@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 280a leva: o calendário da Segunda espanhola: as 42 rodadas, uma tabela para o ano par e outra para o ímpar (spa_second.cpp) ----------
-
 
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
@@ -265,6 +263,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, f
     }
 }
 
+/// Comparer for `spa_second_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SECOND_CREATE_SCHEDULE);
     spa_second_compare_schedule_all_stages("spa_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_second_create_schedule(this, fase, r, e, l))
@@ -279,6 +278,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, ano: u3
     construct_division_league(this, ano, registro, &CQM5_SEGUNDA)
 }
 
+/// Comparer for `construct_spa_second` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_SECOND);
     compare_division_league_ctor("construct_spa_second", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
@@ -297,6 +297,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
 
+/// Comparer for `spa_second_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_second_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_SET_UP_RULES);
     spa_first_compare_league_rules("spa_second_set_up_rules", this, segunda_rules(this), || o(this), || spa_second_set_up_rules(this))
@@ -329,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
-        let c = base + (i as u16 as usize) * 0x245; // cqm6: o clube i do banco
+        let c = base + (i as u16 as usize) * club::SIZE; // cqm6: o clube i do banco
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
@@ -353,7 +354,9 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     1
 }
 
-/// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
+/// Comparer for `spa_second_create_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);
@@ -361,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: us
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut plano: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
-        let c = base + i * 0x245;
+        let c = base + i * club::SIZE;
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             plano.push((c, is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)));
             if plano.len() == 0x16 {

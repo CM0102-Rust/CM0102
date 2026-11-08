@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 280a leva: os play-offs das Séries A e B: a fase seguinte e o mata-mata dos 4 primeiros (bra_nat_first.cpp, bra_nat_second.cpp) ----------
-
 
 
 
@@ -141,27 +139,29 @@ pub(crate) unsafe fn compare_play_off_stage(nome: &str, this: usize, linhas: &[u
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
+/// Comparer for `bra_nat_first_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE);
     compare_state_league_advance_stage("bra_nat_first_advance_stage", this, || o(this))
 }
 
+/// Comparer for `bra_nat_first_create_play_off_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE);
     compare_play_off_stage("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
+/// Comparer for `bra_nat_first_advance_stage_42cdd0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage_42cdd0(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE_42CDD0);
     compare_state_league_advance_stage("bra_nat_first_advance_stage_42cdd0", this, || o(this))
 }
 
+/// Comparer for `bra_nat_first_create_play_off_stage_42ce60` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage_42ce60(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE_42CE60);
     compare_play_off_stage("bra_nat_first_create_play_off_stage_42ce60", this, &[0, 3, 1, 2], || o(this))
 }
-
-// ---------- 280a leva: a virada do futebol brasileiro: a Série A, o acesso e o rebaixamento em cadeia e a Série B (bra_nat_first.cpp, bra_nat_second.cpp) ----------
 
 
 /// Competition object whose id is in global `global` (table G_COMP_OBJECT_TABLE).
@@ -347,23 +347,25 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season_42cc10(thi
 }
 
 
+/// Comparer for `bra_nat_first_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON);
     compare_state_league_new_season("bra_nat_first_start_new_season", this, || o(this))
 }
 
-/// Comparador do acesso e rebaixamento: só a original (ponytail: move clubes entre as listas das ligas, que realocam).
+/// Comparer for `bra_nat_first_process_promotion_relegation_chain` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador do acesso e rebaixamento: só a original (ponytail: move clubes entre as listas das ligas, que realocam).
 /// A cópia roda no modo Rust (contador "cqq_8 acesso e rebaixamento") e é provada pelas mutações e pelas carreiras.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_relegation_chain(this: usize, pares: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_BRA_NAT_FIRST_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pares)
 }
 
+/// Comparer for `bra_nat_first_start_new_season_42cc10` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON_42CC10);
     compare_state_league_new_season("bra_nat_first_start_new_season_42cc10", this, || o(this))
 }
-
-// ---------- 277a leva: a tabela das três divisões nacionais do Brasil: os 28 clubes da Série A (e o dinheiro da TV), os 28 da Série B e o sorteio dos 56 da Série C (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------
 
 
 
@@ -452,7 +454,7 @@ pub(crate) unsafe fn division_clubs_plan(n: usize, campo: usize, g: usize) -> Ve
     let mut plano = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plano.len() < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if club_in_comp_global(clube, campo, g) {
             plano.push(clube);
         }
@@ -482,18 +484,18 @@ pub(crate) unsafe fn compare_division_table(nome: &str, this: usize, n: i16, g: 
     r
 }
 
+/// Comparer for `bra_nat_first_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE);
     compare_division_table("bra_nat_first_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
 }
 
+/// Comparer for `bra_nat_first_create_table_42ca70` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table_42ca70(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE_42CA70);
     compare_division_table("bra_nat_first_create_table_42ca70", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, || o(this))
 }
 
-
-// ---------- 274a leva: as regras das três divisões nacionais do Brasil (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------
 
 
 
@@ -607,7 +609,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -
     1
 }
 
-/// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto inteiro
+/// Comparer for `bra_nat_first_set_up_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto inteiro
 /// menos as saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
@@ -632,7 +636,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules_42cb70(this: u
     1
 }
 
-/// Comparador: como o da Série A.
+/// Comparer for `bra_nat_first_set_up_rules_42cb70` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES_42CB70)(this), || {
@@ -644,8 +650,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules_42cb7
 }
 
 
-
-// ---------- 274a leva: o destino de cada clube no fim das fases da Série A, da Série C e do Baiano (bra_nat_first.cpp, bra_nat_third.cpp, bra_reg_bahia.cpp) ----------
 
 
 
@@ -875,7 +879,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_st
     serie_a_staff_records(this, clube, situacao, fase, true).0
 }
 
-/// Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
+/// Comparer for `bra_nat_first_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação): a devolução e o destino gravado na linha.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = serie_a_staff_records(this, clube, situacao, fase, false);

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 280a leva: o calendário da divisão de baixo espanhola (a Segunda B): as 42 rodadas, uma tabela para o ano par e outra para o ímpar, com a rodada do Natal (spa_lower.cpp) ----------
-
 
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
@@ -308,12 +306,11 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, fa
     }
 }
 
+/// Comparer for `spa_lower_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_LOWER_CREATE_SCHEDULE);
     compare_round_table_any_stage("spa_lower_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_lower_create_schedule(this, fase, r, e, l))
 }
-
-// ---------- 278a leva: a divisão de baixo espanhola (o construtor e a tabela com os times B e os melhores da Segunda B) e a tabela da Segunda espanhola (os times B que não sobem) (spa_lower.cpp, spa_second.cpp) ----------
 
 
 
@@ -376,7 +373,9 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32
     this
 }
 
-/// Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
+/// Comparer for `construct_spa_lower` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
 pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_SPA_LOWER);
     let r = o(this, ano);
@@ -413,7 +412,7 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n && v.len() < 100 {
-        let c = base + (i as u16 as usize) * 0x245;
+        let c = base + (i as u16 as usize) * club::SIZE;
         let comp = read_u32_as_usize(c + 0x57);
         let nacao = read_u32_as_usize(c + 0x53);
         if comp != 0 && nacao != 0 {
@@ -442,7 +441,7 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, linhas: i16, 
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
-        let c = base + (i as u16 as usize) * 0x245;
+        let c = base + (i as u16 as usize) * club::SIZE;
         let comp = read_u32_as_usize(c + 0x57);
         let nacao = read_u32_as_usize(c + 0x53);
         if comp != 0 && nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(KEY_NATION_SPAIN) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_u32_as_usize(comp) != read_u32_as_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
@@ -492,7 +491,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
-        let c = base + (i as u16 as usize) * 0x245;
+        let c = base + (i as u16 as usize) * club::SIZE;
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
             write_u32_from_usize(c + 0x57, comp_record_of_key(KEY_CLUB_COMP_A_LOWER_DIVISION));
         }
@@ -530,7 +529,9 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     (k as i8 as i16 == read_i16(this + 0x3e)) as u32
 }
 
-/// Aloca e sorteia: só a original. O plano, feito antes: os times B (da Primera e da Segunda) das primeiras linhas.
+/// Comparer for `spa_lower_create_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Aloca e sorteia: só a original. O plano, feito antes: os times B (da Primera e da Segunda) das primeiras linhas.
 /// Depois: +0x3e e o clube das primeiras linhas. O +0x60 não entra: a segunda passada (a dos times B da Segunda) zera o
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
@@ -570,6 +571,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u3
     spa_first_apply_league_rules(this, &lower_division_rules())
 }
 
+/// Comparer for `spa_lower_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_lower_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_LOWER_SET_UP_RULES);
     spa_first_compare_league_rules("spa_lower_set_up_rules", this, lower_division_rules(), || o(this), || spa_lower_set_up_rules(this))

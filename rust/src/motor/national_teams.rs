@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- octogesima quarta leva: competicao da pessoa, bytes da selecao, selecoes especiais, data com marca ----------
-
 /// { 0x7751e0 } (ret 4, national_teams.cpp): a competicao (0xae23d0, 107 bytes) do indice +4 do
 /// registro da pessoa em [this+4] (110 bytes); sem pessoa ou indice negativo, 0.
 pub(crate) unsafe extern "thiscall" fn person_competition(this: usize, pessoa: usize) -> usize {
@@ -72,8 +70,6 @@ pub(crate) unsafe extern "thiscall" fn copy_date_and_mark(this: usize, origem: u
     this
 }
 
-// ---------- octogesima terceira leva: mais campos por pessoa (national_teams.cpp), global 0x9b5984 ----------
-
 /// Address of block k (20 bytes) of the person's 110-byte record in [this+4].
 ///
 /// [pt] O bloco `k` da pessoa nos registros de [this+4]: id x 110 + k x 20.
@@ -112,8 +108,6 @@ pub(crate) unsafe extern "stdcall" fn class_by_national_side(pessoa: usize) -> u
     (*((pessoa + staff::PLAYING_SQUAD) as *const u8) >> 3) & 1
 }
 
-
-// ---------- 270a leva: as notícias das seleções aos clubes: o relatório do jogo, a convocação e os adversários (national_teams.cpp) ----------
 
 
 
@@ -336,7 +330,9 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
     }
 }
 
-/// Comparador da 0x7706c0: a original entrega as notícias (aloca nas caixas): só ela roda, com os sorteios rastreados e o
+/// Comparer for `send_club_international_report_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7706c0: a original entrega as notícias (aloca nas caixas): só ela roda, com os sorteios rastreados e o
 /// elenco guardado antes. Depois o elenco volta ao de antes, a cópia refaz em ensaio (sorteios da fita, sem entregar) e o
 /// elenco tem de sair igual ao da original, com os sorteios do ensaio iguais aos da fita (mesmos n, todos usados).
 pub(crate) unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: usize, clube: usize, jogo: usize, resultado: usize, destaque: usize, elenco: *mut usize, conta: u32) {
@@ -459,7 +455,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     }
 }
 
-/// Comparador da 0x76e0b0: ela só monta e entrega notícias (aloca nas caixas dos humanos) e monta e libera a lista dos
+/// Comparer for `national_teams_post_call_up_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x76e0b0: ela só monta e entrega notícias (aloca nas caixas dos humanos) e monta e libera a lista dos
 /// adversários: não pode rodar duas vezes e não grava nada do jogo além das caixas. Só a original roda (ponytail: o
 /// efeito é a caixa de entrada do humano; a lista dos adversários é conferida pela 0x76d560).
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_post_call_up_news(this: usize, selecao: usize, segunda: u32, jogo: usize, tipo: u32, sem_adversarios: u32, adversarios: usize, conta: u32) {
@@ -560,7 +558,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     nl
 }
 
-/// Comparador da 0x76d560: a original aloca a lista nova (não pode rodar duas vezes): só ela roda; antes, a cópia em
+/// Comparer for `national_teams_collect_fixture_opponents` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x76d560: a original aloca a lista nova (não pode rodar duas vezes): só ela roda; antes, a cópia em
 /// ensaio diz os valores que vão na lista (sem alocar), e a lista da original tem de ter exatamente esses, na ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_opponents(this: usize, selecao: usize, jogo: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_NATIONAL_TEAMS_COLLECT_FIXTURE_OPPONENTS);
@@ -572,8 +572,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_o
     PLACAR.registrar(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
     r
 }
-
-// ---------- a escolha do elenco da seleção (0x76c120), com a correção dos elencos de 23 e 25 ----------
 
 
 
@@ -1137,7 +1135,9 @@ pub(crate) unsafe fn squad_selection_regions(this: usize, nacao: usize, t: i8, p
     v
 }
 
-/// Comparador: a original aloca (0x68d020/0x68d0d0), mexe nos elencos, nas vagas da tática e manda notícias (0x76e0b0,
+/// Comparer for `select_squad` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original aloca (0x68d020/0x68d0d0), mexe nos elencos, nas vagas da tática e manda notícias (0x76e0b0,
 /// 0x76f1a0): não pode rodar duas vezes. Só ela roda, com uma gravação da fita aberta nas regiões de squad_selection_regions:
 /// a escala (0x6e2000) entra nela como unidade com os vetores de entrada (a lista e os códigos) e o estado das
 /// regiões logo antes. Depois, com esse estado de volta, a cópia Rust monta a lista (collect_squad_candidates) e os códigos
@@ -1192,8 +1192,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao:
         nacao, t, tam, a[1] as u8, a[2], a[3], lista_o, cod_o, n, modo, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..tam as usize]));
 }
 
-// ---------- 262a leva: o jogador a serviço da seleção: a seleção ou o time das estrelas que o tem na data, o jogador que serve à seleção do técnico e as competições das convocações (national_teams.cpp) ----------
-
 
 
 
@@ -1201,7 +1199,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao:
 ///
 /// [pt] O clube do time das estrelas `g` ([0x9d00a4] ou [0x9d00a8]): o registro de 0x245 bytes em [0xae23b4].
 pub(crate) unsafe fn all_star_club(g: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(g).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(g).wrapping_mul(club::SIZE))
 }
 
 /// the national side holding the player from the day before to the day after (a national side fixture in the window,
@@ -1350,7 +1348,9 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
     sai(0)
 }
 
-/// Comparador da 0x7757d0 (2,1 milhões de chamadas até 2002-06-01: o lado a lado leve, sem alocar até 256 bytes): cada
+/// Comparer for `get_international_duty_club` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7757d0 (2,1 milhões de chamadas até 2002-06-01: o lado a lado leve, sem alocar até 256 bytes): cada
 /// uma com a sua lista provisória (como a original); no texto de 0xde1f64 (0x80) e no do comentário (0x40) e na devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_get_international_duty_club(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
                                                                adversario: usize) -> usize {
@@ -1418,7 +1418,9 @@ pub(crate) unsafe extern "stdcall" fn national_teams_player_is_eligible(jogador:
     1
 }
 
-/// Comparador da 0x76d9b0: pela devolução (só lê).
+/// Comparer for `national_teams_player_is_eligible` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x76d9b0: pela devolução (só lê).
 pub(crate) unsafe extern "stdcall" fn comparar_national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(IDX_NATIONAL_TEAMS_PLAYER_IS_ELIGIBLE)(jogador, tecnico);
     let n = national_teams_player_is_eligible(jogador, tecnico);
@@ -1480,6 +1482,7 @@ pub(crate) unsafe fn national_teams_list_items(lista: usize) -> Vec<usize> {
 // ponytail: a 0x775580 acrescenta nós (aloca): só a original roda. O plano, feito antes pelos nós (sem mexer nos
 // cursores): as competições das convocações que ainda não estão em `saida`, na ordem, sem repetir; depois, a devolução
 // é quantas e os últimos itens de `saida` (4 bytes cada) são elas.
+/// Comparer for `collect_duty_competitions` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: usize, saida: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_COLLECT_DUTY_COMPETITIONS);
     let conv = read_usize(this);
@@ -1502,8 +1505,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: 
     PLACAR.registrar(igual, || format!("collect_duty_competitions(saida {:x}) original={} plano={:x?} depois={:x?}", saida, r, tem, depois));
     r
 }
-
-// ---------- 261a leva: as convocações para o jogo de seleções e duas notícias: escolher os elencos dos dois lados, a notícia do convocado e a do desfecho na copa (national_teams.cpp, Cup.cpp) ----------
 
 
 
@@ -1528,10 +1529,10 @@ pub(crate) unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let base = reg + [0x32usize, 0x46, 0x5a][tipo as usize];
     let data = base + 8;
-    let d = dias(0xae2c90, read_usize(data) as u32, read_usize(data + 4) as u32);
+    let d = dias(G_CURRENT_DATE, read_usize(data) as u32, read_usize(data + 4) as u32);
     if d <= 0xe && read_u8(base + 0x11) != 0 && extra() {
         let mut r = [0u8; 8];
-        copia(base, r.as_mut_ptr(), 0xae2c90);
+        copia(base, r.as_mut_ptr(), G_CURRENT_DATE);
         let mut jogo = [0u8; 8];
         data_nova(jogo.as_mut_ptr(), read_i16(p + 0x2a) as u16 as u32, read_i16(p + 0x28) as u16 as u32);
         let (ra, rd) = (read_i16(data + 2) as u16, read_i16(data) as i16);
@@ -1548,7 +1549,7 @@ pub(crate) unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize
     }
     let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(FN_NATIONALTEAMS_SELECT_SQUAD);
     crate::comparacao::ramo("cpx_13 elenco pedido");
-    escolher(this, read_usize(clube + club::NATION), tipo, 0xae2c90, p, 0); // cpx13: o elenco
+    escolher(this, read_usize(clube + club::NATION), tipo, G_CURRENT_DATE, p, 0); // cpx13: o elenco
 }
 
 /// Refreshes the B/Olympic (match +0x4e bit 0x100) or U21 (bit 0x200 or B national team) squad for the club side.
@@ -1579,7 +1580,7 @@ pub(crate) unsafe fn release_overage_u21(this: usize, clube: usize) {
     }
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let reg = club_nation_record(this, clube);
-    if depois(0xae2c90, read_usize(reg + 0x62) as u32, read_usize(reg + 0x66) as u32) != 0 {
+    if depois(G_CURRENT_DATE, read_usize(reg + 0x62) as u32, read_usize(reg + 0x66) as u32) != 0 {
         *((reg + 0x6b) as *mut u8) = 0;
     }
 }
@@ -1635,7 +1636,9 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
     }
 }
 
-/// Comparador: a original roda antes; a cópia depois, em ensaio, a partir dos mesmos registros das duas nações (+0x32
+/// Comparer for `select_squads_for_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original roda antes; a cópia depois, em ensaio, a partir dos mesmos registros das duas nações (+0x32
 /// a +0x6c: marcas de hoje, datas dos elencos e marcas de convocado). Se a cópia pediu algum elenco (0x76c120 aloca e
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
 pub(crate) unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: usize) {
@@ -1667,7 +1670,7 @@ pub(crate) unsafe fn club_of_person_contract(pessoa: usize) -> usize {
     if c == 0 {
         return 0;
     }
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE))
 }
 
 /// O ensaio do comparador da 0x76fd10: a cópia roda sem entregar a notícia.
@@ -1734,11 +1737,13 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
     }
 }
 
-/// Comparador: a cópia em ensaio (sem entregar) e a original a partir do mesmo [0xae1080] (o último contrato lido, que
+/// Comparer for `national_teams_post_player_called_up_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a cópia em ensaio (sem entregar) e a original a partir do mesmo [0xae1080] (o último contrato lido, que
 /// as duas gravam).
 pub(crate) unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_NATIONAL_TEAMS_POST_PLAYER_CALLED_UP_NEWS);
-    let regioes = [(0xae1080usize, 4usize)];
+    let regioes = [(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX13_ENSAIO_NOTICIA = true;
     crate::aleatorio::pausar_rastro(|| national_teams_post_player_called_up_news(jogador, nacao, vaga));
@@ -1753,8 +1758,6 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_teams_post_player_called
 
 // ponytail: a virtual +0x44 da copa acrescenta registros às pessoas e a notícia vai às caixas dos técnicos (alocam): só
 // a original; a cópia leva o ramo.
-
-// ---------- 259a leva: o jogo entre seleções: as convocações, os jogos e gols pela seleção, o nome do elenco e as rodadas conhecidas (national_teams.cpp, comp.cpp) ----------
 
 
 /// O ensaio do comparador da 0x76b600: a cópia roda sem o ranking da FIFA (0x58cf70, acrescenta pontos ao histórico),
@@ -1778,7 +1781,7 @@ pub(crate) unsafe fn lineup_slot_person(vaga: usize, k: usize) -> Option<usize> 
     if id == -1 || (k >= 11 && *((vaga + 0x32) as *const u8) == 0xff) {
         return None;
     }
-    let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
     if p != 0 && read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return None;
     }
@@ -1876,7 +1879,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                     crate::comparacao::ramo("cpw_12 reserva sem entrar");
                     continue;
                 }
-                let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+                let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
                 if pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
                     continue;
                 }
@@ -1920,7 +1923,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
         }
         let destaque_k = *((m + 0x625 * lado + 0x153) as *const i8) as isize;
         let destaque_id = read_usize((m + 0x625 * lado + 0x190) .wrapping_add((0x49 * destaque_k) as usize));
-        let destaque = read_usize(G_STAFF_TABLE).wrapping_add(destaque_id.wrapping_mul(0x6e));
+        let destaque = read_usize(G_STAFF_TABLE).wrapping_add(destaque_id.wrapping_mul(staff::SIZE));
         if !CPW12_ENSAIO {
             // ponytail: a original empurra a conta num dword da local com só o byte de baixo gravado; a 0x7706c0 lê o byte
             noticia(this, clube, p, m, destaque, lista.as_mut_ptr(), q as u32);
@@ -1945,7 +1948,7 @@ pub(crate) unsafe fn caps_update_regions(this: usize, p: usize, m: usize) -> Vec
             if id == -1 {
                 continue;
             }
-            let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+            let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
             if pessoa != 0 && (read_usize(pessoa) as i32) < read_usize(G_STAFF_COUNT) as i32 {
                 reg.push((pessoa + staff::NATION, 10));
                 reg.push((national_teams_staff_state_record(pessoa) + 0xc, 2));
@@ -1955,7 +1958,9 @@ pub(crate) unsafe fn caps_update_regions(this: usize, p: usize, m: usize) -> Vec
     reg
 }
 
-/// Comparador: o ensaio (a cópia sem o ranking, a primeira convocação, o registro de transferências e a notícia, que
+/// Comparer for `record_international_result` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o ensaio (a cópia sem o ranking, a primeira convocação, o registro de transferências e a notícia, que
 /// alocam, vão para o arquivo ou gravam fora) e a original a partir do mesmo estado, conferidos nas regiões que a
 /// rotina grava por conta própria (caps_update_regions). Fora de jogo entre seleções: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_record_international_result(this: usize, p: usize, m: usize) {
@@ -2000,7 +2005,9 @@ pub(crate) unsafe extern "thiscall" fn format_squad_label(this: usize, tipo: u32
     texto(saida, s)
 }
 
-/// Comparador: lado a lado no começo da saída (até 64 bytes) e na devolução. A caixa: só a original.
+/// Comparer for `format_squad_label` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no começo da saída (até 64 bytes) e na devolução. A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, i32, u32) -> u32>(IDX_FORMAT_SQUAD_LABEL);
     if tamanho < 0x14 || saida == 0 {
@@ -2014,8 +2021,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, 
 }
 
 
-
-// ---------- 258a leva: o convocado machucado: tirar da seleção, a notícia ao clube dele e o pedido de substituto ao técnico da seleção (national_teams.cpp) ----------
 
 
 
@@ -2077,7 +2082,7 @@ pub(crate) unsafe fn club_of_player_contract(p: usize) -> usize {
     if c == 0 {
         0
     } else {
-        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
+        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE))
     }
 }
 
@@ -2139,7 +2144,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
         core::ptr::write_unaligned((lista + 0xa) as *mut u32, read_usize(lista + 2) as u32);
         let mut e = proximo(read_usize(this));
         while e != 0 {
-            if read_usize(e) == read_usize(clube) && maior(0xae2c90, read_usize(e + 8) as u32, read_usize(e + 0xc) as u32) != 0 {
+            if read_usize(e) == read_usize(clube) && maior(G_CURRENT_DATE, read_usize(e + 8) as u32, read_usize(e + 0xc) as u32) != 0 {
                 return;
             }
             e = proximo(read_usize(this));
@@ -2208,7 +2213,7 @@ pub(crate) unsafe fn release_plan(this: usize, p: usize, dias: u32) -> u8 {
             if e == 0 {
                 break;
             }
-            if read_usize(e) == read_usize(clube) && maior(0xae2c90, read_usize(e + 8) as u32, read_usize(e + 0xc) as u32) != 0 {
+            if read_usize(e) == read_usize(clube) && maior(G_CURRENT_DATE, read_usize(e + 8) as u32, read_usize(e + 0xc) as u32) != 0 {
                 return 0;
             }
             no = read_usize(no + 6);
@@ -2307,7 +2312,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_replacement_needed_ne
     }
 }
 
-/// Comparador: a retirada chama a notícia (aloca), a saída da tática e o substituto (originais com efeitos): só a
+/// Comparer for `withdraw_injured_player` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a retirada chama a notícia (aloca), a saída da tática e o substituto (originais com efeitos): só a
 /// original roda. O caminho é decidido antes, só lendo (release_plan), e conferido depois: sem retirada, o clube da
 /// seleção (+0x24) e a marca de convocado (+0x28) ficam; com retirada, o jogador que estava numa das 50 vagas do time
 /// sai delas (+0x24 zerado pela 0x7762f0). Sem clube (a caixa): só a original.
@@ -2330,19 +2337,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: us
     PLACAR.registrar(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
 }
 
-/// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
+/// Comparer for `national_teams_post_player_withdrawn_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_post_player_withdrawn_news(this: usize, p: usize, nacao: usize, tipo: u32) {
     crate::comparacao::ramo("national_teams_post_player_withdrawn_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_NATIONAL_TEAMS_POST_PLAYER_WITHDRAWN_NEWS)(this, p, nacao, tipo)
 }
 
-/// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
+/// Comparer for `national_teams_post_replacement_needed_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_post_replacement_needed_news(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
     crate::comparacao::ramo("national_teams_post_replacement_needed_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_NATIONAL_TEAMS_POST_REPLACEMENT_NEEDED_NEWS)(this, p, nacao, tipo, nivel)
 }
-
-// ---------- 258a leva: a convocação pode mudar agora?, o jogador está na convocação e o adversário marcado no amistoso (national_teams.cpp, friendly.cpp) ----------
 
 
 
@@ -2521,7 +2530,9 @@ pub(crate) unsafe extern "stdcall" fn national_teams_player_in_squad(p: usize, n
 }
 
 
-/// Comparador: lado a lado pela devolução e pelo motivo (a original no destino, a cópia num destino próprio do mesmo
+/// Comparer for `national_teams_can_change_squad` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela devolução e pelo motivo (a original no destino, a cópia num destino próprio do mesmo
 /// tamanho). As duas andam o cursor da lista [this] do mesmo jeito; a busca de jogos do dia monta e libera uma lista
 /// local (sem estado que fique). Sem nação ou destino curto (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
@@ -2547,8 +2558,6 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p:
     r
 }
 
-
-// ---------- 252a leva: as seleções e o calendário dos clubes: se o jogo do clube pode ser marcado com os convocados, a ordem das convocações pela data e a nação classificada para a fase final (national_teams.cpp) ----------
 
 
 
@@ -2663,7 +2672,9 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_nation(this: usize, nacao: 
     acrescentar(this + 0x28, reg.as_mut_ptr() as usize, 8);
 }
 
-/// Comparador: pelo valor (só lê; as datas são locais).
+/// Comparer for `can_schedule_club_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê; as datas são locais).
 pub(crate) unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CAN_SCHEDULE_CLUB_FIXTURE)(this, jogo);
     let n = can_schedule_club_fixture(this, jogo);
@@ -2671,7 +2682,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: 
     r
 }
 
-/// Comparador: pelo valor (só lê).
+/// Comparer for `compare_call_up_records_by_date` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_CALL_UP_RECORDS_BY_DATE)(a, b);
     let n = compare_call_up_records_by_date(a, b);
@@ -2679,7 +2692,9 @@ pub(crate) unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usiz
     r
 }
 
-/// Comparador: a original aloca o nó (não roda duas vezes): só ela, e confere o plano: a conta da lista (+0x28, palavra)
+/// Comparer for `add_qualified_nation` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original aloca o nó (não roda duas vezes): só ela, e confere o plano: a conta da lista (+0x28, palavra)
 /// sobe 1 com as duas não nulas e fica igual senão.
 pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_nation(this: usize, nacao: usize, fase_final: usize) {
     let antes = *((this + 0x28) as *const i16) as i32;
@@ -2688,8 +2703,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_nation(this: usize
     let esperado = antes + (nacao != 0 && fase_final != 0) as i32;
     PLACAR.registrar(depois == esperado, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nacao, fase_final, antes, depois));
 }
-
-// ---------- 251a leva: as seleções: a competição atual da nação e os clubes com jogo na data; a disciplina: tirar o jogador regenerado (national_teams.cpp, discipline.cpp) ----------
 
 
 
@@ -2770,7 +2783,9 @@ pub(crate) unsafe extern "thiscall" fn set_current_competition(this: usize, naca
     }
 }
 
-/// Comparador: a 0x6a3770 (o aviso) não pode rodar duas vezes: o plano antes, a original roda; confere a competição
+/// Comparer for `set_current_competition` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x6a3770 (o aviso) não pode rodar duas vezes: o plano antes, a original roda; confere a competição
 /// atual e a da fila. Nação ou competição nula: só a original (caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_set_current_competition(this: usize, nacao: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_SET_CURRENT_COMPETITION);
@@ -2831,7 +2846,7 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     for i in 0..0x21usize {
-        let e = 0xb63df0 + i * 0x48;
+        let e = G_LEAGUE_WORLD_CLUB_NATION + i * 0x48;
         let nacao = read_u32_as_usize(e);
         if nacao != 0 && *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
@@ -2869,7 +2884,9 @@ pub(crate) unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, dat
     }
 }
 
-/// Comparador: na primeira (sem tabela: calloc) só a original; depois, lado a lado na tabela (n bytes). A lista do
+/// Comparer for `mark_clubs_with_fixtures` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: na primeira (sem tabela: calloc) só a original; depois, lado a lado na tabela (n bytes). A lista do
 /// dia e o amistoso só leem (o cursor da lista volta ao começo a cada uso).
 pub(crate) unsafe extern "thiscall" fn comparar_mark_clubs_with_fixtures(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MARK_CLUBS_WITH_FIXTURES);
@@ -2888,8 +2905,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_clubs_with_fixtures(this: u
 
 
 
-
-// ---------- 242a leva: as seleções: o fim das convocações de uma competição e a poda dos registros de convocação (national_teams.cpp) ----------
 
 
 /// Items of list l (head +2, item +0, next +6, capped at 100000) without touching the cursor.
@@ -2921,7 +2936,7 @@ pub(crate) unsafe fn end_call_ups(this: usize, passa: impl Fn(usize) -> bool) {
     while r != 0 {
         if passa(r) {
             let mut data = [0u8; 8];
-            let dia = *mais_dias(0xae2c90, data.as_mut_ptr(), 1);
+            let dia = *mais_dias(G_CURRENT_DATE, data.as_mut_ptr(), 1);
             core::ptr::write_unaligned((r + 0x10) as *mut u16, dia); // o dia de amanhã
         }
         r = proximo(read_usize(this));
@@ -2960,6 +2975,7 @@ pub(crate) unsafe fn end_call_ups_regions(this: usize) -> Vec<(usize, usize)> {
     reg
 }
 
+/// Comparer for `end_duty_for_competition` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_end_duty_for_competition(this: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_END_DUTY_FOR_COMPETITION);
     let reg = end_call_ups_regions(this);
@@ -2967,6 +2983,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_duty_for_competition(this: u
     PLACAR.registrar(igual, || format!("end_duty_for_competition({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
 }
 
+/// Comparer for `end_duty_for_nation_in_competition` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_END_DUTY_FOR_NATION_IN_COMPETITION);
     let reg = end_call_ups_regions(this);
@@ -3054,7 +3071,9 @@ pub(crate) unsafe fn would_free_call_up_record(rec: usize) -> bool {
     v != 0 && n.wrapping_sub(vencidas as i8) == 0
 }
 
-/// Comparador: os registros (6 bytes cada) e os vetores de entradas. Algum vetor a soltar (0x9452ca; soltar duas
+/// Comparer for `prune_club_call_up_records` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: os registros (6 bytes cada) e os vetores de entradas. Algum vetor a soltar (0x9452ca; soltar duas
 /// vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_prune_club_call_up_records(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PRUNE_CLUB_CALL_UP_RECORDS);
@@ -3073,8 +3092,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_prune_club_call_up_records(this:
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || prune_club_call_up_records(this));
     PLACAR.registrar(igual, || format!("prune_club_call_up_records({:x}) {:x?} x {:x?}", this, mo, mr));
 }
-
-// ---------- 242a leva: as seleções: pôr e tirar do elenco e dispensar os acima da idade do sub-21 (national_teams.cpp) ----------
 
 
 /// National team for call-up type: main team (0x53b3d0) for 0 and 1, U21 (0x53b4f0) otherwise.
@@ -3126,7 +3143,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_squad(_this: usize, nacao: 
     core::ptr::write_unaligned((p + 0x24) as *mut usize, time);
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut data = [0u8; 8];
-    copia(p + 0x29, data.as_mut_ptr(), 0xae2c90);
+    copia(p + 0x29, data.as_mut_ptr(), G_CURRENT_DATE);
     *((p + 0x28) as *mut u8) = 0xb;
     let marcar_elenco: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_STAFF_SET_SQUAD_FLAGS);
     marcar_elenco(p, elenco);
@@ -3139,6 +3156,7 @@ pub(crate) unsafe fn squad_change_regions(time: usize, p: usize) -> [(usize, usi
     [(time + 0xd7, 200), (p + 0x24, 0x3b)]
 }
 
+/// Comparer for `add_player_to_squad` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_add_player_to_squad(this: usize, nacao: usize, tipo: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_ADD_PLAYER_TO_SQUAD);
     let time = national_team_for_type(nacao, tipo as u8);
@@ -3166,7 +3184,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player_from_squad(_
     }
 }
 
-/// Comparador: as vagas e a pessoa. A 0x896c60 tira a pessoa da tática: na segunda vez (a cópia) já não a acha e não
+/// Comparer for `national_teams_remove_player_from_squad` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: as vagas e a pessoa. A 0x896c60 tira a pessoa da tática: na segunda vez (a cópia) já não a acha e não
 /// muda nada, então a tática fica fora das regiões. Time ou pessoa nulos (a caixa da 0x896c60): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_remove_player_from_squad(this: usize, nacao: usize, tipo: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER_FROM_SQUAD);
@@ -3197,7 +3217,7 @@ pub(crate) unsafe fn nation_record_by_id(this: usize, nacao: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn release_overage_u21_players(this: usize, nacao: usize) {
     let rec = nation_record_by_id(this, nacao);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
-    if depois(0xae2c90, read_usize(rec + 0x62) as u32, read_usize(rec + 0x66) as u32) == 0 {
+    if depois(G_CURRENT_DATE, read_usize(rec + 0x62) as u32, read_usize(rec + 0x66) as u32) == 0 {
         return;
     }
     crate::comparacao::ramo("sub-21 dispensar acima da idade");
@@ -3230,8 +3250,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_release_overage_u21_players(this
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, nacao), || release_overage_u21_players(this, nacao));
     PLACAR.registrar(igual, || format!("release_overage_u21_players({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
 }
-
-// ---------- 242a leva: as seleções: a competição atual de cada nação e a convocação do substituto (national_teams.cpp) ----------
 
 
 
@@ -3268,7 +3286,9 @@ pub(crate) unsafe extern "thiscall" fn clear_current_competition(this: usize, na
     }
 }
 
-/// Comparador: a competição atual e a seguinte; com a seguinte (o aviso 0x6a3770 sorteia e mexe nos técnicos), só a
+/// Comparer for `clear_current_competition` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a competição atual e a seguinte; com a seguinte (o aviso 0x6a3770 sorteia e mexe nos técnicos), só a
 /// original.
 pub(crate) unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, nacao: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_CURRENT_COMPETITION);
@@ -3335,6 +3355,7 @@ pub(crate) unsafe extern "thiscall" fn release_competitions_of_continent(this: u
 /// Comparador: o aviso 0x6a3770 sorteia e mexe nos técnicos (não pode rodar duas vezes): só a original; a prova é a
 /// carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (4 chamadas na carreira); comparar pedia separar a decisão do aviso.
+/// Comparer for `release_competitions_of_continent` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_RELEASE_COMPETITIONS_OF_CONTINENT)(this, continente, fim_de_fase)
 }
@@ -3440,11 +3461,10 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: u
 /// Comparador: a entrada no elenco sai com a notícia (0x76fd10) e a saída do outro mexe na tática: só a original
 /// (a 0x776250 e a 0x7762f0 que ela chama passam pelos comparadores delas).
 // ponytail: só a original; a prova é a carreira (140 chamadas) e o ramo da cópia no modo Rust.
+/// Comparer for `call_up_replacement` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_call_up_replacement(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize)>(IDX_CALL_UP_REPLACEMENT)(this, nacao, tipo, nivel, saindo)
 }
-
-// ---------- 242a leva: as seleções: as reservas de convocáveis de cada nação e as duas ordens delas (national_teams.cpp) ----------
 
 
 
@@ -3579,7 +3599,9 @@ pub(crate) unsafe extern "thiscall" fn build_selection_pools(this: usize) {
     }
 }
 
-/// Comparador: os registros das nações e, em cada reserva (principal e sub-21), o trecho dos 4 níveis (a soma das
+/// Comparer for `build_selection_pools` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: os registros das nações e, em cada reserva (principal e sub-21), o trecho dos 4 níveis (a soma das
 /// vagas +0xe a partir do começo +8).
 pub(crate) unsafe extern "thiscall" fn comparar_build_selection_pools(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_SELECTION_POOLS);
@@ -3609,6 +3631,7 @@ pub(crate) unsafe extern "C" fn compare_by_rating(a: usize, b: usize) -> i32 {
     (slot_person_rating(b) as i32) - slot_person_rating(a) as i32 // decrescente
 }
 
+/// Comparer for `compare_by_rating` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_compare_by_rating(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_BY_RATING)(a, b);
     let n = compare_by_rating(a, b);
@@ -3645,14 +3668,13 @@ pub(crate) unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
     0
 }
 
+/// Comparer for `compare_by_club` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_compare_by_club(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_BY_CLUB)(a, b);
     let n = compare_by_club(a, b);
     PLACAR.registrar(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
-
-// ---------- 211a leva: o jogador que sai da seleção, a faixa de horário do jogo e o teto da lista de observados (national_teams.cpp, fix_man.cpp, shortlist_manager.cpp) ----------
 
 /// takes the player out of his level pool in the nation and out of the squad, clearing his national team fields
 /// Original: `NationalTeams::remove_player` (0x775ba0, national_teams.cpp, thiscall).
@@ -3705,6 +3727,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
 
 
 
+/// Comparer for `national_teams_remove_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_remove_player(this: usize, jogador: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
@@ -3733,8 +3756,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_remove_player(thi
 }
 
 
-
-// ---------- 210a leva: as convocações repetidas das seleções, a vaga do escalado e o comentarista ex-internacional (national_teams.cpp, tactics.cpp, media.cpp) ----------
 
 /// Addresses of the 50 call-up slots (+0xd7) of the nation's main team and U21/B team.
 ///
@@ -3770,6 +3791,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_remove_duplicate_squad_entr
 
 
 
+/// Comparer for `national_teams_remove_duplicate_squad_entries` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_national_teams_remove_duplicate_squad_entries(nacao: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(IDX_NATIONAL_TEAMS_REMOVE_DUPLICATE_SQUAD_ENTRIES);
     if nacao == 0 {
@@ -3804,6 +3826,7 @@ pub(crate) unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const 
     }
 }
 
+/// Comparer for `national_team_level` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_national_team_level(j: usize, rep: *const i16, base: u8) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8>(IDX_NATIONAL_TEAM_LEVEL)(j, rep, base);
     let n = national_team_level(j, rep, base);
@@ -3902,7 +3925,9 @@ pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, 
     classificados(this);
 }
 
-/// Comparador: a original convoca (0x76bab0: notícias, elencos), remarca jogos (0x7777e0), aloca a tabela (0x7775c0)
+/// Comparer for `national_teams_daily_update` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original convoca (0x76bab0: notícias, elencos), remarca jogos (0x7777e0), aloca a tabela (0x7775c0)
 /// e libera itens (0x68d1f0): não pode rodar duas vezes. Só ela roda, conferindo o plano do que a própria rotina grava:
 /// nenhum item do dia de hoje sobra na lista em +0.
 pub(crate) unsafe extern "thiscall" fn comparar_national_teams_daily_update(this: usize, hoje: usize) {
@@ -3948,6 +3973,7 @@ pub(crate) unsafe extern "stdcall" fn national_team_ages(comp: usize, tipo: i8, 
     }
 }
 
+/// Comparer for `national_team_ages` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_national_team_ages(comp: usize, tipo: i8, minima: *mut u8, maxima: *mut u8) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, i8, *mut u8, *mut u8)>(IDX_NATIONAL_TEAM_AGES);
     let reg = if minima.is_null() || maxima.is_null() { vec![] } else { vec![(minima as usize, 1), (maxima as usize, 1)] };
@@ -4013,7 +4039,9 @@ pub(crate) unsafe extern "thiscall" fn record_club_call_ups(this: usize, time: u
     }
 }
 
-/// Comparador: lado a lado no elenco do time (50 vagas) e, de cada clube do elenco que conta, no registro (6 bytes) e
+/// Comparer for `record_club_call_ups` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no elenco do time (50 vagas) e, de cada clube do elenco que conta, no registro (6 bytes) e
 /// no vetor de entradas inteiro (capacidade × 9). Quando algum vetor pode crescer (0x945667 solta o velho; não roda
 /// duas vezes): só a original, conferindo depois o elenco ordenado pelo clube (o mesmo qsort sobre uma cópia, antes).
 pub(crate) unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize, time: usize, b: u32, p: usize) {
@@ -4052,6 +4080,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize
     PLACAR.registrar(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
 }
 
+/// Comparer for `set_person_44` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_person_44(this: usize, pessoa: usize, k: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_SET_PERSON_44);
     let reg = [(person_block(this, pessoa, k) + 0x44, 1)];
@@ -4059,6 +4088,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_person_44(this: usize, pesso
     PLACAR.registrar(igual, || format!("set_person_44 original={:x?} rust={:x?}", mo, mr));
 }
 
+/// Comparer for `class_by_national_side` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_class_by_national_side(pessoa: usize) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u8>(IDX_CLASS_BY_NATIONAL_SIDE)(pessoa);
     let v = class_by_national_side(pessoa);
@@ -4066,6 +4096,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_class_by_national_side(pessoa: us
     r
 }
 
+/// Comparer for `national_or_special` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_national_or_special(clube: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NATIONAL_OR_SPECIAL)(clube);
     let v = national_or_special(clube);
@@ -4073,6 +4104,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_national_or_special(clube: usize)
     r
 }
 
+/// Comparer for `dislikes_national_side` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_dislikes_national_side(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_DISLIKES_NATIONAL_SIDE)(pessoa);
     let v = dislikes_national_side(pessoa);
@@ -4080,6 +4112,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_dislikes_national_side(pessoa: us
     r
 }
 
+/// Comparer for `copy_date_and_mark` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_copy_date_and_mark(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPY_DATE_AND_MARK);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 9)], || o(this, origem), || copy_date_and_mark(this, origem));

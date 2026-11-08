@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 284a leva: o dia da Copa do Rei (a copa refeita uma vez no ano dela) e o histórico da temporada de quatro copas (o da última fase): a Liga dos Campeões, a Copa da Grécia, a Copa da Liga irlandesa e a Copa da Série C italiana (spa_cup.cpp, european_cup.cpp, gre_cup.cpp, ire_lge_cup.cpp, ita_c_cup.cpp) ----------
-
 
 
 
@@ -55,6 +53,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje
 
 // ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
+/// Comparer for `spa_cup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_SPA_CUP_UPDATE_FOR_DATE);
     let antes = read_u32_as_usize(this + 0x45);
@@ -98,18 +97,22 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this
 }
 
 // ponytail: o histórico grava nas estatísticas das competições (acha ou acrescenta entradas: aloca); só a original
+/// Comparer for `spa_cup_record_season_honours` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_CUP_RECORD_SEASON_HONOURS)(this)
 }
 
+/// Comparer for `spa_cup_record_season_honours_5e93e0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_5e93e0(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_CUP_RECORD_SEASON_HONOURS_5E93E0)(this)
 }
 
+/// Comparer for `spa_cup_record_season_honours_637750` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_637750(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_CUP_RECORD_SEASON_HONOURS_637750)(this)
 }
 
+/// Comparer for `spa_cup_record_season_honours_63d770` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_63d770(this: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_CUP_RECORD_SEASON_HONOURS_63D770)(this)
 }
@@ -127,6 +130,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_create_round_table(this: usize, f
     single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DO_REI, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
 }
 
+/// Comparer for `spa_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_CUP_CREATE_ROUND_TABLE);
     compare_single_stage_round_table("spa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),

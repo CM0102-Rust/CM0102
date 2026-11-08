@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 282a leva: a virada das copas: a Copa do Brasil, a Copa do Imperador e a Copa da Liga japonesa (a temporada nova: as tabelas liberadas, o ano, os inscritos, as rodadas e a árvore) (bra_cup.cpp, jap_emp_cup.cpp, jap_j_cup.cpp) ----------
-
 
 
 /// Calls a no-argument thiscall virtual method of the cup at vtable offset o.
@@ -97,6 +95,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> 
     start_new_cup_season(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
 }
 
+/// Comparer for `bra_cup_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON);
     compare_cup_new_season("bra_cup_start_new_season", this, || o(this))
@@ -113,14 +112,13 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season_662950(this: usi
     start_new_cup_season(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
 }
 
+/// Comparer for `bra_cup_start_new_season_662950` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season_662950(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON_662950);
     compare_cup_new_season("bra_cup_start_new_season_662950", this, || o(this))
 }
 
 
-
-// ---------- 279a leva: a Copa do Brasil: as rodadas, a tabela dos times e as regras dos jogos (bra_cup.cpp) ----------
 
 /// A Copa do Brasil: sete rodadas em ida e volta de fevereiro a julho do ano da copa (o jogo de volta 14 dias depois do
 /// de ida até as oitavas, 21 nas quartas e 7 na semifinal; 4 dias nas três últimas, ao meio da semana [inferência]).
@@ -149,6 +147,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, f
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQO12_COPA_DO_BRASIL, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
 
+/// Comparer for `bra_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CUP_CREATE_ROUND_TABLE);
     eng_cc_cup_compare_round_table("bra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -197,7 +196,9 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> 
     build_brazil_cup_teams(this)
 }
 
-/// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
+/// Comparer for `bra_cup_build_team_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
 /// sua, comparada nas 71 vagas (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_BUILD_TEAM_TABLE);
@@ -256,7 +257,9 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_set_up_rounds(this: usize) -> i32
     set_up_brazil_cup_rounds(this)
 }
 
-/// Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
+/// Comparer for `bra_cup_set_up_rounds` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
 /// duas (+0xa3) comparadas nos bytes gravados (eng_cc_cup_written_round_bytes) e a da cópia liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_SET_UP_ROUNDS);

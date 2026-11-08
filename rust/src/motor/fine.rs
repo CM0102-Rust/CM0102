@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 262a leva: a forma ruim do jogador e as notícias das multas: o incidente de forma com a multa da IA, a reação à multa e o retorno do treinador (awol.cpp, Fine.cpp) ----------
-
 
 
 
@@ -50,7 +48,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
     if k == 0 {
         return;
     }
-    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245));
+    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE));
     if clube == 0 {
         return;
     }
@@ -93,11 +91,13 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
     entregar(read_usize(G_NEWS), nt, clube);
 }
 
-/// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
+/// Comparer for `post_fine_reaction_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
 /// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
 pub(crate) unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_POST_FINE_REACTION_NEWS);
-    let mut regioes = vec![(0xae1080, 4)];
+    let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPZ9_ENSAIO = true;
@@ -143,6 +143,7 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usi
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
 // notícia as duas não fazem nada.
+/// Comparer for `post_coach_fine_feedback_news` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_POST_COACH_FINE_FEEDBACK_NEWS)(jogador, treinador, desfecho)
 }

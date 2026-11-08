@@ -29,7 +29,7 @@ MUTACOES = [
     ('cqf9_artrite_trocada', 'if strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }', 'if strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4b } else { 0x4c }', 'cqf_9 lesao pelo nome'),
     ('cqf10_nota_minima_5', 'if (nota as i8) < 0xf { // cqf10: a nota mínima', 'if (nota as i8) < 0x5 { // mutacao: nota minima 5', 'cqf_10 avaliar jogador'),
     ('cqf10_reputacao_2000', '&& injury_word_0c(p, olheiro, 0) >= 0xfa0 { // cqf10: reputação vista', '&& reputacao(p, olheiro, 0) >= 0x7d0 { // mutacao: reputacao 2000', 'cqf_10 avaliar jogador'),
-    ('cqf10_comeco_em_tres_dias', 'let amanha = mais(0xae2c90, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã', 'let amanha = mais(0xae2c90, tmp.as_mut_ptr() as usize, 3); // mutacao: tres dias', 'cqf_10 relatorio'),
+    ('cqf10_comeco_em_tres_dias', 'let amanha = mais(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã', 'let amanha = mais(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 3); // mutacao: tres dias', 'cqf_10 relatorio'),
     ('cqf11_sem_sorteio', 'let r = random_or_tape(2); // cqf11: o sorteio da notícia', 'let r = 0; // mutacao: sem o sorteio', 'cqf_11 noticia do clube'),
     ('cqf11_um_grupo_so', 'if read_usize(outro + 0x39) != read_usize(primeiro + 0x39) {', 'if false && read_usize(outro + 0x39) != read_usize(primeiro + 0x39) { // mutacao: um grupo so', 'cqf_11 noticia do clube'),
     ('cqf11_sem_tirar_do_elenco', '                    *pj = 0;', '                    let _ = pj; // mutacao: o jogador fica no elenco', 'cqf_11 noticia do clube'),

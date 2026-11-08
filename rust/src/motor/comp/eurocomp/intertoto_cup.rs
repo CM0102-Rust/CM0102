@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 281a leva: o calendário das copas intercontinentais e da Intertoto: a Intertoto, a Copa Intercontinental, a Copa Interamericana e a Copa dos Campeões da CONCACAF (intertoto_cup.cpp, world_club_cup.cpp, inter_amer_cup.cpp, con_champ.cpp) ----------
-
 /// A Intertoto: cinco rodadas em ida e volta de junho a agosto (a 1ª com 40 times; 12 novos na 2ª, 8 na 3ª).
 pub(crate) const CQP13_INTERTOTO: [Cql10R; 5] = [
     cql10r((0x19, 5, 0, 4), (0x1a, 5, 0, 5, 1, 0), 0xa, (0, 4, 7), 7, (0x28, 0x14, 0x28, 0), (0, 2, 4), (0, 0, 0)), // cqp13: a 1ª rodada da Intertoto
@@ -23,6 +21,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: us
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERTOTO, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
 
+/// Comparer for `intertoto_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE);
     eng_cc_cup_compare_round_table("intertoto_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -44,6 +43,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_92b770(t
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERCONTINENTAL, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
 }
 
+/// Comparer for `intertoto_cup_create_round_table_92b770` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_92b770(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE_92B770);
     eng_cc_cup_compare_round_table("intertoto_cup_create_round_table_92b770", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -65,6 +65,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_632340(t
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERAMERICANA, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
 }
 
+/// Comparer for `intertoto_cup_create_round_table_632340` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_632340(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE_632340);
     eng_cc_cup_compare_round_table("intertoto_cup_create_round_table_632340", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -79,8 +80,6 @@ pub(crate) const CQP13_CONCACAF: [Cql10R; 3] = [
 ];
 
 
-
-// ---------- 281a leva: a Copa da UEFA e a Intertoto: as rodadas da Copa da UEFA, os inscritos da Intertoto e a lista dos seus clubes (uefa_cup.cpp, intertoto_cup.cpp) ----------
 
 /// As rodadas fixas da Copa da UEFA (a preliminar e os campos que dependem de +0xb2 vêm à parte, em
 /// `uefa_cup_rounds`): a 1ª rodada de qualificação em agosto, a 2ª no fim de agosto, a 1ª rodada em setembro, a 2ª
@@ -203,7 +202,9 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usiz
     collect_intertoto_entrants(this).0
 }
 
-/// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
+/// Comparer for `intertoto_cup_collect_entrants` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_INTERTOTO_CUP_COLLECT_ENTRANTS);
@@ -281,7 +282,9 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usi
     collect_club_list(this, saida, ativos)
 }
 
-/// Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
+/// Comparer for `intertoto_cup_collect_club_list` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
 /// própria, comparada na conta e nos ponteiros, e a libera.
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_INTERTOTO_CUP_COLLECT_CLUB_LIST);
@@ -301,8 +304,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(
     PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
     a
 }
-
-// ---------- 273a leva: a Copa Intertoto e a Copa da UEFA: os três vencedores do Intertoto na Copa da UEFA e o destino de cada clube nas duas (intertoto_cup.cpp, uefa_cup.cpp) ----------
 
 
 
@@ -413,6 +414,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano, feito
 // antes: se +0xb2 passa de 0 a 1 com a Copa da UEFA, o livro dela (+0x14) ganha os vencedores (intertoto_winners_for_uefa), em
 // ordem e com a situação 4, e +0x36 sobe tanto quanto; senão o livro não cresce.
+/// Comparer for `intertoto_cup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_FOR_DATE);
     let uefa = uefa_cup_object();
@@ -491,6 +493,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
 
 // ponytail: os registros vão para o histórico das pessoas (reputação, moral): não rodam duas vezes. Só a original roda;
 // o plano confere o +0x1db do clube: [0x9cf6f0] para o vencedor, −1 para quem cai, intacto nos outros.
+/// Comparer for `intertoto_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 {

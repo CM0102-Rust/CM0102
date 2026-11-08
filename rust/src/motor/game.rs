@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 256a leva: os coeficientes das nações (o bônus de dezembro e a história de cinco anos), o dia das aposentadorias e a soma presa de dois bytes (game.cpp) ----------
-
 
 
 
@@ -23,7 +21,7 @@ pub(crate) unsafe fn nation_coefficient_history(na: usize) -> [f64; 6] {
 /// [pt] O mês da data do jogo (0x54cfb0 sobre 0xae2c90, o al com sinal).
 pub(crate) unsafe fn current_month() -> i32 {
     let mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_MONTH);
-    mes(0xae2c90) as u8 as i8 as i32
+    mes(G_CURRENT_DATE) as u8 as i8 as i32
 }
 
 /// December step: adds the reputation bonus if the mark is below 12, shifts the coefficient history one year and zeroes
@@ -119,7 +117,9 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
     free(vetor);
 }
 
-/// Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
+/// Comparer for `game_update_nation_coefficients` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
 /// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
 pub(crate) unsafe extern "C" fn comparar_game_update_nation_coefficients() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_GAME_UPDATE_NATION_COEFFICIENTS);
@@ -171,7 +171,9 @@ pub(crate) unsafe extern "C" fn is_player_regen_day(dia: u32) -> u32 {
     (d == 0 || d == 0x50 || d == 0xad || d == 0xfa) as u32
 }
 
-/// Comparador: pelo al (o único byte que os chamadores leem).
+/// Comparer for `is_player_regen_day` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo al (o único byte que os chamadores leem).
 pub(crate) unsafe extern "C" fn comparar_is_player_regen_day(dia: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_IS_PLAYER_REGEN_DAY)(dia);
     let n = is_player_regen_day(dia);
@@ -198,15 +200,15 @@ pub(crate) unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u3
     }
 }
 
-/// Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
+/// Comparer for `clamp_char_sum` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
 pub(crate) unsafe extern "C" fn comparar_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_CLAMP_CHAR_SUM)(a, b, min, max);
     let n = clamp_char_sum(a, b, min, max);
     PLACAR.registrar(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
     r
 }
-
-// ---------- 255a leva: as relações do elenco no dia a dia: as brigas e preferências entre colegas, o atrito com o técnico e o moral espalhado pela liderança (game.cpp) ----------
 
 
 
@@ -354,7 +356,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
         return;
     }
     let base = read_usize(G_STAFF_TABLE);
-    let fim = base.wrapping_add((read_usize(G_STAFF_COUNT).wrapping_sub(17)).wrapping_mul(0x6e));
+    let fim = base.wrapping_add((read_usize(G_STAFF_COUNT).wrapping_sub(17)).wrapping_mul(staff::SIZE));
     let mut p = base;
     while p < fim {
         player_vs_manager_check(p);
@@ -416,6 +418,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
 
 // ponytail: sorteia e mexe nas preferências (0x547a10, 0x547af0, 0x547c10, 0x547c50), briga e queixa: só a original;
 // a cópia leva os ramos (roda todo dia).
+/// Comparer for `game_update_squad_relationships` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_game_update_squad_relationships() {
     original_fn::<unsafe extern "C" fn()>(IDX_GAME_UPDATE_SQUAD_RELATIONSHIPS)()
 }
@@ -446,6 +449,7 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usiz
 
 // ponytail: a queixa (0x587c60) e a marca no vínculo (0x867700) não rodam duas vezes: só a original; a cópia leva o
 // ramo do atrito.
+/// Comparer for `game_check_club_dressing_room_unrest` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_game_check_club_dressing_room_unrest(clube: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(IDX_GAME_CHECK_CLUB_DRESSING_ROOM_UNREST)(clube)
 }
@@ -471,7 +475,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
     let moral: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let n = read_usize(G_CLUB_COUNT);
     let mut clube = read_usize(G_CLUB_TABLE);
-    let fim = clube.wrapping_add(n.wrapping_mul(0x245));
+    let fim = clube.wrapping_add(n.wrapping_mul(club::SIZE));
     while clube < fim {
         let vagas = clube + club::SQUAD;
         if is_national_team(clube) == 0 && friendly_random(7) == 0 {
@@ -527,11 +531,10 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
 }
 
 // ponytail: sorteia e muda o moral (0x544710, que também sorteia): só a original; a cópia leva os ramos.
+/// Comparer for `game_spread_squad_morale_by_leadership` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_game_spread_squad_morale_by_leadership() {
     original_fn::<unsafe extern "C" fn()>(IDX_GAME_SPREAD_SQUAD_MORALE_BY_LEADERSHIP)()
 }
-
-// ---------- 255a leva: o dia do jogo: as faltas ao treino, as competições do dia e a confiança da diretoria no clube (game.cpp) ----------
 
 
 
@@ -547,7 +550,7 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
     if c == 0 {
         0
     } else {
-        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
+        read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE))
     }
 }
 
@@ -556,7 +559,7 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
 /// [pt] Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
 pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    f(0xae2c90, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32)
+    f(G_CURRENT_DATE, read_usize(p + 0x3e) as u32, read_usize(p + 0x42) as u32)
 }
 
 /// n/250 consecutive people from a random one: a present player, with training and without a serious injury misses
@@ -583,7 +586,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let q = n / 250;
     crate::comparacao::ramo("cps_6 faltas do dia");
     let r = friendly_random(n - q - 1); // cps6: a primeira pessoa
-    let mut atual = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(0x6e));
+    let mut atual = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
     for _ in 0..q {
         let p = atual;
         atual = atual.wrapping_add(0x6e);
@@ -669,6 +672,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
 }
 
 // ponytail: sorteia e a falta (0x41a360) multa, sorteia e mexe na forma: só a original; a cópia leva os ramos.
+/// Comparer for `game_check_players_missing_training` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_game_check_players_missing_training() {
     original_fn::<unsafe extern "C" fn()>(IDX_GAME_CHECK_PLAYERS_MISSING_TRAINING)()
 }
@@ -687,7 +691,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
         let c = read_usize(read_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
         if c != 0 {
             let dia: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_usize(read_usize(c) + 0x14));
-            dia(c, 0xae2c90, m as i32);
+            dia(c, G_CURRENT_DATE, m as i32);
         }
         i += 1;
     }
@@ -699,6 +703,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
 }
 
 // ponytail: passa o dia de todas as competições (virtuais) e do [0xae2a58]: só a original; a cópia leva o ramo.
+/// Comparer for `game_update_comps_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_game_update_comps_for_date(marca: u32) {
     original_fn::<unsafe extern "C" fn(u32)>(IDX_GAME_UPDATE_COMPS_FOR_DATE)(marca)
 }
@@ -730,7 +735,9 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(t
     }
 }
 
-/// Comparador: lado a lado pela confiança (2 bytes).
+/// Comparer for `manager_manager_adjust_board_confidence` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela confiança (2 bytes).
 pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_confidence(this: usize, clube: usize, delta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_MANAGER_MANAGER_ADJUST_BOARD_CONFIDENCE);
     if clube == 0 {
@@ -740,8 +747,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_con
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 2)], || o(this, clube, delta), || manager_manager_adjust_board_confidence(this, clube, delta));
     PLACAR.registrar(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
 }
-
-// ---------- 188a leva: a lista de observados do gerente de transferências, a entrada do treino e a carga de treino (game.cpp, injury.cpp) ----------
 
 /// the shortlist manager kept in the transfer manager
 /// Original: `transfer_manager_get_shortlist_manager` (0x5d5ab0, game.cpp, thiscall).
@@ -771,6 +776,7 @@ pub(crate) unsafe fn training_load_byte(lesoes: usize, id: *const i32) -> *mut u
 }
 
 
+/// Comparer for `transfer_manager_get_shortlist_manager` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_transfer_manager_get_shortlist_manager(gerente: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_MANAGER_GET_SHORTLIST_MANAGER)(gerente);
     let n = transfer_manager_get_shortlist_manager(gerente);
@@ -778,6 +784,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_transfer_manager_get_shortlist_m
     r
 }
 
+/// Comparer for `training_manager_get_player_entry` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_training_manager_get_player_entry(treino: usize, jogador: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRAINING_MANAGER_GET_PLAYER_ENTRY)(treino, jogador);
     let n = training_manager_get_player_entry(treino, jogador);
@@ -785,8 +792,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_training_manager_get_player_entr
     r
 }
 
-
-// ---------- 178a leva: a media do jogo, o valor do contrato e o nivel para a selecao ----------
 
 /// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)
 /// Original: `game_average` (0x5d5a60, game.cpp, thiscall).
@@ -804,6 +809,7 @@ pub(crate) unsafe extern "thiscall" fn game_average(t: usize, segunda: u8) -> f6
 
 
 
+/// Comparer for `game_average` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_game_average(t: usize, segunda: u8) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> f64>(IDX_GAME_AVERAGE)(t, segunda);
     let n = game_average(t, segunda);
@@ -821,6 +827,7 @@ pub(crate) unsafe extern "C" fn pow_double(base: f64, expoente: f64) -> f64 {
     game_pow(base, expoente)
 }
 
+/// Comparer for `pow_double` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_pow_double(base: f64, expoente: f64) -> f64 {
     let r = original_fn::<unsafe extern "C" fn(f64, f64) -> f64>(IDX_POW_DOUBLE)(base, expoente);
     let n = pow_double(base, expoente);
@@ -842,7 +849,9 @@ pub(crate) unsafe extern "C" fn compare_players_by_ability(a: *const usize, b: *
     h(pa, 5) - h(pb, 5)
 }
 
-/// Comparador: pelo valor.
+/// Comparer for `compare_players_by_ability` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn comparar_compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_COMPARE_PLAYERS_BY_ABILITY)(a, b);
     let n = compare_players_by_ability(a, b);

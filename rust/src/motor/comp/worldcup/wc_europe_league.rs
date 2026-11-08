@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 274a leva: as regras das eliminatórias da Copa do Mundo: Europa, América do Sul e Ásia (wc_europe_league.cpp, wc_south_american_league.cpp, wc_asia_league.cpp) ----------
-
 /// Writes byte/word rule fields (offset, size, value) of a qualifier league.
 ///
 /// [pt] Os campos de byte e palavra de uma eliminatória (a virtual +0x8c, set_up_rules, na liga do grupo): (deslocamento,
@@ -87,6 +85,7 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+/// Comparer for `wc_europe_league_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_EUROPE_LEAGUE_SET_UP_RULES);
     check_qualifier_rules("wc_europe_league_set_up_rules", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
@@ -125,6 +124,7 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
 // as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
+/// Comparer for `wc_europe_league_set_up_rules_921040` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_EUROPE_LEAGUE_SET_UP_RULES_921040);
     let lista = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
@@ -161,6 +161,7 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+/// Comparer for `wc_europe_league_set_up_rules_912eb0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_EUROPE_LEAGUE_SET_UP_RULES_912EB0);
     check_qualifier_rules("wc_europe_league_set_up_rules_912eb0", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))

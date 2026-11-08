@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 262a leva: os registros de partida e de nome: a partida vista por um clube, a referência ao nome da pessoa e o código do resultado (record_utils.cpp) ----------
-
 
 
 
@@ -66,7 +64,9 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, club
     1
 }
 
-/// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
+/// Comparer for `fill_match_record_from_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
 pub(crate) unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_FILL_MATCH_RECORD_FROM_FIXTURE);
@@ -111,7 +111,9 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize)
     1
 }
 
-/// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
+/// Comparer for `fill_staff_name_ref` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
 pub(crate) unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FILL_STAFF_NAME_REF);
     if pessoa == 0 || saida == 0 {
@@ -145,7 +147,9 @@ pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 
     }
 }
 
-/// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
+/// Comparer for `match_record_result_code` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
 pub(crate) unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_MATCH_RECORD_RESULT_CODE);
     if registro == 0 {
@@ -156,8 +160,6 @@ pub(crate) unsafe extern "C" fn comparar_match_record_result_code(registro: usiz
     PLACAR.registrar(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
     r
 }
-
-// ---------- 261a leva: o prêmio do ano no histórico (o técnico conta, o jogador premiado agradece ou renova) e os recordes de vitória e de derrota (staff_records.cpp, record_utils.cpp) ----------
 
 
 
@@ -194,7 +196,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio:
     if c == 0 || read_u8(c + 0x35) & 0x3f == 5 {
         return;
     }
-    if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245)) == 0 {
+    if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE)) == 0 {
         return;
     }
     let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
@@ -204,7 +206,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio:
     }
     if read_usize(G_TRANSFER_MANAGER) != 0 {
         let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        if dias(0xae2c90, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
+        if dias(G_CURRENT_DATE, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
             let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
             let dono = contract_club_except_type5(p);
             let x = entrada(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), dono, p, 0, 0);
@@ -256,7 +258,9 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -
     (da > db || (da == db && fa > fb)) as u32
 }
 
-/// Comparador: pura; registro nulo (a caixa), só a original.
+/// Comparer for `match_record_is_bigger_win` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
     if a == 0 || b == 0 {
@@ -285,7 +289,9 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize
     (da > db || (da == db && sa > signed_byte_at)) as u32
 }
 
-/// Comparador: pura; registro nulo (a caixa), só a original.
+/// Comparer for `match_record_is_bigger_defeat` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura; registro nulo (a caixa), só a original.
 pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
     if a == 0 || b == 0 {

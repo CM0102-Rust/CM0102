@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: a fase de mata-mata das copas (Cup_Stage): o construtor (a tabela das rodadas copiada, os times com as sementes e a árvore dos confrontos) e o destrutor (cup_stage.cpp) ----------
-
 
 
 
@@ -89,7 +87,9 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usi
     this
 }
 
-/// Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
+/// Comparer for `construct_cup_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
 /// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
@@ -155,6 +155,7 @@ pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
 }
 
 // ponytail: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
+/// Comparer for `destroy_cup_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_destroy_cup_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DESTROY_CUP_STAGE)(this)
 }

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 267a leva: o fim da falta ao treino e da ausência sem licença e a notícia da falta ao treino (awol.cpp) ----------
-
 
 
 /// The items (node +0 pointers) of an LLIST, without touching its cursor.
@@ -135,10 +133,12 @@ pub(crate) unsafe fn compare_toggle_mark_and_unlist(this: usize, pessoa: usize, 
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
+/// Comparer for `clear_awol` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_awol(this: usize, pessoa: usize) {
     compare_toggle_mark_and_unlist(this, pessoa, 1, 0, original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_AWOL), "clear_awol");
 }
 
+/// Comparer for `clear_missed_training` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_missed_training(this: usize, pessoa: usize) {
     compare_toggle_mark_and_unlist(this, pessoa, 2, 4, original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_MISSED_TRAINING), "clear_missed_training");
 }
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
                 gravar(nt, k, u32::MAX);
             }
         } else {
-            let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
             gravar(nt, 7, id as u32);
             gravar(nt, 8, read_usize(read_usize(p + 4) + 0x33) as u32);
             gravar(nt, 9, read_usize(read_usize(p + 8) + 0x33) as u32);
@@ -266,7 +266,9 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     }
 }
 
-/// Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
+/// Comparer for `awol_post_missed_training_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
 pub(crate) unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
@@ -285,8 +287,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(t
     PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }
-
-// ---------- 260a leva: as faltas do dia: o dia das ausências, das faltas ao treino e dos atrasos, a falta ao treino marcada, o atraso registrado, marcar a falta, o fim da ausência e as marcas do contrato (awol.cpp, staff_contracts.cpp) ----------
 
 
 
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
             return;
         }
         if weeks_after_have_passed(r + 8, 1) {
-            let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(0x6e));
+            let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
             let resolveu = if read_u8(r + 0x10) != 0 {
                 if read_usize(pessoa + staff::PLAYER) == 0 {
                     true
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
 ///
 /// [pt] A falta ao treino `r` com uma semana passada (o meio da lista (2) de `awol_daily_update`).
 pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
     if read_u8(r + 0xc) != 0 {
         // o caso repetido
         if read_usize(pessoa + staff::PLAYER) != 0 {
@@ -497,7 +497,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let k = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-    let clube = if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) } else { 0 };
+    let clube = if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) } else { 0 };
     if clube != 0 {
         let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
@@ -552,6 +552,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
 
 // ponytail: sorteia, tira e libera nós das listas (0x68d1f0), dá notícia de volta (0x419710) e de falta (0x41a360): só
 // a original; a cópia leva os ramos.
+/// Comparer for `awol_daily_update` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_awol_daily_update(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AWOL_DAILY_UPDATE)(this)
 }
@@ -574,7 +575,7 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, pessoa: 
         let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
         let k = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
         write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) == 0 {
+        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) == 0 {
             let limpar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_CLEAR_MISSED_TRAINING);
             limpar(this, pessoa);
         }
@@ -582,19 +583,21 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, pessoa: 
     (read_u8(read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize)) & 2) as u32
 }
 
-/// O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
+/// Comparer for `has_missed_training` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
 /// só a original (a 0x4197c0 tira e libera o nó da lista).
 pub(crate) unsafe extern "thiscall" fn comparar_has_missed_training(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_MISSED_TRAINING);
     if pessoa != 0 && read_i32(pessoa) < read_i32(0xae2364) && read_u8(read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize)) & 2 != 0 {
         let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
         let k = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
-        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) == 0 {
+        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE)) == 0 {
             // ponytail: tira a falta da lista (libera o nó): só a original
             return o(this, pessoa);
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(this, pessoa), || has_missed_training(this, pessoa));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, pessoa), || has_missed_training(this, pessoa));
     PLACAR.registrar(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
@@ -638,7 +641,9 @@ pub(crate) unsafe extern "thiscall" fn has_fitness_incident(this: usize, pessoa:
     }
 }
 
-/// O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
+/// Comparer for `has_fitness_incident` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
 pub(crate) unsafe extern "thiscall" fn comparar_has_fitness_incident(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_FITNESS_INCIDENT);
     let l = read_usize(this + 8);
@@ -662,7 +667,7 @@ pub(crate) unsafe fn awol_club_of_contract(k: usize) -> usize {
     if k == 0 {
         return 0;
     }
-    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(club::SIZE))
 }
 
 /// O byte +0xc (caso repetido) do registro da falta. A 0x41a360 não o grava: o registro de 13 bytes é montado num local
@@ -767,7 +772,9 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize)
     multar(read_usize(G_FINE), pessoa, if a > b { 1 } else { 2 }, 1);
 }
 
-/// O comparador da falta marcada, em ensaio: a cópia para na decisão (0 nada, 1 some, 2 marca a falta) e a original roda
+/// Comparer for `miss_training` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da falta marcada, em ensaio: a cópia para na decisão (0 nada, 1 some, 2 marca a falta) e a original roda
 /// a partir do mesmo estado (sorteio, marca da pessoa, [0xae1080]); a decisão da original sai da marca (bit 1 novo:
 /// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
 /// registro) não entra: na original é resíduo da pilha.
@@ -777,7 +784,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_miss_training(this: usize, pesso
         return o(this, pessoa);
     }
     let m = read_usize(this + 0xc).wrapping_add(read_i32(pessoa) as usize);
-    let mut regioes = vec![(m, 1), (0xae1080, 4)];
+    let mut regioes = vec![(m, 1), (G_CONTRACT_LOOKUP_RESULT, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW7_ENSAIO = true;
@@ -812,7 +819,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
         return;
     }
     crate::comparacao::ramo("cpw_7 fim da ausencia");
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let k = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
@@ -820,7 +827,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
         if CPW7_ENSAIO {
             CPW7_DECISAO = 1;
         } else {
-            let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(0x6e));
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
             let noticia: unsafe extern "stdcall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_AWOL_POST_NEWS);
             noticia(p, read_usize(p + 0x39), 0, 0xffffffff);
         }
@@ -834,7 +841,9 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     tirar(read_usize(this), r);
 }
 
-/// O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
+/// Comparer for `end_absence` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
 /// notícia, o [0xae1080] têm de bater com os da original.
 pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_END_ABSENCE);
@@ -842,7 +851,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usiz
         return o(this, r);
     }
     let m = read_usize(this + 0xc).wrapping_add(read_i32(r) as usize);
-    let regioes = [(m, 1), (0xae1080, 4)];
+    let regioes = [(m, 1), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW7_ENSAIO = true;
     CPW7_DECISAO = 0;
@@ -879,7 +888,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador:
     reg[4..8].copy_from_slice(&read_u32(clube).to_le_bytes());
     let atribuir: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut temporaria = [0u8; 8];
-    atribuir(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, 0xae2c90);
+    atribuir(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
     // ponytail: o byte +0x10 do registro é sobra de pilha na original; a cópia grava 0 (ninguém o lê)
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     acrescentar(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
@@ -942,7 +951,9 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador:
     multar(read_usize(G_FINE), jogador, prazo, 1);
 }
 
-/// O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
+/// Comparer for `report_poor_fitness` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
 /// plano: jogador e clube não nulos põem logo depois da cauda de antes (ou na cabeça, lista vazia) o registro com o
 /// jogador, o clube e a data de hoje (16 bytes; o byte +0x10 é sobra de pilha).
 pub(crate) unsafe extern "thiscall" fn comparar_report_poor_fitness(this: usize, jogador: usize, clube: usize) {
@@ -986,7 +997,9 @@ pub(crate) unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_
     marca()
 }
 
-/// Comparador da 0x418f60 (quente: sem alocar): lado a lado em [0xae1080] e no al devolvido; com o bit, sem `só_ler` e
+/// Comparer for `is_player_awol` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x418f60 (quente: sem alocar): lado a lado em [0xae1080] e no al devolvido; com o bit, sem `só_ler` e
 /// sem contrato ou clube (a 0x4196a0 tira e libera o nó da lista: não pode rodar duas vezes), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_is_player_awol(this: usize, p: usize, so_ler: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_IS_PLAYER_AWOL);
@@ -996,7 +1009,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_awol(this: usize, p: u
             return o(this, p, so_ler);
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, so_ler), || is_player_awol(this, p, so_ler));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p, so_ler), || is_player_awol(this, p, so_ler));
     PLACAR.registrar(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_ler, r as u8, mo, n as u8, mr));
     r
 }

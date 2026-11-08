@@ -16,6 +16,7 @@ pub(crate) mod city {
 /// `TClub` record. [pt] Registro `TClub`.
 #[allow(dead_code)]
 pub(crate) mod club {
+    pub(crate) const SIZE: usize = 0x245; // the record size (581 bytes)
     pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s), byte
     pub(crate) const SHORT_NAME: usize = 0x38; // 26 byte(s), byte[][26]
     pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
@@ -84,6 +85,7 @@ pub(crate) mod contract {
 /// `TNation` record. [pt] Registro `TNation`.
 #[allow(dead_code)]
 pub(crate) mod nation {
+    pub(crate) const SIZE: usize = 0x122; // the record size (290 bytes)
     pub(crate) const SHORT_NAME: usize = 0x38; // 26 byte(s), byte[][26]
     pub(crate) const THREE_LETTER_NAME: usize = 0x53; // 4 byte(s), byte[][4]
     pub(crate) const NATIONALITY: usize = 0x57; // 26 byte(s), byte[][26]
@@ -109,6 +111,7 @@ pub(crate) mod stadium {
 /// `TStaff` record. [pt] Registro `TStaff`.
 #[allow(dead_code)]
 pub(crate) mod staff {
+    pub(crate) const SIZE: usize = 0x6e; // the record size (110 bytes)
     pub(crate) const COMMON_NAME: usize = 0xc; // 4 byte(s), int
     pub(crate) const DATE_OF_BIRTH: usize = 0x10; // 8 byte(s), TCMDate
     pub(crate) const YEAR_OF_BIRTH: usize = 0x18; // 2 byte(s), UInt16

@@ -14,7 +14,7 @@ MUTACOES = [
     ('cpl_decisao_conta', 'write_usize(this + 0x14, n.wrapping_add(1)); // a data da decisão', 'write_usize(this + 0x14, n); // mutacao: a conta nao sobe', 'cpl_4 data de decisao'),
     ('cpl_proposta_fim', 'core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(fim as *const [u8; 8])); // o fim do contrato', 'core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(0xae2c90 as *const [u8; 8])); let _ = fim; // mutacao: vence hoje', 'cpl_5 contrato pelo atual'),
     ('cpl_felicidade', 'write_u8(this + 0x3f, 0); // a felicidade', 'write_u8(this + 0x3f, 10); // mutacao: 10', 'cpl_5 moral zerada'),
-    ('cpl_faixa_meio', 'if m(0xae1010) { // depois do limite do meio', 'if m(0xae1030) { // mutacao: o limite de baixo'),
+    ('cpl_faixa_meio', 'if m(G_CONTRACT_DATE_PLUS_91_DAYS) { // depois do limite do meio', 'if m(G_CONTRACT_DATE_PLUS_30_DAYS) { // mutacao: o limite de baixo'),
     ('cpl_registrar_conta', 'write_usize(this + 8, n); // mais uma história', 'write_usize(this + 8, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_6 registrar historia'),
     ('cpl_expirar_sorteio', 'let s = sorteio(0x28); // o sorteio da história do time', 'let s = 0; let _ = sorteio; // mutacao: sem o sorteio', 'cpl_6 expirar historia do time'),
     ('cpl_historia_do_time', 'return 1; // a história do time já contada', 'return 0; // mutacao: nunca contada', 'cpl_6 historia do time ja contada'),

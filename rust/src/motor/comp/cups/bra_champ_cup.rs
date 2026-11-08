@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 281a leva: o calendário de mais copas de clubes: a Copa dos Campeões, a Merconorte e as Supercopas da Europa e da Ásia (bra_champ_cup.cpp, con_merc_cup.cpp, eur_super_cup.cpp, asia_super_cup.cpp) ----------
-
 /// Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
 pub(crate) type Cqp10G = (u32, u32, u32, u32);
@@ -168,6 +166,7 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize
     build_stage_schedule(this, champions_cup_stage(fase), rodadas, extra, liga, 0x98a1e8)
 }
 
+/// Comparer for `bra_champ_cup_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CHAMP_CUP_CREATE_SCHEDULE);
     compare_stage_schedule("bra_champ_cup_create_schedule", fase, champions_cup_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
@@ -222,6 +221,7 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: us
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_ASIATICA, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
 }
 
+/// Comparer for `bra_champ_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CHAMP_CUP_CREATE_ROUND_TABLE);
     eng_cc_cup_compare_round_table("bra_champ_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -242,6 +242,7 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -
     set_cup_league_rules(this, &CQI12_COPA_DOS_CAMPEOES, 1)
 }
 
+/// Comparer for `bra_champ_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_set_up_rules(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CHAMP_CUP_SET_UP_RULES)(this);
     check_cup_league_rules("bra_champ_cup_set_up_rules", this, &CQI12_COPA_DOS_CAMPEOES, r);

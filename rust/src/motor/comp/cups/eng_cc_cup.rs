@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 276a leva: o calendário das copas inglesas: as rodadas da Copa da Liga, da Copa da Inglaterra e da Supercopa (eng_cc_cup.cpp, eng_fa_cup.cpp, eng_charity.cpp) ----------
-
 /// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
 /// e o mando em +0x13) pela 0x521eb0; depois os campos: +7 o nome da rodada, +9 o índice, +0xb os bits do sorteio, +0xd
@@ -173,6 +171,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table(this: usize
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &t, 0x9c4224, 0xa2, "cql_10 tabela da copa da liga")
 }
 
+/// Comparer for `eng_cc_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_CC_CUP_CREATE_ROUND_TABLE);
     eng_cc_cup_compare_round_table("eng_cc_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -238,6 +237,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56f320(this
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &t, 0x9c42cc, 0xb6, "cql_10 tabela da copa da inglaterra")
 }
 
+/// Comparer for `eng_cc_cup_create_round_table_56f320` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56f320(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_CC_CUP_CREATE_ROUND_TABLE_56F320);
     eng_cc_cup_compare_round_table("eng_cc_cup_create_round_table_56f320", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -259,13 +259,12 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56d640(this
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL10_SUPERCOPA, 0x9c425c, 0x9c, "cql_10 tabela da supercopa inglesa")
 }
 
+/// Comparer for `eng_cc_cup_create_round_table_56d640` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56d640(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_CC_CUP_CREATE_ROUND_TABLE_56D640);
     eng_cc_cup_compare_round_table("eng_cc_cup_create_round_table_56d640", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| eng_cc_cup_create_round_table_56d640(this, fase, r, e, s))
 }
-
-// ---------- 276a leva: os inscritos das copas inglesas: a Copa da Liga, a segunda chave do Troféu da Liga e os dois clubes da Supercopa (eng_cc_cup.cpp, eng_auto_cup.cpp, eng_charity.cpp) ----------
 
 
 
@@ -273,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn eng_cc_cup_club_by_index(i: i16) -> usize {
-    read_u32_as_usize(G_CLUB_TABLE) + i as isize as usize * 0x245
+    read_u32_as_usize(G_CLUB_TABLE) + i as isize as usize * club::SIZE
 }
 
 /// Returns the id of the club's division competition (club +0x57 → +0), or None without a division.
@@ -468,6 +467,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(nome: &str, this: usize, re
     a
 }
 
+/// Comparer for `eng_cc_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CC_CUP_COLLECT_ENTRANTS);
     eng_cc_cup_compare_entrant_list("eng_cc_cup_collect_entrants", this, &[(this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)], || o(this),
@@ -570,13 +570,12 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_select_teams(this: usize) -> i
     select_charity_shield_teams(this).0
 }
 
+/// Comparer for `eng_cc_cup_select_teams` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CC_CUP_SELECT_TEAMS);
     eng_cc_cup_compare_entrant_list("eng_cc_cup_select_teams", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || select_charity_shield_teams(this),
         |r, _| if r == 1 { 12 } else { 0 })
 }
-
-// ---------- 276a leva: o dia das copas: a virada da Copa da Liga inglesa, as inscrições da Copa da Inglaterra e a convocação do Jogo das Estrelas (eng_cc_cup.cpp, eng_fa_cup.cpp, usa_mls_all_stars.cpp) ----------
 
 
 
@@ -671,6 +670,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, h
 
 // ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
+/// Comparer for `eng_cc_cup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE);
     let antes = read_u32_as_usize(this + 0x45);
@@ -728,6 +728,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: u
 
 // ponytail: como a da Copa da Liga, só a original; o plano: +0x45 vai a 1 em 3 de outubro (com +0x45 = 0 e a fase), fora
 // do caminho de 1999.
+/// Comparer for `eng_cc_cup_update_for_date_570550` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date_570550(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE_570550);
     let antes = read_u32_as_usize(this + 0x45);

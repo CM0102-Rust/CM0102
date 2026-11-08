@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 264a leva: a lista encadeada do jogo: tirar o item pelo conteúdo, esvaziar e o item do cursor (LLIST, vizinhança de manager_manager.cpp) ----------
-
 
 
 /// List node (14 bytes: item, size, next, prev) whose item has the same bytes as dado, from the head (+2); 0 if none.

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- vigesima quarta leva: lances de bola parada / arbitragem ----------
-
 /// { 0x6e9470 }: inicia o objeto (motor, pessoa, valor): sem pessoa, 5000; senao o primeiro de
 /// 7750, 7250, 6750, 6250, 5750 cuja palavra 0x1e da pessoa passa de sorteio(350, 300, ...), ou 5250.
 pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, motor: u32, pessoa: usize) {
@@ -80,8 +78,6 @@ pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, codigo
     *tipo = 4;
     1
 }
-
-// ---------- vigesima quinta leva: cartoes ----------
 
 /// Yellow card: the first stores x at +0x25 (type 2, weight 2.0); the second at +0x26 (type 3, weight 3.5).
 ///
@@ -218,8 +214,6 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, outro:
     *((outro + 0x15) as *mut u8) = (*((outro + 0x15) as *const u8)).wrapping_add(1);
 }
 
-// ---------- vigesima setima leva: impedimento (match_official.cpp) ----------
-
 /// { 0x6ea760 } (match_official.cpp): procura um atacante do `lado` em impedimento no lance para a
 /// casa de `y` (linha do passe em `linha`). Devolve o jogador (ajustando o valor do arbitro em 0x8)
 /// ou 0. Sem lance valendo; `y` alem da linha e nao atras da ultima linha defensiva (0x8eaf para o
@@ -296,8 +290,6 @@ pub(crate) unsafe extern "thiscall" fn engine_look_for_offside(this: usize, lado
     f(this + 0xf5b2, lado_b, linha, y, passador)
 }
 
-// ---------- vigesima oitava leva: cartao pela gravidade ----------
-
 /// Writes the card code in the player's record: +0x25 when the card total is 1 (or ≤ 1), else +0x26 when non-zero.
 ///
 /// [pt] Grava o codigo do cartao no registro do jogador: 0x25 com (0x23 + 0x24) == 1 (ou <= 1, `ate_um`),
@@ -373,8 +365,6 @@ pub(crate) unsafe extern "thiscall" fn engine_card_by_severity(this: usize, j: u
     let f: unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8) = core::mem::transmute(FN_MATCH_OFFICIAL_DECIDE_CARD);
     f(this + 0xf5b2, j, tipo, gravidade, flag)
 }
-
-// ---------- septuagesima leva: decisao do arbitro na falta (0x6e9820, 3 KB) ----------
 
 /// { 0x6e9820 } (match_man.cpp): o arbitro decide a falta `tipo` do jogador `j` sobre `outro`.
 /// Devolve 1 ou 7 (cartao dado; 0 = nada) e escreve o cartao (4, 5, 7, 10, 11), a gravidade e a
@@ -670,6 +660,7 @@ pub(crate) unsafe extern "thiscall" fn construct_referee(a: usize) -> usize {
     a
 }
 
+/// Comparer for `construct_referee` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_REFEREE);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(a, 8)], || o(a), || construct_referee(a));
@@ -677,6 +668,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> u
     r
 }
 
+/// Comparer for `init_strictness` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_init_strictness(this: usize, motor: u32, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_INIT_STRICTNESS);
     let mut reg = vec![(this, 10)];
@@ -685,6 +677,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_strictness(this: usize, mot
     PLACAR.registrar(igual, || format!("init_strictness original={:x?} rust={:x?}", mo, mr));
 }
 
+/// Comparer for `move_counts` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_move_counts(this: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_MOVE_COUNTS);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x475a, 16)], || o(this), || move_counts(this));
@@ -692,6 +685,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_counts(this: usize) -> u8 {
     r
 }
 
+/// Comparer for `decide_foul` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_DECIDE_FOUL);
     let motor = *(this as *const usize);
@@ -702,6 +696,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_foul(this: usize, j: usiz
     r
 }
 
+/// Comparer for `punish_foul` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_punish_foul(this: usize, j: usize, tipo: *mut u8, x: i8, sev: i8, flag: u8, peso: *mut f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32)>(IDX_PUNISH_FOUL);
     let reg = regioes_do_cartao(*(this as *const usize), j, tipo, peso);
@@ -710,6 +705,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_punish_foul(this: usize, j: usiz
     PLACAR.registrar(igual, || format!("punish_foul(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
+/// Comparer for `punish_move` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_punish_move(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, sev: i8, flag: u8, peso: *mut f32, expulsar: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(IDX_PUNISH_MOVE);
     let mut reg = regioes_do_cartao(*(this as *const usize), j, tipo, peso);
@@ -719,6 +715,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_punish_move(this: usize, j: usiz
     PLACAR.registrar(igual, || format!("punish_move(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
+/// Comparer for `foul_decision` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_foul_decision(
     this: usize, j: usize, outro: usize, tipo: i8, quem: i8, cartao: *mut u8, grav: *mut i8, vantagem: *mut u8,

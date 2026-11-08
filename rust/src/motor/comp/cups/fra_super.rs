@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 276a leva: o calendário das supercopas: o jogo da Supercopa da França, da Espanha e do Japão (fra_super.cpp, spa_super.cpp, jap_super.cpp) ----------
-
 
 /// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
@@ -154,6 +152,7 @@ pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table(this: usize,
 }
 
 // ponytail: fora de 2001 a original sorteia o mando (0x90cfc0): só ela roda nesse caso.
+/// Comparer for `fra_super_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SUPER_CREATE_ROUND_TABLE);
     if core::ptr::read_unaligned((this + 0x40) as *const i16) != 0x7d1 {
@@ -187,6 +186,7 @@ pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table_666020(this:
     fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DO_JAPAO, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
 }
 
+/// Comparer for `fra_super_create_round_table_666020` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_super_create_round_table_666020(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SUPER_CREATE_ROUND_TABLE_666020);
     fra_super_compare_round_table("fra_super_create_round_table_666020", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -203,6 +203,7 @@ pub(crate) unsafe extern "thiscall" fn fra_super_select_teams(this: usize) -> i3
     french_super_cup_select_teams(this).0
 }
 
+/// Comparer for `fra_super_select_teams` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_super_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_SUPER_SELECT_TEAMS);
     eng_cc_cup_compare_entrant_list("fra_super_select_teams", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_super_cup_select_teams(this),

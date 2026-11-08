@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: a Copa América: as 12 seleções, as posições previstas e a temporada nova (goldcup.cpp) ----------
-
 
 
 
@@ -11,7 +9,7 @@ use super::*;
 /// add esp -> cdecl) com a nação da tabela [0xae23a8] (0x122 bytes cada).
 pub(crate) unsafe fn national_team_of_nation_id(id: usize) -> usize {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
-    selecao(read_u32_as_usize(G_NATION_TABLE) + id * 0x122)
+    selecao(read_u32_as_usize(G_NATION_TABLE) + id * nation::SIZE)
 }
 
 /// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
@@ -175,6 +173,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
 // ponytail: a estatística acha ou cria a entrada de cada seleção (aloca): não roda duas vezes. Só a original; o plano:
 // a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
 // cada uma das 12 igual à da faixa.
+/// Comparer for `goldcup_set_predicted_positions` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_SET_PREDICTED_POSITIONS);
     if read_u32_as_usize(this + 8) == 0 || read_u32_as_usize(this + 0xee) == 0 || read_u32_as_usize(this + 0xf2) != 0xc {
@@ -242,6 +241,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
 // ponytail: libera as tabelas e destrói as fases: não roda duas vezes. Só a original; o plano: o ano sobe 2, +0x45 = 0,
 // +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
 // quando havia antes).
+/// Comparer for `goldcup_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_START_NEW_SEASON);
     let ano = read_i16(this + 0x40);
@@ -249,8 +249,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: u
     let ok = read_i16(this + 0x40) == ano.wrapping_add(2) && read_u32_as_usize(this + 0x45) == 0 && read_u32_as_usize(this + 0x30) as i32 == -1 && read_u32_as_usize(this + 0x4c) == 0;
     PLACAR.registrar(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, read_i16(this + 0x40), read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
 }
-
-// ---------- 282a leva: a Copa América: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros dois grupos (goldcup.cpp) ----------
 
 
 
@@ -329,6 +327,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje
 // ponytail: a lista, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano no
 // dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
 // fases criadas e a fase atual (+0x30) a última delas (1).
+/// Comparer for `goldcup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
@@ -383,6 +382,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
+/// Comparer for `goldcup_create_group_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_CREATE_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -484,6 +484,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
+/// Comparer for `goldcup_create_group_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_GOLDCUP_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -503,8 +504,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this:
     }
     r
 }
-
-// ---------- 281a leva: o calendário dos torneios de seleções: a Copa América, a Copa Africana de Nações e a Copa das Confederações (goldcup.cpp, african_nations.cpp, fifa_confed.cpp) ----------
 
 /// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
 /// rodada, dia, mês com 0 = janeiro, anos a somar, dia da semana, código, valor; registros de 0x41 bytes), `L` um jogo
@@ -801,6 +800,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule(this: usize, fase
     build_phase_table(this, copa_america_phase(fase), rodadas, extra, liga, 0x9cd640)
 }
 
+/// Comparer for `goldcup_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE);
     compare_phase_table("goldcup_create_schedule", fase, copa_america_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
@@ -866,13 +866,12 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule_58b560(this: usiz
     build_phase_table(this, confed_cup_phase(fase), rodadas, extra, liga, 0x9c7474)
 }
 
+/// Comparer for `goldcup_create_schedule_58b560` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE_58B560);
     compare_phase_table("goldcup_create_schedule_58b560", fase, confed_cup_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
         |r, e, l| goldcup_create_schedule_58b560(this, fase, r, e, l))
 }
-
-// ---------- 274a leva: as regras dos torneios de seleções: a Copa América, a Copa Africana de Nações e a eliminatória da Oceania (goldcup.cpp, african_nations.cpp, wc_oceania_league.cpp) ----------
 
 /// Writes the byte/word rule fields of a national-team tournament league; the win points (+0xc2) come separately.
 ///
@@ -946,6 +945,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+/// Comparer for `goldcup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
     check_set_up_rules("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
@@ -977,6 +977,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) 
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
+/// Comparer for `goldcup_set_up_rules_91ecf0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES_91ECF0);
     check_set_up_rules("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
@@ -992,6 +993,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
     con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
+/// Comparer for `goldcup_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_ADVANCE_STAGE);
     con_merc_cup_compare_advance_stage("goldcup_advance_stage", this, || o(this))
@@ -1007,6 +1009,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_staff_records_for_status(t
     national_tournament_staff_records(1, this, clube, desfecho, fase, jogo, a6, 2)
 }
 
+/// Comparer for `goldcup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));

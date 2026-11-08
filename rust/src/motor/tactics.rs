@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- centesima trigesima oitava leva: o batedor guardado, as instrucoes guardadas e o codigo da competicao ----------
-
 /// who takes set piece `tipo` (0..4) on `lado` (0..1): the cell (dword) in the club's tactics row (0x8982b0) at +0x601
 /// + row × 0x91 + 0x5e + (side + type × 2) × 4. Above [0xae2364] + 0x52d it becomes −1; negative, 0; a person (0x6e
 /// bytes at [0xae23bc]) without +0x61 clears the cell; from the club (+0x39), in a national team (0x53b900) or with
@@ -37,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, clube: usize, t
         crate::comparacao::ramo("batedor vazio");
         return 0;
     }
-    let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * 0x6e);
+    let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * staff::SIZE);
     if *((pessoa + staff::PLAYER) as *const u32) == 0 {
         crate::comparacao::ramo("batedor sem ficha");
         *celula = -1;
@@ -84,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
     let ocupados = (this + 0x5f0) as *mut u8;
     // o espaco do humano da vez, se houver
     let espaco = || {
-        let humano = *((0xb74c26 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize * 0x300) as *const usize);
+        let humano = *((G_SCREEN_RECORDS_MANAGER + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize * 0x300) as *const usize);
         if humano == 0 {
             return None;
         }
@@ -142,6 +140,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, clube: us
 }
 
 
+/// Comparer for `stored_taker` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_stored_taker(this: usize, clube: usize, tipo: u32, lado: u32, humano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> usize>(IDX_STORED_TAKER);
     let (t, l) = (tipo as u8 as i8, lado as u8 as i8);
@@ -159,6 +158,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stored_taker(this: usize, clube:
     r
 }
 
+/// Comparer for `store_instructions` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_store_instructions(this: usize, clube: usize, pessoa: u32, usar: u32, volta: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_STORE_INSTRUCTIONS);
     if is_recording_top_level() || clube == 0 {
@@ -176,8 +176,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_store_instructions(this: usize, 
     r
 }
 
-
-// ---------- centesima quadragesima leva: a linha tatica (0x8983f0, 0x8984d0) e a simulacao rapida (0x6beeb0) ----------
 
 /// copies the club's tactics row (0x91 bytes at +0x601, row from 0x8982b0) to the destination. Null club: the original
 /// (error box); row -1: 0. Compared side by side
@@ -234,6 +232,7 @@ pub(crate) unsafe fn tactics_row_regions(this: usize, clube: usize, p: usize, hu
     reg
 }
 
+/// Comparer for `read_tactics_row` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_read_tactics_row(this: usize, clube: usize, destino: *mut u8, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32) -> u32>(IDX_READ_TACTICS_ROW);
     if is_recording_top_level() || clube == 0 {
@@ -245,6 +244,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_read_tactics_row(this: usize, cl
     r
 }
 
+/// Comparer for `write_tactics_row` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_write_tactics_row(this: usize, clube: usize, origem: *const u8, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8, u32) -> u32>(IDX_WRITE_TACTICS_ROW);
     if is_recording_top_level() || clube == 0 {
@@ -735,8 +735,6 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
 
 
 
-// ---------- sexagesima oitava leva: vagas da tabela tatica ----------
-
 /// Club's tactics row index (0x8982b0) and its start in the table at +0x601 (0x91 bytes per row), or None for row −1.
 ///
 /// [pt] Linha tatica do clube (0x8982b0) e o inicio dela na tabela em +0x601 (0x91 bytes por linha), ou
@@ -795,8 +793,6 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, clube: usize, qua
     (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
 }
 
-// ---------- sexagesima quinta leva: tabela tatica do clube ----------
-
 /// { 0x8982b0 } (tactics.cpp; o `this` nao e usado, ret 8): a linha do clube na tabela tatica.
 /// Clube dirigido por humano (0x600a50 com 1, 1) e `humano` ligado: segunda selecao, -1; senao a
 /// linha do tecnico, depois dos clubes (0xae235c): quantidade de pessoas (0xae2364) - id do tecnico
@@ -840,8 +836,6 @@ pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, clube: usize, p
     let tabela = *((this + 0x601) as *const usize);
     *((tabela.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x86 + pos as usize) as *const u8)
 }
-
-// ---------- 262a leva: as estatísticas das táticas: o resultado de cada partida na linha da tática do clube do computador, o capitão guardado e o capitão escolhido (tactics.cpp) ----------
 
 
 
@@ -934,7 +928,9 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: u
     1
 }
 
-/// Comparador da 0x896290: lado a lado nas linhas das táticas dos dois clubes (0x28 bytes cada) e na devolução; o
+/// Comparer for `record_tactic_result` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x896290: lado a lado nas linhas das táticas dos dois clubes (0x28 bytes cada) e na devolução; o
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RECORD_TACTIC_RESULT);
@@ -966,7 +962,9 @@ pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, ti
     read_usize(read_usize(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52) as u32
 }
 
-/// Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
+/// Comparer for `get_captain` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
 pub(crate) unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GET_CAPTAIN);
     if clube == 0 {
@@ -1003,7 +1001,9 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pe
     1
 }
 
-/// Comparador da 0x897880: lado a lado no dword do capitão da linha (achada antes pela 0x8982b0, que só lê) e na
+/// Comparer for `set_captain` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x897880: lado a lado no dword do capitão da linha (achada antes pela 0x8982b0, que só lê) e na
 /// devolução. Clube ou ponteiro nulos, ou sem linha: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_SET_CAPTAIN);
@@ -1020,8 +1020,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: 
     PLACAR.registrar(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
     r
 }
-
-// ---------- 260a leva: a escalação guardada do clube: tirar o jogador da escalação, trocar duas vagas e a cópia para desfazer (tactics.cpp) ----------
 
 
 
@@ -1126,7 +1124,9 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
     achou
 }
 
-/// Comparador: lado a lado pela devolução, pela linha do clube na tabela tática (as vagas, as extras e os batedores) e
+/// Comparer for `remove_player_from_selection` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela devolução, pela linha do clube na tabela tática (as vagas, as extras e os batedores) e
 /// pelas cópias para desfazer com a conta. Clube ou pessoa nulos (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_REMOVE_PLAYER_FROM_SELECTION);
@@ -1162,7 +1162,9 @@ pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: 
     1
 }
 
-/// Comparador: lado a lado pela devolução, pela linha tática do clube e pelas cópias para desfazer. Clube nulo ou vaga
+/// Comparer for `swap_selection_slots` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela devolução, pela linha tática do clube e pelas cópias para desfazer. Clube nulo ou vaga
 /// fora (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_SWAP_SELECTION_SLOTS);
@@ -1198,15 +1200,15 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: us
     (read_usize(e + 8) != 0 && read_usize(e) == clube && read_usize(e + 4) as u32 == time) as u32
 }
 
-/// Comparador: a devolução (rotina pura).
+/// Comparer for `has_selection_undo` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a devolução (rotina pura).
 pub(crate) unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_HAS_SELECTION_UNDO)(this, clube, time);
     let n = has_selection_undo(this, clube, time);
     PLACAR.registrar(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
     r
 }
-
-// ---------- 253a leva: a escalação guardada: limpar uma vaga e o batedor de bola parada (tactics.cpp) ----------
 
 
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX); −1 without one (duplicate of club_tactics_index).
@@ -1255,7 +1257,9 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: 
     1
 }
 
-/// Comparador: só grava a vaga e os espaços guardados: lado a lado pela linha da escalação (20 dwords), pelos 16
+/// Comparer for `clear_selection_slot` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: só grava a vaga e os espaços guardados: lado a lado pela linha da escalação (20 dwords), pelos 16
 /// espaços e pela conta (+0x5f0). Clube nulo ou vaga fora: só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_CLEAR_SELECTION_SLOT);
@@ -1314,7 +1318,9 @@ pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: u
     1
 }
 
-/// Comparador: só grava a linha dos batedores: lado a lado pelos 10 dwords (+0x5e) da linha do clube. Clube nulo,
+/// Comparer for `set_set_piece_taker` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: só grava a linha dos batedores: lado a lado pelos 10 dwords (+0x5e) da linha do clube. Clube nulo,
 /// papel ou escolha fora: só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(IDX_SET_SET_PIECE_TAKER);
@@ -1329,8 +1335,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize,
     PLACAR.registrar(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
     r
 }
-
-// ---------- 175a leva: a formacao da tabela tatica, o peso das competicoes do jogador e o dado da noticia ----------
 
 /// the formation record (0x18e3 bytes) in the two tables
 /// Original: `formation_record` (0x896570, tactics.cpp, thiscall).
@@ -1357,8 +1361,6 @@ pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, humano
 comparar_valor!(comparar_formation_record, formation_record, IDX_FORMATION_RECORD, (f: i16, humano: u32) -> usize);
 
 
-
-// ---------- centesima sexagesima quinta leva: as vagas extras da tatica, as idades da selecao e o dado do tecnico humano ----------
 
 /// the two extra slots (+0x56, +0x5a) of the club row
 /// Original: `extra_tactic_slot` (0x897ee0, tactics.cpp, thiscall).
@@ -1395,6 +1397,7 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, clube: usize,
 
 
 
+/// Comparer for `extra_tactic_slot` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_extra_tactic_slot(t: usize, clube: usize, qual: i8, pessoa: *const u32, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT);
     let reg = regioes_da_tabela(t, clube, humano);
@@ -1442,7 +1445,9 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize
     }
 }
 
-/// Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
+/// Comparer for `get_club_tactic` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
 /// grava). Clube nulo (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC);
@@ -1486,6 +1491,7 @@ pub(crate) unsafe extern "thiscall" fn find_selection_slot(tatica: usize, clube:
     }
 }
 
+/// Comparer for `find_selection_slot` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(IDX_FIND_SELECTION_SLOT)(tatica, clube, pessoa, time);
     if clube == 0 || pessoa.is_null() {
@@ -1550,7 +1556,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, clube: usize
         return 0;
     }
     let pessoas = *(G_STAFF_TABLE as *const usize);
-    let p = pessoas.wrapping_add((id as usize).wrapping_mul(0x6e));
+    let p = pessoas.wrapping_add((id as usize).wrapping_mul(staff::SIZE));
     if core::ptr::read_unaligned((p + 0x61) as *const usize) == 0 {
         core::ptr::write_unaligned(casa, -1);
         return 0;
@@ -1587,6 +1593,7 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, clube: usi
     1
 }
 
+/// Comparer for `set_tactic_slot` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_slot(t: usize, clube: usize, vaga: i8, pessoa: *const u32, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_SET_TACTIC_SLOT);
     let reg = regioes_da_tabela(t, clube, humano);
@@ -1595,6 +1602,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_slot(t: usize, clube:
     r
 }
 
+/// Comparer for `tactic_slot_person` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_tactic_slot_person(t: usize, clube: usize, vaga: i8, humano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON);
     let reg = regioes_da_tabela(t, clube, humano);
@@ -1603,6 +1611,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tactic_slot_person(t: usize, clu
     r
 }
 
+/// Comparer for `set_tactic_formation` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_formation(t: usize, clube: usize, formacao: i16, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(IDX_SET_TACTIC_FORMATION);
     let reg = regioes_da_tabela(t, clube, humano);
@@ -1611,6 +1620,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_tactic_formation(t: usize, c
     r
 }
 
+/// Comparer for `marked_slot` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_marked_slot(this: usize, clube: usize, humano: u32, menos_um: u32) -> i8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, clube, humano, menos_um);
     let v = marked_slot(this, clube, humano, menos_um);
@@ -1618,6 +1628,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_marked_slot(this: usize, clube: 
     r
 }
 
+/// Comparer for `mark_slot` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_mark_slot(this: usize, clube: usize, vaga: i8, humano: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT);
     if is_recording_top_level() {
@@ -1633,6 +1644,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_slot(this: usize, clube: us
     r
 }
 
+/// Comparer for `tactics_row` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_tactics_row(clube: usize, humano: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(clube, humano);
     let v = tactics_row(clube, humano);

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 268a leva: o período do empréstimo na Inglaterra e as regras de empréstimo da Escócia, da Itália, da Irlanda e da Espanha (england_rules.cpp, scotland_rules.cpp, italy_rules.cpp, ireland_rules.cpp, spain_rules.cpp) ----------
-
 
 
 
@@ -85,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
 pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
     let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    *ini_mes = (mes(0xae2c90) as i8).wrapping_add(1);
+    *ini_mes = (mes(G_CURRENT_DATE) as i8).wrapping_add(1);
     *ini_ano = read_i16(0xae2c92);
     if *ini_mes > 0xb {
         *ini_mes = (*ini_mes).wrapping_sub(0xc);
@@ -123,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player_661770(this: usize, clube: usize, _jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
     let na_janela: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_WINDOW_CONTAINS_DATE);
-    if na_janela(this, 0xae2c90, read_usize(this + 4)) == 0 && na_janela(this, 0xae2c90, read_usize(this + 4) + 0xc) == 0 {
+    if na_janela(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && na_janela(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
         crate::comparacao::ramo("cqe_6 italia fora da janela");
         return refuse_outside_window(this, msg, motivo);
     }
@@ -203,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player_63c3d0(thi
 /// [pt] Comparador comum (pode emprestar): lado a lado na devolução, em [0xae1080] e no motivo; a mensagem, que só é
 /// escrita, é conferida pelo texto (antes da cópia o primeiro byte vai a zero, e no fim volta o texto da original).
 pub(crate) unsafe fn scotland_rules_compare_can_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32, nome: &str, this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    let mut regioes = vec![(0xae1080usize, 4usize)];
+    let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     if !motivo.is_null() {
         regioes.push((motivo as usize, 2));
     }
@@ -229,22 +227,27 @@ pub(crate) unsafe fn scotland_rules_compare_can_loan(o: unsafe extern "thiscall"
 }
 
 
+/// Comparer for `scotland_rules_can_loan_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SCOTLAND_RULES_CAN_LOAN_PLAYER), scotland_rules_can_loan_player, "scotland_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }
 
-/// Comparador: lado a lado nas quatro saídas e em [0xae1080].
+/// Comparer for `scotland_rules_get_loan_period` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado nas quatro saídas e em [0xae1080].
 pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_get_loan_period(this: usize, a1: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_SCOTLAND_RULES_GET_LOAN_PERIOD);
-    let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (0xae1080, 4)];
+    let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, a1, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || scotland_rules_get_loan_period(this, a1, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
     PLACAR.registrar(igual, || format!("scotland_rules_get_loan_period(regras {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, jogador, mo, mr));
 }
 
+/// Comparer for `scotland_rules_can_loan_player_661770` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player_661770(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SCOTLAND_RULES_CAN_LOAN_PLAYER_661770), scotland_rules_can_loan_player_661770, "scotland_rules_can_loan_player_661770", this, clube, jogador, msg, motivo)
 }
 
+/// Comparer for `scotland_rules_can_loan_player_63c3d0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_scotland_rules_can_loan_player_63c3d0(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SCOTLAND_RULES_CAN_LOAN_PLAYER_63C3D0), scotland_rules_can_loan_player_63c3d0, "scotland_rules_can_loan_player_63c3d0", this, clube, jogador, msg, motivo)
 }
@@ -262,7 +265,9 @@ pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1:
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `construct_scotland_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_SCOTLAND_RULES);
     let mut r = 0usize;

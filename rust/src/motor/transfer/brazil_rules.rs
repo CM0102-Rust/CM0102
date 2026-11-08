@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 273a leva: as regras de transferência do Brasil, da Alemanha e da Escócia: as janelas de transferência (brazil_rules.cpp, germany_rules.cpp, scotland_rules.cpp) ----------
-
 
 
 /// Constructor of a nation's transfer rules: base TransferRules (0x8e84a0) with the caller's 5 arguments, the nation
@@ -37,7 +35,9 @@ pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `construct_brazil_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_BRAZIL_RULES);
     let mut r = 0usize;
@@ -66,7 +66,9 @@ pub(crate) unsafe extern "thiscall" fn brazil_rules_init_transfer_windows(this: 
     set_transfer_windows(this, 2, &CQK3_ALEMANHA, 0x9cd538, 0x4d);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `brazil_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_brazil_rules_init_transfer_windows(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRAZIL_RULES_INIT_TRANSFER_WINDOWS);
     compare_transfer_rules_ctor("brazil_rules_init_transfer_windows", this, || o(this), |s| brazil_rules_init_transfer_windows(s));

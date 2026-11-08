@@ -1,6 +1,6 @@
 # Mutações da 236a leva (itens dbs_1, dbs_2, dbs_3, dbt_1, dbt_2, dbt_3, dbt_4). Uso: python mutacoes.py mutacoes\leva236.py --carreira 2002-06-01
 MUTACOES = [
-    ('dbs_nome_comum', '    let c = terceiro.unwrap_or_else(|| registro(0xae23f8, comum)); // o nome comum', '    let c = terceiro.unwrap_or_else(|| registro(0xae23f4, comum)); // mutacao: o comum pela tabela dos sobrenomes'),
+    ('dbs_nome_comum', '    let c = terceiro.unwrap_or_else(|| registro(G_COMMON_NAME_TABLE, comum)); // o nome comum', '    let c = terceiro.unwrap_or_else(|| registro(G_SECOND_NAME_TABLE, comum)); // mutacao: o comum pela tabela dos sobrenomes'),
     ('dbs_nome_oficial', '            1 => { sprintf(texto, 0x98f0b8, a, b); } // "%s %s"', '            1 => { sprintf(texto, 0x98f0b8, b, a); } // mutacao: sobrenome primeiro'),
     ('dbs_mascara_texto', '        ((0x9b82fc, 0x9b82d0), 2, 1) // left back', '        ((0x9b82a4, 0x9b8278), 2, 1) // mutacao: right back no lugar de left back'),
     ('dbs_nome_da_posicao', '        escrever(0x9b7c9c, 2, 1); // utility player', '        escrever(0x9b7c94, 2, 1); // mutacao: "player" no lugar de "utility player"'),
@@ -17,7 +17,7 @@ MUTACOES = [
     ('dbt_pessoas_pelo_sobrenome', 'formatar(pa, na.as_mut_ptr() as usize, 0x7d0, 4); // "sobrenome, nome" (dbt)', 'formatar(pa, na.as_mut_ptr() as usize, 0x7d0, 1); // mutacao: o nome completo de um lado'),
     ('dbt_clubes_pela_reputacao', '        1 // a de menor reputação depois (dbt)', '        -1 // mutacao: a de menor reputacao antes'),
     ('dbt_clube_na_cee', '*((nacao + nation::GROUP_MEMBERSHIP) as *const u8) == 2) as u32 // na CEE (dbt)', '*((nacao + 0x7f) as *const u8) != 2) as u32 // mutacao: fora da CEE'),
-    ('dbt_regioes_pelo_nome', 'qsort(0xae2104, 14, 1, 0x545e00); // (dbt)', 'qsort(0xae2104, 13, 1, 0x545e00); // mutacao: a ultima regiao fora da ordem'),
+    ('dbt_regioes_pelo_nome', 'qsort(G_REGIONS_SORTED_BY_NAME, 14, 1, 0x545e00); // (dbt)', 'qsort(G_REGIONS_SORTED_BY_NAME, 13, 1, 0x545e00); // mutacao: a ultima regiao fora da ordem'),
     ('dbt_ordem_das_regioes', '    compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)', '    compare_text_nocase(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
     ('dbt_pessoa_da_opiniao', '        ler(0x3b) // (dbt)', '        ler(0x27) // mutacao: o indice do outro lado'),
 ]

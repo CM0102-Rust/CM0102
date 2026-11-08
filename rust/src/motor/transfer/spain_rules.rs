@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 273a leva: as regras de transferência da Espanha, da Itália e da França: as janelas de transferência (france_rules.cpp, italy_rules.cpp, spain_rules.cpp) ----------
-
 
 
 /// Constructor of a nation's transfer rules: TRANSFER_RULES base, the nation's vtable and its windows.
@@ -35,7 +33,9 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows(this: u
     set_transfer_windows(this, 2, &CQK2_ESPANHA, 0xa82ac8, 0x54);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `spain_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPAIN_RULES_INIT_TRANSFER_WINDOWS);
     compare_transfer_rules_ctor("spain_rules_init_transfer_windows", this, || o(this), |s| spain_rules_init_transfer_windows(s));
@@ -62,7 +62,9 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_6613f0(
     set_transfer_windows(this, 3, &CQK2_ITALIA, 0x9ea9a4, 0x52);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `spain_rules_init_transfer_windows_6613f0` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_6613f0(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPAIN_RULES_INIT_TRANSFER_WINDOWS_6613F0);
     compare_transfer_rules_ctor("spain_rules_init_transfer_windows_6613f0", this, || o(this), |s| spain_rules_init_transfer_windows_6613f0(s));
@@ -89,7 +91,9 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_5c15e0(
     set_transfer_windows(this, 3, &CQK2_FRANCA, 0x9cccf4, 0x4f);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `spain_rules_init_transfer_windows_5c15e0` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_5c15e0(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPAIN_RULES_INIT_TRANSFER_WINDOWS_5C15E0);
     compare_transfer_rules_ctor("spain_rules_init_transfer_windows_5c15e0", this, || o(this), |s| spain_rules_init_transfer_windows_5c15e0(s));
@@ -104,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_window
 pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8
     let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
-    if janela(this, 0xae2c90, 0) == 0 {
+    if janela(this, G_CURRENT_DATE, 0) == 0 {
         crate::comparacao::ramo("cqe_6 espanha fora da janela");
         return refuse_outside_window(this, msg, motivo);
     }
@@ -124,6 +128,7 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
     1
 }
 
+/// Comparer for `spain_rules_can_loan_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SPAIN_RULES_CAN_LOAN_PLAYER), spain_rules_can_loan_player, "spain_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 271a leva: a formação lida do arquivo .pct (as táticas da IA e as do humano) e a troca da ordem dos bytes de palavras e dwords (formation.cpp, cash.cpp) ----------
-
 
 
 /// CRT fread of one record of tam bytes; returns records read.
@@ -59,7 +57,9 @@ pub(crate) unsafe extern "C" fn swap_bytes_16_array(p: usize, conta: u32) {
     }
 }
 
-/// Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
+/// Comparer for `swap_bytes_16_array` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
 pub(crate) unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(IDX_SWAP_BYTES_16_ARRAY);
     if p == 0 || conta == 0 || conta > 0x1000 {

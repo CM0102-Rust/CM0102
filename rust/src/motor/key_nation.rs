@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 257a leva: as linhas da nação-chave: a linha de uma nação, a linha do clube e o ano da temporada do clube (key_nation.cpp) ----------
-
 
 /// the first row of the 35 key nation table holding the given nation, or 4
 /// Original: `key_nation_index_of_nation` (0x669340, key_nation.cpp, cdecl).
@@ -19,6 +17,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
     4
 }
 
+/// Comparer for `key_nation_index_of_nation` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_NATION)(nacao);
     let n = key_nation_index_of_nation(nacao);
@@ -72,6 +71,7 @@ pub(crate) unsafe fn hits_key_nation_error(clube: usize) -> bool {
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao)
 }
 
+/// Comparer for `key_nation_index_of_club` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_CLUB);
     if hits_key_nation_error(clube) {
@@ -106,6 +106,7 @@ pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) ->
     ano
 }
 
+/// Comparer for `key_nation_get_club_season_year` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: usize) -> u16 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_KEY_NATION_GET_CLUB_SEASON_YEAR);
     if clube != 0 && hits_key_nation_error(clube) {
@@ -116,8 +117,6 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: 
     PLACAR.registrar(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
-
-// ---------- 257a leva: a temporada do clube e a nação principal: se o clube está na temporada e as datas dela, o continente principal e a nação principal (key_nation.cpp) ----------
 
 
 
@@ -149,7 +148,7 @@ pub(crate) unsafe fn write_date(dst: usize, dia: i16, ano: u16) {
 /// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. Chamada a cada
 /// jogador: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
-    let mut linha = 0xb63e38usize;
+    let mut linha = G_LEAGUE_EUROPE_NATION;
     let mut c: i16 = 0x28;
     let nacao = read_usize(clube + club::NATION);
     if nacao != 0 {
@@ -193,6 +192,7 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: 
     1 // cpu2: entre o inicio e o fim do ano
 }
 
+/// Comparer for `key_nation_club_in_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_KEY_NATION_CLUB_IN_SEASON)(clube, inicio, fim);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
@@ -229,6 +229,7 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     0
 }
 
+/// Comparer for `key_nation_get_main_continent` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_CONTINENT)();
     let n = key_nation_get_main_continent();
@@ -255,14 +256,13 @@ pub(crate) unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     0
 }
 
+/// Comparer for `key_nation_get_main_nation` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
     let r = original_fn::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_NATION)();
     let n = key_nation_get_main_nation();
     PLACAR.registrar(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
     r
 }
-
-// ---------- 256a leva: a nação-chave do jogo: a nação-chave ativa de uma competição ou jogo, se a competição é a Copa do Mundo e se é um torneio internacional (comp.cpp, key_nation.cpp) ----------
 
 
 
@@ -289,6 +289,7 @@ pub(crate) unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32
     CPT3_COPA.iter().any(|&g| read_usize(g) == id) as u32
 }
 
+/// Comparer for `key_nation_is_world_cup_comp` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_KEY_NATION_IS_WORLD_CUP_COMP);
     if comp == 0 {
@@ -314,6 +315,7 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
     CPT3_INTERNACIONAIS.iter().any(|&g| read_usize(g) == id) as u32
 }
 
+/// Comparer for `key_nation_is_international_comp` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_KEY_NATION_IS_INTERNATIONAL_COMP);
     if comp == 0 {
@@ -365,6 +367,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     3
 }
 
+/// Comparer for `key_nation_index_of_comp` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_COMP)(comp);
     let n = key_nation_index_of_comp(comp);

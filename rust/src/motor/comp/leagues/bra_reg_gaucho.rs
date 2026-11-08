@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 278a leva: o mata-mata dos estaduais e regionais: Gaúcho, Centro-Oeste e Goiano (bra_reg_gaucho.cpp, bra_reg_central.cpp, bra_reg_goias.cpp) ----------
-
 
 
 
@@ -96,6 +94,7 @@ pub(crate) unsafe fn bra_reg_gaucho_compare_knockout_from_table(nome: &str, this
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
+/// Comparer for `bra_reg_gaucho_create_knockout_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_CREATE_KNOCKOUT_STAGE);
     bra_reg_gaucho_compare_knockout_from_table("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
@@ -116,7 +115,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this
     campeoes()
 }
 
-/// Comparador: só a original (ponytail: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
+/// Comparer for `bra_reg_gaucho_record_season_honours` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: só a original (ponytail: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
 /// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas
 /// mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
@@ -133,6 +134,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, ano
     bra_reg_bahia_construct_state_league(this, ano, registro, &CQT1_GAUCHO, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
 }
 
+/// Comparer for `construct_bra_reg_gaucho` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GAUCHO);
     bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
@@ -149,6 +151,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_start_new_season(this: usi
     state_league_new_season(this, 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: o ano seguinte do Gaúcho
 }
 
+/// Comparer for `bra_reg_gaucho_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_START_NEW_SEASON);
     compare_state_league_new_season("bra_reg_gaucho_start_new_season", this, || o(this))
@@ -164,6 +167,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize)
     state_league_advance_stage(this, 0x98ae50, 0x1f4, 0x4325b0);
 }
 
+/// Comparer for `bra_reg_gaucho_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_ADVANCE_STAGE);
     compare_state_league_advance_stage("bra_reg_gaucho_advance_stage", this, || o(this))
@@ -179,6 +183,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: us
     fill_state_league_table(this, 0x11, 0x98ae50, 0x163, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, 0, "cql_8 gaucho cheio")
 }
 
+/// Comparer for `bra_reg_gaucho_load_region_clubs` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_LOAD_REGION_CLUBS);
     bra_reg_bahia_compare_state_league_table("bra_reg_gaucho_load_region_clubs", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))

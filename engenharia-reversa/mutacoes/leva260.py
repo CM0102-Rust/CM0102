@@ -21,7 +21,7 @@ MUTACOES = [
     ('cpx9_vaga_fica', '            write_u32(vaga, u32::MAX); // cpx9: a vaga fica vazia', '            let _ = vaga; // mutacao: a vaga fica com a pessoa', 'cpx_9 tirou titular'),
     ('cpx9_so_titulares', '    for k in 0..20usize { // cpx9: as vagas da escalação', '    for k in 0..11usize { // mutacao: so os titulares', 'cpx_9 tirou reserva'),
     ('cpx9_so_reservas', '    for k in 0..20usize { // cpx9: as vagas da escalação', '    for k in 11..20usize { // mutacao: so os reservas', 'cpx_9 tirou titular'),
-    ('cpx10_sem_data', '    copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha', '    let _ = (copiar, data); // mutacao: sem a data', 'cpx_10 data da pressao'),
+    ('cpx10_sem_data', '    copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, G_CURRENT_DATE); // cpx10: a data da notícia na linha', '    let _ = (copiar, data); // mutacao: sem a data', 'cpx_10 data da pressao'),
     ('cpx10_boato_sem_sorteio', '    let mut boato = friendly_random(10); // cpx10: o sorteio do boato', '    let mut boato = 0; // mutacao: sem o sorteio', 'cpx_10 sorteio do boato'),
     ('cpx10_limite_400', '    let motivo: i8 = if (read_i16(l + 8) as i32) < read_i16(l + 6) as i32 - 500 /* cpx10: o limit pela avaliação +8 */ && {', '    let motivo: i8 = if (read_i16(l + 8) as i32) < read_i16(l + 6) as i32 - 400 /* mutacao: o limit a 400 */ && {', 'cpx_10 motivo pela avaliacao'),
     ('cpx11_sem_premio', 'somar(fin, valor); // cpx11: o prêmio', 'let _ = (somar, fin); // mutacao: sem premio', 'cpx_11 premio pago'),

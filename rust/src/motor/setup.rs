@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 221a leva: o save: carregar o jogo inteiro (load_game_data) (Setup.cpp) ----------
-
 /// Unrecoverable load error box (setup warning with the line), fatal cleanup and exit(-1).
 ///
 /// [pt] A caixa "Error" da carga sem volta (memória para os dados de execução): `setup_warning(linha)`,
@@ -107,46 +105,46 @@ pub(crate) const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
     PassoDaCarga::Rotina(0x539750, 0),                                      // 4
     PassoDaCarga::Rotina(0x667150, 0x2555),                                 // 5 nações-chave
     PassoDaCarga::Rotina(0x669140, 0x256c),                                 // 6
-    PassoDaCarga::Objeto(0x609, 0x893dc0, 0xde1d08, 0x2581, ArgDaCarga::Caminho), // 7 Tactics
-    PassoDaCarga::Objeto(0x10, 0x5fb430, 0xb63c98, 0x2596, ArgDaCarga::Caminho),  // 8 HUMAN_MANAGER
-    PassoDaCarga::Objeto(0xe8, 0x7f6760, 0xb74448, 0x25d0, ArgDaCarga::Caminho),  // 9 SCOUT_MANAGER
-    PassoDaCarga::Objeto(0x14, 0x785b20, 0xb7431c, 0x25e5, ArgDaCarga::Caminho),  // 0xa News
-    PassoDaCarga::Objeto(0x3507, 0x5c1f80, 0xae2c74, 0x25fa, ArgDaCarga::Sozinho), // 0xb Friendly
-    PassoDaCarga::Objeto(0x698, 0x903360, 0xde1f58, 0x260f, ArgDaCarga::Sozinho),  // 0xc UefaSeeding
-    PassoDaCarga::Objeto(0x75, 0x4c5fe0, 0xae1000, 0x2624, ArgDaCarga::Sozinho),   // 0xd ConmebolSeeding
-    PassoDaCarga::Objeto(0x18, 0x868390, 0xdd7f00, 0x2639, ArgDaCarga::Caminho),   // 0xe Staff_Records
-    PassoDaCarga::Objeto(0x20, 0x729000, 0xb6b7c0, 0x264e, ArgDaCarga::Estatisticas), // 0xf Match_Stats
-    PassoDaCarga::Objeto(0x30, 0x444520, 0xad9dac, 0x2663, ArgDaCarga::Caminho),   // 0x10 Club_Records
-    PassoDaCarga::Objeto(0x48, 0x7bfd50, 0xb74350, 0x2678, ArgDaCarga::Caminho),   // 0x11 PlayerStats
-    PassoDaCarga::Objeto(0x10, 0x442ab0, 0xad9da8, 0x268d, ArgDaCarga::Caminho),   // 0x12 Club_History
-    PassoDaCarga::Objeto(6, 0x5f97c0, 0xb5e134, 0x26a2, ArgDaCarga::Sozinho),      // 0x13 HostCountry
-    PassoDaCarga::Objeto(0x2a, 0x5554a0, 0xae28f0, 0x26b7, ArgDaCarga::Caminho),   // 0x14 Discipline
-    PassoDaCarga::Objeto(0xe0, 0x413180, 0xad9c60, 0x26cc, ArgDaCarga::Caminho),   // 0x15 AWARD_MANAGER
-    PassoDaCarga::Objeto(0xc, 0x5a4fc0, 0xae2a3c, 0x26e0, ArgDaCarga::Caminho),    // 0x16 Fine
-    PassoDaCarga::Objeto(0x10, 0x418440, 0xad9c6c, 0x26f4, ArgDaCarga::Caminho),   // 0x17 AWOL
-    PassoDaCarga::Objeto(8, 0x5697e0, 0xae2a30, 0x2708, ArgDaCarga::Caminho),      // 0x18 DISPUTE
-    PassoDaCarga::Objeto(0x1070, 0x794ad0, 0xb7433c, 0x271b, ArgDaCarga::Caminho), // 0x19 Notes
-    PassoDaCarga::Objeto(0x2c, 0x62a680, 0xb63d28, 0x272f, ArgDaCarga::Caminho),   // 0x1a Injury
-    PassoDaCarga::Objeto(0x3a, 0x76a4e0, 0xb74318, 0x2744, ArgDaCarga::Caminho),   // 0x1b NationalTeams
-    PassoDaCarga::Objeto(0x6a, 0x90d140, 0xde2f70, 0x2759, ArgDaCarga::Sozinho),   // 0x1c VIRTUAL_STAFF
-    PassoDaCarga::Objeto(0x19, 0x85b670, 0xdd7ef4, 0x276e, ArgDaCarga::Sozinho),   // 0x1d Stadium
-    PassoDaCarga::Objeto(0x1184, 0x5a9cf0, 0xae2a58, 0x2783, ArgDaCarga::Calendario), // 0x1e FIXTURE_MANAGER
+    PassoDaCarga::Objeto(0x609, 0x893dc0, G_TACTICS, 0x2581, ArgDaCarga::Caminho), // 7 Tactics
+    PassoDaCarga::Objeto(0x10, 0x5fb430, G_HUMAN_MANAGER, 0x2596, ArgDaCarga::Caminho),  // 8 HUMAN_MANAGER
+    PassoDaCarga::Objeto(0xe8, 0x7f6760, G_SCOUT_MANAGER, 0x25d0, ArgDaCarga::Caminho),  // 9 SCOUT_MANAGER
+    PassoDaCarga::Objeto(0x14, 0x785b20, G_NEWS, 0x25e5, ArgDaCarga::Caminho),  // 0xa News
+    PassoDaCarga::Objeto(0x3507, 0x5c1f80, G_FRIENDLY, 0x25fa, ArgDaCarga::Sozinho), // 0xb Friendly
+    PassoDaCarga::Objeto(0x698, 0x903360, G_UEFA_SEEDING, 0x260f, ArgDaCarga::Sozinho),  // 0xc UefaSeeding
+    PassoDaCarga::Objeto(0x75, 0x4c5fe0, G_CONMEBOL_SEEDING, 0x2624, ArgDaCarga::Sozinho),   // 0xd ConmebolSeeding
+    PassoDaCarga::Objeto(0x18, 0x868390, G_STAFF_RECORDS, 0x2639, ArgDaCarga::Caminho),   // 0xe Staff_Records
+    PassoDaCarga::Objeto(0x20, 0x729000, G_MATCH_STATS, 0x264e, ArgDaCarga::Estatisticas), // 0xf Match_Stats
+    PassoDaCarga::Objeto(0x30, 0x444520, G_CLUB_RECORDS, 0x2663, ArgDaCarga::Caminho),   // 0x10 Club_Records
+    PassoDaCarga::Objeto(0x48, 0x7bfd50, G_PLAYER_STATS, 0x2678, ArgDaCarga::Caminho),   // 0x11 PlayerStats
+    PassoDaCarga::Objeto(0x10, 0x442ab0, G_CLUB_HISTORY, 0x268d, ArgDaCarga::Caminho),   // 0x12 Club_History
+    PassoDaCarga::Objeto(6, 0x5f97c0, G_HOST_COUNTRY, 0x26a2, ArgDaCarga::Sozinho),      // 0x13 HostCountry
+    PassoDaCarga::Objeto(0x2a, 0x5554a0, G_DISCIPLINE, 0x26b7, ArgDaCarga::Caminho),   // 0x14 Discipline
+    PassoDaCarga::Objeto(0xe0, 0x413180, G_AWARD_MANAGER, 0x26cc, ArgDaCarga::Caminho),   // 0x15 AWARD_MANAGER
+    PassoDaCarga::Objeto(0xc, 0x5a4fc0, G_FINE, 0x26e0, ArgDaCarga::Caminho),    // 0x16 Fine
+    PassoDaCarga::Objeto(0x10, 0x418440, G_AWOL, 0x26f4, ArgDaCarga::Caminho),   // 0x17 AWOL
+    PassoDaCarga::Objeto(8, 0x5697e0, G_DISPUTE, 0x2708, ArgDaCarga::Caminho),      // 0x18 DISPUTE
+    PassoDaCarga::Objeto(0x1070, 0x794ad0, G_NOTES, 0x271b, ArgDaCarga::Caminho), // 0x19 Notes
+    PassoDaCarga::Objeto(0x2c, 0x62a680, G_INJURY, 0x272f, ArgDaCarga::Caminho),   // 0x1a Injury
+    PassoDaCarga::Objeto(0x3a, 0x76a4e0, G_NATIONAL_TEAMS, 0x2744, ArgDaCarga::Caminho),   // 0x1b NationalTeams
+    PassoDaCarga::Objeto(0x6a, 0x90d140, G_VIRTUAL_STAFF, 0x2759, ArgDaCarga::Sozinho),   // 0x1c VIRTUAL_STAFF
+    PassoDaCarga::Objeto(0x19, 0x85b670, G_STADIUM, 0x276e, ArgDaCarga::Sozinho),   // 0x1d Stadium
+    PassoDaCarga::Objeto(0x1184, 0x5a9cf0, G_FIXTURE_MANAGER, 0x2783, ArgDaCarga::Calendario), // 0x1e FIXTURE_MANAGER
     PassoDaCarga::Rotina(0x669180, 0x2797),                                 // 0x1f competições (key_nation_create_all_comps)
     PassoDaCarga::Rotina(0x8386f0, 0x27ab),                                 // 0x20 build_comp_object_table
-    PassoDaCarga::Objeto(2, 0x859aa0, 0xdd7ef0, 0x27c0, ArgDaCarga::Caminho),      // 0x21 SQUAD_MANAGER
-    PassoDaCarga::Objeto(0xab, 0x7e5fc0, 0xb74434, 0x27d5, ArgDaCarga::Caminho),   // 0x22 (depois 0x7e61c0)
-    PassoDaCarga::Objeto(4, 0x59a370, 0xae2a38, 0x27ed, ArgDaCarga::Caminho),      // 0x23 FinanceTable
-    PassoDaCarga::Objeto(0x3c, 0x4c7040, 0xae1050, 0x2802, ArgDaCarga::Caminho),   // 0x24 CONTRACT_MANAGER
-    PassoDaCarga::Objeto(0x94a, 0x8bba30, 0xde1f54, 0x2817, ArgDaCarga::Caminho),  // 0x25 TRANSFER_MANAGER
-    PassoDaCarga::Objeto(0x60, 0x7a5380, 0xb7434c, 0x282c, ArgDaCarga::Caminho),   // 0x26 PLAYER_REGEN
-    PassoDaCarga::Objeto(0x1c, 0x68dbf0, 0xb67a44, 0x2840, ArgDaCarga::Caminho),   // 0x27 MANAGER_MANAGER
-    PassoDaCarga::Objeto(0x18, 0x72b1d0, 0xb6b7c8, 0x2855, ArgDaCarga::Caminho),   // 0x28 Media
-    PassoDaCarga::Objeto(0x40, 0x5af630, 0xae2a60, 0x286a, ArgDaCarga::Caminho),   // 0x29 FOG_OF_WAR (confere o de Media)
-    PassoDaCarga::Objeto(0x10, 0x79b580, 0xb74340, 0x287f, ArgDaCarga::Caminho),   // 0x2a OfficialsManager
-    PassoDaCarga::Objeto(8, 0x84b940, 0xdd7ee4, 0x2894, ArgDaCarga::Caminho),      // 0x2b SimulatedStats
-    PassoDaCarga::Objeto(0xc, 0x9226c0, 0xde2f74, 0x28a9, ArgDaCarga::Sozinho),    // 0x2c Weather
-    PassoDaCarga::Objeto(0x688f, 0x8b0ec0, 0xde1f44, 0x28be, ArgDaCarga::Caminho), // 0x2d TRAINING_MANAGER
-    PassoDaCarga::Objeto(0xa, 0x7da190, 0xb74430, 0x28d9, ArgDaCarga::Idioma),     // 0x2d de novo: PunditList
+    PassoDaCarga::Objeto(2, 0x859aa0, G_SQUAD_MANAGER, 0x27c0, ArgDaCarga::Caminho),      // 0x21 SQUAD_MANAGER
+    PassoDaCarga::Objeto(0xab, 0x7e5fc0, G_RESERVE_COMP, 0x27d5, ArgDaCarga::Caminho),   // 0x22 (depois 0x7e61c0)
+    PassoDaCarga::Objeto(4, 0x59a370, G_FINANCE_TABLE, 0x27ed, ArgDaCarga::Caminho),      // 0x23 FinanceTable
+    PassoDaCarga::Objeto(0x3c, 0x4c7040, G_CONTRACT_MANAGER, 0x2802, ArgDaCarga::Caminho),   // 0x24 CONTRACT_MANAGER
+    PassoDaCarga::Objeto(0x94a, 0x8bba30, G_TRANSFER_MANAGER, 0x2817, ArgDaCarga::Caminho),  // 0x25 TRANSFER_MANAGER
+    PassoDaCarga::Objeto(0x60, 0x7a5380, G_PLAYER_REGEN, 0x282c, ArgDaCarga::Caminho),   // 0x26 PLAYER_REGEN
+    PassoDaCarga::Objeto(0x1c, 0x68dbf0, G_MANAGER_MANAGER, 0x2840, ArgDaCarga::Caminho),   // 0x27 MANAGER_MANAGER
+    PassoDaCarga::Objeto(0x18, 0x72b1d0, G_MEDIA, 0x2855, ArgDaCarga::Caminho),   // 0x28 Media
+    PassoDaCarga::Objeto(0x40, 0x5af630, G_FOG_OF_WAR, 0x286a, ArgDaCarga::Caminho),   // 0x29 FOG_OF_WAR (confere o de Media)
+    PassoDaCarga::Objeto(0x10, 0x79b580, G_OFFICIALS_MANAGER, 0x287f, ArgDaCarga::Caminho),   // 0x2a OfficialsManager
+    PassoDaCarga::Objeto(8, 0x84b940, G_SIMULATED_STATS, 0x2894, ArgDaCarga::Caminho),      // 0x2b SimulatedStats
+    PassoDaCarga::Objeto(0xc, 0x9226c0, G_WEATHER, 0x28a9, ArgDaCarga::Sozinho),    // 0x2c Weather
+    PassoDaCarga::Objeto(0x688f, 0x8b0ec0, G_TRAINING_MANAGER, 0x28be, ArgDaCarga::Caminho), // 0x2d TRAINING_MANAGER
+    PassoDaCarga::Objeto(0xa, 0x7da190, G_PUNDIT_LIST, 0x28d9, ArgDaCarga::Idioma),     // 0x2d de novo: PunditList
 ];
 
 /// Looks for "<root>cm0102.exe" on each CD drive: with `exigir` (start of load, honouring no-CD patches in the exe)
@@ -311,7 +309,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     };
     let mut texto = [0u8; 0xc8];
     traduzir(texto.as_mut_ptr(), 0xa81790);
-    barra(0xb74450, texto.as_ptr(), 1, 0x2d, -1);
+    barra(G_SCREEN_MANAGER, texto.as_ptr(), 1, 0x2d, -1);
     limpar_temporarios(0xa813ac);
     let n = tamanho(caminho, 0xa813ac);
     let mb = match n.wrapping_add((n >> 31) & 0xfffff) >> 20 {
@@ -321,7 +319,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     if falta_espaco(mb) {
         return 0;
     }
-    barra(0xb74450, texto.as_ptr(), 2, 0x2d, -1);
+    barra(G_SCREEN_MANAGER, texto.as_ptr(), 2, 0x2d, -1);
     if desempacotar(caminho, temporaria.as_ptr(), 0xa813ac) == 0 {
         save_error_box(0x2382, 0xa81758, 0x9c7774, 0x9c7680);
         return 0;
@@ -329,7 +327,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     if falta_espaco(0x19) {
         return 0;
     }
-    barra(0xb74450, texto.as_ptr(), 3, 0x2d, -1);
+    barra(G_SCREEN_MANAGER, texto.as_ptr(), 3, 0x2d, -1);
     let mut z = abrir_item(caminho, 0x9c7b84, 0, 0x15, 4);
     if z == 0 {
         save_error_box(0x2397, 0xa81720, 0x9af3e0, 0x9af334);
@@ -361,10 +359,10 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     let campos: [(usize, u32, u32, usize); 10] = [
         (0xdd7120, 4, 0x23cf, 0xa8166c),
         (0xdd7114, 1, 0x23d7, 0xa81634),
-        (0xdd6ec8, 8, 0x23df, 0xa81604),
+        (G_GAME_START_DATE, 8, 0x23df, 0xa81604),
         (data_do_jogo.as_mut_ptr() as usize, 8, 0x23e7, 0xa81604),
         (0xae2c88, 1, 0x23ef, 0xa815d0),
-        (0xae2c78, 8, 0x23f7, 0xa8159c),
+        (G_LAST_PROCESSED_DATE, 8, 0x23f7, 0xa8159c),
         (0xae2cfc, 1, 0x23ff, 0xa81560),
         (0xae2d00, 4, 0x2407, 0xa8151c),
         (0xae2d04, 4, 0x240f, 0xa814cc),
@@ -375,7 +373,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
             return load_read_error(linha, msg, &mut z);
         }
     }
-    *(G_MAIN_NATION as *mut usize) = if nacao > -1 { (u(G_NATION_TABLE) as usize).wrapping_add((nacao as usize).wrapping_mul(0x122)) } else { 0 };
+    *(G_MAIN_NATION as *mut usize) = if nacao > -1 { (u(G_NATION_TABLE) as usize).wrapping_add((nacao as usize).wrapping_mul(nation::SIZE)) } else { 0 };
     if ler(0xae2d10, 4, 1, z) != 1 {
         return load_read_error(0x2420, 0xa81450, &mut z);
     }
@@ -453,7 +451,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
         if falta_espaco(0x19) {
             return 0;
         }
-        barra(0xb74450, texto.as_ptr(), k, 0x2d, -1);
+        barra(G_SCREEN_MANAGER, texto.as_ptr(), k, 0x2d, -1);
         match *step_towards {
             PassoDaCarga::Rotina(f, linha) => {
                 let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(f);
@@ -463,7 +461,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
                 }
                 if k == 5 {
                     let mut tmp = [0u8; 8];
-                    copia_data(0xae2c90, tmp.as_mut_ptr(), data_do_jogo.as_ptr() as usize);
+                    copia_data(G_CURRENT_DATE, tmp.as_mut_ptr(), data_do_jogo.as_ptr() as usize);
                 }
             }
             PassoDaCarga::Objeto(tam, construtor, global, linha, arg) => {
@@ -518,7 +516,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
     *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 0;
     let mut tmp = [0u8; 8];
-    copia_data(0xdd70a0, tmp.as_mut_ptr(), 0xae2c90);
+    copia_data(G_LAST_AUTOSAVE_DATE, tmp.as_mut_ptr(), G_CURRENT_DATE);
     if *(G_FIFA_TRANSFER_RULES_FEATURE_ENABLED as *const u8) != 0 {
         // a data de mudança das regras [0xae2330] (palavra baixa: dia; alta: ano) contra a do jogo
         // [0xae2c90]: ano sem sinal, dia com sinal
@@ -567,7 +565,7 @@ pub(crate) unsafe fn undo_holiday_managers() {
             let f: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(f);
             f(u(G_HUMAN_MANAGER), 0, s);
         }
-        for (g, f) in [(0xae1050usize, 0x4ccbf0usize), (0xae1050, 0x4d0b50), (0xae1050, 0x4d0bd0), (0xb74318, 0x775ba0), (0xdd7f00, 0x86fb80), (0xdd7f00, 0x86fc70)] {
+        for (g, f) in [(G_CONTRACT_MANAGER, 0x4ccbf0usize), (G_CONTRACT_MANAGER, 0x4d0b50), (G_CONTRACT_MANAGER, 0x4d0bd0), (G_NATIONAL_TEAMS, 0x775ba0), (G_STAFF_RECORDS, 0x86fb80), (G_STAFF_RECORDS, 0x86fc70)] {
             let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
             f(u(g), s);
         }
@@ -581,17 +579,16 @@ pub(crate) unsafe fn undo_holiday_managers() {
         core::ptr::write_unaligned((s + 0x24) as *mut u32, 0);
         core::ptr::write_unaligned((s + 0x39) as *mut u32, 0);
         let tela: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(FN_SCREENMANAGER_REMOVE_MANAGER_RECORD);
-        tela(0xb74450, s, -1);
+        tela(G_SCREEN_MANAGER, s, -1);
     }
 }
 
 // ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
+/// Comparer for `load_game_data` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_load_game_data(caminho: *const u8) -> u32 {
     original_fn::<unsafe extern "C" fn(*const u8) -> u32>(IDX_LOAD_GAME_DATA)(caminho)
 }
-
-// ---------- 220a leva: o save: criar o jogo pelo arquivo de configuração (o início rápido e a carreira automática) (Setup.cpp) ----------
 
 /// Setup.cpp "Error" box (setup_warning) followed by fatal cleanup and exit(-1).
 ///
@@ -755,8 +752,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
                 preparar_banco(true, 0x1c49, 0x1c5d);
             }
             let v = b.add(0x13);
-            let mut liga = 0xb63d68usize;
-            while liga < 0xb64740 {
+            let mut liga = G_LEAGUE_WORLD_CUP_SETUP_FUNC;
+            while liga < G_KEY_NATION_SETUP_FUNC_LOOP_END {
                 let n = u(liga - 8) as usize;
                 if n != 0 && u(liga) != 0 && (procurar(v, nome_da_nacao(n) as usize) != 0 || nacao_casa(n, v) != 0) {
                     let m = (n + 0x11c) as *mut u8;
@@ -782,8 +779,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
                 preparar_banco(false, 0x1c92, 0x1ca3);
             }
             let v = b.add(0x13);
-            let mut liga = 0xb63d68usize;
-            while liga < 0xb64740 {
+            let mut liga = G_LEAGUE_WORLD_CUP_SETUP_FUNC;
+            while liga < G_KEY_NATION_SETUP_FUNC_LOOP_END {
                 let n = u(liga - 8) as usize;
                 if n != 0 && u(liga) != 0 && (procurar(v, nome_da_nacao(n) as usize) != 0 || nacao_casa(n, v) != 0) {
                     let m = (n + 0x11c) as *mut u8;
@@ -859,8 +856,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     copy_text((opcoes() + 0x113) as *mut u8, 0xa81288 as *const u8);
     *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
     let mut data = [0u8; 8];
-    copia_data(0xdd70a0, data.as_mut_ptr(), 0xae2c90);
-    let vaga = || 0xb74c26usize.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize).wrapping_mul(0x300));
+    copia_data(G_LAST_AUTOSAVE_DATE, data.as_mut_ptr(), G_CURRENT_DATE);
+    let vaga = || G_SCREEN_RECORDS_MANAGER.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize).wrapping_mul(0x300));
     if core::ptr::read_unaligned(vaga() as *const u32) != 0 {
         return 0;
     }
@@ -869,7 +866,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     if tabela == 0 {
         setup_warning(0x39b3);
     } else {
-        let mut q = tabela.wrapping_add((i(G_STAFF_COUNT) as usize).wrapping_mul(0x6e)).wrapping_sub(0x6e);
+        let mut q = tabela.wrapping_add((i(G_STAFF_COUNT) as usize).wrapping_mul(staff::SIZE)).wrapping_sub(0x6e);
         for _ in 0..0x10 {
             if *((q + 0x5f) as *const u8) == 0 {
                 p = q;
@@ -889,7 +886,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     set_on_holiday(u(G_HUMAN_MANAGER) as usize, ferias, 0);
     let clube = loop {
         let r = sorteio(i(G_CLUB_COUNT));
-        let c = (u(G_CLUB_TABLE) as usize).wrapping_add((r as usize).wrapping_mul(0x245));
+        let c = (u(G_CLUB_TABLE) as usize).wrapping_add((r as usize).wrapping_mul(club::SIZE));
         if selecao(c) != 0 {
             continue;
         }
@@ -911,11 +908,10 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
 // ponytail: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
+/// Comparer for `create_game_from_setup_file` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_CREATE_GAME_FROM_SETUP_FILE)(cfg, qst)
 }
-
-// ---------- 220a leva: o save: gravar o jogo inteiro (save_game_data) (Setup.cpp) ----------
 
 /// Save error box: "v%s %s.%s %d (%s)" with Setup.cpp, line and text, translated title and body, message box; the game
 /// continues (G_MOUSE_LEFT_BUTTON_DOWN untouched).
@@ -960,41 +956,41 @@ pub(crate) enum PassoDoSave {
 }
 
 pub(crate) const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
-    PassoDoSave::Caminho(0xb63c98, 0x5ff9e0), // 2 HUMAN_MANAGER
-    PassoDoSave::Caminho(0xb74448, 0x7f8020), // 3 SCOUT_MANAGER
-    PassoDoSave::Caminho(0xb7431c, 0x787c30), // 4 News
-    PassoDoSave::Virtual(0xae2c74),           // 5 Friendly
-    PassoDoSave::Sozinho(0xde1f58, 0x905510), // 6 UefaSeeding
-    PassoDoSave::Sozinho(0xae1000, 0x4c6b70), // 7 ConmebolSeeding
-    PassoDoSave::Caminho(0xdd7f00, 0x86ffd0), // 8 Staff_Records
-    PassoDoSave::Caminho(0xb6b7c0, 0x72adf0), // 9 Match_Stats
-    PassoDoSave::Caminho(0xb74350, 0x7c55a0), // 0xa PlayerStats
-    PassoDoSave::Caminho(0xad9da8, 0x443f50), // 0xb Club_History
-    PassoDoSave::Caminho(0xad9dac, 0x451ff0), // 0xc Club_Records
-    PassoDoSave::Caminho(0xde1d08, 0x8995d0), // 0xd Tactics
-    PassoDoSave::Sozinho(0xb5e134, 0x5fb320), // 0xe HostCountry
-    PassoDoSave::Caminho(0xae28f0, 0x555dd0), // 0xf Discipline
-    PassoDoSave::Caminho(0xad9c60, 0x4141a0), // 0x10 AWARD_MANAGER
-    PassoDoSave::Caminho(0xae2a3c, 0x5a53d0), // 0x11 Fine
-    PassoDoSave::Caminho(0xad9c6c, 0x418980), // 0x12 AWOL
-    PassoDoSave::Caminho(0xae2a30, 0x569ae0), // 0x13 DISPUTE
-    PassoDoSave::Caminho(0xb7433c, 0x794f00), // 0x14 Notes
-    PassoDoSave::Caminho(0xb63d28, 0x62b2d0), // 0x15 Injury
-    PassoDoSave::Caminho(0xb74318, 0x776a20), // 0x16 NationalTeams
-    PassoDoSave::Sozinho(0xdd7ef4, 0x85bea0), // 0x17 Stadium
-    PassoDoSave::Um(0xae2a58, 0x5ac060),      // 0x18 FIXTURE_MANAGER
+    PassoDoSave::Caminho(G_HUMAN_MANAGER, 0x5ff9e0), // 2 HUMAN_MANAGER
+    PassoDoSave::Caminho(G_SCOUT_MANAGER, 0x7f8020), // 3 SCOUT_MANAGER
+    PassoDoSave::Caminho(G_NEWS, 0x787c30), // 4 News
+    PassoDoSave::Virtual(G_FRIENDLY),           // 5 Friendly
+    PassoDoSave::Sozinho(G_UEFA_SEEDING, 0x905510), // 6 UefaSeeding
+    PassoDoSave::Sozinho(G_CONMEBOL_SEEDING, 0x4c6b70), // 7 ConmebolSeeding
+    PassoDoSave::Caminho(G_STAFF_RECORDS, 0x86ffd0), // 8 Staff_Records
+    PassoDoSave::Caminho(G_MATCH_STATS, 0x72adf0), // 9 Match_Stats
+    PassoDoSave::Caminho(G_PLAYER_STATS, 0x7c55a0), // 0xa PlayerStats
+    PassoDoSave::Caminho(G_CLUB_HISTORY, 0x443f50), // 0xb Club_History
+    PassoDoSave::Caminho(G_CLUB_RECORDS, 0x451ff0), // 0xc Club_Records
+    PassoDoSave::Caminho(G_TACTICS, 0x8995d0), // 0xd Tactics
+    PassoDoSave::Sozinho(G_HOST_COUNTRY, 0x5fb320), // 0xe HostCountry
+    PassoDoSave::Caminho(G_DISCIPLINE, 0x555dd0), // 0xf Discipline
+    PassoDoSave::Caminho(G_AWARD_MANAGER, 0x4141a0), // 0x10 AWARD_MANAGER
+    PassoDoSave::Caminho(G_FINE, 0x5a53d0), // 0x11 Fine
+    PassoDoSave::Caminho(G_AWOL, 0x418980), // 0x12 AWOL
+    PassoDoSave::Caminho(G_DISPUTE, 0x569ae0), // 0x13 DISPUTE
+    PassoDoSave::Caminho(G_NOTES, 0x794f00), // 0x14 Notes
+    PassoDoSave::Caminho(G_INJURY, 0x62b2d0), // 0x15 Injury
+    PassoDoSave::Caminho(G_NATIONAL_TEAMS, 0x776a20), // 0x16 NationalTeams
+    PassoDoSave::Sozinho(G_STADIUM, 0x85bea0), // 0x17 Stadium
+    PassoDoSave::Um(G_FIXTURE_MANAGER, 0x5ac060),      // 0x18 FIXTURE_MANAGER
     PassoDoSave::Competicoes,                 // 0x19 key_nation_save_all_comps
-    PassoDoSave::Caminho(0xae1050, 0x4dc3a0), // 0x1a CONTRACT_MANAGER
-    PassoDoSave::Caminho(0xae2a38, 0x59b3b0), // 0x1b FinanceTable
-    PassoDoSave::Caminho(0xde1f54, 0x8bd4b0), // 0x1c TRANSFER_MANAGER
-    PassoDoSave::Caminho(0xb7434c, 0x7ad7c0), // 0x1d PLAYER_REGEN
-    PassoDoSave::Caminho(0xb6b7c8, 0x72b5f0), // 0x1e Media
-    PassoDoSave::Outro(0xb6b7c8, 0xae2a60, 0x5afad0), // 0x1f FOG_OF_WAR
-    PassoDoSave::Caminho(0xb67a44, 0x68e920), // 0x20 MANAGER_MANAGER
-    PassoDoSave::Caminho(0xb74340, 0x79bb80), // 0x21 OfficialsManager
-    PassoDoSave::Caminho(0xdd7ee4, 0x84c680), // 0x22 SimulatedStats
-    PassoDoSave::Caminho(0xde1f44, 0x8b1450), // 0x23 TRAINING_MANAGER
-    PassoDoSave::Caminho(0xdd7ef0, 0x859cc0), // 0x24 SQUAD_MANAGER
+    PassoDoSave::Caminho(G_CONTRACT_MANAGER, 0x4dc3a0), // 0x1a CONTRACT_MANAGER
+    PassoDoSave::Caminho(G_FINANCE_TABLE, 0x59b3b0), // 0x1b FinanceTable
+    PassoDoSave::Caminho(G_TRANSFER_MANAGER, 0x8bd4b0), // 0x1c TRANSFER_MANAGER
+    PassoDoSave::Caminho(G_PLAYER_REGEN, 0x7ad7c0), // 0x1d PLAYER_REGEN
+    PassoDoSave::Caminho(G_MEDIA, 0x72b5f0), // 0x1e Media
+    PassoDoSave::Outro(G_MEDIA, G_FOG_OF_WAR, 0x5afad0), // 0x1f FOG_OF_WAR
+    PassoDoSave::Caminho(G_MANAGER_MANAGER, 0x68e920), // 0x20 MANAGER_MANAGER
+    PassoDoSave::Caminho(G_OFFICIALS_MANAGER, 0x79bb80), // 0x21 OfficialsManager
+    PassoDoSave::Caminho(G_SIMULATED_STATS, 0x84c680), // 0x22 SimulatedStats
+    PassoDoSave::Caminho(G_TRAINING_MANAGER, 0x8b1450), // 0x23 TRAINING_MANAGER
+    PassoDoSave::Caminho(G_SQUAD_MANAGER, 0x859cc0), // 0x24 SQUAD_MANAGER
 ];
 
 /// saves the game: deletes the old file, the database (0x524d30), general.dat (16 fields and the summary), the
@@ -1119,7 +1115,7 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
     }
     let mut texto = [0u8; 0xc8];
     traduzir(texto.as_mut_ptr(), 0xa81ce0);
-    barra(0xb74450, texto.as_ptr(), 1, 0x25, -1);
+    barra(G_SCREEN_MANAGER, texto.as_ptr(), 1, 0x25, -1);
     let mut z = abrir_item(l, 0x9c7b84, 1, a4, tipo());
     if z == 0 {
         save_error_box(0x29a3, 0xa81c88, 0xa81c70, 0xa81b5c);
@@ -1144,10 +1140,10 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
     if !campo(resumo.as_ptr() as usize, 0xf74, 1, 0x29b5, 0xa81ae0)
         || !campo(0xdd7120, 4, 1, 0x29bd, 0xa81aa4)
         || !campo(0xdd7114, 1, 1, 0x29c5, 0xa81a6c)
-        || !campo(0xdd6ec8, 8, 1, 0x29cd, 0xa81a3c)
-        || !campo(0xae2c90, 8, 1, 0x29d5, 0xa81a3c)
+        || !campo(G_GAME_START_DATE, 8, 1, 0x29cd, 0xa81a3c)
+        || !campo(G_CURRENT_DATE, 8, 1, 0x29d5, 0xa81a3c)
         || !campo(0xae2c88, 1, 1, 0x29dd, 0xa81a04)
-        || !campo(0xae2c78, 8, 1, 0x29e5, 0xa819d0)
+        || !campo(G_LAST_PROCESSED_DATE, 8, 1, 0x29e5, 0xa819d0)
         || !campo(0xae2cfc, 1, 1, 0x29ed, 0xa81994)
         || !campo(0xae2d00, 4, 1, 0x29f5, 0xa8194c)
         || !campo(0xae2d04, 4, 1, 0x29fd, 0xa818fc)
@@ -1181,7 +1177,7 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
         } else if falta_espaco() {
             return 0;
         }
-        barra(0xb74450, texto.as_ptr(), k, 0x25, -1);
+        barra(G_SCREEN_MANAGER, texto.as_ptr(), k, 0x25, -1);
         match *step_towards {
             PassoDoSave::Caminho(g, f) => {
                 if u(g) != 0 {
@@ -1225,7 +1221,7 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
     if falta_espaco() {
         return 0;
     }
-    barra(0xb74450, texto.as_ptr(), 0x25, 0x25, -1);
+    barra(G_SCREEN_MANAGER, texto.as_ptr(), 0x25, 0x25, -1);
     let (t, linha) = if opcoes() & 0x8000 != 0 { (3, 0x2c82) } else { (4, 0x2c8a) };
     if empacotar(l, temporaria.as_ptr(), 0xa813ac, a4, t) == 0 {
         save_error_box(linha, 0xa817a4, 0x9c7774, 0x9c7680);
@@ -1242,17 +1238,16 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
     *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
     *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 0;
     let mut data = [0u8; 8];
-    copia_data(0xdd70a0, data.as_mut_ptr(), 0xae2c90);
+    copia_data(G_LAST_AUTOSAVE_DATE, data.as_mut_ptr(), G_CURRENT_DATE);
     1
 }
 
 // ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
+/// Comparer for `save_game_data` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_save_game_data(caminho: *const u8, a4: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(*const u8, u32) -> u32>(IDX_SAVE_GAME_DATA)(caminho, a4)
 }
-
-// ---------- 219a leva: o save: os filtros da caixa de arquivos (o jogo salvo, o início rápido e a versão) (Setup.cpp) ----------
 
 /// file box filter for saved games: 1 if the container has id 0x16 (.sav), else 2 (ax only); a null path gives the
 /// error box
@@ -1273,6 +1268,7 @@ pub(crate) unsafe extern "C" fn check_saved_game_file(caminho: usize) -> u32 {
 
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
+/// Comparer for `check_saved_game_file` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_SAVED_GAME_FILE)(caminho);
     if caminho == 0 {
@@ -1309,6 +1305,7 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
 // ponytail: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
+/// Comparer for `check_quick_start_file` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_check_quick_start_file(caminho: usize) -> u32 {
     original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_QUICK_START_FILE)(caminho)
 }
@@ -1388,11 +1385,10 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 
 // ponytail: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
+/// Comparer for `valid_saved_game_version` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_valid_saved_game_version(caminho: usize) -> u32 {
     original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_VALID_SAVED_GAME_VERSION)(caminho)
 }
-
-// ---------- 219a leva: o save: as regras FIFA de transferência (gravar e carregar) e o resumo do save (Setup.cpp, file_screens.cpp) ----------
 
 /// Setup.cpp "Error" box "v%s %s.%s %d" with the line, then clears G_MOUSE_LEFT_BUTTON_DOWN.
 ///
@@ -1450,6 +1446,7 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 
 // ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
+/// Comparer for `save_fifa_transfer_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_save_fifa_transfer_rules(save: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(IDX_SAVE_FIFA_TRANSFER_RULES)(save)
 }
@@ -1493,6 +1490,7 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
 
 // ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
+/// Comparer for `load_fifa_transfer_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
     original_fn::<unsafe extern "C" fn(usize)>(IDX_LOAD_FIFA_TRANSFER_RULES)(save)
 }
@@ -1580,7 +1578,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
         }
     }
     let mut copia = [0u8; 8];
-    copia_data(resumo as usize + 0xf64, copia.as_mut_ptr(), 0xae2c90);
+    copia_data(resumo as usize + 0xf64, copia.as_mut_ptr(), G_CURRENT_DATE);
     copy_text(resumo.add(0x7d0), versao());
     let mut agora = 0i32;
     let t = relogio(&mut agora);
@@ -1595,6 +1593,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
 // Lado a lado sobre o resumo inteiro (0xf74) e o relógio do tempo de jogo ([0xdd7140], [0xdd7144]),
 // restaurados entre as duas; compara só +0..+0xf6c: o tempo de jogo e o time() (+0xf6c, +0xf70) são
 // relógio (fixos só no modo simulação), como na prova do save.
+/// Comparer for `build_save_game_summary` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
@@ -1660,12 +1659,12 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
             *(g as *mut usize) = 0;
         }
     };
-    soltar_telas(0xb74450);
+    soltar_telas(G_SCREEN_MANAGER);
     if tela != 0 {
-        soltar_mais(0xb74450);
+        soltar_mais(G_SCREEN_MANAGER);
     }
     antes();
-    objetos(&[(0xb67a50, 0x6b4190)]);
+    objetos(&[(G_MATCH_DAY, 0x6b4190)]);
     let p = *(G_COMP_OBJECT_TABLE as *const usize);
     if p != 0 {
         livre(p);
@@ -1673,35 +1672,36 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
         *(G_COMP_OBJECT_COUNT as *mut usize) = 0;
     }
     competicoes();
-    objetos(&[(0xb6b7c8, 0x72b200), (0xae2a60, 0x5af6a0), (0xb67a44, 0x68e0e0), (0xad9da8, 0x442e20),
-              (0xad9dac, 0x4448a0), (0xde1d08, 0x8961e0), (0xae28f0, 0x555790), (0xde1f44, 0x8b1070),
-              (0xad9c60, 0x413410), (0xde1f54, 0x8bbe20), (0xb63d28, 0x62a8a0), (0xae2a3c, 0x5a5120),
-              (0xad9c6c, 0x4185f0), (0xae2a30, 0x5698d0), (0xb7433c, 0x794ba0), (0xdd7ef4, 0x85b7f0)]);
-    virtual_(0xae2c74);
-    objetos(&[(0xb74318, 0x76a710), (0xde2f70, 0x90d2e0), (0xde1f58, 0x903570), (0xae1000, 0x5a8f60),
-              (0xdd7f00, 0x8687c0), (0xb6b7c0, 0x7293c0), (0xb74350, 0x7c0d00), (0xb5e134, 0x58e330),
-              (0xae2a58, 0x5aa0d0), (0xb63c98, 0x5fb730), (0xb74448, 0x7f6aa0), (0xb7431c, 0x785d00)]);
+    objetos(&[(G_MEDIA, 0x72b200), (G_FOG_OF_WAR, 0x5af6a0), (G_MANAGER_MANAGER, 0x68e0e0), (G_CLUB_HISTORY, 0x442e20),
+              (G_CLUB_RECORDS, 0x4448a0), (G_TACTICS, 0x8961e0), (G_DISCIPLINE, 0x555790), (G_TRAINING_MANAGER, 0x8b1070),
+              (G_AWARD_MANAGER, 0x413410), (G_TRANSFER_MANAGER, 0x8bbe20), (G_INJURY, 0x62a8a0), (G_FINE, 0x5a5120),
+              (G_AWOL, 0x4185f0), (G_DISPUTE, 0x5698d0), (G_NOTES, 0x794ba0), (G_STADIUM, 0x85b7f0)]);
+    virtual_(G_FRIENDLY);
+    objetos(&[(G_NATIONAL_TEAMS, 0x76a710), (G_VIRTUAL_STAFF, 0x90d2e0), (G_UEFA_SEEDING, 0x903570), (G_CONMEBOL_SEEDING, 0x5a8f60),
+              (G_STAFF_RECORDS, 0x8687c0), (G_MATCH_STATS, 0x7293c0), (G_PLAYER_STATS, 0x7c0d00), (G_HOST_COUNTRY, 0x58e330),
+              (G_FIXTURE_MANAGER, 0x5aa0d0), (G_HUMAN_MANAGER, 0x5fb730), (G_SCOUT_MANAGER, 0x7f6aa0), (G_NEWS, 0x785d00)]);
     // [0xdd7ef0]: só o delete, sem destrutor
     let p = *(G_SQUAD_MANAGER as *const usize);
     if p != 0 {
         apagar(p);
         *(G_SQUAD_MANAGER as *mut usize) = 0;
     }
-    virtual_(0xb74434);
-    objetos(&[(0xae1050, 0x4c74f0), (0xae2a38, 0x59a5a0)]);
-    soltos(&[0xae2d0c, 0xae2d14, 0xae2d1c, 0xae2d20, 0xae2d24]);
-    objetos(&[(0xb7434c, 0x7a56f0), (0xb74340, 0x79b800), (0xdd7ee4, 0x84be10), (0xde2f74, 0x9227d0),
-              (0xb74430, 0x7da690)]);
+    virtual_(G_RESERVE_COMP);
+    objetos(&[(G_CONTRACT_MANAGER, 0x4c74f0), (G_FINANCE_TABLE, 0x59a5a0)]);
+    soltos(&[G_STAFF_STATE_TABLE, G_CLUB_STATE_TABLE, G_CLUB_REPUTATION_ORDER, G_PLAYER_ABILITY_VALUES_SORTED, G_PLAYER_DATA_PTRS_BY_ABILITY]);
+    objetos(&[(G_PLAYER_REGEN, 0x7a56f0), (G_OFFICIALS_MANAGER, 0x79b800), (G_SIMULATED_STATS, 0x84be10), (G_WEATHER, 0x9227d0),
+              (G_PUNDIT_LIST, 0x7da690)]);
     limpar_temporarios(0xa813ac);
-    soltos(&[0xae2338]);
+    soltos(&[G_NATION_NAME_INDEX_TABLE]);
     liberar_tabelas();
-    acertar_data(0xae2c90, 1, 0, 0x7d1, -1);
+    acertar_data(G_CURRENT_DATE, 1, 0, 0x7d1, -1);
     *(G_CURRENT_DAY_SLICE as *mut u8) = 0;
     *(G_GAME_DATA_LOADED_FLAG as *mut u32) = 0;
     *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 0;
     1
 }
 
+/// Comparer for `free_game_data` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
     original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_FREE_GAME_DATA)(tela)
 }
@@ -1716,6 +1716,7 @@ pub(crate) unsafe extern "C" fn get_heading_colour(x: u32) -> u32 {
     (x & 0xffff_0000) | c as u32
 }
 
+/// Comparer for `get_heading_colour` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_GET_HEADING_COLOUR)(x);
     let n = get_heading_colour(x);

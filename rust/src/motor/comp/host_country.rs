@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 280a leva: as sedes dos torneios: a tabela padrão, a notícia das candidaturas e a carga do HostCountry.tmp (host_country.cpp) ----------
-
 
 
 
@@ -149,7 +147,9 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     }
 }
 
-/// Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
+/// Comparer for `init_default_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
 pub(crate) unsafe extern "thiscall" fn comparar_init_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_DEFAULT_TABLE);
@@ -226,6 +226,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize
 }
 
 // ponytail: entrega notícias (aloca); só a original. A cópia leva o ramo.
+/// Comparer for `post_host_news` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_post_host_news(this: usize, lista: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_HOST_NEWS)(this, lista)
 }
@@ -275,11 +276,10 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
 }
 
 // ponytail: abre o arquivo e aloca; só a original. A cópia leva os ramos.
+/// Comparer for `load_temp_file` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_load_temp_file(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_LOAD_TEMP_FILE)(this)
 }
-
-// ---------- 273a leva: as sedes das competições: a sede de uma edição, a próxima sede e o calendário das candidaturas (host_country.cpp) ----------
 
 
 
@@ -330,7 +330,9 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u
     0
 }
 
-/// A devolução (o al) e as duas saídas (a rotina só lê).
+/// Comparer for `find_hosts` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A devolução (o al) e as duas saídas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(IDX_FIND_HOSTS);
     let (va, vb) = (*a, *b);
@@ -369,7 +371,9 @@ pub(crate) unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a
     0
 }
 
-/// A devolução (o al) e as duas saídas (a rotina só lê).
+/// Comparer for `find_next_hosts` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A devolução (o al) e as duas saídas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(IDX_FIND_NEXT_HOSTS);
     let (va, vb) = (*a, *b);
@@ -497,7 +501,9 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, ho
     destruir(l);
 }
 
-/// Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
+/// Comparer for `host_country_daily_update` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
 pub(crate) unsafe extern "thiscall" fn comparar_host_country_daily_update(this: usize, hoje: usize) {
     // ponytail: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOST_COUNTRY_DAILY_UPDATE)(this, hoje)
@@ -522,7 +528,9 @@ pub(crate) unsafe extern "thiscall" fn save_temp_file(this: usize) {
     uefa_seeding_crt_fclose(f);
 }
 
-/// Comparador da 0x5fb320: só a original.
+/// Comparer for `save_temp_file` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x5fb320: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_save_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SAVE_TEMP_FILE)(this)

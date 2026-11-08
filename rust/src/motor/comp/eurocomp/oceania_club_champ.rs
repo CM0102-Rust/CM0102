@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: o Campeonato de Clubes da Oceania: o dia do sorteio e as tabelas dos grupos A e B (oceania_club_champ.cpp) ----------
-
 
 
 
@@ -74,6 +72,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 // ponytail: os clubes, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
 // grupo B criadas e a fase atual (+0x30) = 0.
+/// Comparer for `oceania_club_champ_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_OCEANIA_CLUB_CHAMP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
@@ -128,6 +127,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
+/// Comparer for `create_group_a_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_A_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -228,6 +228,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
+/// Comparer for `create_group_b_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_GROUP_B_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -247,8 +248,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize
     }
     r
 }
-
-// ---------- 283a leva: o Campeonato de Clubes da Oceania: os 8 clubes, a fase seguinte e as semifinais (oceania_club_champ.cpp) ----------
 
 
 
@@ -402,7 +401,9 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_select_qualified_clubs
     select_qualified_clubs(this)
 }
 
-/// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
+/// Comparer for `oceania_club_champ_select_qualified_clubs` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SELECT_QUALIFIED_CLUBS);
@@ -457,6 +458,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
 
 // ponytail: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
 // última fase, que dá a caixa e não muda nada).
+/// Comparer for `oceania_club_champ_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
@@ -526,6 +528,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
 
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
 // o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
+/// Comparer for `oceania_club_champ_create_knockout_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_OCEANIA_CLUB_CHAMP_CREATE_KNOCKOUT_STAGE);
     if read_u32_as_usize(this + 0xb1) == 0 || read_u32_as_usize(this + 0xc) == 0 || read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
@@ -546,8 +549,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knocko
     let igual = plano == achou && read_i16(fase + 0x3e) == 4 && read_u32_as_usize(fase + 4) == read_u32_as_usize(this + 4);
     PLACAR.registrar(igual, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
-
-// ---------- 281a leva: as copas de clubes da Oceania e da Ásia: o calendário do Campeonato de Clubes da Oceania e os times da Liga dos Campeões e da Recopa asiáticas (oceania_club_champ.cpp, asia_club_champ.cpp, asia_cup_winner.cpp) ----------
 
 /// Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
 /// rodada, dia, mês com 0 = janeiro, anos a somar, dia da semana, código, valor; registros de 0x41 bytes), `L` um jogo
@@ -760,6 +761,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
     build_stage_table(this, oceania_stage_spec(fase), rodadas, extra, liga, 0xa6a068)
 }
 
+/// Comparer for `oceania_club_champ_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_OCEANIA_CLUB_CHAMP_CREATE_SCHEDULE);
     compare_stage_table("oceania_club_champ_create_schedule", fase, oceania_stage_spec(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
@@ -844,6 +846,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usi
     apply_cup_rules(this, &CQJ11_OCEANIA, dia, 3)
 }
 
+/// Comparer for `oceania_club_champ_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SET_UP_RULES);
     check_cup_rules("oceania_club_champ_set_up_rules", this, &CQJ11_OCEANIA, || o(this))

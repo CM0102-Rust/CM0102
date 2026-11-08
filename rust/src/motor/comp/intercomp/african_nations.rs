@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 284a leva: a Copa Africana de Nações: o dia do sorteio, o sorteio dos 16 e as fases dos grupos B a D (african_nations.cpp) ----------
-
 
 
 
@@ -68,6 +66,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 // ponytail: o sorteio, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e as três fases
 // criadas e a fase atual (+0x30) a última delas (2).
+/// Comparer for `african_nations_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_FOR_DATE);
     let sorteia = completo != 0
@@ -125,7 +124,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     let mut n = 0usize;
     if quantas > 0 {
         for &id in ids.iter().take(quantas as usize) {
-            write_u32_from_usize(read_u32_as_usize(this + 0xee) + n * 4, selecao(read_u32_as_usize(G_NATION_TABLE) + id as usize * 0x122));
+            write_u32_from_usize(read_u32_as_usize(this + 0xee) + n * 4, selecao(read_u32_as_usize(G_NATION_TABLE) + id as usize * nation::SIZE));
             n += 1;
         }
     }
@@ -175,7 +174,9 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
     draw_african_nations_finalists(this)
 }
 
-/// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
+/// Comparer for `draw_finalists` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa os grupos dela em +0xee, a cópia faz os seus, comparados nas 16 vagas e liberados (sem os 16, as listas
 /// de 50 comparadas nas 16 primeiras vagas).
 pub(crate) unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u32 {
@@ -285,6 +286,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+/// Comparer for `african_nations_create_group_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_AFRICAN_NATIONS_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -304,8 +306,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_group_sta
     }
     r
 }
-
-// ---------- 274a leva: a Copa Africana de Nações: a fase seguinte, a tabela do grupo A e o histórico da temporada (african_nations.cpp) ----------
 
 
 
@@ -333,6 +333,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 
 // ponytail: o mata-mata (0x402090) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa).
+/// Comparer for `african_nations_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AFRICAN_NATIONS_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
@@ -379,6 +380,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
 // ponytail: a tabela é alocada (e cada linha aloca o histórico de posições) e a notícia vai aos técnicos: não roda duas
 // vezes. Só a original; o plano: 4 times, a tabela, e em cada linha i a seleção i dos sorteados (+0xee) com a posição i
 // (+4 da linha, 0x3b bytes).
+/// Comparer for `init_group_a_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_init_group_a_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_A_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -412,11 +414,10 @@ pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(thi
 
 // ponytail: o histórico (a virtual +0x30 do mata-mata, a 0x519a90 já em Rust com o seu comparador) não roda duas vezes;
 // a rotina não grava nada além do salto. Só a original.
+/// Comparer for `african_nations_record_season_honours` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_record_season_honours(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AFRICAN_NATIONS_RECORD_SEASON_HONOURS)(this)
 }
-
-// ---------- 273a leva: o destino das seleções nos torneios: a Copa Africana de Nações, a Copa América e a eliminatória da Oceania (african_nations.cpp, goldcup.cpp, wc_oceania_league.cpp) ----------
 
 
 
@@ -496,6 +497,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
 
 // ponytail: os registros vão para o histórico dos técnicos e encerram as convocações: não rodam duas vezes, e a rotina
 // não grava nada além deles. Só a original; o plano confere a devolução 0.
+/// Comparer for `african_nations_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, desfecho, fase, a4, jogo, a6);
     PLACAR.registrar(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
@@ -566,6 +568,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
 
 // ponytail: os registros, o fim da competição da seleção e a vaga na Copa do Mundo não rodam duas vezes. Só a original;
 // o plano: a devolução 0 e, na repescagem ganha, *saida = 4 e a lista da Copa do Mundo (+0x36) um a mais (se cabia).
+/// Comparer for `african_nations_update_staff_records_for_status_91e840` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_update_staff_records_for_status_91e840(this: usize, clube: usize, desfecho: u32, fase: u32, saida: usize, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS_91E840);
     let vaga = fase as u8 == 2 && desfecho as u8 == 1 && saida != 0;
@@ -593,6 +596,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usi
     build_phase_table(this, african_nations_phase(fase), rodadas, extra, liga, 0x9870f8)
 }
 
+/// Comparer for `african_nations_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_AFRICAN_NATIONS_CREATE_SCHEDULE);
     compare_phase_table("african_nations_create_schedule", fase, african_nations_phase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
@@ -617,6 +621,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize)
     finish_rules_setup(this, palavra, 0xffff)
 }
 
+/// Comparer for `african_nations_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AFRICAN_NATIONS_SET_UP_RULES);
     check_set_up_rules("african_nations_set_up_rules", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))

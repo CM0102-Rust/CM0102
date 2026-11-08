@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 280a leva: o calendário da Primera espanhola: as 38 rodadas, uma tabela para o ano par e outra para o ímpar, com a rodada do Natal conforme o dia da semana (spa_first.cpp) ----------
-
 
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
@@ -301,12 +299,11 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, fa
     }
 }
 
+/// Comparer for `spa_first_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_FIRST_CREATE_SCHEDULE);
     compare_league_round_table("spa_first_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_first_create_schedule(this, fase, r, e, l))
 }
-
-// ---------- 275a leva: as regras das divisões espanholas (Primera, Segunda e a divisão de baixo): turnos, pontos, vagas, o confronto direto primeiro nos desempates e a tabela de rodadas (spa_first.cpp, spa_second.cpp, spa_lower.cpp) ----------
 
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
@@ -421,14 +418,13 @@ pub(crate) unsafe fn spa_first_compare_league_rules(nome: &str, this: usize, esc
     r
 }
 
+/// Comparer for `spa_first_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_first_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_SET_UP_RULES);
     spa_first_compare_league_rules("spa_first_set_up_rules", this, primera_rules(), || o(this), || spa_first_set_up_rules(this))
 }
 
 
-
-// ---------- 275a leva: a Primera espanhola (a tabela, a TV, a divisão de baixo genérica e a situação nas estatísticas) e os registros da Série C2/A italiana pela situação na tabela, no play-off e no play-out (spa_first.cpp, ita_ser_c2a.cpp) ----------
 
 
 
@@ -496,7 +492,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     1
 }
 
-/// Comparador da 0x84fc70: a original aloca a tabela, muda a divisão dos clubes e paga a TV (com notícia): só ela. O
+/// Comparer for `spa_first_create_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x84fc70: a original aloca a tabela, muda a divisão dos clubes e paga a TV (com notícia): só ela. O
 /// plano, feito antes: os clubes da divisão de baixo espanhola (que passam à genérica) e os da Primera na ordem do
 /// banco (até 20). Depois: os primeiros com +0x57 = o registro de [0x9cf764]; +0x3e = 20, a devolução, as linhas com
 /// os clubes da Primera na ordem e, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
@@ -504,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_CREATE_TABLE);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
-        let clube = read_usize(G_CLUB_TABLE) + i * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + i * club::SIZE;
         let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
             baixo.push(clube);
@@ -622,7 +620,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_update_staff_records_for_status
     0
 }
 
-/// Comparador da 0x654180: os registros vão ao histórico das pessoas e mexem nas reputações e no moral (não rodam duas
+/// Comparer for `spa_first_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x654180: os registros vão ao histórico das pessoas e mexem nas reputações e no moral (não rodam duas
 /// vezes): só a original. O plano, feito antes, nas fases 0 e 1: a primeira linha do clube com situação 1, 2 ou 0xff
 /// decide o +0x37 que a rotina grava (fase 0: 0 com 1, 0xfe com 2/0xff; fase 1: 0xfe com 1, 3 com 2/0xff); depois a
 /// linha tem de estar assim. Na liga ela só registra: a devolução 0.
@@ -676,7 +676,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, 
     *((e + 0x75) as *mut u8) = p;
 }
 
-/// Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
+/// Comparer for `spa_first_set_club_progress` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_spa_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SPA_FIRST_SET_CLUB_PROGRESS);
@@ -699,6 +701,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_first(this: usize, ano: u32
     construct_division_league(this, ano, registro, &CQM5_PRIMERA)
 }
 
+/// Comparer for `construct_spa_first` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_FIRST);
     compare_division_league_ctor("construct_spa_first", this, ano, registro, &CQM5_PRIMERA, || o(this, ano, registro))

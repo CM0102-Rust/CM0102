@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 284a leva: a Copa da UEFA: os inscritos (os clubes das vagas da classificação da UEFA, completados até 118 com clubes de nações fracas, e a lista dos que vêm da Intertoto) (uefa_cup.cpp) ----------
-
 
 
 
@@ -44,7 +42,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     let mut i: i16 = 0;
     if (read_u32_as_usize(G_CLUB_COUNT) as i32) > 0 {
         loop {
-            let c = base + i as u16 as usize * 0x245;
+            let c = base + i as u16 as usize * club::SIZE;
             if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) {
                 let e = k as i32 as usize * 6;
                 k = k.wrapping_add(1);
@@ -69,7 +67,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
                 if entrants_minus_half_prelim(this, k) >= 0x76 { // cqs9: completa até 118
                     break;
                 }
-                let c = base + j as u16 as usize * 0x245;
+                let c = base + j as u16 as usize * club::SIZE;
                 let nac = read_u32_as_usize(c + 0x53);
                 if nac != 0 && *((nac + 0x11c) as *const u8) == 0 && read_i16(nac + 0x8e) < 0x7d0 && read_u32_as_usize(c + 0x1db) as i32 == -1 {
                     crate::comparacao::ramo("cqs_9 clube completando a uefa");
@@ -128,14 +126,16 @@ pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
     uefa_cup_build_entrants(this)
 }
 
-/// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
+/// Comparer for `build_entrants` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);
     let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
-    reg.extend((0..read_u32_as_usize(G_CLUB_COUNT)).map(|i| (base + i * 0x245 + 0x1db, 4)));
+    reg.extend((0..read_u32_as_usize(G_CLUB_COUNT)).map(|i| (base + i * club::SIZE + 0x1db, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
@@ -202,6 +202,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
     t
 }
 
+/// Comparer for `uefa_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_UEFA_CUP_CREATE_ROUND_TABLE);
     eng_cc_cup_compare_round_table("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -229,6 +230,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
     base(this, clube, desfecho, a3, a4, jogo, a6)
 }
 
+/// Comparer for `uefa_cup_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 {

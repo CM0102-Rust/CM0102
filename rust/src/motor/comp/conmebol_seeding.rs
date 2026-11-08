@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 273a leva: a classificação da Conmebol: as vagas da Libertadores, o n-ésimo clube da nação e os convidados da Mercosul (conmebol_seeding.cpp) ----------
-
 
 
 /// Club (non-null and without a place, +0x1db = -1) enters the Copa Libertadores at stage `fase`; returns whether it
@@ -90,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_libertadores_places(this:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_LIBERTADORES_PLACES);
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
-    let reg = [(read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
+    let reg = [(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_libertadores_places(this, clubes, conta));
     PLACAR.registrar(igual, || {
         let base = read_u32(G_CLUB_TABLE) as usize;
@@ -164,7 +162,9 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
     0
 }
 
-/// A devolução das duas (a rotina só lê).
+/// Comparer for `find_nth_unqualified_club_of_nation` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
@@ -202,7 +202,9 @@ pub(crate) unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, cl
     0
 }
 
-/// A devolução das duas (a rotina só lê).
+/// Comparer for `is_mercosur_invited_club` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: usize, clube: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_MERCOSUR_INVITED_CLUB);
     let r = o(this, clube);
@@ -210,8 +212,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_mercosur_invited_club(this: u
     PLACAR.registrar(r == c, || format!("is_mercosur_invited_club({:x}): original {} rust {}", clube, r, c));
     r
 }
-
-// ---------- 273a leva: a classificação da Conmebol: a tabela dos clubes sul-americanos, a virada do ano e o campeão da Copa dos Campeões (conmebol_seeding.cpp) ----------
 
 
 /// the CONMEBOL club table: South American and Mexican clubs (national teams excluded), each without a continental
@@ -290,10 +290,12 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(saida: *mut usize) 
 /// [pt] Os clubes do jogo, a marca da caixa e o histórico das competições (a 0x4afd80 o reordena: ver a cqj_1).
 pub(crate) unsafe fn club_seeding_regions() -> Vec<(usize, usize)> {
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
-    vec![(read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
+    vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
 
-/// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
+/// Comparer for `collect_conmebol_clubs` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
 pub(crate) unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(saida: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut usize) -> u32>(IDX_COLLECT_CONMEBOL_CLUBS);
@@ -341,7 +343,9 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, pular:
     soltar(t);
 }
 
-/// Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
+/// Comparer for `update_for_new_season` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
 pub(crate) unsafe extern "thiscall" fn comparar_update_for_new_season(this: usize, pular: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_FOR_NEW_SEASON);
     let mut reg = club_seeding_regions();
@@ -401,7 +405,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: 
     uefa_seeding_crt_fclose(f);
 }
 
-/// Comparador da 0x4c6b70: só a original.
+/// Comparer for `conmebol_seeding_save_to_temp_file` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x4c6b70: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_SEEDING_SAVE_TO_TEMP_FILE)(this)

@@ -1,6 +1,6 @@
 # Mutações da 261a leva (itens cpx_13, cpy_1, cpy_2, cpy_3, cpy_4, cpy_5, cpy_6, cpy_8, cpy_9, cpy_10, cpy_11, cpy_12, cpy_13). Uso: python mutacoes.py mutacoes\leva261.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpx13_sem_elenco', 'escolher(this, read_usize(clube + club::NATION), tipo, 0xae2c90, p, 0); // cpx13: o elenco', 'let _ = escolher; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
+    ('cpx13_sem_elenco', 'escolher(this, read_usize(clube + club::NATION), tipo, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = escolher; // mutacao: sem pedir elenco', 'cpx_13 elenco pedido'),
     ('cpx13_elenco_de_60_dias', 'if d <= 0xe && read_u8(base + 0x11) != 0 && extra() {', 'if d <= 60 && read_u8(base + 0x11) != 0 && extra() { // mutacao: o elenco vale 60 dias', 'cpx_13 elenco pedido'),
     ('cpx13_janela_de_uma_semana', 'let q = semanas_antes(jogo.as_mut_ptr(), r.as_mut_ptr(), 2); // cpx13: a janela', 'let q = semanas_antes(jogo.as_mut_ptr(), r.as_mut_ptr(), 1); // mutacao: a janela de uma semana', 'cpx_13 elenco pedido'),
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: alvo sem lance não conta', '            // mutacao: o alvo sem lance conta', 'cpy_1 alvo sem lance'),
@@ -13,7 +13,7 @@ MUTACOES = [
     ('cpy3_sem_reducao_pela_sobra', '                write_i32(v + 7, e.wrapping_sub(x)); // cpy3: a redução da vaga pela sobra', '                let _ = (e, x); // mutacao: sem a reducao', 'cpy_3 reducao pela sobra'),
     ('cpy3_vaga_sem_preencher', '            preencher(this, v, clube, 0); // cpy3: a vaga é preenchida', '            let _ = preencher; // mutacao: a vaga fica sem alvo', 'cpy_3 vaga preenchida'),
     ('cpy4_sem_marcar_amistosos', '    marcar(this, primeira, quantas); // cpy4: marcar os amistosos da data', '    let _ = marcar; // mutacao: os amistosos nao sao marcados', 'cpy_4 amistosos marcados'),
-    ('cpy4_onze_semanas', '    semanas(0xae2c90, &mut lim, 0xc); // cpy4: hoje + 12 semanas', '    semanas(0xae2c90, &mut lim, 0xb); // mutacao: hoje + 11 semanas', 'cpy_4 amistosos marcados'),
+    ('cpy4_onze_semanas', '    semanas(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas', '    semanas(G_CURRENT_DATE, &mut lim, 0xb); // mutacao: hoje + 11 semanas', 'cpy_4 amistosos marcados'),
     ('cpy4_nacoes_sem_ordem', '        ordenar(read_usize(this + 0x34fa), read_usize(this + 0x34fe) as u32, 4, 0x5cc5f0); // cpy4: as nações pela reputação', '        // mutacao: as nacoes ficam fora da ordem de reputacao', 'cpy_4 virada do ano'),
     ('cpy5_banda2_na_rodada_0xd', 'european_cup_write_entrant(t + 0x60 + o2, c, 8); // cpy5: a banda 2 entra na rodada 8', 'european_cup_write_entrant(t + 0x60 + o2, c, 0xd); // mutacao: a banda 2 entra com a 3', 'cpy_5 entrada da banda 2'),
     ('cpy5_banda3_na_rodada_8', 'european_cup_write_entrant(t + 0xcc + o3, c, 0xd); // cpy5: a banda 3 entra na rodada 0xd', 'european_cup_write_entrant(t + 0xcc + o3, c, 8); // mutacao: a banda 3 entra com a 2', 'cpy_5 entrada da banda 3'),

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 277a leva: as regras de transferência da Noruega, da Irlanda do Norte e do País de Gales: as janelas de transferência (northern_ireland_rules.cpp, norway_rules.cpp, wales_rules.cpp) ----------
-
 
 
 /// Constructs a nation's transfer rules: base TRANSFER_RULES ctor, the nation vtable and the transfer windows.
@@ -32,7 +30,9 @@ pub(crate) unsafe extern "thiscall" fn construct_norway_rules(this: usize, a1: u
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `construct_norway_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_norway_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_NORWAY_RULES);
     let mut r = 0usize;
@@ -58,7 +58,9 @@ pub(crate) unsafe extern "thiscall" fn construct_northern_ireland_rules(this: us
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `construct_northern_ireland_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_northern_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_NORTHERN_IRELAND_RULES);
     let mut r = 0usize;
@@ -84,7 +86,9 @@ pub(crate) unsafe extern "thiscall" fn construct_wales_rules(this: usize, a1: u3
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `construct_wales_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_wales_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_WALES_RULES);
     let mut r = 0usize;

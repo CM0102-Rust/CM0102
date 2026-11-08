@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 267a leva: o calendário: o dia do calendário, a lista dos jogos do dia e a carga dos jogos do ano (fix_man.cpp) ----------
-
 
 
 
@@ -56,12 +54,12 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
     let rotular: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(FN_CUP_LABEL_ROUND_EXTRA_FIXTURES);
     let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     let (pa, pb, pc) = (a.as_mut_ptr() as usize, b.as_mut_ptr() as usize, c.as_mut_ptr() as usize);
-    let dia = semana(0xae2c90) as i16;
+    let dia = semana(G_CURRENT_DATE) as i16;
     if dia == 2 || dia == 3 {
-        mais(0xae2c90, pa, 3);
+        mais(G_CURRENT_DATE, pa, 3);
         reservas(read_u32_as_usize(G_RESERVE_COMP), pa);
         if dia == 3 {
-            mais(0xae2c90, pb, 1);
+            mais(G_CURRENT_DATE, pb, 1);
             crate::comparacao::ramo("cqd_6 reservas de amanha");
             reservas(read_u32_as_usize(G_RESERVE_COMP), pb); // cqd6: as reservas de amanhã
         }
@@ -89,9 +87,9 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
         write_u32_from_usize(this + 0x1128, 0);
     }
     if dia == 5 || dia == 6 {
-        let t = menos(0xae2c90, pa, 1);
+        let t = menos(G_CURRENT_DATE, pa, 1);
         if read_i16(t + 2) == read_i16(G_CURRENT_DATE_YEAR) {
-            let ontem = read_i16(menos(0xae2c90, pc, 1)) as u16 as usize;
+            let ontem = read_i16(menos(G_CURRENT_DATE, pc, 1)) as u16 as usize;
             for fatia in 0..3usize {
                 let listas = read_u32_as_usize(this + (ontem * 3 + fatia) * 4);
                 let mut k: i8 = 0;
@@ -120,7 +118,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
     }
     if read_i16(G_FIXTURE_LEGS_LIST) != 0 {
         write_u32_from_usize(G_FIXTURE_LEGS_LIST_CURSOR, read_u32_as_usize(G_FIXTURE_LEGS_LIST_HEAD));
-        let mut e = proximo(0xae2a48);
+        let mut e = proximo(G_FIXTURE_LEGS_LIST);
         while e != 0 {
             let i = read_u32_as_usize(e) as i32;
             let tab = read_u32_as_usize(G_COMP_OBJECT_TABLE);
@@ -140,13 +138,15 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                     }
                 }
             }
-            e = proximo(0xae2a48);
+            e = proximo(G_FIXTURE_LEGS_LIST);
         }
-        esvaziar(0xae2a48);
+        esvaziar(G_FIXTURE_LEGS_LIST);
     }
 }
 
-/// O comparador do dia do calendário: só a original (ponytail: as notícias vão aos técnicos, os nós dos amistosos e
+/// Comparer for `fix_man_daily_update` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador do dia do calendário: só a original (ponytail: as notícias vão aos técnicos, os nós dos amistosos e
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
 pub(crate) unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize) {
@@ -194,7 +194,9 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_list(this: usize, ano: u32, d
     read_u32_as_usize(read_u32_as_usize(b + i * 4) + (tipo as u8 as i8) as isize as usize * 4)
 }
 
-/// O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
+/// Comparer for `get_fixture_list` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
 /// original (ponytail: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
 pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(IDX_GET_FIXTURE_LIST);
@@ -291,7 +293,9 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
     fechar(f);
 }
 
-/// O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
+/// Comparer for `load_fixtures` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
 /// duas vezes). Confere o nome gravado em +0x1133.
 pub(crate) unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LOAD_FIXTURES)(this);
@@ -300,8 +304,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
     PLACAR.registrar(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
         || format!("load_fixtures: nome {:?} (esperado {})", s, esperado));
 }
-
-// ---------- 266a leva: os conflitos de calendário: os conflitos de um jogo nos dias em volta, os conflitos de um dia e a carga da conferência das pernas (fix_man.cpp) ----------
 
 
 
@@ -485,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: us
             }
         }
     }
-    let nac = read_usize(G_NATION_TABLE).wrapping_add((read_i32(KEY_NATION_NORWAY) as usize).wrapping_mul(0x122));
+    let nac = read_usize(G_NATION_TABLE).wrapping_add((read_i32(KEY_NATION_NORWAY) as usize).wrapping_mul(nation::SIZE));
     if read_usize(read_usize(jogo + 0x1c) + 0x53) == nac || read_usize(read_usize(jogo + 0x20) + 0x53) == nac {
         if mesma(day_of_year(0x11, 4, ano())) && flag == 0 {
             return dezenove();
@@ -591,7 +593,9 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: us
     }
 }
 
-/// O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
+/// Comparer for `collect_day_clashes` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
 pub(crate) unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
@@ -724,7 +728,9 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: u
     lista
 }
 
-/// O comparador dos conflitos de um jogo: a original e a cópia, cada uma com a sua lista nova, a partir do mesmo estado
+/// Comparer for `find_fixture_clashes` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador dos conflitos de um jogo: a original e a cópia, cada uma com a sua lista nova, a partir do mesmo estado
 /// (a original não muda o jogo: só cria a lista e mexe nos cursores das listas dos dias, que as duas refazem); confere a
 /// devolução (lista ou 0), a saída e os jogos das duas listas (0x4f bytes cada, na ordem), e destrói e libera a lista
 /// da cópia como o calendário faz (0x68d040, 0x944c94).
@@ -764,7 +770,7 @@ pub(crate) unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
     let ler: unsafe extern "C" fn(*mut u8, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
     let acrescentar: unsafe extern "thiscall" fn(usize, *const u8, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    esvaziar(0xae2a48);
+    esvaziar(G_FIXTURE_LEGS_LIST);
     let f = abrir(caminho(0x987da0, 0x9cc258), 0x98f928); // "CM3_TEMP", "check_fixture_legs.tmp", "rb"
     if f == 0 {
         return;
@@ -779,19 +785,19 @@ pub(crate) unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
         if ler(reg.as_mut_ptr(), 0xf, 1, f) != 1 {
             show_error_at(0x9cc208, 0x10b9);
         }
-        acrescentar(0xae2a48, reg.as_ptr(), 0xf);
+        acrescentar(G_FIXTURE_LEGS_LIST, reg.as_ptr(), 0xf);
         k = k.wrapping_add(1);
     }
     fechar(f);
 }
 
-/// O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
+/// Comparer for `fix_man_load_fixture_leg_checks` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
 /// duas vezes).
 pub(crate) unsafe extern "C" fn comparar_fix_man_load_fixture_leg_checks() {
     original_fn::<unsafe extern "C" fn()>(IDX_FIX_MAN_LOAD_FIXTURE_LEG_CHECKS)()
 }
-
-// ---------- 266a leva: o calendário: a nova data de um jogo, a entrada do jogo no calendário e a troca do ano do calendário (fix_man.cpp) ----------
 
 
 
@@ -922,7 +928,7 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: 
         reg[7..11].copy_from_slice(&core::slice::from_raw_parts((jogo + 0xc) as *const u8, 4));
         reg[11..15].copy_from_slice(&core::slice::from_raw_parts((jogo + 0x10) as *const u8, 4));
         let acrescentar: unsafe extern "thiscall" fn(usize, *const u8, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
-        acrescentar(0xae2a48, reg.as_ptr(), 0xf);
+        acrescentar(G_FIXTURE_LEGS_LIST, reg.as_ptr(), 0xf);
     }
     let pj = j.as_ptr() as usize;
     match (read_u8(jogo + 0x3a) as i8 as i32).wrapping_sub(2) {
@@ -971,7 +977,7 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: 
                 date_assign(&mut k, ps);
                 while fix_man_date_is_after(pe, pk) {
                     nearest_weekday(pk, alvo as u16 as u32, &mut h);
-                    let t = date_op(0x54c5b0, 0xae2c90, 2);
+                    let t = date_op(0x54c5b0, G_CURRENT_DATE, 2);
                     let t = [read_usize(t), read_usize(t + 4)];
                     let pt = t.as_ptr() as usize;
                     if !fix_man_date_is_after(pt, ph) && !fix_man_date_is_after(ph, pe) {
@@ -997,8 +1003,8 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: 
             }
         }
     }
-    if fix_man_date_is_after(0xae2c90, pj) {
-        date_assign(&mut j, 0xae2c90);
+    if fix_man_date_is_after(G_CURRENT_DATE, pj) {
+        date_assign(&mut j, G_CURRENT_DATE);
     }
     let r = date_op(0x54c5b0, pj, 2);
     date_assign(&mut j, r);
@@ -1006,7 +1012,9 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: 
     write_u16(jogo + 0x28, read_u16(pj + 2));
 }
 
-/// O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
+/// Comparer for `find_new_fixture_date` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
 pub(crate) unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usize, jogo: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIND_NEW_FIXTURE_DATE);
@@ -1225,7 +1233,9 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zer
     1
 }
 
-/// O comparador da entrada no calendário: só a original (ponytail: grava nas listas do calendário, aloca nós e o
+/// Comparer for `add_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da entrada no calendário: só a original (ponytail: grava nas listas do calendário, aloca nós e o
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
 pub(crate) unsafe extern "thiscall" fn comparar_add_fixture(this: usize, jogo: usize, zerar: u32) -> u32 {
@@ -1326,13 +1336,13 @@ pub(crate) unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
     1
 }
 
-/// O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
+/// Comparer for `set_year` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
 /// as listas; não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_set_year(this: usize, ano: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_SET_YEAR)(this, ano)
 }
-// ---------- 265a leva: o save do calendário: gravar e carregar as datas dos clubes e gravar a conferência das pernas (fix_man.cpp) ----------
-
 
 
 /// Opens a file by name in the CM3_TEMP folder with fopen and the given mode.
@@ -1369,7 +1379,9 @@ pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
     uefa_seeding_crt_fclose(f);
 }
 
-/// Comparador da 0x5af040: só a original.
+/// Comparer for `fix_man_save_club_dates` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x5af040: só a original.
 pub(crate) unsafe extern "C" fn comparar_fix_man_save_club_dates() {
     // ponytail: grava o arquivo do save (não pode rodar duas vezes); a cópia é provada pela prova do save (o .qst
     // gravado no modo rust com e sem a leva, item a item: club_dates.tmp)
@@ -1409,7 +1421,9 @@ pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
     uefa_seeding_crt_fclose(f);
 }
 
-/// Comparador da 0x5aee90: só a original.
+/// Comparer for `fix_man_load_club_dates` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x5aee90: só a original.
 pub(crate) unsafe extern "C" fn comparar_fix_man_load_club_dates() {
     // ponytail: aloca a tabela global e lê o arquivo (não pode rodar duas vezes); a cópia é provada pela carga do
     // save de férias na prova do save (levas/N/CARGA) e, sem o arquivo, pela carreira nova
@@ -1439,7 +1453,7 @@ pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
     escrever(&conta as *const usize as usize, 2, 1, f);
     *(G_FIXTURE_LEGS_LIST_CURSOR as *mut usize) = read_usize(G_FIXTURE_LEGS_LIST_HEAD);
     loop {
-        let item = proximo(0xae2a48);
+        let item = proximo(G_FIXTURE_LEGS_LIST);
         if item == 0 {
             break;
         }
@@ -1450,13 +1464,13 @@ pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
     uefa_seeding_crt_fclose(f);
 }
 
-/// Comparador da 0x5af4a0: só a original.
+/// Comparer for `fix_man_save_fixture_leg_checks` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x5af4a0: só a original.
 pub(crate) unsafe extern "C" fn comparar_fix_man_save_fixture_leg_checks() {
     // ponytail: grava o arquivo do save e anda o cursor da lista; a cópia é provada pela prova do save
     original_fn::<unsafe extern "C" fn()>(IDX_FIX_MAN_SAVE_FIXTURE_LEG_CHECKS)()
 }
-
-// ---------- 264a leva: o calendário: o conflito de dois jogos no mesmo dia e os anos de jogos de um clube (fix_man.cpp) ----------
 
 /// Modo de ensaio da 0x5ae380 (o comparador): a cópia para na decisão, antes de mexer no calendário.
 pub(crate) static mut CQB13_ENSAIO: bool = false;
@@ -1573,7 +1587,9 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo:
     1
 }
 
-/// Comparador em ensaio: a rotina só grava o cursor da lista (+0xa, lido pela 0x68d1b0) e o resto vai pelas
+/// Comparer for `resolve_same_day_clash` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador em ensaio: a rotina só grava o cursor da lista (+0xa, lido pela 0x68d1b0) e o resto vai pelas
 /// chamadas do calendário (tirar, juntar, conflitos que alocam a lista, a notícia), que não podem rodar duas vezes.
 /// A cópia roda em ensaio (para na decisão, sem a caixa) e a original depois, a partir do mesmo estado: lado a lado no
 /// cabeçalho da lista (+2 começo, +0xa cursor). Sem o jogo ou o primeiro da lista: só a original (a caixa).
@@ -1620,8 +1636,6 @@ pub(crate) unsafe extern "thiscall" fn get_club_last_fixture_year(_this: usize, 
 
 comparar_valor!(comparar_get_club_first_fixture_year, get_club_first_fixture_year, IDX_GET_CLUB_FIRST_FIXTURE_YEAR, (id: usize) -> u16);
 comparar_valor!(comparar_get_club_last_fixture_year, get_club_last_fixture_year, IDX_GET_CLUB_LAST_FIXTURE_YEAR, (id: usize) -> u16);
-
-// ---------- 262a leva: os jogos remarcados: os jogos vizinhos do clube movidos um dia, os jogos perto da data da seleção e a notícia do jogo remarcado (fix_man.cpp) ----------
 
 
 
@@ -1848,6 +1862,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jo
 }
 
 // ponytail: move jogos no calendário (tira, junta, aloca e libera listas, notícia): só a original; a cópia leva os ramos.
+/// Comparer for `move_nearby_club_fixtures` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_move_nearby_club_fixtures(this: usize, jogo: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MOVE_NEARBY_CLUB_FIXTURES)(this, jogo)
 }
@@ -1890,6 +1905,7 @@ pub(crate) unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: 
 }
 
 // ponytail: move jogos no calendário e dá a notícia (aloca): só a original; a cópia leva o ramo.
+/// Comparer for `reschedule_club_fixtures_near_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_reschedule_club_fixtures_near_date(this: usize, clube: usize, data: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESCHEDULE_CLUB_FIXTURES_NEAR_DATE)(this, clube, data)
 }
@@ -1988,7 +2004,9 @@ pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: 
     copiar(read_usize(this + 0x1128), nt, 0xdf);
 }
 
-/// O comparador da notícia, em ensaio. Já na fila: lado a lado no cabeçalho da fila e na notícia achada (a data nova).
+/// Comparer for `queue_fixture_moved_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da notícia, em ensaio. Já na fila: lado a lado no cabeçalho da fila e na notícia achada (a data nova).
 /// Nova: a cópia monta a notícia sem pô-la na fila e a original roda; a fila tem de crescer um e o último item (a cauda,
 /// +6, nó +0) ser a notícia da cópia nos 0xde bytes que o construtor (0x77bbe0) grava; o último dos 0xdf copiados é
 /// sobra de pilha na original (a cópia leva zero).
@@ -2024,8 +2042,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: u
             == core::slice::from_raw_parts(core::ptr::addr_of!(CPZ8_NOTICIA) as *const u8, 0xde);
     PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
 }
-
-// ---------- 255a leva: o calendário guardado: achar a cópia guardada de um jogo, guardar um jogo e tirar um jogo (fix_man.cpp) ----------
 
 
 
@@ -2157,7 +2173,9 @@ pub(crate) unsafe fn find_fixture_list(fm: usize, f: usize) -> usize {
     if b == 0 { 0 } else { fixture_list_in_block(b, f) }
 }
 
-/// Comparador: a original e a cópia só andam o cursor da lista (e a primeira pode criar o bloco do ano, que a segunda
+/// Comparer for `find_stored_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original e a cópia só andam o cursor da lista (e a primeira pode criar o bloco do ano, que a segunda
 /// acha pronto): pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize, f: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_STORED_FIXTURE)(this, f);
@@ -2166,7 +2184,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_stored_fixture(this: usize,
     r
 }
 
-/// Comparador: acrescenta à lista (não roda duas vezes): a lista é achada antes pela cópia, a original guarda e a conta
+/// Comparer for `insert_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: acrescenta à lista (não roda duas vezes): a lista é achada antes pela cópia, a original guarda e a conta
 /// tem de subir 1 com a cauda nova igual aos 0x4f bytes do jogo.
 pub(crate) unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_INSERT_FIXTURE);
@@ -2182,7 +2202,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_insert_fixture(this: usize, f: u
     PLACAR.registrar(igual, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, conta, read_u16(l)));
 }
 
-/// Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
+/// Comparer for `remove_fixture` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: tira da lista (não roda duas vezes): antes da original, a cópia acha a lista e vê se algum item tem os
 /// bytes do jogo (o tamanho guardado em +4, como a 0x68d1f0); a original tira e devolve: a devolução e a conta.
 pub(crate) unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_REMOVE_FIXTURE);
@@ -2205,8 +2227,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_remove_fixture(this: usize, f: u
         f, r, esperado, conta, read_u16(l)));
     r
 }
-
-// ---------- 254a leva: o calendário dos jogos: achar os jogos de um clube ou competição entre duas datas, os jogos da competição num dia e se a competição tem jogo na data (fix_man.cpp) ----------
 
 
 /// Fixture list for (year, day, slice, key nation) in calendar fm (0x5abf10, creates the year block if missing).
@@ -2473,7 +2493,9 @@ pub(crate) unsafe fn run_with_temp_list(lista: usize, conta_antes: u16, cauda_an
     (n, iguais)
 }
 
-/// Comparador: sem lista, pela devolução (a original e a cópia só andam os cursores das listas do calendário). Com
+/// Comparer for `find_fixtures` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: sem lista, pela devolução (a original e a cópia só andam os cursores das listas do calendário). Com
 /// lista, a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
@@ -2495,7 +2517,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0:
     r
 }
 
-/// Comparador: a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
+/// Comparer for `collect_comp_fixtures_on_day` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                                 tipo: u32, lista: usize) -> u32 {
@@ -2509,15 +2533,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(thi
     r
 }
 
-/// Comparador: pela devolução (só anda os cursores das listas do calendário).
+/// Comparer for `fix_man_comp_has_fixture_on_date` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pela devolução (só anda os cursores das listas do calendário).
 pub(crate) unsafe extern "stdcall" fn comparar_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_FIX_MAN_COMP_HAS_FIXTURE_ON_DATE)(data, comp);
     let n = fix_man_comp_has_fixture_on_date(data, comp);
     PLACAR.registrar(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r
 }
-
-// ---------- 241a leva: a próxima partida pelo filtro, o estádio em uso no dia e a data do amistoso internacional (fix_man.cpp, friendly.cpp) ----------
 
 /// Fixture list for (year, day, slice, group) via 0x5abf10 with the cursor rewound; 0 if null.
 ///
@@ -2633,6 +2657,7 @@ pub(crate) unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut
     f
 }
 
+/// Comparer for `find_next_fixture` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, a9: u32, a10: u32, a11: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(IDX_FIND_NEXT_FIXTURE);
@@ -2736,6 +2761,7 @@ pub(crate) unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize,
     if dia == 6 || dia == 5 { 1 } else { 2 }
 }
 
+/// Comparer for `get_time_slice` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_get_time_slice(this: usize, comp: usize, dia: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_TIME_SLICE)(this, comp, dia);
     let n = get_time_slice(this, comp, dia);
@@ -2781,6 +2807,7 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
     }
 }
 
+/// Comparer for `add_away_trip_illness_risk` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_add_away_trip_illness_risk(this: usize, f: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_AWAY_TRIP_ILLNESS_RISK)(this, f)
 }
@@ -2814,7 +2841,9 @@ pub(crate) unsafe extern "C" fn fix_man_get_partner_key_nation_index(clube: usiz
     0xff
 }
 
-/// Comparador: pelo valor (só lê).
+/// Comparer for `fix_man_get_partner_key_nation_index` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_FIX_MAN_GET_PARTNER_KEY_NATION_INDEX)(clube);
     let n = fix_man_get_partner_key_nation_index(clube);
@@ -2838,6 +2867,7 @@ pub(crate) unsafe extern "stdcall" fn get_fixture_list_for_date(data: usize, fat
     lista(*(G_FIXTURE_MANAGER as *const usize), ano, dia, fatia, grupo) // o gerenciador de partidas
 }
 
+/// Comparer for `get_fixture_list_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_get_fixture_list_for_date(data: usize, fatia: u32, grupo: u32) -> usize {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(IDX_GET_FIXTURE_LIST_FOR_DATE)(data, fatia, grupo);
     let n = get_fixture_list_for_date(data, fatia, grupo);
@@ -2876,6 +2906,7 @@ pub(crate) unsafe extern "C" fn mark_calendar_year(jogo: usize) {
     }
 }
 
+/// Comparer for `mark_calendar_year` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_mark_calendar_year(jogo: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_MARK_CALENDAR_YEAR);
     let tabela = *(G_CLUB_FIXTURE_YEAR_TABLE as *const usize);

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- centesima quinquagesima quarta leva: os eventos gravados e o passo em rede (0x6d98b0, 0x6d9c40, 0x6b55c0) ----------
-
 /// The two match event file names in CM3_TEMP (human or computer).
 ///
 /// [pt] Os dois arquivos de eventos (humano ou computador) em CM3_TEMP.
@@ -139,6 +137,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
 
 // ponytail: os eventos gravados mexem em arquivos e o passo em rede so roda em jogo em rede; sem
 // comparacao propria, validados pela carreira (Rust x original).
+/// Comparer for `record_events` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_record_events(e: usize, desc: *mut u32, humano: u8) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, u8) -> u8>(IDX_RECORD_EVENTS)(e, desc, humano)
 }
@@ -156,8 +155,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_read_events(e: usize, desc: *con
     PLACAR.registrar(igual && r == rr, || format!("read_events(pos {} n {} numero {} humano {}) original={} rust={} {:x?} x {:x?}", *desc, *desc.add(1), *desc.add(2), *(desc.add(3) as *const u8), r, rr, mo, mr));
     r
 }
-
-// ---------- centesima quinquagesima quinta leva: o leitor dos eventos da partida (0x6d9e50) ----------
 
 /// Like show_error_at (error box at file/line), then cleanup and exit(-1) like the original.
 ///
@@ -454,11 +451,10 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 
 // ponytail: le arquivo, aloca os textos e grava a tabela global; sem comparacao propria, validada
 // pela carreira (Rust x original) e pela comparacao da tabela no fim da leitura.
+/// Comparer for `read_events_cfg` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_read_events_cfg() {
     original_fn::<unsafe extern "C" fn()>(IDX_READ_EVENTS_CFG)()
 }
-
-// ---------- centesima quinquagesima sexta leva: o texto dos eventos e o comeco da partida assistida (0x6d8d10, 0x6b5260) ----------
 
 /// the event sound's `R` text with the tokens replaced (`<P1>` player, `<T1>`/`<T2>` club, `<C>` competition, `<F>`
 /// stage, `<D>`/`<N>` number, `<rf>`/`<Rf>` referee), `{...}` prefix and suffix (0x6701f0) and upper case; writes to
@@ -635,7 +631,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                         let dois = t(pos + 2) == b'2';
                         let casa = b(6) != 0;
                         let id = if dois == casa { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                        let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(0x245));
+                        let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
                         let g = *((clube + club::SHORT_GENDER_NAME) as *const u8) as u32;
@@ -743,7 +739,9 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 }
 
 
-/// O texto do evento so escreve nos buffers de texto ([0xb67ea0], [0xb67dd8]) e no `qual` do evento:
+/// Comparer for `event_text` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O texto do evento so escreve nos buffers de texto ([0xb67ea0], [0xb67dd8]) e no `qual` do evento:
 /// a original e a copia montam o mesmo texto e o resultado e conferido.
 pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize, comp: i32, variante: u32) -> usize {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i32, u32) -> usize>(IDX_EVENT_TEXT);
@@ -756,8 +754,6 @@ pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize,
     r as usize
 }
 // ponytail: so roda em jogo em rede (cria e libera motor e resumo); sem comparacao propria.
-
-// ---------- centesima quinquagesima setima leva: a narracao no painel (0x6d7b00) ----------
 
 /// restores the crowd sound, builds the event's `G` text (like 0x6d8d10) into a line with the club colours (`<O>` the
 /// other's, `<Y>`/`<R>` the default ones), wraps or cuts with "..." by the width (0x5e5ad0, 0x90cb20), draws on the
@@ -802,7 +798,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
     let mostrar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
     let relogio: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
-    const SOM: usize = 0xb74450;
+    const SOM: usize = G_SCREEN_MANAGER;
     const TABELA: isize = 0xb68788;
 
     if ev == 0 || ctx == 0 || painel as u16 == 0xffff {
@@ -839,7 +835,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         let lado = b(6);
         let mut clube_id = if lado != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
         let kit = *((ctx as isize + lado as i8 as isize * 1573 + 0x152) as *const u8) as u32;
-        cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(clube_id.wrapping_mul(0x245)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+        cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(clube_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
         let mut s = core::ptr::read_unaligned((sons() as isize + qual() * 0x110 + 0x108) as *const usize);
         let v = b(0xd) as i8;
         if v > 0 {
@@ -979,7 +975,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             let dois = t(pos + 2) == b'2';
                             let casa = b(6) != 0;
                             let id = if dois == casa { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                            let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(0x245));
+                            let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
                             let g = *((clube + club::SHORT_GENDER_NAME) as *const u8) as u32;
@@ -1021,7 +1017,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             clube_id = if lado != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
                             let a = (lado == 0) as isize;
                             let kit = *((ctx as isize + a * 1573 + 0x152) as *const u8) as u32;
-                            cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(clube_id.wrapping_mul(0x245)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+                            cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(clube_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'Y' | b'y' => {
@@ -1182,12 +1178,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 }
 
 // ponytail: desenha no painel e toca som; sem comparacao propria (so roda com a tela da partida).
+/// Comparer for `commentate_on_panel` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, painel: u32, largura: i32, quebrar: u32, fonte: usize, modo: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, modo)
 }
-
-// ---------- 172a leva: o fechamento do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
 
 /// Advances the commentary queue read position (+0xc, ring of 12), marks the slot and switches the queue off on
 /// reaching write/saved position; returns whether it did.
@@ -1305,7 +1300,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, jogador: i8, l
     for k in 0..2 {
         let clube = *((pt + 4 * k) as *const u32) as usize;
         let mut l = [0usize; 100];
-        lista(*(G_CLUB_TABLE as *const usize) + clube * 0x245, l.as_mut_ptr(), 1);
+        lista(*(G_CLUB_TABLE as *const usize) + clube * club::SIZE, l.as_mut_ptr(), 1);
         for &q in l.iter() {
             if q == 0 {
                 continue;
@@ -1327,6 +1322,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, jogador: i8, l
 
 
 
+/// Comparer for `next_event` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(IDX_NEXT_EVENT);
     let mut reg = vec![(t, 0x2db4)];
@@ -1339,6 +1335,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut
 }
 
 // ponytail: escreve em `buf` e chama a 0x53e140 e a 0x541f90 (efeitos fora); comparação pelo texto
+/// Comparer for `commentary_player_name` (comparison mode: see the header of motor.rs).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(IDX_COMMENTARY_PLAYER_NAME);
@@ -1347,8 +1344,6 @@ pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogad
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
     PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
 }
-
-// ---------- 171a leva: o fechamento do motor (5): a narração combinada e o comentário de contexto ----------
 
 /// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
@@ -1698,6 +1693,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 }
 
 
+/// Comparer for `combine_with_previous` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(IDX_COMBINE_WITH_PREVIOUS);
     if is_recording_top_level() {
@@ -1785,8 +1781,6 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
 
 
 
-// ---------- 169a leva: o fechamento do motor (3): a fila da narracao (match_events.cpp) ----------
-
 /// puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via
 /// 0x6d6f70
 /// Original: `event_at_front` (0x6d5d00, match_events.cpp, thiscall).
@@ -1848,7 +1842,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
         let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
         let lado = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let nome = caminho(0x9c382c, 0xa159a0);
-        tocar(0xb74450, (t as isize + 0x20 + lado) as usize, 2, nome, 1);
+        tocar(G_SCREEN_MANAGER, (t as isize + 0x20 + lado) as usize, 2, nome, 1);
     }
     t
 }
@@ -1863,7 +1857,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
 pub(crate) unsafe extern "C" fn free_event_tables() {
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut e = 0xb68790usize;
-    while e < 0xb6b72a {
+    while e < G_MATCH_EVENT_TABLE_END_MARKER {
         let tabela = core::ptr::read_unaligned(e as *const usize);
         if tabela != 0xb68670 && tabela != 0 {
             let mut k = 0i32;
@@ -1888,14 +1882,17 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 
 // ponytail: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem
 // comparacao propria, provadas pela carreira (fila de 19414 partidas, 285 mil eventos na frente).
+/// Comparer for `event_at_front` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(IDX_EVENT_AT_FRONT)(t, a, b, c, d, e, f, g)
 }
 
+/// Comparer for `construct_commentary_queue` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize, u8) -> usize>(IDX_CONSTRUCT_COMMENTARY_QUEUE)(t, goal_crowd_reaction)
 }
 
+/// Comparer for `free_event_tables` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_free_event_tables() {
     original_fn::<unsafe extern "C" fn()>(IDX_FREE_EVENT_TABLES)()
 }
@@ -1926,10 +1923,10 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
             if *canal == 0xfe {
                 return 0;
             }
-            if tocando(0xb74450, (ini & !0xff) | *canal as u32) != 0 {
+            if tocando(G_SCREEN_MANAGER, (ini & !0xff) | *canal as u32) != 0 {
                 return 0;
             }
-            parar(0xb74450, *canal as u32);
+            parar(G_SCREEN_MANAGER, *canal as u32);
             *canal = 0xff;
         }
         if !passou {
@@ -1939,6 +1936,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
     1
 }
 
+/// Comparer for `sounds_finished` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_sounds_finished(e: usize, ativos: *const u32) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(IDX_SOUNDS_FINISHED)(e, ativos)
 }
@@ -1979,6 +1977,7 @@ pub(crate) unsafe extern "system" fn event_variant(e: *const i16, lados: u32, ti
     v
 }
 
+/// Comparer for `event_variant` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
     let o = original_fn::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(IDX_EVENT_VARIANT);
     if is_recording_top_level() {

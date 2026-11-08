@@ -14,7 +14,7 @@ MUTACOES = [
     ('cpn_nacao_sem_sorteio', 'let nota = sorteio(c as i16 as i32) as i16;', 'let nota = c as i16; // mutacao: sem o sorteio', 'cpn_4 sorteio do clube da nacao'),
     ('cpn_vaga_nunca_achada', 'return Some(true);', 'return Some(false); // mutacao: a vaga aberta nao conta', 'cpn_5 clube com vaga aberta'),
     ('cpn_candidato_conta_o_atual', "break 'f true; // o atual fica de fora", "if false { break 'f true; } // mutacao: o tecnico atual entra", 'cpn_5 o tecnico atual fica de fora'),
-    ('cpn_oferta_um_dia_depois', 'let r = somar(0xae2c90, tmp.as_mut_ptr(), dias as i16 as i32 as u32);', 'let r = somar(0xae2c90, tmp.as_mut_ptr(), (dias as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 agendar oferta'),
+    ('cpn_oferta_um_dia_depois', 'let r = somar(G_CURRENT_DATE, tmp.as_mut_ptr(), dias as i16 as i32 as u32);', 'let r = somar(G_CURRENT_DATE, tmp.as_mut_ptr(), (dias as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 agendar oferta'),
     ('cpn_estatuto_lista', 'return (read_u8(e + 0x24) >> 1) & 0xf; // os bits 1..4 da entrada', 'return (read_u8(e + 0x24) >> 2) & 0xf; // mutacao: os bits 2..5', 'cpn_6 estatuto pela lista'),
     ('cpn_estatuto_contrato', 'read_u8(k + 0x4f) >> 4 // o nibble alto do contrato', 'read_u8(k + 0x4f) & 0xf // mutacao: o nibble baixo', 'cpn_6 estatuto pelo contrato'),
     ('cpn_alvos_evento', 'atualizar(this, p, clube, 3, tipo);', 'let _ = (atualizar, tipo); // mutacao: sem o evento 3', 'cpn_6 alvo fora do clube'),

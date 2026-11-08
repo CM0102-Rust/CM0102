@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- octogesima primeira leva: casa da vaga, byte de criterio da competicao ----------
-
 /// { 0x5b2ae0 } (ret 8, formation.cpp): a casa da vaga 0..10 (palavra +0x12d, ou +0x14e com
 /// `segunda`). Vaga fora da faixa: a original (caixa de erro e 1). Devolve so `ax`: no caminho +0x12d
 /// a original deixa em cima de `eax` o que o chamador tinha ali.
@@ -28,8 +26,6 @@ pub(crate) unsafe extern "C" fn competition_criterion(registro: usize, a: u32, b
     }
     *((registro + if tipo == 1 { 0x37 } else { 0x52 }) as *const u8)
 }
-
-// ---------- octogesima leva: esquecer a pessoa e quadro do tecnico (nevoa), casas da formacao ----------
 
 /// { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
 /// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
@@ -127,8 +123,6 @@ pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
     v
 }
 
-// ---------- quinquagesima nona leva: marcado designado ----------
-
 /// { 0x5b58e0 } (formation.cpp): a pessoa designada para a posicao (indice em +0x5bf + 4 x posicao,
 /// no vetor de pessoas de 0xae23bc, 110 bytes cada); indice negativo: 0.
 pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, posicao: i8) -> usize {
@@ -140,8 +134,6 @@ pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, posi
     }
 }
 
-
-// ---------- quinquagesima oitava leva: casas da formacao e craques ----------
 
 /// { 0x5b5290 } (formation.cpp): liga o bit `mascara` (um so) na mascara de casas da posicao
 /// (+0x188b + 8 x posicao, 64 bits), apagando antes o grupo dele (bits que se excluem), e zera
@@ -211,8 +203,6 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, lado: i8) {
         }
     }
 }
-
-// ---------- centesima quinquagesima nona leva: a formacao (formation.cpp), posicoes do jogador e casas no campo ----------
 
 /// the strong-position mask by the ratings (+0xf..+0x15, level 15 down to 10) and the sides rated 15 (+0x17..+0x19);
 /// returns only `ax`
@@ -414,6 +404,7 @@ pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8
     1
 }
 
+/// Comparer for `position_mask` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_position_mask(p: usize) -> u16 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_POSITION_MASK)(p);
     let n = position_mask(p);
@@ -421,6 +412,7 @@ pub(crate) unsafe extern "C" fn comparar_position_mask(p: usize) -> u16 {
     r
 }
 
+/// Comparer for `pitch_cell` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_pitch_cell(mascara: u32, ataque: i8, band: u32, saida: *mut i16) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32>(IDX_PITCH_CELL);
     let reg = [(saida as usize, 4)];
@@ -430,8 +422,6 @@ pub(crate) unsafe extern "C" fn comparar_pitch_cell(mascara: u32, ataque: i8, ba
 }
 
 comparar_valor!(comparar_slots_without_conflict, slots_without_conflict, IDX_SLOTS_WITHOUT_CONFLICT, () -> u8);
-
-// ---------- 257a leva: as casas da formação: gravar a coordenada da casa e escolher as posições, a posição repetida e o tipo de marcação (formation.cpp) ----------
 
 
 
@@ -648,7 +638,9 @@ pub(crate) fn formation_regions(this: usize) -> [(usize, usize); 3] {
     [(this + 0x12d, 0x584 - 0x12d), (this + 0x5b4, 11), (this + 0x187b, 8)]
 }
 
-/// Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
+/// Comparer for `set_slot_coordinate` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
 pub(crate) unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, band: u32, coord: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_SET_SLOT_COORDINATE);
     let reg = formation_regions(this);
@@ -657,7 +649,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize,
     r
 }
 
-/// Comparador: pura (grava só a saída): as duas sobre saídas próprias.
+/// Comparer for `check_duplicate_position` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura (grava só a saída): as duas sobre saídas próprias.
 pub(crate) unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(IDX_CHECK_DUPLICATE_POSITION);
     if !(0..=10).contains(&(casa as u8 as i8)) {
@@ -683,8 +677,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, ca
     PLACAR.registrar(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
     r
 }
-
-// ---------- 214a leva: o mapa de casas da formação, a nota do clube para o jovem e a partida assistida pelo humano (formation.cpp, player_regen.cpp, human_manager.cpp) ----------
 
 /// expands each formation slot's positions into the pitch cell tables and their mirrored copy
 /// Original: `Formation::build_position_lookup` (0x5b7160, formation.cpp, thiscall).
@@ -741,6 +733,7 @@ pub(crate) unsafe fn formation_watched_match_record(this: usize, humano: usize) 
 }
 
 
+/// Comparer for `build_position_lookup` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_build_position_lookup(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BUILD_POSITION_LOOKUP);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
@@ -749,8 +742,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_position_lookup(this: usiz
 }
 
 
-
-// ---------- centesima sexagesima terceira leva: a formacao (marcas e casas) e o reinicio dos recordes do clube ----------
 
 /// the stored cell of the slot by attack and band
 /// Original: `stored_cell` (0x5b3c70, formation.cpp, thiscall).
@@ -795,6 +786,7 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
 }
 
 
+/// Comparer for `stored_cell` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_stored_cell(t: usize, vaga: i8, ataque: i8, band: u32, saida: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL);
     let reg = [(saida as usize, 4)];
@@ -803,6 +795,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stored_cell(t: usize, vaga: i8, 
     r
 }
 
+/// Comparer for `set_formation_flag` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_formation_flag(t: usize, m: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_SET_FORMATION_FLAG);
     let reg = [(t + 0x584, 4), (t + 0x187f, 4)];
@@ -997,7 +990,9 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usiz
     1
 }
 
-/// Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
+/// Comparer for `load_from_disk` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
 /// devolução; o arquivo é aberto e lido pelas duas (só leitura).
 pub(crate) unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_LOAD_FROM_DISK);
@@ -1112,7 +1107,9 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32,
     1
 }
 
-/// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
+/// Comparer for `set_slot_position` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
 /// +0x187f) e [0xb67a34] (a 0x5b73a0 zera quando falha).
 pub(crate) unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_SET_SLOT_POSITION);
@@ -1130,6 +1127,7 @@ pub(crate) unsafe extern "thiscall" fn position_byte(this: usize, i: i8) -> u8 {
     *((this as isize + 0x5b4 + i as isize) as *const u8)
 }
 
+/// Comparer for `forget_person` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_forget_person(this: usize, pessoa: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FORGET_PERSON);
     let mut reg: Vec<(usize, usize)> = Vec::new();
@@ -1145,6 +1143,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_forget_person(this: usize, pesso
     PLACAR.registrar(igual, || format!("forget_person original={:x?} rust={:x?}", mo, mr));
 }
 
+/// Comparer for `clear_assigned` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_assigned(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_ASSIGNED);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5b4, 11), (this + 0x5bf, 44)], || o(this), || clear_assigned(this));
@@ -1152,6 +1151,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_assigned(this: usize) -> u
     r
 }
 
+/// Comparer for `competition_criterion` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_competition_criterion(registro: usize, a: u32, b: u32, tipo: u8) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32, u32, u8) -> u8>(IDX_COMPETITION_CRITERION)(registro, a, b, tipo);
     let v = competition_criterion(registro, a, b, tipo);
@@ -1159,6 +1159,7 @@ pub(crate) unsafe extern "C" fn comparar_competition_criterion(registro: usize, 
     r
 }
 
+/// Comparer for `formation_mask` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_formation_mask(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FORMATION_MASK);
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x187b, 4)], || o(this), || formation_mask(this));
@@ -1166,6 +1167,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_formation_mask(this: usize) -> u
     r
 }
 
+/// Comparer for `set_square` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_square(this: usize, posicao: i8, mascara: u64) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, u64) -> u32>(IDX_SET_SQUARE);
     let regioes = [(this + 0x187f, 0x64), (0xb67a34, 4)];
@@ -1174,6 +1176,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_square(this: usize, posicao:
     r
 }
 
+/// Comparer for `mark_stars` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_mark_stars(this: usize, lado: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_MARK_STARS);
     let regioes = [(this, MOTOR), (0xb67a34, 4)];
@@ -1185,6 +1188,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mark_stars(this: usize, lado: i8
     });
 }
 
+/// Comparer for `designated_for_position` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_designated_for_position(this: usize, posicao: i8) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> usize>(IDX_DESIGNATED_FOR_POSITION)(this, posicao);
     let n = designated_for_position(this, posicao);

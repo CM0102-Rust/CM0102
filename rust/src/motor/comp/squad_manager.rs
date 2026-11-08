@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 277a leva: a inscrição das três copas europeias, a tabela inicial do ranking da FIFA e a lista dos estádios neutros (fifa_rankings.cpp, squad_manager.cpp, stadium.cpp) ----------
-
 
 /// As três copas europeias da inscrição, na ordem: a Liga dos Campeões, a Copa da UEFA e a Recopa [inferência] (as
 /// chaves dos ids das competições).
@@ -71,7 +69,9 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, et
     }
 }
 
-/// Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
+/// Comparer for `process_euro_registration` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
 pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etapa: u32) {
@@ -93,14 +93,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: 
         return o(this, etapa);
     }
     let n = (read_u32(G_STAFF_COUNT) as i32).max(0) as usize;
-    let reg = [(this, 2usize), (read_u32(G_STAFF_TABLE) as usize, n * 0x6e), (0xae1080, 4)];
+    let reg = [(this, 2usize), (read_u32(G_STAFF_TABLE) as usize, n * staff::SIZE), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, etapa), || process_euro_registration(this, etapa));
     PLACAR.registrar(igual, || {
         let base = read_u32(G_STAFF_TABLE) as usize;
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| {
             let a0 = a.0;
             a.1.iter().zip(b.1.iter()).enumerate().filter(|(_, (x, y))| x != y).map(move |(i, (x, y))| (a0 + i, *x, *y))
-        }).take(12).map(|(e, x, y)| if e >= base && e < base + n * 0x6e { format!("pessoa {} +{:x}: {}/{}", (e - base) / 0x6e, (e - base) % 0x6e, x, y) } else { format!("{:x}: {}/{}", e, x, y) }).collect();
+        }).take(12).map(|(e, x, y)| if e >= base && e < base + n * staff::SIZE { format!("pessoa {} +{:x}: {}/{}", (e - base) / 0x6e, (e - base) % 0x6e, x, y) } else { format!("{:x}: {}/{}", e, x, y) }).collect();
         format!("process_euro_registration(etapa {}): {}", etapa as u8, d.join(", "))
     });
 }
@@ -108,8 +108,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_euro_registration(this: 
 
 
 
-
-// ---------- 276a leva: os números de camisa: o número de um jogador no clube, se o clube usa números e gravar o número (squad_manager.cpp) ----------
 
 
 /// True if contract k's club (+4) is club c itself or the club returned by 0x540a50(c, 0, 1) (the parent of a B team)
@@ -125,7 +123,7 @@ pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
     }
     let p = parceiro(c, 0, 1);
     let id = read_u32(k + 4) as usize;
-    (read_u32(G_CLUB_TABLE) as usize).wrapping_add(id.wrapping_mul(0x245)) == p
+    (read_u32(G_CLUB_TABLE) as usize).wrapping_add(id.wrapping_mul(club::SIZE)) == p
 }
 
 /// the rule: the squad number lives in the contract (+0x3a), positive at human-managed clubs and negative elsewhere;
@@ -161,7 +159,9 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
     0
 }
 
-/// A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
+/// Comparer for `get_squad_number` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
 pub(crate) unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(IDX_GET_SQUAD_NUMBER);
     let r = o(this, p, c);
@@ -205,7 +205,9 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
     1 // cql1: usa números
 }
 
-/// A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
+/// Comparer for `club_uses_squad_numbers` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
 pub(crate) unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, outra: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CLUB_USES_SQUAD_NUMBERS);
     if c == 0 {
@@ -247,7 +249,9 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
     }
 }
 
-/// Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
+/// Comparer for `set_squad_number` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_SET_SQUAD_NUMBER);
@@ -265,8 +269,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p:
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
     PLACAR.registrar(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
 }
-
-// ---------- 276a leva: os números de camisa: dar número a quem chega e numerar o elenco de um clube (squad_manager.cpp) ----------
 
 
 /// True if the person's id is below G_STAFF_COUNT (in the table of contracted people).
@@ -387,7 +389,9 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
     }
 }
 
-/// Lado a lado: o +0x3a dos dois contratos da pessoa (a única que a rotina numera) e a marca da caixa. Quando nenhuma
+/// Comparer for `allocate_squad_number` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0x3a dos dois contratos da pessoa (a única que a rotina numera) e a marca da caixa. Quando nenhuma
 /// posição da ficha é boa, a original lê a lista de preferidos de 4 bytes sem valor na pilha (sobra de quem chamou):
 /// a cópia usa a lista vazia (um valor que o jogo produz quando a sobra é 0xff) e o comparador deixa só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_allocate_squad_number(this: usize, c: usize, p: usize) {
@@ -584,7 +588,9 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
     }
 }
 
-/// Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
+/// Comparer for `assign_club_squad_numbers` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
@@ -601,8 +607,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_club_squad_numbers(this: 
         format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, manter, d.join(", "))
     });
 }
-
-// ---------- 276a leva: os números de camisa: numerar as ligas no começo do jogo e a inscrição nas copas europeias (squad_manager.cpp) ----------
 
 
 /// As ligas que a 0x859dc0 da original mandou numerar (gravadas pelo comparador da 0x859e20 enquanto o da 0x859dc0
@@ -639,7 +643,9 @@ pub(crate) unsafe extern "thiscall" fn init_new_game(this: usize) {
     for_each_numbered_league(|c| numerar(this, c, 1, 0));
 }
 
-/// Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
+/// Comparer for `init_new_game` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
 /// 0x859e20) e o +0 zerado.
 pub(crate) unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
@@ -719,7 +725,9 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
     }
 }
 
-/// Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
+/// Comparer for `assign_league_squad_numbers` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
 pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
@@ -876,14 +884,16 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
     conta as u8
 }
 
-/// Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
+/// Comparer for `select_euro_registered_players` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(IDX_SELECT_EURO_REGISTERED_PLAYERS);
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let mut sq = [0usize; 50];
     elenco(c, sq.as_mut_ptr(), 0);
-    let mut reg = vec![(0xae1080usize, 4usize)];
+    let mut reg = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     for &p in sq.iter() {
         if p != 0 && !reg.contains(&(p + 0x6d, 1)) {
             reg.push((p + 0x6d, 1));
@@ -924,7 +934,9 @@ pub(crate) unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usi
     1
 }
 
-/// Comparador da 0x859cc0: só a original.
+/// Comparer for `squad_manager_save` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x859cc0: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_squad_manager_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SQUAD_MANAGER_SAVE)(this, save)

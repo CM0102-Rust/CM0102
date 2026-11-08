@@ -19,7 +19,7 @@ MUTACOES = [
     ('cqd9_guardado_cat1_mais_1', '        *(G_TRAINING_PROGRESS_SAVED_DELTA_1 as *mut i8) = training_nibble(e, 1); // cqd9: guarda a categoria 1', '        *(0xde1f40 as *mut i8) = training_nibble(e, 1).wrapping_add(1); // mutacao: guarda a categoria 1', 'cqd_9 tirar'),
     ('cqd9_volta_cat4_menos_1', '        d[4] = g(0xde1f3e); // cqd9: devolve a categoria 4', '        d[4] = g(0xde1f3e).wrapping_sub(1); // mutacao: devolve a categoria 4', 'cqd_9 devolver'),
     ('cqd10_jovem_ate_35', '    if read_i8(p + 0x18) < 0x1e && read_i8(item + 0x18) != 8 // cqd10: o jovem não se aposenta', '    if read_i8(p + 0x18) < 0x24 && read_i8(item + 0x18) != 8 // mutacao: o jovem não se aposenta', 'cqd_10 aposentadoria desfeita'),
-    ('cqd10_fica_com_o_contrato', '        call_on_global_manager(0x4d0b50, 0xae1050, p); // cqd10: tira o contrato', '        // mutacao: tira o contrato', 'cqd_10 tira o contrato'),
+    ('cqd10_fica_com_o_contrato', '        call_on_global_manager(0x4d0b50, G_CONTRACT_MANAGER, p); // cqd10: tira o contrato', '        // mutacao: tira o contrato', 'cqd_10 tira o contrato'),
     ('cqd10_fica_no_elenco', '        elenco(p); // cqd10: sai do elenco', '        let _ = elenco; // mutacao: sai do elenco', 'cqd_10 sai do elenco'),
     ('cqd11_sem_sorteio', '    let r = taped_random(3); // cqd11: o sorteio da notícia', '    let r = 0; // mutacao: sem o sorteio da noticia', 'cqd_11 noticia da falta'),
     ('cqd11_relator_invertido', '    if tecnico != 0 && humano(clube, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata', '    if tecnico != 0 && humano(clube, 1, 1, 0, 0) != 0 { // mutacao: o relator invertido', 'cqd_11 relator tecnico'),

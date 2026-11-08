@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 277a leva: as regras de transferência da Argentina, de Portugal e da Coreia do Sul: as janelas de transferência (argentina_rules.cpp, korea_rules.cpp, portugal_rules.cpp) ----------
-
 
 
 /// Constructor of a nation's transfer rules: base 0x8e84a0 with the caller's 5 arguments, the nation's vtable and the
@@ -37,7 +35,9 @@ pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows(thi
     set_transfer_windows(this, 2, &CQN1_ARGENTINA, 0x987960, 0x50);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `argentina_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ARGENTINA_RULES_INIT_TRANSFER_WINDOWS);
     compare_transfer_rules_ctor("argentina_rules_init_transfer_windows", this, || o(this), |s| argentina_rules_init_transfer_windows(s));
@@ -61,7 +61,9 @@ pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows_7d3
     set_transfer_windows(this, 2, &CQN1_PORTUGAL, 0xa78844, 0x4f);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `argentina_rules_init_transfer_windows_7d3df0` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows_7d3df0(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ARGENTINA_RULES_INIT_TRANSFER_WINDOWS_7D3DF0);
     compare_transfer_rules_ctor("argentina_rules_init_transfer_windows_7d3df0", this, || o(this), |s| argentina_rules_init_transfer_windows_7d3df0(s));
@@ -85,7 +87,9 @@ pub(crate) unsafe extern "thiscall" fn construct_korea_rules(this: usize, a1: u3
     this
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `construct_korea_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_korea_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_KOREA_RULES);
     let mut r = 0usize;

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 259a leva: o prêmio do mês: o melhor das notas, a vaga do vencedor e a reputação do premiado (month_award.cpp, award_manager.cpp) ----------
-
 
 
 
@@ -13,7 +11,7 @@ use super::*;
 ///
 /// [pt] O clube `id` ([0xae23b4], 0x245 bytes cada).
 pub(crate) unsafe fn month_award_club_by_id(id: i32) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE))
 }
 
 /// O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
@@ -59,6 +57,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, nota
 
 // ponytail: o trabalho dela é chamar o melhor do mês e a vaga do vencedor, que têm comparador próprio (lado a lado e em
 // ensaio); a vaga chama a notícia e o registro do prêmio, que alocam: só a original; a cópia leva o ramo.
+/// Comparer for `award_best_rated_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_award_best_rated_player(this: usize, notas: usize, idade: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AWARD_BEST_RATED_PLAYER)(this, notas, idade)
 }
@@ -153,6 +152,7 @@ pub(crate) unsafe fn compare_month_award(nome: &str, regioes: &[(usize, usize)],
     PLACAR.registrar(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
 }
 
+/// Comparer for `set_winner` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(IDX_SET_WINNER);
     let mut regioes = vec![(this + 0x1d, 12 * 11)];
@@ -263,6 +263,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clu
     write_i16(linha, if v < 6500 { 6500 } else { v });
 }
 
+/// Comparer for `award_raise_winner_reputation` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_award_raise_winner_reputation(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(IDX_AWARD_RAISE_WINNER_REPUTATION);
     let mut regioes = Vec::new();

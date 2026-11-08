@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 282a leva: a virada das copas: a Supercopa japonesa, a Copa dos EUA e o Jogo das Estrelas da MLS (com os dois times das estrelas e o estádio sorteado) (jap_super.cpp, usa_open_cup.cpp, usa_mls_all_stars.cpp) ----------
-
 
 
 
@@ -85,6 +83,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season(this: 
     usa_mls_all_stars_cup_start_new_season(this, 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
 }
 
+/// Comparer for `usa_mls_all_stars_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON);
     compare_cup_new_season("usa_mls_all_stars_start_new_season", this, || o(this))
@@ -101,6 +100,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90b790
     usa_mls_all_stars_cup_start_new_season(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: a Copa dos EUA
 }
 
+/// Comparer for `usa_mls_all_stars_start_new_season_90b790` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90b790(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90B790);
     compare_cup_new_season("usa_mls_all_stars_start_new_season_90b790", this, || o(this))
@@ -117,6 +117,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760
     usa_mls_all_stars_cup_start_new_season(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
 }
 
+/// Comparer for `usa_mls_all_stars_start_new_season_90a760` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_USA_MLS_ALL_STARS_START_NEW_SEASON_90A760);
     compare_cup_new_season("usa_mls_all_stars_start_new_season_90a760", this, || o(this))
@@ -126,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_seas
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
-    read_u32_as_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(0x245))
+    read_u32_as_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(club::SIZE))
 }
 
 /// 0x90a540 UsaMlsAllStars::set_up_teams: the two All-Star clubs (home side by year parity), a random MLS stadium of
@@ -179,7 +180,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
         }
         i += 1;
     }
-    let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(0x122));
+    let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
     let l = read_u32_as_usize(this + 0xa7);
     write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nacao);
     write_u32_from_usize(read_u32_as_usize(l) + 0x53, read_u32_as_usize(read_u32_as_usize(l + 6) + 0x53));
@@ -203,7 +204,9 @@ pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
     set_up_all_star_teams(this)
 }
 
-/// Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
+/// Comparer for `set_up_teams` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
 /// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
 /// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
 pub(crate) unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32 {
@@ -258,6 +261,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
     eng_cc_cup_cup_update_for_date(this, hoje, fase)
 }
 
+/// Comparer for `usa_mls_all_stars_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ALL_STARS_UPDATE_FOR_DATE)(this, hoje, fase)
 }
@@ -315,7 +319,9 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     t
 }
 
-/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
+/// Comparer for `usa_mls_all_stars_create_round_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
 /// fase −1, só a original (nenhuma grava nada).
 pub(crate) unsafe extern "thiscall" fn comparar_usa_mls_all_stars_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {

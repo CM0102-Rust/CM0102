@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: os construtores dos estaduais: Nordeste, Paranaense e Pernambucano (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (bra_reg_northeast.cpp, bra_reg_parana.cpp, bra_reg_pern.cpp) ----------
-
 
 /// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
@@ -143,14 +141,13 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_northeast(this: usize, 
 
 
 
+/// Comparer for `construct_bra_reg_northeast` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_northeast(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTHEAST);
     bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_northeast", this, ano, registro, &CQT3_NORDESTE, || o(this, ano, registro))
 }
 
 
-
-// ---------- 277a leva: a tabela dos estaduais: Nordeste, Paranaense e Pernambucano (bra_reg_northeast.cpp, bra_reg_parana.cpp, bra_reg_pern.cpp) ----------
 
 
 
@@ -218,7 +215,7 @@ pub(crate) unsafe fn bra_reg_northeast_compare_state_league_table(nome: &str, th
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if is_in_state_league(clube, g) {
             plano.push(clube);
         }
@@ -237,6 +234,7 @@ pub(crate) unsafe fn bra_reg_northeast_compare_state_league_table(nome: &str, th
     r
 }
 
+/// Comparer for `bra_reg_northeast_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_NORTHEAST_CREATE_TABLE);
     bra_reg_northeast_compare_state_league_table("bra_reg_northeast_create_table", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, || o(this))
@@ -252,6 +250,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_create_semi_final_stage
     bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
 }
 
+/// Comparer for `bra_reg_northeast_create_semi_final_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_semi_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_NORTHEAST_CREATE_SEMI_FINAL_STAGE);
     bra_reg_bahia_compare_knockout_from_table("bra_reg_northeast_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
@@ -268,6 +267,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_start_new_season(this: 
     state_league_new_season(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
+/// Comparer for `bra_reg_northeast_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_NORTHEAST_START_NEW_SEASON);
     compare_state_league_new_season("bra_reg_northeast_start_new_season", this, || o(this))
@@ -283,6 +283,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_advance_stage(this: usi
     state_league_advance_stage(this, 0x98af54, 0x1ea, 0x4370d0);
 }
 
+/// Comparer for `bra_reg_northeast_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_NORTHEAST_ADVANCE_STAGE);
     compare_state_league_advance_stage("bra_reg_northeast_advance_stage", this, || o(this))

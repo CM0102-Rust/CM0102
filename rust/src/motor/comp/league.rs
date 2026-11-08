@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- octogesima nona leva: decisao pela classificacao do grupo, narracao da classificacao ----------
-
 /// { 0x6854a0 } (ret 8, league.cpp): a fase (this) com a partida (`partida`, +0x42 = 0xff) ja decide
 /// o clube? So nas competicoes que contam (0x4b0700), com o bit 1 de +0xd9 e a rodada +0xa9 >= 24:
 /// a linha do clube (+0xb1, 0x3b bytes, +0x3e linhas) sem situacao +0x37 de 5, 2, 3, -2, -4 ou -5;
@@ -150,8 +148,6 @@ pub(crate) unsafe extern "thiscall" fn narrate_qualification(this: usize, lado: 
     comment_standing_with(this, lado, &mut |t, a| add_match_event(t, a))
 }
 
-// ---------- 272a leva: a Liga dos Campeões: a tabela das rodadas das fases de grupos; a liga: as expectativas da temporada e o rebaixamento de um clube (european_cup.cpp, league.cpp) ----------
-
 /// As datas das 6 rodadas das fases de grupos (0x68a160: rodada, dia, mês 0..11, anos a somar, dia da semana; código 2,
 /// valor 0), pela metade da fase: [0] primeira fase, grupos 0..3; [1] primeira fase, 4..7; [2] segunda fase, 8..9; [3]
 /// segunda fase, 10..11.
@@ -201,7 +197,9 @@ pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize)
     }
 }
 
-/// Só a original (as expectativas mudam a diretoria e mandam notícias; não rodam duas vezes): a cópia leva o ramo.
+/// Comparer for `set_club_season_expectations` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (as expectativas mudam a diretoria e mandam notícias; não rodam duas vezes): a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_set_club_season_expectations(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_CLUB_SEASON_EXPECTATIONS)(this)
 }
@@ -234,15 +232,15 @@ pub(crate) unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, c
     }
 }
 
-/// Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
+/// Comparer for `relegate_club_to_division` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
 /// a divisão e +0x5b = a competição de antes.
 pub(crate) unsafe extern "thiscall" fn comparar_relegate_club_to_division(this: usize, clube: usize, divisao: usize, x: u32) {
     let antiga = read_u32_as_usize(clube + club::DIVISION);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RELEGATE_CLUB_TO_DIVISION)(this, clube, divisao, x);
     PLACAR.registrar(read_u32_as_usize(clube + club::DIVISION) == divisao && read_u32_as_usize(clube + club::LAST_DIVISION) == antiga, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", read_u32_as_usize(clube + club::DIVISION), read_u32_as_usize(clube + club::LAST_DIVISION)));
 }
-
-// ---------- 269a leva: a liga: os jogos levados para a TV, a notícia dos grupos e a notícia da tabela (league.cpp) ----------
 
 
 
@@ -458,7 +456,9 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
     destruir(l);
 }
 
-/// Comparador da 0x685640: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, as notas
+/// Comparer for `move_fixtures_for_tv` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x685640: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, as notas
 /// sorteiam e as notícias vão aos técnicos). O plano, feito antes: pela entrada da data, os jogos da liga no dia e fatia
 /// dela (0x5abd90 numa lista provisória) e as vagas válidas (fatia 0..2) antes da primeira vazia; cada vaga válida leva
 /// um jogo enquanto a lista tiver (toda nota passa do −1 inicial), e a vaga fica 0xff: as vagas 0xff do bloco depois da
@@ -573,7 +573,9 @@ pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
     }
 }
 
-/// Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
+/// Comparer for `send_group_draw_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
 pub(crate) unsafe extern "thiscall" fn comparar_send_group_draw_news(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SEND_GROUP_DRAW_NEWS)(this) // ponytail: só a notícia
 }
@@ -704,12 +706,12 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, lista
     destruir(p0);
 }
 
-/// Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
+/// Comparer for `send_fixture_list_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
 pub(crate) unsafe extern "thiscall" fn comparar_send_fixture_list_news(this: usize, lista: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FIXTURE_LIST_NEWS)(this, lista) // ponytail: só as notícias
 }
-
-// ---------- 267a leva: a liga: o dia da liga, a criação dos jogos da temporada e a promoção e o rebaixamento (league.cpp) ----------
 
 
 
@@ -898,7 +900,9 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
     1
 }
 
-/// O comparador do dia da liga: só a original (ponytail: chama os métodos de cada fase e da liga, as notícias, os
+/// Comparer for `league_update_for_date` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador do dia da liga: só a original (ponytail: chama os métodos de cada fase e da liga, as notícias, os
 /// recordes e os jogos para a TV, que mexem no calendário: não roda duas vezes). Confere o que a rotina garante: 0 só
 /// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
 pub(crate) unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: usize, completo: u32) -> u32 {
@@ -1142,7 +1146,9 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     1
 }
 
-/// O comparador da criação dos jogos: só a original (ponytail: aloca a grade, sorteia a ordem dos clubes e põe os
+/// Comparer for `create_fixtures` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da criação dos jogos: só a original (ponytail: aloca a grade, sorteia a ordem dos clubes e põe os
 /// jogos no calendário, que aloca: não roda duas vezes). Confere o que a rotina garante: com a lista própria do ano, ela
 /// é liberada (+0xea = 0) quando devolve 1.
 pub(crate) unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> u32 {
@@ -1261,13 +1267,13 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
     }
 }
 
-/// O comparador da promoção e do rebaixamento: só a original (ponytail: os contratos, o técnico demitido e as notícias
+/// Comparer for `league_promote_and_relegate` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da promoção e do rebaixamento: só a original (ponytail: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, acima, abaixo, contratos, aos_pares, sobem, descem)
 }
-
-// ---------- 262a leva: a tabela da liga: as posições possíveis e a situação de cada clube (o título, o acesso, o mata-mata, o rebaixamento, a vaga europeia), e a fase seguinte da First e da Second (league.cpp, eng_first.cpp, eng_second.cpp) ----------
 
 
 
@@ -1643,7 +1649,9 @@ pub(crate) unsafe fn table_status_regions(this: usize) -> Vec<(usize, usize)> {
     v
 }
 
-/// Comparador da 0x684cd0, em ensaio (modelo CPV6_ENSAIO): a original roda inteira primeiro, gravando a fita dos
+/// Comparer for `update_positions_and_status` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x684cd0, em ensaio (modelo CPV6_ENSAIO): a original roda inteira primeiro, gravando a fita dos
 /// anúncios (CPZ3_FITA); a memória volta e a cópia roda sem as virtuais +0x40 e +0x68 nem as cláusulas (que mandam
 /// notícia, gravam registros e sorteiam o moral), repondo da fita o que a +0x44 de cada anúncio gravou na tabela. As
 /// duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
@@ -1706,8 +1714,6 @@ pub(crate) unsafe fn compare_stage_advance(nome: &str, this: usize, original: im
 }
 
 
-
-// ---------- 260a leva: o fim da temporada da liga: os prêmios em dinheiro, os registros pela situação do clube e a notícia da situação (league.cpp) ----------
 
 
 
@@ -1790,7 +1796,9 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
     }
 }
 
-/// Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
+/// Comparer for `pay_prize_money` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
 /// outros casos, o ensaio: a cópia sem a notícia do prêmio (0x48e3e0 aloca) e a original a partir do mesmo estado, nos
 /// registros de finanças (0x167 bytes) de todos os clubes da tabela.
 pub(crate) unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
@@ -1853,6 +1861,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(li
 
 // ponytail: os três registros acrescentam ao histórico das pessoas e mexem na reputação (alocam): só a original; a
 // cópia leva os ramos.
+/// Comparer for `league_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_league_update_staff_records_for_status(liga: usize, clube: usize, situacao: u32, fase: u32, saida: usize, a: u32, b: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_LEAGUE_UPDATE_STAFF_RECORDS_FOR_STATUS)(liga, clube, situacao, fase, saida, a, b)
 }
@@ -1950,6 +1959,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(liga: usize, clube: 
 // ponytail: a virtual +0x44 acrescenta registros e a notícia vai às caixas dos técnicos (alocam): só a original; a
 // cópia leva o ramo.
 // Dentro do comparador da 0x684cd0 (CPZ3_GRAVAR), guarda na fita dele o que o anúncio gravou nas regiões.
+/// Comparer for `announce_team_status` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_announce_team_status(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(IDX_ANNOUNCE_TEAM_STATUS);
     let Some(regioes) = (*core::ptr::addr_of!(CPZ3_GRAVAR)).clone() else {
@@ -1965,8 +1975,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_announce_team_status(liga: usize
     (*core::ptr::addr_of_mut!(CPZ3_FITA)).push((clube, situacao as u8, bytes));
     r
 }
-
-// ---------- 259a leva: a tabela da liga: o resultado na tabela, a cópia da tabela e as posições previstas (league.cpp) ----------
 
 
 
@@ -1990,7 +1998,7 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, 
     }
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut local = [0u8; 8];
-    copia(liga + 0xc9, local.as_mut_ptr(), 0xae2c90);
+    copia(liga + 0xc9, local.as_mut_ptr(), G_CURRENT_DATE);
     let fase_da_liga = *((liga + 0x44) as *const u8);
     let fase = *((p + 0x42) as *const u8);
     if fase_da_liga == 0xff && fase != 0xff {
@@ -2026,7 +2034,9 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, 
     1
 }
 
-/// Comparador: a partida nula e a da fase (a virtual da fase recebe a partida e compara por conta própria): só a
+/// Comparer for `league_add_result` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a partida nula e a da fase (a virtual da fase recebe a partida e compara por conta própria): só a
 /// original. Nos outros casos, o ensaio: a cópia sem a estatística (0x49f570 acha ou cria registros) e a original a
 /// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
 /// da partida e a devolução.
@@ -2104,7 +2114,9 @@ pub(crate) unsafe extern "thiscall" fn copy_table(liga: usize) -> usize {
     c
 }
 
-/// Comparador: aloca (não roda duas vezes): só a original, com o plano completo conferido depois: o +0xa7 esperado
+/// Comparer for `copy_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: aloca (não roda duas vezes): só a original, com o plano completo conferido depois: o +0xa7 esperado
 /// (calculado antes) e a cópia devolvida igual à tabela, linha a linha (fora os ponteiros dos vetores novos), com os
 /// vetores de confrontos e de forma iguais aos da tabela.
 pub(crate) unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
@@ -2187,7 +2199,9 @@ pub(crate) unsafe extern "thiscall" fn league_set_predicted_positions(liga: usiz
     liberar(v);
 }
 
-/// Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia
+/// Comparer for `league_set_predicted_positions` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia
 /// do vetor ordenada pelo núcleo da 0x4c08f0 (chaves num Vec); depois, o registro de cada clube (a última vez que ele
 /// aparece) tem de ter em +0x72 a posição planejada.
 pub(crate) unsafe extern "thiscall" fn comparar_league_set_predicted_positions(liga: usize) {
@@ -2214,8 +2228,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_set_predicted_positions(l
     }
     PLACAR.registrar(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", liga, n, erros.join("; ")));
 }
-
-// ---------- 254a leva: a projeção da liga para a diretoria: as posições projetadas do clube e as duas ordens da projeção (league.cpp) ----------
 
 
 
@@ -2361,7 +2373,9 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
     1
 }
 
-/// Comparador: pelo valor (só lê).
+/// Comparer for `compare_projection_by_reputation_desc` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_PROJECTION_BY_REPUTATION_DESC)(a, b);
     let n = compare_projection_by_reputation_desc(a, b);
@@ -2369,7 +2383,9 @@ pub(crate) unsafe extern "C" fn comparar_compare_projection_by_reputation_desc(a
     r
 }
 
-/// Comparador: pelo valor (só lê).
+/// Comparer for `compare_projection_by_points_desc` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_PROJECTION_BY_POINTS_DESC)(a, b);
     let n = compare_projection_by_points_desc(a, b);
@@ -2377,7 +2393,9 @@ pub(crate) unsafe extern "C" fn comparar_compare_projection_by_points_desc(a: us
     r
 }
 
-/// Comparador: o bloco da projeção é alocado e liberado dentro (não fica nada dele); o efeito é a virtual +0x68, que
+/// Comparer for `update_projected_positions` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o bloco da projeção é alocado e liberado dentro (não fica nada dele); o efeito é a virtual +0x68, que
 /// grava os bytes +0x73..+0x75 do registro do clube no Comp_Stats da liga (+8, achado pela 0x4a4850, que dentro da
 /// 0x4ae300 devolve o registro provisório dela): lado a lado nesses 3 bytes e na devolução. As duas versões que repassam
 /// a outra competição (0x48e380, 0x7ef100) gravam fora da região: aí só a devolução pesa.
@@ -2395,8 +2413,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_projected_positions(this:
         this, clube, r, n, mo, mr));
     r
 }
-
-// ---------- 249a leva: a tabela da liga: iniciar a linha do clube, o vetor dos clubes e as posições finais (league.cpp) ----------
 
 
 
@@ -2543,7 +2559,9 @@ pub(crate) unsafe extern "thiscall" fn record_final_positions(this: usize) {
     }
 }
 
-/// Comparador: a original aloca (histórico e confrontos): roda só ela e confere a linha com o plano feito antes (o
+/// Comparer for `init_table_row` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original aloca (histórico e confrontos): roda só ela e confere a linha com o plano feito antes (o
 /// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
 /// adversários de cada linha).
 pub(crate) unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
@@ -2582,7 +2600,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u
         idx, clube, marca as u8, n, read_i16(this + 0xa7), a7_esperado, confrontos, read_usize(l + 5), read_usize(l + 9)));
 }
 
-/// Comparador: a original aloca o vetor: roda só ela e confere a conta e os clubes, na ordem da tabela.
+/// Comparer for `league_get_club_array` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original aloca o vetor: roda só ela e confere a conta e os clubes, na ordem da tabela.
 pub(crate) unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *mut usize, n: *mut i16) {
     original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_LEAGUE_GET_CLUB_ARRAY)(this, saida, n);
     let p = *saida;
@@ -2594,7 +2614,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_get_club_array(this: usiz
     PLACAR.registrar(ok, || format!("league_get_club_array conta {} (tabela {})", *n, conta));
 }
 
-/// Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
+/// Comparer for `record_final_positions` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
 pub(crate) unsafe extern "thiscall" fn comparar_record_final_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RECORD_FINAL_POSITIONS);
     let reg: Vec<(usize, usize)> = (0..read_i16(this + 0x3e).max(0) as usize)
@@ -2603,8 +2625,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_final_positions(this: usi
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || record_final_positions(this));
     PLACAR.registrar(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
 }
-
-// ---------- 242a leva: o resultado na tabela da liga e os pontos do resultado (league.cpp) ----------
 
 
 /// Adds 1 to the byte at address a.
@@ -2818,6 +2838,7 @@ pub(crate) unsafe fn result_update_regions(p: usize, tab: usize, n: u32, pts_cas
     reg
 }
 
+/// Comparer for `apply_result_to_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(IDX_APPLY_RESULT_TO_TABLE);
     let reg = result_update_regions(p, tab, n, pts_casa, pts_fora);
@@ -2854,8 +2875,6 @@ pub(crate) unsafe extern "thiscall" fn points_for_result(liga: usize, clube: usi
 }
 
 comparar_valor!(comparar_points_for_result, points_for_result, IDX_POINTS_FOR_RESULT, (clube: usize, p: usize) -> u32);
-
-// ---------- 242a leva: a ordem pelo confronto guardado, a ordem das datas e a linha do clube na tabela da liga (league.cpp) ----------
 
 
 
@@ -2905,6 +2924,7 @@ pub(crate) unsafe extern "C" fn league_compare_table_rows_h2h(a: usize, b: usize
     }
 }
 
+/// Comparer for `league_compare_table_rows_h2h` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_league_compare_table_rows_h2h(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_LEAGUE_COMPARE_TABLE_ROWS_H2H)(a, b);
     let n = league_compare_table_rows_h2h(a, b);
@@ -2933,6 +2953,7 @@ pub(crate) unsafe extern "C" fn league_compare_dates(a: usize, b: usize) -> i32 
     }
 }
 
+/// Comparer for `league_compare_dates` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_league_compare_dates(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_LEAGUE_COMPARE_DATES)(a, b);
     let n = league_compare_dates(a, b);
@@ -2991,8 +3012,6 @@ pub(crate) unsafe extern "thiscall" fn contains_club(liga: usize, clube: usize) 
 }
 
 comparar_valor!(comparar_contains_club, contains_club, IDX_CONTAINS_CLUB, (clube: usize) -> u32);
-
-// ---------- 241a leva: a tabela da liga: ordenar, a minitabela do confronto direto, liberar e conferir o fim (league.cpp) ----------
 
 
 
@@ -3154,7 +3173,7 @@ pub(crate) unsafe fn is_sort_tie(a: usize, b: usize, col: usize) -> bool {
 pub(crate) unsafe fn sort_regions(liga: usize, linhas: usize) -> Vec<(usize, usize)> {
     let n = read_i16(liga + 0x3e).max(0) as usize;
     let linhas = if linhas == 0 { read_usize(liga + 0xb1) } else { linhas };
-    let mut reg = vec![(liga + 0xa7, 2), (0xb679fc, 4), (0xb67a00, 4)];
+    let mut reg = vec![(liga + 0xa7, 2), (G_LEAGUE_SORT_CURRENT_LEAGUE, 4), (G_LEAGUE_SORT_CUSTOM_COMPARE_FUNC, 4)];
     if linhas == 0 {
         return reg;
     }
@@ -3179,6 +3198,7 @@ pub(crate) unsafe fn sort_regions(liga: usize, linhas: usize) -> Vec<(usize, usi
     reg
 }
 
+/// Comparer for `sort_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_sort_table(liga: usize, linhas: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SORT_TABLE);
     let reg = sort_regions(liga, linhas);
@@ -3274,6 +3294,7 @@ pub(crate) unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usiz
     free(t);
 }
 
+/// Comparer for `build_h2h_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_build_h2h_table(liga: usize, linhas: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_BUILD_H2H_TABLE);
     if linhas == 0 {
@@ -3318,6 +3339,7 @@ pub(crate) unsafe extern "thiscall" fn free_table(liga: usize, tabela: usize) {
 
 /// Comparador: liberar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as liberações da 232ª); a prova é a carreira e o ramo da cópia no modo Rust.
+/// Comparer for `free_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_free_table(liga: usize, tabela: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FREE_TABLE)(liga, tabela)
 }
@@ -3418,6 +3440,7 @@ pub(crate) unsafe fn is_complete_check_read_only(liga: usize, fases: u32) -> boo
     (0..n.max(0) as usize).any(|i| ((read_u8(tab + 0x3b * i + 0x11) as i8) as i16) < total)
 }
 
+/// Comparer for `league_check_complete` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_league_check_complete(liga: usize, fases: u32, avisar: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_LEAGUE_CHECK_COMPLETE);
     if !is_complete_check_read_only(liga, fases) {
@@ -3427,8 +3450,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_league_check_complete(liga: usiz
     PLACAR.registrar(igual && r == n, || format!("league_check_complete({:x}, {}, {}) {}/{} {:x?} x {:x?}", liga, fases, avisar, r, n, mo, mr));
     r
 }
-
-// ---------- 241a leva: o fim de temporada da liga: os direitos de TV, as honras da temporada e o registro no histórico de competições (league.cpp, comp_util.cpp) ----------
 
 
 
@@ -3474,7 +3495,9 @@ pub(crate) unsafe extern "thiscall" fn pay_tv_rights(liga: usize, valor: i32, fi
     pay_tv_money(liga, valor, filtro, true)
 }
 
-/// Comparador: as finanças (0x167 bytes) de cada clube da tabela; a cópia roda sem a notícia (a da original fica, uma
+/// Comparer for `pay_tv_rights` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: as finanças (0x167 bytes) de cada clube da tabela; a cópia roda sem a notícia (a da original fica, uma
 /// vez só). Clube nulo na tabela (a caixa da 0x5a0590): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_pay_tv_rights(liga: usize, valor: i32, filtro: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_PAY_TV_RIGHTS);
@@ -3542,10 +3565,12 @@ pub(crate) unsafe extern "thiscall" fn league_record_season_honours(liga: usize)
 /// [pt] As regiões do histórico de competições: contagem, ponteiro e as linhas (26 bytes).
 pub(crate) unsafe fn comp_history_regions() -> Vec<(usize, usize)> {
     let n = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).max(0) as usize;
-    vec![(0xae237c, 4), (0xae23d4, 4), (*(G_CLUB_COMP_HISTORY_TABLE as *const usize), 26 * n)]
+    vec![(0xae237c, 4), (G_CLUB_COMP_HISTORY_TABLE, 4), (*(G_CLUB_COMP_HISTORY_TABLE as *const usize), 26 * n)]
 }
 
-/// Comparador: os clubes (o +0x5b) e o histórico de competições. Sem linha livre no histórico (a 0x4afce0 faria
+/// Comparer for `league_record_season_honours` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: os clubes (o +0x5b) e o histórico de competições. Sem linha livre no histórico (a 0x4afce0 faria
 /// realloc): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_league_record_season_honours(liga: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_LEAGUE_RECORD_SEASON_HONOURS);
@@ -3582,8 +3607,6 @@ pub(crate) unsafe fn free_comp_history_row() -> usize {
 }
 
 
-
-// ---------- 216a leva: se a liga tem rebaixamento, a data da rodada do modelo da liga e a importância do jogo da liga (league.cpp) ----------
 
 /// whether the league has relegation places at the bottom of the table
 /// Original: `League::has_relegation` (0x6847b0, league.cpp, thiscall).
@@ -3653,6 +3676,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_importance(liga: usize, partida
     local
 }
 
+/// Comparer for `has_relegation` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_has_relegation(liga: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_HAS_RELEGATION)(liga);
     let n = has_relegation(liga);
@@ -3660,6 +3684,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_has_relegation(liga: usize) -> u
     r
 }
 
+/// Comparer for `league_round_set_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_league_round_set_date(rodadas: usize, i: u32, dia: u32, mes: u32, anos: u32, semana: u32, codigo: u32, base: u32, valor: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(IDX_LEAGUE_ROUND_SET_DATE);
     let r = rodadas.wrapping_add((i as i16 as isize * 0x41) as usize);
@@ -3669,6 +3694,7 @@ pub(crate) unsafe extern "C" fn comparar_league_round_set_date(rodadas: usize, i
     a
 }
 
+/// Comparer for `get_match_importance` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_get_match_importance(liga: usize, partida: usize, lado: u32, saida: *mut u8) -> u8 {
     // a 0x68a4d0 só lê a liga e grava na local e na `saida`: pode rodar nos dois lados
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut u8) -> u8>(IDX_GET_MATCH_IMPORTANCE);
@@ -3677,8 +3703,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_match_importance(liga: usize
     PLACAR.registrar(igual && r == n, || format!("get_match_importance original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
-
-// ---------- 214a leva: a ordem das linhas da tabela, a grade de turnos da liga e a margem do último dia (league.cpp) ----------
 
 /// the table qsort comparison: points, the league tiebreak rules and the club id
 /// Original: `league_compare_table_rows` (0x683210, league.cpp, cdecl).
@@ -3941,6 +3965,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linh
     0xff
 }
 
+/// Comparer for `league_compare_table_rows` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_league_compare_table_rows(a: usize, b: usize) -> i32 {
     // a comparação particular de [0xb67a00] (se houver) roda nos dois lados: só lê as linhas
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_LEAGUE_COMPARE_TABLE_ROWS)(a, b);
@@ -3949,6 +3974,7 @@ pub(crate) unsafe extern "C" fn comparar_league_compare_table_rows(a: usize, b: 
     r
 }
 
+/// Comparer for `league_build_round_robin_grid` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_league_build_round_robin_grid(grade: *const *mut i32, n: i32) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*const *mut i32, i32) -> u32>(IDX_LEAGUE_BUILD_ROUND_ROBIN_GRID);
     let regioes: Vec<(usize, usize)> = (1..=n.max(0)).map(|i| (*grade.offset(i as isize) as usize + 4, (n.max(1) as usize - 1) * 4)).collect();
@@ -3957,6 +3983,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_league_build_round_robin_grid(gra
     r
 }
 
+/// Comparer for `final_day_margin_needed` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_final_day_margin_needed(liga: usize, linha: usize, saida: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8>(IDX_FINAL_DAY_MARGIN_NEEDED);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida as usize, 1)], || o(liga, linha, saida),
@@ -3964,8 +3991,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_final_day_margin_needed(liga: us
     PLACAR.registrar(igual && r == n, || format!("final_day_margin_needed original={:#x} rust={:#x} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
-
-// ---------- 196a leva: o confronto direto da liga e os termos oferecidos na transferência (league.cpp, transfer_manager.cpp) ----------
 
 /// the head-to-head mini table order: points and the league tie-breakers
 /// Original: `league_compare_h2h_rows` (0x6834f0, league.cpp, cdecl).
@@ -4037,6 +4062,7 @@ pub(crate) unsafe extern "thiscall" fn update_head_to_head(liga: usize, tabela: 
 }
 
 
+/// Comparer for `league_compare_h2h_rows` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_league_compare_h2h_rows(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_LEAGUE_COMPARE_H2H_ROWS)(a, b);
     let n = league_compare_h2h_rows(a, b);
@@ -4044,6 +4070,7 @@ pub(crate) unsafe extern "C" fn comparar_league_compare_h2h_rows(a: usize, b: us
     r
 }
 
+/// Comparer for `update_head_to_head` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, i32, i8, i8)>(IDX_UPDATE_HEAD_TO_HEAD);
     if linha < 0 || adversario < 0 {
@@ -4055,8 +4082,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize,
     PLACAR.registrar(igual, || format!("update_head_to_head({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
 }
 
-
-// ---------- 177a leva: o bit do contrato, a marca da competicao e o registro do clube na liga ----------
 
 
 /// does the competition have +0xbe and flag 2 of +0xd9?
@@ -4078,8 +4103,6 @@ pub(crate) unsafe extern "thiscall" fn league_record(t: usize, i: i32) -> usize 
 comparar_valor!(comparar_competition_flagged, competition_flagged, IDX_COMPETITION_FLAGGED, () -> u32);
 comparar_valor!(comparar_league_record, league_record, IDX_LEAGUE_RECORD, (i: i32) -> usize);
 
-
-// ---------- centesima sexagesima quarta leva: o calendario das ligas (league.cpp, fix_man.cpp) ----------
 
 /// the next position in the calendar rotation (special league, jumps of 3 by draw, wrapping at n)
 /// Original: `rotate_round` (0x68a030, league.cpp, cdecl).
@@ -4146,6 +4169,7 @@ pub(crate) unsafe extern "C" fn store_round_match(base: usize, rodada: i16, j: i
 }
 
 
+/// Comparer for `rotate_round` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_rotate_round(pos: i32, step_towards: *mut i8, liga: i32, rodadas: i16, turnos: i16, n: i16, marcas: u8) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i32, *mut i8, i32, i16, i16, i16, u8) -> i32>(IDX_ROTATE_ROUND);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -4155,6 +4179,7 @@ pub(crate) unsafe extern "C" fn comparar_rotate_round(pos: i32, step_towards: *m
     r
 }
 
+/// Comparer for `store_round_match` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_store_round_match(base: usize, rodada: i16, j: i16, a: i16, b: i8, c: i8, valor: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32)>(IDX_STORE_ROUND_MATCH);
     let e = base.wrapping_add((rodada as isize * 0x41 + j as isize * 7) as usize);
@@ -4183,6 +4208,7 @@ pub(crate) unsafe extern "thiscall" fn calc_prize_fund(liga: usize, cota: i32) -
     total
 }
 
+/// Comparer for `calc_prize_fund` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_calc_prize_fund(liga: usize, cota: i32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_CALC_PRIZE_FUND)(liga, cota);
     if *((liga + 0x3e) as *const i16) == 0 {
@@ -4221,6 +4247,7 @@ pub(crate) unsafe extern "thiscall" fn league_process_promotion_relegation_chain
     }
 }
 
+/// Comparer for `league_process_promotion_relegation_chain` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_LEAGUE_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, aos_pares)
 }
@@ -4275,7 +4302,9 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, clube
     }
 }
 
-/// Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
+/// Comparer for `move_club_to_division` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
 /// prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "thiscall" fn comparar_move_club_to_division(this: usize, clube: usize, divisao: usize, vaga: u32) {
     crate::comparacao::ramo("move_club_to_division");
@@ -4474,7 +4503,9 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32)
     liberar(grade);
 }
 
-/// Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
+/// Comparer for `draw_team_order` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_draw_team_order(this: usize, clubes: i32) {
     // ponytail: sorteia e aloca (não roda duas vezes); a cópia se prova pela carreira (a grade de jogos de toda liga)
     original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_DRAW_TEAM_ORDER)(this, clubes)
@@ -4505,7 +4536,9 @@ pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, val
     }
 }
 
-/// Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
+/// Comparer for `limit_club_division_tier` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
 pub(crate) unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(IDX_LIMIT_CLUB_DIVISION_TIER);
     let n = *((this + 0x3e) as *const i16);
@@ -4517,6 +4550,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: u
         valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
 }
 
+/// Comparer for `narrate_qualification` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_narrate_qualification(this: usize, lado: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_NARRATE_QUALIFICATION);
     if is_recording_top_level() {

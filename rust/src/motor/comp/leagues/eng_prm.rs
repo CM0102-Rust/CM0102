@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 278a leva: os construtores das quatro divisões inglesas (a Premier, a First, a Second e a Third Division: as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) (eng_prm.cpp, eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
-
 
 
 /// O que muda de uma divisão inglesa para outra no construtor.
@@ -173,6 +171,7 @@ pub(crate) unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u
     r
 }
 
+/// Comparer for `construct_eng_prm` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_PRM);
     compare_english_constructor("construct_eng_prm", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
@@ -180,12 +179,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, a
 
 
 
+/// Comparer for `construct_eng_third` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_THIRD);
     compare_english_constructor("construct_eng_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
 }
-
-// ---------- 275a leva: as regras das quatro divisões inglesas: turnos, pontos, vagas de acesso, mata-mata e rebaixamento, desempates e a tabela de rodadas (eng_prm.cpp, eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
 
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
@@ -319,6 +317,7 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(nome: &str, this: usize, escri
     r
 }
 
+/// Comparer for `eng_prm_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_SET_UP_RULES);
     eng_prm_compare_league_rules("eng_prm_set_up_rules", this, premier_rules(), || o(this), || eng_prm_set_up_rules(this))
@@ -326,12 +325,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules(this: usize
 
 
 
+/// Comparer for `eng_prm_set_up_rules_5780c0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_SET_UP_RULES_5780C0);
     eng_prm_compare_league_rules("eng_prm_set_up_rules_5780c0", this, third_division_rules(this), || o(this), || eng_prm_set_up_rules_5780c0(this))
 }
-
-// ---------- 275a leva: a tabela das quatro divisões inglesas: os clubes de cada divisão, o fundo de prêmios e o dinheiro da TV no início da temporada (eng_prm.cpp, eng_second.cpp, eng_third.cpp, eng_first.cpp) ----------
 
 
 
@@ -441,7 +439,7 @@ pub(crate) unsafe fn eng_prm_compare_league_table(nome: &str, this: usize, n: i1
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);
@@ -465,12 +463,14 @@ pub(crate) unsafe fn eng_prm_compare_league_table(nome: &str, this: usize, n: i1
     r
 }
 
+/// Comparer for `eng_prm_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_CREATE_TABLE);
     eng_prm_compare_league_table("eng_prm_create_table", this, 0x14, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || o(this))
 }
 
 
+/// Comparer for `eng_prm_create_table_577f70` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_table_577f70(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_CREATE_TABLE_577F70);
     eng_prm_compare_league_table("eng_prm_create_table_577f70", this, 0x18, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || o(this))
@@ -505,6 +505,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, fase
     }
 }
 
+/// Comparer for `eng_prm_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_PRM_CREATE_SCHEDULE);
     eng_first_compare_round_table("eng_prm_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| eng_prm_create_schedule(this, fase, r, e, l))

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 240a leva: o adjetivo de nacionalidade pelo idioma e pela forma (index.cpp) ----------
-
 // As tabelas da nation_get_nationality_adjective, geradas do exe por `python engenharia-reversa/adjetivos_nacao.py`
 // (rust/src/adjetivos_nacao.rs).
 include!("../adjetivos_nacao.rs");
@@ -50,6 +48,7 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, t
     1
 }
 
+/// Comparer for `nation_get_nationality_adjective` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
     if texto == 0 {
@@ -63,8 +62,6 @@ pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao:
         nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
     r
 }
-
-// ---------- 238a leva: as chaves fixas do jogo: os ids pela base, as cores e os continentes, e o relato das que faltam (index.cpp) ----------
 
 // As listas da set_key_ids, geradas do exe por `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
 include!("../chaves_fixas.rs");
@@ -143,7 +140,7 @@ pub(crate) unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32
     let competicao: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_CLUB_COMP_KEY_ID);
     let premio: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STAFF_COMP_KEY_ID);
     let mut marca = marca_entrada;
-    if key_ids_loop(|| gi(0xae2394), |i| match_key_name_chain(em(rd(0xae23ec), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
+    if key_ids_loop(|| gi(0xae2394), |i| match_key_name_chain(em(rd(G_COLOUR_TABLE), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
         marca = u32::MAX;
     }
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
@@ -178,7 +175,7 @@ pub(crate) unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32
         tabela(c[0], 0x4f, &mut |b| {
             let mut i = 0i32;
             loop {
-                let lista = rd(0xae23fc); // a lista de clubes da base
+                let lista = rd(G_CLUB_ENGLISH_NAME_INDEX_TABLE); // a lista de clubes da base
                 if i >= if lista != 0 { gi(0xae235c) } else { c[0] } {
                     break;
                 }
@@ -213,14 +210,14 @@ pub(crate) unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32
         fechar(f);
         marca = u32::MAX;
     } else {
-        let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { nacao(em(rd(0xae23a8), i, 0x122) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competicao(em(rd(0xae23d0), i, 0x6b) + 4, i as u32); });
+        let mut rodou = key_ids_loop(|| gi(0xae2350), |i| { nacao(em(rd(G_NATION_TABLE), i, 0x122) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae2378).wrapping_sub(0x7f), |i| { competicao(em(rd(G_CLUB_COMP_TABLE), i, 0x6b) + 4, i as u32); });
         rodou |= key_ids_loop(|| gi(0xae234c), |i| {
-            let nome = em(rd(0xae23a4), i, 0xc6) + 4;
+            let nome = em(rd(G_CONTINENT_TABLE), i, 0xc6) + 4;
             match_key_name_chain(nome, &CONTINENTES_DAS_CHAVES, i as u32); // continentes da base
         });
-        rodou |= key_ids_loop(|| gi(0xae2388), |i| { premio(em(rd(0xae23e0), i, 0x65) + 4, i as u32); });
-        rodou |= key_ids_loop(|| gi(0xae235c), |i| { clube(em(rd(0xae23b4), i, 0x245) + 4, i as u32); }); // clubes da base
+        rodou |= key_ids_loop(|| gi(0xae2388), |i| { premio(em(rd(G_STAFF_COMP_TABLE), i, 0x65) + 4, i as u32); });
+        rodou |= key_ids_loop(|| gi(0xae235c), |i| { clube(em(rd(G_CLUB_TABLE), i, 0x245) + 4, i as u32); }); // clubes da base
         if rodou {
             marca = u32::MAX;
         }
@@ -232,7 +229,7 @@ pub(crate) unsafe fn set_fixed_key_ids(marca_entrada: u32, relatar: bool) -> u32
                 continue;
             }
             if tipo == 2 {
-                let n = em(rd(0xae23a8), gi(nacao_da_chave as usize), 0x122);
+                let n = em(rd(G_NATION_TABLE), gi(nacao_da_chave as usize), 0x122);
                 if *((n as u32).wrapping_add(0x11c) as *const u8) != 0 {
                     index_fatal_error(linha as u32, marca);
                 }
@@ -285,6 +282,7 @@ pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 pub(crate) const REGIOES_DAS_CHAVES_DBW: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
+/// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
@@ -295,6 +293,7 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     r
 }
 
+/// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
@@ -304,8 +303,6 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
     PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
     r
 }
-
-// ---------- 237a leva: o nome da região e o adjetivo do continente (index.cpp) ----------
 
 
 
@@ -386,6 +383,7 @@ pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, taman
     1
 }
 
+/// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
     let r = regiao as u8 as i8;
@@ -468,6 +466,7 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continente: usize, texto
     1
 }
 
+/// Comparer for `get_continent_adjective` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
@@ -479,8 +478,6 @@ pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usi
     PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
     r
 }
-
-// ---------- 227a leva: as chaves fixas de clube e de nação pelo nome e a troca da chave de clube depois do corte da base (index.cpp) ----------
 
 /// As chaves de clube do index.cpp (0x6146b0), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
 pub(crate) static CHAVES_DE_CLUBE: &[&[(u32, u32)]] = &[
@@ -1493,6 +1490,7 @@ pub(crate) fn describe_key_diffs(mo: &crate::comparacao::Memoria, mr: &crate::co
     s
 }
 
+/// Comparer for `match_club_key_id` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
@@ -1504,6 +1502,7 @@ pub(crate) unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u
     r
 }
 
+/// Comparer for `remap_club_key_id` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
@@ -1512,6 +1511,7 @@ pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u3
     r
 }
 
+/// Comparer for `match_nation_key_id` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
@@ -1522,8 +1522,6 @@ pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha:
     });
     r
 }
-
-// ---------- 227a leva: as chaves fixas das competições de clube e das competições e prêmios de pessoa pelo nome (index.cpp) ----------
 
 /// As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
 pub(crate) static CHAVES_DE_COMPETICAO_DE_CLUBE: &[&[(u32, u32)]] = &[
@@ -2411,6 +2409,7 @@ pub(crate) unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32)
 }
 
 
+/// Comparer for `match_club_comp_key_id` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
@@ -2422,6 +2421,7 @@ pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, lin
     r
 }
 
+/// Comparer for `match_staff_comp_key_id` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_STAFF_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];

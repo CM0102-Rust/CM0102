@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 257a leva: as suspensões dos órgãos disciplinares: a suspensão do cartão vermelho, a virada da temporada do órgão e a compactação das suas entradas (ruling_body.cpp) ----------
-
 
 
 /// Matches of ban by foul code (9..12) and ruling body scale (+6); None when no ban.
@@ -79,14 +77,16 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     *((r + 2) as *mut u16) = dias;
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut hoje = [0u32; 2];
-    copiar(r + 4, hoje.as_mut_ptr() as usize, 0xae2c90);
+    copiar(r + 4, hoje.as_mut_ptr() as usize, G_CURRENT_DATE);
     *((r + 0x10) as *mut u8) = 3;
     *((r + 0x1c) as *mut u32) = read_u32_as_usize(j) as u32;
     *((r + 0x6f) as *mut u8) = (*((j + 0x48) as *const u8) == 0) as u8;
     1 // cpu10: a punição feita
 }
 
-/// Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
+/// Comparer for `make_points_ban` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
 pub(crate) unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_MAKE_POINTS_BAN);
     let regioes = [(r, 0x70)];
@@ -158,6 +158,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
 // ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
+/// Comparer for `ruling_body_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RULING_BODY_START_NEW_SEASON)(this);
 }
@@ -205,7 +206,9 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     }
 }
 
-/// Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
+/// Comparer for `compact_entries` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
 /// original e confere a conta, a capacidade e as entradas na nova ordem.
 pub(crate) unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
     let mut esperado: Vec<u8> = Vec::new();

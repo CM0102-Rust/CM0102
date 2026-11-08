@@ -23,7 +23,7 @@ MUTACOES = [
     ('cpr9_vaga_nao_abre', 'abrir(read_u32_as_usize(G_MANAGER_MANAGER), c, pessoa); // cpr9: a vaga do técnico abre', 'let _ = abrir; // mutacao: a vaga nao abre', 'cpr_9 tecnico'),
     ('cpr10_lesionado_como_recuperando', 'return 2; // cpr10: lesionado', 'return 1; // mutacao: lesionado como recuperando'),
     ('cpr10_recuperando_como_pronto', '(dias < read_i16(l + 0x28) as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),
-    ('cpr10_decisao_mais_tarde', 'injury_date_add_days(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias', 'injury_date_add_days(0xae2c90, (sortear(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias', 'cpr_10 nova decisao'),
+    ('cpr10_decisao_mais_tarde', 'injury_date_add_days(G_CURRENT_DATE, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias', 'injury_date_add_days(G_CURRENT_DATE, (sortear(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias', 'cpr_10 nova decisao'),
     ('cpr11_reputacao_invertida', 'rb - ra // o clube de maior reputação primeiro', 'ra - rb // mutacao: a menor primeiro', 'cpr_11 projecao pela reputacao'),
     ('cpr11_pontos_invertidos', 'read_i16(b + 0xa) as i32 - read_i16(a + 0xa) as i32 // os mais pontos primeiro', 'read_i16(a + 0xa) as i32 - read_i16(b + 0xa) as i32 // mutacao: os menos primeiro'),
     ('cpr11_normal_acima', 'normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // a posição na forma normal', 'normal = (normal & !0xff) | (k as u8).wrapping_add(2) as u32; // mutacao: uma abaixo', 'cpr_11 projecao'),

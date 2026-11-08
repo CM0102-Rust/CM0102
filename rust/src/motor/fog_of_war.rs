@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- septuagesima quinta leva: nevoa de guerra (o que o clube humano sabe dos jogadores) ----------
-
 /// { 0x544410 }: x = (palavra +4 da pessoa + 2 x `nivel`) x 0,05 + 10; (x + 0,1 x^2) x (1/3) + 0,5,
 /// limitado a 1..20 (NaN vira 1) e truncado.
 pub(crate) unsafe extern "C" fn chance_to_know(pessoa: usize, nivel: i8) -> i32 {
@@ -21,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, pessoa: usize, f
     let reg = (*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9));
     let mut data = [0u8; 8];
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    copiar(reg + 1, data.as_mut_ptr() as usize, 0xae2c90);
+    copiar(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
     let obs = if fonte == 0 { 0 } else { *((fonte + 0x69) as *const usize) };
     let nivel = reg as *mut u8;
     if obs == 0 {
@@ -71,7 +69,7 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, dados: usi
             if i == -1 || *((e + 4) as *const i32) == -1 || (vaga > 10 && *((e + 0x32) as *const u8) == 0xff) {
                 continue;
             }
-            let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
+            let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
             if p == 0 || *(p as *const i32) < n() {
                 conhecer(obj, p, 0);
             }
@@ -79,6 +77,7 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, dados: usi
     }
 }
 
+/// Comparer for `chance_to_know` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_chance_to_know(pessoa: usize, nivel: i8) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, i8) -> i32>(IDX_CHANCE_TO_KNOW)(pessoa, nivel);
     let v = chance_to_know(pessoa, nivel);
@@ -86,6 +85,7 @@ pub(crate) unsafe extern "C" fn comparar_chance_to_know(pessoa: usize, nivel: i8
     r
 }
 
+/// Comparer for `know_person` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, pessoa: usize, fonte: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_KNOW_PERSON);
     let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -96,6 +96,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_know_person(this: usize, pessoa:
     PLACAR.registrar(igual, || format!("know_person original={:x?} rust={:x?}", mo, mr));
 }
 
+/// Comparer for `fog_after_match` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "stdcall" fn comparar_fog_after_match(partida: usize, dados: usize) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize)>(IDX_FOG_AFTER_MATCH);
     // os registros que a rotina pode mexer (mesmos testes, sem o 0x32 das reservas: sobra nao atrapalha)
@@ -114,7 +115,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_fog_after_match(partida: usize, d
         }
         for vaga in 0..20usize {
             let i = *((dados + lado * 0x625 + 0x190 + vaga * 0x49) as *const i32);
-            let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
+            let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
             if i != -1 && p != 0 && *(p as *const i32) < n {
                 reg.push(((*(obj as *const usize)).wrapping_add((*(p as *const i32) as usize).wrapping_mul(9)), 9));
             }

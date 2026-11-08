@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- centesima quadragesima primeira leva: a lesao (0x6d0980, 0x62be00) e o destaque do jogador (0x717470) ----------
-
 /// Unidades da fita da lesao: a 0x68d0d0 recebe o registro montado na pilha (confere o conteudo).
 pub(crate) static GRAVAR_LESAO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -203,7 +201,9 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, tipo: u32, chance: u32, 
     PLACAR.registrar(igual && sequencia, || format!("injure(tipo {}, chance {}) {} chamadas: {}", tipo as u8 as i8, chance as u8 as i8, k, tape_detail()));
 }
 
-/// A 0x62be00 so e chamada pela 0x6d0980: a comparacao e a dela (a lista entra nas regioes).
+/// Comparer for `register_injury` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A 0x62be00 so e chamada pela 0x6d0980: a comparacao e a dela (a lista entra nas regioes).
 pub(crate) unsafe extern "thiscall" fn comparar_register_injury(this: usize, ficha: usize, tipo: *mut u8, chance: *mut u8) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_REGISTER_INJURY)(this, ficha, tipo, chance)
 }
@@ -220,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_register_injury(this: usize, fic
 /// 0x757da0 nos ultimos 7 ou 30 dias, datas da 0x54c8e0); os demais da faixa, sim.
 pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, codigo: u32) -> u32 {
     let m = *((p + 0x19e) as *const usize);
-    let hoje = 0xae2c90usize;
+    let hoje = G_CURRENT_DATE;
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
     datar(hoje, &mut d7, 7);
@@ -309,6 +309,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, codigo: u32) -
     r as u32
 }
 
+/// Comparer for `player_highlight` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_player_highlight(p: usize, codigo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_PLAYER_HIGHLIGHT);
     if is_recording_top_level() {
@@ -321,8 +322,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_highlight(p: usize, codig
     PLACAR.registrar(igual && r == n, || format!("player_highlight({:#x}) original={} rust={} {:x?} x {:x?}", codigo as u16, r, n, mo, mr));
     r
 }
-
-// ---------- centesima oitava leva: as folhas das lesoes (0x62ec00, 0x62ece0) ----------
 
 /// { 0x62ec00 } (ret 4, injury.cpp): o byte de gravidade do tipo de lesao `tipo` (tabela de 13 bytes
 /// por tipo em 0x9e7ad9).
@@ -348,8 +347,6 @@ pub(crate) unsafe extern "thiscall" fn injury_grade(lesoes: usize, pessoa: usize
     let g = byte(r, 0x13);
     if g > 1 { g as u8 } else { 1 }
 }
-
-// ---------- 270a leva: a lesão pelo nome do player_setup.cfg; a notícia da volta aos treinos e o que ela acerta (o tratamento, as férias e a moral do jogador, a relação com o técnico, a fuga) e o nome da categoria da lesão (player_regen.cpp, injury.cpp) ----------
 
 /// Os nomes das lesões do player_setup.cfg (a comparação, os caracteres comparados, o texto no .rdata e o tipo), na
 /// ordem da original; o último, ARTHRITIS (8 caracteres, 0xa6b3a8), dá 0x4c, e nenhum, 0x4b.
@@ -648,7 +645,9 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
     entregar(read_u32_as_usize(G_NEWS), n, clube, 0, nacao, continente, forcar);
 }
 
-/// Comparador em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem a entrega da notícia e parando antes da fuga,
+/// Comparer for `post_recovery_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador em ensaio (modelo CPV6_ENSAIO): a cópia roda primeiro sem a entrega da notícia e parando antes da fuga,
 /// depois a original a partir do mesmo estado; compara o registro do jogador (0x6e), a ficha (0x46), o contrato (0x4f),
 /// o registro de forma (31), o byte +0xc do registro de 79 bytes, o registro do técnico do clube e o estado do sorteio.
 /// Com a fuga na cópia (a original põe na lista, sorteia e manda notícia): só a original.
@@ -669,7 +668,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, 
     if c != 0 {
         reg.push((c, 0x4f));
     }
-    reg.push((0xae1080, 4));
+    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     reg.push((physical_record_of_player(this, p), 31));
     reg.push((read_u32_as_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f) as usize), 0x4f));
     let clube = read_u32_as_usize(p + 0x39);
@@ -717,7 +716,9 @@ pub(crate) unsafe extern "stdcall" fn injury_get_category_name(categoria: u32, t
     if idioma() == 3 { 2 } else { 0 }
 }
 
-/// Comparador: lado a lado no texto (o tamanho, até 0x100) e na devolução; o tamanho curto (a caixa): só a original.
+/// Comparer for `injury_get_category_name` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no texto (o tamanho, até 0x100) e na devolução; o tamanho curto (a caixa): só a original.
 pub(crate) unsafe extern "stdcall" fn comparar_injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, usize, i32) -> u32>(IDX_INJURY_GET_CATEGORY_NAME);
     if tamanho < 0x14 || texto == 0 {
@@ -727,8 +728,6 @@ pub(crate) unsafe extern "stdcall" fn comparar_injury_get_category_name(categori
     PLACAR.registrar(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", categoria as u8 as i8, r, n));
     r
 }
-
-// ---------- 264a leva: a lesão nova (o registro, a duração pelo fisioterapeuta, a recaída e a aposentadoria), a notícia da lesão e a ausência sem licença (injury.cpp, awol.cpp) ----------
 
 
 
@@ -764,7 +763,7 @@ pub(crate) unsafe fn injury_main_contract_stored(p: usize) -> usize {
 ///
 /// [pt] O clube do contrato `c` (+4 = id no registro de 0x245 bytes em [0xae23b4]; 0 sem contrato).
 pub(crate) unsafe fn injury_club_of_contract(c: usize) -> usize {
-    if c == 0 { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245)) }
+    if c == 0 { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(club::SIZE)) }
 }
 
 /// Offset of an injury type in the 13-byte-per-type injury table (base days, variable days, return-to-training %, can
@@ -1020,10 +1019,10 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, re
         let s = friendly_random(n);
         let menos: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
         let mut d = [0u8; 8];
-        let r = menos(0xae2c90, d.as_mut_ptr(), (s + 1) as u32);
+        let r = menos(G_CURRENT_DATE, d.as_mut_ptr(), (s + 1) as u32);
         copiar(read_usize(this + 4) + off + 0x20, saida.as_mut_ptr(), r);
     } else {
-        copiar(read_usize(this + 4) + off + 0x20, saida.as_mut_ptr(), 0xae2c90);
+        copiar(read_usize(this + 4) + off + 0x20, saida.as_mut_ptr(), G_CURRENT_DATE);
     }
     fisico(this, p);
     let noticia_fn: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_INJURY_POST_INJURY_NEWS);
@@ -1086,13 +1085,15 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, re
         let clube = read_usize(p + 0x39);
         if clube != 0 {
             let surto_fn: unsafe extern "thiscall" fn(usize, usize, u32, i32, usize) = core::mem::transmute(FN_INJURY_ADD_ILLNESS_OUTBREAK);
-            surto_fn(this, 0xae2c90, tipo_arg, read_usize(clube) as i32, 0);
+            surto_fn(this, G_CURRENT_DATE, tipo_arg, read_usize(clube) as i32, 0);
         }
     }
     vaga
 }
 
-/// Comparador da 0x62d250: só a original (aloca, entrega a notícia, agenda aposentadoria e chama originais que sorteiam
+/// Comparer for `add_injury` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x62d250: só a original (aloca, entrega a notícia, agenda aposentadoria e chama originais que sorteiam
 /// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode lesionar de novo: não pode rodar duas vezes). Confere
 /// o que a lesão garante depois: argumentos inválidos ou só recorrência dão −1; −1 de resto só com a pessoa ainda
 /// lesionada (+0xe ≠ −1) ou sem vetor; vaga válida com a pessoa ainda nela (+0xe = vaga, sem recaída que a tenha
@@ -1228,15 +1229,15 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     }
 }
 
-/// Comparador da 0x62dca0: só a original (entrega a notícia, que não pode sair duas vezes; a cópia leva o ramo no modo
+/// Comparer for `injury_post_injury_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x62dca0: só a original (entrega a notícia, que não pode sair duas vezes; a cópia leva o ramo no modo
 /// Rust). ponytail: sem plano a conferir além do que a original entrega.
 pub(crate) unsafe extern "thiscall" fn comparar_injury_post_injury_news(this: usize, p: usize, l: usize, arg: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_INJURY_POST_INJURY_NEWS)(this, p, l, arg)
 }
 
 
-
-// ---------- 259a leva: o dia das lesões: as lesões que envelhecem e as lesões no treino, as notícias da volta aos treinos e o jogador a um cartão da suspensão (injury.cpp, discipline.cpp) ----------
 
 
 
@@ -1318,7 +1319,7 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
         k += 1;
     }
     let anterior: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
-    if anterior(0xae2c90, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 && read_i16(G_CURRENT_DATE) == 0xb4 {
+    if anterior(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 && read_i16(G_CURRENT_DATE) == 0xb4 {
         if CPW9_ENSAIO {
             CPW9_PAROU = true;
             return;
@@ -1333,7 +1334,7 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
         }
     }
     let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-    if semana(0xae2c90) as i16 != 6 && semana(0xae2c90) as i16 != 5 { // cpw9: sábado e domingo sem treino
+    if semana(G_CURRENT_DATE) as i16 != 6 && semana(G_CURRENT_DATE) as i16 != 5 { // cpw9: sábado e domingo sem treino
         crate::comparacao::ramo("cpw_9 dia de treino");
         roll_training_injuries(this);
     }
@@ -1519,7 +1520,9 @@ pub(crate) unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize
     }
 }
 
-/// Comparador lado a lado da fase do treino: a cópia em ensaio (sem soltar a lista, sem a lesão nova e sem as rotinas
+/// Comparer for `injury_daily_update` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador lado a lado da fase do treino: a cópia em ensaio (sem soltar a lista, sem a lesão nova e sem as rotinas
 /// do fim) e a original a partir do mesmo estado (o cabeçalho do Injury, a tabela de lesões e o sorteio); a original é
 /// conferida quando chega às notícias da volta (0x62e010, desviada no mesmo item), antes das rotinas do fim. Com lesão
 /// nova (aloca e manda notícia) ou com o físico de todos (dia 180 da primeira temporada): só a original.
@@ -1609,8 +1612,8 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
     let (mut d1, mut d2, mut t) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     padrao(d1.as_mut_ptr());
     padrao(d2.as_mut_ptr());
-    copiar(d1.as_mut_ptr(), t.as_mut_ptr(), 0xae2c90);
-    copiar(d2.as_mut_ptr(), t.as_mut_ptr(), 0xae2c90);
+    copiar(d1.as_mut_ptr(), t.as_mut_ptr(), G_CURRENT_DATE);
+    copiar(d2.as_mut_ptr(), t.as_mut_ptr(), G_CURRENT_DATE);
     let pd1 = d1.as_ptr() as usize;
     let (d1dia, d1ano) = (read_i16(pd1), read_u16(pd1 + 2));
     let pd2 = d2.as_ptr() as usize;
@@ -1706,6 +1709,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
 
 // ponytail: as notícias da volta (0x630ee0) alocam e o físico do dia mexe no sorteio: só a original; a cópia leva o
 // ramo. É também o ponto de conferência da fase do treino do dia das lesões (comparar_injury_daily_update).
+/// Comparer for `post_due_recovery_news` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(CPW9_ESPERA)).take() {
         let mo = crate::comparacao::Memoria::ler(&reg);
@@ -1715,8 +1719,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usi
 }
 
 
-
-// ---------- 258a leva: o físico depois da partida: o ritmo de recuperação de cada jogador e as batidas que viram lesão, a batida do jogador na partida e o jogador de férias (injury.cpp) ----------
 
 
 
@@ -1804,7 +1806,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: us
                 crate::comparacao::ramo("cpv_8 jovem");
                 v = v.wrapping_add(v); // cpv8: o jovem em dobro
             }
-            if depois(0xdd6ec8, read_i32(G_CURRENT_DATE) as u32, read_i32(G_CURRENT_DATE_LEAP) as u32) != 0 {
+            if depois(G_GAME_START_DATE, read_i32(G_CURRENT_DATE) as u32, read_i32(G_CURRENT_DATE_LEAP) as u32) != 0 {
                 v = 0;
             }
             recuperar(this, pessoa, core::ptr::read_unaligned((vaga + 6) as *const i16), v as i16);
@@ -1859,7 +1861,9 @@ pub(crate) unsafe fn has_injury_hit(this: usize, id: i32, pessoa: usize) -> bool
     achou
 }
 
-/// Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
+/// Comparer for `apply_match_effects` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
 pub(crate) unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, jogo: usize, partida: usize) {
@@ -1913,7 +1917,9 @@ pub(crate) unsafe extern "thiscall" fn find_match_injury(this: usize, pessoa: us
     0
 }
 
-/// Comparador: lado a lado no cursor da lista e na devolução.
+/// Comparer for `find_match_injury` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no cursor da lista e na devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_find_match_injury(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_MATCH_INJURY);
     let lista = read_i32(this + 0x28) as usize;
@@ -1934,7 +1940,9 @@ pub(crate) unsafe extern "thiscall" fn is_player_on_holiday(_this: usize, pessoa
     (e != 0 && *(e as *const u8) == 0x51) as u8
 }
 
-/// Comparador: a devolução (só o al).
+/// Comparer for `is_player_on_holiday` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a devolução (só o al).
 pub(crate) unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize, pessoa: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_PLAYER_ON_HOLIDAY);
     let r = o(this, pessoa);
@@ -1942,8 +1950,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize
     PLACAR.registrar(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", pessoa, r, n));
     r
 }
-
-// ---------- 258a leva: o fim da lesão do jogador, a notícia do pedido de desculpas e a caixa de entrada esvaziada (injury.cpp, media.cpp, news.cpp) ----------
 
 
 /// Address of person id's 31-byte physical record in [lesoes] (current injury at +0xe).
@@ -2002,7 +2008,9 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: us
     core::ptr::write_unaligned((physical_record_of_id(this, read_i32(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual
 }
 
-/// Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
+/// Comparer for `end_player_injury` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
 /// com o histórico (arquivo) ou a notícia: só a original, conferindo o plano (tipo 0xff e +0xe −1). Sem pessoa: a
 /// original (caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usize, noticia: u32) {
@@ -2048,8 +2056,6 @@ pub(crate) unsafe fn news_box_regions(this: usize, caixa: usize) -> Vec<(usize, 
 }
 
 
-// ---------- 254a leva: o estado da lesão do jogador, a data da decisão sobre as ofertas e os candidatos a técnico do ano (injury.cpp, contract_manager.cpp, staff_records.cpp) ----------
-
 
 
 
@@ -2067,7 +2073,7 @@ pub(crate) unsafe fn injury_status(this: usize, pessoa: usize) -> u8 {
     let l = read_u32_as_usize(this + 4).wrapping_add((k as usize).wrapping_mul(48));
     let diferenca: unsafe extern "thiscall" fn(usize, *mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_GET_DIFFERENCE);
     let mut t = [0u8; 8];
-    diferenca(0xae2c90, t.as_mut_ptr(), read_u32_as_usize(l + 0x20) as u32, read_u32_as_usize(l + 0x24) as u32);
+    diferenca(G_CURRENT_DATE, t.as_mut_ptr(), read_u32_as_usize(l + 0x20) as u32, read_u32_as_usize(l + 0x24) as u32);
     let dias = (read_u16(t.as_ptr() as usize + 2) as i32).wrapping_mul(365).wrapping_add(read_i16(t.as_ptr() as usize) as i32);
     if dias < read_i16(l + 0x2a) as i32 {
         return 2; // cpr10: lesionado
@@ -2115,7 +2121,7 @@ pub(crate) unsafe fn injury_assign_date(d: usize, p: usize) {
 /// [pt] A data `d` = a data do jogo + `n` dias (0x54c5b0, 0x417c10).
 pub(crate) unsafe fn set_today_plus_days(d: usize, n: u32) {
     let mut t = [0u8; 8];
-    injury_assign_date(d, injury_date_add_days(0xae2c90, n, &mut t));
+    injury_assign_date(d, injury_date_add_days(G_CURRENT_DATE, n, &mut t));
 }
 
 /// Stores slice f in entry +0xc; above 2 subtracts 3 and moves the entry date (+4) to the next day.
@@ -2172,7 +2178,9 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
 
 
 
-/// Comparador: a original (com a forma do dia) e o estado relido pela regra (injury_status, sem rodar a 0x62c680 de
+/// Comparer for `get_player_injury_status` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original (com a forma do dia) e o estado relido pela regra (injury_status, sem rodar a 0x62c680 de
 /// novo: a original já a rodou).
 pub(crate) unsafe extern "thiscall" fn comparar_get_player_injury_status(this: usize, pessoa: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_PLAYER_INJURY_STATUS)(this, pessoa);
@@ -2184,11 +2192,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_player_injury_status(this: u
 }
 
 /// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
-pub(crate) const CPR10_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2470, 8), (0xae2418, 1)];
+pub(crate) const CPR10_ESTATICAS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 
-
-// ---------- 252a leva: as doenças e a pré-temporada: acrescentar o surto de doença no clube, espalhar os surtos pelos elencos e o jogador fora da temporada (injury.cpp) ----------
 
 
 
@@ -2199,7 +2205,7 @@ pub(crate) const CPR10_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae246
 ///
 /// [pt] O clube pelo índice (registro de 0x245 bytes em [0xae23b4]).
 pub(crate) unsafe fn injury_club_by_index(i: i32) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE))
 }
 
 /// Calls Database is_national_team for the club.
@@ -2284,7 +2290,7 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
 pub(crate) unsafe fn five_days_ago() -> [u8; 8] {
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mut d = [0u8; 8];
-    datar(0xae2c90, &mut d, 5); // cinco dias atrás
+    datar(G_CURRENT_DATE, &mut d, 5); // cinco dias atrás
     d
 }
 
@@ -2404,13 +2410,15 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(pessoa: usiz
         return 0;
     }
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    if (dias(0xae2c90, fim[0], fim[1]) as u16) < 0x28 {
+    if (dias(G_CURRENT_DATE, fim[0], fim[1]) as u16) < 0x28 {
         return 1;
     }
     0
 }
 
-/// Comparador: a original sorteia, aloca e reordena: o plano antes (os sorteios e a seleção, com o estado do sorteio
+/// Comparer for `add_illness_outbreak` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original sorteia, aloca e reordena: o plano antes (os sorteios e a seleção, com o estado do sorteio
 /// guardado e devolvido); a original roda. Confere o mesmo estado do sorteio e, se o surto entrou, a conta +1 e o surto
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
 pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
@@ -2440,7 +2448,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize
     });
 }
 
-/// Comparador: a original sorteia e adoece (0x62d250, que pode acrescentar surtos): roda só ela e confere o plano
+/// Comparer for `spread_illness_outbreaks` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original sorteia e adoece (0x62d250, que pode acrescentar surtos): roda só ela e confere o plano
 /// feito antes: quantos surtos tinham mais de cinco dias (os que saem) e, depois, nenhum surto com mais de cinco dias e
 /// a conta pelo menos a de antes menos os que saem.
 pub(crate) unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
@@ -2467,15 +2477,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: u
     });
 }
 
-/// Comparador: pelo valor (datas, a seleção e a temporada só calculam).
+/// Comparer for `injury_player_in_close_season` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (datas, a seleção e a temporada só calculam).
 pub(crate) unsafe extern "stdcall" fn comparar_injury_player_in_close_season(pessoa: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_INJURY_PLAYER_IN_CLOSE_SEASON)(pessoa);
     let n = injury_player_in_close_season(pessoa);
     PLACAR.registrar(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
     r
 }
-
-// ---------- 252a leva: a criação do jogo: a forma inicial dos elencos, os registros de lesão com as lesões iniciais e as listas de clubes por nação dos jovens (injury.cpp, player_regen.cpp) ----------
 
 
 
@@ -2530,7 +2540,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
     let base = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
     while i < injury_club_count_without_nations() {
-        let clube = base.wrapping_add((i as usize).wrapping_mul(0x245));
+        let clube = base.wrapping_add((i as usize).wrapping_mul(club::SIZE));
         let dias = preseason_days(clube, &mut inicio, &mut fim);
         for s in 0..50usize {
             let vaga = clube + club::SQUAD + 4 * s;
@@ -2592,7 +2602,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
     let mut i = 0i32;
     while i < read_i32(0xae2364) {
         let mut rascunho = [0u8; 8];
-        copiar(r, rascunho.as_mut_ptr(), 0xae2c90);
+        copiar(r, rascunho.as_mut_ptr(), G_CURRENT_DATE);
         core::ptr::write_unaligned((r + 0xc) as *mut u16, 0);
         core::ptr::write_unaligned((r + 8) as *mut u16, 10000);
         core::ptr::write_unaligned((r + 0xa) as *mut u16, 10000);
@@ -2656,15 +2666,17 @@ pub(crate) unsafe fn injury_youth_list_nation(clube: usize) -> usize {
 }
 
 
-/// Comparador: lado a lado pelos registros de lesão (31 bytes × [0xae2364]), pelos clubes (as vagas) e pelo clube e
+/// Comparer for `init_squad_fitness` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelos registros de lesão (31 bytes × [0xae2364]), pelos clubes (as vagas) e pelo clube e
 /// cargo (+0x39..+0x3d) de quem não é jogador nas vagas.
 pub(crate) unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_SQUAD_FITNESS);
     let base = read_usize(G_CLUB_TABLE);
-    let mut regioes = vec![(read_usize(this), (read_i32(0xae2364).max(0) as usize) * 31), (base, (read_i32(0xae235c).max(0) as usize) * 0x245)];
+    let mut regioes = vec![(read_usize(this), (read_i32(0xae2364).max(0) as usize) * 31), (base, (read_i32(0xae235c).max(0) as usize) * club::SIZE)];
     for i in 0..injury_club_count_without_nations().max(0) as usize {
         for s in 0..50usize {
-            let p = read_usize(base + i * 0x245 + 0xd7 + 4 * s);
+            let p = read_usize(base + i * club::SIZE + 0xd7 + 4 * s);
             if p != 0 && read_i32(p) < read_i32(0xae2364) && read_usize(p + 0x61) == 0 {
                 regioes.push((p + 0x39, 5));
             }
@@ -2674,7 +2686,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) 
     PLACAR.registrar(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regioes.len()));
 }
 
-/// Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
+/// Comparer for `init_records` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
 /// vetor alocado e o +0x1e = 50 de todos os registros.
 pub(crate) unsafe extern "thiscall" fn comparar_init_records(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_INIT_RECORDS)(this);
@@ -2686,8 +2700,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_records(this: usize) {
     PLACAR.registrar(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
 }
 
-
-// ---------- 249a leva: as lesões: sortear a lesão recorrente, recomeçar o histórico de lesões e reiniciar o físico do jogador (injury.cpp) ----------
 
 
 
@@ -2738,7 +2750,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: 
     let mut i = 0i32;
     while i < *(G_STAFF_COUNT as *const i32) {
         if read_u8(r + 0x12) != 0xff {
-            let p = read_usize(G_STAFF_TABLE).wrapping_add(i as usize * 0x6e);
+            let p = read_usize(G_STAFF_TABLE).wrapping_add(i as usize * staff::SIZE);
             let v = friendly_random(0x65) as u8;
             let jogador = read_usize(p + 0x61);
             let nota = if jogador == 0 { 0x64 } else { v.wrapping_add(read_u8(r + 0x13).wrapping_mul(0xfb)).wrapping_sub(read_u8(jogador + 0x2d)) };
@@ -2843,16 +2855,16 @@ pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32)
         }
     }
     let r = injury_history_record(this, id as usize);
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
     if read_usize(r + 0xe) as i32 != -1 {
         let terminar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_INJURY_END_PLAYER_INJURY);
         terminar(this, pessoa, 0);
     }
     let recomecar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_RESET_PLAYER_HISTORY);
-    recomecar(this, read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e)));
+    recomecar(this, read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut rascunho = [0u8; 8];
-    copiar(r, rascunho.as_mut_ptr(), 0xae2c90); // a data de hoje
+    copiar(r, rascunho.as_mut_ptr(), G_CURRENT_DATE); // a data de hoje
     core::ptr::write_unaligned((r + 8) as *mut u16, 10000);
     core::ptr::write_unaligned((r + 0xa) as *mut u16, 10000);
     core::ptr::write_unaligned((r + 0xc) as *mut i16, 0); // sem desgaste
@@ -2866,7 +2878,9 @@ pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32)
     g
 }
 
-/// Comparador: a 0x62d250 (tratar) não pode rodar duas vezes: o plano antes, com o estado do sorteio guardado (sem
+/// Comparer for `roll_recurring_injury` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x62d250 (tratar) não pode rodar duas vezes: o plano antes, com o estado do sorteio guardado (sem
 /// contar nem rastrear) e as marcas do registro devolvidas; a original roda. Confere as marcas do registro e do
 /// escolhido e, fora do tratar, o estado do sorteio igual ao do plano (os mesmos sorteios).
 pub(crate) unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
@@ -2894,7 +2908,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usiz
     });
 }
 
-/// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
+/// Comparer for `reset_player_history` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RESET_PLAYER_HISTORY);
     if pessoa == 0 {
@@ -2906,7 +2922,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_reset_player_history(this: usize
     a
 }
 
-/// Comparador: a 0x68d1f0 libera o item tirado e a 0x62e700 grava o histórico no arquivo: o plano antes (os itens
+/// Comparer for `injury_reset_player` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x68d1f0 libera o item tirado e a 0x62e700 grava o histórico no arquivo: o plano antes (os itens
 /// que ficam, o byte do registro de 79 bytes, os bytes do registro que não mudam); a original roda; confere.
 pub(crate) unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize, id: u32) -> usize {
     let l = read_usize(this + 0x28);
@@ -2928,8 +2946,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize,
     });
     ret
 }
-
-// ---------- 176a leva: a recuperacao da lesao, a pessoa na lista de transferencias e a punicao da disciplina ----------
 
 /// the recovery day (below −1000 in x87 with −0.0035 and 2.5; otherwise the pace or a draw)
 /// Original: `recover_injury` (0x62bd10, injury.cpp, thiscall).
@@ -2966,6 +2982,7 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
 
 
 
+/// Comparer for `recover_injury` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *const i32, marca: i16, ritmo: i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, i16, i16)>(IDX_RECOVER_INJURY);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -3014,7 +3031,9 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, jogador: usize
     c as u16
 }
 
-/// Comparador: pelo valor (a 0x62c400 só lê).
+/// Comparer for `get_condition` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (a 0x62c400 só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(IDX_GET_CONDITION)(this, jogador, em_porcento);
     let n = get_condition(this, jogador, em_porcento);
@@ -3053,6 +3072,7 @@ pub(crate) unsafe extern "thiscall" fn set_training_load(lesoes: usize, id: *con
     *training_load_byte(lesoes, id) = valor;
 }
 
+/// Comparer for `set_training_load` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_set_training_load(lesoes: usize, id: *const i32, valor: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, u8)>(IDX_SET_TRAINING_LOAD);
     let a = training_load_byte(lesoes, id) as usize;
@@ -3081,9 +3101,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_training_load(lesoes: usize,
 /// (+0xc).
 /// Grava as duas e a data de hoje.
 pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
-    init_static_date(1, 0xb63d08, 0x62ce20);
-    init_static_date(2, 0xb63d18, 0x62ce10);
-    init_static_date(4, 0xb63d20, 0x62ce00);
+    init_static_date(1, G_FITNESS_UPDATE_CACHE_DATE, 0x62ce20);
+    init_static_date(2, G_FITNESS_UPDATE_SEASON_START_DATE, 0x62ce10);
+    init_static_date(4, G_FITNESS_UPDATE_SEASON_END_DATE, 0x62ce00);
     if pessoa == 0 {
         return;
     }
@@ -3155,16 +3175,16 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa
         if clube != 0 && !ocupado {
             if clube != read_usize(G_FITNESS_UPDATE_CACHED_CLUB) || read_u16(0xb63d0a) != read_u16(0xae2c92) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
                 let na_temporada: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_KEY_NATION_CLUB_IN_SEASON);
-                let r = na_temporada(clube, 0xb63d18, 0xb63d20);
+                let r = na_temporada(clube, G_FITNESS_UPDATE_SEASON_START_DATE, G_FITNESS_UPDATE_SEASON_END_DATE);
                 *(G_FITNESS_UPDATE_CACHED_SEASON_FLAG as *mut u32) = (r == 0) as u32;
                 *(G_FITNESS_UPDATE_CACHED_CLUB as *mut usize) = read_usize(pessoa + staff::CLUB_JOB);
-                manager_manager_copy_date(0xb63d08, 0xae2c90);
+                manager_manager_copy_date(G_FITNESS_UPDATE_CACHE_DATE, G_CURRENT_DATE);
             }
             if read_i32(0xb63d30) != 0 {
                 l38 = 0;
                 let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-                let u6 = dias_ate(0xae2c90, read_usize(G_FITNESS_UPDATE_SEASON_END_DATE) as u32, read_usize(G_FITNESS_UPDATE_SEASON_END_DATE_LEAP) as u32) as u16;
-                let u7 = dias_ate(0xb63d18, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) as u16;
+                let u6 = dias_ate(G_CURRENT_DATE, read_usize(G_FITNESS_UPDATE_SEASON_END_DATE) as u32, read_usize(G_FITNESS_UPDATE_SEASON_END_DATE_LEAP) as u32) as u16;
+                let u7 = dias_ate(G_FITNESS_UPDATE_SEASON_START_DATE, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) as u16;
                 if u6 < u7 {
                     let lim = if (u6 as i32) < t { u6 as i32 } else { t };
                     l30 = lim;
@@ -3298,10 +3318,12 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa
     }
     core::ptr::write_unaligned((rec + 8) as *mut i16, forma as i16);
     core::ptr::write_unaligned((rec + 0xa) as *mut i16, cond as i16);
-    manager_manager_copy_date(rec, 0xae2c90);
+    manager_manager_copy_date(rec, G_CURRENT_DATE);
 }
 
-/// Comparador lado a lado: o registro de 31 bytes da pessoa, o byte +0xa do registro de 79 bytes, as estáticas e o
+/// Comparer for `update_player_fitness` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador lado a lado: o registro de 31 bytes da pessoa, o byte +0xa do registro de 79 bytes, as estáticas e o
 /// guardado do clube (0xb63d08..0xb63d34) e o sorteio. A cópia roda em ensaio, sem o fim da lesão (0x62e700): quando
 /// ela chega lá, fica a original sozinha (já rodou primeiro). Na primeira vez (estáticas por criar, com atexit) e sem
 /// registro (pessoa nula, id fora da tabela, sem ficha): só a original.
@@ -3314,7 +3336,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_player_fitness(this: usiz
     let rec = read_usize(this).wrapping_add(id.wrapping_mul(31));
     let geral = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f));
     let e = crate::aleatorio::REGIOES_DO_ESTADO;
-    let reg = [(rec, 31), (geral + 0xa, 1), (0xb63d08, 0x2c), e[0], e[1]];
+    let reg = [(rec, 31), (geral + 0xa, 1), (G_FITNESS_UPDATE_CACHE_DATE, 0x2c), e[0], e[1]];
     CPW8_TERMINOU = false;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || {
         CPW8_ENSAIO = true;
@@ -3346,7 +3368,7 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
     if v < -1000 {
         core::ptr::write_unaligned(e, v.wrapping_sub(1));
     }
-    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
     let idade = *((p + 0x18) as *const i8);
     if idade < 0x13 && core::ptr::read_unaligned(e) < 0 {
         core::ptr::write_unaligned(e, 0);
@@ -3362,6 +3384,7 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
     }
 }
 
+/// Comparer for `daily_wear` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_DAILY_WEAR);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -3424,6 +3447,7 @@ pub(crate) unsafe extern "thiscall" fn choose_injury_type(lesoes: usize, categor
     }
 }
 
+/// Comparer for `choose_injury_type` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(IDX_CHOOSE_INJURY_TYPE);
     // ponytail: jogador nulo abre a caixa de erro do 0x62ed70; não roda duas vezes
@@ -3460,6 +3484,7 @@ pub(crate) unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: u
     0 // cps9: a volta de hoje achada
 }
 
+/// Comparer for `injury_compare_entry_dates` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_INJURY_COMPARE_ENTRY_DATES)(chave, item);
     let n = injury_compare_entry_dates(chave, item);
@@ -3489,6 +3514,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: 
     r
 }
 
+/// Comparer for `injury_severity` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_injury_severity(lesoes: usize, tipo: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_INJURY_SEVERITY)(lesoes, tipo);
     let n = injury_severity(lesoes, tipo);
@@ -3496,6 +3522,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_injury_severity(lesoes: usize, t
     r
 }
 
+/// Comparer for `injury_grade` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_injury_grade(lesoes: usize, pessoa: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_INJURY_GRADE)(lesoes, pessoa);
     let n = injury_grade(lesoes, pessoa);

@@ -16,6 +16,6 @@ MUTACOES = [
     ('cqe5_mesma_divisao_qualquer', 'if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {', 'if comp == read_usize(dono + 0x57) && comp != 0 { // mutacao: qualquer divisao', 'cqe_5 mesma divisao'),
     ('cqe5_conta_tres', '*(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: a conta da temporada', '*(p as *mut u8) = read_u8(p).wrapping_add(3); // mutacao: soma 3', 'cqe_5 emprestimo contado'),
     ('cqe6_quatro_meses', '*fim_mes = (*ini_mes).wrapping_add(3); // cqe6: três meses', '*fim_mes = (*ini_mes).wrapping_add(4); // mutacao: quatro meses', 'cqe_6 inglaterra tres meses'),
-    ('cqe6_comeco_dois_meses', '*ini_mes = (mes(0xae2c90) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)', '*ini_mes = (mes(0xae2c90) as i8).wrapping_add(2); // mutacao: dois meses adiante', 'cqe_6 inglaterra tres meses'),
+    ('cqe6_comeco_dois_meses', '*ini_mes = (mes(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)', '*ini_mes = (mes(G_CURRENT_DATE) as i8).wrapping_add(2); // mutacao: dois meses adiante', 'cqe_6 inglaterra tres meses'),
     ('cqe6_base_abaixo_de_21', '< 0x18 { // cqe6: abaixo de 24 anos', '< 0x15 { // mutacao: abaixo de 21 anos', 'cqe_6 inglaterra periodo da base'),
 ]

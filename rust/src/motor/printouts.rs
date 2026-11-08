@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 262a leva: os veículos da imprensa: o comentarista sorteado, o nome do veículo e a notícia da queixa do técnico à federação (printouts.cpp, media.cpp) ----------
-
 
 
 
@@ -20,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
     let mut t = tipo as i8;
     if t == 1 {
         let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-        if semana(0xae2c90) as i16 == 6 {
+        if semana(G_CURRENT_DATE) as i16 == 6 {
             t = 7;
         }
     }
@@ -97,7 +95,9 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: us
     ids[r as usize] as i32
 }
 
-/// O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
+/// Comparer for `pick_random_pundit` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador: lado a lado nos cabeçalhos das duas listas (o cursor) e no sorteio, e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_pick_random_pundit(this: usize, clube: usize, tipo: u32, nacao: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32>(IDX_PICK_RANDOM_PUNDIT);
     let mut regioes = Vec::new();
@@ -171,7 +171,9 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, tipo: u32, i
     *marca = 0;
 }
 
-/// O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
+/// Comparer for `get_pundit_name` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador: lado a lado no nome (até 0xd4 bytes: o nome do comentarista tem 0xd1 e o padrão menos), na marca e
 /// nos cabeçalhos das listas (o cursor).
 pub(crate) unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, tipo: u32, id: u32, nome: usize, marca: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, *mut u8)>(IDX_GET_PUNDIT_NAME);

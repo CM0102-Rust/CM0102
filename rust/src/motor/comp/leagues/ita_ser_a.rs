@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 279a leva: o calendário das primeiras divisões da Itália e da França e da Série B: as rodadas da temporada, o jogo-desempate italiano e as 34 ou 38 rodadas da francesa (ita_ser_a.cpp, ita_ser_b.cpp, fra_first.cpp) ----------
-
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
@@ -313,6 +311,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule(this: usize, fa
     italian_schedule(this, fase, rodadas, extra, liga, &CQO6_SERIE_A_E_DESEMPATE)
 }
 
+/// Comparer for `ita_ser_a_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_A_CREATE_SCHEDULE);
     ita_ser_a_compare_schedule_all_stages("ita_ser_a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_a_create_schedule(this, fase, r, e, l))
@@ -329,14 +328,13 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule_645af0(this: us
     italian_schedule(this, fase, rodadas, extra, liga, &CQO6_SERIE_B_E_DESEMPATE)
 }
 
+/// Comparer for `ita_ser_a_create_schedule_645af0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule_645af0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_A_CREATE_SCHEDULE_645AF0);
     ita_ser_a_compare_schedule_all_stages("ita_ser_a_create_schedule_645af0", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_a_create_schedule_645af0(this, fase, r, e, l))
 }
 
 
-
-// ---------- 278a leva: o desempate da Série A e da Série B italianas no fim da temporada (o "spareggio": empate em pontos na fronteira de duas faixas), a ordem dos empatados pelo confronto direto e o resultado do jogo de desempate (ita_ser_a.cpp, ita_ser_b.cpp) ----------
 
 
 
@@ -549,11 +547,13 @@ pub(crate) unsafe fn compare_league_day(nome: &str, this: usize, completo: u32, 
     r
 }
 
+/// Comparer for `ita_ser_a_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_FOR_DATE);
     compare_league_day("ita_ser_a_update_for_date", this, completo, || serie_a_zones(this), || o(this, hoje, completo))
 }
 
+/// Comparer for `ita_ser_a_update_for_date_647050` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date_647050(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_FOR_DATE_647050);
     compare_league_day("ita_ser_a_update_for_date_647050", this, completo, serie_b_zones, || o(this, hoje, completo))
@@ -595,7 +595,9 @@ pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(thi
     }
 }
 
-/// Lado a lado na tabela inteira (a 0x682b30 grava +4 de cada linha e solta a sua minitabela; o qsort só mexe no
+/// Comparer for `ita_league_sort_clubs_level_on_points` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado na tabela inteira (a 0x682b30 grava +4 de cada linha e solta a sua minitabela; o qsort só mexe no
 /// bloco).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_league_sort_clubs_level_on_points(this: usize, pontos: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
@@ -689,7 +691,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     0xffff_ffff
 }
 
-/// Na liga e no desempate com a situação 1 há chamadas que não rodam duas vezes (os registros da base, a ordenação, as
+/// Comparer for `ita_ser_a_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Na liga e no desempate com a situação 1 há chamadas que não rodam duas vezes (os registros da base, a ordenação, as
 /// virtuais): só a original. Nas outras situações a cópia só devolve −1: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_STAFF_RECORDS_FOR_STATUS);
@@ -699,8 +703,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_f
     }
     r
 }
-
-// ---------- 278a leva: os construtores da Série A, da Série B e dos dois grupos da Série C1 italianas (as regras, a tabela, o calendário real de 2001/02, os jogos, as estatísticas e as posições previstas na criação) (ita_ser_a.cpp, ita_ser_b.cpp, ita_ser_c1a.cpp, ita_ser_c1b.cpp) ----------
 
 
 
@@ -884,23 +886,24 @@ pub(crate) unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u
     r
 }
 
+/// Comparer for `construct_ita_ser_a` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_A);
     compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &CQM4_SERIE_A, || o(this, ano, registro))
 }
 
+/// Comparer for `construct_ita_ser_b` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_B);
     compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &CQM4_SERIE_B, || o(this, ano, registro))
 }
 
 
+/// Comparer for `construct_ita_ser_c1b` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1B);
     compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &CQM4_C1B, || o(this, ano, registro))
 }
-
-// ---------- 278a leva: o calendário real de 2001/02 da Série A e da Série B italianas (os jogos fixos pelo nome dos clubes) (ita_ser_a.cpp, ita_ser_b.cpp) ----------
 
 
 
@@ -1002,11 +1005,13 @@ pub(crate) unsafe fn ita_ser_a_compare_fixed_fixtures(nome: &str, this: usize, o
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
 
+/// Comparer for `create_fixed_fixtures` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_create_fixed_fixtures(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_FIXED_FIXTURES);
     ita_ser_a_compare_fixed_fixtures("create_fixed_fixtures", this, || o(this))
 }
 
+/// Comparer for `ita_ser_a_set_up_fixed_fixtures` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_fixed_fixtures(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_A_SET_UP_FIXED_FIXTURES);
     ita_ser_a_compare_fixed_fixtures("ita_ser_a_set_up_fixed_fixtures", this, || o(this))
@@ -1707,8 +1712,6 @@ pub(crate) const CQN5_SERIE_B: [(u8, u8, u16, u32, u32); 380] = [
 ];
 
 
-// ---------- 275a leva: as regras das divisões italianas (Série A, B, C1/A e C1/B): turnos, pontos, vagas, desempates, o empate que vai ao jogo-desempate e a tabela de rodadas (ita_ser_a.cpp, ita_ser_b.cpp, ita_ser_c1a.cpp, ita_ser_c1b.cpp) ----------
-
 
 /// No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
 pub(crate) static mut CQI6_ENSAIO: bool = false;
@@ -1848,23 +1851,24 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(nome: &str, this: usize, esc
     r
 }
 
+/// Comparer for `ita_ser_a_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_SET_UP_RULES);
     ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules", this, serie_a_rules(this), || o(this), || ita_ser_a_set_up_rules(this))
 }
 
+/// Comparer for `ita_ser_a_set_up_rules_6468a0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules_6468a0(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_SET_UP_RULES_6468A0);
     ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules_6468a0", this, serie_b_rules(this), || o(this), || ita_ser_a_set_up_rules_6468a0(this))
 }
 
 
+/// Comparer for `ita_ser_a_set_up_rules_64f920` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules_64f920(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_SET_UP_RULES_64F920);
     ita_ser_a_compare_league_rules("ita_ser_a_set_up_rules_64f920", this, serie_c1b_rules(this), || o(this), || ita_ser_a_set_up_rules_64f920(this))
 }
-
-// ---------- 275a leva: a tabela das divisões italianas (Série A, B, C1/A e C1/B): os clubes de cada divisão, o fundo de prêmios e o dinheiro da TV (ita_ser_a.cpp, ita_ser_b.cpp, ita_ser_c1a.cpp, ita_ser_c1b.cpp) ----------
 
 
 
@@ -1970,7 +1974,7 @@ pub(crate) unsafe fn ita_ser_a_compare_league_table(nome: &str, this: usize, n: 
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         let comp = read_usize(clube + club::DIVISION);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);
@@ -1993,17 +1997,20 @@ pub(crate) unsafe fn ita_ser_a_compare_league_table(nome: &str, this: usize, n: 
     r
 }
 
+/// Comparer for `ita_ser_a_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_CREATE_TABLE);
     ita_ser_a_compare_league_table("ita_ser_a_create_table", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_A, Some(0x3d090), || o(this))
 }
 
+/// Comparer for `ita_ser_a_create_table_646780` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_table_646780(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_CREATE_TABLE_646780);
     ita_ser_a_compare_league_table("ita_ser_a_create_table_646780", this, 0x14, KEY_CLUB_COMP_ITALIAN_SERIE_B, Some(0x11170), || o(this))
 }
 
 
+/// Comparer for `ita_ser_a_create_table_64f820` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_table_64f820(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_A_CREATE_TABLE_64F820);
     ita_ser_a_compare_league_table("ita_ser_a_create_table_64f820", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B, None, || o(this))

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 264a leva: as suspensões internacionais cumpridas no jogo da seleção, o recurso da suspensão e o texto da vaga da suspensão (discipline.cpp) ----------
-
 
 
 /// Range (start, end) of the 8-byte items of the discipline nation index ([this+0xc]) for the team's nation, found by
@@ -67,7 +65,9 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tim
     soltar(lista);
 }
 
-/// Comparador: a contagem (0x556e90) grava o histórico no arquivo quando a suspensão termina e não pode rodar duas
+/// Comparer for `serve_international_bans` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a contagem (0x556e90) grava o histórico no arquivo quando a suspensão termina e não pode rodar duas
 /// vezes: o plano antes (as pessoas da nação e, de cada uma, o que a 0x556e90 fará, serve_ban_match_plan), a original roda;
 /// confere, pessoa a pessoa, o contador novo ou a suspensão solta (livre: +0 = 0xff, +2 = −1).
 pub(crate) unsafe extern "thiscall" fn comparar_serve_international_bans(this: usize, time: usize) {
@@ -179,7 +179,9 @@ pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32,
     }
 }
 
-/// Comparador: o órgão tira as suspensões pendentes (0x7e91d0, lista que solta nós) e a 0x556d00 pode gravar o
+/// Comparer for `apply_appeal_result` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o órgão tira as suspensões pendentes (0x7e91d0, lista que solta nós) e a 0x556d00 pode gravar o
 /// histórico: só a original, com o plano antes; confere a suspensão solta (+0 = 0xff, +2 = −1) ou os jogos e os dias
 /// novos.
 pub(crate) unsafe extern "thiscall" fn comparar_apply_appeal_result(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32, x: u32) {
@@ -225,7 +227,9 @@ pub(crate) unsafe extern "thiscall" fn get_slot_text(this: usize, pessoa: usize,
     texto(read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4))), pessoa, saida, tamanho)
 }
 
-/// Comparador: sem regra na vaga (ou pessoa fora da tabela), a devolução (0, sem gravar nada); com regra, o texto do órgão
+/// Comparer for `get_slot_text` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: sem regra na vaga (ou pessoa fora da tabela), a devolução (0, sem gravar nada); com regra, o texto do órgão
 /// (0x7e88d0) pode contar a suspensão por dias (0x556e90, que grava o histórico no arquivo): só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, pessoa: usize, vaga: u32, saida: usize, tamanho: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(IDX_GET_SLOT_TEXT);
@@ -238,8 +242,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, pesso
     PLACAR.registrar(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", pessoa, vaga as i8, r, n));
     r
 }
-
-// ---------- 251a leva: as suspensões na troca de clube: acrescentar a suspensão, soltar as vagas que não valem no clube novo e devolver as suspensões guardadas no fim do empréstimo (discipline.cpp) ----------
 
 
 
@@ -412,7 +414,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
     let n = read_i16(this + 0x12);
     let item = read_u32_as_usize(this + 0xc).wrapping_add((n as i32 as usize).wrapping_mul(8));
     write_u32(item, id);
-    let pessoa = read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let pessoa = read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
     write_u32(item + 4, read_u32_as_usize(read_u32_as_usize(pessoa + staff::NATION)) as u32); // a nação
     write_u16(this + 0x12, n.wrapping_add(1) as u16);
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -471,7 +473,7 @@ pub(crate) unsafe fn return_bans_plan(this: usize, pessoa: usize) -> Cpo11Devolv
     let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contrato = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), pessoa);
-    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(0x245)) };
+    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(club::SIZE)) };
     let mut p = Cpo11Devolver { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
     let lista = this + 0x1c;
     write_u32(lista + 0xa, read_u32_as_usize(this + 0x1e) as u32);
@@ -522,8 +524,8 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: us
     let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contrato = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), pessoa);
-    write_u32(0xae1080, contrato as u32);
-    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(0x245)) };
+    write_u32(G_CONTRACT_LOOKUP_RESULT, contrato as u32);
+    let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(club::SIZE)) };
     let lista = this + 0x1c;
     write_u32(lista + 0xa, read_u32_as_usize(this + 0x1e) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -609,7 +611,9 @@ pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plan
     Cpo11Plano::Caixa
 }
 
-/// Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
+/// Comparer for `add_ban` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
 /// roda; confere a velha estendida (jogos, dias, bit 0 das duas), ou a nova na vaga (jogos, dias, as 4 regras), a
 /// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
 pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
@@ -644,7 +648,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ba
     PLACAR.registrar(ok, || format!("add_ban({}) {}", id, detalhe));
 }
 
-/// Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
+/// Comparer for `clear_bans_invalid_for_club` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
 /// entrada repetida em duas vagas não entra na conferência da segunda.
 pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pessoa: usize, nada: u32, clube: usize) {
@@ -685,7 +691,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this
     PLACAR.registrar(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plano, antes, depois));
 }
 
-/// Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
+/// Comparer for `restore_held_bans` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
 /// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as
 /// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
 pub(crate) unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, pessoa: usize) {
@@ -710,8 +718,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, p
     ok &= depois == esperado;
     PLACAR.registrar(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, esperado, depois));
 }
-
-// ---------- 249a leva: a disciplina: contar o jogo cumprido da suspensão, soltar a suspensão e apagar o histórico de suspensões da pessoa (discipline.cpp) ----------
 
 
 
@@ -744,13 +750,13 @@ pub(crate) unsafe fn ruling_body_entry(orgao: usize, id: u32) -> usize {
 /// (0x946464 com 0x55e5f0) pela nação (+0x1a) e, sem achar, pela segunda nação (+0x1e, se houver). 0 sem achar.
 pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
     let mut chave = [id, read_usize(read_usize(pessoa + staff::NATION)) as u32];
     let e = bsearch(chave.as_ptr(), read_usize(this + 0xc), read_i16(this + 0x12) as i32, 8, 0x55e5f0);
     if e != 0 {
         return e;
     }
-    let segunda = read_usize(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e)) + 0x1e);
+    let segunda = read_usize(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)) + 0x1e);
     if segunda == 0 {
         return 0;
     }
@@ -894,7 +900,9 @@ pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, pessoa: us
     sem_ultimo(read_usize(this + 0x18), r + 0x14, r + 0x18)
 }
 
-/// Comparador: a 0x58e340 grava o histórico no arquivo (não pode rodar duas vezes): o plano antes, a original roda;
+/// Comparer for `update_ban_progress` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x58e340 grava o histórico no arquivo (não pode rodar duas vezes): o plano antes, a original roda;
 /// confere o contador, ou a suspensão solta (livre e a entrada do órgão sem índice), ou nada mudado.
 pub(crate) unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize, id: u32, regra: u32, conta: u32) {
     let j = serve_ban_match_plan(this, id, regra, conta);
@@ -916,7 +924,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize,
     });
 }
 
-/// Comparador: lado a lado pela suspensão, o índice das nações (conta e itens) e as entradas da pessoa nos órgãos das
+/// Comparer for `release_ban` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela suspensão, o índice das nações (conta e itens) e as entradas da pessoa nos órgãos das
 /// regras (achadas antes, sem criar). Quarta regra sem o item no índice: só a original (caixa).
 pub(crate) unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_RELEASE_BAN);
@@ -943,7 +953,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32
     r
 }
 
-/// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
+/// Comparer for `clear_ban_history` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, pessoa: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY);
     if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 {
@@ -954,8 +966,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, p
     PLACAR.registrar(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", read_usize(pessoa), mo, mr));
     a
 }
-
-// ---------- 243a leva: a cópia do registro de suspensão (discipline.cpp), o salário padrão do contrato (staff_contracts.cpp) e a condição de jogo (injury.cpp) ----------
 
 /// copies the ban record (0x14 bytes): fields, the date (+4) and bits 0..2 of +0x13
 /// Original: `BanRecord::operator=` (0x556c70, discipline.cpp, thiscall, ret 4).
@@ -984,6 +994,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, origem: 
 
 
 
+/// Comparer for `discipline_operator` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_operator(this: usize, origem: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_DISCIPLINE_OPERATOR);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this, origem), || discipline_operator(this, origem));
@@ -994,8 +1005,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_discipline_operator(this: usize,
 
 // a original roda primeiro e atualiza o físico do dia (0x62c680, com sorteio); a cópia, depois, acha o dia já feito
 comparar_valor!(comparar_get_match_condition, get_match_condition, IDX_GET_MATCH_CONDITION, (jogador: usize, em_porcento: u32) -> u16);
-
-// ---------- 184a leva: a disciplina (discipline.cpp): a temporada nova, o dia e a vaga da tabela ----------
 
 /// starts the new season of the competition's discipline rules (virtual method 0)
 /// Original: `discipline_new_season` (0x556210, discipline.cpp, thiscall).
@@ -1046,14 +1055,17 @@ pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32,
 }
 
 // ponytail: as duas primeiras só despacham pela tabela virtual (efeitos fora): provadas pela carreira
+/// Comparer for `discipline_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_new_season(this: usize, id: *const i32) {
     original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(IDX_DISCIPLINE_NEW_SEASON)(this, id)
 }
 
+/// Comparer for `discipline_daily_update` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_daily_update(this: usize, hoje: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_DISCIPLINE_DAILY_UPDATE)(this, hoje)
 }
 
+/// Comparer for `discipline_set_slot` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_set_slot(this: usize, id: i32, vaga: i8, tipo: u8, valor: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8, u8, u32)>(IDX_DISCIPLINE_SET_SLOT);
     let a = (*((this + 0x14) as *const usize) as isize + id as isize * 29 + vaga as isize * 5) as usize;
@@ -1108,7 +1120,9 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, jogador:
     1
 }
 
-/// Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
+/// Comparer for `is_player_suspended` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
 pub(crate) unsafe extern "thiscall" fn comparar_is_player_suspended(this: usize, jogador: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
     let clube = if jogador != 0 { read_usize(jogador + 0x39) } else { 0 };
@@ -1138,7 +1152,9 @@ pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, pessoa: *cons
     }
 }
 
-/// Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
+/// Comparer for `drop_held_bans` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
 /// itens que ficaram e o contador.
 pub(crate) unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
@@ -1187,7 +1203,9 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, jogador: 
     }
 }
 
-/// Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
+/// Comparer for `hold_bans_for_loan` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
 /// registro do jogador: as vagas do plano em −1, as outras iguais e o contador somado.
 pub(crate) unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, jogador: usize) {
     let ficha_de: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
@@ -1233,6 +1251,7 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pess
     perguntar(o, read_usize(pessoa) as u32, 0, 0, read_usize(comp + 4) as u32)
 }
 
+/// Comparer for `is_one_booking_from_ban` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_ONE_BOOKING_FROM_BAN)(this, pessoa, competicao);
     let n = is_one_booking_from_ban(this, pessoa, competicao);
@@ -1288,7 +1307,9 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
     0
 }
 
-/// Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
+/// Comparer for `process_match` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_process_match(this: usize, partida: usize, resultado: u32) -> u32 {
     crate::comparacao::ramo("process_match");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_PROCESS_MATCH)(this, partida, resultado)
@@ -1305,7 +1326,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_process_match(this: usize, parti
 pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
     let r = read_u32_as_usize(this + 0x14).wrapping_add((id as usize).wrapping_mul(29));
     let apagar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_DISCIPLINE_CLEAR_BAN_HISTORY);
-    apagar(this, read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e)));
+    apagar(this, read_u32_as_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     for k in 0..4usize {
         let regra = *((r + k * 5) as *const u8);
         if regra == 0xff {
@@ -1343,7 +1364,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
     *((r + 0x1c) as *mut u8) = 0;
 }
 
-/// Comparador: a 0x556830 solta suspensões e tira (e libera) itens da lista: o plano antes (as entradas das vagas), a
+/// Comparer for `discipline_remove_player` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a 0x556830 solta suspensões e tira (e libera) itens da lista: o plano antes (as entradas das vagas), a
 /// original roda; confere o registro (0xff, conta 0) e as entradas livres (+0 = −1).
 pub(crate) unsafe extern "thiscall" fn comparar_discipline_remove_player(this: usize, id: u32) {
     let r = read_u32_as_usize(this + 0x14).wrapping_add((id as usize).wrapping_mul(29));
@@ -1389,6 +1412,7 @@ pub(crate) unsafe extern "thiscall" fn find_held_ban(disciplina: usize, id: i32,
     0
 }
 
+/// Comparer for `find_held_ban` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_find_held_ban(disciplina: usize, id: i32, vaga: i8) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8) -> usize>(IDX_FIND_HELD_BAN);
     // a lista guarda o cursor: as duas partem do mesmo e têm de deixá-lo igual

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: os mata-matas da Libertadores e da Merconorte: os classificados dos grupos e a fase seguinte (conmebol_liber.cpp, con_merc_cup.cpp) ----------
-
 
 
 
@@ -132,6 +130,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this
     build_knockout_stage(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
 
+/// Comparer for `con_merc_cup_create_semi_final_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_CREATE_SEMI_FINAL_STAGE);
     con_merc_cup_compare_knockout_stage("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
@@ -160,6 +159,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
 
 // ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa e não muda nada).
+/// Comparer for `con_merc_cup_advance_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
@@ -168,8 +168,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this:
     let depois = read_u32_as_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
-
-// ---------- 283a leva: os convidados da Merconorte e a fase seguinte da Mercosul e da Copa América (con_merc_cup.cpp, conmebol_merc.cpp, goldcup.cpp) ----------
 
 
 
@@ -306,7 +304,9 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: u
     select_invited_clubs(this)
 }
 
-/// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
+/// Comparer for `con_merc_cup_select_invited_clubs` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
@@ -373,8 +373,6 @@ pub(crate) unsafe fn con_merc_cup_compare_advance_stage(nome: &str, this: usize,
 
 
 
-
-// ---------- 282a leva: a Merconorte: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros grupos (con_merc_cup.cpp) ----------
 
 
 
@@ -448,6 +446,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
 // ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
 // criadas e a fase atual (+0x30) a última delas.
+/// Comparer for `con_merc_cup_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_MERC_CUP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
@@ -501,6 +500,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
+/// Comparer for `con_merc_cup_create_first_group_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_CREATE_FIRST_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -604,6 +604,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
+/// Comparer for `con_merc_cup_create_group_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CON_MERC_CUP_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
@@ -635,6 +636,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize,
     build_stage_schedule(this, merconorte_stage(fase), rodadas, extra, liga, 0x9a7d6c)
 }
 
+/// Comparer for `con_merc_cup_create_schedule` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_MERC_CUP_CREATE_SCHEDULE);
     compare_stage_schedule("con_merc_cup_create_schedule", fase, merconorte_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
@@ -653,6 +655,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) ->
     apply_cup_rules(this, &CQJ11_MERCONORTE, CQJ11_MERCONORTE.dia, 3)
 }
 
+/// Comparer for `con_merc_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SET_UP_RULES);
     check_cup_rules("con_merc_cup_set_up_rules", this, &CQJ11_MERCONORTE, || o(this))

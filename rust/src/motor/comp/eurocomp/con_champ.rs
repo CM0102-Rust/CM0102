@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 273a leva: a Copa dos Campeões da CONCACAF: os oito classificados, o dia da copa e as rodadas (con_champ.cpp) ----------
-
 
 
 
@@ -175,6 +173,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, ho
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano: com a
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
+/// Comparer for `con_champ_update_for_date` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_CHAMP_UPDATE_FOR_DATE);
     if read_u32_as_usize(this + 0xa7) == 0 {
@@ -204,6 +203,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
+/// Comparer for `con_champ_set_up_rounds` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this);
     PLACAR.registrar(r == 1 && read_u32_as_usize(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, read_u32_as_usize(this + 0x28)));
@@ -245,6 +245,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     t
 }
 
+/// Comparer for `con_champ_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_champ_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_CHAMP_CREATE_ROUND_TABLE);
     let a = eng_cc_cup_compare_round_table("con_champ_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 276a leva: as supercopas e o Jogo das Estrelas: os clubes da Supercopa da Espanha e do Japão e o calendário do Jogo das Estrelas da MLS (spa_super.cpp, jap_super.cpp, usa_mls_all_stars.cpp) ----------
-
 
 
 /// Common start: +0x3e = 2 and allocates the two-entry list (0xc bytes) at +0xa7; None with the error box on out of
@@ -116,6 +114,7 @@ pub(crate) unsafe fn compare_team_list(nome: &str, this: usize, o: impl FnOnce()
     a
 }
 
+/// Comparer for `spa_super_select_teams` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_super_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_SUPER_SELECT_TEAMS);
     compare_team_list("spa_super_select_teams", this, || o(this), || select_spanish_super_cup_teams(this))
@@ -174,6 +173,7 @@ pub(crate) unsafe extern "thiscall" fn spa_super_select_teams_666160(this: usize
     select_japanese_super_cup_teams(this).0
 }
 
+/// Comparer for `spa_super_select_teams_666160` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_super_select_teams_666160(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_SUPER_SELECT_TEAMS_666160);
     compare_team_list("spa_super_select_teams_666160", this, || o(this), || select_japanese_super_cup_teams(this))
@@ -202,6 +202,7 @@ pub(crate) unsafe extern "thiscall" fn spa_super_create_round_table(this: usize,
     fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 
+/// Comparer for `spa_super_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_spa_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SUPER_CREATE_ROUND_TABLE);
     fra_super_compare_round_table("spa_super_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),

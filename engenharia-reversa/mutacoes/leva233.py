@@ -19,6 +19,6 @@ MUTACOES = [
     ('dbn1_comissao_alvo', '            let alvo = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // a comissão pela reputação', '            let alvo = ((rep(c) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
     ('dbn1_cortar_pessoas', '        for &d in &[0x39usize, 0x24] { // o clube e a seleção da pessoa ficam', '        for &d in &[0x24usize] { // mutacao: o clube da pessoa nao a segura'),
     ('dbn1_podar', '            if nac == 0 || *((nac + 0x11c) as *const u8) != 0 { // a linha fica', '            if nac == 0 || nac != 0 { // mutacao: fica tambem a linha de nacao nao escolhida'),
-    ('dbn2_cidade_sem_nacao', '        a(e + 0x1f, 0xae23a8, 0x122); // a nação da cidade', '        wr(e + 0x1f, 0); // mutacao: a cidade sem nacao'),
-    ('dbn2_ordenar', '    ordenar(rd(0xae2d1c), gi(0xae235c) as u32, 4, 0x540020); // todos os clubes pela reputação', '    ordenar(rd(0xae2d1c), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
+    ('dbn2_cidade_sem_nacao', '        a(e + 0x1f, G_NATION_TABLE, 0x122); // a nação da cidade', '        wr(e + 0x1f, 0); // mutacao: a cidade sem nacao'),
+    ('dbn2_ordenar', '    ordenar(rd(G_CLUB_REPUTATION_ORDER), gi(0xae235c) as u32, 4, 0x540020); // todos os clubes pela reputação', '    ordenar(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
 ]

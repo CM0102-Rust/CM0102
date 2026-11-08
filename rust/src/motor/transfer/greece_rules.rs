@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 277a leva: as regras de transferência da Grécia, da Rússia e da Bélgica: as janelas de transferência (belgium_rules.cpp, greece_rules.cpp, russia_rules.cpp) ----------
-
 
 
 
@@ -24,7 +22,9 @@ pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows(this: 
     set_transfer_windows(this, 2, &CQN2_GRECIA, 0x9cdbc8, 0x51);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `greece_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS);
     compare_transfer_rules_ctor("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
@@ -49,7 +49,9 @@ pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_7ec7e0
     set_transfer_windows(this, 2, &CQN2_RUSSIA, 0xa7ad38, 0x4d);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `greece_rules_init_transfer_windows_7ec7e0` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_7ec7e0(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_7EC7E0);
     compare_transfer_rules_ctor("greece_rules_init_transfer_windows_7ec7e0", this, || o(this), |s| greece_rules_init_transfer_windows_7ec7e0(s));
@@ -75,7 +77,9 @@ pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_424c00
     set_transfer_windows(this, 3, &CQN2_BELGICA, 0x989e34, 0x53);
 }
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
+/// Comparer for `greece_rules_init_transfer_windows_424c00` (comparison mode: see the header of motor.rs).
+///
+/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_424c00(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_424C00);
     compare_transfer_rules_ctor("greece_rules_init_transfer_windows_424c00", this, || o(this), |s| greece_rules_init_transfer_windows_424c00(s));

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: a Série C: a final, a virada da temporada e as posições previstas (bra_nat_third.cpp) ----------
-
 
 
 /// Club in the first table row of stage k of the league (k = -1: the league itself).
@@ -179,7 +177,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
     crate::comparacao::ramo("cqs_4 posicoes previstas");
 }
 
-/// O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
+/// Comparer for `bra_nat_third_create_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usize) {
@@ -194,7 +194,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage
     PLACAR.registrar(igual, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, fase));
 }
 
-/// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
+/// Comparer for `bra_nat_third_start_new_season` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize) -> u32 {
@@ -206,7 +208,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(t
     r
 }
 
-/// O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
+/// Comparer for `bra_nat_third_set_predicted_positions` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
 /// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_positions(this: usize) {
@@ -228,8 +232,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
     });
     PLACAR.registrar(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
 }
-
-// ---------- 282a leva: a Série C: os sete grupos da primeira fase, a segunda fase dos dezesseis e os dois grupos da terceira (bra_nat_third.cpp) ----------
 
 
 
@@ -432,7 +434,9 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 9);
 }
 
-/// O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
+/// Comparer for `bra_nat_third_create_group_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
 /// (como conjunto) e +0x30 = g.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usize, g: u32) {
@@ -456,7 +460,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage
     PLACAR.registrar(igual, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
 }
 
-/// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
+/// Comparer for `create_second_round_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
 /// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
 pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
@@ -494,7 +500,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: 
     PLACAR.registrar(igual, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
 }
 
-/// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
+/// Comparer for `create_third_round_groups` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
 pub(crate) unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
     let segunda = read_usize(read_usize(this + 0xc) + 0x1c);
@@ -581,7 +589,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
     1
 }
 
-/// O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
+/// Comparer for `bra_nat_third_create_table` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
 /// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
 /// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this: usize) -> u32 {
@@ -589,7 +599,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_create_table(this:
     let mut plano = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plano.len() < 0x38 {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if read_usize(clube + club::DIVISION) == read_usize(this + 4) {
             plano.push(clube);
         }
@@ -625,7 +635,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -
     1
 }
 
-/// Comparador: como o da Série A.
+/// Comparer for `bra_nat_third_set_up_rules` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_SET_UP_RULES)(this), || {
@@ -651,7 +663,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_st
     serie_c_staff_records(this, clube, situacao, fase, true).0
 }
 
-/// Comparador: como o da Série A.
+/// Comparer for `bra_nat_third_update_staff_records_for_status` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = serie_c_staff_records(this, clube, situacao, fase, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 276a leva: o calendário das copas da França e da Espanha: as rodadas da Copa da França, da Copa da Liga francesa e da Copa do Rei (fra_cup.cpp, fra_lge_cup.cpp, spa_cup.cpp) ----------
-
 
 /// Uma rodada de copa (registro de 0x68 bytes, docs/.md §2.4): o sorteio (dia, mês com 0 =
 /// janeiro, anos a somar ao ano da copa +0x40, dia da semana ou −1) pela 0x521e60; o jogo (o mesmo, mais o turno em +6
@@ -145,6 +143,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, f
     single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_FRANCA, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
+/// Comparer for `fra_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE);
     compare_single_stage_round_table("fra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -174,6 +173,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: u
     single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_LIGA_FRANCESA, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
 }
 
+/// Comparer for `fra_cup_create_round_table_5bcc40` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE_5BCC40);
     compare_single_stage_round_table("fra_cup_create_round_table_5bcc40", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
@@ -192,8 +192,6 @@ pub(crate) const CQL11_COPA_DO_REI: [Cql11R; 7] = [
     cql11r((0x1a, 3, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 6, (2, 1, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
 ];
 
-
-// ---------- 276a leva: os inscritos das copas francesas: a Copa da França, a Copa da Liga francesa e os dois clubes da Supercopa (fra_cup.cpp, fra_lge_cup.cpp, fra_super.cpp) ----------
 
 
 
@@ -306,6 +304,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> 
 }
 
 
+/// Comparer for `fra_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS);
     eng_cc_cup_compare_entrant_list("fra_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_cup_collect_entrants(this),
@@ -367,6 +366,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants_5bd160(this: usi
     french_league_cup_collect_entrants(this).0
 }
 
+/// Comparer for `fra_cup_collect_entrants_5bd160` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS_5BD160);
     eng_cc_cup_compare_entrant_list("fra_cup_collect_entrants_5bd160", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_league_cup_collect_entrants(this),

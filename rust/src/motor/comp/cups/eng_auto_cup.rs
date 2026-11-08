@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): os 56 clubes das duas chaves (Norte e Sul), a fase das chaves e a fase seguinte (eng_auto_cup.cpp) ----------
-
 
 
 
@@ -56,7 +54,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     let mut i: i16 = 0;
     if n > 0 {
         loop {
-            let c = base + i as u16 as usize * 0x245;
+            let c = base + i as u16 as usize * club::SIZE;
             if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
                 push_section_club(this, &mut k, c);
             }
@@ -75,7 +73,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     let mut i: i16 = 0;
     if n > 0 {
         loop {
-            let c = base + i as u16 as usize * 0x245;
+            let c = base + i as u16 as usize * club::SIZE;
             let antes = read_u32_as_usize(c + 0x5b);
             if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
                 crate::comparacao::ramo("cqs_5 rebaixado para a conference");
@@ -104,7 +102,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                         if k >= read_u32_as_usize(this + 0xb6) as i32 {
                             break;
                         }
-                        let c = base + i as u16 as usize * 0x245;
+                        let c = base + i as u16 as usize * club::SIZE;
                         let antes = read_u32_as_usize(c + 0x5b);
                         if antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) && eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) {
                             let v = *((c + 0x5f) as *const i8);
@@ -131,7 +129,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
         let mut i: i16 = 0;
         if n > 0 {
             loop {
-                let c = base + i as u16 as usize * 0x245;
+                let c = base + i as u16 as usize * club::SIZE;
                 if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && achado != c {
                     local[m as u8 as usize] = c;
                     m = m.wrapping_add(1);
@@ -150,7 +148,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             let mut j: i16 = 0;
             if lim > 0 {
                 loop {
-                    let c = base + j as u16 as usize * 0x245;
+                    let c = base + j as u16 as usize * club::SIZE;
                     let nac = read_u32_as_usize(c + 0x53);
                     if nac != 0 && read_u32_as_usize(nac) == read_u32_as_usize(KEY_NATION_ENGLAND) && !eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_A_LOWER_DIVISION) {
                         local[m as u8 as usize] = c;
@@ -204,14 +202,16 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
     eng_auto_cup_select_section_clubs(this)
 }
 
-/// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
+/// Comparer for `select_section_clubs` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SELECT_SECTION_CLUBS);
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let tem_rebaixado = (0..read_u32_as_usize(G_CLUB_COUNT) as i32).any(|i| {
-        let c = base + i as usize * 0x245;
+        let c = base + i as usize * club::SIZE;
         let antes = read_u32_as_usize(c + 0x5b);
         eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION)
     });
@@ -296,7 +296,9 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     write_u32_from_usize(this + 0x30, 0);
 }
 
-/// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
+/// Comparer for `create_section_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
     o(this);
@@ -325,7 +327,9 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     }
 }
 
-/// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
+/// Comparer for `eng_auto_cup_advance_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_ADVANCE_STAGE);
     let antes = read_u32_as_usize(this + 0x30) as i32;
@@ -334,8 +338,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this:
     let depois = read_u32_as_usize(this + 0x30) as i32;
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, antes, depois));
 }
-
-// ---------- 283a leva: o Troféu da Liga inglesa (LDV Vans Trophy): a final entre os campeões das duas chaves e a classificação final da copa nas estatísticas (eng_auto_cup.cpp) ----------
 
 
 
@@ -401,7 +403,9 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     soltar(l);
 }
 
-/// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
+/// Comparer for `eng_auto_cup_create_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);
@@ -484,6 +488,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
 }
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
+/// Comparer for `eng_auto_cup_rank_teams` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_rank_teams(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_RANK_TEAMS)(this)
 }
@@ -500,6 +505,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_collect_entrants(this: usize
     collect_auto_cup_entrants(this).0
 }
 
+/// Comparer for `eng_auto_cup_collect_entrants` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_AUTO_CUP_COLLECT_ENTRANTS);
     eng_cc_cup_compare_entrant_list("eng_auto_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || collect_auto_cup_entrants(this), |_, n| n.max(0) as usize * 6)
@@ -518,6 +524,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_round_table(this: usi
     create_round_table(this, ldv_trophy_stage(fase), rodadas, extra, liga, 0x9c4180)
 }
 
+/// Comparer for `eng_auto_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eng_auto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_AUTO_CUP_CREATE_ROUND_TABLE);
     asia_club_champ_compare_round_table("eng_auto_cup_create_round_table", fase, ldv_trophy_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),

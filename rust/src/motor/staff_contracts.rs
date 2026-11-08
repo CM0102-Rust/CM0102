@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 257a leva: as cláusulas do contrato: a cláusula de rescisão ativa, o período protegido da FIFA e o tipo de bônus permitido (staff_contracts.cpp) ----------
-
 
 
 /// 1 when one of the three release clauses of the contract is active
@@ -18,6 +16,7 @@ pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u3
     0
 }
 
+/// Comparer for `has_active_release_clause` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_HAS_ACTIVE_RELEASE_CLAUSE)(c);
     let n = has_active_release_clause(c);
@@ -53,14 +52,14 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     let idade: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_STAFF_AGE);
     let (d0, d1) = (read_usize(d) as u32, read_usize(d + 4) as u32);
     let mut t = [0u8; 8];
-    diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
+    diferenca(G_CURRENT_DATE, t.as_mut_ptr(), d0, d1);
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c).wrapping_mul(110));
     let limit: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade
     if !anos.is_null() {
         *anos = limit;
     }
     let mut l = [0u8; 8];
-    let p = diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
+    let p = diferenca(G_CURRENT_DATE, t.as_mut_ptr(), d0, d1);
     core::ptr::copy_nonoverlapping(p as *const u8, l.as_mut_ptr(), 8);
     let a = u16::from_le_bytes([l[2], l[3]]) as i32;
     if a < limit as i32 {
@@ -72,6 +71,7 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     0
 }
 
+/// Comparer for `check_fifa_protected_period` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
     // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
     let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
@@ -105,14 +105,13 @@ pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(pessoa: usi
     (tipo as u8 != 2) as u32
 }
 
+/// Comparer for `staff_contract_is_bonus_type_allowed` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_STAFF_CONTRACT_IS_BONUS_TYPE_ALLOWED)(pessoa, tipo);
     let n = staff_contract_is_bonus_type_allowed(pessoa, tipo);
     PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
     r
 }
-
-// ---------- 248a leva: o contrato da comissão: montar a proposta pelo contrato atual, zerar a moral do contrato novo e a faixa do vencimento (staff_contracts.cpp) ----------
 
 
 
@@ -131,7 +130,7 @@ pub(crate) unsafe fn reset_contract_morale(this: usize, pessoa: usize, clube: us
     write_u8(this + 0x4e, 0);
     write_usize(this + 0x45, 0);
     let limpar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_CLEAR_OPINION_LINKS);
-    limpar(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this).wrapping_mul(0x6e)));
+    limpar(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this).wrapping_mul(staff::SIZE)));
     write_usize(this + 0x40, 0);
     write_u8(this + 0x4e, 4);
     write_u8(this + 0x3f, 0); // a felicidade
@@ -220,34 +219,34 @@ pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
     if read_u8(this + 0x35) & 0x3f == 1 {
         return 14;
     }
-    if !m(0xae2c90) {
+    if !m(G_CURRENT_DATE) {
         return 14;
     }
     if read_u8(this + 0x35) & 0x3f != 2 {
         return 0;
     }
-    if m(0xae1090) {
+    if m(G_CONTRACT_DATE_PLUS_182_DAYS) {
         return 0;
     }
-    if m(0xae1010) { // depois do limite do meio
-        if m(0xae1060) {
-            if m(0xae1040) {
-                return if q(0xae1090) { 1 } else { 2 };
+    if m(G_CONTRACT_DATE_PLUS_91_DAYS) { // depois do limite do meio
+        if m(G_CONTRACT_DATE_PLUS_121_DAYS) {
+            if m(G_CONTRACT_DATE_PLUS_152_DAYS) {
+                return if q(G_CONTRACT_DATE_PLUS_182_DAYS) { 1 } else { 2 };
             }
-            return if q(0xae1040) { 3 } else { 4 };
+            return if q(G_CONTRACT_DATE_PLUS_152_DAYS) { 3 } else { 4 };
         }
-        return if q(0xae1060) { 5 } else { 6 };
+        return if q(G_CONTRACT_DATE_PLUS_121_DAYS) { 5 } else { 6 };
     }
-    if m(0xae1030) {
-        if m(0xae1058) {
-            return if q(0xae1010) { 7 } else { 8 };
+    if m(G_CONTRACT_DATE_PLUS_30_DAYS) {
+        if m(G_CONTRACT_DATE_PLUS_60_DAYS) {
+            return if q(G_CONTRACT_DATE_PLUS_91_DAYS) { 7 } else { 8 };
         }
-        return if q(0xae1058) { 9 } else { 10 };
+        return if q(G_CONTRACT_DATE_PLUS_60_DAYS) { 9 } else { 10 };
     }
-    if q(0xae1030) {
+    if q(G_CONTRACT_DATE_PLUS_30_DAYS) {
         return 11;
     }
-    if q(0xae1048) { 13 } else { 12 }
+    if q(G_CONTRACT_DATE_PLUS_7_DAYS) { 13 } else { 12 }
 }
 
 /// Memory regions the two morale-reset routines write: the contract (0x50 bytes), the person's 79-byte staff state
@@ -257,14 +256,16 @@ pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
 /// em [0xae2d0c] (os vínculos da 0x549c90, se o id está na tabela) e [0xb67a34] (a caixa).
 pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize, usize)> {
     let mut r = vec![(this, 0x50), (0xb67a34, 4)];
-    let id = read_usize(read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(0x6e))) as i32;
+    let id = read_usize(read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(staff::SIZE))) as i32;
     if id >= 0 && id < read_usize(G_STAFF_COUNT) as i32 {
         r.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)), 0x4f));
     }
     r
 }
 
-/// Comparador: lado a lado no contrato e nos vínculos da pessoa (o idioma 0x7c6830 só lê).
+/// Comparer for `reset_morale_state` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no contrato e nos vínculos da pessoa (o idioma 0x7c6830 só lê).
 pub(crate) unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usize, clube: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESET_MORALE_STATE);
     let regioes = morale_reset_regions(this, read_usize(this));
@@ -272,7 +273,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, 
     PLACAR.registrar(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", read_usize(pessoa), mo, mr));
 }
 
-/// Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
+/// Comparer for `init_from_current_contract` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pessoa: usize, clube: usize, fim: usize, write_percent_pair: u32, sem_acesso: u32, multa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_INIT_FROM_CURRENT_CONTRACT);
@@ -289,15 +292,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_init_from_current_contract(this:
     });
 }
 
-/// Comparador: só lê; compara a faixa.
+/// Comparer for `get_expiry_band` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: só lê; compara a faixa.
 pub(crate) unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_EXPIRY_BAND)(this);
     let n = get_expiry_band(this);
     PLACAR.registrar(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", read_usize(this), r, n));
     r
 }
-
-// ---------- 243a leva: o contrato de pessoal (staff_contracts.cpp): os dias até o fim, limpar todas as queixas e conferir a retirada do pedido de transferência ----------
 
 
 
@@ -407,7 +410,9 @@ pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: u
 // a 0x54cdb0 só lê: compara o valor
 comparar_valor!(comparar_days_to_end_date, days_to_end_date, IDX_DAYS_TO_END_DATE, () -> u32);
 
-/// Comparador: sem `conferir`, lado a lado pelas queixas e pelo registro de opiniões da pessoa (79 bytes, o que a
+/// Comparer for `clear_all_grievances` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: sem `conferir`, lado a lado pelas queixas e pelo registro de opiniões da pessoa (79 bytes, o que a
 /// 0x549c90 escreve); com `conferir`, a retirada (0x4d9460) mexe na transferência: só a original (a 0x867240 passa
 /// pelo comparador dela).
 pub(crate) unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, conferir: u32) {
@@ -423,7 +428,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize
     PLACAR.registrar(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
-/// Comparador: quando a decisão da cópia é não retirar, lado a lado pela ficha [0xae1080] e pelo contrato (0x50
+/// Comparer for `check_transfer_request_withdrawal` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: quando a decisão da cópia é não retirar, lado a lado pela ficha [0xae1080] e pelo contrato (0x50
 /// bytes); quando retira, só a original (a 0x4d9460 mexe na transferência e a 0x867240 se chama de novo).
 pub(crate) unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
@@ -433,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawa
     if retira {
         return o(this, ctx);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4), (this, 0x50)], || o(this, ctx), || check_transfer_request_withdrawal(this, ctx));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4), (this, 0x50)], || o(this, ctx), || check_transfer_request_withdrawal(this, ctx));
     PLACAR.registrar(igual, || format!("check_transfer_request_withdrawal({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
 }
 
@@ -454,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SET_FLAGS)(c, marcas);
     }
     write_u32(c + 0x40, read_usize(c + 0x40) as u32 | marcas);
-    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c) as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c) as usize).wrapping_mul(staff::SIZE));
     let funcao = read_u8(pessoa + staff::JOB_FOR_CLUB);
     if funcao == 0xc || funcao == 0xd || funcao == 0xf {
         return;
@@ -487,7 +494,9 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
     pedido(read_usize(G_CONTRACT_MANAGER), c);
 }
 
-/// O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
+/// Comparer for `set_flags` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
 /// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
 pub(crate) unsafe extern "thiscall" fn comparar_set_flags(c: usize, marcas: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SET_FLAGS);
@@ -570,11 +579,13 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     }
 }
 
-/// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
+/// Comparer for `get_contract_satisfaction` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
 pub(crate) unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_CONTRACT_SATISFACTION);
-    let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
+    let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize), (this, 0x50)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regioes,
@@ -600,7 +611,9 @@ pub(crate) unsafe extern "thiscall" fn set_default_wage(this: usize, pessoa: usi
     v as u32
 }
 
-/// Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
+/// Comparer for `set_default_wage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
 pub(crate) unsafe extern "thiscall" fn comparar_set_default_wage(this: usize, pessoa: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_DEFAULT_WAGE);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, pessoa), || set_default_wage(this, pessoa));
@@ -637,7 +650,9 @@ pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> 
     this
 }
 
-/// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
+/// Comparer for `construct_staff_contract` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_STAFF_CONTRACT);
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
@@ -656,8 +671,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_staff_contract(this: u
 /// faixas, a reputação do clube, e menos o número de funções acima de uma) decide pelas funções e
 /// pelas notas se devolve 1.
 pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
-    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(0x6e));
-    let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + 4) as *const i32) as usize).wrapping_mul(0x245));
+    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(staff::SIZE));
+    let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + 4) as *const i32) as usize).wrapping_mul(club::SIZE));
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let tecnico = u(clube + club::MANAGER);
     if tecnico != 0 && p == tecnico {

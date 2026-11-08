@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 281a leva: os clubes das supercopas: a Supercopa Europeia, a Supercopa Asiática e a Supercopa da Série C1 (eur_super_cup.cpp, asia_super_cup.cpp, ita_c1_super.cpp) ----------
-
 /// EurSuperCup::select_teams (0x57a500): Champions League winner and Cup Winners' Cup (1999) or UEFA Cup winner.
 ///
 /// [pt] { 0x57a500 } (thiscall, ret 0, eur_super_cup.cpp): `EurSuperCup::select_teams()`: a lista de dois (sem memória, a
@@ -36,6 +34,7 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams(this: usize) -
     select_european_super_cup_teams(this).0
 }
 
+/// Comparer for `eur_super_cup_select_teams` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS);
     compare_team_list("eur_super_cup_select_teams", this, || o(this), || select_european_super_cup_teams(this))
@@ -80,6 +79,7 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams_410a50(this: u
     select_asian_super_cup_teams(this).0
 }
 
+/// Comparer for `eur_super_cup_select_teams_410a50` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams_410a50(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS_410A50);
     compare_team_list("eur_super_cup_select_teams_410a50", this, || o(this), || select_asian_super_cup_teams(this))
@@ -111,6 +111,7 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_init_team_list(this: usize)
     init_c1_super_cup_list(this).0
 }
 
+/// Comparer for `eur_super_cup_init_team_list` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_init_team_list(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_INIT_TEAM_LIST);
     compare_team_list("eur_super_cup_init_team_list", this, || o(this), || init_c1_super_cup_list(this))
@@ -126,6 +127,7 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: us
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP10_SUPERCOPA_EUROPEIA, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
 }
 
+/// Comparer for `eur_super_cup_create_round_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_eur_super_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUR_SUPER_CUP_CREATE_ROUND_TABLE);
     eng_cc_cup_compare_round_table("eur_super_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 265a leva: o save dos históricos: o histórico dos clubes, as estatísticas dos árbitros e as estatísticas simuladas (club_history.cpp, officials_manager.cpp, simulated_stats.cpp) ----------
-
 
 /// Opens an item named nome in the save archive (FN_ZOPEN with 1, 0x16, 4).
 pub(crate) unsafe fn zip_open_item(save: usize, nome: usize) -> usize {
@@ -49,7 +47,9 @@ pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usiz
     1
 }
 
-/// Comparador da 0x443f50: só a original.
+/// Comparer for `club_history_save` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x443f50: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_club_history_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLUB_HISTORY_SAVE)(this, save)
@@ -92,7 +92,9 @@ pub(crate) unsafe extern "thiscall" fn club_history_save_84c680(this: usize, sav
     zip_close(&mut z);
 }
 
-/// Comparador da 0x84c680: só a original.
+/// Comparer for `club_history_save_84c680` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x84c680: só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_club_history_save_84c680(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLUB_HISTORY_SAVE_84C680)(this, save)

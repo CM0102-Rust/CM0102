@@ -1,14 +1,12 @@
 use super::*;
 
-// ---------- 279a leva: a escolha do estádio de um jogo: o estádio da partida e a busca do estádio neutro (stadium.cpp) ----------
-
 
 
 /// Returns nation id's record ([G_NATION_TABLE] + id × 0x122).
 ///
 /// [pt] A nação `id` (registro de 0x122 bytes em [0xae23a8]).
 pub(crate) unsafe fn nation_by_id(id: usize) -> usize {
-    read_u32_as_usize(G_NATION_TABLE).wrapping_add(id.wrapping_mul(0x122))
+    read_u32_as_usize(G_NATION_TABLE).wrapping_add(id.wrapping_mul(nation::SIZE))
 }
 
 
@@ -233,7 +231,9 @@ pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, u
     Some((r, m))
 }
 
-/// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
+/// Comparer for `find_available_venue` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
     let Some((r, m)) = stadium_choice_regions(this, None) else {
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     if f == 0x8000 {
         let monaco = read_u32_as_usize(G_KEY_CLUB_AS_MONACO);
         if read_u32_as_usize(read_u32_as_usize(fx + 0x1c)) != monaco && read_u32_as_usize(read_u32_as_usize(fx + 0x20)) != monaco {
-            fixar(read_u32_as_usize(read_u32_as_usize(G_CLUB_TABLE) + monaco * 0x245 + 0x69));
+            fixar(read_u32_as_usize(read_u32_as_usize(G_CLUB_TABLE) + monaco * club::SIZE + 0x69));
             return;
         }
         f = 4;
@@ -456,7 +456,9 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     }
 }
 
-/// Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
+/// Comparer for `set_fixture_venue` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_SET_FIXTURE_VENUE);
@@ -470,8 +472,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, m
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, partida, estadio), || crate::aleatorio::sem_contar(|| set_fixture_venue(this, marcas, partida, estadio)));
     PLACAR.registrar(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, read_u32_as_usize(partida), mo, mr));
 }
-
-// ---------- 279a leva: o público de um jogo (stadium.cpp) ----------
 
 
 
@@ -861,7 +861,9 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
     total
 }
 
-/// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
+/// Comparer for `calculate_match_attendance` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_CALCULATE_MATCH_ATTENDANCE);
@@ -879,8 +881,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this:
     PLACAR.registrar(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_u32_as_usize(jogo), read_u8(jogo + 0x3a), r, n, mo, mr));
     r
 }
-
-// ---------- 256a leva: o estádio neutro e o clima inicial: a nota do estádio para o jogo, o fator da distância no público e a leitura do weather.cfg (stadium.cpp, weather.cpp) ----------
 
 
 
@@ -913,7 +913,7 @@ pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
 /// No fim, nota × (sorteio(100) × 0,004 + 0,8), truncada.
 pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(0x122));
+    let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE));
     if est == read_usize(inglaterra + 0x80) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
         return 0;
     }
@@ -1001,6 +1001,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
+/// Comparer for `score_venue_for_fixture` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_SCORE_VENUE_FOR_FIXTURE)(this, est, marcas, casa, fora, jogo)
 }
@@ -1051,7 +1052,9 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     f
 }
 
-/// Comparador: pelo valor (os bits do double).
+/// Comparer for `get_travel_distance_factor` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (os bits do double).
 pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, jogo, cid_est, cid_clube, base);
     let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
@@ -1062,8 +1065,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this:
 
 // ponytail: abre o arquivo, aloca e sorteia: só a original; a cópia leva o ramo.
 
-// ---------- 255a leva: os estádios: o dia dos estádios (o estádio nacional fechado e as reservas vencidas), reservar um estádio numa data e se ele está livre (stadium.cpp) ----------
-
 
 
 
@@ -1071,7 +1072,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this:
 ///
 /// [pt] A nação da Inglaterra ([0x9cf2e4]; registros de 0x122 bytes em [0xae23a8]).
 pub(crate) unsafe fn england_nation() -> usize {
-    read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(0x122))
+    read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE))
 }
 
 /// Returns the nation's main national team (FN_DATABASE_GET_NATIONAL_TEAM, 0x53b3d0).
@@ -1176,7 +1177,9 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: u
     sort_stadium_list(read_usize(this), (n - k) as u32);
 }
 
-/// Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
+/// Comparer for `stadium_daily_update` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
 /// lugares do estádio fechado.
 pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, hoje: usize) {
@@ -1249,7 +1252,9 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, 
     sort_stadium_list(read_usize(this), n);
 }
 
-/// Comparador: com lista e vaga (não aloca), lado a lado pelo cabeçalho (0xc bytes) e pelas reservas com a nova; senão
+/// Comparer for `add_booking` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: com lista e vaga (não aloca), lado a lado pelo cabeçalho (0xc bytes) e pelas reservas com a nova; senão
 /// (aloca, realoca ou a caixa) só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_add_booking(this: usize, estadio: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_BOOKING);
@@ -1283,7 +1288,9 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, esta
     (r == 0) as u32 // cps7: livre sem a reserva
 }
 
-/// Comparador: a original e a cópia (as duas só leem), pelo valor.
+/// Comparer for `is_stadium_free_on_date` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original e a cópia (as duas só leem), pelo valor.
 pub(crate) unsafe extern "thiscall" fn comparar_is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_STADIUM_FREE_ON_DATE)(this, estadio, data);
     let n = is_stadium_free_on_date(this, estadio, data);
@@ -1310,7 +1317,9 @@ pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> 
     read_i32(a).wrapping_sub(read_i32(b))
 }
 
-/// Comparador: pelo valor.
+/// Comparer for `stadium_compare_bookings` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_BOOKINGS)(a, b);
     let n = stadium_compare_bookings(a, b);
@@ -1402,7 +1411,9 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     *((this + 0x18) as *mut u8) = 1;
 }
 
-/// Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
+/// Comparer for `build_venue_list` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
 /// solta). Sem o HostCountry (a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
@@ -1449,7 +1460,9 @@ pub(crate) unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: 
     core::ptr::read_unaligned((eb + 0x3c) as *const i32).wrapping_sub(core::ptr::read_unaligned((ea + 0x3c) as *const i32))
 }
 
-/// Comparador: pelo valor.
+/// Comparer for `stadium_compare_venues_by_capacity` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn comparar_stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_VENUES_BY_CAPACITY)(a, b);
     let n = stadium_compare_venues_by_capacity(a, b);

@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 187a leva: as telas da partida (5): o painel dos últimos placares, a tela seguinte e a cor do título (match_screens.cpp, scrman.cpp, Setup.cpp) ----------
-
 /// the screen manager has no next screen to go forward to
 /// Original: `ScreenManager::is_forward_unavailable` (0x7febb0, scrman.cpp, thiscall).
 ///
@@ -52,6 +50,7 @@ pub(crate) unsafe fn panel_competition_name(c: usize, rodadas: usize) {
 }
 
 
+/// Comparer for `is_forward_unavailable` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_is_forward_unavailable(gerente: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_IS_FORWARD_UNAVAILABLE)(gerente);
     let n = is_forward_unavailable(gerente);

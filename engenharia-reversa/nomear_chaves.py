@@ -77,11 +77,12 @@ def tipos():
         for l, c, t in sorted(pos, reverse=True):
             linha = ls[l - 1]
             # a constante na coluna do erro, ou a última antes dela na mesma linha (o operando esquerdo da soma)
-            m = re.match(r'(?:KEY|G)_\w+', linha[c - 1:])
+            # KEY_/G_ (chaves e globais) e <registro>::SIZE (tamanhos, arrumar_rodada4.py)
+            m = re.match(r'(?:KEY|G)_\w+|\w+::SIZE\b', linha[c - 1:])
             if m:
                 ini, fim = c - 1, c - 1 + m.end()
             else:
-                antes = list(re.finditer(r'\b(?:KEY|G)_\w+\b(?! as )', linha[:c + 40]))
+                antes = list(re.finditer(r'\b(?:(?:KEY|G)_\w+|\w+::SIZE)\b(?! as )', linha[:c + 40]))
                 if not antes:
                     continue
                 ini, fim = antes[-1].start(), antes[-1].end()

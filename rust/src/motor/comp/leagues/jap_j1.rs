@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 280a leva: a J1: a fase seguinte, a final entre os campeões dos dois turnos e a virada da temporada (jap_j1.cpp) ----------
-
 
 
 
@@ -167,7 +165,9 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
-/// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia), com o
+/// Comparer for `jap_j1_advance_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
@@ -177,7 +177,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
-/// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
+/// Comparer for `create_championship_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
 /// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize) {
@@ -192,7 +194,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_championship_final_stage(
     PLACAR.registrar(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, read_usize(this + 0x30)));
 }
 
-/// O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
+/// Comparer for `jap_j1_start_new_season` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: usize) -> u32 {
     let antes = read_i16(this + 0x40);
@@ -201,8 +205,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: us
     PLACAR.registrar(depois == antes.wrapping_add(1) && read_usize(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, read_usize(this + 0x2c)));
     r
 }
-
-// ---------- 277a leva: a tabela das ligas do Japão e da Austrália: os 16 clubes da J1 (o fundo de prêmios e a TV), os 12 da J2 (os que sobram saem da divisão) e os 13 da NSL (jap_j1.cpp, jap_j2.cpp, aus_nsl.cpp) ----------
 
 
 
@@ -318,7 +320,7 @@ pub(crate) unsafe fn compare_japanese_table(nome: &str, this: usize, n: i16, g: 
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if is_in_division(clube, g) {
             plano.push(clube);
         }
@@ -345,11 +347,13 @@ pub(crate) unsafe fn compare_japanese_table(nome: &str, this: usize, n: i16, g: 
     r
 }
 
+/// Comparer for `jap_j1_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_CREATE_TABLE);
     compare_japanese_table("jap_j1_create_table", this, 0x10, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, true, 0x186a0, || o(this))
 }
 
+/// Comparer for `jap_j1_create_table_665030` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_create_table_665030(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_CREATE_TABLE_665030);
     compare_japanese_table("jap_j1_create_table_665030", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
@@ -393,6 +397,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_half_season_stage(this: usi
     create_half_season_stage(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: os pontos por vitória na J1
 }
 
+/// Comparer for `jap_j1_create_half_season_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_jap_j1_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_JAP_J1_CREATE_HALF_SEASON_STAGE);
     compare_half_season_stage("jap_j1_create_half_season_stage", this, k, || o(this, k))

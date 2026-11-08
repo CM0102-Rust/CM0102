@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- septuagesima oitava leva: competicao com rodada a disputar, comparacoes de ordenacao (comp_util.cpp) ----------
-
 /// { 0x4b0700 } (comp_util.cpp): a competicao `id` conta? As tres de 0x9cf6b0, 0x9cf5d8 e 0x9cf548
 /// sim; sem o +0x5d do registro (0xae23d0, 107 bytes) nao; senao so a do objeto em 0xadadfc com
 /// fase 2 (+0x43), rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60.
@@ -62,8 +60,6 @@ pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize
     *((x + 0x80) as *const i16) as i32 - *((y + 0x80) as *const i16) as i32
 }
 
-// ---------- quadragesima oitava leva: folhas de outros modulos ----------
-
 /// { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
 pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
     if n < 1000 {
@@ -112,8 +108,6 @@ pub(crate) unsafe extern "C" fn is_national_team(clube: usize) -> u32 {
     let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
     (*(clube as *const i32) >= limit) as u32
 }
-
-// ---------- 256a leva: as posições previstas da copa: as posições pela rodada de saída, ordenar os clubes pela força e gravar a posição do clube na estatística (Cup.cpp, comp_util.cpp, comp_stats.cpp) ----------
 
 
 
@@ -236,7 +230,9 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, gr
 
 
 
-/// Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
+/// Comparer for `comp_util_sort_clubs_by_strength` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
 /// Vec) antes da original; depois, o vetor tem de ser igual.
 pub(crate) unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(IDX_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
@@ -251,7 +247,9 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usi
     PLACAR.registrar(obtido == &esperado[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
 }
 
-/// Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
+/// Comparer for `set_club_final_position` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
 /// devolvido, com a posição em +0x72.
 pub(crate) unsafe extern "thiscall" fn comparar_set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_SET_CLUB_FINAL_POSITION);
@@ -265,8 +263,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_club_final_position(this: us
     PLACAR.registrar(igual, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, antes, r));
     r
 }
-
-// ---------- 253a leva: o lado do jogo, a ordem dos coeficientes das nações e o pedido de observação (comp_util.cpp, scout_manager.cpp) ----------
 
 
 
@@ -314,7 +310,9 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, j
     1 // o estádio do clube
 }
 
-/// Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
+/// Comparer for `comp_util_get_fixture_venue_side` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
 pub(crate) unsafe extern "C" fn comparar_comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let r = o(clube, jogo);
@@ -342,6 +340,7 @@ pub(crate) unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: us
     0
 }
 
+/// Comparer for `compare_nation_coefficients_desc` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_NATION_COEFFICIENTS_DESC);
     let r = o(a, b);
@@ -351,8 +350,6 @@ pub(crate) unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usi
 }
 
 
-
-// ---------- 249a leva: a mudança de divisão do clube e os embaralhamentos das listas de clubes (league.cpp, comp_util.cpp) ----------
 
 
 
@@ -424,7 +421,9 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usi
 }
 
 
-/// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
+/// Comparer for `comp_util_shuffle_pointer_array` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
 pub(crate) unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: usize, n: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(IDX_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let k = (n as u16 as i16).max(0) as usize;
@@ -437,7 +436,9 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_shuffle_pointer_array(itens: 
     PLACAR.registrar(igual, || format!("comp_util_shuffle_pointer_array({}) {:x?} x {:x?}", k, mo, mr));
 }
 
-/// Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
+/// Comparer for `comp_util_sort_and_shuffle_top_clubs` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
 /// em sem_contar. Caixa (`n` negativo ou menor que `escolhas`): só a original.
 pub(crate) unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32, escolhas: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32)>(IDX_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
@@ -453,8 +454,6 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(cl
         || crate::aleatorio::sem_contar(|| comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)));
     PLACAR.registrar(igual, || format!("comp_util_sort_and_shuffle_top_clubs({}, {}) {:x?} x {:x?}", nn, e, mo, mr));
 }
-
-// ---------- 241a leva: os auxiliares de competição: o tipo de confronto na liga, a força do clube e o colocado mais recente (comp_util.cpp) ----------
 
 
 
@@ -548,6 +547,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
 
 // ponytail: ~4 milhões de chamadas na carreira: comparação só do valor, sem regiões (a rotina só lê; a 0x4a4850 pode
 // reordenar a estatística, e a original já deixa ordenada para a cópia).
+/// Comparer for `comp_util_get_league_clash_type` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_GET_LEAGUE_CLASH_TYPE)(a, b);
     let n = comp_util_get_league_clash_type(a, b);
@@ -607,6 +607,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) 
 
 // ponytail: 1.117 chamadas; só o valor. A escalação e as notas têm comparadores próprios, e o físico que a nota
 // atualiza uma vez (0x62ed70, com sorteio) a original já deixa pronto para a cópia.
+/// Comparer for `comp_util_get_club_strength_score` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> i32>(IDX_COMP_UTIL_GET_CLUB_STRENGTH_SCORE)(clube);
     let n = comp_util_get_club_strength_score(clube);
@@ -650,6 +651,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, lu
     read_usize(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro
 }
 
+/// Comparer for `comp_util_get_latest_placed_club` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     if lugar as u8 > 2 {
@@ -661,8 +663,6 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: 
     PLACAR.registrar(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
     r
 }
-
-// ---------- 214a leva: a partida guardada na notícia, o resultado da eliminatória para a notícia e o dia da rodada da copa (comp_util.cpp, Cup.cpp) ----------
 
 /// rebuilds the fixture from eighteen consecutive news slots and resolves its clubs, stadium and competition
 /// Original: `comp_util_read_fixture_from_news_slots` (0x4b0010, comp_util.cpp, cdecl).
@@ -708,10 +708,10 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(noticia: 
         let i = id(o);
         if i == 0xffff_ffff { 0 } else { (*(tabela as *const u32)).wrapping_add(i.wrapping_mul(tamanho)) }
     };
-    d(0x1c, ponteiro(0xc, 0xae23b4, 0x245)); // clube da casa
-    d(0x20, ponteiro(0x10, 0xae23b4, 0x245));
-    d(0x18, ponteiro(4, 0xae23b0, 0x4e));
-    d(0x14, ponteiro(0, 0xae23d0, 0x6b));
+    d(0x1c, ponteiro(0xc, G_CLUB_TABLE, 0x245)); // clube da casa
+    d(0x20, ponteiro(0x10, G_CLUB_TABLE, 0x245));
+    d(0x18, ponteiro(4, G_STADIUM_TABLE, 0x4e));
+    d(0x14, ponteiro(0, G_CLUB_COMP_TABLE, 0x6b));
 }
 
 /// the category of the cup tie result for the club, from the final margin, the side and the reputation gap
@@ -791,6 +791,7 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(clube: us
 }
 
 
+/// Comparer for `comp_util_read_fixture_from_news_slots` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_read_fixture_from_news_slots(noticia: usize, partida: usize, cursor: *mut u8) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8)>(IDX_COMP_UTIL_READ_FIXTURE_FROM_NEWS_SLOTS);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(partida, 0x4d), (cursor as usize, 1)],
@@ -798,6 +799,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_read_fixture_from_news_slots(
     PLACAR.registrar(igual, || format!("comp_util_read_fixture_from_news_slots {:x?} x {:x?}", mo, mr));
 }
 
+/// Comparer for `comp_util_classify_tie_result_for_news` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_classify_tie_result_for_news(clube: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS)(clube, partida);
     let n = comp_util_classify_tie_result_for_news(clube, partida);
@@ -834,6 +836,7 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usiz
     r
 }
 
+/// Comparer for `comp_util_write_fixture_to_news_slots` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8) -> u32>(IDX_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
     let k = *cursor as i8;
@@ -882,7 +885,9 @@ pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(fase: u32, rod
     1
 }
 
-/// Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
+/// Comparer for `comp_util_format_stage_round_name` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
 pub(crate) unsafe extern "C" fn comparar_comp_util_format_stage_round_name(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
     if saida.is_null() || tamanho < 0xc8 {
@@ -914,7 +919,9 @@ pub(crate) unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, 
     eax
 }
 
-/// Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
+/// Comparer for `comp_util_scale_by_round` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
 pub(crate) unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_COMP_UTIL_SCALE_BY_ROUND);
     if !(0..=100).contains(&interpolate_by_round(baixo, alto, rodada, rodadas).1) {
@@ -954,6 +961,7 @@ pub(crate) unsafe extern "C" fn comp_util_add_history_record(liga: usize, a: u32
     r
 }
 
+/// Comparer for `comp_util_add_history_record` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_comp_util_add_history_record(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(IDX_COMP_UTIL_ADD_HISTORY_RECORD);
     if free_comp_history_row() == 0 {
@@ -1013,7 +1021,9 @@ pub(crate) unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
     -1
 }
 
-/// Pura: a devolução.
+/// Comparer for `comp_util_get_parent_stage_id` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Pura: a devolução.
 pub(crate) unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_COMP_UTIL_GET_PARENT_STAGE_ID)(id);
     let n = comp_util_get_parent_stage_id(id);
@@ -1021,6 +1031,7 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) 
     r
 }
 
+/// Comparer for `units_digit` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_units_digit(n: i32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> u8>(IDX_UNITS_DIGIT)(n);
     let v = units_digit(n);
@@ -1028,6 +1039,7 @@ pub(crate) unsafe extern "C" fn comparar_units_digit(n: i32) -> u8 {
     r
 }
 
+/// Comparer for `is_national_team` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_is_national_team(clube: usize) -> u32 {
     if is_recording_post_match() {
         return call_recording(0x53b900, 0, [clube as u32, 0, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_NATIONAL_TEAM)(clube));
@@ -1038,6 +1050,7 @@ pub(crate) unsafe extern "C" fn comparar_is_national_team(clube: usize) -> u32 {
     r
 }
 
+/// Comparer for `competition_counts` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_competition_counts(id: i32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> u32>(IDX_COMPETITION_COUNTS)(id);
     let v = competition_counts(id);

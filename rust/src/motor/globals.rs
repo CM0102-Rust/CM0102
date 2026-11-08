@@ -406,3 +406,87 @@ pub(crate) const G_UEFA_SEEDING: usize = 0xde1f58;
 pub(crate) const G_VIRTUAL_STAFF: usize = 0xde2f70;
 /// Pointer to the Weather object that picks match weather. (Weather *)
 pub(crate) const G_WEATHER: usize = 0xde2f74;
+/// The lowest value that Formation::load_from_disk accepts as the identifier of a formation file. The code uses this address as a number. (unknown)
+pub(crate) const G_FORMATION_FILE_IDENTIFIER_LOWEST: usize = 0x98ec54;
+/// List of 20 column ids that the team statistics panel uses for its first column view. (buffer)
+pub(crate) const G_TEAM_STATS_COLUMN_IDS_VIEW_1: usize = 0xa16178;
+/// List of 20 column ids that the team statistics panel uses for its second column view. (buffer)
+pub(crate) const G_TEAM_STATS_COLUMN_IDS_VIEW_2: usize = 0xa1618c;
+/// Pointer to the scrollbar state of the area that currently owns the scrollbar, or null. (void *)
+pub(crate) const G_ACTIVE_AREA_SCROLLBAR: usize = 0xad9c58;
+/// The AWARD_MANAGER object that holds past and current awards, created when a game starts or loads. (AWARD_MANAGER *)
+pub(crate) const G_AWARD_MANAGER: usize = 0xad9c60;
+/// The Comp_Stats object that the team and player entry comparators use while a sort or search runs. (Comp_Stats *)
+pub(crate) const G_COMP_STATS_SORT_CONTEXT: usize = 0xadae10;
+/// The game date plus 91 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_91_DAYS: usize = 0xae1010;
+/// The game date plus 30 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_30_DAYS: usize = 0xae1030;
+/// The game date plus 152 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_152_DAYS: usize = 0xae1040;
+/// The game date plus 7 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_7_DAYS: usize = 0xae1048;
+/// The game date plus 60 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_60_DAYS: usize = 0xae1058;
+/// The game date plus 121 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_121_DAYS: usize = 0xae1060;
+/// The game date plus 365 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_365_DAYS: usize = 0xae1068;
+/// The game date plus 182 days, which the contract manager works out once when it is built. (Date)
+pub(crate) const G_CONTRACT_DATE_PLUS_182_DAYS: usize = 0xae1090;
+/// The shared buffer that holds the localised name of a staff job. (buffer)
+pub(crate) const G_JOB_NAME_BUFFER: usize = 0xae19b4;
+/// The 14 world region ids sorted by their localised names. (u8[14])
+pub(crate) const G_REGIONS_SORTED_BY_NAME: usize = 0xae2104;
+/// The table of staff preference records, 52 bytes each. (Preferences *)
+pub(crate) const G_PREFERENCES_TABLE: usize = 0xae23c8;
+/// The table of staff competition rows, 101 bytes each. (StaffComp *)
+pub(crate) const G_STAFF_COMP_TABLE: usize = 0xae23e0;
+/// The static Date that Date::add_weeks returns to its caller. (Date)
+pub(crate) const G_ADD_WEEKS_RESULT_DATE: usize = 0xae2410;
+/// The static Date that Date::add_days returns to its caller. (Date)
+pub(crate) const G_ADD_DAYS_RESULT_DATE: usize = 0xae2420;
+/// The static working date of Date::days_since. It starts as day 40 of 1972 and its year steps while days are counted. (Date)
+pub(crate) const G_DAYS_SINCE_SCRATCH_DATE: usize = 0xae2470;
+/// The static result date of Date::sub_days. It starts as day 40 of 1972 and is copied to the caller. (Date)
+pub(crate) const G_SUB_DAYS_RESULT_DATE: usize = 0xae24c0;
+/// The static result date of Date::sub_weeks. It starts as day 40 of 1972 and is copied to the caller. (Date)
+pub(crate) const G_SUB_WEEKS_RESULT_DATE: usize = 0xae24c8;
+/// The date that game_main_day_loop last processed. The loop compares it with the current date to detect a new day. (Date)
+pub(crate) const G_LAST_PROCESSED_DATE: usize = 0xae2c78;
+/// Pointer to a sorted copy of one 16 bit field of every player record, built once for the daily staff update. (u16 *)
+pub(crate) const G_PLAYER_ABILITY_VALUES_SORTED: usize = 0xae2d20;
+/// Pointer to an array of player record pointers, sorted by the ability fields of the player records for the daily staff update. (PlayerData **)
+pub(crate) const G_PLAYER_DATA_PTRS_BY_ABILITY: usize = 0xae2d24;
+/// The season start date that key_nation_club_in_season returns for the club of the player in Injury::update_player_fitness. (Date)
+pub(crate) const G_FITNESS_UPDATE_SEASON_START_DATE: usize = 0xb63d18;
+/// g_league_table+0x8 setup_func: pointer to create_world_cup_qualifying_comps, which creates the world cup in a new game. (void *)
+pub(crate) const G_LEAGUE_WORLD_CUP_SETUP_FUNC: usize = 0xb63d68;
+/// g_league_table+0x2a start_date: first season date of the world cup entry, built by Date::Date. (Date)
+pub(crate) const G_LEAGUE_WORLD_CUP_START_DATE: usize = 0xb63d8a;
+/// g_league_table+0x39 end_date: second season date of the world cup entry, built by Date::Date. (Date)
+pub(crate) const G_LEAGUE_WORLD_CUP_END_DATE: usize = 0xb63d99;
+/// g_league_table+0x90 nation: always null for the world club entry, which has no nation. (Nation *)
+pub(crate) const G_LEAGUE_WORLD_CLUB_NATION: usize = 0xb63df0;
+/// g_league_table+0xd8 nation: always null for the Europe entry, which has no nation. (Nation *)
+pub(crate) const G_LEAGUE_EUROPE_NATION: usize = 0xb63e38;
+/// The end address of the setup function field loop over the key nation league entries. It is a loop bound, not a stored value. (unknown)
+pub(crate) const G_KEY_NATION_SETUP_FUNC_LOOP_END: usize = 0xb64740;
+/// The end address of the active slot byte loop over the key nation league entries. It is a loop bound, not a stored value. (unknown)
+pub(crate) const G_KEY_NATION_ACTIVE_SLOT_LOOP_END: usize = 0xb6474c;
+/// The address after the last event table entry, used as the loop limit when the event tables are freed or checked. (buffer)
+pub(crate) const G_MATCH_EVENT_TABLE_END_MARKER: usize = 0xb6b72a;
+/// The static Date that fill_match_record builds on its first call. (Date)
+pub(crate) const G_MATCH_STATS_FILL_RECORD_STATIC_DATE: usize = 0xb6b7b8;
+/// The Notes object that stores staff notes and diary reminders. (Notes *)
+pub(crate) const G_NOTES: usize = 0xb7433c;
+/// The static global list of club report tables that scout lists add to when they watch a club. (object)
+pub(crate) const G_SCOUT_CLUB_TABLE_LIST: usize = 0xb74438;
+/// The global ScreenManager object that keeps the screen stack of every manager channel and its records. (object)
+pub(crate) const G_SCREEN_MANAGER: usize = 0xb74450;
+/// g_screen_records+0x58 display: the Display object pointer of the channel record, read by every screen build and input function. (Display *)
+pub(crate) const G_SCREEN_RECORDS_DISPLAY: usize = 0xb74c4c;
+/// Date of the last automatic save. The menubar compares it with the current date against the save interval. (Date)
+pub(crate) const G_LAST_AUTOSAVE_DATE: usize = 0xdd70a0;
+/// The SimulatedStats object that game creation and loading build and free_game_data frees. (SimulatedStats *)
+pub(crate) const G_SIMULATED_STATS: usize = 0xdd7ee4;

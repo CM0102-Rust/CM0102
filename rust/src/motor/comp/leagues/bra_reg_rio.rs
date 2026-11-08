@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 283a leva: os construtores dos estaduais: Carioca, Catarinense e Paulista (as regras, a tabela, os jogos, as estatísticas e as posições previstas na criação) e a média de público dos clubes no fim da temporada (bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp, game.cpp) ----------
-
 
 /// Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
 /// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
@@ -161,16 +159,19 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, ano: u3
     bra_reg_rio_construct_state_league(this, ano, registro, &CQT4_PAULISTA, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
 }
 
+/// Comparer for `construct_bra_reg_rio` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_RIO);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_rio", this, ano, registro, &CQT4_CARIOCA, || o(this, ano, registro))
 }
 
+/// Comparer for `construct_bra_reg_santa` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_SANTA);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_santa", this, ano, registro, &CQT4_CATARINENSE, || o(this, ano, registro))
 }
 
+/// Comparer for `construct_bra_reg_sp` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_SP);
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_sp", this, ano, registro, &CQT4_PAULISTA, || o(this, ano, registro))
@@ -407,18 +408,18 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
     soltar(t);
 }
 
-/// O comparador da média de público: lado a lado (a cópia sem contar os sorteios, com o estado do sorteador
+/// Comparer for `cqt4_atualizar_media_de_publico` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da média de público: lado a lado (a cópia sem contar os sorteios, com o estado do sorteador
 /// restaurado entre as duas) sobre a tabela dos clubes inteira (onde ficam +0x73, +0x77 e +0x7b) e o estado do
 /// sorteador; a tabela final (0x4a4b20) é alocada e liberada nas duas.
 pub(crate) unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_CQT4_ATUALIZAR_MEDIA_DE_PUBLICO);
-    let mut regioes = vec![(read_usize(G_CLUB_TABLE), read_usize(G_CLUB_COUNT) * 0x245)];
+    let mut regioes = vec![(read_usize(G_CLUB_TABLE), read_usize(G_CLUB_COUNT) * club::SIZE)];
     regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(liga), || crate::aleatorio::sem_contar(|| cqt4_atualizar_media_de_publico(liga)));
     PLACAR.registrar(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
 }
-
-// ---------- 282a leva: os turnos do Carioca, do Mineiro, do Paranaense e da J1: a fase de pontos corridos de cada turno (bra_reg_rio.cpp, bra_reg_minas_gerais.cpp, bra_reg_parana.cpp, jap_j1.cpp) ----------
 
 
 
@@ -503,6 +504,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this
 
 
 
+/// Comparer for `bra_reg_rio_create_half_season_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_REG_RIO_CREATE_HALF_SEASON_STAGE);
     compare_half_season_stage("bra_reg_rio_create_half_season_stage", this, k, || o(this, k))
@@ -510,8 +512,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_half_season_s
 
 
 
-
-// ---------- 282a leva: a virada da temporada do Carioca, do Mineiro e do Paranaense (bra_reg_rio.cpp, bra_reg_minas_gerais.cpp, bra_reg_parana.cpp) ----------
 
 
 /// start_new_season of a two-half state league with final: frees table, stages and lists, archives stats, allocates 3
@@ -620,14 +620,13 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_start_new_season(this: usize)
 
 
 
+/// Comparer for `bra_reg_rio_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_START_NEW_SEASON);
     compare_new_season("bra_reg_rio_start_new_season", this, || o(this))
 }
 
 
-
-// ---------- 279a leva: o Carioca: a fase seguinte, a final entre os campeões dos dois turnos e o fim da temporada (bra_reg_rio.cpp) ----------
 
 
 
@@ -767,7 +766,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
     campeoes()
 }
 
-/// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
+/// Comparer for `bra_reg_rio_advance_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_advance_stage(this: usize) {
@@ -779,7 +780,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_advance_stage(this: 
     PLACAR.registrar(igual, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
-/// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
+/// Comparer for `bra_reg_rio_create_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
@@ -806,14 +809,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_final_stage(t
     PLACAR.registrar(igual, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
-/// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
+/// Comparer for `bra_reg_rio_record_season_honours` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_9 historico da final" e "cqo_9 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_RECORD_SEASON_HONOURS)(this)
 }
-
-// ---------- 277a leva: a tabela dos estaduais: Carioca, Catarinense e Paulista (bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
 
 
 
@@ -900,7 +903,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(nome: &str, this: us
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
         if is_in_state_league(clube, g) {
             plano.push(clube);
         }
@@ -919,16 +922,19 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(nome: &str, this: us
     r
 }
 
+/// Comparer for `bra_reg_rio_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE);
     bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, || o(this))
 }
 
+/// Comparer for `bra_reg_rio_create_table_43bb70` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE_43BB70);
     bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table_43bb70", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, || o(this))
 }
 
+/// Comparer for `bra_reg_rio_create_table_43cc40` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE_43CC40);
     bra_reg_rio_compare_state_league_table("bra_reg_rio_create_table_43cc40", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, || o(this))

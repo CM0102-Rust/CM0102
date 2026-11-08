@@ -1,7 +1,5 @@
 use super::*;
 
-// ---------- 279a leva: o Mineiro: a fase seguinte, a final entre os campeões dos dois turnos e o fim da temporada (bra_reg_minas_gerais.cpp) ----------
-
 
 
 /// Champion of a half: club in row 0 of stage k's table.
@@ -146,7 +144,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
     campeoes()
 }
 
-/// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
+/// Comparer for `bra_reg_minas_gerais_advance_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_stage(this: usize) {
@@ -158,7 +158,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_advance_sta
     PLACAR.registrar(igual, || format!("bra_reg_minas_gerais_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
-/// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
+/// Comparer for `bra_reg_minas_gerais_create_final_stage` (comparison mode: see the header of motor.rs).
+///
+/// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
@@ -185,14 +187,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_fina
     PLACAR.registrar(igual, || format!("bra_reg_minas_gerais_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
-/// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
+/// Comparer for `bra_reg_minas_gerais_record_season_honours` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_7 historico da final" e "cqo_7 premios") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_RECORD_SEASON_HONOURS)(this)
 }
-
-// ---------- 274a leva: o progresso do clube nas estatísticas da competição no Mineiro (Paranaense, Carioca), na MLS e na Série C (bra_reg_minas_gerais.cpp, usa_mls.cpp, bra_nat_third.cpp) ----------
 
 /// Comp_Stats::find_club_entry(club) on [this+8] (original routine).
 ///
@@ -237,7 +239,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
     e
 }
 
-/// Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
+/// Comparer for `bra_reg_minas_gerais_set_club_progress` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
 /// busca depois; a original e a cópia a chamam de novo); a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = bra_reg_minas_gerais_comp_stats_club_entry(this, clube);
@@ -307,6 +311,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usiz
     bra_reg_goias_construct_state_league(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
 }
 
+/// Comparer for `construct_bra_reg_minas_gerais` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_minas_gerais(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_MINAS_GERAIS);
     bra_reg_goias_compare_state_league_ctor("construct_bra_reg_minas_gerais", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
@@ -322,6 +327,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: u
     bra_reg_goias_create_state_league_table(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
 
+/// Comparer for `bra_reg_minas_gerais_create_table` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_table(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_CREATE_TABLE);
     bra_reg_goias_compare_state_league_table("bra_reg_minas_gerais_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
@@ -339,6 +345,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_s
     create_half_season_stage(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
 }
 
+/// Comparer for `bra_reg_minas_gerais_create_half_season_stage` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_REG_MINAS_GERAIS_CREATE_HALF_SEASON_STAGE);
     compare_half_season_stage("bra_reg_minas_gerais_create_half_season_stage", this, k, || o(this, k))
@@ -355,6 +362,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_start_new_season(thi
     start_new_season_two_halves(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
 }
 
+/// Comparer for `bra_reg_minas_gerais_start_new_season` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_START_NEW_SEASON);
     compare_new_season("bra_reg_minas_gerais_start_new_season", this, || o(this))
