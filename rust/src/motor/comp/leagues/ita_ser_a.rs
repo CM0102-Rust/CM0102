@@ -337,53 +337,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_serie_b(this: usiz
     cqo6_comparar_fases("calendario_da_serie_b", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_serie_b(this, fase, r, e, l))
 }
 
-/// the French first division schedule: in 2001/02, 34 rounds (18 clubs) from 31 July to 20 May; from 2002/03, 38 rounds
-/// (20 clubs), with four extra dates in January and March (8 and 22 January, 4 and 18 March); nearly all with two
-/// matches in TV slots (days 6, 4 or 1, slots 1 and 2); main stage only
-/// Original: `FraFirst::create_schedule` (0x5bb690, fra_first.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x5bb690 } (thiscall, ret 0x10, fra_first.cpp, 3.090 bytes, método +0x3c): `FraFirst::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: só a fase −1 (as outras devolvem 0). Em 2001 (o ano +0x40 = 0x7d1) 34 rodadas (18
-/// clubes); nos outros anos 38 (20 clubes). é_liga (se pedido) = 1, as rodadas, extra 0, a tabela de rodadas × 0x41
-/// bytes (sem memória: a caixa da linha 0xd1 e 0); as rodadas de `CQO6_PRIMEIRA_FRANCESA` em sequência (as marcadas só
-/// entram com 38); no fim, se a conta não bate com as rodadas, a caixa da linha 0x1b2 (e devolve a tabela assim mesmo).
-/// Fonte 0x9ccb5c.
-pub(crate) unsafe extern "thiscall" fn calendario_da_primeira_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    if fase as u8 != 0xff {
-        return 0;
-    }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const u16);
-    let n: i16 = if ano == 0x7d1 { 0x22 } else { 0x26 }; // cqo6: 34 rodadas em 2001, 38 depois
-    if !liga.is_null() {
-        *liga = 1;
-    }
-    *rodadas = n;
-    *extra = 0;
-    let t = alocar((n as i32 * 0x41) as u32);
-    if t == 0 {
-        aviso_em(0x9ccb5c, 0xd1);
-        return 0;
-    }
-    crate::comparacao::ramo("cqo_6 calendario da primeira francesa");
-    let mut i: i16 = 0;
-    for (so_38, r) in CQO6_PRIMEIRA_FRANCESA.iter() {
-        if *so_38 && n != 0x26 {
-            continue;
-        }
-        cqo6_rodadas(t, ano as u32, i as i32, core::slice::from_ref(r));
-        i += 1;
-    }
-    if i != n {
-        aviso_em(0x9ccb5c, 0x1b2);
-    }
-    t
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_primeira_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1898);
-    cqo6_comparar("calendario_da_primeira_francesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primeira_francesa(this, fase, r, e, l))
-}
 
 // ---------- 278a leva: o desempate da Série A e da Série B italianas no fim da temporada (o "spareggio": empate em pontos na fronteira de duas faixas), a ordem dos empatados pelo confronto direto e o resultado do jogo de desempate (ita_ser_a.cpp, ita_ser_b.cpp) ----------
 
@@ -889,15 +843,6 @@ pub(crate) unsafe extern "thiscall" fn construir_serie_b(this: usize, ano: u32, 
     cqm4_construir(this, ano, registro, &CQM4_SERIE_B)
 }
 
-/// C1/A: discipline 0x11, the league and 2 stages (the promotion play-off and the play-out), the real 2001/02 fixture
-/// list
-/// Original: `ItaSerC1a::ItaSerC1a` (0x64aa70, ita_ser_c1a.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
-/// (o play-off de acesso e o play-out).
-pub(crate) unsafe extern "thiscall" fn construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    cqm4_construir(this, ano, registro, &CQM4_C1A)
-}
 
 /// C1/B, as C1/A
 /// Original: `ItaSerC1b::ItaSerC1b` (0x64ec20, ita_ser_c1b.cpp, thiscall, ret 8).
@@ -934,10 +879,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_serie_b(this: usize, a
     cqm4_comparar("construir_serie_b", this, ano, registro, &CQM4_SERIE_B, || o(this, ano, registro))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1867);
-    cqm4_comparar("construir_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_construir_c1b(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1868);
@@ -1816,18 +1757,6 @@ pub(crate) unsafe fn cqi6_serie_b(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// Serie C1/A (18): the champion goes up to B, 2nd to 5th go to the promotion play-off, 14th to 17th to the relegation
-/// play-out and the last goes down; tie-breaks 1 and 2; the league below stored is C1/B (as in the original)
-/// Original: `ItaSerC1a::set_up_rules` (0x64b770, ita_ser_c1a.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x64b770 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::set_up_rules()`. A C1/A: as comuns, 2 turnos, 3
-/// pontos, os desempates 3º = 0 (+0xc7), o campeão sobe direto (+0xbe = 1), do 2º ao 5º vão ao play-off de acesso
-/// (+0xbf = 4), do 14º ao 17º ao play-out de permanência (+0xc0 = 4), o último cai (+0xc1 = 1), a Série B acima
-/// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
-pub(crate) unsafe extern "thiscall" fn regras_da_c1a(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_6 regras da c1a");
-    cqi6_regras(this, &cqi6_c1a(this))
-}
 
 pub(crate) unsafe fn cqi6_c1a(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqi6_comuns(this);
@@ -1893,10 +1822,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_serie_b(this: usize) -
     cqi6_comparar("regras_da_serie_b", this, cqi6_serie_b(this), || o(this), || regras_da_serie_b(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_c1a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1750);
-    cqi6_comparar("regras_da_c1a", this, cqi6_c1a(this), || o(this), || regras_da_c1a(this))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_c1b(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1751);
@@ -1984,14 +1909,6 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_serie_b(this: usize) -> u32 {
     1
 }
 
-/// Serie C1/A has 18 clubs; no prize fund and no TV money
-/// Original: `ItaSerC1a::create_table` (0x64b670, ita_ser_c1a.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x64b670 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::create_table()`: 18 clubes ([0x9cf578]), sem fundo
-/// nem TV; devolve se encheu. Fonte 0x9ea474, linha 0x1bd.
-pub(crate) unsafe extern "thiscall" fn tabela_da_c1a(this: usize) -> u32 {
-    cqj4_encher(this, 0x12, 0x9ea474, 0x1bd, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A).unwrap_or(false) as u32
-}
 
 /// Serie C1/B has 18 clubs; no prize fund and no TV money
 /// Original: `ItaSerC1b::create_table` (0x64f820, ita_ser_c1b.cpp, thiscall, ret 0).
@@ -2042,10 +1959,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_serie_b(this: usize) -
     cqj4_comparar("tabela_da_serie_b", this, 0x14, KEY_CLUB_COMP_ITALIAN_SERIE_B, Some(0x11170), || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_c1a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1754);
-    cqj4_comparar("tabela_da_c1a", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_c1b(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1755);

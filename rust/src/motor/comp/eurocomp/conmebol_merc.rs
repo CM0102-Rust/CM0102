@@ -388,27 +388,7 @@ pub(crate) const CQO13_LIBERTADORES: [Cql10R; 4] = [
     cql10r((0xb, 5, 0, 3), (0x11, 5, 0, 2, 2, 0), 0x96, (0, 4, 1), 8, (2, 1, 0, 0), (0, 2, 7), (0, 0x1e8480, 0xc3500)),
 ];
 
-/// rule: the Copa Libertadores starts with six-round groups on Tuesdays [inference: weekday 2], from 25/2 to 1/4 (each
-/// group a league stage, id 0x3e9 + stage, up to stage 6: 8 groups [inference]); then the knockout (stage 7) over two
-/// legs: round of 16 drawn on 2/4 and played on 15/4 (16 teams, return 14 days later), quarter-finals 30/4 and 20/5,
-/// semi-final 28/5 and 3/6, final draw 11/6 and match on 17/6 (return 7 days later); two-leg tie-break 1 and draw with
-/// bit 4; category 7 in the round of 16 and 8 after; final prize 2 million to the winner and 800 thousand to the
-/// runner-up
-/// Original: `ConmebolLiber::create_schedule` (0x4c31c0, conmebol_liber.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x4c31c0 } (thiscall, ret 0x10, conmebol_liber.cpp; a virtual +0x3c da Libertadores): `ConmebolLiber::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (a caixa da linha 0x9f), o mata-mata na
-/// fase 7 (a caixa da linha 0xc5).
-pub(crate) unsafe extern "thiscall" fn cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqo13_tabela(this, fase, rodadas, extra, liga, 7, &CQO13_LIBERTADORES_GRUPOS, &CQO13_LIBERTADORES, &[], 0x9a7de4, 0x9f, 0xc5,
-        "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1918);
-    cqo13_comparar("cqo13_libertadores_tabela", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqo13_libertadores_tabela(this, fase, r, e, l))
-}
 
 /// A Mercosul, grupos: seis rodadas às terças, de 29 de julho a 14 de outubro.
 pub(crate) const CQO13_MERCOSUL_GRUPOS: [Cqo13G; 6] = [(0x1d, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // cqo13: os grupos da Mercosul
@@ -523,3 +503,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo13_mercosul_convidados(this: 
     a
 }
 
+/// rule: the Mercosur moves on one stage when the current one ends; after the 4 group stages (on reaching 4) it builds
+/// the quarter-finals; going past the last stage is an error
+/// Original: `ConmebolMerc::advance_stage` (0x4c5140, conmebol_merc.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
+/// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
+pub(crate) unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
+    cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(2041);
+    cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
+}

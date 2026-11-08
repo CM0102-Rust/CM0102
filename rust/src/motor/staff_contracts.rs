@@ -429,3 +429,210 @@ pub(crate) unsafe extern "thiscall" fn comparar_conferir_retirada_do_pedido(this
     PLACAR.registrar(igual, || format!("conferir_retirada_do_pedido({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
 }
 
+/// sets the flags at +0x40 and, when the person now wants to leave and nothing prevents it, the transfer request
+/// (0x4d8610)
+/// Original: `STAFF_CONTRACT::set_flags` (0x867560, staff_contracts.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x867560 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_flags(marcas)`, chamada por muitas rotinas
+/// (no motor.rs pelo endereço; antes só a porta do pós-jogo a desviava, no modo comparação). Marcas acima de 0x1000: a
+/// caixa "Error" e segue (aqui: a original inteira). Liga as marcas em +0x40; pessoa (+0 id) que não é das funções
+/// 0xc, 0xd e 0xf, contrato com +0x44 positivo, sem +0x49, que quer sair (0x866f60), sem transferência futura
+/// (0x8cca10 com 0), sem os bits 1 e 8 de +0x4e, fora da fila da transferência livre (0x8c1870) e com mais de 20 anos
+/// (+0x18) ou reputação atual (+0xb do jogador) acima de 4250: o pedido de transferência (0x4d8610 em [0xae1050]).
+/// Não lê local sem valor.
+pub(crate) unsafe extern "thiscall" fn marcas_do_contrato(c: usize, marcas: u32) {
+    if marcas as i32 > 0x1000 {
+        // ponytail: a caixa "Error" (antes de qualquer gravação): a original inteira
+        return orig::<unsafe extern "thiscall" fn(usize, u32)>(1313)(c, marcas);
+    }
+    write_u32(c + 0x40, read_usize(c + 0x40) as u32 | marcas);
+    let pessoa = read_usize(0xae23bc).wrapping_add((cpw7_i(c) as usize).wrapping_mul(0x6e));
+    let funcao = read_u8(pessoa + 0x3d);
+    if funcao == 0xc || funcao == 0xd || funcao == 0xf {
+        return;
+    }
+    let moral = read_u8(c + 0x44) as i8;
+    if moral == 0 || moral < 0 || read_u8(c + 0x49) != 0 {
+        return;
+    }
+    let quer_sair: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_WANTS_TO_LEAVE);
+    if quer_sair(c) == 0 {
+        return;
+    }
+    let futura: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
+    if futura(read_usize(0xde1f54), pessoa, 0) != 0 || read_u8(c + 0x4e) & 9 != 0 {
+        return;
+    }
+    let na_fila: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_IS_QUEUED_FOR_FREE_TRANSFER);
+    if na_fila(read_usize(0xde1f54), pessoa) != 0 {
+        return;
+    }
+    if read_u8(pessoa + 0x18) as i8 <= 0x14 && read_i16(read_usize(pessoa + 0x61) + 0xb) <= 0x109a {
+        return;
+    }
+    crate::comparacao::ramo("cpw_7 pedido de saida");
+    if CPW7_ENSAIO {
+        CPW7_DECISAO = 1;
+        return;
+    }
+    let pedido: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_HANDLE_TRANSFER_REQUEST);
+    pedido(read_usize(0xae1050), c);
+}
+
+/// O comparador das marcas do contrato, em ensaio: a cópia sem o pedido de transferência e a original a partir do mesmo
+/// estado (marcas e sorteio); sem pedido, tudo tem de bater; com pedido (que sorteia e dá notícia), só as marcas.
+pub(crate) unsafe extern "thiscall" fn comparar_marcas_do_contrato(c: usize, marcas: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1313);
+    if marcas as i32 > 0x1000 {
+        return o(c, marcas);
+    }
+    let mut regioes = vec![(c + 0x40, 4)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let antes = crate::comparacao::Memoria::ler(&regioes);
+    CPW7_ENSAIO = true;
+    CPW7_DECISAO = 0;
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| marcas_do_contrato(c, marcas)));
+    CPW7_ENSAIO = false;
+    let pediu = CPW7_DECISAO != 0;
+    let mr = crate::comparacao::Memoria::ler(&regioes);
+    antes.escrever();
+    o(c, marcas);
+    let mo = crate::comparacao::Memoria::ler(&regioes);
+    let igual = if pediu { mo.0[0] == mr.0[0] } else { mo == mr };
+    PLACAR.registrar(igual, || format!("marcas_do_contrato({:#x}, {:#x}) pediu={} original={:x?} rust={:x?}", c, marcas, pediu, mo, mr));
+}
+
+/// 1 to 3: 100 × the value of the current contract / that of the desired one (with the deserved squad status), with an
+/// allowance for recent signings; below 50: 1; below 80: 3; otherwise 2
+/// Original: `get_contract_satisfaction` (0x866620, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x866620 } (thiscall, ret 4, staff_contracts.cpp, quadro SEH sem destrutor): `STAFF_CONTRACT::
+/// get_contract_satisfaction(pessoa)`, pelo passe diário do pessoal (0x5ce2d0, com sorteio(50) zero) e pela tela do
+/// contrato: 1 a 3. Sem pessoa, 1. A situação no elenco que ela merece (0x4ca470) vale se for menor que a do contrato
+/// (+0x4f >> 4) e não for 0 nem 7; senão, a do contrato. O contrato desejado (0x85fc50 num contrato local, com o clube
+/// do contrato, −1, a situação e 0xb) e a razão 100 × valor do contrato atual (0x866830, em f32) / valor do desejado
+/// (valor zero: razão 0). Contratado há menos de 15 × adaptabilidade (+0x59) + 100 dias (de +0x25, teto 500): razão +
+/// 50 + 7,5 × adaptabilidade − dias / 2. Razão abaixo de 50: 1; abaixo de 80: 3; senão 2.
+pub(crate) unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
+    if pessoa == 0 {
+        return 1;
+    }
+    let categoria: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
+    let desejado: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_SET_TO_DESIRED_CONTRACT);
+    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    // o contrato local (0x50 bytes) como a original o deixa antes da 0x85fc50; o resto ela preenche
+    let mut local = [0u8; 0x50];
+    let l = local.as_mut_ptr() as usize;
+    data_padrao(l + 0x25);
+    data_padrao(l + 0x2d);
+    core::ptr::write_unaligned((l + 4) as *mut i32, -1);
+    core::ptr::write_unaligned((l + 0x4a) as *mut i32, -1);
+    let merece = categoria(pessoa, this);
+    let atual = read_u8(this + 0x4f) >> 4;
+    // ponytail: a original empurra o dword inteiro da vaga onde guardou o byte (no primeiro caso, o resto é o ponteiro
+    // da pessoa; no segundo, sobra de pilha); a 0x85fc50 só lê o byte.
+    let situacao = if (merece as i8) < (atual as i8) && merece != 0 && merece != 7 {
+        (pessoa as u32 & !0xff) | merece as u32
+    } else {
+        atual as u32
+    };
+    desejado(l, pessoa, cpw1_clube(read_usize(this + 4)), -1, situacao, 0xb, 0, 0);
+    let v1 = cpw1_valor(this, pessoa, l) as f32;
+    let v2 = cpw1_valor(l, pessoa, l) as f64;
+    let mut razao = if v2 == f32_em(0x968970) as f64 {
+        f32_em(0x968970) as f64
+    } else {
+        v1 as f64 * f32_em(0x968960) as f64 / v2
+    };
+    let anos = (read_i16(0xae2c92) as u16 as i32).wrapping_sub(read_i16(this + 0x27) as u16 as i32);
+    let dias = anos.wrapping_mul(365).wrapping_sub(read_i16(this + 0x25) as i32).wrapping_add(read_i16(0xae2c90) as i32).clamp(0, 500);
+    let adapt = read_u8(pessoa + 0x59) as i8 as i32;
+    if dias < adapt.wrapping_mul(15).wrapping_add(100) {
+        crate::comparacao::ramo("cpw_1 contratado ha pouco");
+        razao = razao + f32_em(0x969560) as f64 + adapt as f64 * f64_em(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
+    }
+    crate::comparacao::ramo("cpw_1 satisfacao avaliada");
+    if !(razao >= f32_em(0x969560) as f64) { // cpw1: o limite da insatisfação
+        return 1;
+    }
+    if razao < f32_em(0x96ff70) as f64 { // cpw1: o limite da satisfação
+        3
+    } else {
+        2
+    }
+}
+
+/// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
+/// 0x85fc50 grava e o contrato); a devolução e a memória.
+pub(crate) unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1272);
+    let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
+    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+        &regioes,
+        || o(this, pessoa),
+        || crate::aleatorio::sem_contar(|| satisfacao_com_o_contrato(this, pessoa)),
+    );
+    PLACAR.registrar(igual && r == n, || {
+        format!("satisfacao_com_o_contrato(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if pessoa != 0 { read_usize(pessoa) } else { 0 }, r, mo, n, mr)
+    });
+    r
+}
+
+/// the wage (+0xc) = the default for the person at the club (0x862720) truncated, minimum 55
+/// Original: `STAFF_CONTRACT::set_default_wage` (0x8626e0, staff_contracts.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x8626e0 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_default_wage(pessoa)`: o salário (+0xc) é
+/// o padrão da pessoa no clube dela ([+0x39]) pela 0x862720 (stdcall, 6 argumentos, float; o ecx vai junto, como na
+/// original), truncado (0x945640), com mínimo 55. Devolve o truncado (antes do mínimo).
+pub(crate) unsafe extern "thiscall" fn salario_padrao_do_contrato(this: usize, pessoa: usize) -> u32 {
+    let padrao: unsafe extern "thiscall" fn(usize, usize, usize, i32, i32, i32, i32) -> f64 = core::mem::transmute(FN_STAFF_CONTRACT_CALC_UNSET_DEFAULT_WAGE);
+    let v = ftol(padrao(this, pessoa, core::ptr::read_unaligned((pessoa + 0x39) as *const usize), 1, -1, 0xb, 0));
+    *((this + 0xc) as *mut i32) = if v < 0x37 { 0x37 } else { v }; // o mínimo de 55
+    v as u32
+}
+
+/// Comparador: lado a lado pelo salário (+0xc). A 0x862720 grava a mesma ficha em [0xae1080] nas duas vezes.
+pub(crate) unsafe extern "thiscall" fn comparar_salario_padrao_do_contrato(this: usize, pessoa: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(824);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0xc, 4)], || o(this, pessoa), || salario_padrao_do_contrato(this, pessoa));
+    PLACAR.registrar(igual && r == n, || format!("salario_padrao_do_contrato({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    r
+}
+
+/// +0x40 (a 4-byte routine; the hook covers the first alignment nop)
+/// Original: `contract_flags` (0x8676f0, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x8676f0 } (staff_contracts.cpp): as bandeiras do contrato (+0x40).
+pub(crate) unsafe extern "thiscall" fn bandeiras_do_contrato(this: usize) -> u32 {
+    *((this + 0x40) as *const u32)
+}
+
+/// the empty contract: default dates at +0x25 and +0x2d, +4 and +0x4a = -1, +8, +0x3b, +0x40, +0x45, +0x49 and +0x4e =
+/// 0
+/// Original: `STAFF_CONTRACT::STAFF_CONTRACT` (0x85e410, staff_contracts.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x85e410 } (thiscall, ret 0, staff_contracts.cpp): `STAFF_CONTRACT::STAFF_CONTRACT()`: as duas datas (+0x25,
+/// +0x2d) padrão (0x54a110), +4 e +0x4a = −1, +0x49, +0x3b, +0x4e, +0x40, +0x45 e +8 = 0. Devolve o próprio contrato.
+pub(crate) unsafe extern "thiscall" fn cqe4_construir_contrato(this: usize) -> usize {
+    let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    data_padrao(this + 0x25);
+    data_padrao(this + 0x2d);
+    core::ptr::write_unaligned((this + 4) as *mut u32, u32::MAX);
+    core::ptr::write_unaligned((this + 0x4a) as *mut u32, u32::MAX);
+    *((this + 0x49) as *mut u8) = 0;
+    core::ptr::write_unaligned((this + 0x3b) as *mut u16, 0);
+    *((this + 0x4e) as *mut u8) = 0;
+    core::ptr::write_unaligned((this + 0x40) as *mut u32, 0);
+    core::ptr::write_unaligned((this + 0x45) as *mut u32, 0);
+    core::ptr::write_unaligned((this + 8) as *mut u32, 0);
+    this
+}
+
+/// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
+pub(crate) unsafe extern "thiscall" fn comparar_cqe4_construir_contrato(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(1585);
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || cqe4_construir_contrato(this));
+    PLACAR.registrar(igual && ro == rr, || format!("cqe4_construir_contrato({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    ro
+}

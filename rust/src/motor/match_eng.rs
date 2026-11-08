@@ -5675,30 +5675,7 @@ pub(crate) unsafe fn despachar_finalizacao(rotina: usize, this: usize, a: [u32; 
     }
 }
 
-/// `p`'s shot (type, value, commentary, mode 1 match / 2 no challenger / 3 shoot-out / 4 set-piece kick / 5-6 repeat,
-/// the pressure teammates list). Challenger (0x6c87e0) with foul or dispossession; commentary; offside; interception
-/// (0x6cc540); the outcome class; goal (can be disallowed), save, post or wide, with the commentary. Compared through
-/// the tape, with comparison inside the unit
-/// Original: `shoot` (0x702050, match_pl.cpp (35 KB), thiscall, ret 0x18).
-///
-/// [pt] { 0x702050 } (ret 0x18, match_pl.cpp): ver `chutar_com`.
-#[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn chutar(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
-    chutar_com(p, a1, a2, a3, a4, a5, a6 as usize, &mut |r, t, a| despachar_finalizacao(r, t, a))
-}
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_chutar(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
-    if gravando() {
-        // unidade da fita de fora (conducao, penaltis, o proprio chute de novo); por dentro, a propria comparacao
-        chamar_gravando(0x702050, p, [a1, a2, a3, a4, a6], || {
-            fita_do_chute(p, a1, a2, a3, a4, a5, a6);
-            0
-        });
-        return;
-    }
-    fita_do_chute(p, a1, a2, a3, a4, a5, a6)
-}
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn fita_do_chute(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
@@ -10860,40 +10837,11 @@ pub(crate) unsafe extern "thiscall" fn zagueiros_do_lado_sem_conflito(m: usize, 
     f(m + if lado != 0 { 0xaac5 } else { 0x91e2 })
 }
 
-/// the referee constructor (zeroes +0 and +4)
-/// Original: `construct_referee` (0x6e9460, match_official.cpp, thiscall).
-///
-/// [pt] { 0x6e9460 } (thiscall, match_official.cpp): o construtor do árbitro: zera o motor (+0) e o oficial
-/// (+4). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_arbitro(a: usize) -> usize {
-    core::ptr::write_unaligned(a as *mut u32, 0);
-    core::ptr::write_unaligned((a + 4) as *mut u32, 0);
-    a
-}
 
-/// the match player destructor (zeroes +0x19e)
-/// Original: `destroy_match_player` (0x6ebd60, match_pl.cpp, thiscall).
-///
-/// [pt] { 0x6ebd60 } (thiscall, match_pl.cpp): o destrutor do jogador da partida: zera o ponteiro do motor
-/// (+0x19e).
-pub(crate) unsafe extern "thiscall" fn destruir_jogador_da_partida(j: usize) {
-    core::ptr::write_unaligned((j + 0x19e) as *mut u32, 0);
-}
 
 comparar_valor!(comparar_zagueiros_do_lado_sem_conflito, zagueiros_do_lado_sem_conflito, 376, (lado: i8) -> u8);
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_arbitro(a: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(377);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(a, 8)], || o(a), || construir_arbitro(a));
-    PLACAR.registrar(igual && r == v, || format!("construir_arbitro({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
-    r
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_destruir_jogador_da_partida(j: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(378);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(j + 0x19e, 4)], || o(j), || destruir_jogador_da_partida(j));
-    PLACAR.registrar(igual, || format!("destruir_jogador_da_partida({:#x}) {:x?} x {:x?}", j, mo, mr));
-}
 
 // ---------- 167a leva: o fechamento do motor (1): o gol da bola, a partida abandonada e as vagas do lado ----------
 
@@ -10943,3 +10891,478 @@ comparar_valor!(comparar_bola_na_area, bola_na_area, 373, () -> i8);
 comparar_valor!(comparar_partida_abandonada, partida_abandonada, 374, () -> u8);
 comparar_valor!(comparar_vagas_do_lado_sem_conflito, vagas_do_lado_sem_conflito, 375, (lado: i8) -> u8);
 
+/// with the day's event list (+0x478e) and the match, walks the events (0x68d1b0): 0x82 goes to the global list
+/// [0xb67dc8] (0x68d0d0); 0x1e by the score, the clubs' strength and the other side's manager (0x544410) marks the
+/// event (+0xe, +0xf) or compares it with the club's strength; the others, from the match player (6 by marks
+/// +0x24/+0x23; the rest by draw). Then, per side, each player's record (0x6d26b0), the request to leave (event 0xa)
+/// and dissatisfaction (event 0xb, rival, favourite/rejected 0x547790/0x5477d0, preferences 0x547d30/0x547d60), and the
+/// average rating by minutes (±0.25 home/away) for the reputations (0x6d3610, 0x6d3de0). First routine of the
+/// **determinized original**: a side's average with no minutes and 4 bytes of the event built on the stack were
+/// garbage; the zeroing at entry leaves them at zero in every mode. Compared through the tape (the record, the
+/// reputations and the event copy are units; the event's content is checked)
+/// Original: `match_wrap_up` (0x6d1cc0, match_eng.cpp (2.5 KB, called by the engine step 0x6b98c0), cdecl).
+///
+/// [pt] { 0x6d1cc0 } (cdecl, match_eng.cpp): ver `fechamento_com`.
+pub(crate) unsafe extern "C" fn fechamento(m: usize) {
+    fechamento_com(m, &mut |r, t, a| despachar_fechamento(r, t, a))
+}
+
+pub(crate) unsafe extern "C" fn comparar_fechamento(m: usize) {
+    use std::sync::atomic::Ordering::Relaxed;
+    let o = orig::<unsafe extern "C" fn(usize)>(309);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    let reg = regioes_do_fechamento(m);
+    let gravar = GRAVAR_FECHAMENTO.swap(true, Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || {
+        zerar_pilha();
+        o(m)
+    }, |chamar| {
+        fechamento_com(m, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x68d0d0 => [0, u32::MAX, 0, 0, 0],
+                _ => [u32::MAX; 5],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_FECHAMENTO.store(gravar, Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("fechamento {} chamadas: {}", k, detalhe_fita()));
+}
+
+/// the player's injury in the match. With more than 3 injuries in the match (+0xf639) draws may avoid it; more than 6,
+/// never. Registers it (0x62be00), marks the culprit (+0x55, -10 at +0x31), takes stamina by severity (above 50: the
+/// square; otherwise a draw), writes +0x59 and reduces +0xd5; with no stamina the player leaves, otherwise stops
+/// (0x7160e0 with 5 or 3) by the person's strength. Compared through the tape when it runs outside another tape (the
+/// injury list and the 0x68d0d0 copy); inside, it is a unit
+/// Original: `injure` (0x6d0980, match_eng.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x6d0980 }: ver `lesionar_com`.
+pub(crate) unsafe extern "thiscall" fn lesionar(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
+    lesionar_com(m, tipo, chance, p, o, &mut |r, t, a| despachar_lesao(r, t, a))
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_lesionar(m: usize, tipo: u32, chance: u32, p: usize, o: usize) {
+    if gravando() {
+        // unidade da fita de fora; por dentro, a propria comparacao (fita aninhada)
+        chamar_gravando(0x6d0980, m, [tipo, chance, p as u32, o as u32, 0], || {
+            fita_da_lesao(m, tipo, chance, p, o);
+            0
+        });
+        return;
+    }
+    fita_da_lesao(m, tipo, chance, p, o);
+}
+
+/// the day's match order (qsort): competition, record fields and the club name
+/// Original: `day_match_order` (0x6b6510, match_eng.cpp, cdecl).
+///
+/// [pt] { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
+/// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome
+/// do primeiro clube (+0x20 → +0x38) na comparação de textos 0x90c1d0 (sem maiúsculas).
+pub(crate) unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
+    let d = core::ptr::read_unaligned((a + 4) as *const i32).wrapping_sub(core::ptr::read_unaligned((b + 4) as *const i32));
+    if d != 0 {
+        return d;
+    }
+    let d = *((a + 0x46) as *const i8) as i32 - *((b + 0x46) as *const i8) as i32;
+    if d != 0 {
+        return d;
+    }
+    for o in [0x36, 0x38, 0x34] {
+        let d = core::ptr::read_unaligned((a + o) as *const i16) as i32 - core::ptr::read_unaligned((b + o) as *const i16) as i32;
+        if d != 0 {
+            return d;
+        }
+    }
+    let textos: unsafe extern "C" fn(usize, usize, i32, u32) -> i32 = core::mem::transmute(FN_UTILS_STRING_COMPARE);
+    let nome = |x: usize| core::ptr::read_unaligned((x + 0x20) as *const usize).wrapping_add(0x38);
+    textos(nome(a), nome(b), 1, 0)
+}
+
+pub(crate) unsafe extern "C" fn comparar_ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(382)(a, b);
+    let n = ordem_das_partidas_do_dia(a, b);
+    PLACAR.registrar(r == n, || format!("ordem_das_partidas_do_dia({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    r
+}
+
+/// the players' order on the engine's turn (qsort): the marked ones first, then by strength
+/// Original: `action_order` (0x6bd840, match_eng.cpp, cdecl).
+///
+/// [pt] { 0x6bd840 } (cdecl, qsort, match_eng.cpp): a ordem dos jogadores na vez do motor ([0xb67a64]):
+/// com +0x8eb2 ligado, o de +0xf582 vem primeiro; depois o de +0x91de; os demais pela força
+/// (+0x104 + +0x105) × (+0x3b × 0,005 + 0,5) × +0x4d (f32), truncada, do maior para o menor.
+pub(crate) unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
+    let (pa, pb) = (*a, *b);
+    let m = *(0xb67a64 as *const usize);
+    if *((m + 0x8eb2) as *const u8) != 0 {
+        let primeiro = core::ptr::read_unaligned((m + 0xf582) as *const usize);
+        if pa == primeiro {
+            return -1;
+        }
+        if pb == primeiro {
+            return 1;
+        }
+    }
+    let c = core::ptr::read_unaligned((m + 0x91de) as *const usize);
+    if c == pa {
+        return -1;
+    }
+    if c == pb {
+        return 1;
+    }
+    let forca = |p: usize| {
+        let s = *((p + 0x105) as *const i8) as i32 + *((p + 0x104) as *const i8) as i32;
+        let w = core::ptr::read_unaligned((p + 0x3b) as *const i16) as f64;
+        ftol(s as f64 * (w * f64_em(0x968ef0) + f64_em(0x968968)) * core::ptr::read_unaligned((p + 0x4d) as *const f32) as f64)
+    };
+    forca(pb).wrapping_sub(forca(pa))
+}
+
+pub(crate) unsafe extern "C" fn comparar_ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(383)(a, b);
+    let n = ordem_de_acao(a, b);
+    PLACAR.registrar(r == n, || format!("ordem_de_acao({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    r
+}
+
+/// decides whether a context commentary (league race, club news) may play now
+/// Original: `context_commentary` (0x6d4b70, match_eng.cpp, thiscall).
+///
+/// [pt] { 0x6d4b70 } (thiscall, ret 0xc, match_eng.cpp): o comentário de contexto `evento` (0x21a3..=0x21af:
+/// a corrida da liga, as notícias recentes do clube) pode tocar agora para o `lado`? Fora da faixa
+/// 8000..=0x21e4, já tocado (tabela de +0x21e por lado) ou sem competição (+0x4792 → +0x14), não. Pesa
+/// o placar agregado (0x6ce310), a linha do clube na tabela da liga (0x4a4850: +0x19/+0x41 e
+/// +0x2d/+0x55), o minuto (+0x8ed0 / 11), as notícias do clube nos últimos 10 ou 30 dias (0x757da0 na
+/// mídia [0xb6b7c8]) e a média dos 20 jogadores do lado (+0x47cb, passo 0x1be, os marcados em −0x1c);
+/// os da tabela gravam o valor em `saida`. Os eventos da faixa fora dos 13 casos: sim.
+pub(crate) unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
+    let hoje = 0xae2c90usize;
+    let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(FN_DATE_SUB_DAYS);
+    let (mut d10, mut d30) = ([0u8; 8], [0u8; 8]);
+    datar(hoje, &mut d10, 10);
+    datar(hoje, &mut d30, 0x1e);
+    let ev = evento as u16 as i16 as i32;
+    if !(8000..=0x21e4).contains(&ev) {
+        return 0;
+    }
+    let l = lado as u8 as i8;
+    if *((m as isize + ((ev + l as i32 * 1000) * 4) as isize - 0x7ae2) as *const u32) != 0 {
+        return 0;
+    }
+    let c = *((m + 0x4792) as *const usize);
+    if *((c + 0x14) as *const u32) == 0 {
+        return 0;
+    }
+    let (mut casa, mut fora, mut classificado, mut ida, mut fase3) = (0i8, 0i8, 0u8, 0u8, 0u8);
+    let agregado = placar_agregado(m, l, &mut casa, &mut fora, &mut classificado, &mut ida, &mut fase3, 0) as i8 as i32;
+    let competicao = *((*(0xadadfc as *const usize)) as *const usize).add(*(c as *const u32) as usize);
+    let clube = *((c + if l != 0 { 0x20 } else { 0x1c }) as *const usize);
+    let mut linha = 0usize;
+    if competicao != 0 && *((competicao + 8) as *const u32) != 0 {
+        let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
+        linha = busca(*((competicao + 8) as *const usize), clube);
+    }
+    let na_competicao = || {
+        let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_CLUB_STILL_IN_CONTENTION);
+        f(competicao, clube) != 0
+    };
+    let noticia = |tipo: u32, data: &[u8; 8]| {
+        let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
+        let r = f(*(0xb6b7c8 as *const usize), 0, clube, -1, tipo, data) != 0;
+        if r {
+            crate::comparacao::ramo("contexto noticia");
+        }
+        r
+    };
+    // a média (16 bits) dos jogadores marcados do lado; None sem nenhum
+    let media = || {
+        let (mut s, mut n) = (0i32, 0i32);
+        for k in 0..20 {
+            let p = (m as isize + l as isize * 0x22d8 + 0x47cb + k * 0x1be) as usize;
+            if *((p - 0x1c) as *const i8) < 0 {
+                s += core::ptr::read_unaligned(p as *const i16) as i32;
+                n += 1;
+            }
+        }
+        if n == 0 { None } else { Some((s / n) as i16) }
+    };
+    let do_clube = || core::ptr::read_unaligned((clube + 0x57) as *const u32) == *((c + 0x14) as *const u32);
+    let da_competicao = || core::ptr::read_unaligned((clube + 0x1db) as *const u32) == *(c as *const u32);
+    let minuto = core::ptr::read_unaligned((m + 0x8ed0) as *const i16) as i32 / 11;
+    // 0x6d587c / 0x6d5704: a linha da tabela (+o1, +o2) contra sorteios; grava +o2 em `saida`
+    let tabela = |o1: usize, o2: usize| -> u32 {
+        if linha == 0 || core::ptr::read_unaligned((linha + o1) as *const i32) <= sortear(3) + 1 {
+            return 0;
+        }
+        let valor = core::ptr::read_unaligned((linha + o2) as *const i32);
+        if valor <= sortear(5) + 8 {
+            return 0;
+        }
+        if !saida.is_null() {
+            *saida = valor;
+        }
+        1
+    };
+    let ate_media = |limite: i16| {
+        crate::comparacao::ramo("contexto media");
+        media().is_some_and(|v| v >= limite) as u32
+    };
+    let fim = || media().map_or(1, |v| (v <= 0x1a2b) as u32);
+    let nao_trava = if fase3 as i8 != -3 { 3 } else { 0 };
+    match ev {
+        0x21a3 => {
+            if !do_clube() || agregado <= sortear(3) || !na_competicao() {
+                return 0;
+            }
+            if noticia(0x61, &d10) && media().is_some_and(|v| v > 8000) {
+                return 1;
+            }
+            if noticia(0x62, &d10) && media().is_some_and(|v| v > 0x1e46) {
+                return 1;
+            }
+            if !noticia(99, &d10) {
+                return 0;
+            }
+            ate_media(0x1d4d)
+        }
+        0x21a4 | 0x21a5 => {
+            if ev == 0x21a4 {
+                if !da_competicao() || agregado <= sortear(nao_trava) {
+                    return 0;
+                }
+            } else if !do_clube() || agregado <= sortear(3) {
+                return 0;
+            }
+            let (tipo, data) = if ev == 0x21a4 { (0x5c, &d30) } else { (0x5f, &d10) };
+            if !na_competicao() || !noticia(tipo, data) {
+                return 0;
+            }
+            ate_media(0x1d4d)
+        }
+        0x21a6 | 0x21a7 | 0x21a9 => {
+            if !do_clube() || sortear(-3) <= agregado || minuto < 0x1f || !na_competicao() {
+                return 0;
+            }
+            if minuto == 0x1f {
+                crate::comparacao::ramo("contexto minuto 31");
+            }
+            let tipos: &[u32] = match ev {
+                0x21a6 => &[0x3f],
+                0x21a7 => &[0x61, 0x62, 0x41, 99],
+                _ => &[0x5f, 0x40],
+            };
+            if !tipos.iter().any(|&t| noticia(t, &d10)) {
+                return 0;
+            }
+            fim()
+        }
+        0x21a8 => {
+            if !da_competicao() || sortear(-nao_trava) <= agregado || !na_competicao() || !noticia(0x5c, &d30) {
+                return 0;
+            }
+            fim()
+        }
+        0x21aa => {
+            if !do_clube() || agregado <= sortear(3) || minuto < 0x1f || !na_competicao() {
+                return 0;
+            }
+            if !noticia(0x3f, &d10) && !noticia(0x60, &d10) {
+                return 0;
+            }
+            ate_media(0x1b59)
+        }
+        0x21ab => {
+            if !do_clube() || agregado <= sortear(2) + 1 || minuto <= 0x1e {
+                return 0;
+            }
+            tabela(0x19, 0x41)
+        }
+        0x21ac | 0x21ad => {
+            if !do_clube() {
+                return 0;
+            }
+            if ev == 0x21ac {
+                if -1 - sortear(2) <= agregado {
+                    return 0;
+                }
+            } else if agregado <= sortear(3) + 1 {
+                return 0;
+            }
+            if minuto < 0x1f {
+                return 0;
+            }
+            tabela(0x2d, 0x55)
+        }
+        0x21ae => {
+            if !do_clube() || sortear(-3) <= agregado || minuto < 0x1f || (minuto > 0x4b && agregado < -1) {
+                return 0;
+            }
+            tabela(0x19, 0x41)
+        }
+        0x21af => {
+            if !do_clube() {
+                return 0;
+            }
+            match agregado {
+                -1 if minuto > 0x50 => tabela(0x19, 0x41),
+                -2 if minuto > sortear(10) + 0x46 => tabela(0x19, 0x41),
+                _ => 0,
+            }
+        }
+        _ => 1,
+    }
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_comentario_de_contexto(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(386);
+    if gravando_no_topo() {
+        return o(m, lado, evento, saida);
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    if !saida.is_null() {
+        reg.push((saida as usize, 4));
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, lado, evento, saida), || crate::aleatorio::sem_contar(|| comentario_de_contexto(m, lado, evento, saida)));
+    PLACAR.registrar(igual && r == n, || format!("comentario_de_contexto({}, {:#x}) original={} rust={} {:x?} x {:x?}", lado as u8, evento as u16, r, n, mo, mr));
+    sonda_do_comentario(m, o);
+    r
+}
+
+/// the match referee (+0xf5b6, id ≠ −1), except in friendly competitions (0x5c6710 on [0xae2c74]). Cards (+0xf5cb and
+/// +0xf601 on both sides) and fouls (+0xf5cc and +0xf602); the grade starts at +0xf5ba / 1000, loses 2 with more than 2
+/// cards, 1 with 2, gains 1 with none; loses 1 with more than 5 fouls, gains 1 with fewer than 3; below 4 becomes 4
+/// (except 1 in 500), above 8 becomes 8 (except 1 in 25), and stays within 1 to 10. Records through 0x79ce10 on
+/// [0xb74340] (8-byte record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by
+/// side (draws and the referee's record)
+/// Original: `referee_grade` (0x6d4a20, match_eng.cpp (336 bytes, called by 0x6b98c0), thiscall).
+///
+/// [pt] { 0x6d4a20 } (match_eng.cpp, chamada pela 0x6b98c0): a nota do arbitro da partida (+0xf5b6, id
+/// != -1), fora das competicoes amistosas (0x5c6710 em [0xae2c74]). Os cartoes (+0xf5cb e +0xf601 dos
+/// dois lados) e as faltas (+0xf5cc e +0xf602); a nota parte de +0xf5ba / 1000, perde 2 com mais de 2
+/// cartoes, 1 com 2, ganha 1 sem cartao; perde 1 com mais de 5 faltas, ganha 1 com menos de 3. Abaixo
+/// de 4 vira 4 (salvo 1 em 500), acima de 8 vira 8 (salvo 1 em 25), e fica entre 1 e 10. Grava pela
+/// 0x79ce10 em [0xb74340].
+pub(crate) unsafe extern "thiscall" fn nota_do_arbitro(m: usize) {
+    let arbitro = *((m + 0xf5b6) as *const usize);
+    if arbitro == 0 || *(arbitro as *const i32) == -1 {
+        return;
+    }
+    let partida = *((m + 0x4792) as *const usize);
+    if partida == 0 {
+        return;
+    }
+    let comp = *((partida + 0x14) as *const usize);
+    if comp == 0 {
+        return;
+    }
+    let amistosos = *(0xae2c74 as *const usize);
+    if amistosos != 0 {
+        let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+        if amistosa(amistosos, comp) != 0 {
+            crate::comparacao::ramo("nota do arbitro amistoso");
+            return;
+        }
+    }
+    let cartoes = (*((m + 0xf601) as *const u8)).wrapping_add(*((m + 0xf5cb) as *const u8)) as i8;
+    let faltas = (*((m + 0xf602) as *const u8)).wrapping_add(*((m + 0xf5cc) as *const u8)) as i8;
+    let mut nota = (*((m + 0xf5ba) as *const i16) as i32 / 1000) as i8;
+    if cartoes > 2 {
+        nota = nota.wrapping_sub(2);
+    } else if cartoes > 1 {
+        nota = nota.wrapping_sub(1);
+    } else if cartoes == 0 {
+        nota = nota.wrapping_add(1);
+    }
+    if faltas > 5 {
+        nota = nota.wrapping_sub(1);
+    } else if faltas < 3 {
+        nota = nota.wrapping_add(1);
+    }
+    if nota < 4 && sortear(500) != 0 {
+        nota = 4;
+    } else if nota > 8 && sortear(0x19) != 0 {
+        nota = 8;
+    } else if nota < 1 {
+        crate::comparacao::ramo("nota do arbitro minima");
+        nota = 1;
+    } else if nota > 10 {
+        crate::comparacao::ramo("nota do arbitro maxima");
+        nota = 10;
+    }
+    let mut r = [0u8; 8];
+    r[..4].copy_from_slice(&(*(arbitro as *const i32)).to_le_bytes());
+    r[4] = cartoes as u8;
+    r[5] = faltas as u8;
+    r[6] = nota as u8;
+    let registrar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(FN_OFFICIALSMANAGER_RECORD_MATCH_STATS);
+    registrar(*(0xb74340 as *const usize), r.as_ptr());
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_nota_do_arbitro(m: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(302);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    // o sorteio e a ficha do arbitro
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    let arbitro = *((m + 0xf5b6) as *const usize);
+    if arbitro != 0 && *(0xb74340 as *const usize) != 0 {
+        reg.extend(ficha_do_arbitro(*(0xb74340 as *const usize), *(arbitro as *const i32)));
+    }
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m), || nota_do_arbitro(m));
+    PLACAR.registrar(igual, || format!("nota_do_arbitro {:x?} x {:x?}", mo, mr));
+}
+
+/// the match without moves, in periods of two rounds. Per period, the team strength (0x6c0c60) with four pairs clamped
+/// between half and double, and the side that starts; per round, three attacks with a duel of an active player, the
+/// second and third duel (0x6c2880), the wear (0x6c2750), the other side's cards (0x6c2310; the second yellow sends
+/// off, 0x6cda20; more than 4 sent off: abandonment 3-0), the score factor, the contest (0x6c06b0/0x6c07a0/0x6c0a70),
+/// the shot (0x6c23f0, 0x6c0890/0x6c0980) and the goal (0x6c2050, keepers 0x717410, commentary 0x1fcc/0x1fcf, or 0x1fce
+/// on a missed penalty). At minutes 45/90/105/120 the scores (+0x45/+0x43/+0x47), extra time, golden goal and
+/// penalties; the aggregate; the home goal; the injuries (0x6d0980); the ratings (friendly: by the club's reputation).
+/// Used to read high bytes of stack dwords with no value (determinized original). Compared through the tape
+/// (commentary, injuries and the player-leaving calls are units)
+/// Original: `quick_simulation` (0x6beeb0, match_eng.cpp (6 KB, called by the engine step 0x6b98c0), thiscall).
+///
+/// [pt] { 0x6beeb0 } (match_eng.cpp): ver `simulacao_rapida_com`.
+pub(crate) unsafe extern "thiscall" fn simulacao_rapida(m: usize) {
+    simulacao_rapida_com(m, &mut |r, t, a| despachar_dividida(r, t, a))
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_simulacao_rapida(m: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(312);
+    if gravando_no_topo() {
+        return o(m);
+    }
+    // o motor inteiro, o sorteio, o erro, 0xae1080, a linha da tatica dos dois clubes (a expulsao
+    // pode trocar o capitao) e o registro da partida (placares e agregado)
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
+    let t = *((m + 0x4792) as *const usize);
+    reg.push((t, 0x50));
+    for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
+        reg.extend(linhas_do_clube(clube));
+    }
+    let gravar = GRAVAR_716.swap(true, std::sync::atomic::Ordering::Relaxed);
+    let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || {
+        zerar_pilha();
+        o(m)
+    }, |chamar| {
+        simulacao_rapida_com(m, &mut |rotina, this, args| {
+            let mascara = match rotina {
+                0x6d6f70 => [0xffff, u32::MAX, 0xff, 0xff, 0xff],
+                0x6d0980 => [0xff, 0xff, u32::MAX, u32::MAX, 0],
+                0x897760 => [u32::MAX, 0xff, u32::MAX, 0, 0],
+                0x62ed70 => [u32::MAX, 0, 0, 0, 0],
+                0x6e1aa0 => [0, 0, 0, 0, 0],
+                _ => [0xff, 0, 0, 0, 0],
+            };
+            chamar(rotina, this, args, mascara)
+        })
+    });
+    GRAVAR_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
+    PLACAR.registrar(igual && sequencia, || format!("simulacao_rapida {} chamadas: {}", k, detalhe_fita()));
+}

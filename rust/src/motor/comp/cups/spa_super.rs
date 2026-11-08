@@ -170,58 +170,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(
     cqm12_comparar("cqm12_supercopa_do_japao_clubes", this, || o(this), || cqm12_japao(this))
 }
 
-/// rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
-/// (moved to weekday 6) at the borrowed home ground [inference: venue 0], with no bracket draw (+0xd = 0x20
-/// [inference]); category 8; no prize
-/// Original: `UsaMlsAllStars::create_round_table` (0x90a400, usa_mls_all_stars.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x90a400 } (thiscall, ret 0x10, usa_mls_all_stars.cpp; a virtual +0x3c do Jogo das Estrelas): `UsaMlsAllStars::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: fora da fase −1 (o byte), 0. Na −1: saida (se pedida) = 0,
-/// rodadas = 1, extra = 0; a tabela (0x944e46 de 0x68; sem memória, a caixa da linha 0x9a e 0) com a rodada única: o
-/// sorteio em 15 do mês 5 (junho) levado ao dia da semana 5, o jogo em 2 do mês 7 (agosto) levado ao dia 6, turno 1,
-/// mando 0 (0x521e60 e 0x521eb0, cdecl, com o ano +0x40); nome 0, +0xd = 0x20, categoria 8, 2 times, 1 jogo, 2 novos,
-/// 1 jogo por confronto, sem prêmio.
-pub(crate) unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    if fase as u8 != 0xff {
-        return 0;
-    }
-    if !saida.is_null() {
-        *saida = 0;
-    }
-    *rodadas = 1;
-    *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(0x68);
-    if t == 0 {
-        aviso_em(0xaa20a0, 0x9a);
-        return 0;
-    }
-    crate::comparacao::ramo("cqm_12 tabela do jogo das estrelas");
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
-    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, 0, 0xf, 5, 0, 5, ano);
-    jogo(t, 0, 2, 7, 0, 6, 1, ano, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
-    let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
-    let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
-    w(0x18, 2);
-    w(0x1c, 2);
-    w(7, 0);
-    w(9, 0);
-    w(0xb, 0);
-    w(0xd, 0x20);
-    *((t + 0x17) as *mut u8) = 8;
-    w(0x1a, 1);
-    w(0xf, 0);
-    w(0x1e, 0);
-    *((t + 0x20) as *mut u8) = 0;
-    *((t + 0x21) as *mut u8) = 1;
-    *((t + 0x22) as *mut u8) = 0;
-    d(0x5c, 0);
-    d(0x60, 0);
-    d(0x64, 0);
-    t
-}
 
 /// Os bytes que a original grava na rodada: +0..+0x10, +0x13..+0x22 e +0x5c..+0x67.
 pub(crate) unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
@@ -232,28 +180,19 @@ pub(crate) unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
     v
 }
 
-/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
-/// fase −1, só a original (nenhuma grava nada).
-pub(crate) unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1789);
-    if fase as u8 != 0xff {
-        let a = o(this, fase, rodadas, extra, saida);
-        PLACAR.registrar(a == 0, || format!("cqm12_jogo_das_estrelas_tabela(fase {}) devolveu {:#x}", fase as u8 as i8, a));
-        return a;
-    }
-    let (mut r2, mut e2) = (*rodadas, *extra);
-    let mut s2 = if saida.is_null() { 0 } else { *saida };
-    let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, fase, rodadas, extra, saida),
-        || cqm12_jogo_das_estrelas_tabela(this, fase, &mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
-    let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
-    let tabela = if a != 0 && b != 0 { cqm12_gravados(a) == cqm12_gravados(b) } else { a == 0 && b == 0 };
-    if b != 0 {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(b);
-    }
-    PLACAR.registrar(igual && saidas && tabela, || format!("cqm12_jogo_das_estrelas_tabela: saídas {} tabela {}", saidas, tabela));
-    a
+/// rule: the Spanish Super Cup is played over two legs (7 days apart) between 2 clubs, without a draw (+0xd = 0x200:
+/// the built order), drawn on 5/7 with the first leg on 20/8 (moved to weekday 6) at the home side [inference: venue
+/// 0]; two-leg tiebreak 1 [inference: away goals and penalties]; no prize; category 6
+/// Original: `SpaSuper::create_round_table` (0x858960, spa_super.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
+/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
+pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 
+pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1779);
+    cql12_comparar("cql12_supercopa_da_espanha_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| cql12_supercopa_da_espanha_tabela(this, fase, r, e, s))
+}

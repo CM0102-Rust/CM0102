@@ -206,3 +206,53 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_rodadas(this: usi
     r
 }
 
+/// rule: the CONCACAF Champions' Cup has 8 teams in single matches: quarter-finals drawn on 1/8 and played on 28/8,
+/// semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1)
+/// Original: `ConChamp::create_round_table` (0x4c0f00, con_champ.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4c0f00 } (thiscall, ret 0x10, con_champ.cpp; a virtual +0x3c): `ConChamp::create_round_table(fase, &rodadas,
+/// &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 3, extra = 0; a tabela (0x944e46 de 0x138; sem
+/// memória, a caixa da linha 0x97 e 0) com as 3 rodadas e, nas duas primeiras, o dia 0 do confronto vazio (0x521f10
+/// com −1, −1, −1 e mando 0; a original o chama entre o jogo e os campos, que não se sobrepõem). Fora da −1, 0.
+pub(crate) unsafe extern "thiscall" fn cqp13_concacaf_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    if fase as u8 != 0xff {
+        return 0;
+    }
+    if !saida.is_null() {
+        *saida = 0;
+    }
+    *rodadas = 3;
+    *extra = 0;
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alocar(0x138);
+    if t == 0 {
+        aviso_em(0x9a7d30, 0x97);
+        return 0;
+    }
+    crate::comparacao::ramo("cqp_13 tabela da concacaf");
+    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
+    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    for (i, r) in CQP13_CONCACAF.iter().enumerate() {
+        cql10_rodada(t, i as u32, r, ano);
+        if i < 2 {
+            elo(t, i as i32, 0, -1, -1, -1, 0);
+        }
+    }
+    t
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqp13_concacaf_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1976);
+    let a = cql10_comparar("cqp13_concacaf_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| cqp13_concacaf_tabela(this, fase, r, e, s));
+    // ponytail: a cql10_comparar não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
+    // conferido aqui contra o valor fixo que a cópia grava
+    if a != 0 {
+        let ok = (0..2usize).all(|r| {
+            let e = a + r * 0x68 + 0x23;
+            core::ptr::read_unaligned(e as *const u32) == 0 && core::slice::from_raw_parts((e + 4) as *const u8, 3) == [0xff, 0xff, 0xff]
+        });
+        PLACAR.registrar(ok, || format!("cqp13_concacaf_tabela: o dia 0 dos confrontos da original difere"));
+    }
+    a
+}

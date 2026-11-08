@@ -1214,38 +1214,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_carregar_financas(this: usize, s
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1498)(this, save)
 }
 
-/// writes the u16 at +0, widened to 4 bytes, into the squad_manager.dat item and returns 1; on error the "Error" box
-/// (squad_manager.cpp 0x68, 0x6f) and 0
-/// Original: `SQUAD_MANAGER::save` (0x859cc0, squad_manager.cpp, thiscall).
-///
-/// [pt] { 0x859cc0 } (thiscall, ret 4, squad_manager.cpp): `SQUAD_MANAGER::save(save)`: grava no item `squad_manager.dat`
-/// o u16 em +0 do gerente de elencos, estendido a 4 bytes (a original zera eax antes do `mov ax`), e devolve 1. Erro
-/// ao abrir ou ao gravar: a caixa "Error" (squad_manager.cpp 0x68, 0x6f) e 0, sem fechar o item. Não confere o
-/// contêiner nulo (o 0x9326e0 recebe como vier).
-pub(crate) unsafe extern "thiscall" fn gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
-    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
-    crate::comparacao::ramo("cpx_5 gravar gerente de elencos");
-    let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos
-    let mut z = abrir_item(save, 0xa82bc0, 1, 0x16, 4);
-    if z == 0 {
-        aviso_em(0xa82b88, 0x68);
-        return 0;
-    }
-    if gravar_item(&mut v as *mut u32 as usize, 4, 1, z) != 1 {
-        aviso_em(0xa82b88, 0x6f);
-        return 0;
-    }
-    fechar_item(&mut z);
-    1
-}
 
-/// Comparador da 0x859cc0: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
-    // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1499)(this, save)
-}
 
 // ---------- 264a leva: a renda das partidas: a renda da partida nas finanças dos dois clubes, a renda do estádio e a multa da liga (fin_prm.cpp) ----------
 
@@ -3290,50 +3259,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_faixa_de_riqueza(this: usize) ->
     r
 }
 
-/// player data qsort: current ability (+5), then potential (+7), ascending
-/// Original: `compare_players_by_ability` (0x5d6220, game.cpp, cdecl).
-///
-/// [pt] { 0x5d6220 } (cdecl, game.cpp): `compare_players_by_ability(a, b)`, o qsort dos dados de jogador em
-/// game_daily_staff_update (0x5d588f): pela habilidade atual (+5), depois pela potencial (+7), crescente.
-pub(crate) unsafe extern "C" fn ordem_por_habilidade(a: *const usize, b: *const usize) -> i32 {
-    let (pa, pb) = (*a, *b);
-    let h = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const i16) as i32;
-    if h(pa, 5) == h(pb, 5) {
-        return h(pa, 7) - h(pb, 7);
-    }
-    h(pa, 5) - h(pb, 5)
-}
 
-/// Comparador: pelo valor.
-pub(crate) unsafe extern "C" fn comparar_ordem_por_habilidade(a: *const usize, b: *const usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(1213)(a, b);
-    let n = ordem_por_habilidade(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_por_habilidade({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
-    r
-}
 
-/// venue qsort: places (+0x3c) of the stadium (+0xc), largest first; without a stadium, 0
-/// Original: `stadium_compare_venues_by_capacity` (0x85e350, stadium.cpp, cdecl).
-///
-/// [pt] { 0x85e350 } (cdecl, stadium.cpp): `stadium_compare_venues_by_capacity(a, b)`, o qsort dos locais na busca do
-/// estádio neutro (0x85c8de): pelos lugares (+0x3c) do estádio (+0xc), do maior para o menor; sem um dos estádios, 0.
-pub(crate) unsafe extern "C" fn ordem_pela_capacidade(a: usize, b: usize) -> i32 {
-    let ea = core::ptr::read_unaligned((a + 0xc) as *const usize);
-    if ea == 0 {
-        return 0;
-    }
-    let eb = core::ptr::read_unaligned((b + 0xc) as *const usize);
-    if eb == 0 {
-        return 0;
-    }
-    core::ptr::read_unaligned((eb + 0x3c) as *const i32).wrapping_sub(core::ptr::read_unaligned((ea + 0x3c) as *const i32))
-}
 
-/// Comparador: pelo valor.
-pub(crate) unsafe extern "C" fn comparar_ordem_pela_capacidade(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1214)(a, b);
-    let n = ordem_pela_capacidade(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_pela_capacidade({:#x}, {:#x}) original={} rust={}", a, b, r, n));
-    r
-}
 

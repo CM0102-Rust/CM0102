@@ -231,47 +231,7 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
     agradece(p, clube, premio);
 }
 
-/// the year award entry in the person history; the manager adds the award to his record; the player with a long
-/// contract on the club list gets the renewal offer and the winner may thank the manager (draw by loyalty)
-/// Original: `Staff_Records::add_year_award_record` (0x86c390, staff_records.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x86c390 } (thiscall, ret 0x18, staff_records.cpp, quadro SEH sem destrutor): `Staff_Records::add_year_award_record(
-/// p, clube, premio, a4, a5, credito)`, pelo registro dos vencedores do prêmio do ano (YEAR_AWARD::record_winners
-/// 0x9302f0: o primeiro, o segundo e o terceiro). A entrada 0x34 do histórico da pessoa (data do jogo, clube ou −1, o id
-/// do prêmio, a4 na palavra, a5 e o crédito em bytes com sinal; 0x58e340). Técnico (+0x3d ou +0x28 = 5 ou 0xc): +1 na
-/// palavra +0x9e do registro dele (0x86f5b0). Jogador com ficha (+0x61) e contrato (0x4cf5a0, fora do tipo 5) com o
-/// clube (0x4cf5f0): com o gerente de transferências, contrato de mais de 300 dias e o jogador na lista do clube
-/// (0x849ce0), a renovação (0x4cda70); depois, só com o crédito 1, sem a marca +0x45 do contrato, com +0x59 acima de 15
-/// e +0x5b acima de 10, sorteio(+0x59) acima de 5: a notícia do agradecimento ao técnico (0x58a070). Sem pessoa ou sem
-/// prêmio: a original (caixa "Error").
-pub(crate) unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
-    if p == 0 || premio == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(1368)(this, p, clube, premio, a4, a5, credito);
-    }
-    cpy10_premio(this, p, clube, premio, a4, a5, credito, true)
-}
 
-/// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
-/// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
-/// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(1368);
-    if p == 0 || premio == 0 {
-        return o(this, p, clube, premio, a4, a5, credito);
-    }
-    let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
-    if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("registrar_premio_do_ano jogador");
-        return o(this, p, clube, premio, a4, a5, credito);
-    }
-    let r = cpq4_registro(this, p);
-    if r == 0 {
-        return o(this, p, clube, premio, a4, a5, credito);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
-        || cpy10_premio(this, p, clube, premio, a4, a5, credito, false));
-    PLACAR.registrar(igual, || format!("registrar_premio_do_ano({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(premio), mo, mr));
-}
 
 /// the match record is a win by a larger margin than the other one, or the same with more goals scored
 /// Original: `match_record_is_bigger_win` (0x7e4a30, record_utils.cpp, cdecl).

@@ -8,54 +8,54 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 18566 |
+| deslocamentos crus | 18567 |
 | chaves fixas cruas | 1494 |
 | chamadas por endereço | 0 |
-| cópias de acesso à memória | 10 |
-| rotinas sem cabeçalho | 7 |
-| linhas | 188107 |
+| cópias de acesso à memória | 0 |
+| rotinas sem cabeçalho | 0 |
+| linhas | 189066 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | linhas |
 |---|---:|---:|---:|---:|---:|---:|
-| `motor/transfer_manager.rs` | 1532 | 18 | 0 | 0 | 0 | 11751 |
-| `motor/manager_manager.rs` | 965 | 3 | 0 | 0 | 0 | 6200 |
-| `motor.rs` | 817 | 0 | 0 | 0 | 0 | 11983 |
-| `motor/comp/league.rs` | 703 | 9 | 0 | 0 | 0 | 4334 |
-| `motor/contract_manager.rs` | 696 | 13 | 0 | 2 | 0 | 4805 |
-| `motor/match_screens.rs` | 654 | 2 | 0 | 0 | 0 | 6270 |
-| `motor/match_eng.rs` | 632 | 7 | 0 | 0 | 1 | 10943 |
-| `motor/player_regen.rs` | 602 | 8 | 0 | 0 | 0 | 3482 |
-| `motor/shortlist_manager.rs` | 582 | 7 | 0 | 0 | 0 | 4439 |
-| `motor/database.rs` | 571 | 64 | 0 | 2 | 0 | 10299 |
-| `motor/match_pl.rs` | 531 | 5 | 0 | 0 | 0 | 9699 |
-| `motor/national_teams.rs` | 530 | 30 | 0 | 0 | 0 | 4061 |
-| `motor/comp/friendly.rs` | 519 | 15 | 0 | 0 | 0 | 3726 |
-| `motor/injury.rs` | 495 | 0 | 0 | 0 | 0 | 3397 |
-| `motor/comp/cup.rs` | 489 | 5 | 0 | 0 | 0 | 3569 |
-| `motor/comp/leagues/fin_prm.rs` | 479 | 14 | 0 | 0 | 0 | 3337 |
-| `motor/media.rs` | 478 | 1 | 0 | 0 | 0 | 3469 |
-| `motor/staff_records.rs` | 388 | 1 | 0 | 0 | 0 | 2227 |
-| `motor/club_records.rs` | 299 | 3 | 0 | 3 | 0 | 1924 |
-| `motor/comp/fix_man.rs` | 260 | 10 | 0 | 0 | 0 | 2668 |
-| `motor/match_man.rs` | 248 | 1 | 0 | 0 | 1 | 4325 |
-| `motor/comp/stadium.rs` | 201 | 7 | 0 | 0 | 0 | 1345 |
-| `motor/comp/eurocomp/european_cup.rs` | 191 | 5 | 0 | 0 | 0 | 1696 |
-| `motor/news.rs` | 185 | 0 | 0 | 0 | 0 | 1661 |
-| `motor/match_day.rs` | 179 | 8 | 0 | 0 | 0 | 2062 |
-| `motor/player_stats.rs` | 175 | 0 | 0 | 0 | 0 | 1553 |
-| `motor/comp/comp.rs` | 165 | 7 | 0 | 0 | 0 | 1172 |
-| `motor/player_search.rs` | 156 | 0 | 0 | 0 | 0 | 1150 |
-| `motor/comp/leagues/bra_reg_rio.rs` | 149 | 13 | 0 | 0 | 0 | 994 |
-| `motor/scout_manager.rs` | 143 | 9 | 0 | 0 | 0 | 1369 |
-| `motor/officials_manager.rs` | 139 | 0 | 0 | 0 | 0 | 1020 |
-| `motor/training_manager.rs` | 137 | 0 | 0 | 0 | 0 | 1524 |
-| `motor/comp/worldcup/world_cup.rs` | 130 | 7 | 0 | 0 | 0 | 769 |
-| `motor/comp/uefa_seeding.rs` | 127 | 7 | 0 | 0 | 0 | 1186 |
-| `motor/comp/leagues/usa_mls.rs` | 125 | 1 | 0 | 0 | 0 | 866 |
-| `motor/comp/leagues/ita_ser_a.rs` | 121 | 11 | 0 | 1 | 0 | 2052 |
-| `motor/tactics.rs` | 119 | 6 | 0 | 0 | 0 | 1619 |
-| `motor/match_events.rs` | 108 | 0 | 0 | 0 | 0 | 2446 |
-| `motor/shared.rs` | 104 | 1 | 0 | 0 | 0 | 975 |
-| `motor/comp/cups/ita_cup.rs` | 104 | 10 | 0 | 0 | 0 | 1179 |
+| `motor/transfer_manager.rs` | 1485 | 16 | 0 | 0 | 0 | 11801 |
+| `motor/manager_manager.rs` | 882 | 1 | 0 | 0 | 0 | 5550 |
+| `motor.rs` | 818 | 0 | 0 | 0 | 0 | 12261 |
+| `motor/comp/league.rs` | 731 | 10 | 0 | 0 | 0 | 4465 |
+| `motor/contract_manager.rs` | 671 | 9 | 0 | 0 | 0 | 4773 |
+| `motor/match_screens.rs` | 667 | 2 | 0 | 0 | 0 | 6375 |
+| `motor/match_eng.rs` | 660 | 7 | 0 | 0 | 0 | 11368 |
+| `motor/player_regen.rs` | 651 | 7 | 0 | 0 | 0 | 3723 |
+| `motor/shortlist_manager.rs` | 586 | 16 | 0 | 0 | 0 | 4500 |
+| `motor/database.rs` | 571 | 64 | 0 | 0 | 0 | 10114 |
+| `motor/comp/cup.rs` | 568 | 4 | 0 | 0 | 0 | 3785 |
+| `motor/match_pl.rs` | 542 | 5 | 0 | 0 | 0 | 9839 |
+| `motor/media.rs` | 524 | 1 | 0 | 0 | 0 | 3706 |
+| `motor/comp/friendly.rs` | 519 | 14 | 0 | 0 | 0 | 3809 |
+| `motor/national_teams.rs` | 509 | 23 | 0 | 0 | 0 | 3939 |
+| `motor/injury.rs` | 492 | 0 | 0 | 0 | 0 | 3447 |
+| `motor/comp/leagues/fin_prm.rs` | 475 | 14 | 0 | 0 | 0 | 3265 |
+| `motor/staff_records.rs` | 461 | 1 | 0 | 0 | 0 | 2589 |
+| `motor/comp/fix_man.rs` | 284 | 16 | 0 | 0 | 0 | 2815 |
+| `motor/match_man.rs` | 267 | 1 | 0 | 0 | 0 | 4527 |
+| `motor/club_records.rs` | 234 | 3 | 0 | 0 | 0 | 1626 |
+| `motor/player_stats.rs` | 233 | 4 | 0 | 0 | 0 | 1772 |
+| `motor/comp/stadium.rs` | 224 | 10 | 0 | 0 | 0 | 1446 |
+| `motor/comp/eurocomp/european_cup.rs` | 190 | 5 | 0 | 0 | 0 | 1705 |
+| `motor/match_day.rs` | 183 | 8 | 0 | 0 | 0 | 2046 |
+| `motor/player_search.rs` | 174 | 0 | 0 | 0 | 0 | 1073 |
+| `motor/scout_manager.rs` | 160 | 9 | 0 | 0 | 0 | 1443 |
+| `motor/comp/leagues/bra_reg_rio.rs` | 149 | 13 | 0 | 0 | 0 | 950 |
+| `motor/training_manager.rs` | 140 | 0 | 0 | 0 | 0 | 1542 |
+| `motor/officials_manager.rs` | 131 | 0 | 0 | 0 | 0 | 990 |
+| `motor/comp/worldcup/world_cup.rs` | 130 | 7 | 0 | 0 | 0 | 771 |
+| `motor/comp/leagues/usa_mls.rs` | 126 | 1 | 0 | 0 | 0 | 928 |
+| `motor/discipline.rs` | 122 | 1 | 0 | 0 | 0 | 1374 |
+| `motor/comp/uefa_seeding.rs` | 122 | 5 | 0 | 0 | 0 | 1127 |
+| `motor/comp/leagues/ita_ser_a.rs` | 120 | 8 | 0 | 0 | 0 | 1967 |
+| `motor/comp/leagues/bra_nat_third.rs` | 118 | 0 | 0 | 0 | 0 | 689 |
+| `motor/tactics.rs` | 117 | 0 | 0 | 0 | 0 | 1475 |
+| `motor/awol.rs` | 105 | 0 | 0 | 0 | 0 | 982 |
+| `motor/shared.rs` | 104 | 1 | 0 | 0 | 0 | 977 |
+| `motor/comp/cups/ita_cup.rs` | 104 | 10 | 0 | 0 | 0 | 1163 |

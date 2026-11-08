@@ -115,26 +115,5 @@ pub(crate) const CQK3_ESCOCIA: [[u8; 6]; 2] = [
     [0x15, 0x00, 0x04, 0x1e, 0x02, 0x00],
 ];
 
-/// the Scottish rule (21): one window, from 30 May (moved to the Saturday [inference]) to 30 March (moved to the
-/// Thursday [inference]); dword +0x15 = 1
-/// Original: `SCOTLAND_RULES::SCOTLAND_RULES` (0x7f6390, scotland_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
-/// transferência da Escócia (regra 21): a base (0x8e84a0), a vtable 0x96f838, 1 janela(s) de `CQK3_ESCOCIA` e o dword +0x15 = 1. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparacao::ramo("cqk_3 escocia");
-    cqk3_construir(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &CQK3_ESCOCIA, 0xa7b058, 0x50);
-    core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
-    this
-}
 
-/// A original no objeto de quem chama, a cópia num rascunho (ver `cqk3_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(1684);
-    let mut r = 0usize;
-    cqk3_comparar("regras_escocia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_escocia(s, a1, a2, a3, a4, a5);
-    });
-    r
-}
 

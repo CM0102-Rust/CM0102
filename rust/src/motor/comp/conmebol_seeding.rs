@@ -376,3 +376,42 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_campeao_dos_campeoes(th
     PLACAR.registrar(igual, || format!("conmebol_campeao_dos_campeoes({:x})", clube));
 }
 
+/// writes CM3_TEMP\conmebol_seeding.tmp: the country count (+0x6e), 0xa bytes per country from +0, +0x6f (u16) and
+/// +0x71 (u32); on error the "Error" box without closing the file
+/// Original: `ConmebolSeeding::save_to_temp_file` (0x4c6b70, conmebol_seeding.cpp, thiscall).
+///
+/// [pt] { 0x4c6b70 } (thiscall, ret 0, conmebol_seeding.cpp): `ConmebolSeeding::save_to_temp_file`: grava
+/// `CM3_TEMP\conmebol_seeding.tmp`: a quantidade de países (+0x6e, i8), os registros de 0xa bytes de +0, +0x6f (u16) e
+/// +0x71 (u32). Erro: a caixa "Error" (conmebol_seeding.cpp 0x2ee, 0x2f6, 0x2ff, 0x307, 0x30f), sem fechar o arquivo.
+pub(crate) unsafe extern "thiscall" fn gravar_sementes_da_conmebol(this: usize) {
+    const FONTE: usize = 0x9a7ed8;
+    crate::comparacao::ramo("cpx_6 gravar sementes da conmebol");
+    let f = cpx6_abrir(0x9a7f10);
+    if f == 0 {
+        aviso_em(FONTE, 0x2ee);
+        return;
+    }
+    if cpx6_escrever(this + 0x6e, 1, 1, f) != 1 {
+        aviso_em(FONTE, 0x2f6);
+        return;
+    }
+    if cpx6_escrever(this, 0xa, cpx6_n8(this + 0x6e), f) != cpx6_n8(this + 0x6e) { // cpx6: os registros dos países
+        aviso_em(FONTE, 0x2ff);
+        return;
+    }
+    if cpx6_escrever(this + 0x6f, 2, 1, f) != 1 {
+        aviso_em(FONTE, 0x307);
+        return;
+    }
+    if cpx6_escrever(this + 0x71, 4, 1, f) != 1 {
+        aviso_em(FONTE, 0x30f);
+        return;
+    }
+    cpx6_fechar(f);
+}
+
+/// Comparador da 0x4c6b70: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_sementes_da_conmebol(this: usize) {
+    // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
+    orig::<unsafe extern "thiscall" fn(usize)>(1501)(this)
+}

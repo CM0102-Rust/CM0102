@@ -520,3 +520,170 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs3_terceira_fase_da_serie_c(th
     PLACAR.registrar(igual, || format!("cqs3_terceira_fase_da_serie_c({:#x}) n={} plano={:x?}", this, n, plano));
 }
 
+/// Series C takes up to 56 clubs (those of the division, in database order), which are drawn (3 swaps per club); the
+/// first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups [inference: 8
+/// groups of 7 in the first stage]
+/// Original: `BraNatThird::create_table` (0x42dc90, bra_nat_third.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x42dc90 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::create_table()`: +0x3e = 7; a lista dos
+/// participantes (+0xee) refeita (a velha liberada, 0x9452ca push; add esp -> cdecl; a nova com 0xe0 bytes = 56
+/// ponteiros; sem memória: a caixa da linha 0x18f e devolve 1, como a original); a tabela (+0xb1, 7 × 0x3b; sem
+/// memória: a caixa da linha 0x196 e 0); a lista recebe, na ordem do banco, até 56 clubes cuja divisão (+0x57) é a
+/// própria Série C (o registro em [this+4]); a lista é embaralhada (comp_util_shuffle_pointer_array 0x4afb40: push
+/// conta (word); push lista; add esp, 8 -> cdecl; 3 × conta trocas sorteadas) e os 7 primeiros do sorteio entram nas
+/// linhas 0..6 (0x687430, a linha num dword limpo). Fonte 0x98aba4. Devolve 1.
+pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let embaralhar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
+    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 7);
+    let velha = read_usize(this + 0xee);
+    if velha != 0 {
+        soltar(velha);
+    }
+    let lista = alocar(0xe0);
+    core::ptr::write_unaligned((this + 0xee) as *mut usize, lista);
+    if lista == 0 {
+        aviso_em(0x98aba4, 0x18f);
+        return 1;
+    }
+    let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
+    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    if t == 0 {
+        aviso_em(0x98aba4, 0x196);
+        return 0;
+    }
+    let mut k: u8 = 0;
+    let mut i: i32 = 0;
+    let mut clube = read_usize(0xae23b4);
+    while i < read_usize(0xae235c) as i32 {
+        if (k as i8) >= 0x38 {
+            break;
+        }
+        if read_usize(clube + 0x57) == read_usize(this + 4) {
+            core::ptr::write_unaligned((read_usize(this + 0xee) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
+            k = k.wrapping_add(1);
+        }
+        i += 1;
+        clube = clube.wrapping_add(0x245);
+    }
+    crate::comparacao::ramo("cql_7 serie c sorteio");
+    embaralhar(read_usize(this + 0xee), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
+    for j in 0..7usize {
+        iniciar(this, j as u32, read_usize(read_usize(this + 0xee) + j * 4), 0, 0);
+    }
+    1
+}
+
+/// O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
+/// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
+/// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
+pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_c(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1827);
+    let mut plano = Vec::new();
+    let mut i: i32 = 0;
+    while i < read_usize(0xae235c) as i32 && plano.len() < 0x38 {
+        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+        if read_usize(clube + 0x57) == read_usize(this + 4) {
+            plano.push(clube);
+        }
+        i += 1;
+    }
+    let r = o(this);
+    let (lista, t) = (read_usize(this + 0xee), read_usize(this + 0xb1));
+    let mut igual = r == 1 && read_i16(this + 0x3e) == 7 && lista != 0 && t != 0 && plano.len() >= 7;
+    let mut sorteados: Vec<usize> = Vec::new();
+    if igual {
+        sorteados = (0..plano.len()).map(|k| read_usize(lista + k * 4)).collect();
+        let linhas_ok = (0..7usize).all(|j| read_usize(t + j * 0x3b) == sorteados[j]);
+        let (mut a, mut b) = (sorteados.clone(), plano.clone());
+        a.sort_unstable();
+        b.sort_unstable();
+        igual = linhas_ok && a == b;
+    }
+    PLACAR.registrar(igual, || format!("cql7_tabela_da_serie_c({:#x}) original={} plano={:x?} lista={:x?}", this, r, plano, sorteados));
+    r
+}
+
+/// Series C: double round robin (home-and-away groups [inference: the groups of 7 of the 0x42d620 schedule]); win 3,
+/// draw 1; tie-break by goal difference, goals scored and away goals; promotes to Series B, no league below; 2 top
+/// places leading to the next stage (rule word 8) and 2 bottom ones [inference: no effect, there is no league below]; 7
+/// substitutes, 3 substitutions, fixed numbers. Then the schedule
+/// Original: `BraNatThird::set_up_rules` (0x42de50, bra_nat_third.cpp, thiscall).
+///
+/// [pt] { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
+pub(crate) unsafe extern "thiscall" fn cqi7_regras_da_serie_c(this: usize) -> u32 {
+    cqi7_regras_serie_c(this);
+    crate::comparacao::ramo("cqi_7 regras da serie c");
+    cqi7_calendario(this);
+    1
+}
+
+/// Comparador: como o da Série A.
+pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_c(this: usize) -> u32 {
+    let reg = cqi7_regioes(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1714)(this), || {
+        cqi7_regras_serie_c(this);
+        1
+    });
+    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_c({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    r
+}
+
+/// Series C: in the groups, the qualified get the qualification record; in stage 7, those who go through; in the final
+/// group (stages 8 and 9), the two promoted get the promotion (weight 0x32) and qualification records and fate 0
+/// (promotion) in the first table that has them; in the final (stage 10), the champion gets the champion record
+/// Original: `BraNatThird::update_staff_records_for_status` (0x42eb00, bra_nat_third.cpp, thiscall).
+///
+/// [pt] { 0x42eb00 } (thiscall, ret 0x18, bra_nat_third.cpp): `BraNatThird::update_staff_records_for_status`: nos grupos
+/// (fase < 7), os classificados (6) ganham o registro de classificação; na fase 7, quem passa (1) também (os outros: -1);
+/// no quadrangular (fases 8 e 9), os que sobem (0) ganham os registros de acesso e de classificação e o destino 0 na
+/// primeira tabela que os tiver (a liga ou os estágios 0..6); na final (10), o campeão (1) ganha o registro de campeão.
+/// Devolve 0, ou -1 nas situações que a fase não espera.
+pub(crate) unsafe extern "thiscall" fn cqj9_destino_na_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let _ = (a4, a5, a6);
+    cqj9_serie_c(this, clube, situacao, fase, true).0
+}
+
+/// Comparador: como o da Série A.
+pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_na_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let (n, l, dest) = cqj9_serie_c(this, clube, situacao, fase, false);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(1729)(this, clube, situacao, fase, a4, a5, a6);
+    let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
+    PLACAR.registrar(r == n && gravado == dest, || format!("cqj9_destino_na_serie_c({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    r
+}
+
+/// Series C: in the groups (stages up to 6), the group position becomes the position on the 49-place Series C scale
+/// [inference]: 1 and 2 → 1 (the highest → 9), 3 → 17, 4 → 25, 5 → 33, 6 → 41, 7 → 49; in later stages, the codes as
+/// they come
+/// Original: `BraNatThird::set_club_progress` (0x42e100, bra_nat_third.cpp, thiscall).
+///
+/// [pt] { 0x42e100 } (thiscall, ret 0x14, bra_nat_third.cpp): `BraNatThird::set_club_progress(clube, fase, a, b, c)`: nos
+/// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
+/// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
+/// entrada.
+pub(crate) unsafe extern "thiscall" fn cqk8_progresso_na_serie_c(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = cqk8_entrada(this, clube);
+    let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
+    if fa < 7 {
+        let (a, c) = (cqk8_serie_c(a, 1), cqk8_serie_c(c, 9));
+        let b2 = cqk8_serie_c(b, 1);
+        if b == 3 {
+            crate::comparacao::ramo("cqk_8 serie c segundo 3");
+        }
+        cqk8_gravar(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
+    } else {
+        cqk8_gravar(e, a, b, c);
+    }
+    e
+}
+
+/// Comparador: como o do Mineiro.
+pub(crate) unsafe extern "thiscall" fn comparar_cqk8_progresso_na_serie_c(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = cqk8_entrada(this, clube);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(1736)(this, clube, fase, a, b, c), || cqk8_progresso_na_serie_c(this, clube, fase, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_serie_c({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    r
+}

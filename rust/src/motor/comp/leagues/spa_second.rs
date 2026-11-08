@@ -280,3 +280,114 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_espanhola(
     cqq4_comparar("calendario_da_segunda_espanhola", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_espanhola(this, fase, r, e, l))
 }
 
+/// the Spanish Segunda: discipline rule 0x1a (the Spanish one), only the league
+/// Original: `SpaSecond::SpaSecond` (0x8539a0, spa_second.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
+/// disciplina 0x1a, só a liga.
+pub(crate) unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+    cqm5_construir(this, ano, registro, &CQM5_SEGUNDA)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1871);
+    cqm5_comparar("construir_segunda", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
+}
+
+/// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from
+/// nation bit 4]; B teams cannot go up (marked by the table, 0x855b40)
+/// Original: `SpaSecond::set_up_rules` (0x855cc0, spa_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
+/// pontos, o 4º desempate 3, 3 sobem direto (+0xbe), nenhum play-off de acesso, 4 caem (+0xc1), a Primera acima
+/// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
+/// da nação [inferência]), senão −1; +0x52 = 2.
+pub(crate) unsafe extern "thiscall" fn regras_da_segunda(this: usize) -> u32 {
+    crate::comparacao::ramo("cqk_4 regras da segunda");
+    cqk4_regras(this, &cqk4_segunda(this))
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_regras_da_segunda(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1763);
+    cqk4_comparar("regras_da_segunda", this, cqk4_segunda(this), || o(this), || regras_da_segunda(this))
+}
+
+/// the Segunda has 22 clubs (the competition's, in database order); the B team of a Primera club is marked as not
+/// promotable (fate −4); the prize fund starts from 50,000
+/// Original: `SpaSecond::create_table` (0x855b40, spa_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),
+/// a tabela (malloc 0x944e46 de 0x512: push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x298 e 0) recebe, na
+/// ordem do banco ([0xae23b4], [0xae235c] clubes de 0x245 bytes), os clubes da competição de id [0x9cf628] até encher
+/// (League::init_table_row 0x687430: push 0; push 0; push clube; push linha (a palavra empurrada tem o byte da linha e o
+/// lixo da pilha em cima; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret 0x10); o time B de um clube da
+/// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
+/// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
+pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
+    let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
+    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
+    let t = alocar(0x512);
+    write_u32_from_usize(this + 0xb1, t);
+    if t == 0 {
+        aviso_em(0xa828bc, 0x298);
+        return 0;
+    }
+    let mut k: u8 = 0;
+    let n = read_u32_as_usize(0xae235c) as i32;
+    let base = read_u32_as_usize(0xae23b4);
+    let mut i: i16 = 0;
+    while (i as i32) < n {
+        let c = base + (i as u16 as usize) * 0x245; // cqm6: o clube i do banco
+        if cqm6_na(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
+            iniciar(this, k as u32, c, 0, 0);
+            if cqm6_time_b_de(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
+                crate::comparacao::ramo("cqm_6 time b na segunda");
+                *((read_u32_as_usize(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
+            }
+            k = k.wrapping_add(1);
+            if k as i8 as i16 == read_i16(this + 0x3e) {
+                break;
+            }
+        }
+        i = i.wrapping_add(1);
+    }
+    crate::comparacao::ramo("cqm_6 tabela da segunda");
+    if k as i8 as i16 != read_i16(this + 0x3e) {
+        return 0;
+    }
+    let f = premios(this, 0xc350);
+    write_u32_from_usize(this + 0x28, f as usize);
+    *((this + 0xe1) as *mut u8) = 1;
+    1
+}
+
+/// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
+/// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1874);
+    let n = read_u32_as_usize(0xae235c) as i32;
+    let base = read_u32_as_usize(0xae23b4);
+    let mut plano: Vec<(usize, bool)> = Vec::new();
+    for i in 0..n.max(0) as usize {
+        let c = base + i * 0x245;
+        if cqm6_na(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
+            plano.push((c, cqm6_time_b_de(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)));
+            if plano.len() == 0x16 {
+                break;
+            }
+        }
+    }
+    let r = o(this);
+    let t = read_u32_as_usize(this + 0xb1);
+    let mut ok = r == (plano.len() == 0x16) as u32 && read_i16(this + 0x3e) == 0x16 && t != 0;
+    if ok {
+        for (k, &(c, b)) in plano.iter().enumerate() {
+            let l = t + k * 0x3b;
+            ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
+        }
+    }
+    PLACAR.registrar(ok, || format!("tabela_da_segunda({:#x}): devolveu {}, plano {:x?}", this, r, plano));
+    r
+}

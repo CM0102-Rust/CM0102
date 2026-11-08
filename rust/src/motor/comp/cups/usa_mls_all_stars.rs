@@ -244,3 +244,104 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(
     a
 }
 
+/// rule: the two MLS All-Star selections are called up on the day of Date(26, 6, year, 6): 26 July moved to weekday 6
+/// [inference: the following Saturday]; the match is on 2 August (see cqm_12); then, every day, the cup update
+/// Original: `UsaMlsAllStars::update_for_date` (0x90a900, usa_mls_all_stars.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x90a900 } (thiscall, ret 8, usa_mls_all_stars.cpp; a virtual +0x14 do Jogo das Estrelas; quadro SEH pela Date
+/// local, sem destrutor): `UsaMlsAllStars::update_for_date(hoje, fase)`: com a fase diferente de 0, no dia de Date(26, 6,
+/// ano de hoje, dia da semana 6) (o sábado de 26 de julho em diante [inferência]), a convocação das duas seleções
+/// (0x90a980, mov ecx -> thiscall, ret 0); depois a atualização da copa.
+pub(crate) unsafe extern "thiscall" fn cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+    // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
+    let ano = read_i16(hoje + 2) as u16 as u32;
+    let d = cqn10_data(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
+    if fase != 0 && cqn10_e_hoje(d, hoje) {
+        crate::comparacao::ramo("cqn_10 convocacao do jogo das estrelas");
+        let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
+        convocar(this);
+    }
+    cqn10_base(this, hoje, fase)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1792)(this, hoje, fase)
+}
+
+/// rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
+/// (moved to weekday 6) at the borrowed home ground [inference: venue 0], with no bracket draw (+0xd = 0x20
+/// [inference]); category 8; no prize
+/// Original: `UsaMlsAllStars::create_round_table` (0x90a400, usa_mls_all_stars.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x90a400 } (thiscall, ret 0x10, usa_mls_all_stars.cpp; a virtual +0x3c do Jogo das Estrelas): `UsaMlsAllStars::
+/// create_round_table(fase, &rodadas, &extra, &saida)`: fora da fase −1 (o byte), 0. Na −1: saida (se pedida) = 0,
+/// rodadas = 1, extra = 0; a tabela (0x944e46 de 0x68; sem memória, a caixa da linha 0x9a e 0) com a rodada única: o
+/// sorteio em 15 do mês 5 (junho) levado ao dia da semana 5, o jogo em 2 do mês 7 (agosto) levado ao dia 6, turno 1,
+/// mando 0 (0x521e60 e 0x521eb0, cdecl, com o ano +0x40); nome 0, +0xd = 0x20, categoria 8, 2 times, 1 jogo, 2 novos,
+/// 1 jogo por confronto, sem prêmio.
+pub(crate) unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    if fase as u8 != 0xff {
+        return 0;
+    }
+    if !saida.is_null() {
+        *saida = 0;
+    }
+    *rodadas = 1;
+    *extra = 0;
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let t = alocar(0x68);
+    if t == 0 {
+        aviso_em(0xaa20a0, 0x9a);
+        return 0;
+    }
+    crate::comparacao::ramo("cqm_12 tabela do jogo das estrelas");
+    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
+    let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
+    sorteio(t, 0, 0xf, 5, 0, 5, ano);
+    jogo(t, 0, 2, 7, 0, 6, 1, ano, 0); // cqm12: o Jogo das Estrelas em 2 de agosto
+    let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
+    let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
+    w(0x18, 2);
+    w(0x1c, 2);
+    w(7, 0);
+    w(9, 0);
+    w(0xb, 0);
+    w(0xd, 0x20);
+    *((t + 0x17) as *mut u8) = 8;
+    w(0x1a, 1);
+    w(0xf, 0);
+    w(0x1e, 0);
+    *((t + 0x20) as *mut u8) = 0;
+    *((t + 0x21) as *mut u8) = 1;
+    *((t + 0x22) as *mut u8) = 0;
+    d(0x5c, 0);
+    d(0x60, 0);
+    d(0x64, 0);
+    t
+}
+
+/// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
+/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
+/// fase −1, só a original (nenhuma grava nada).
+pub(crate) unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1789);
+    if fase as u8 != 0xff {
+        let a = o(this, fase, rodadas, extra, saida);
+        PLACAR.registrar(a == 0, || format!("cqm12_jogo_das_estrelas_tabela(fase {}) devolveu {:#x}", fase as u8 as i8, a));
+        return a;
+    }
+    let (mut r2, mut e2) = (*rodadas, *extra);
+    let mut s2 = if saida.is_null() { 0 } else { *saida };
+    let reg = [(0xb67a34usize, 4usize)];
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, fase, rodadas, extra, saida),
+        || cqm12_jogo_das_estrelas_tabela(this, fase, &mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
+    let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
+    let tabela = if a != 0 && b != 0 { cqm12_gravados(a) == cqm12_gravados(b) } else { a == 0 && b == 0 };
+    if b != 0 {
+        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+        soltar(b);
+    }
+    PLACAR.registrar(igual && saidas && tabela, || format!("cqm12_jogo_das_estrelas_tabela: saídas {} tabela {}", saidas, tabela));
+    a
+}

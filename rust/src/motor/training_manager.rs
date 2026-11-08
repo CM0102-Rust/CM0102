@@ -1480,47 +1480,63 @@ pub(crate) unsafe extern "thiscall" fn comparar_avancar_a_semana(this: usize, di
     r
 }
 
-/// copies the first spare non-player record entry (id, nation, second nation) to the outputs and removes it from the
-/// list
-/// Original: `PLAYER_REGEN::take_spare_non_player_record` (0x7a6e30, player_regen.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x7a6e30 } (thiscall, ret 0xc, player_regen.cpp): `PLAYER_REGEN::take_spare_non_player_record(&id, &nacao,
-/// &segunda)`, pela contract_manager (0x4ce4e0, duas chamadas): copia o primeiro item da reserva de fichas de não
-/// jogador (this +0x1c: id, nação e segunda nação) para as três saídas e tira-o da reserva
-/// (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 com o id lido da saída); devolve o eax dela.
-pub(crate) unsafe extern "thiscall" fn tirar_a_ficha_reservada(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
-    crate::comparacao::ramo("cpt_10 ficha reservada");
-    *id = read_u32_as_usize(read_u32_as_usize(this + 0x1c)) as u32;
-    *nacao = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 4) as u32;
-    *segunda = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 8) as u32;
-    let tirar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_REGEN_REMOVE_SPARE_NON_PLAYER_RECORD);
-    tirar(this, *id)
-}
 
 // ponytail: a reserva perde o item (não roda duas vezes): só a original; a cópia leva o ramo.
-pub(crate) unsafe extern "thiscall" fn comparar_tirar_a_ficha_reservada(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(1183)(this, id, nacao, segunda)
-}
 
-/// the player's recurring injury type, or 0xff when he has none or is not a player
-/// Original: `Injury::get_recurring_injury_type` (0x62ed30, injury.cpp, thiscall, ret 4).
+/// allocates the 6-byte training entry of every player data record and puts goalkeepers (goalkeeping rating 15 or more)
+/// on schedule 6 and the others on 1
+/// Original: `TRAINING_MANAGER::init_player_entries` (0x8b3c50, training_manager.cpp, thiscall).
 ///
-/// [pt] { 0x62ed30 } (thiscall, ret 4, injury.cpp): `Injury::get_recurring_injury_type(pessoa)`, pelas notícias (0x77bc80),
-/// pela avaliação do fisioterapeuta (0x7a2650) e pelas telas: o tipo da lesão que volta (+0x12 da ficha de forma de 31
-/// bytes da pessoa, em [this]); pessoa nula, id a partir de [0xae2364] ou sem a ficha de jogador (+0x61): 0xff. Os
-/// chamadores leem só o al.
-pub(crate) unsafe extern "thiscall" fn lesao_que_volta(this: usize, pessoa: usize) -> u8 {
-    if pessoa == 0 || read_u32_as_usize(pessoa) as i32 >= read_u32_as_usize(0xae2364) as i32 || read_u32_as_usize(pessoa + 0x61) == 0 {
-        return 0xff;
+/// [pt] { 0x8b3c50 } (thiscall, ret 0, training_manager.cpp): `TRAINING_MANAGER::init_player_entries()`, pelo construtor
+/// (0x8b0ec0) num jogo novo: aloca (calloc 0x945501) as fichas de treino de 6 bytes, uma por ficha de jogador
+/// ([0xae236c] fichas de 0x46 bytes em [0xae23c4], a ficha pelo id +0), em this + 0x651d; sem memória, a caixa (linha
+/// 0x6e3) e volta. Em cada ficha apaga o bit 0x20 do +5 e põe a vaga do programa (+0): 6 (goleiros) com a nota de
+/// goleiro (+0xf, com sinal) de 15 para cima, senão 1 (geral). A primeira atualização do treino de cada jogador
+/// (0x8b1750, que só depois refaz a vaga dos jogadores do computador) e todo o treino do clube humano usam essa vaga.
+pub(crate) unsafe extern "thiscall" fn fichas_de_treino_iniciais(this: usize) {
+    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
+    let p = calloc(read_u32_as_usize(0xae236c) as u32, 6);
+    *((this + 0x651d) as *mut u32) = p as u32;
+    if p == 0 {
+        aviso_em(0xa8ccd0, 0x6e3);
+        return;
     }
-    *((read_u32_as_usize(this) + 31 * read_u32_as_usize(pessoa)) as *const u8).add(0x12)
+    let mut f = read_u32_as_usize(0xae23c4);
+    let mut i = 0i32;
+    while i < cpu9_i(0xae236c) {
+        let ficha = || read_u32_as_usize(this + 0x651d).wrapping_add((cpu9_i(f) as usize).wrapping_mul(6));
+        *((ficha() + 5) as *mut u8) &= 0xdf;
+        let gol = *((f + 0xf) as *const i8);
+        if gol >= 0xf { // cpu9: goleiro de 15 para cima
+            crate::comparacao::ramo("cpu_9 goleiro");
+            *(ficha() as *mut u8) = 6; // cpu9: o programa dos goleiros
+        } else {
+            crate::comparacao::ramo("cpu_9 linha");
+            *(ficha() as *mut u8) = 1; // cpu9: o programa geral
+        }
+        i += 1;
+        f += 0x46;
+    }
 }
 
-/// Comparador: o al devolvido.
-pub(crate) unsafe extern "thiscall" fn comparar_lesao_que_volta(this: usize, pessoa: usize) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1184)(this, pessoa);
-    let n = lesao_que_volta(this, pessoa);
-    PLACAR.registrar(r == n, || format!("lesao_que_volta(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
-    r
+/// Comparador: a original aloca (não pode rodar duas vezes): roda só ela e confere cada ficha pela regra (a vaga 6
+/// ou 1 pela nota de goleiro e o bit 0x20 do +5 apagado).
+pub(crate) unsafe extern "thiscall" fn comparar_fichas_de_treino_iniciais(this: usize) {
+    orig::<unsafe extern "thiscall" fn(usize)>(1218)(this);
+    let base = read_u32_as_usize(this + 0x651d);
+    if base == 0 {
+        return;
+    }
+    let mut erradas = 0usize;
+    let mut primeira = None;
+    for k in 0..cpu9_i(0xae236c).max(0) as usize {
+        let f = read_u32_as_usize(0xae23c4) + 0x46 * k;
+        let e = base.wrapping_add((cpu9_i(f) as usize).wrapping_mul(6));
+        let vaga = if *((f + 0xf) as *const i8) >= 0xf { 6 } else { 1 };
+        if *(e as *const u8) != vaga || *((e + 5) as *const u8) & 0x20 != 0 {
+            erradas += 1;
+            primeira.get_or_insert(k);
+        }
+    }
+    PLACAR.registrar(erradas == 0, || format!("fichas_de_treino_iniciais: {} fichas fora da regra (a primeira {:?})", erradas, primeira));
 }
-

@@ -494,22 +494,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(th
     r
 }
 
-/// rule: the Copa America follows the African Nations Cup rule with two group stages (the knockout at stage 2)
-/// Original: `GoldCup::update_staff_records_for_status` (0x5e13b0, goldcup.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
-/// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 2 fases de grupos (o
-/// mata-mata na fase 2).
-pub(crate) unsafe extern "thiscall" fn cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
-    cqj10_selecao(1, this, clube, desfecho, fase, jogo, a6, 2)
-}
 
 // ponytail: como a da Copa Africana: só a original, a devolução 0.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1695)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.registrar(r == 0, || format!("cqj10_copa_america_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
-    r
-}
 
 /// A competição atual da seleção acaba (0x775000 em [0xb74318]: push nação; mov ecx -> thiscall, ret 4).
 pub(crate) unsafe fn cqj10_fim_da_competicao(clube: usize) {
@@ -585,3 +571,43 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj10_eliminatoria_oceania_regis
     r
 }
 
+/// rule: the African Nations Cup has four groups (stages −1 to 2, ids 0x3e8 to 0x3eb) of three rounds on 8, 12 and 16
+/// February, with each group's fixed matches; the knockout (stage 3) in single matches: quarter-finals on 21/2 with
+/// fixed pairings, semi-final on 25/2, third place on 27/2 and final on 28/2 (venue 4); category 10; tie-break 0x303 up
+/// to the semi-final and 0x203 in the final; no prizes
+/// Original: `AfricanNations::create_schedule` (0x4012e0, african_nations.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4012e0 } (thiscall, ret 0x10, african_nations.cpp; a virtual +0x3c da Copa Africana): `AfricanNations::
+/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_africana_fase`.
+pub(crate) unsafe extern "thiscall" fn cqp12_africana_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    cqp12_tabela(this, cqp12_africana_fase(fase), rodadas, extra, liga, 0x9870f8)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqp12_africana_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1971);
+    cqp12_comparar("cqp12_africana_tabela", fase, cqp12_africana_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| cqp12_africana_tabela(this, fase, r, e, l))
+}
+
+/// rule: the African Nations Cup groups are single round robin, 3/1 points, tiebreak 1, 2, 3, two qualifiers per group,
+/// category 10, 7 substitutes and 3 changes; the date of 5 of month 9 of the year before the tournament on weekday 5
+/// [inference: the draw in the previous year] and +0xb8 = −1
+/// Original: `AfricanNations::set_up_rules` (0x401ab0, african_nations.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x401ab0 } (thiscall, ret 0, african_nations.cpp; a virtual +0x8c; quadro SEH só da data local):
+/// `AfricanNations::set_up_rules()`: os grupos da Copa Africana em turno único, 3/1 pontos, a categoria 0xa, os
+/// desempates (1, 2, 3), dois classificados por grupo, seleções, 7 no banco e 3 substituições, a data em 5 do mês 9 do
+/// ano anterior ao da competição num dia da semana 5 [inferência: o sorteio] e +0xb8 = −1.
+pub(crate) unsafe extern "thiscall" fn cqk10_copa_africana_regras(this: usize) -> u32 {
+    crate::comparacao::ramo("cqk_10 regras da copa africana");
+    let vitoria = 3; // cqk10: a vitória nos grupos da Copa Africana
+    cqk10_campos(this, &CQK10_AFRICANA, vitoria);
+    let dia = 5; // cqk10: o dia da data da Copa Africana
+    let palavra = cqk10_data(this, dia, 9, -1, 5);
+    cqk10_fim(this, palavra, 0xffff)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqk10_copa_africana_regras(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1704);
+    cqk10_confere("cqk10_copa_africana_regras", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))
+}

@@ -9699,3 +9699,141 @@ pub(crate) unsafe fn papel_por_endereco(endereco: usize, j: usize) -> u8 {
     f(j)
 }
 
+/// the opponent the player man-marks, or 0. Needs mark 4 on the position's square; looks among the active opponents for
+/// the record designated for the position. With mark 0x10: if the opposing formation has a centre forward (bit
+/// 0x10000000 of +0x187b) or the other side's byte +0xaf is above 1, a player with 0x106 does not mark; and, if the
+/// marked player has tables A and B different (arrow to another square) and B without the attack mark 0x40, a player
+/// with 0x106 does not mark either
+/// Original: `designated_marked` (0x7160f0, match_pl.cpp, thiscall).
+///
+/// [pt] { 0x7160f0 } (match_pl.cpp): o adversario que o jogador marca individualmente, ou 0. Precisa
+/// da marca 4 na casa da posicao (0x5b57c0, formacao do lado em motor + 0x91e2); procura entre os
+/// adversarios ativos a ficha designada para a posicao (0x5b58e0). Com a marca 0x10 ainda: se a
+/// formacao adversaria tem o bit 0x10000000 em +0x187b ou o byte +0xaf do outro lado passa de 1, o
+/// jogador com 0x106 nao marca; e, se o marcado tem as tabelas A e B diferentes e sem a marca 0x40
+/// na B, o jogador com 0x106 tambem nao marca.
+pub(crate) unsafe extern "thiscall" fn marcado_designado(this: usize) -> usize {
+    let marca: unsafe extern "thiscall" fn(usize, i8) -> u8 = core::mem::transmute(FN_FORMATION_GET_MARKING_TYPE);
+    let designado: unsafe extern "thiscall" fn(usize, i8) -> usize = core::mem::transmute(FN_FORMATION_GET_MARKING_TARGET);
+    let motor = *((this + 0x19e) as *const usize);
+    let lado = byte(this, 0x27);
+    let formacao = (motor as isize + 0x91e2 + 0x18e3 * lado as isize) as usize;
+    if marca(formacao, byte(this, 0x19)) & 4 == 0 {
+        return 0;
+    }
+    let ficha = designado(formacao, byte(this, 0x19));
+    let outro = (lado == 0) as i8;
+    let alvo = match (0..20).map(|k| jogador_do_bloco(motor, outro, k)).find(|&q| byte(q, 0x19) >= 0 && *((q + 0x69) as *const usize) == ficha) {
+        Some(q) => q,
+        None => return 0,
+    };
+    if marca(formacao, byte(this, 0x19)) & 0x10 == 0 {
+        return alvo;
+    }
+    let o = outro as usize;
+    let fechada = *((motor + 0xaa5d + 0x18e3 * o) as *const u32) & 0x1000_0000 != 0 || byte(motor + o, 0xaf) > 1;
+    if fechada && byte(this, 0x106) != 0 {
+        return 0;
+    }
+    let m_alvo = *((alvo + 0x19e) as *const usize);
+    let b = if m_alvo != 0 { tabela_b(m_alvo, alvo) } else { 0 };
+    let a = if m_alvo != 0 { tabela_a(m_alvo, alvo) } else { 0 };
+    if b == a || b & 0x40 != 0 || byte(this, 0x106) == 0 {
+        alvo
+    } else {
+        0
+    }
+}
+
+/// the player's side (+0x27)
+/// Original: `player_side` (0x714d30, match_pl.cpp, thiscall).
+///
+/// [pt] { 0x714d30 } (thiscall, match_pl.cpp): o lado do jogador `j` (+0x27).
+pub(crate) unsafe extern "thiscall" fn lado_do_jogador(j: usize) -> u8 {
+    *((j + 0x27) as *const u8)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_lado_do_jogador(j: usize) -> u8 {
+    orig::<unsafe extern "thiscall" fn(usize) -> u8>(337)(j)
+}
+
+/// `p`'s shot (type, value, commentary, mode 1 match / 2 no challenger / 3 shoot-out / 4 set-piece kick / 5-6 repeat,
+/// the pressure teammates list). Challenger (0x6c87e0) with foul or dispossession; commentary; offside; interception
+/// (0x6cc540); the outcome class; goal (can be disallowed), save, post or wide, with the commentary. Compared through
+/// the tape, with comparison inside the unit
+/// Original: `shoot` (0x702050, match_pl.cpp (35 KB), thiscall, ret 0x18).
+///
+/// [pt] { 0x702050 } (ret 0x18, match_pl.cpp): ver `chutar_com`.
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn chutar(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
+    chutar_com(p, a1, a2, a3, a4, a5, a6 as usize, &mut |r, t, a| despachar_finalizacao(r, t, a))
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn comparar_chutar(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: u32) {
+    if gravando() {
+        // unidade da fita de fora (conducao, penaltis, o proprio chute de novo); por dentro, a propria comparacao
+        chamar_gravando(0x702050, p, [a1, a2, a3, a4, a6], || {
+            fita_do_chute(p, a1, a2, a3, a4, a5, a6);
+            0
+        });
+        return;
+    }
+    fita_do_chute(p, a1, a2, a3, a4, a5, a6)
+}
+
+/// the match player destructor (zeroes +0x19e)
+/// Original: `destroy_match_player` (0x6ebd60, match_pl.cpp, thiscall).
+///
+/// [pt] { 0x6ebd60 } (thiscall, match_pl.cpp): o destrutor do jogador da partida: zera o ponteiro do motor
+/// (+0x19e).
+pub(crate) unsafe extern "thiscall" fn destruir_jogador_da_partida(j: usize) {
+    core::ptr::write_unaligned((j + 0x19e) as *mut u32, 0);
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_destruir_jogador_da_partida(j: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(378);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(j + 0x19e, 4)], || o(j), || destruir_jogador_da_partida(j));
+    PLACAR.registrar(igual, || format!("destruir_jogador_da_partida({:#x}) {:x?} x {:x?}", j, mo, mr));
+}
+
+/// the match player constructor (clears the fields, with initial values for some)
+/// Original: `construct_match_player` (0x6eada0, match_pl.cpp, thiscall).
+///
+/// [pt] { 0x6eada0 } (thiscall, match_pl.cpp): o construtor do jogador da partida (0x1bc bytes): zera os
+/// campos, com −1 em +0, +0x28, +0x2b e +0x5d/+0x61/+0x65, 0xfb em +0x19, 6 em +0x1b e 0x17d4 em +0x35.
+/// Devolve `this`.
+pub(crate) unsafe extern "thiscall" fn construir_jogador_da_partida(j: usize) -> usize {
+    let b = |o: usize, v: u8| *((j + o) as *mut u8) = v;
+    let w = |o: usize, v: u16| core::ptr::write_unaligned((j + o) as *mut u16, v);
+    let d = |o: usize, v: u32| core::ptr::write_unaligned((j + o) as *mut u32, v);
+    for o in [0x19e, 0x69, 0x6d, 0x55, 0x1a6, 0x1a2, 0x1aa, 0x1ae, 0x1b2, 0x1b6, 0x4d, 0xf9] {
+        d(o, 0);
+    }
+    for o in [0x5d, 0x61, 0x65] {
+        d(o, u32::MAX);
+    }
+    for o in [0x37, 0x29, 0x19c, 0x1ba] {
+        w(o, 0);
+    }
+    for o in [0x27, 0x102, 0x103, 0x25, 0x26, 0x1c, 0xff, 0x1a, 0x101, 0xfe, 1, 0x24, 0x23, 0xfd] {
+        b(o, 0);
+    }
+    for o in 2..=0x16 {
+        b(o, 0);
+    }
+    b(0x19, 0xfb);
+    b(0, 0xff);
+    b(0x2b, 0xff);
+    b(0x28, 0xff);
+    b(0x1b, 6);
+    w(0x35, 0x17d4);
+    j
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_construir_jogador_da_partida(j: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(387);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(j, 0x1bc)], || o(j), || construir_jogador_da_partida(j));
+    PLACAR.registrar(igual && r == n, || format!("construir_jogador_da_partida({:#x}) {:x?} x {:x?}", j, mo, mr));
+    r
+}

@@ -835,62 +835,7 @@ pub(crate) unsafe extern "C" fn comparar_campeoes_ordem_da_segunda_fase(a: usize
     r
 }
 
-/// the group (the containing stage) of a stage or round by id, by the fixed ranges; −1 without a group
-/// Original: `comp_util_get_parent_stage_id` (0x4b01d0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4b01d0 } (cdecl, comp_util.cpp): `comp_util_get_parent_stage_id(id)`, o grupo de uma fase pelo id: 0x3e8..0x3fb,
-/// 0x41f..0x42e, 0x413, 0x414, 0x47b e 0x3fc -> 0x41c; 0x473..0x474 -> 0x410; 0x475..0x479 -> 0x47a; 0x3fd..0x406 ->
-/// 0xa; 0x407..0x40b e 0x472 -> 0x14; 0x47e..0x47f -> 0x1e; 0x40c..0x40e -> 0x82; 0x43d..0x444 -> 0x449; 0x445..0x448
-/// -> 0x44a; 0x44d..0x450 -> 0x451; o resto −1 (na ordem dos testes da original).
-pub(crate) unsafe extern "C" fn grupo_da_fase(id: i32) -> i32 {
-    let em = |a: i32, b: i32| id >= a && id <= b;
-    if em(0x3e8, 0x3fb) {
-        return 0x41c;
-    }
-    if em(0x473, 0x474) {
-        return 0x410;
-    }
-    if em(0x475, 0x479) {
-        return 0x47a;
-    }
-    if em(0x3fd, 0x406) {
-        crate::comparacao::ramo("cqg_6 grupo 0xa");
-        return 0xa; // cqg6: o grupo das fases 0x3fd..0x406
-    }
-    if em(0x407, 0x40b) || id == 0x472 {
-        return 0x14;
-    }
-    if em(0x47e, 0x47f) {
-        return 0x1e;
-    }
-    if em(0x41f, 0x42e) {
-        return 0x41c;
-    }
-    if em(0x40c, 0x40e) {
-        return 0x82;
-    }
-    if id == 0x413 || id == 0x414 || id == 0x47b || id == 0x3fc {
-        return 0x41c;
-    }
-    if em(0x43d, 0x444) {
-        return 0x449;
-    }
-    if em(0x445, 0x448) {
-        return 0x44a;
-    }
-    if em(0x44d, 0x450) {
-        return 0x451;
-    }
-    -1
-}
 
-/// Pura: a devolução.
-pub(crate) unsafe extern "C" fn comparar_grupo_da_fase(id: i32) -> i32 {
-    let r = orig::<unsafe extern "C" fn(i32) -> i32>(1651)(id);
-    let n = grupo_da_fase(id);
-    PLACAR.registrar(r == n, || format!("grupo_da_fase({:#x}): original={:#x} rust={:#x}", id, r, n));
-    r
-}
 
 // ---------- 262a leva: a Liga dos Campeões: os registros pela fase alcançada, o sorteio das quartas e a lista dos clubes inscritos (european_cup.cpp) ----------
 
@@ -1678,21 +1623,83 @@ pub(crate) unsafe extern "thiscall" fn comparar_progresso_do_clube_na_liga_dos_c
     PLACAR.registrar(igual, || format!("progresso_do_clube_na_liga_dos_campeoes(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
 }
 
-/// 1 when the match round (+0x30) ends in 0 or is above 999, else 0
-/// Original: `Comp::counts_for_fixture_clash` (0x48e360, comp.cpp, thiscall, ret 8).
+/// in the group stages, the 6-round schedule (phase 1 dates in September and October and phase 2 from November to
+/// March, by half) with fixture 0 of each round empty; the qualifying rounds and the knockout stay with the original
+/// Original: `EuropeanCup::create_round_table` (0x583c50, european_cup.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
-/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
-/// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
-pub(crate) unsafe extern "thiscall" fn conta_para_conflito_de_datas(_this: usize, jogo: usize, _outro: usize) -> u32 {
-    let unidades: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
-    (unidades(read_i16(jogo + 0x30) as i32) == 0) as u32
+/// [pt] { 0x583c50 } (thiscall, ret 0x10, european_cup.cpp, método +0x3c da Liga dos Campeões, quadro SEH pelas datas locais
+/// sem destrutor no caminho normal): `EuropeanCup::create_round_table(fase, &rodadas, &id, &é_liga)`, dos sorteios dos
+/// grupos (0x585290, 0x585ab0) e das posições previstas (0x586900). Nas fases de grupos (char 0..11, e as negativas
+/// abaixo de −1, que caem no mesmo ramo): é_liga (se pedido) = 1, rodadas = 6, id = 0x43d + fase; a tabela de 6 rodadas
+/// de 0x41 bytes (0x944e46(0x186); sem memória, a caixa da linha 0x17a ou 0x1aa e devolve 0); na segunda fase, antes, a
+/// data de 1º de março do ano seguinte levada à terça (0x549f70), um dia antes (0x54c8e0, que grava a data estática dela)
+/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `CQH4_DATAS` (0x68a160 com o ano
+/// +0x40 da copa) e o jogo 0 de cada rodada vazio (0x68a1c0 com −1). As preliminares (−1) e o mata-mata (12 em diante):
+/// a original pelo trampolim. Devolve a tabela.
+pub(crate) unsafe extern "thiscall" fn campeoes_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+    let f = fase as u8 as i8;
+    if f == -1 || f >= 0xc {
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1652)(this, fase, rodadas, id, liga);
+    }
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
+    let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
+    if !liga.is_null() {
+        *liga = 1;
+    }
+    *rodadas = 6;
+    *id = (f as i16).wrapping_add(0x43d);
+    let t = alocar(0x186);
+    if t == 0 {
+        aviso_em(0x9c4900, if f < 8 { 0x17a } else { 0x1aa });
+        return 0;
+    }
+    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as u16 as u32;
+    let metade = if f < 8 {
+        if f < 4 { 0 } else { 1 }
+    } else {
+        let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
+        let menos: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
+        let copia: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+        let (mut d, mut t1, mut t2) = ([0u16; 4], [0u16; 4], [0u16; 4]);
+        // ponytail: o ano + 1 vai no ax com o resto do eax nos bytes altos; a 0x549f70 lê o ano como word
+        construir(&mut d, 1, 2, (ano as u16).wrapping_add(1) as u32, 2);
+        let r = menos(&mut d, &mut t1, 1);
+        copia(&mut d, &mut t2, r);
+        if f < 10 { 2 } else { 3 }
+    };
+    crate::comparacao::ramo("cqh_4 tabela das rodadas");
+    for &(i, dia, mes, anos, semana) in CQH4_DATAS[metade].iter() {
+        data(t, i, dia, mes, anos, semana, 2, ano, 0);
+    }
+    for r in 0..6 {
+        jogo(t, r, 0, -1, -1, -1, 0);
+    }
+    t
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_conta_para_conflito_de_datas(this: usize, jogo: usize, outro: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(1361)(this, jogo, outro);
-    let n = conta_para_conflito_de_datas(this, jogo, outro);
-    PLACAR.registrar(r == n, || format!("conta_para_conflito_de_datas(rodada {}) original={} rust={}", read_i16(jogo + 0x30), r, n));
-    r
+/// Lado a lado nas fases de grupos: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
+/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As
+/// preliminares e o mata-mata: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_campeoes_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1652);
+    let f = fase as u8 as i8;
+    if f == -1 || f >= 0xc {
+        return o(this, fase, rodadas, id, liga);
+    }
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
+    let reg = [(0xb67a34usize, 4usize)];
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
+        &reg,
+        || o(this, fase, rodadas, id, liga),
+        || campeoes_rodadas_da_fase(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
+    );
+    let saidas = *rodadas == r2 && *id == i2 && (liga.is_null() || *liga == l2);
+    let tabela = if a != 0 && b != 0 { cqh4_gravados(a) == cqh4_gravados(b) } else { a == 0 && b == 0 };
+    if b != 0 {
+        soltar(b);
+    }
+    PLACAR.registrar(igual && saidas && tabela, || format!("campeoes_rodadas_da_fase({}): saídas {} tabela {}", f, saidas, tabela));
+    a
 }
-

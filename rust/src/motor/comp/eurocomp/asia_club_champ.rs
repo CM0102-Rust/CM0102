@@ -518,23 +518,7 @@ pub(crate) fn cqp11_asia_recopa_fase(fase: u32) -> Option<Cqp11Fase> {
     }
 }
 
-/// rule: the Asian Cup Winners' Cup has, in each zone (stages −1 and 0, ids 0x480 and 0x481), three two-legged
-/// qualifying rounds: 1st on 23/8, 2nd on 20/9, quarter-finals on 24 March of the following year (21 days between legs
-/// in the 1st, 7 after); the final stage (stage 1) in May: semi-final on 24/5, third place and final on 26/5, single
-/// matches; category 4 in the qualifiers and 6 after
-/// Original: `AsiaCupWinner::create_round_table` (0x40cf90, asia_cup_winner.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x40cf90 } (thiscall, ret 0x10, asia_cup_winner.cpp; a virtual +0x3c): `AsiaCupWinner::create_round_table(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `cqp11_asia_recopa_fase`.
-pub(crate) unsafe extern "thiscall" fn cqp11_asia_recopa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqp11_asia_recopa_fase(fase), rodadas, extra, liga, 0x987b60)
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp11_asia_recopa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1968);
-    cqp11_comparar("cqp11_asia_recopa_tabela", fase, cqp11_asia_recopa_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqp11_asia_recopa_tabela(this, fase, r, e, l))
-}
 
 /// O LDV Vans Trophy (o troféu da liga inglesa de baixo), as fases: −1 e 0 as chaves do Norte e do Sul (5 rodadas em
 /// jogo único de dezembro a fevereiro e a final da chave em ida e volta em março), 1 a final (abril, mando 4).
@@ -549,22 +533,17 @@ pub(crate) fn cqp11_trofeu_fase(fase: u32) -> Option<Cqp11Fase> {
     }
 }
 
-/// rule: the LDV Vans Trophy has two sections (stages −1 and 0, North and South [inference], ids 0x41d and 0x41e) of
-/// five single-match rounds: 1st on 10/12 (24 teams), 2nd on 14/1 (16 teams, 4 new), quarter-finals on 4/2, semi-final
-/// on 18/2 and the section final over two legs from 4/3 (7 days); the final (stage 1) drawn on 12/3 and played on 20/4
-/// of the following year with venue 4 (neutral ground [inference]); category 4 in the sections and 6 in the finals; no
-/// per-round prizes
-/// Original: `EngAutoCup::create_round_table` (0x56ade0, eng_auto_cup.cpp, thiscall, ret 0x10).
+/// rule: the Asian Club Championship has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
+/// class and status 0
+/// Original: `AsiaClubChamp::build_team_table` (0x40b620, asia_club_champ.cpp, thiscall, ret 0).
 ///
-/// [pt] { 0x56ade0 } (thiscall, ret 0x10, eng_auto_cup.cpp; a virtual +0x3c do LDV Vans Trophy): `EngAutoCup::
-/// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp11_trofeu_fase`.
-pub(crate) unsafe extern "thiscall" fn cqp11_trofeu_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    cqp11_tabela(this, cqp11_trofeu_fase(fase), rodadas, extra, liga, 0x9c4180)
+/// [pt] { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
+/// linha 0x1cd sem memória).
+pub(crate) unsafe extern "thiscall" fn cqq12_asia_clubes_times(this: usize) -> i32 {
+    cqq12_times(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: os times da Liga dos Campeões asiática
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp11_trofeu_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1969);
-    cqp11_comparar("cqp11_trofeu_tabela", fase, cqp11_trofeu_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqp11_trofeu_tabela(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_cqq12_asia_clubes_times(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1984);
+    cqq12_comparar_times("cqq12_asia_clubes_times", this, || o(this), || cqq12_asia_clubes_times(this))
 }
-

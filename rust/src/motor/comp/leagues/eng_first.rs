@@ -382,39 +382,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_primeira_inglesa(t
     cqp5_comparar("calendario_da_primeira_inglesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_primeira_inglesa(this, fase, r, e, l))
 }
 
-/// the Premiership schedule: 38 rounds (20 clubs), from 19 August to 20 May; Christmas (four fixed-date rounds) by the
-/// day the 16 December round falls on; no play-offs (main stage only)
-/// Original: `EngPrm::create_schedule` (0x573660, eng_prm.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
-/// &extra, &é_liga)`: só a fase −1, 38 rodadas (`CQP5_PREMIERSHIP_NATAL`); as outras devolvem 0. Fonte 0x9c43b0.
-pub(crate) unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    match fase as u8 {
-        0xff => {
-            if !liga.is_null() {
-                *liga = 1;
-            }
-            *rodadas = 38;
-            *extra = 0;
-            let t = alocar(0x9a6);
-            if t == 0 {
-                aviso_em(0x9c43b0, 0xa7);
-                return 0;
-            }
-            crate::comparacao::ramo("cqp_5 calendario da premiership");
-            let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-            cqp5_natal(t, ano, &CQP5_PREMIERSHIP_NATAL, 0x9c43b0);
-            t
-        }
-        _ => 0,
-    }
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1924);
-    cqp5_comparar("calendario_da_premiership", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_premiership(this, fase, r, e, l))
-}
 
 // ---------- 262a leva: os play-offs das divisões inglesas: o mata-mata da First, da Second e da Third (eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
 
@@ -485,14 +453,6 @@ pub(crate) unsafe extern "thiscall" fn mata_mata_da_first(this: usize) {
     cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
 }
 
-/// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual +0x3c (lines 0x2b6 and 0x2cc)
-/// Original: `EngSecond::create_play_off_stage` (0x576a70, eng_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
-/// First (linhas 5, 2, 4 e 3); +0x3a da fase = o extra da virtual +0x3c. Fonte 0x9c43e8, linhas 0x2b6 e 0x2cc.
-pub(crate) unsafe extern "thiscall" fn mata_mata_da_second(this: usize) {
-    cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
-}
 
 /// like the Second one, with the 7th, 4th, 6th and 5th (ties 7th v 4th and 6th v 5th; lines 0x2be and 0x2d5)
 /// Original: `EngThird::create_play_off_stage` (0x5783c0, eng_third.cpp, thiscall, ret 0).
@@ -537,13 +497,96 @@ pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_first(this: usize) 
     cpz1_comparar("mata_mata_da_first", this, [5, 2, 4, 3], || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_second(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1381);
-    cpz1_comparar("mata_mata_da_second", this, [5, 2, 4, 3], || o(this))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_third(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1382);
     cpz1_comparar("mata_mata_da_third", this, [6, 3, 5, 4], || o(this))
 }
 
+/// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
+/// play-offs (0x573080)
+/// Original: `EngFirst::advance_stage` (0x572ff0, eng_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x572ff0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::advance_stage()` (a virtual +0x28): fonte 0x9c4374,
+/// linha 0x2ce; o mata-mata 0x573080.
+pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_first(this: usize) {
+    cpz3_fase_seguinte(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_first(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1387);
+    cpz3_comparar_fase("fase_seguinte_da_first", this, || o(this), || fase_seguinte_da_first(this))
+}
+
+/// the First Division: discipline 9, no minimum ground, the league and 1 stage (the promotion play-off)
+/// Original: `EngFirst::EngFirst` (0x571680, eng_first.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
+/// liga (o play-off de acesso), sem estádio mínimo.
+pub(crate) unsafe extern "thiscall" fn construir_first(this: usize, ano: u32, registro: usize) -> usize {
+    cql6_construir(this, ano, registro, &CQL6_FIRST)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_construir_first(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1862);
+    cql6_comparar("construir_first", this, ano, registro, &CQL6_FIRST, || o(this, ano, registro))
+}
+
+/// the First (24): the top 2 go up directly, 3rd to 6th go to the promotion play-offs, the bottom 3 go down to the
+/// Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points
+/// Original: `EngFirst::set_up_rules` (0x572d90, eng_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x572d90 } (thiscall, ret 0, eng_first.cpp): `EngFirst::set_up_rules()`. A First: as comuns, 2 sobem direto
+/// (+0xbe), 4 vão ao mata-mata de acesso (+0xbf, do 3º ao 6º), nenhum play-off de permanência (+0xc0), 3 caem
+/// (+0xc1), a Premier acima (+0x1c = [0x9cf5bc]) e a Second abaixo (+0x20 = [0x9cf5c4]), 5 reservas no banco
+/// (+0x49) e 3 substituições (+0x4a).
+pub(crate) unsafe extern "thiscall" fn regras_da_first(this: usize) -> u32 {
+    crate::comparacao::ramo("cqi_4 regras da first");
+    cqi4_regras(this, &cqi4_first())
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_regras_da_first(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1741);
+    cqi4_comparar("regras_da_first", this, cqi4_first(), || o(this), || regras_da_first(this))
+}
+
+/// the First has 24 clubs; prize fund of 70,000 per place; TV pays by the division the club came from: 5,877,777 to
+/// those relegated from the Premier and 4,099,999 to those already in the First and those promoted from the Second
+/// (1,000,000 to all up to 1999)
+/// Original: `EngFirst::create_table` (0x572bf0, eng_first.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x572bf0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_table()`: 24 clubes ([0x9cf5c0]), cota 70.000
+/// e a TV pela divisão de onde o clube veio (+0x5b): depois de 1999, 5.877.777 aos que caíram da Premier (o registro
+/// de [0x9cf5bc]), 4.099.999 aos que já estavam na First (o próprio registro, +4) e 4.099.999 aos que subiram da
+/// Second ([0x9cf5c4]); antes, 1.000.000 a todos. Fonte 0x9c4374, linha 0x22d.
+pub(crate) unsafe extern "thiscall" fn tabela_da_first(this: usize) -> u32 {
+    cqi5_tabela(this, 0x18, 0x9c4374, 0x22d, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || {
+        if cqi5_depois_de_1999() {
+            cqi5_pagar(this, 0x59b011, cqi5_registro(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION)); // cqi5: a TV de quem caiu da Premier
+            cqi5_pagar(this, 0x3e8fa0, read_usize(this + 4));
+            cqi5_pagar(this, 0x3e8fa0, cqi5_registro(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION));
+        } else {
+            cqi5_pagar(this, 0xf4240, 0);
+        }
+    })
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_first(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1747);
+    cqi5_comparar("tabela_da_first", this, 0x18, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || o(this))
+}
+
+/// writes stage, best and worst in the club stats entry (+0x73..+0x75): in the league, best 3 to 6 becomes 3 and worst
+/// 3 to 6 becomes 6; in the play-offs (stage 0), 1, 2 and 3 become 3, 4 and 5
+/// Original: `EngFirst::set_club_progress` (0x573260, eng_first.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
+/// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
+pub(crate) unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+    cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1384);
+    cpz2_comparar("situacao_na_first", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_first(this, clube, fase, atual, melhor, pior))
+}

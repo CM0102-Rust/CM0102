@@ -866,3 +866,63 @@ pub(crate) unsafe extern "C" fn comparar_cqk9_conferencia_das_estrelas(clube: us
     r
 }
 
+/// MLS: 32 games per team (+0xa7; four round robins in +0x3c); win 3, draw 1; tie-break by goal difference, goals
+/// scored and head-to-head; 1 top place in the overall table (rule word 0x48: 0x8 next stage, the play-offs; 0x40 fixed
+/// round order); nobody goes up or down; the word +0xab = 0xc2 copied to each match. No schedule here: the games are
+/// built by hand (0x9086e0)
+/// Original: `UsaMls::set_up_rules` (0x908660, usa_mls.cpp, thiscall).
+///
+/// [pt] { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como
+/// valor).
+pub(crate) unsafe extern "thiscall" fn cqj8_regras_da_mls(this: usize) -> u32 {
+    cqj8_regras_mls(this);
+    crate::comparacao::ramo("cqj_8 regras da mls");
+    1
+}
+
+/// Comparador: lado a lado sobre o objeto da liga (0xee; só grava nele); a devolução.
+pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_mls(this: usize) -> u32 {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1725)(this), || cqj8_regras_da_mls(this));
+    PLACAR.registrar(igual && r == n, || format!("cqj8_regras_da_mls({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    r
+}
+
+/// MLS: in the regular season and play-off stages 0 and 1, the current position 1, 2, 3, 4 becomes 1, 3, 7, 10, the
+/// lowest 1 to 3 becomes 1 and 4 becomes 10, the highest 1 to 3 becomes 7 and 4 becomes 10 (positions on the
+/// whole-league scale [inference]); in stage 2, each code becomes 2 × code − 1; after that, as they come
+/// Original: `UsaMls::set_club_progress` (0x909dd0, usa_mls.cpp, thiscall).
+///
+/// [pt] { 0x909dd0 } (thiscall, ret 0x14, usa_mls.cpp): `UsaMls::set_club_progress(clube, fase, a, b, c)`: nas fases 0 e 1
+/// e na temporada (-1), a: 1 → 1, 2 → 3, 3 → 7, 4 → 10; b: 1..3 → 1, 4 → 10; c: 1..3 → 7, 4 → 10; na fase 2, cada
+/// código vira 2 × código − 1; depois, os códigos como vêm. Devolve a entrada.
+pub(crate) unsafe extern "thiscall" fn cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = cqk8_entrada(this, clube);
+    let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
+    if fa < 2 {
+        let (b, c) = (cqk8_mls(b, 1), cqk8_mls(c, 7));
+        let a = match a {
+            1 => 1,
+            2 => {
+                crate::comparacao::ramo("cqk_8 mls segundo");
+                3 // cqk8: o código 2 da MLS
+            }
+            3 => 7,
+            4 => 10,
+            _ => a,
+        };
+        cqk8_gravar(e, a, b, c);
+    } else if fa == 2 {
+        cqk8_gravar(e, a.wrapping_mul(2).wrapping_sub(1), b.wrapping_mul(2).wrapping_sub(1), c.wrapping_mul(2).wrapping_sub(1));
+    } else {
+        cqk8_gravar(e, a, b, c);
+    }
+    e
+}
+
+/// Comparador: como o do Mineiro.
+pub(crate) unsafe extern "thiscall" fn comparar_cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+    let e = cqk8_entrada(this, clube);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(1735)(this, clube, fase, a, b, c), || cqk8_progresso_na_mls(this, clube, fase, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_mls({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    r
+}

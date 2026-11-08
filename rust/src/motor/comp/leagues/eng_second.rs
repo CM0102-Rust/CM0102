@@ -550,15 +550,6 @@ pub(crate) unsafe fn cpz2_situacao(this: usize, clube: usize, fase: u8, atual: u
     *((e + 0x75) as *mut u8) = p;
 }
 
-/// writes stage, best and worst in the club stats entry (+0x73..+0x75): in the league, best 3 to 6 becomes 3 and worst
-/// 3 to 6 becomes 6; in the play-offs (stage 0), 1, 2 and 3 become 3, 4 and 5
-/// Original: `EngFirst::set_club_progress` (0x573260, eng_first.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x573260 } (thiscall, ret 0x14, eng_first.cpp): `EngFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
-/// a virtual +0x68 da First e da Second (da 0x684cd0 a cada linha da tabela): as vagas do mata-mata são 3 a 6.
-pub(crate) unsafe extern "thiscall" fn situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    cpz2_situacao(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
-}
 
 /// like the First one, with places 4 to 7 (4 and 7; in the play-offs, 4, 5 and 6)
 /// Original: `EngThird::set_club_progress` (0x578660, eng_third.cpp, thiscall, ret 0x14).
@@ -580,13 +571,79 @@ pub(crate) unsafe fn cpz2_comparar(nome: &str, this: usize, clube: usize, origin
     PLACAR.registrar(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", nome, this, clube, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_first(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1384);
-    cpz2_comparar("situacao_na_first", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_first(this, clube, fase, atual, melhor, pior))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_third(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(1385);
     cpz2_comparar("situacao_na_third", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_third(this, clube, fase, atual, melhor, pior))
 }
 
+/// like the First one (line 0x294; the play-offs 0x576a70)
+/// Original: `EngSecond::advance_stage` (0x5769e0, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5769e0 } (thiscall, ret 0, eng_second.cpp): `EngSecond::advance_stage()` (a virtual +0x28): fonte 0x9c43e8,
+/// linha 0x294; o mata-mata 0x576a70.
+pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_second(this: usize) {
+    cpz3_fase_seguinte(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_second(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1388);
+    cpz3_comparar_fase("fase_seguinte_da_second", this, || o(this), || fase_seguinte_da_second(this))
+}
+
+/// like the First one (6th, 3rd, 5th and 4th), with +0x3a = the extra from virtual +0x3c (lines 0x2b6 and 0x2cc)
+/// Original: `EngSecond::create_play_off_stage` (0x576a70, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
+/// First (linhas 5, 2, 4 e 3); +0x3a da fase = o extra da virtual +0x3c. Fonte 0x9c43e8, linhas 0x2b6 e 0x2cc.
+pub(crate) unsafe extern "thiscall" fn mata_mata_da_second(this: usize) {
+    cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_mata_mata_da_second(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1381);
+    cpz1_comparar("mata_mata_da_second", this, [5, 2, 4, 3], || o(this))
+}
+
+/// the Second Division: discipline 9, no minimum ground, the league and the play-off
+/// Original: `EngSecond::EngSecond` (0x5754a0, eng_second.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x5754a0 } (thiscall, ret 8, eng_second.cpp): `EngSecond::EngSecond(ano, registro)`. A Second Division: 1 fase além
+/// da liga (o play-off), sem estádio mínimo.
+pub(crate) unsafe extern "thiscall" fn construir_second(this: usize, ano: u32, registro: usize) -> usize {
+    cql6_construir(this, ano, registro, &CQL6_SECOND)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_construir_second(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1863);
+    cql6_comparar("construir_second", this, ano, registro, &CQL6_SECOND, || o(this, ano, registro))
+}
+
+/// the Second (24): 2 go up directly, 3rd to 6th to the play-offs, the bottom 4 go down to the Third
+/// Original: `EngSecond::set_up_rules` (0x576780, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x576780 } (thiscall, ret 0, eng_second.cpp): `EngSecond::set_up_rules()`. A Second: como a First, mas 4
+/// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
+pub(crate) unsafe extern "thiscall" fn regras_da_second(this: usize) -> u32 {
+    crate::comparacao::ramo("cqi_4 regras da second");
+    cqi4_regras(this, &cqi4_second())
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_regras_da_second(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1742);
+    cqi4_comparar("regras_da_second", this, cqi4_second(), || o(this), || regras_da_second(this))
+}
+
+/// the Second has 24 clubs; prize fund of 20,000 per place; TV pays 2,500,000 to each club (300,000 up to 1999)
+/// Original: `EngSecond::create_table` (0x576630, eng_second.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x576630 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_table()`: 24 clubes ([0x9cf5c4]), cota 20.000
+/// e a TV: 2.500.000 depois de 1999 (300.000 antes). Fonte 0x9c43e8, linha 0x1f5.
+pub(crate) unsafe extern "thiscall" fn tabela_da_second(this: usize) -> u32 {
+    cqi5_tabela(this, 0x18, 0x9c43e8, 0x1f5, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0x2625a0 } else { 0x493e0 }, 0))
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_second(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1745);
+    cqi5_comparar("tabela_da_second", this, 0x18, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, 0x4e20, || o(this))
+}

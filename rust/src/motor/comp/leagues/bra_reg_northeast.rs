@@ -135,40 +135,14 @@ pub(crate) unsafe extern "thiscall" fn cqt3_construir_nordeste(this: usize, ano:
     cqt3_construir(this, ano, registro, &CQT3_NORDESTE, 7, true, "cqt_3 nordeste novo") // cqt3: a disciplina e as posições previstas do Nordeste
 }
 
-/// The Parana state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
-/// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
-/// the state clubs, the fixtures, the order, the statistics and the predicted positions
-/// Original: `BraRegParana::BraRegParana` (0x437400, bra_reg_parana.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
-    cqt3_construir(this, ano, registro, &CQT3_PARANAENSE, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
-}
 
-/// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with
-/// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
-/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
-/// Original: `BraRegPern::BraRegPern` (0x4388f0, bra_reg_pern.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
-    cqt3_construir(this, ano, registro, &CQT3_PERNAMBUCANO, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2052);
     cqt3_comparar("cqt3_construir_nordeste", this, ano, registro, &CQT3_NORDESTE, || o(this, ano, registro))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2053);
-    cqt3_comparar("cqt3_construir_paranaense", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2054);
-    cqt3_comparar("cqt3_construir_pernambucano", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
-}
 
 // ---------- 277a leva: a tabela dos estaduais: Nordeste, Paranaense e Pernambucano (bra_reg_northeast.cpp, bra_reg_parana.cpp, bra_reg_pern.cpp) ----------
 
@@ -230,25 +204,7 @@ pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_nordeste(this: usize) -> u
     cqm7_tabela(this, 0x10, 0x98af54, 0x159, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, 0, "cqm_7 nordeste cheio")
 }
 
-/// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
-/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
-/// Original: `BraRegParana::create_table` (0x437ec0, bra_reg_parana.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
-/// Fonte 0x98af98, linha 0x169.
-pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_paranaense(this: usize) -> u32 {
-    cqm7_tabela(this, 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
-}
 
-/// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds
-/// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
-/// Original: `BraRegPern::create_table` (0x439330, bra_reg_pern.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
-/// Fonte 0x98afd8, linha 0x167.
-pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) -> u32 {
-    cqm7_tabela(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
-}
 
 /// O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
 /// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
@@ -281,13 +237,48 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_nordeste(this: us
     cqm7_comparar("cqm7_tabela_do_nordeste", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_paranaense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1835);
-    cqm7_comparar("cqm7_tabela_do_paranaense", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
+/// Northeast: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
+/// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
+/// Original: `BraRegNortheast::create_semi_final_stage` (0x4370d0, bra_reg_northeast.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4370d0 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
+/// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af54, linhas 0x20d (sem lista) e 0x221 (sem fase).
+pub(crate) unsafe extern "thiscall" fn cqn7_mata_mata_do_nordeste(this: usize) {
+    cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_pernambucano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1836);
-    cqm7_comparar("cqm7_tabela_do_pernambucano", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_nordeste(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1845);
+    cqn7_comparar("cqn7_mata_mata_do_nordeste", this, &[0, 3, 1, 2], || o(this))
 }
 
+/// The Northeast turnover: archives the season in the statistics, clears the previous table and stages, moves to the
+/// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
+/// then the predicted positions and the renewal of the state referees
+/// Original: `BraRegNortheast::start_new_season` (0x436e90, bra_reg_northeast.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
+/// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
+pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
+    cqp8_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1936);
+    cqp8_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
+}
+
+/// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
+/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
+/// Original: `BraRegNortheast::advance_stage` (0x437040, bra_reg_northeast.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
+/// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
+pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
+    cqp8_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1937);
+    cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
+}

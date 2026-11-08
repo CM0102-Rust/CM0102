@@ -4325,3 +4325,203 @@ pub(crate) unsafe extern "C" fn comparar_nota_para_a_vaga(
     r
 }
 
+/// sets up one side's tactics (manager, players, club, opponent, match, home side) and selects: at the human's club the
+/// stored lines (0x5fbe20/0x5fbd00) and the automatic 0x6dbc50 mode 1 or the regulars (0x6dbb80); otherwise the
+/// automatic mode 2 and the count of the home players; the substitutes by the bench and the club's tactical line.
+/// Returns how many it selected
+/// Original: `select_side` (0x6db500, match_man.cpp, thiscall, ret 0x24).
+///
+/// [pt] { 0x6db500 } (ret 0x24, match_man.cpp): monta a tatica `t` de um lado (+0x9032 ou +0x9102 do
+/// motor) e escala o time: o tecnico e a ficha dele, os jogadores do bloco, o lado, o clube, o
+/// adversario e a partida; o modo (+0x19 humano/+0x1a 3) pelo mando. No clube do humano, as linhas
+/// taticas guardadas (0x5fbe20/0x5fbd00) e, sem o tecnico humano, a escalacao automatica no modo 1
+/// (0x6dbc50, com o tecnico do clube 0x600e90) ou os titulares (0x6dbb80); fora isso, a automatica no
+/// modo 2 e a conta dos da casa. Os reservas (+0x17) pelo banco da partida; le a linha tatica do
+/// clube. Devolve quantos foram escalados; em `*vagas`, o tamanho do time.
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
+    let b = |o: usize| (t + o) as *mut u8;
+    let d = |o: usize| (t + o) as *mut usize;
+    let u = |q: usize, o: usize| *((q + o) as *const usize);
+    if m == 0 {
+        erro_de_match_man(0x69);
+    }
+    if linhas == 0 {
+        erro_de_match_man(0x6b);
+    }
+    if jogadores == 0 {
+        erro_de_match_man(0x6d);
+    }
+    if clube == 0 {
+        erro_de_match_man(0x6f);
+    }
+    if outro == 0 {
+        erro_de_match_man(0x71);
+    }
+    if tecnico != 0 {
+        *d(0x1b) = tecnico;
+        *d(0x1f) = u(tecnico, 0x69);
+    } else {
+        *d(0x1b) = 0;
+        *d(0x1f) = 0;
+    }
+    *d(0x23) = jogadores;
+    *b(0x18) = lado as u8;
+    *d(0x27) = linhas;
+    *d(0x2f) = clube;
+    *d(0x12) = m;
+    *d(0x37) = jogo;
+    *d(0x3b) = 0;
+    *d(0xe) = 0;
+    *d(0xa) = 0;
+    *d(6) = 0;
+    *d(0x2b) = m + 0x91e2 + (lado as u8 as i8 as isize * 0x18e3) as usize;
+    *d(0x33) = outro;
+    let mandante = (clube == u(jogo, 0x1c) && byte(jogo, 0x40) == 0) || (clube == u(jogo, 0x20) && byte(jogo, 0x41) == 0);
+    if mandante {
+        *b(0x19) = 1;
+        *b(0x1a) = 0;
+    } else {
+        *b(0x19) = 0;
+        *b(0x1a) = 3;
+    }
+    let ficha = *d(0x1f);
+    if ficha != 0 {
+        *((t) as *mut u16) = *((ficha + 0xa) as *const u16);
+        *((t + 2) as *mut u16) = *((ficha + 8) as *const u16);
+        *((t + 4) as *mut u16) = *((ficha + 0xc) as *const u16);
+    }
+    let humano_usa: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
+    let tecnico_do_clube: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_STAND_IN_MANAGER);
+    let automatica: unsafe extern "thiscall" fn(usize, usize, u32) -> i8 = core::mem::transmute(FN_MATCH_MAN_PICK_TEAM);
+    let gerente = *(0xb63c98 as *const usize);
+    let n: i8;
+    if *(m as *const u8) == 0 && humano_usa(clube) != 0 && clube_humano(clube, 0, 1, 0, 0) != 0 {
+        if e_segunda_selecao(clube) != 0 {
+            *d(0x1b) = u(selecao_principal(u(clube, 0x53)), 0xcf);
+        }
+        let preparar: unsafe extern "thiscall" fn(usize, i32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
+        let guardadas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
+        preparar(gerente, byte(t, 0x19) as i32, clube, u(clube, 0xcf));
+        let r = guardadas(gerente, u(clube, 0xcf));
+        if r == 0 || *d(0x2b) == 0 {
+            erro_de_match_man(0xbc);
+        }
+        core::ptr::copy_nonoverlapping(r as *const u8, *d(0x2b) as *mut u8, 0x18e3);
+        let sem_tecnico = |t: usize| {
+            let x = tecnico_do_clube(*((t + 0x2f) as *const usize));
+            *((t + 0x1b) as *mut usize) = x;
+            *((t + 0x1f) as *mut usize) = if x != 0 { *((x + 0x69) as *const usize) } else { 0 };
+            automatica(t, outro, 1)
+        };
+        n = if *b(0x19) == 0 {
+            titulares(t) as i8
+        } else if e_selecao(clube) == 0 {
+            if tecnico_9a05(gerente, u(clube, 0xcf)) == 0 { sem_tecnico(t) } else { titulares(t) as i8 }
+        } else if tecnico_9a06(gerente, u(clube, 0xcf), core::ptr::null_mut()) == 0 {
+            sem_tecnico(t)
+        } else {
+            titulares(t) as i8
+        };
+        *vagas = ((*((jogo + 0x4d) as *const u8) & 0xf) + 0xb) as i8;
+    } else {
+        let x = *d(0x1b);
+        if x != 0 {
+            let base = *(0xae2364 as *const i32);
+            let id = *(x as *const i32);
+            if id >= base - 0x10 && id < base && byte(x, 0x5f) != 0 {
+                let y = tecnico_do_clube(*d(0x2f));
+                *d(0x1b) = y;
+                *d(0x1f) = if y != 0 { u(y, 0x69) } else { 0 };
+            }
+        }
+        n = automatica(t, outro, 2);
+        *vagas = 0;
+        let total = (*((jogo + 0x4d) as *const u8) & 0xf) + 0xb;
+        let mut k = 0u8;
+        while (k as i8) < total as i8 {
+            let p = u(jogadores + k as usize * 0x1be, 0x69);
+            if p != 0 && *(p as *const i32) < *(0xae2364 as *const i32) {
+                *vagas = (*vagas).wrapping_add(1);
+            }
+            k += 1;
+        }
+    }
+    let banco = (*((jogo + 0x4d) as *const u8) >> 4) & 0xf;
+    let sobra = (n as u8).wrapping_sub(0xb) as i8;
+    let r = if banco as i8 >= sobra { sobra } else { banco as i8 };
+    *b(0x17) = if r <= 0 { 0 } else if (banco as i8) < sobra { banco } else { sobra as u8 };
+    ler_linha_tatica(*(0xde1d08 as *const usize), *d(0x2f), (t + 0x3f) as *mut u8, byte(t, 0x19) as i32 as u32);
+    n
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) unsafe extern "thiscall" fn comparar_escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(328)(t, m, tecnico, linhas, jogadores, lado, clube, outro, jogo, vagas)
+}
+
+/// a player's current or potential ability as an observer sees it (reputation, noise and the observer's knowledge)
+/// Original: `perceived_ability` (0x6e86d0, match_man.cpp, cdecl).
+///
+/// [pt] { 0x6e86d0 } (cdecl, match_man.cpp): a habilidade do jogador `p` (2 = atual, senão potencial) como
+/// o observador `o` (0 = o técnico do clube `c`, +0xcf) a vê: a reputação `rep` (negativa: pela
+/// 0x5407e0) / 50 mistura com a habilidade verdadeira (ficha +0x61: +5 atual, +7 potencial) e um
+/// ruído pseudoaleatório (id do jogador + [0xdd7120] + id do observador) que encolhe com o
+/// conhecimento do observador (0x544410 da ficha +0x69, níveis +0x17/+0x18, até 20). Com a ficha
+/// do observador, conhecimento alto e a semente favorável, a habilidade atual exata.
+pub(crate) unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+    let mut semente = (*(p as *const i32)).wrapping_add(*(0xdd7120 as *const i32));
+    let mut rep = if rep > -1 {
+        rep / 50
+    } else {
+        let relacao: unsafe extern "C" fn(usize, usize, u32) -> i16 = core::mem::transmute(FN_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER);
+        relacao(p, if o == 0 { *((c + 0xcf) as *const usize) } else { o }, 0) / 50
+    };
+    let ficha = *((p + 0x61) as *const usize);
+    let idade = if tipo == 2 {
+        0
+    } else {
+        (*((p + 0x18) as *const u8)).wrapping_sub(if *((ficha + 0xf) as *const u8) == 0x14 { 0x1a } else { 0x17 }) as i8
+    };
+    let mut conhece = 0usize;
+    if o != 0 {
+        conhece = *((o + 0x69) as *const usize);
+        semente = semente.wrapping_add(*(o as *const i32));
+        if conhece != 0 && tipo == 2 && rep > 0x32 {
+            let k = chance_de_conhecer(conhece, *((conhece + 0x17) as *const i8)) as i8 as i32;
+            if rep as i32 + (k - 10) * 10 > semente % 200 {
+                return core::ptr::read_unaligned((ficha + 5) as *const i16);
+            }
+        }
+    }
+    let mut certeza: i8 = 1;
+    if conhece != 0 {
+        let f = ((semente % 101) as f64 * f64_em(0x967898)) as f32 as f64;
+        let x = if semente % 10 == 0 {
+            f * f32_em(0x96afb0) as f64
+        } else {
+            let nivel = *((conhece + if tipo == 2 { 0x17 } else { 0x18 }) as *const i8);
+            (chance_de_conhecer(conhece, nivel) as i8 as f64) * f
+        };
+        certeza = (ftol(x + f64_em(0x968968)) as i8).min(0x14);
+    }
+    let c32 = certeza as i32;
+    let ruido = (semente % ((0x15 - c32) * 2) + c32 - 0x15) as i16 as i32;
+    let verdade = if tipo == 2 {
+        core::ptr::read_unaligned((ficha + 5) as *const i16)
+    } else {
+        if idade > 0 {
+            rep = rep.wrapping_sub((idade as i16).wrapping_mul(idade as i16));
+        }
+        core::ptr::read_unaligned((ficha + 7) as *const i16)
+    } as i32;
+    let peso = (c32 / 2 + 10) as i8 as i32;
+    (((verdade + ruido) * peso + (20 - peso) * rep as i32) / 20) as i16
+}
+
+pub(crate) unsafe extern "C" fn comparar_habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(390)(o, p, c, tipo, rep);
+    let n = habilidade_vista(o, p, c, tipo, rep);
+    PLACAR.registrar(r == n, || format!("habilidade_vista({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
+    r
+}

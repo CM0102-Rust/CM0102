@@ -497,3 +497,27 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_das_sedes(this: usize
     orig::<unsafe extern "thiscall" fn(usize, usize)>(1675)(this, hoje)
 }
 
+/// writes CM3_TEMP\HostCountry.tmp: the count (+4, u16) and 0x22 bytes per host from [+0], without checking the writes;
+/// on open error the "Error" box
+/// Original: `HostCountry::save_temp_file` (0x5fb320, host_country.cpp, thiscall).
+///
+/// [pt] { 0x5fb320 } (thiscall, ret 0, host_country.cpp): `HostCountry::save_temp_file`: grava `CM3_TEMP\HostCountry.tmp`:
+/// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
+/// "Error" (host_country.cpp 0x475).
+pub(crate) unsafe extern "thiscall" fn gravar_paises_anfitrioes(this: usize) {
+    crate::comparacao::ramo("cpx_6 gravar paises anfitrioes");
+    let f = cpx6_abrir(0x9cf10c);
+    if f == 0 {
+        aviso_em(0x9cf0d8, 0x475);
+        return;
+    }
+    cpx6_escrever(this + 4, 2, 1, f);
+    cpx6_escrever(read_usize(this), 0x22, *((this + 4) as *const i16) as i32 as u32, f); // cpx6: os anfitriões
+    cpx6_fechar(f);
+}
+
+/// Comparador da 0x5fb320: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_paises_anfitrioes(this: usize) {
+    // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
+    orig::<unsafe extern "thiscall" fn(usize)>(1502)(this)
+}

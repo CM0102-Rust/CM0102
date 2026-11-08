@@ -378,3 +378,46 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqe5_dia_das_regras(this: usize,
     PLACAR.registrar(igual, || format!("cqe5_dia_das_regras(regras {:#x}) tabela diverge", this));
 }
 
+/// after 19 June and with the player under 24, the base rule period; otherwise from next month to three months later
+/// Original: `ENGLAND_RULES::get_loan_period` (0x579c70, england_rules.cpp, thiscall, ret 0x1c).
+///
+/// [pt] { 0x579c70 } (thiscall, ret 0x1c, england_rules.cpp): `ENGLAND_RULES::get_loan_period(clube, a2, início_mês,
+/// início_ano, fim_mês, fim_ano, jogador)`, pelo período do empréstimo (0x8d0590). Depois de 19 de junho (só o dia do
+/// ano, 0x549f70 com 1998) e com o jogador abaixo de 24 anos (+0x18): o período da regra base (0x8e8bd0). Senão começa
+/// no mês seguinte e acaba três meses depois.
+pub(crate) unsafe extern "thiscall" fn cqe6_periodo_inglaterra(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
+    // 0x549f70: push -1; push 0x7ce; push 5; push 0x13; lea ecx, local -> thiscall, ret 0x10
+    let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
+    let mut d = [0u8; 8];
+    data_de(d.as_mut_ptr() as usize, 0x13, 5, 0x7ce, -1);
+    if cqe6_h(0xae2c90) > cqe6_h(d.as_ptr() as usize) && (read_u8(jogador + 0x18) as i8) < 0x18 { // cqe6: abaixo de 24 anos
+        crate::comparacao::ramo("cqe_6 inglaterra periodo da base");
+        // 0x8e8bd0: os mesmos 7 argumentos empurrados de novo; mov ecx, esi (this) -> thiscall, ret 0x1c
+        let base: unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize) = core::mem::transmute(FN_TRANSFER_RULES_GET_LOAN_PERIOD);
+        base(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador);
+        return;
+    }
+    // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0 (o mês de hoje)
+    let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
+    *ini_mes = (mes(0xae2c90) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)
+    *ini_ano = cqe6_h(0xae2c92);
+    if *ini_mes > 0xb {
+        *ini_mes = (*ini_mes).wrapping_sub(0xc);
+        *ini_ano = (*ini_ano).wrapping_add(1);
+    }
+    crate::comparacao::ramo("cqe_6 inglaterra tres meses");
+    *fim_mes = (*ini_mes).wrapping_add(3); // cqe6: três meses
+    *fim_ano = *ini_ano;
+    if *fim_mes > 0xb {
+        *fim_mes = (*fim_mes).wrapping_sub(0xc);
+        *fim_ano = (*fim_ano).wrapping_add(1);
+    }
+}
+
+/// Comparador: lado a lado nas quatro saídas e em [0xae1080] (a regra base pode consultar contratos).
+pub(crate) unsafe extern "thiscall" fn comparar_cqe6_periodo_inglaterra(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(1589);
+    let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (0xae1080, 4)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || cqe6_periodo_inglaterra(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
+    PLACAR.registrar(igual, || format!("cqe6_periodo_inglaterra(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, clube, jogador, mo, mr));
+}

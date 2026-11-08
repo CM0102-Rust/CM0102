@@ -133,3 +133,35 @@ pub(crate) unsafe extern "thiscall" fn comparar_janelas_franca(this: usize) {
     cqk2_comparar("janelas_franca", this, || o(this), |s| janelas_franca(s));
 }
 
+/// refuses outside the window (9) and between clubs of the same division after five league games of the player (0x1f)
+/// Original: `SPAIN_RULES::can_loan_player` (0x859630, spain_rules.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x859630 } (thiscall, ret 0x10, spain_rules.cpp): `SPAIN_RULES::can_loan_player(clube, jogador, mensagem,
+/// motivo)`: fora da janela (0x8e8e50): 9; com contrato, entre clubes da mesma divisão (+0x57) depois de mais de
+/// [0x968990] jogos do jogador na liga (0x7c1e30 da ficha +0x61, tipo 2, 1, 6,5): 0x1f.
+pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_espanha(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+    // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8
+    let janela: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
+    if janela(this, 0xae2c90, 0) == 0 {
+        crate::comparacao::ramo("cqe_6 espanha fora da janela");
+        return cqe6_fora_da_janela(this, msg, motivo);
+    }
+    let dono = match cqe6_dono(jogador) {
+        None => return 1,
+        Some(d) => d,
+    };
+    if read_usize(clube + 0x57) == read_usize(dono + 0x57) {
+        // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall, ret 0x10 (devolve no st0)
+        let jogos: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
+        let v = jogos(read_usize(0xb74350), read_usize(jogador + 0x61), 2, 1, 6.5);
+        if v > f32_em(0x968990) as f64 {
+            crate::comparacao::ramo("cqe_6 espanha mesma divisao");
+            return cqe6_recusa(msg, motivo, 0xa82b00, read_usize(this + 0xa), 0x1f);
+        }
+    }
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqe6_pode_emprestar_espanha(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+    cqe6_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(1594), cqe6_pode_emprestar_espanha, "cqe6_pode_emprestar_espanha", this, clube, jogador, msg, motivo)
+}

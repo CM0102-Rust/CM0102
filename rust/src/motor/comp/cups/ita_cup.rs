@@ -1158,24 +1158,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi12_copa_c_regras(this: usize)
     r
 }
 
-/// rule: the Brazilian Champions' Cup group is single round robin, 3 points a win and 1 a draw; tiebreak by codes 3, 1,
-/// 2 and 4 [inference: wins, goal difference, goals for, head-to-head]; two qualifiers; rule bits 8 (those who secure
-/// the places go to the next stage); category 23 on each match (the champions' finals one); no prize fund
-/// Original: `BraChampCup::set_up_rules` (0x426230, bra_champ_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x426230 } (thiscall, ret 0, bra_champ_cup.cpp; a virtual +0x8c): `BraChampCup::set_up_rules()`: o grupo da
-/// Copa dos Campeões do Brasil em turno único, 3 pontos a vitória e 1 o empate, a categoria 0x17 (23, a das finais de
-/// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
-/// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
-pub(crate) unsafe extern "thiscall" fn cqi12_copa_dos_campeoes_regras(this: usize) -> u32 {
-    crate::comparacao::ramo("cqi_12 regras da copa dos campeoes");
-    cqi12_regras(this, &CQI12_COPA_DOS_CAMPEOES, 1)
-}
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi12_copa_dos_campeoes_regras(this: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1693)(this);
-    cqi12_confere("cqi12_copa_dos_campeoes_regras", this, &CQI12_COPA_DOS_CAMPEOES, r);
-    r
-}
 

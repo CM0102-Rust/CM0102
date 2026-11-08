@@ -59,57 +59,7 @@ pub(crate) unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
     0
 }
 
-/// writes [0xae2390] officials (0x11 bytes from [+0]), [0xae2350] nations (0x102 bytes from [+0xc]) and one byte per
-/// official from [+8] into the off.dat item; returns 1 in the low byte; with no officials or on error the "Error" box,
-/// closes the item and 0
-/// Original: `OfficialsManager::save_official_stats` (0x79bb80, officials_manager.cpp, thiscall).
-///
-/// [pt] { 0x79bb80 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::save_official_stats(save)`: grava no item
-/// `off.dat` a quantidade de árbitros [0xae2390], os registros de 0x11 bytes de [+0] (um por árbitro), a quantidade de
-/// nações [0xae2350], os registros de 0x102 bytes de [+0xc] (um por nação) e um byte por árbitro de [+8]; devolve 1
-/// (no byte baixo). Sem contêiner ou erro ao abrir: a caixa "Error" (officials_manager.cpp 0x142, 0x14a) e 0; sem
-/// árbitros ou erro ao gravar: a caixa (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), fecha o item e 0.
-pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
-    const FONTE: usize = 0xa6a22c;
-    let arbitros = || *(0xae2390 as *const u32);
-    let nacoes = || *(0xae2350 as *const u32);
-    crate::comparacao::ramo("cpx_7 gravar estatisticas dos arbitros");
-    if save == 0 {
-        aviso_em(FONTE, 0x142);
-        return 0;
-    }
-    let mut z = cpx7_abrir(save, 0xa6a260);
-    if z == 0 {
-        aviso_em(FONTE, 0x14a);
-        return 0;
-    }
-    if cpx7_gravar(0xae2390, 4, 1, z) != 1 {
-        return cpx7_falha_dos_arbitros(0x150, &mut z);
-    }
-    if arbitros() == 0 {
-        return cpx7_falha_dos_arbitros(0x156, &mut z);
-    }
-    if cpx7_gravar(read_usize(this), 0x11, arbitros(), z) != arbitros() {
-        return cpx7_falha_dos_arbitros(0x15c, &mut z);
-    }
-    if cpx7_gravar(0xae2350, 4, 1, z) != 1 {
-        return cpx7_falha_dos_arbitros(0x164, &mut z);
-    }
-    if cpx7_gravar(read_usize(this + 0xc), 0x102, nacoes(), z) != nacoes() { // cpx7: os registros das nações
-        return cpx7_falha_dos_arbitros(0x16c, &mut z);
-    }
-    if cpx7_gravar(read_usize(this + 8), 1, arbitros(), z) != arbitros() {
-        return cpx7_falha_dos_arbitros(0x174, &mut z);
-    }
-    cpx7_fechar(&mut z);
-    1
-}
 
-/// Comparador da 0x79bb80: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
-    // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1504)(this, save)
-}
 
 /// writes the count (+0) and the 0x44-byte records from [+4] into the simulated_stats.dat item; on error the "Error"
 /// box without closing the item

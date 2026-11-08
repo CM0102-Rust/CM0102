@@ -329,3 +329,59 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_paulista(this:
     cqn8_comparar("cqn8_mata_mata_do_paulista", this, &[0, 3, 1, 2], || o(this))
 }
 
+/// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with
+/// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
+/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegPern::BraRegPern` (0x4388f0, bra_reg_pern.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
+pub(crate) unsafe extern "thiscall" fn cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
+    cqt3_construir(this, ano, registro, &CQT3_PERNAMBUCANO, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2054);
+    cqt3_comparar("cqt3_construir_pernambucano", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
+}
+
+/// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds
+/// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegPern::create_table` (0x439330, bra_reg_pern.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
+/// Fonte 0x98afd8, linha 0x167.
+pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) -> u32 {
+    cqm7_tabela(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_pernambucano(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1836);
+    cqm7_comparar("cqm7_tabela_do_pernambucano", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, || o(this))
+}
+
+/// North and Pernambuco (the same routine in the two vtables): 4 top places (the final stage of 4); 2 relegated; double
+/// round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league
+/// above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to the next
+/// stage; no champion band); 7 bench substitutes and 3 substitutions; category 2 (league) matches. Then the main stage
+/// schedule
+/// Original: `BraRegPern::set_up_rules` (0x439430, bra_reg_pern.cpp, thiscall).
+///
+/// [pt] { 0x439430 } (thiscall, bra_reg_pern.cpp): `BraRegPern::set_up_rules`, nas vtables do Norte (0x968338) e do
+/// Pernambucano (0x968554); devolve 1.
+pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) -> u32 {
+    cqi9_regras_pernambucano(this);
+    crate::comparacao::ramo("cqi_9 regras do pernambucano");
+    cqi9_calendario(this);
+    1
+}
+
+/// Comparador: como o do Paranaense.
+pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_pernambucano(this: usize) -> u32 {
+    let reg = cqi9_regioes(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1719)(this), || {
+        cqi9_regras_pernambucano(this);
+        1
+    });
+    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_pernambucano({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    r
+}

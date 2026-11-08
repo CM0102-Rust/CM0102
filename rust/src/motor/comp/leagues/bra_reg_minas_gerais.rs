@@ -250,45 +250,7 @@ pub(crate) fn cqk8_mls(x: u8, ate_3: u8) -> u8 {
     }
 }
 
-/// MLS: in the regular season and play-off stages 0 and 1, the current position 1, 2, 3, 4 becomes 1, 3, 7, 10, the
-/// lowest 1 to 3 becomes 1 and 4 becomes 10, the highest 1 to 3 becomes 7 and 4 becomes 10 (positions on the
-/// whole-league scale [inference]); in stage 2, each code becomes 2 × code − 1; after that, as they come
-/// Original: `UsaMls::set_club_progress` (0x909dd0, usa_mls.cpp, thiscall).
-///
-/// [pt] { 0x909dd0 } (thiscall, ret 0x14, usa_mls.cpp): `UsaMls::set_club_progress(clube, fase, a, b, c)`: nas fases 0 e 1
-/// e na temporada (-1), a: 1 → 1, 2 → 3, 3 → 7, 4 → 10; b: 1..3 → 1, 4 → 10; c: 1..3 → 7, 4 → 10; na fase 2, cada
-/// código vira 2 × código − 1; depois, os códigos como vêm. Devolve a entrada.
-pub(crate) unsafe extern "thiscall" fn cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
-    let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
-    if fa < 2 {
-        let (b, c) = (cqk8_mls(b, 1), cqk8_mls(c, 7));
-        let a = match a {
-            1 => 1,
-            2 => {
-                crate::comparacao::ramo("cqk_8 mls segundo");
-                3 // cqk8: o código 2 da MLS
-            }
-            3 => 7,
-            4 => 10,
-            _ => a,
-        };
-        cqk8_gravar(e, a, b, c);
-    } else if fa == 2 {
-        cqk8_gravar(e, a.wrapping_mul(2).wrapping_sub(1), b.wrapping_mul(2).wrapping_sub(1), c.wrapping_mul(2).wrapping_sub(1));
-    } else {
-        cqk8_gravar(e, a, b, c);
-    }
-    e
-}
 
-/// Comparador: como o do Mineiro.
-pub(crate) unsafe extern "thiscall" fn comparar_cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(1735)(this, clube, fase, a, b, c), || cqk8_progresso_na_mls(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_mls({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
-    r
-}
 
 /// O código da Série C nos grupos (fases até 6): 1 e 2 viram `um_dois`, 3 → 0x11, 4 → 0x19, 5 → 0x21, 6 → 0x29,
 /// 7 → 0x31 (a posição no grupo levada para a escala de 49 lugares [inferência]); os outros ficam.
@@ -304,36 +266,87 @@ pub(crate) fn cqk8_serie_c(x: u8, um_dois: u8) -> u8 {
     }
 }
 
-/// Series C: in the groups (stages up to 6), the group position becomes the position on the 49-place Series C scale
-/// [inference]: 1 and 2 → 1 (the highest → 9), 3 → 17, 4 → 25, 5 → 33, 6 → 41, 7 → 49; in later stages, the codes as
-/// they come
-/// Original: `BraNatThird::set_club_progress` (0x42e100, bra_nat_third.cpp, thiscall).
+/// Minas Gerais, Parana and Rio: the round robin as in the Centre-West; the two halves (stages 0 and 1) record nothing
+/// and return -1; the final knockout (stage 2, a single round: weight 40 for the loser) gives the champion (fate 5) and
+/// the runner-up (fate -2)
+/// Original: `BraRegMinasGerais::update_staff_records_for_status` (0x434d90, bra_reg_minas_gerais.cpp, thiscall).
 ///
-/// [pt] { 0x42e100 } (thiscall, ret 0x14, bra_nat_third.cpp): `BraNatThird::set_club_progress(clube, fase, a, b, c)`: nos
-/// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
-/// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
-/// entrada.
-pub(crate) unsafe extern "thiscall" fn cqk8_progresso_na_serie_c(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
-    let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
-    if fa < 7 {
-        let (a, c) = (cqk8_serie_c(a, 1), cqk8_serie_c(c, 9));
-        let b2 = cqk8_serie_c(b, 1);
-        if b == 3 {
-            crate::comparacao::ramo("cqk_8 serie c segundo 3");
-        }
-        cqk8_gravar(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
-    } else {
-        cqk8_gravar(e, a, b, c);
-    }
-    e
+/// [pt] { 0x434d90 } (thiscall, ret 0x18, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::update_staff_records_for_status`
+/// (slot 18 do Mineiro, do Paranaense e do Carioca): os pontos corridos como no Centro-Oeste; os turnos (fases 0 e 1)
+/// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
+pub(crate) unsafe extern "thiscall" fn cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let _ = (a4, a6);
+    cqk7_mineiro(this, clube, situacao, fase, jogo, true).0
 }
 
-/// Comparador: como o do Mineiro.
-pub(crate) unsafe extern "thiscall" fn comparar_cqk8_progresso_na_serie_c(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(1736)(this, clube, fase, a, b, c), || cqk8_progresso_na_serie_c(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_serie_c({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+/// Comparador: como o do Centro-Oeste.
+pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_mineiro(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let (n, l, dest) = cqk7_mineiro(this, clube, situacao, fase, jogo, false);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1732)(this, clube, situacao, fase, a4, jogo, a6);
+    let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
+    PLACAR.registrar(r == n && gravado == dest, || format!("cqk7_destino_no_mineiro({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
+/// The Minas Gerais state league at career creation: the year and the database competition, disciplinary rule 7 and,
+/// with no saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table
+/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegMinasGerais::BraRegMinasGerais` (0x433d50, bra_reg_minas_gerais.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
+pub(crate) unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
+    cqt2_construir(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2050);
+    cqt2_comparar("cqt2_construir_mineiro", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
+}
+
+/// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
+/// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegMinasGerais::create_table` (0x434810, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
+/// Fonte 0x98aed0, linha 0x169.
+pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
+    cql9_tabela(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_mineiro(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1832);
+    cql9_comparar("cql9_tabela_do_mineiro", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
+}
+
+/// One half of the Minas Gerais state league: when the first game of a half is processed, it builds that half's
+/// round-robin stage (a league with all the clubs of the table, the same points for a win and a draw and the same
+/// tie-breakers as the league, and one top place, the half winner's); the first half goes to stage 0 and the second
+/// (from round 12, by the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `BraRegMinasGerais::create_half_season_stage` (0x4351b0, bra_reg_minas_gerais.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
+/// do Mineiro (a caixa da linha 0x3d5).
+pub(crate) unsafe extern "thiscall" fn cqr1_turno_do_mineiro(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: os pontos por vitória no Mineiro
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_mineiro(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1987);
+    cqr1_comparar("cqr1_turno_do_mineiro", this, k, || o(this, k))
+}
+
+/// The Minas Gerais state league turnover: archives the season in the statistics, clears the table, the schedule and
+/// the stages (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds
+/// the rules, the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the
+/// referee renewal. The halves are only built at each one's first game (cqr_1)
+/// Original: `BraRegMinasGerais::start_new_season` (0x434910, bra_reg_minas_gerais.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
+pub(crate) unsafe extern "thiscall" fn cqr2_virada_do_mineiro(this: usize) -> u32 {
+    cqr2_virada(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_mineiro(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1991);
+    cqr2_comparar("cqr2_virada_do_mineiro", this, || o(this))
+}

@@ -159,60 +159,6 @@ pub(crate) const CQH4_DATAS: [[(i32, i32, i32, i32, i32); 6]; 4] = [
     [(0, 0x16, 0xa, 0, 2), (1, 5, 0xb, 0, 1), (2, 0xd, 1, 1, 1), (3, 0x15, 1, 1, 2), (4, 6, 2, 1, 1), (5, 0xe, 2, 1, 2)], // cqh4: a segunda fase, grupos C e D
 ];
 
-/// in the group stages, the 6-round schedule (phase 1 dates in September and October and phase 2 from November to
-/// March, by half) with fixture 0 of each round empty; the qualifying rounds and the knockout stay with the original
-/// Original: `EuropeanCup::create_round_table` (0x583c50, european_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x583c50 } (thiscall, ret 0x10, european_cup.cpp, método +0x3c da Liga dos Campeões, quadro SEH pelas datas locais
-/// sem destrutor no caminho normal): `EuropeanCup::create_round_table(fase, &rodadas, &id, &é_liga)`, dos sorteios dos
-/// grupos (0x585290, 0x585ab0) e das posições previstas (0x586900). Nas fases de grupos (char 0..11, e as negativas
-/// abaixo de −1, que caem no mesmo ramo): é_liga (se pedido) = 1, rodadas = 6, id = 0x43d + fase; a tabela de 6 rodadas
-/// de 0x41 bytes (0x944e46(0x186); sem memória, a caixa da linha 0x17a ou 0x1aa e devolve 0); na segunda fase, antes, a
-/// data de 1º de março do ano seguinte levada à terça (0x549f70), um dia antes (0x54c8e0, que grava a data estática dela)
-/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `CQH4_DATAS` (0x68a160 com o ano
-/// +0x40 da copa) e o jogo 0 de cada rodada vazio (0x68a1c0 com −1). As preliminares (−1) e o mata-mata (12 em diante):
-/// a original pelo trampolim. Devolve a tabela.
-pub(crate) unsafe extern "thiscall" fn campeoes_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
-    let f = fase as u8 as i8;
-    if f == -1 || f >= 0xc {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1652)(this, fase, rodadas, id, liga);
-    }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
-    if !liga.is_null() {
-        *liga = 1;
-    }
-    *rodadas = 6;
-    *id = (f as i16).wrapping_add(0x43d);
-    let t = alocar(0x186);
-    if t == 0 {
-        aviso_em(0x9c4900, if f < 8 { 0x17a } else { 0x1aa });
-        return 0;
-    }
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as u16 as u32;
-    let metade = if f < 8 {
-        if f < 4 { 0 } else { 1 }
-    } else {
-        let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
-        let menos: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-        let copia: unsafe extern "thiscall" fn(*mut [u16; 4], *mut [u16; 4], usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-        let (mut d, mut t1, mut t2) = ([0u16; 4], [0u16; 4], [0u16; 4]);
-        // ponytail: o ano + 1 vai no ax com o resto do eax nos bytes altos; a 0x549f70 lê o ano como word
-        construir(&mut d, 1, 2, (ano as u16).wrapping_add(1) as u32, 2);
-        let r = menos(&mut d, &mut t1, 1);
-        copia(&mut d, &mut t2, r);
-        if f < 10 { 2 } else { 3 }
-    };
-    crate::comparacao::ramo("cqh_4 tabela das rodadas");
-    for &(i, dia, mes, anos, semana) in CQH4_DATAS[metade].iter() {
-        data(t, i, dia, mes, anos, semana, 2, ano, 0);
-    }
-    for r in 0..6 {
-        jogo(t, r, 0, -1, -1, -1, 0);
-    }
-    t
-}
 
 /// Os bytes que a tabela tem gravados (o resto da memória alocada não é escrito): de cada rodada, +0..+4, +0x3d..+0x40
 /// e o jogo 0 (+5..+0xb).
@@ -226,31 +172,6 @@ pub(crate) unsafe fn cqh4_gravados(t: usize) -> Vec<u8> {
     v
 }
 
-/// Lado a lado nas fases de grupos: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As
-/// preliminares e o mata-mata: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_campeoes_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1652);
-    let f = fase as u8 as i8;
-    if f == -1 || f >= 0xc {
-        return o(this, fase, rodadas, id, liga);
-    }
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let (mut r2, mut i2, mut l2) = (0i16, 0i16, 0i32);
-    let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
-        &reg,
-        || o(this, fase, rodadas, id, liga),
-        || campeoes_rodadas_da_fase(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
-    );
-    let saidas = *rodadas == r2 && *id == i2 && (liga.is_null() || *liga == l2);
-    let tabela = if a != 0 && b != 0 { cqh4_gravados(a) == cqh4_gravados(b) } else { a == 0 && b == 0 };
-    if b != 0 {
-        soltar(b);
-    }
-    PLACAR.registrar(igual && saidas && tabela, || format!("campeoes_rodadas_da_fase({}): saídas {} tabela {}", f, saidas, tabela));
-    a
-}
 
 
 
@@ -1750,24 +1671,7 @@ pub(crate) unsafe fn cpz3_fase_seguinte(this: usize, arquivo: usize, linha: u32,
     }
 }
 
-/// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
-/// play-offs (0x573080)
-/// Original: `EngFirst::advance_stage` (0x572ff0, eng_first.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x572ff0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::advance_stage()` (a virtual +0x28): fonte 0x9c4374,
-/// linha 0x2ce; o mata-mata 0x573080.
-pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_first(this: usize) {
-    cpz3_fase_seguinte(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
-}
 
-/// like the First one (line 0x294; the play-offs 0x576a70)
-/// Original: `EngSecond::advance_stage` (0x5769e0, eng_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5769e0 } (thiscall, ret 0, eng_second.cpp): `EngSecond::advance_stage()` (a virtual +0x28): fonte 0x9c43e8,
-/// linha 0x294; o mata-mata 0x576a70.
-pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_second(this: usize) {
-    cpz3_fase_seguinte(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
-}
 
 /// O comparador das duas: na fase que não chega a 0 (só +0x30 muda) a original e a cópia lado a lado em +0x30; na
 /// última fase (a caixa) e na que chega a 0 (o mata-mata aloca a fase): só a original.
@@ -1780,15 +1684,7 @@ pub(crate) unsafe fn cpz3_comparar_fase(nome: &str, this: usize, original: impl 
     PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_first(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1387);
-    cpz3_comparar_fase("fase_seguinte_da_first", this, || o(this), || fase_seguinte_da_first(this))
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_second(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1388);
-    cpz3_comparar_fase("fase_seguinte_da_second", this, || o(this), || fase_seguinte_da_second(this))
-}
 
 // ---------- 260a leva: o fim da temporada da liga: os prêmios em dinheiro, os registros pela situação do clube e a notícia da situação (league.cpp) ----------
 
@@ -3639,42 +3535,7 @@ pub(crate) unsafe fn cpa2_linha_livre() -> usize {
     t.wrapping_add(26 * (i + 1) as usize)
 }
 
-/// stores competition, year and four values in the free row of the competition history (without one, grows 20 rows by
-/// 0x527f60); returns the row
-/// Original: `comp_util_add_history_record` (0x4afce0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afce0 } (cdecl, comp_util.cpp): `comp_util_add_history_record(liga, primeiro, segundo, terceiro, extra)`:
-/// a linha livre do histórico de competições (sem ela, cresce 20 linhas pela 0x527f60 e usa a primeira nova; sem
-/// memória, 0) recebe a competição (+4 da liga), o ano [0xae2c92] (+8), e os quatro valores em +0xa, +0xe, +0x12,
-/// +0x16. Devolve a linha. Sem SEH, sem sorteio, sem locais.
-pub(crate) unsafe extern "C" fn acrescentar_ao_historico(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
-    let mut r = cpa2_linha_livre();
-    if r == 0 {
-        crate::comparacao::ramo("histórico de competições crescer");
-        let crescer: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_DATABASE_GROW_COMP_HISTORY_TABLE);
-        if crescer(0x14) == 0 {
-            return 0;
-        }
-        let n = *(0xae237c as *const i32);
-        r = (*(0xae23d4 as *const usize)).wrapping_add(26usize.wrapping_mul(n.wrapping_sub(20) as usize));
-    }
-    core::ptr::write_unaligned((r + 4) as *mut usize, read_usize(liga + 4));
-    core::ptr::write_unaligned((r + 8) as *mut u16, *(0xae2c92 as *const u16)); // o ano
-    for (k, v) in [a, b, c, d].into_iter().enumerate() {
-        core::ptr::write_unaligned((r + 0xa + 4 * k) as *mut u32, v);
-    }
-    r
-}
 
-pub(crate) unsafe extern "C" fn comparar_acrescentar_ao_historico(liga: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32) -> usize>(779);
-    if cpa2_linha_livre() == 0 {
-        return o(liga, a, b, c, d); // cresce (realloc): só a original
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&cpa2_regioes_do_historico(), || o(liga, a, b, c, d), || acrescentar_ao_historico(liga, a, b, c, d));
-    PLACAR.registrar(igual && r == n, || format!("acrescentar_ao_historico({:x}, {:x}, {:x}, {:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", liga, a, b, c, d, r, n, mo, mr));
-    r
-}
 
 // ---------- 216a leva: se a liga tem rebaixamento, a data da rodada do modelo da liga e a importância do jogo da liga (league.cpp) ----------
 
@@ -4122,22 +3983,6 @@ pub(crate) unsafe extern "thiscall" fn atualizar_confronto_direto(liga: usize, t
     somar(0xa, contra as i16);
 }
 
-/// marks that the transfer offer had contract terms offered to the player
-/// Original: `TRANSFER_MANAGER::note_terms_offered_to_main_player` (0x8c1f80, transfer_manager.cpp, thiscall).
-///
-/// [pt] { 0x8c1f80 } (thiscall, ret 4, transfer_manager.cpp): marca que a oferta `k` (fora de empréstimo,
-/// +0x1f ≠ 1) teve os termos oferecidos ao jogador: o estado +0x2c vira 8 se era 6, senão 7. Índice
-/// fora da lista ([+4] ofertas): a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn marcar_termos_oferecidos(gerente: usize, k: i32) {
-    if k < 0 || k >= *((gerente + 4) as *const i32) {
-        return orig::<unsafe extern "thiscall" fn(usize, i32)>(462)(gerente, k);
-    }
-    let oferta = *((*(gerente as *const usize) as isize + k as isize * 4) as *const usize);
-    if oferta != 0 && *((oferta + 0x1f) as *const u8) != 1 {
-        let estado = (oferta + 0x2c) as *mut u8;
-        *estado = (*estado == 6) as u8 + 7;
-    }
-}
 
 pub(crate) unsafe extern "C" fn comparar_ordem_do_confronto(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(460)(a, b);
@@ -4157,30 +4002,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_atualizar_confronto_direto(liga:
     PLACAR.registrar(igual, || format!("atualizar_confronto_direto({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_marcar_termos_oferecidos(gerente: usize, k: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(462);
-    if k < 0 || k >= *((gerente + 4) as *const i32) {
-        return o(gerente, k);
-    }
-    let oferta = *((*(gerente as *const usize) as isize + k as isize * 4) as *const usize);
-    if oferta == 0 {
-        return o(gerente, k);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(oferta + 0x2c, 1)], || o(gerente, k), || marcar_termos_oferecidos(gerente, k));
-    PLACAR.registrar(igual, || format!("marcar_termos_oferecidos({}) {:x?} x {:x?}", k, mo, mr));
-}
 
 // ---------- 177a leva: o bit do contrato, a marca da competicao e o registro do clube na liga ----------
 
-/// bits 4..5 of byte +0xb of the person's 79-byte record
-/// Original: `record_bits` (0x7a7eb0, player_regen.cpp, stdcall).
-///
-/// [pt] { 0x7a7eb0 } (stdcall, ret 4, player_regen.cpp): os bits 4..5 do byte +0xb do registro de 79 bytes
-/// da pessoa `*p` em [0xae2d0c]. Devolve só `al`.
-pub(crate) unsafe extern "stdcall" fn bits_do_registro(p: *const i32) -> u8 {
-    let r = (*(0xae2d0c as *const usize)).wrapping_add((*p as usize).wrapping_mul(79));
-    (*((r + 0xb) as *const u8) >> 4) & 3
-}
 
 /// does the competition have +0xbe and flag 2 of +0xd9?
 /// Original: `competition_flagged` (0x684790, league.cpp, thiscall).
@@ -4201,12 +4025,6 @@ pub(crate) unsafe extern "thiscall" fn registro_da_liga(t: usize, i: i32) -> usi
 comparar_valor!(comparar_competicao_marcada, competicao_marcada, 404, () -> u32);
 comparar_valor!(comparar_registro_da_liga, registro_da_liga, 405, (i: i32) -> usize);
 
-pub(crate) unsafe extern "stdcall" fn comparar_bits_do_registro(p: *const i32) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(*const i32) -> u8>(403)(p);
-    let n = bits_do_registro(p);
-    PLACAR.registrar(r == n, || format!("bits_do_registro({:p}) original={} rust={}", p, r, n));
-    r
-}
 
 // ---------- centesima sexagesima quarta leva: o calendario das ligas (league.cpp, fix_man.cpp) ----------
 
@@ -4274,36 +4092,6 @@ pub(crate) unsafe extern "C" fn registrar_jogo_da_rodada(base: usize, rodada: i1
     core::ptr::write_unaligned((e + 5) as *mut u32, valor);
 }
 
-/// marks the match year in both clubs' entries (year × 2 + bit, 2001 rule)
-/// Original: `mark_calendar_year` (0x5af180, fix_man.cpp, cdecl).
-///
-/// [pt] { 0x5af180 } (cdecl, fix_man.cpp): marca o ano (+0x28, palavra) do jogo `jogo` nas entradas dos
-/// dois clubes (+0xc e +0x10) da tabela [0xae2a5c] (palavras: ano × 2 + bit 0). Entrada vazia: o
-/// bit 0 liga, ou a entrada zera em 2001, e o ano entra; senão em 2001 o bit 0 apaga e o ano sobe se
-/// for maior. Tabela nula: a original (caixa de erro).
-pub(crate) unsafe extern "C" fn marcar_ano_no_calendario(jogo: usize) {
-    let tabela = *(0xae2a5c as *const usize);
-    if tabela == 0 {
-        return orig::<unsafe extern "C" fn(usize)>(366)(jogo);
-    }
-    let ano = core::ptr::read_unaligned((jogo + 0x28) as *const u16);
-    for o in [0xc, 0x10] {
-        let e = tabela.wrapping_add((*((jogo + o) as *const i32) as usize).wrapping_mul(2)) as *mut u16;
-        let v = core::ptr::read_unaligned(e);
-        if v & 0xfffe == 0 {
-            let w = if ano == 0x7d1 { 0 } else { v | 1 };
-            core::ptr::write_unaligned(e, w & 1 | ano << 1);
-        } else {
-            if v & 1 != 0 && ano == 0x7d1 {
-                core::ptr::write_unaligned(e, v & 0xfffe);
-            }
-            let v = core::ptr::read_unaligned(e);
-            if ano > v >> 1 {
-                core::ptr::write_unaligned(e, ano.wrapping_mul(2) | v & 1);
-            }
-        }
-    }
-}
 
 pub(crate) unsafe extern "C" fn comparar_girar_rodada(pos: i32, passo: *mut i8, liga: i32, rodadas: i16, turnos: i16, n: i16, marcas: u8) -> i32 {
     let o = orig::<unsafe extern "C" fn(i32, *mut i8, i32, i16, i16, i16, u8) -> i32>(364);
@@ -4322,15 +4110,356 @@ pub(crate) unsafe extern "C" fn comparar_registrar_jogo_da_rodada(base: usize, r
     PLACAR.registrar(igual, || format!("registrar_jogo_da_rodada({:#x}, {}, {}, {}, {}, {}, {:#x}) {:x?} x {:x?}", base, rodada, j, a, b, c, valor, mo, mr));
 }
 
-pub(crate) unsafe extern "C" fn comparar_marcar_ano_no_calendario(jogo: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(366);
-    let tabela = *(0xae2a5c as *const usize);
-    let reg: Vec<(usize, usize)> = if tabela == 0 {
-        vec![]
-    } else {
-        [0xc, 0x10].iter().map(|&o| (tabela.wrapping_add((*((jogo + o) as *const i32) as usize).wrapping_mul(2)), 2)).collect()
-    };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(jogo), || marcar_ano_no_calendario(jogo));
-    PLACAR.registrar(igual, || format!("marcar_ano_no_calendario({:#x}) {:x?} x {:x?}", jogo, mo, mr));
+/// the league total prize fund (one more share per place above the last)
+/// Original: `League::calc_prize_fund` (0x682f70, league.cpp, thiscall).
+///
+/// [pt] { 0x682f70 } (thiscall, ret 4, league.cpp): o prêmio total da liga: `cota` para o último colocado e
+/// uma cota a mais por posição acima (cota × (1 + 2 + … + times), times = +0x3e). Sem times: a
+/// original (caixa de erro, devolve 0).
+pub(crate) unsafe extern "thiscall" fn premio_da_liga(liga: usize, cota: i32) -> i32 {
+    let times = *((liga + 0x3e) as *const i16);
+    if times == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(456)(liga, cota);
+    }
+    let mut total = 0i32;
+    let mut parcela = cota;
+    for _ in 0..times.max(0) {
+        total = total.wrapping_add(parcela);
+        parcela = parcela.wrapping_add(cota);
+    }
+    total
 }
 
+pub(crate) unsafe extern "thiscall" fn comparar_premio_da_liga(liga: usize, cota: i32) -> i32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(456)(liga, cota);
+    if *((liga + 0x3e) as *const i16) == 0 {
+        return r;
+    }
+    let n = premio_da_liga(liga, cota);
+    PLACAR.registrar(r == n, || format!("premio_da_liga({}) original={} rust={}", cota, r, n));
+    r
+}
+
+/// at the season end, only the top league of the pyramid (no league above) closes its table and walks down the chain of
+/// divisions: for each pair (upper and lower), closes the lower one and swaps the promoted and relegated clubs
+/// (0x689c80, with contract clauses, pairwise or as a block, without checking counts)
+/// Original: `League::process_promotion_relegation_chain` (0x689c20, league.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x689c20 } (thiscall, ret 4, league.cpp, `League::process_promotion_relegation_chain(aos_pares)`; pelo slot do
+/// fim de temporada da liga): só na liga do topo da pirâmide (+0x1c, a liga de cima, negativo): fecha a temporada
+/// dela (slot 0xa4) e, descendo a cadeia (+0x20 o índice da liga de baixo na tabela [0xadadfc], até negativo), fecha a
+/// de baixo e troca os que sobem e descem entre as duas (0x689c80 com contratos = 1, `aos_pares`, sem contagem
+/// esperada: −1, −1; o ecx é o desta liga).
+pub(crate) unsafe extern "thiscall" fn cadeia_de_acessos(this: usize, aos_pares: u32) {
+    if (read_u32_as_usize(this + 0x1c) as i32) >= 0 {
+        return;
+    }
+    crate::comparacao::ramo("cqp_1 cadeia");
+    let trocar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) = core::mem::transmute(FN_LEAGUE_PROMOTE_AND_RELEGATE);
+    let mut acima = this;
+    cqp1_fechar(this); // cqp1: fecha a liga do topo
+    let mut i = read_u32_as_usize(this + 0x20) as i32;
+    while i >= 0 {
+        let abaixo = read_u32_as_usize(read_u32_as_usize(0xadadfc) + i as usize * 4);
+        cqp1_fechar(abaixo); // cqp1: fecha a de baixo
+        trocar(this, acima, abaixo, 1, aos_pares, u32::MAX, u32::MAX); // cqp1: sobem e descem
+        i = read_u32_as_usize(abaixo + 0x20) as i32;
+        acima = abaixo;
+    }
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cadeia_de_acessos(this: usize, aos_pares: u32) {
+    orig::<unsafe extern "thiscall" fn(usize, u32)>(1960)(this, aos_pares)
+}
+
+/// the current division becomes last season's and the new one is set; clears the division clauses (and the squad
+/// numbers when the new one uses them), opens the requested manager vacancy, upgrades the stadium to the league minimum
+/// and turns status 3 into 2
+/// Original: `League::move_club_to_division` (0x6830b0, league.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x6830b0 } (thiscall, ret 0xc, league.cpp; `this` não é lido): `League::move_club_to_division(clube, divisao,
+/// vaga)`: a divisão atual (+0x57) vira a da última temporada (+0x5b) e a nova entra; as cláusulas de divisão dos
+/// jogadores são limpas (0x4cd120 em [0xae1050]), com os números da camisa também se a divisão velha não os usava e a
+/// nova usa (0x85add0 em [0xdd7ef0], antes e depois); com `vaga` e sem técnico (+0xcf), a vaga de técnico (0x69ba50 em
+/// [0xb67a44]); numa divisão de liga (+0x43 = 2 na competição [0xadadfc][id]) com estádio mínimo (+0xe2 ≠ −1) e ficha
+/// do estádio (+0x69), a obra do estádio (0x599e00 nas finanças 0x5a0590 de [0xae2a38], lugares +0xe4 e +0xe2); e,
+/// com a competição carregada, a situação +0x64 = 3 passa a 2.
+pub(crate) unsafe extern "thiscall" fn mudar_clube_de_divisao(_this: usize, clube: usize, divisao: usize, vaga: u32) {
+    crate::comparacao::ramo("cpm_3 mudar de divisao");
+    let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_SQUAD_MANAGER_CLUB_USES_SQUAD_NUMBERS);
+    let limpar_clausulas: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_RESET_DIVISION_CLAUSES);
+    let antes = usa_numeros(read_usize(0xdd7ef0), clube, 0);
+    cpm3_por(clube + 0x5b, read_usize(clube + 0x57)); // a divisão da última temporada
+    cpm3_por(clube + 0x57, divisao);
+    let numeros = (antes == 0 && usa_numeros(read_usize(0xdd7ef0), clube, 0) != 0) as u32;
+    limpar_clausulas(read_usize(0xae1050), clube, numeros);
+    if vaga != 0 && read_usize(clube + 0xcf) == 0 {
+        let abrir_vaga: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_MANAGER_MANAGER_ADD_JOB_VACANCY);
+        abrir_vaga(read_usize(0xb67a44), clube, 0);
+    }
+    if divisao == 0 {
+        return;
+    }
+    let comps = read_usize(0xadadfc);
+    let id = read_usize(divisao);
+    if comps != 0 {
+        let comp = read_usize(comps + 4 * id);
+        if comp != 0 && read_usize(clube + 0x69) != 0 && *((comp + 0x43) as *const u8) == 2 {
+            let lugares = core::ptr::read_unaligned((comp + 0xe2) as *const i16);
+            if lugares != -1 {
+                crate::comparacao::ramo("cpm_3 estadio da divisao");
+                let capacidade = core::ptr::read_unaligned((comp + 0xe4) as *const i16);
+                let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
+                let obra: unsafe extern "thiscall" fn(usize, i32, i32, usize, u32) -> u32 = core::mem::transmute(FN_FINANCE_UPGRADE_STADIUM_FOR_LEAGUE);
+                let f = financas(read_usize(0xae2a38), clube);
+                obra(f, capacidade as i32, lugares as i32, id, 0); // a obra do estádio
+            }
+        }
+    }
+    // a original relê [0xadadfc] depois da obra (sem a obra, o mesmo valor; nulo, ela lê do endereço 0 também)
+    if read_usize(read_usize(0xadadfc) + 4 * id) != 0 && *((clube + 0x64) as *const u8) == 3 {
+        *((clube + 0x64) as *mut u8) = 2;
+    }
+}
+
+/// Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
+/// prova é a carreira e o modo Rust).
+pub(crate) unsafe extern "thiscall" fn comparar_mudar_clube_de_divisao(this: usize, clube: usize, divisao: usize, vaga: u32) {
+    crate::comparacao::ramo("mudar_clube_de_divisao");
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(931)(this, clube, divisao, vaga)
+}
+
+/// shuffles the league table with the seeded rand and puts clubs sharing a ground, clubs with linked grounds and Celtic
+/// and Rangers in paired slots
+/// Original: `League::draw_team_order` (0x686a70, league.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x686a70 } (thiscall, ret 4, league.cpp): `League::draw_team_order(clubes)`: embaralha a tabela da liga
+/// ([+0xb1], +0x3e registros de 59 bytes) para a grade de jogos: guarda um sorteio (0x90cfc0, 30000), semeia o rand
+/// da CRT com +0x40 + [0xdd7120] e troca n pares sorteados (rand × n / 0x8000), e volta a semente (sorteio + 1). Liga
+/// com a marca 0x100 em +0xd9: cada clube vai à vaga que a tabela virtual +0xa8 diz (se livre), os outros às
+/// primeiras livres, e a +0xac recebe cada vaga. Senão: na Escócia ([+4] = [0x9cf5dc]) o Celtic e o Rangers
+/// ([0x9d0118], [0x9d011c]) vão às vagas 0 e clubes / 2, em ordem sorteada (0x90cfc0, 2); os clubes do mesmo estádio
+/// (+0x69) e depois os de estádios ligados (+0x48 do estádio) vão em pares às vagas k e clubes / 2 + k (passando da
+/// metade dos clubes, a caixa); os outros, às primeiras vagas livres. A grade (0x944cf1, livre em 0x944c94) volta à
+/// tabela. Sem memória: a caixa (linha 0xed3).
+pub(crate) unsafe extern "thiscall" fn sortear_ordem_dos_clubes(this: usize, clubes: i32) {
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let semear: unsafe extern "C" fn(u32) = core::mem::transmute(FN_CRT_SRAND);
+    let rand: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_CRT_RAND);
+    let n = || read_i16(this + 0x3e) as i32;
+    let tab = || read_u32_as_usize(this + 0xb1);
+    let metade_n = n() / 2;
+    let usado = novo((n() * 4) as u32) as *mut u32;
+    let posto = novo((n() << 2) as u32) as *mut u32;
+    let grade = novo((n() * CPU12_LINHA as i32) as u32);
+    let mut k: i32 = 0;
+    if grade == 0 || usado.is_null() || posto.is_null() {
+        aviso_em(0x9f15f4, 0xed3);
+        liberar(posto as usize);
+        liberar(usado as usize);
+        liberar(grade);
+        return;
+    }
+    let mut i = 0;
+    while i < n() {
+        *usado.add(i as usize) = 0;
+        *posto.add(i as usize) = 0;
+        i += 1;
+    }
+    let semente = sorteio(30000).wrapping_add(1);
+    semear((read_i16(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)) as u32); // cpu12: a semente
+    crate::comparacao::ramo("cpu_12 ordem sorteada");
+    let mut i = 0;
+    while i < n() {
+        let a = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
+        let b = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
+        let mut tmp = [0u8; CPU12_LINHA];
+        let t = tab();
+        core::ptr::copy(( t + a * CPU12_LINHA) as *const u8, tmp.as_mut_ptr(), CPU12_LINHA);
+        cpu12_copiar(t + a * CPU12_LINHA, t + b * CPU12_LINHA);
+        core::ptr::copy(tmp.as_ptr(), (tab() + b * CPU12_LINHA) as *mut u8, CPU12_LINHA); // cpu12: a troca
+        i += 1;
+    }
+    semear(semente as u32);
+    let metade = clubes / 2;
+    if read_i16(this + 0xd9) as u16 & 0x100 != 0 {
+        let mut i = 0;
+        while i < n() {
+            *((grade + i as usize * CPU12_LINHA) as *mut u32) = 0;
+            i += 1;
+        }
+        let vt = read_u32_as_usize(this);
+        let vaga_do: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(read_u32_as_usize(vt + 0xa8));
+        let mut i = 0usize;
+        while (i as i32) < n() {
+            let s = vaga_do(this, read_u32_as_usize(tab() + i * CPU12_LINHA)) as i8 as i32;
+            if s >= 0 && s < n() && read_u32_as_usize(grade + s as usize * CPU12_LINHA) == 0 {
+                cpu12_copiar(grade + s as usize * CPU12_LINHA, tab() + i * CPU12_LINHA);
+                *((tab() + i * CPU12_LINHA) as *mut u32) = 0;
+            }
+            i += 1;
+        }
+        let mut i = 0usize;
+        while (i as i32) < n() {
+            let lin = tab() + i * CPU12_LINHA;
+            if read_u32_as_usize(lin) != 0 {
+                if let Some(j) = (0..n().max(0) as usize).find(|&j| read_u32_as_usize(grade + j * CPU12_LINHA) == 0) {
+                    cpu12_copiar(grade + j * CPU12_LINHA, lin);
+                }
+            }
+            i += 1;
+        }
+        let gravar: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_u32_as_usize(vt + 0xac));
+        let mut i = 0;
+        while i < n() {
+            gravar(this, read_u32_as_usize(grade + i as usize * CPU12_LINHA), i);
+            i += 1;
+        }
+    } else {
+        if read_u32_as_usize(read_u32_as_usize(this + 4)) == read_u32_as_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
+            let (mut rangers, mut celtic): (i8, i8) = (-1, -1); // bl e [esp+0x17]
+            let total = read_i16(this + 0x3e);
+            let mut c: i8 = 0;
+            while total > 0 && (c as i16) < total {
+                let id = read_u32_as_usize(read_u32_as_usize(tab() + c as isize as usize * CPU12_LINHA));
+                if id == read_u32_as_usize(0x9d0118) {
+                    celtic = c;
+                }
+                if id == read_u32_as_usize(0x9d011c) {
+                    rangers = c;
+                }
+                c = c.wrapping_add(1);
+            }
+            if rangers != -1 && celtic != -1 {
+                let (primeiro, segundo) = if sorteio(2) != 0 { (celtic, rangers) } else { (rangers, celtic) };
+                cpu12_copiar(grade, tab() + primeiro as isize as usize * CPU12_LINHA);
+                cpu12_copiar(grade + metade as usize * CPU12_LINHA, tab() + segundo as isize as usize * CPU12_LINHA);
+                k = 1;
+                *posto.add(metade as usize) = 1;
+                *posto = 1;
+                *usado.add(celtic as isize as usize) = 1;
+                *usado.add(rangers as isize as usize) = 1;
+            }
+        }
+        // os clubes do mesmo estádio (+0x69)
+        let mut i = 0usize;
+        while (i as i32) < n() - 1 {
+            if *usado.add(i) == 0 {
+                let mut j = i + 1;
+                while (j as i32) < n() {
+                    if *usado.add(j) == 0 {
+                        let ei = read_u32_as_usize(read_u32_as_usize(tab() + i * CPU12_LINHA) + 0x69);
+                        if ei != 0 {
+                            let ej = read_u32_as_usize(read_u32_as_usize(tab() + j * CPU12_LINHA) + 0x69);
+                            if ej != 0 && ei == ej {
+                                if k >= metade_n {
+                                    aviso_em(0x9f15f4, 0xf76);
+                                } else {
+                                    cpu12_par(grade, posto, usado, tab(), i, j, &mut k, metade);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    j += 1;
+                }
+            }
+            i += 1;
+        }
+        // os clubes de estádios ligados (+0x48 do estádio de um é o do outro)
+        let mut i = 0usize;
+        while (i as i32) < n() - 1 {
+            if *usado.add(i) == 0 {
+                let mut j = i + 1;
+                while (j as i32) < n() {
+                    if *usado.add(j) == 0 {
+                        let ei = read_u32_as_usize(read_u32_as_usize(tab() + i * CPU12_LINHA) + 0x69);
+                        if ei == 0 {
+                            break;
+                        }
+                        let ej = read_u32_as_usize(read_u32_as_usize(tab() + j * CPU12_LINHA) + 0x69);
+                        if ej == 0 {
+                            break;
+                        }
+                        if read_u32_as_usize(ei + 0x48) == ej || read_u32_as_usize(ej + 0x48) == ei {
+                            if k >= metade_n {
+                                aviso_em(0x9f15f4, 0xfa3);
+                            } else {
+                                cpu12_par(grade, posto, usado, tab(), i, j, &mut k, metade);
+                            }
+                            break;
+                        }
+                    }
+                    j += 1;
+                }
+            }
+            i += 1;
+        }
+        // os outros, às primeiras vagas livres
+        let mut i = 0usize;
+        while (i as i32) < n() {
+            if *usado.add(i) == 0 {
+                if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre
+                    crate::comparacao::ramo("cpu_12 clube na vaga livre");
+                    cpu12_copiar(grade + j * CPU12_LINHA, tab() + i * CPU12_LINHA);
+                    *posto.add(j) = 1;
+                    *usado.add(i) = 1;
+                }
+            }
+            i += 1;
+        }
+    }
+    let mut i = 0usize;
+    while (i as i32) < n() {
+        cpu12_copiar(tab() + i * CPU12_LINHA, grade + i * CPU12_LINHA);
+        i += 1;
+    }
+    liberar(posto as usize);
+    liberar(usado as usize);
+    liberar(grade);
+}
+
+/// Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_sortear_ordem_dos_clubes(this: usize, clubes: i32) {
+    // ponytail: sorteia e aloca (não roda duas vezes); a cópia se prova pela carreira (a grade de jogos de toda liga)
+    orig::<unsafe extern "thiscall" fn(usize, i32)>(1227)(this, clubes)
+}
+
+/// for each table row, moves the club byte +0x64 to the value (down or up) when the row status is not the excluded one
+/// and when it is the included one (0xfd = none)
+/// Original: `League::limit_club_division_tier` (0x68a980, league.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x68a980 } (thiscall, ret 0x10, league.cpp): `League::limit_club_division_tier(valor, fora, dentro, baixar)`
+/// (chamada pelo fim de temporada de cada liga: Argentina, Bélgica, Brasil, Croácia, Dinamarca, Inglaterra, França,
+/// Alemanha, Holanda, Itália, Rússia, Escócia, Suécia e Turquia): para cada linha da tabela (+0xb1, 0x3b bytes, conta
+/// +0x3e), ajusta o byte +0x64 do clube (+0) a `valor` quando a situação da linha (+0x37) não é `fora` (0xfd = nenhuma)
+/// e de novo quando é `dentro` (0xfd = nenhuma). Os três primeiros argumentos são bytes empurrados como dword: só o
+/// byte baixo conta.
+pub(crate) unsafe extern "thiscall" fn teto_da_divisao_dos_clubes(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
+    let (valor, fora, dentro) = (valor as u8 as i8, fora as u8, dentro as u8);
+    let mut i: i16 = 0;
+    while i < *((this + 0x3e) as *const i16) {
+        let linha = || read_usize(this + 0xb1).wrapping_add(i as isize as usize * 0x3b);
+        if fora != 0xfd && *((linha() + 0x37) as *const u8) != fora {
+            cpp13_ajustar(read_usize(linha()), valor, baixar);
+        }
+        if dentro != 0xfd && *((linha() + 0x37) as *const u8) == dentro {
+            cpp13_ajustar(read_usize(linha()), valor, baixar);
+        }
+        i = i.wrapping_add(1);
+    }
+}
+
+/// Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
+pub(crate) unsafe extern "thiscall" fn comparar_teto_da_divisao_dos_clubes(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(1044);
+    let n = *((this + 0x3e) as *const i16);
+    let tabela = read_usize(this + 0xb1);
+    let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (read_usize(tabela + i * 0x3b) + 0x64, 1)).collect();
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, valor, fora, dentro, baixar),
+        || teto_da_divisao_dos_clubes(this, valor, fora, dentro, baixar));
+    PLACAR.registrar(igual, || format!("teto_da_divisao_dos_clubes(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
+        valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
+}

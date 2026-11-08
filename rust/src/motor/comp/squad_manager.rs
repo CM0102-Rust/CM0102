@@ -103,189 +103,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, 
     });
 }
 
-/// the initial FIFA ranking rule: each nation's points are its database strength ÷ 35, repeated as the points of each
-/// of the 6 years [inference] (× 1000); the position comes from the points order
-/// Original: `FIFA_RANKINGS::create_default_table` (0x58dd50, fifa_rankings.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x58dd50 } (thiscall, ret 0, fifa_rankings.cpp, `FIFA_RANKINGS::create_default_table`): a tabela inicial do
-/// ranking da FIFA (registros de 0x2c bytes, um por nação, calloc 0x945501 de [0xae2350] × 0x2c em +0; sem memória, a
-/// caixa da linha 0x2da). Cada registro: +0 o índice da nação; a força da nação (+0xa8, double, nações de 0x122 bytes em
-/// [0xae23a8]) × 1/35 dá os pontos (+0xc, float) e, × 1000 (truncado, _ftol), os 6 dwords +0x14..+0x28 [inferência: os
-/// pontos de cada um dos últimos anos]. Depois a ordem pelos pontos (0x58d610(this, &conta), thiscall, a lista ordenada
-/// das nações com continente) dá a posição: +0x12 = a posição de antes (+0x10) e +0x10 = 1, 2, 3...; a lista é solta.
-pub(crate) unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
-    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let ordem: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(FN_FIFA_RANKINGS_COLLECT_RANKED_ORDER);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let t = calloc(read_u32(0xae2350), 0x2c);
-    *(this as *mut usize) = t;
-    if t == 0 {
-        aviso_em(0x9c74f4, 0x2da);
-        return;
-    }
-    let c1 = core::ptr::read_unaligned(0x96a348 as *const f64);
-    let c2 = core::ptr::read_unaligned(0x968908 as *const f64);
-    let mut k = 0i32;
-    while k < read_u32(0xae2350) as i32 {
-        let r = t + 0x2c * k as usize;
-        *(r as *mut i32) = k;
-        let a = core::ptr::read_unaligned((read_u32(0xae23a8) as usize + 0x122 * k as usize + 0xa8) as *const f64) * c1;
-        let p = (a * c2) as i32;
-        for j in 0..6 {
-            *((r + 0x14 + 4 * j) as *mut i32) = p;
-        }
-        *((r + 0xc) as *mut f32) = a as f32;
-        k += 1;
-    }
-    let mut n = 0i32;
-    let l = ordem(this, &mut n);
-    for i in 0..n.max(0) as usize {
-        let r = read_u32(l + 4 * i) as usize;
-        *((r + 0x12) as *mut u16) = *((r + 0x10) as *const u16);
-        *((r + 0x10) as *mut u16) = (i + 1) as u16;
-    }
-    soltar(l);
-}
 
-/// Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
-/// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
-pub(crate) unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1823);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    o(this);
-    let mut s = [0usize; 1];
-    ranking_fifa_inicial(s.as_mut_ptr() as usize);
-    let (ta, tb) = (read_u32(this) as usize, s[0]);
-    let n = (read_u32(0xae2350) as i32).max(0) as usize * 0x2c;
-    let igual = if ta != 0 && tb != 0 {
-        core::slice::from_raw_parts(ta as *const u8, n) == core::slice::from_raw_parts(tb as *const u8, n)
-    } else {
-        ta == tb
-    };
-    let dif = if igual || ta == 0 || tb == 0 {
-        None
-    } else {
-        (0..n).find(|&i| *((ta + i) as *const u8) != *((tb + i) as *const u8))
-    };
-    if tb != 0 {
-        soltar(tb);
-    }
-    PLACAR.registrar(igual, || format!("ranking_fifa_inicial: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
-}
 
-/// the neutral venue rule (finals and semi-finals): grounds with a city, nation and continent qualify, except the City
-/// of Manchester Stadium (under construction) and, in nations with competitions, those under 5000 seats; each nation's
-/// national stadium is flagged
-/// Original: `Stadium::build_venue_list` (0x85dfc0, stadium.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x85dfc0 } (thiscall, ret 0, stadium.cpp, `Stadium::build_venue_list`): refaz a lista dos estádios para jogos
-/// em campo neutro (+0xc a lista de registros de 16 bytes, +0x10 a conta, +0x14 a capacidade; a velha é solta). As
-/// sedes das próximas edições de três competições (as chaves 0x9cf79c, 0x9cf7a4, 0x9cf7ac; 0x5fa7d0 no HostCountry
-/// [0xb5e134], sem ele a caixa da linha 0x858) são achadas, mas não mudam nada (o laço delas termina igual nos dois
-/// caminhos). Entram os estádios (registros de 0x4e bytes em [0xae23b0], conta [0xae2358]) com cidade (+0x38), nação da
-/// cidade (+0x1f) e continente da nação (+0x71), fora o "City of Manchester Stadium" (ainda em obras em 2001) e, nas
-/// nações com competições (+0x11c), os de menos de 5000 lugares (+0x3c). Cada registro: +0 o id da nação, +4 o id do
-/// continente, +8 se é o estádio nacional (+0x80 da nação), +0xc o estádio. A lista cresce de 30 em 30 (0x944e46,
-/// realloc 0x945667; sem memória, as caixas das linhas 0x89c e 0x8ac, e para). No fim é ordenada (qsort com a
-/// 0x85e2f0) e +0x18 = 1.
-pub(crate) unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let sedes: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_NEXT_HOSTS);
-    let (lista, conta, cap) = ((this + 0xc) as *mut usize, (this + 0x10) as *mut i32, (this + 0x14) as *mut i32);
-    if *lista != 0 {
-        soltar(*lista);
-        *lista = 0;
-        *cap = 0;
-        *conta = 0;
-    }
-    let hc = read_u32(0xb5e134) as usize;
-    if hc == 0 {
-        aviso_em(0xa835b0, 0x858);
-    } else {
-        // as sedes: só achadas (a original não as usa depois); as saídas se sobrepõem como na original
-        let mut s = [0u32; 8];
-        let mut b = sedes(hc, read_u32(KEY_CLUB_COMP_FIFA_WORLD_CUP), s.as_mut_ptr(), s.as_mut_ptr().add(1)) as i8;
-        b = b.wrapping_add(sedes(hc, read_u32(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1)) as i8);
-        sedes(hc, read_u32(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), s.as_mut_ptr().add(b as usize), s.as_mut_ptr().add(b as usize + 1));
-    }
-    let mut k = 0i32;
-    while k < read_u32(0xae2358) as i32 {
-        let e = read_u32(0xae23b0) as usize + 0x4e * k as usize;
-        k = (k as i16).wrapping_add(1) as i32;
-        let cidade = read_u32(e + 0x38) as usize;
-        if cidade == 0 {
-            continue;
-        }
-        let nacao = read_u32(cidade + 0x1f) as usize;
-        if nacao == 0 || read_u32(nacao + 0x71) == 0 {
-            continue;
-        }
-        if core::ffi::CStr::from_ptr((e + 4) as *const core::ffi::c_char).to_bytes() == b"City of Manchester Stadium" {
-            continue;
-        }
-        if *((nacao + 0x11c) as *const u8) != 0 && (read_u32(e + 0x3c) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
-            crate::comparacao::ramo("cqn_3 estadio pequeno");
-            continue; // cqn3: o estádio pequeno fica de fora
-        }
-        if *lista == 0 {
-            *lista = alocar(0x1e0);
-            if *lista == 0 {
-                aviso_em(0xa835b0, 0x89c);
-                return;
-            }
-            *cap = 0x1e;
-        } else if *conta == *cap {
-            *lista = realocar(*lista, ((*cap + 0x1e) << 4) as u32);
-            if *lista == 0 {
-                aviso_em(0xa835b0, 0x8ac);
-                return;
-            }
-            *cap += 0x1e;
-        }
-        let r = *lista + 16 * *conta as usize;
-        *(r as *mut u32) = read_u32(nacao);
-        *((r + 4) as *mut u32) = read_u32(read_u32(nacao + 0x71) as usize);
-        *((r + 0xc) as *mut usize) = e;
-        crate::comparacao::ramo("cqn_3 entra na lista");
-        *((r + 8) as *mut u32) = (read_u32(nacao + 0x80) as usize == e) as u32; // cqn3: o estádio nacional
-        *conta += 1;
-    }
-    ordenar(*lista, *conta as u32, 0x10, 0x85e2f0);
-    *((this + 0x18) as *mut u8) = 1;
-}
 
-/// Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
-/// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
-/// solta). Sem o HostCountry (a caixa), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1824);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    if read_u32(0xb5e134) == 0 {
-        return o(this);
-    }
-    let mut s = [0u8; 0x20];
-    core::ptr::copy_nonoverlapping(this as *const u8, s.as_mut_ptr(), 0x20);
-    s[0xc..0x18].fill(0);
-    o(this);
-    let r = s.as_mut_ptr() as usize;
-    lista_de_estadios_neutros(r);
-    let a = core::slice::from_raw_parts(this as *const u8, 0x20);
-    let campos = a[..0xc] == s[..0xc] && a[0x10..0x20] == s[0x10..0x20];
-    let (la, lb) = (read_u32(this + 0xc) as usize, read_u32(r + 0xc) as usize);
-    let n = (read_u32(this + 0x10) as i32).max(0) as usize * 16;
-    let listas = if la != 0 && lb != 0 {
-        core::slice::from_raw_parts(la as *const u8, n) == core::slice::from_raw_parts(lb as *const u8, n)
-    } else {
-        la == lb
-    };
-    if lb != 0 {
-        soltar(lb);
-    }
-    PLACAR.registrar(campos && listas, || format!("lista_de_estadios_neutros: campos {} listas {} (contas {} e {})", campos, listas, read_u32(this + 0x10) as i32, read_u32(r + 0x10) as i32));
-}
 
 // ---------- 276a leva: os números de camisa: o número de um jogador no clube, se o clube usa números e gravar o número (squad_manager.cpp) ----------
 
@@ -1062,3 +882,35 @@ pub(crate) unsafe extern "thiscall" fn comparar_inscrever_na_europa(this: usize,
     r
 }
 
+/// writes the u16 at +0, widened to 4 bytes, into the squad_manager.dat item and returns 1; on error the "Error" box
+/// (squad_manager.cpp 0x68, 0x6f) and 0
+/// Original: `SQUAD_MANAGER::save` (0x859cc0, squad_manager.cpp, thiscall).
+///
+/// [pt] { 0x859cc0 } (thiscall, ret 4, squad_manager.cpp): `SQUAD_MANAGER::save(save)`: grava no item `squad_manager.dat`
+/// o u16 em +0 do gerente de elencos, estendido a 4 bytes (a original zera eax antes do `mov ax`), e devolve 1. Erro
+/// ao abrir ou ao gravar: a caixa "Error" (squad_manager.cpp 0x68, 0x6f) e 0, sem fechar o item. Não confere o
+/// contêiner nulo (o 0x9326e0 recebe como vier).
+pub(crate) unsafe extern "thiscall" fn gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
+    let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
+    let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
+    let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(FN_ZCLOSE);
+    crate::comparacao::ramo("cpx_5 gravar gerente de elencos");
+    let mut v = *(this as *const u16) as u32; // cpx5: o valor do gerente de elencos
+    let mut z = abrir_item(save, 0xa82bc0, 1, 0x16, 4);
+    if z == 0 {
+        aviso_em(0xa82b88, 0x68);
+        return 0;
+    }
+    if gravar_item(&mut v as *mut u32 as usize, 4, 1, z) != 1 {
+        aviso_em(0xa82b88, 0x6f);
+        return 0;
+    }
+    fechar_item(&mut z);
+    1
+}
+
+/// Comparador da 0x859cc0: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
+    // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1499)(this, save)
+}

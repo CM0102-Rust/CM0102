@@ -764,13 +764,6 @@ pub(crate) unsafe fn byte_da_carga(lesoes: usize, id: *const i32) -> *mut u8 {
     (*(lesoes as *const usize) as isize + *id as isize * 31 + 0x1e) as *mut u8
 }
 
-/// stores the player's training load in the fitness record
-/// Original: `Injury::set_training_load` (0x62c660, injury.cpp, thiscall).
-///
-/// [pt] { 0x62c660 } (thiscall, ret 8, injury.cpp): grava a carga de treino `valor` do jogador `*id`.
-pub(crate) unsafe extern "thiscall" fn gravar_carga_de_treino(lesoes: usize, id: *const i32, valor: u8) {
-    *byte_da_carga(lesoes, id) = valor;
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_lista_de_observados(gerente: usize) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> usize>(436)(gerente);
@@ -786,12 +779,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_entrada_do_treino(treino: usize,
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_carga_de_treino(lesoes: usize, id: *const i32, valor: u8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, u8)>(438);
-    let a = byte_da_carga(lesoes, id) as usize;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 1)], || o(lesoes, id, valor), || gravar_carga_de_treino(lesoes, id, valor));
-    PLACAR.registrar(igual, || format!("gravar_carga_de_treino({}, {}) {:x?} x {:x?}", *id, valor, mo, mr));
-}
 
 // ---------- 178a leva: a media do jogo, o valor do contrato e o nivel para a selecao ----------
 
@@ -809,50 +796,7 @@ pub(crate) unsafe extern "thiscall" fn media_do_jogo(t: usize, segunda: u8) -> f
     n / q
 }
 
-/// dword +0xc of the person's contract record
-/// Original: `contract_value` (0x4d0c20, contract_manager.cpp, thiscall).
-///
-/// [pt] { 0x4d0c20 } (thiscall, ret 4, contract_manager.cpp): o dword +0xc da ficha de contrato (0x50 bytes
-/// a partir de [this]) da pessoa `*p`, pelo índice em +0 do registro de 79 bytes em [0xae2d0c]; 0 sem
-/// pessoa, com id fora de [0xae2364], índice negativo ou ficha no endereço 0.
-pub(crate) unsafe extern "thiscall" fn valor_do_contrato(t: usize, p: *const i32) -> u32 {
-    if p.is_null() || *p >= *(0xae2364 as *const i32) {
-        return 0;
-    }
-    let k = core::ptr::read_unaligned((*(0xae2d0c as *const usize)).wrapping_add((*p as usize).wrapping_mul(79)) as *const i32);
-    if k < 0 {
-        return 0;
-    }
-    let ficha = (*(t as *const usize)).wrapping_add(k as usize * 0x50);
-    if ficha == 0 {
-        return 0;
-    }
-    core::ptr::read_unaligned((ficha + 0xc) as *const u32)
-}
 
-/// the player's level 1..3 for the national team by reputation and position ratings
-/// Original: `national_team_level` (0x76d810, national_teams.cpp, stdcall).
-///
-/// [pt] { 0x76d810 } (stdcall, ret 0xc, national_teams.cpp): o nível 1..3 do jogador `j` para a seleção
-/// (0 com reputação `*rep` abaixo de 100, ou 50 com `base`, ou goleiro de nota 15): 1 para líbero ou
-/// zagueiro, 2 para volante, meia ou meia-atacante (nota 15 em +0x10..+0x14 da ficha), senão 3.
-/// Devolve só `al`.
-pub(crate) unsafe extern "stdcall" fn nivel_para_a_selecao(j: usize, rep: *const i16, base: u8) -> u8 {
-    if *rep < if base != 0 { 0x32 } else { 0x64 } {
-        return 0;
-    }
-    let ficha = core::ptr::read_unaligned((j + 0x61) as *const usize);
-    let n = |o: usize| *((ficha + o) as *const i8) >= 0xf;
-    if n(0xf) {
-        0
-    } else if n(0x10) || n(0x11) {
-        1
-    } else if n(0x12) || n(0x13) || n(0x14) {
-        2
-    } else {
-        3
-    }
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_media_do_jogo(t: usize, segunda: u8) -> f64 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u8) -> f64>(406)(t, segunda);
@@ -863,10 +807,39 @@ pub(crate) unsafe extern "thiscall" fn comparar_media_do_jogo(t: usize, segunda:
 
 comparar_valor!(comparar_valor_do_contrato, valor_do_contrato, 407, (p: *const i32) -> u32);
 
-pub(crate) unsafe extern "stdcall" fn comparar_nivel_para_a_selecao(j: usize, rep: *const i16, base: u8) -> u8 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8>(408)(j, rep, base);
-    let n = nivel_para_a_selecao(j, rep, base);
-    PLACAR.registrar(r == n, || format!("nivel_para_a_selecao({:#x}, {}, {}) original={} rust={}", j, *rep, base, r, n));
+/// the game CRT pow (0x945ff0) of two doubles, result in st0
+/// Original: `pow_double` (0x5d5a20, game.cpp, cdecl).
+///
+/// [pt] { 0x5d5a20 } (cdecl, game.cpp): `pow_double(base, expoente)`: o pow da CRT do jogo (0x945ff0), resultado em st0.
+pub(crate) unsafe extern "C" fn pow_do_game(base: f64, expoente: f64) -> f64 {
+    pow_do_jogo(base, expoente)
+}
+
+pub(crate) unsafe extern "C" fn comparar_pow_do_game(base: f64, expoente: f64) -> f64 {
+    let r = orig::<unsafe extern "C" fn(f64, f64) -> f64>(857)(base, expoente);
+    let n = pow_do_game(base, expoente);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("pow_do_game({}, {}) original={} rust={}", base, expoente, r, n));
     r
 }
 
+/// player data qsort: current ability (+5), then potential (+7), ascending
+/// Original: `compare_players_by_ability` (0x5d6220, game.cpp, cdecl).
+///
+/// [pt] { 0x5d6220 } (cdecl, game.cpp): `compare_players_by_ability(a, b)`, o qsort dos dados de jogador em
+/// game_daily_staff_update (0x5d588f): pela habilidade atual (+5), depois pela potencial (+7), crescente.
+pub(crate) unsafe extern "C" fn ordem_por_habilidade(a: *const usize, b: *const usize) -> i32 {
+    let (pa, pb) = (*a, *b);
+    let h = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const i16) as i32;
+    if h(pa, 5) == h(pb, 5) {
+        return h(pa, 7) - h(pb, 7);
+    }
+    h(pa, 5) - h(pb, 5)
+}
+
+/// Comparador: pelo valor.
+pub(crate) unsafe extern "C" fn comparar_ordem_por_habilidade(a: *const usize, b: *const usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(1213)(a, b);
+    let n = ordem_por_habilidade(a, b);
+    PLACAR.registrar(r == n, || format!("ordem_por_habilidade({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    r
+}

@@ -199,61 +199,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_nome_do_veiculo(this: usize, tip
     PLACAR.registrar(igual, || format!("nome_do_veiculo(tipo {}, id {}) original={:x?} rust={:x?}", tipo as i8, id as i16, mo, mr));
 }
 
-/// club with a nation and manager: news 0x178e (club, manager, type, person, a, b, nation, c) to the nation's managers
-/// if the reputation is above 4750, else to the club
-/// Original: `Media::queue_manager_fa_complaint_story` (0x758de0, media.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x758de0 } (thiscall, ret 0x18, media.cpp, SEH da notícia local, sem destrutor): `Media::
-/// queue_manager_fa_complaint_story(clube, pessoa, tipo, a, b, c)`, pela disciplina (0x55e300) e pelo MANAGER_MANAGER
-/// (0x6a9e60, 0x6ab800). Clube com nação (+0x53) e técnico (+0xcf), e pessoa: a notícia 0x178e (o clube; o técnico, id
-/// e chaves, ou −1; o tipo; a pessoa, id e chaves; a; b; a nação ou −1; c) aos técnicos da nação (0x7863f0) se a
-/// reputação (+0x80) passar de 4750, senão ao clube (0x7861e0).
-pub(crate) unsafe extern "thiscall" fn noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
-    let _ = this;
-    if clube == 0 || read_usize(clube + 0x53) == 0 || read_usize(clube + 0xcf) == 0 || pessoa == 0 {
-        return;
-    }
-    crate::comparacao::ramo("cpz_10 noticia da queixa a federacao");
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
-    let nt = local.as_mut_ptr() as usize;
-    construir(nt, 0x178e, 0);
-    gravar(nt, 0, cpz10_u(clube));
-    let tecnico = read_usize(clube + 0xcf);
-    if tecnico != 0 {
-        gravar(nt, 1, cpz10_u(tecnico));
-        gravar(nt, 2, cpz10_u(read_usize(tecnico + 4) + 0x33));
-        gravar(nt, 3, cpz10_u(read_usize(tecnico + 8) + 0x33));
-        gravar(nt, 4, cpz10_u(read_usize(tecnico + 0xc) + 0x33));
-    } else {
-        for k in 1..5 {
-            gravar(nt, k, u32::MAX);
-        }
-    }
-    gravar(nt, 5, tipo as i8 as u32);
-    gravar(nt, 6, cpz10_u(pessoa));
-    gravar(nt, 7, cpz10_u(read_usize(pessoa + 4) + 0x33));
-    gravar(nt, 8, cpz10_u(read_usize(pessoa + 8) + 0x33));
-    gravar(nt, 9, cpz10_u(read_usize(pessoa + 0xc) + 0x33));
-    gravar(nt, 0xa, a as i8 as u32);
-    gravar(nt, 0xb, b as i16 as u32);
-    let nacao = read_usize(clube + 0x53);
-    gravar(nt, 0xc, if nacao != 0 { cpz10_u(nacao) } else { u32::MAX });
-    gravar(nt, 0xd, c as i8 as u32);
-    let nacao = read_usize(clube + 0x53);
-    if nacao != 0 && cpz10_sw(clube + 0x80) > 0x128e {
-        let aos_da_nacao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
-        aos_da_nacao(read_usize(0xb7431c), nt, nacao);
-    } else {
-        let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
-        entregar(read_usize(0xb7431c), nt, clube);
-    }
-}
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo. Sem notícia as duas não
 // fazem nada.
-pub(crate) unsafe extern "thiscall" fn comparar_noticia_queixa_a_federacao(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(1409)(this, clube, pessoa, tipo, a, b, c)
-}
 

@@ -421,97 +421,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_noticia_do_confronto_penden
     orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(1522)(this, rodada, confronto) // ponytail: só a notícia
 }
 
-/// checks each transfer window in the previous, current and next months: on the day, the opening or closing notice; the
-/// day after the opening, the notice and the waiting offers of the nation; a week before the opening, the notice
-/// Original: `TRANSFER_MANAGER::update_transfer_window_news` (0x8c6bc0, transfer_manager.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x8c6bc0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
-/// `TRANSFER_MANAGER::update_transfer_window_news(hoje)`, do dia das transferências. Os meses anterior, atual e
-/// seguinte (0x54cfb0: mov ecx, hoje -> thiscall, ret 0; o anterior de janeiro é dezembro do ano −1, o seguinte de
-/// dezembro é janeiro do ano +1), hoje + 1 semana (0x54c770: push 1; push saída; mov ecx, hoje -> thiscall, ret 8) e
-/// ontem (0x54c8e0: idem). Para cada janela do vetor [this+0x8a4] (conta +0x8a8, relida): no primeiro dos três meses
-/// igual ao dela (+4), a data dela naquele ano (0x40a7d0: push ano; push saída; mov ecx, janela -> thiscall, ret 8;
-/// copiada pela 0x417c10). Hoje: o virtual +0x2c das regras da nação dela ([this+0x8ac + 4·(+0)]: push o dword do ano
-/// da data; push o código 1, ou 3 se a janela fecha (+5), com os bytes altos do mesmo dword; push janela -> thiscall,
-/// ret 0xc); ontem e janela que abre: o virtual com 0 e as ofertas em espera da nação das regras (+0xa; 0x8c4e10: push
-/// nação; mov ecx, esi -> thiscall, ret 4); daqui a uma semana e janela que abre: o virtual com 2.
-pub(crate) unsafe extern "thiscall" fn janelas_avisos_do_dia(this: usize, hoje: usize) {
-    let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    let mais_semanas: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
-    let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let data_da_janela: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_TRANSFER_WINDOW_GET_DATE);
-    let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let espera: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_TRANSFER_MANAGER_HOLD_OFFERS_AT_WINDOW_CLOSE);
-    let mut anos = [0i16; 3];
-    let mut d = [0u8; 8];
-    let pd = d.as_mut_ptr() as usize;
-    padrao(pd);
-    let mut meses = [0u8; 3];
-    meses[0] = mes(hoje).wrapping_sub(1);
-    if (meses[0] as i8) < 0 {
-        meses[0] = 0xb;
-        anos[0] = -1;
-    }
-    meses[1] = mes(hoje);
-    meses[2] = mes(hoje).wrapping_add(1);
-    if (meses[2] as i8) > 0xb {
-        meses[2] = 0;
-        anos[2] = 1;
-    }
-    let (mut semana, mut ontem) = ([0u8; 8], [0u8; 8]);
-    let (ps, po) = (semana.as_mut_ptr() as usize, ontem.as_mut_ptr() as usize);
-    mais_semanas(hoje, ps, 1);
-    menos(hoje, po, 1);
-    let mut v = read_u32_as_usize(this + 0x8a4);
-    let mut i: i32 = 0;
-    while i < read_u32_as_usize(this + 0x8a8) as i32 {
-        for j in 0..3 {
-            let w = read_u32_as_usize(v);
-            if read_u8(w + 4) != meses[j] {
-                continue;
-            }
-            let ano = (anos[j] as u16).wrapping_add(read_i16(hoje + 2) as u16);
-            let (mut t, mut c) = ([0u8; 8], [0u8; 8]);
-            let r = data_da_janela(w, t.as_mut_ptr() as usize, ano as u32);
-            copia(pd, c.as_mut_ptr() as usize, r);
-            let (hd, ha) = (read_i16(hoje), read_i16(hoje + 2));
-            let (dd, da, dw) = (read_i16(pd), read_i16(pd + 2), read_u32_as_usize(pd + 2) as u32);
-            let regras = |w: usize| read_u32_as_usize(this + 0x8ac + (read_u8(w) as i8 as isize * 4) as usize);
-            let aviso = |w: usize, codigo: u32| {
-                let rg = regras(w);
-                let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(rg) + 0x2c));
-                f(rg, w, codigo, dw);
-            };
-            if ha == da && hd == dd {
-                let codigo = if read_u8(w + 5) != 0 { 3 } else { 1 };
-                aviso(w, (dw & 0xffff_ff00) | codigo); // cqc5: o aviso do dia da janela
-                break;
-            }
-            if read_i16(po + 2) == da && read_i16(po) == dd && read_u8(w + 5) == 0 {
-                aviso(w, 0);
-                let nacao = read_u32_as_usize(regras(read_u32_as_usize(v)) + 0xa);
-                if nacao != 0 {
-                    crate::comparacao::ramo("cqc_5 janela aberta");
-                    espera(this, nacao); // cqc5: as ofertas em espera da janela que abriu
-                }
-                break;
-            }
-            if read_i16(ps + 2) == da && read_i16(ps) == dd && read_u8(w + 5) == 0 {
-                aviso(w, 2);
-                break;
-            }
-        }
-        i += 1;
-        v += 4;
-    }
-}
 
-/// Comparador da 0x8c6bc0: só a original (ela só grava nas locais; os avisos das regras alocam notícias e as ofertas
-/// em espera mudam de status e são reagendadas).
-pub(crate) unsafe extern "thiscall" fn comparar_janelas_avisos_do_dia(this: usize, hoje: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1523)(this, hoje) // ponytail: nada próprio a conferir
-}
 
 // ---------- 264a leva: a copa: o sorteio pela semente, o sorteio que separa as nações e o começo da temporada da copa (Cup.cpp) ----------
 
@@ -1404,52 +1314,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize,
     r
 }
 
-/// writes the stage and round names (with their genders, through template 0x9a7cfc), or just one of them; without an
-/// output or under 200 bytes, the error box and 0
-/// Original: `comp_util_format_stage_round_name` (0x4bffc0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4bffc0 } (cdecl, comp_util.cpp): `comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo)`:
-/// sem saída ou com menos de 200 bytes, a caixa (linha 0x26a1) e 0. Zera a saída; com fase e rodada, "{fase} {rodada}"
-/// (0x66f4e0 com o modelo 0x9a7cfc, os nomes de 100 bytes da 0x4b4850 e os gêneros da 0x4ba8f0); só uma delas, o nome
-/// dela direto na saída (0x4b4850 com o tamanho); nenhuma, só o zero. Devolve 1 (0 na caixa).
-pub(crate) unsafe extern "C" fn nome_da_fase_e_rodada(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
-    if saida.is_null() || tamanho < 0xc8 {
-        return orig::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(1426)(fase, rodada, saida, tamanho, estilo); // a caixa
-    }
-    // 0x4b4850: 4 pushes (estilo, id, tamanho, saída); add esp -> cdecl; 0x4ba8f0: push estilo; push id -> cdecl
-    let nome: unsafe extern "C" fn(*mut u8, i32, u32, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
-    let genero: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
-    *saida = 0;
-    if fase != 0 && rodada != 0 {
-        let (mut a, mut b) = ([0u8; 0x64], [0u8; 0x64]);
-        nome(a.as_mut_ptr(), 0x64, fase, estilo);
-        let ga = genero(fase, estilo) as i8 as i32 as u32;
-        nome(b.as_mut_ptr(), 0x64, rodada, estilo);
-        let gb = genero(rodada, estilo) as i8 as i32 as u32;
-        // 0x66f4e0: 8 pushes; add esp, 0x20 -> cdecl (saída, modelo, ga, ga, gb, gb, &a, &b)
-        let texto: unsafe extern "C" fn(*mut u8, usize, u32, u32, u32, u32, *const u8, *const u8) -> usize = core::mem::transmute(FN_LANGLIB_SPRINTF);
-        texto(saida, 0x9a7cfc, ga, ga, gb, gb, a.as_ptr(), b.as_ptr());
-    } else if fase != 0 {
-        nome(saida, tamanho, fase, estilo);
-    } else if rodada != 0 {
-        nome(saida, tamanho, rodada, estilo);
-    } else {
-        return 0; // nenhuma das duas: 0 (0x4c0136)
-    }
-    1
-}
 
-/// Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
-pub(crate) unsafe extern "C" fn comparar_nome_da_fase_e_rodada(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(1426);
-    if saida.is_null() || tamanho < 0xc8 {
-        return o(fase, rodada, saida, tamanho, estilo); // a caixa: só a original
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, (tamanho as usize).min(0x400))],
-        || o(fase, rodada, saida, tamanho, estilo), || nome_da_fase_e_rodada(fase, rodada, saida, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("nome_da_fase_e_rodada({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
-    r
-}
 
 /// O nível da divisão do clube: a palavra +0x69 da divisão (+0x57), ou 0 sem divisão.
 pub(crate) unsafe fn cqa3_nivel(clube: usize) -> i16 {
@@ -1839,197 +1704,6 @@ pub(crate) unsafe fn cpu12_par(grade: usize, posto: *mut u32, usado: *mut u32, t
     *k += 1;
 }
 
-/// shuffles the league table with the seeded rand and puts clubs sharing a ground, clubs with linked grounds and Celtic
-/// and Rangers in paired slots
-/// Original: `League::draw_team_order` (0x686a70, league.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x686a70 } (thiscall, ret 4, league.cpp): `League::draw_team_order(clubes)`: embaralha a tabela da liga
-/// ([+0xb1], +0x3e registros de 59 bytes) para a grade de jogos: guarda um sorteio (0x90cfc0, 30000), semeia o rand
-/// da CRT com +0x40 + [0xdd7120] e troca n pares sorteados (rand × n / 0x8000), e volta a semente (sorteio + 1). Liga
-/// com a marca 0x100 em +0xd9: cada clube vai à vaga que a tabela virtual +0xa8 diz (se livre), os outros às
-/// primeiras livres, e a +0xac recebe cada vaga. Senão: na Escócia ([+4] = [0x9cf5dc]) o Celtic e o Rangers
-/// ([0x9d0118], [0x9d011c]) vão às vagas 0 e clubes / 2, em ordem sorteada (0x90cfc0, 2); os clubes do mesmo estádio
-/// (+0x69) e depois os de estádios ligados (+0x48 do estádio) vão em pares às vagas k e clubes / 2 + k (passando da
-/// metade dos clubes, a caixa); os outros, às primeiras vagas livres. A grade (0x944cf1, livre em 0x944c94) volta à
-/// tabela. Sem memória: a caixa (linha 0xed3).
-pub(crate) unsafe extern "thiscall" fn sortear_ordem_dos_clubes(this: usize, clubes: i32) {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let semear: unsafe extern "C" fn(u32) = core::mem::transmute(FN_CRT_SRAND);
-    let rand: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_CRT_RAND);
-    let n = || read_i16(this + 0x3e) as i32;
-    let tab = || read_u32_as_usize(this + 0xb1);
-    let metade_n = n() / 2;
-    let usado = novo((n() * 4) as u32) as *mut u32;
-    let posto = novo((n() << 2) as u32) as *mut u32;
-    let grade = novo((n() * CPU12_LINHA as i32) as u32);
-    let mut k: i32 = 0;
-    if grade == 0 || usado.is_null() || posto.is_null() {
-        aviso_em(0x9f15f4, 0xed3);
-        liberar(posto as usize);
-        liberar(usado as usize);
-        liberar(grade);
-        return;
-    }
-    let mut i = 0;
-    while i < n() {
-        *usado.add(i as usize) = 0;
-        *posto.add(i as usize) = 0;
-        i += 1;
-    }
-    let semente = sorteio(30000).wrapping_add(1);
-    semear((read_i16(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)) as u32); // cpu12: a semente
-    crate::comparacao::ramo("cpu_12 ordem sorteada");
-    let mut i = 0;
-    while i < n() {
-        let a = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
-        let b = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
-        let mut tmp = [0u8; CPU12_LINHA];
-        let t = tab();
-        core::ptr::copy(( t + a * CPU12_LINHA) as *const u8, tmp.as_mut_ptr(), CPU12_LINHA);
-        cpu12_copiar(t + a * CPU12_LINHA, t + b * CPU12_LINHA);
-        core::ptr::copy(tmp.as_ptr(), (tab() + b * CPU12_LINHA) as *mut u8, CPU12_LINHA); // cpu12: a troca
-        i += 1;
-    }
-    semear(semente as u32);
-    let metade = clubes / 2;
-    if read_i16(this + 0xd9) as u16 & 0x100 != 0 {
-        let mut i = 0;
-        while i < n() {
-            *((grade + i as usize * CPU12_LINHA) as *mut u32) = 0;
-            i += 1;
-        }
-        let vt = read_u32_as_usize(this);
-        let vaga_do: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(read_u32_as_usize(vt + 0xa8));
-        let mut i = 0usize;
-        while (i as i32) < n() {
-            let s = vaga_do(this, read_u32_as_usize(tab() + i * CPU12_LINHA)) as i8 as i32;
-            if s >= 0 && s < n() && read_u32_as_usize(grade + s as usize * CPU12_LINHA) == 0 {
-                cpu12_copiar(grade + s as usize * CPU12_LINHA, tab() + i * CPU12_LINHA);
-                *((tab() + i * CPU12_LINHA) as *mut u32) = 0;
-            }
-            i += 1;
-        }
-        let mut i = 0usize;
-        while (i as i32) < n() {
-            let lin = tab() + i * CPU12_LINHA;
-            if read_u32_as_usize(lin) != 0 {
-                if let Some(j) = (0..n().max(0) as usize).find(|&j| read_u32_as_usize(grade + j * CPU12_LINHA) == 0) {
-                    cpu12_copiar(grade + j * CPU12_LINHA, lin);
-                }
-            }
-            i += 1;
-        }
-        let gravar: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(read_u32_as_usize(vt + 0xac));
-        let mut i = 0;
-        while i < n() {
-            gravar(this, read_u32_as_usize(grade + i as usize * CPU12_LINHA), i);
-            i += 1;
-        }
-    } else {
-        if read_u32_as_usize(read_u32_as_usize(this + 4)) == read_u32_as_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
-            let (mut rangers, mut celtic): (i8, i8) = (-1, -1); // bl e [esp+0x17]
-            let total = read_i16(this + 0x3e);
-            let mut c: i8 = 0;
-            while total > 0 && (c as i16) < total {
-                let id = read_u32_as_usize(read_u32_as_usize(tab() + c as isize as usize * CPU12_LINHA));
-                if id == read_u32_as_usize(0x9d0118) {
-                    celtic = c;
-                }
-                if id == read_u32_as_usize(0x9d011c) {
-                    rangers = c;
-                }
-                c = c.wrapping_add(1);
-            }
-            if rangers != -1 && celtic != -1 {
-                let (primeiro, segundo) = if sorteio(2) != 0 { (celtic, rangers) } else { (rangers, celtic) };
-                cpu12_copiar(grade, tab() + primeiro as isize as usize * CPU12_LINHA);
-                cpu12_copiar(grade + metade as usize * CPU12_LINHA, tab() + segundo as isize as usize * CPU12_LINHA);
-                k = 1;
-                *posto.add(metade as usize) = 1;
-                *posto = 1;
-                *usado.add(celtic as isize as usize) = 1;
-                *usado.add(rangers as isize as usize) = 1;
-            }
-        }
-        // os clubes do mesmo estádio (+0x69)
-        let mut i = 0usize;
-        while (i as i32) < n() - 1 {
-            if *usado.add(i) == 0 {
-                let mut j = i + 1;
-                while (j as i32) < n() {
-                    if *usado.add(j) == 0 {
-                        let ei = read_u32_as_usize(read_u32_as_usize(tab() + i * CPU12_LINHA) + 0x69);
-                        if ei != 0 {
-                            let ej = read_u32_as_usize(read_u32_as_usize(tab() + j * CPU12_LINHA) + 0x69);
-                            if ej != 0 && ei == ej {
-                                if k >= metade_n {
-                                    aviso_em(0x9f15f4, 0xf76);
-                                } else {
-                                    cpu12_par(grade, posto, usado, tab(), i, j, &mut k, metade);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    j += 1;
-                }
-            }
-            i += 1;
-        }
-        // os clubes de estádios ligados (+0x48 do estádio de um é o do outro)
-        let mut i = 0usize;
-        while (i as i32) < n() - 1 {
-            if *usado.add(i) == 0 {
-                let mut j = i + 1;
-                while (j as i32) < n() {
-                    if *usado.add(j) == 0 {
-                        let ei = read_u32_as_usize(read_u32_as_usize(tab() + i * CPU12_LINHA) + 0x69);
-                        if ei == 0 {
-                            break;
-                        }
-                        let ej = read_u32_as_usize(read_u32_as_usize(tab() + j * CPU12_LINHA) + 0x69);
-                        if ej == 0 {
-                            break;
-                        }
-                        if read_u32_as_usize(ei + 0x48) == ej || read_u32_as_usize(ej + 0x48) == ei {
-                            if k >= metade_n {
-                                aviso_em(0x9f15f4, 0xfa3);
-                            } else {
-                                cpu12_par(grade, posto, usado, tab(), i, j, &mut k, metade);
-                            }
-                            break;
-                        }
-                    }
-                    j += 1;
-                }
-            }
-            i += 1;
-        }
-        // os outros, às primeiras vagas livres
-        let mut i = 0usize;
-        while (i as i32) < n() {
-            if *usado.add(i) == 0 {
-                if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre
-                    crate::comparacao::ramo("cpu_12 clube na vaga livre");
-                    cpu12_copiar(grade + j * CPU12_LINHA, tab() + i * CPU12_LINHA);
-                    *posto.add(j) = 1;
-                    *usado.add(i) = 1;
-                }
-            }
-            i += 1;
-        }
-    }
-    let mut i = 0usize;
-    while (i as i32) < n() {
-        cpu12_copiar(tab() + i * CPU12_LINHA, grade + i * CPU12_LINHA);
-        i += 1;
-    }
-    liberar(posto as usize);
-    liberar(usado as usize);
-    liberar(grade);
-}
 
 /// O núcleo da 0x5219b0: o jogo `jogo` da rodada `rodada` ([[+0xad] + rodada × 4] + jogo × 0x35): cada lado (+0 e
 /// +2) com clube vai a `saida[*conta]` (e conta sobe); lado vazio (−1) desce ao jogo de onde ele vem (+0xe/+0xa e
@@ -2102,11 +1776,6 @@ pub(crate) unsafe extern "thiscall" fn clubes_do_lado_do_jogo(this: usize, rodad
     *conta
 }
 
-/// Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_sortear_ordem_dos_clubes(this: usize, clubes: i32) {
-    // ponytail: sorteia e aloca (não roda duas vezes); a cópia se prova pela carreira (a grade de jogos de toda liga)
-    orig::<unsafe extern "thiscall" fn(usize, i32)>(1227)(this, clubes)
-}
 
 /// Comparador: o esperado sai do núcleo sobre uma conta própria e uma saída própria antes da original; depois, a
 /// devolução, a conta global e a saída têm de bater.
@@ -2457,43 +2126,6 @@ pub(crate) unsafe fn cps13_doenca(f: usize, id: usize, nacao: usize, alto_dia: u
     doenca(read_u32_as_usize(0xb63d28), &mut d, 3, id, nacao);
 }
 
-/// with the stadium in a third-world country, gives the visiting clubs the illness risk on the day before the fixture
-/// Original: `FIXTURE_MANAGER::add_away_trip_illness_risk` (0x5ab3c0, fix_man.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5ab3c0 } (thiscall, ret 4, fix_man.cpp; o `this` não é usado): `FIXTURE_MANAGER::add_away_trip_illness_risk(jogo)`:
-/// com o estádio do jogo (+0x18), a cidade (+0x38) e a nação dela (+0x1f) num país do terceiro mundo (+0x7e = 3), cada
-/// clube visitante de outra nação (+0x53) — o mandante (+0x1c, id +0xc) e o visitante (+0x20, id +0x10) — ganha o risco
-/// de doença na véspera do jogo.
-pub(crate) unsafe extern "thiscall" fn risco_de_doenca_na_viagem(_this: usize, f: usize) {
-    let estadio = read_u32_as_usize(f + 0x18);
-    if estadio == 0 {
-        return;
-    }
-    let cidade = read_u32_as_usize(estadio + 0x38);
-    if cidade == 0 {
-        return;
-    }
-    let nacao = read_u32_as_usize(cidade + 0x1f);
-    if nacao == 0 {
-        return;
-    }
-    if read_u8(nacao + 0x7e) != 3 { // cps13: só o terceiro mundo
-        return;
-    }
-    let casa = read_u32_as_usize(f + 0x1c);
-    if casa != 0 && read_u32_as_usize(casa + 0x53) != nacao {
-        crate::comparacao::ramo("cps_13 doenca do mandante");
-        // a original empurra o ano no eax do clube e o dia no ecx da nação (metades altas dos ponteiros)
-        cps13_doenca(f, read_u32_as_usize(f + 0xc), read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(f + 0x18) + 0x38) + 0x1f), nacao as u32, casa as u32);
-    }
-    let fora = read_u32_as_usize(f + 0x20);
-    if fora != 0 && read_u32_as_usize(fora + 0x53) != read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(f + 0x18) + 0x38) + 0x1f) {
-        crate::comparacao::ramo("cps_13 doenca do visitante");
-        // o ano no ecx do estádio e o dia no edx da cidade
-        let (e, c) = (read_u32_as_usize(f + 0x18), read_u32_as_usize(read_u32_as_usize(f + 0x18) + 0x38));
-        cps13_doenca(f, read_u32_as_usize(f + 0x10), read_u32_as_usize(c + 0x1f), c as u32, e as u32);
-    }
-}
 
 // ponytail: sorteia e monta rodadas (aloca jogos): não roda duas vezes. Só a original; a cópia leva os ramos (sorteio e
 // montagem; a atualização é diária em cada copa, 29.934 chamadas até 2002-06-01: sem ramo no caminho comum).
@@ -2508,9 +2140,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_montar_rodada_da_copa(this: usiz
 
 // ponytail: acrescenta o risco de doença (não roda duas vezes; o caminho comum não faz nada). Só a original; a cópia leva
 // os ramos.
-pub(crate) unsafe extern "thiscall" fn comparar_risco_de_doenca_na_viagem(this: usize, f: usize) {
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(1154)(this, f)
-}
 
 // ---------- 253a leva: a copa: o sorteio dos times da rodada, os confrontos no estádio compartilhado e a escala pela rodada (Cup.cpp, comp_util.cpp) ----------
 
@@ -2802,38 +2431,7 @@ pub(crate) fn cpq11_escala(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> 
     }
 }
 
-/// the round value between two limits: the average with a single round, otherwise (high − low) × round / (rounds − 1);
-/// outside 0..100, the error box
-/// Original: `comp_util_scale_by_round` (0x4bf850, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4bf850 } (cdecl, comp_util.cpp): `comp_util_scale_by_round(baixo, alto, rodada, rodadas)` (bytes e palavras com
-/// sinal; as palavras chegam em registradores com lixo acima, só a palavra é lida): com uma rodada só, a média
-/// (baixo + alto) / 2; senão (alto − baixo) × rodada / (rodadas − 1). Fora de 0..=100: a original (caixa da linha
-/// 0x256e, devolve 0 ou 100). Devolve o eax inteiro da original (quem chama empurra o registrador todo para
-/// 0x86bdd0/0x86c000): o byte em al sobre a soma (rodada única) ou o quociente.
-pub(crate) unsafe extern "C" fn escala_pela_rodada(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
-    let (eax, v) = cpq11_escala(baixo, alto, rodada, rodadas);
-    if !(0..=100).contains(&v) {
-        return orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(1077)(baixo, alto, rodada, rodadas);
-    }
-    if rodadas as u16 != 1 {
-        crate::comparacao::ramo("cpq_11 escala pela rodada");
-    }
-    eax
-}
 
-/// Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
-pub(crate) unsafe extern "C" fn comparar_escala_pela_rodada(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(1077);
-    if !(0..=100).contains(&cpq11_escala(baixo, alto, rodada, rodadas).1) {
-        return o(baixo, alto, rodada, rodadas);
-    }
-    let r = o(baixo, alto, rodada, rodadas);
-    let n = escala_pela_rodada(baixo, alto, rodada, rodadas);
-    PLACAR.registrar(r == n, || format!("escala_pela_rodada({}, {}, {}, {}) original={:x} rust={:x}",
-        baixo as u8 as i8, alto as u8 as i8, rodada as u16 as i16, rodadas as u16 as i16, r, n));
-    r
-}
 // ---------- 252a leva: as copas e a divisão dos clubes: a ordem dos cabeças de chave do sorteio (decrescente e crescente) e o teto da divisão dos clubes no fim da temporada (Cup.cpp, league.cpp) ----------
 
 
@@ -2885,30 +2483,6 @@ pub(crate) unsafe fn cpp13_ajustar(clube: usize, valor: i8, baixar: u32) {
     }
 }
 
-/// for each table row, moves the club byte +0x64 to the value (down or up) when the row status is not the excluded one
-/// and when it is the included one (0xfd = none)
-/// Original: `League::limit_club_division_tier` (0x68a980, league.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x68a980 } (thiscall, ret 0x10, league.cpp): `League::limit_club_division_tier(valor, fora, dentro, baixar)`
-/// (chamada pelo fim de temporada de cada liga: Argentina, Bélgica, Brasil, Croácia, Dinamarca, Inglaterra, França,
-/// Alemanha, Holanda, Itália, Rússia, Escócia, Suécia e Turquia): para cada linha da tabela (+0xb1, 0x3b bytes, conta
-/// +0x3e), ajusta o byte +0x64 do clube (+0) a `valor` quando a situação da linha (+0x37) não é `fora` (0xfd = nenhuma)
-/// e de novo quando é `dentro` (0xfd = nenhuma). Os três primeiros argumentos são bytes empurrados como dword: só o
-/// byte baixo conta.
-pub(crate) unsafe extern "thiscall" fn teto_da_divisao_dos_clubes(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
-    let (valor, fora, dentro) = (valor as u8 as i8, fora as u8, dentro as u8);
-    let mut i: i16 = 0;
-    while i < *((this + 0x3e) as *const i16) {
-        let linha = || read_usize(this + 0xb1).wrapping_add(i as isize as usize * 0x3b);
-        if fora != 0xfd && *((linha() + 0x37) as *const u8) != fora {
-            cpp13_ajustar(read_usize(linha()), valor, baixar);
-        }
-        if dentro != 0xfd && *((linha() + 0x37) as *const u8) == dentro {
-            cpp13_ajustar(read_usize(linha()), valor, baixar);
-        }
-        i = i.wrapping_add(1);
-    }
-}
 
 /// Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) -> i32 {
@@ -2926,17 +2500,6 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave_crescente(a:
     r
 }
 
-/// Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
-pub(crate) unsafe extern "thiscall" fn comparar_teto_da_divisao_dos_clubes(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(1044);
-    let n = *((this + 0x3e) as *const i16);
-    let tabela = read_usize(this + 0xb1);
-    let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (read_usize(tabela + i * 0x3b) + 0x64, 1)).collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, valor, fora, dentro, baixar),
-        || teto_da_divisao_dos_clubes(this, valor, fora, dentro, baixar));
-    PLACAR.registrar(igual, || format!("teto_da_divisao_dos_clubes(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
-        valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
-}
 
 // ---------- 249a leva: a copa: quem passa no jogo e no confronto e a ordem dos cabeças de chave no sorteio (Cup.cpp) ----------
 
@@ -3343,41 +2906,6 @@ pub(crate) unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u
     r
 }
 
-/// removes the club from the planned AI friendlies and from the friendly lists
-/// Original: `Friendly::remove_club_from_ai_plans` (0x5c64e0, friendly.cpp, thiscall).
-///
-/// [pt] { 0x5c64e0 } (thiscall, ret 4, friendly.cpp): tira o `clube` dos amistosos planejados: no vetor
-/// [+0x34d8] ([+0x34e0] registros de 0x14 bytes) o id do clube em +8 vira −1; na lista [+0x34c8]
-/// (0x68d1b0), o ponteiro do clube em +0xc vira 0.
-pub(crate) unsafe extern "thiscall" fn tirar_clube_dos_amistosos(amistosos: usize, clube: usize) {
-    let vetor = (amistosos + 0x34d8) as *const usize;
-    let n = (amistosos + 0x34e0) as *const i32;
-    if *vetor != 0 {
-        let mut i = 0;
-        while i < *n {
-            let id = (*vetor + 8 + 0x14 * i as usize) as *mut u32;
-            if *id == *(clube as *const u32) {
-                *id = 0xffff_ffff;
-            }
-            i += 1;
-        }
-    }
-    let lista = (amistosos + 0x34c8) as *const usize;
-    if *lista == 0 {
-        return;
-    }
-    let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    core::ptr::write_unaligned((*lista + 0xa) as *mut u32, core::ptr::read_unaligned((*lista + 2) as *const u32));
-    loop {
-        let e = prox(*lista);
-        if e == 0 {
-            return;
-        }
-        if *((e + 0xc) as *const usize) == clube {
-            *((e + 0xc) as *mut usize) = 0; // sai da lista
-        }
-    }
-}
 
 pub(crate) unsafe extern "C" fn comparar_data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize>(531);
@@ -3397,33 +2925,6 @@ pub(crate) unsafe extern "C" fn comparar_data_do_jogo_da_rodada(rodadas: usize, 
     a
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tirar_clube_dos_amistosos(amistosos: usize, clube: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(533);
-    let mut regioes = vec![];
-    let vetor = *((amistosos + 0x34d8) as *const usize);
-    let n = *((amistosos + 0x34e0) as *const i32);
-    if vetor != 0 && n > 0 {
-        regioes.push((vetor, n as usize * 0x14));
-    }
-    let lista = *((amistosos + 0x34c8) as *const usize);
-    if lista != 0 {
-        // o cursor e o ponteiro +0xc de cada amistoso da lista (percorrida aqui antes; as duas
-        // rotinas reiniciam o cursor)
-        regioes.push((lista + 0xa, 4));
-        let prox: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-        core::ptr::write_unaligned((lista + 0xa) as *mut u32, core::ptr::read_unaligned((lista + 2) as *const u32));
-        loop {
-            let e = prox(lista);
-            if e == 0 {
-                break;
-            }
-            regioes.push((e + 0xc, 4));
-        }
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(amistosos, clube),
-        || tirar_clube_dos_amistosos(amistosos, clube));
-    PLACAR.registrar(igual, || format!("tirar_clube_dos_amistosos({:#x}) {:x?} x {:x?}", clube, mo, mr));
-}
 
 // ---------- 210a leva: as regras da rodada no jogo da copa, a chave do jogo e o país da excursão (Cup.cpp, friendly.cpp) ----------
 
@@ -3489,59 +2990,6 @@ pub(crate) unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: 
     -1
 }
 
-/// draws the nation for a club tour, nearer the lower the reputation
-/// Original: `Friendly::pick_tour_nation` (0x5c4680, friendly.cpp, thiscall).
-///
-/// [pt] { 0x5c4680 } (thiscall, ret 4, friendly.cpp): sorteia o país da excursão do clube. Pela reputação
-/// (+0x80) o alcance: ≥ 8000 qualquer país, ≥ 6000 e ≥ 4000 o mesmo continente (+0x71), ≥ 2000 o mesmo
-/// continente e a mesma região (+0x75); abaixo, nenhum (0). Candidatos: os outros países (lista
-/// [0xae23a8], 0x122 bytes, [0xae2350] países) com +0x86 ≥ 20, +0x7e = 1, +0x84 ≤ 2 e +0x8e ≥ 5; cada um
-/// tira 0x90cfc0(100) e fica o maior (estrito, comparado como byte com sinal).
-pub(crate) unsafe extern "thiscall" fn pais_da_excursao(_this: usize, clube: usize) -> usize {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let proprio = *((clube + 0x53) as *const usize);
-    let alcance: i8 = match *((clube + 0x80) as *const i16) {
-        8000.. => 5,
-        6000.. => 4,
-        4000.. => 3,
-        2000.. => 2,
-        _ => return 0,
-    };
-    let mut escolhido = 0usize;
-    let mut melhor: i8 = -1;
-    if *(0xae2350 as *const i32) <= 0 {
-        return 0;
-    }
-    let mut p = *(0xae23a8 as *const usize);
-    let mut i: i16 = 0;
-    loop {
-        let candidato = p != proprio
-            && *((p + 0x86) as *const i16) >= 0x14
-            && *((p + 0x7e) as *const u8) == 1
-            && *((p + 0x84) as *const i8) <= 2
-            && *((p + 0x8e) as *const i16) >= 5;
-        if candidato {
-            let continente = || *((p + 0x71) as *const u32) == *((proprio + 0x71) as *const u32);
-            let perto = match alcance {
-                2 => *((p + 0x75) as *const u8) == *((proprio + 0x75) as *const u8) && continente(),
-                5.. => true,
-                _ => continente(),
-            };
-            if perto {
-                let r = sorteio(100) as i8;
-                if r > melhor {
-                    melhor = r;
-                    escolhido = p;
-                }
-            }
-        }
-        i = i.wrapping_add(1);
-        p += 0x122;
-        if i as i32 >= *(0xae2350 as *const i32) {
-            return escolhido;
-        }
-    }
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_regras_da_rodada_no_jogo(copa: usize, jogo: usize, chave: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(511);
@@ -3560,12 +3008,778 @@ pub(crate) unsafe extern "thiscall" fn comparar_chave_do_jogo_na_copa(copa: usiz
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_pais_da_excursao(this: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(513);
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube),
-        || crate::aleatorio::sem_contar(|| pais_da_excursao(this, clube)));
-    PLACAR.registrar(igual && r == n, || format!("pais_da_excursao({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
+/// the cup match importance by round and the first-leg score difference
+/// Original: `cup_match_importance` (0x5221f0, Cup.cpp, thiscall).
+///
+/// [pt] { 0x5221f0 } (thiscall, ret 0xc, Cup.cpp): a importância da partida da copa (a fase +0x34 da
+/// partida menos +0x3c mais +0x51 da copa, pelo menos 1) e em `margem` a diferença do placar da ida
+/// (+0x4b/+0x4c, 0xff sem ida) para o lado `segundo`, mais 1 (0xff abaixo de 1). Devolve só `al`.
+pub(crate) unsafe extern "thiscall" fn importancia_da_partida(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
+    let b = |p: usize, o: usize| *((p + o) as *const u8);
+    let mut al = b(partida, 0x34).wrapping_sub(b(copa, 0x3c)).wrapping_add(b(copa, 0x51));
+    if (al as i8) < 1 {
+        al = 1;
+    }
+    let ida = b(partida, 0x4b);
+    if ida != 0xff {
+        let volta = b(partida, 0x4c);
+        *margem = if segundo == 0 { volta.wrapping_sub(ida) } else { ida.wrapping_sub(volta) }.wrapping_add(1);
+        if (*margem as i8) < 1 {
+            *margem = 0xff;
+        }
+    }
+    al
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_importancia_da_partida(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(417);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(margem as usize, 1)], || o(copa, partida, segundo, margem), || importancia_da_partida(copa, partida, segundo, margem));
+    PLACAR.registrar(igual && r == n, || format!("importancia_da_partida(lado {}) original={} rust={} {:x?} x {:x?}", segundo, r, n, mo, mr));
     r
 }
 
+/// outside friendlies, the competition virtual +0x44 and news item 0x10 (club, competition, outcome, result category,
+/// the match, the next round), delivered by scope, to the competition region (final and semi-final) or to the club
+/// manager
+/// Original: `Cup::add_team_result_news` (0x519690, Cup.cpp, thiscall, ret 0x14).
+///
+/// [pt] { 0x519690 } (thiscall, ret 0x14, Cup.cpp, quadro SEH sem destrutor): `Cup::add_team_result_news(clube, desfecho,
+/// a3, partida, a5)`: amistoso (0x5c6710), 0. A virtual +0x44 da competição ([0xadadfc] pelo id de +4) com o clube, o
+/// desfecho, a3, a saída (0xff), a partida e a5; −1 dela ou sem partida: 0. A notícia 0x10 (local): 0 o clube, 1 a
+/// competição, 2 o desfecho, 3 a categoria do resultado (0x4b0890), 4 o que a virtual devolveu, o jogo a partir do
+/// dado 5 (0x4afeb0, que avança o cursor) e no cursor a rodada seguinte (+7 da rodada +0x34 + 1, até +0x3c − 1; 0x8c
+/// ou fora: −1). Saída ≠ 0xff: a entrega pelo alcance (0x786090). Desfecho 1 na rodada 0x96 ou 3 na 0x8c (+0x30): à
+/// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
+pub(crate) unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+    let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let categoria: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS);
+    let gravar_jogo: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
+    let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let a_regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_COMP_REGION);
+    let pelo_alcance: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_SEND_BY_SCOPE);
+    // ponytail: a original grava só o byte da saída num dword da pilha e empurra o dword; a 0x786090 lê o byte
+    let mut saida: u32 = 0xff;
+    if amistoso(read_usize(0xae2c74), read_usize(copa + 4)) != 0 {
+        return 0;
+    }
+    let comp = read_usize(read_usize(0xadadfc).wrapping_add(read_usize(read_usize(copa + 4)).wrapping_mul(4)));
+    let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, usize, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + 0x44));
+    let r = virtual44(comp, clube, desfecho, a3, &mut saida, p, a5);
+    if r == -1 || p == 0 {
+        return 0;
+    }
+    crate::comparacao::ramo("cpx_13 noticia do desfecho");
+    let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
+    let n = local.as_mut_ptr() as usize;
+    construir(n, 0x10, 0);
+    gravar(n, 0, read_usize(clube) as u32);
+    gravar(n, 1, read_usize(read_usize(copa + 4)) as u32);
+    gravar(n, 2, desfecho as u8 as i8 as i32 as u32);
+    gravar(n, 3, categoria(clube, p) as i8 as i32 as u32);
+    gravar(n, 4, r as u32);
+    // ponytail: o cursor é um dword da pilha com 5 no byte baixo (o resto é sobra); só o byte baixo conta
+    let mut cursor = [5u8, 0, 0, 0];
+    gravar_jogo(p, n, cursor.as_mut_ptr());
+    let k = read_i16(p + 0x34) as i32;
+    let proxima = if k < read_i16(copa + 0x3c) as i32 - 1 {
+        let v = read_i16(read_usize(copa + 0xa3).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
+        if v != 0x8c { v as i32 } else { -1 }
+    } else {
+        -1
+    };
+    gravar(n, cursor[0] as i8, proxima as u32);
+    let noticias = read_usize(0xb7431c);
+    if saida as u8 != 0xff {
+        let nacao = read_usize(clube + 0x53);
+        let continente = if nacao != 0 { read_usize(nacao + 0x71) } else { 0 };
+        pelo_alcance(noticias, n, clube, read_usize(copa + 4), nacao, continente, saida);
+        return 1;
+    }
+    let rodada = read_i16(p + 0x30);
+    if (desfecho as u8 == 1 && rodada == 0x96) || (desfecho as u8 == 3 && rodada == 0x8c) {
+        a_regiao(noticias, n, read_usize(copa + 4));
+    } else {
+        ao_clube(noticias, n, clube);
+    }
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(1343)(copa, clube, desfecho, a3, p, a5)
+}
+
+/// the cup started (+0xb1) and, asking for the stages with no stage set (+0x44), all up to the current complete and the
+/// current is the last
+/// Original: `Cup::check_complete` (0x521e00, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x521e00 } (thiscall, ret 8, Cup.cpp): `Cup::check_complete(fases, _)`: 0 se a copa não começou (+0xb1). Com
+/// `fases` = 1 e sem fase marcada (+0x44 = 0xff): cada fase de 0 até a atual (+0x30, vetor +0xc) tem de estar completa
+/// (método +0x10 com 0, 1) e a atual tem de ser a última (+0x2c − 1); senão 0. Fora isso, 1.
+pub(crate) unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x: u32) -> u8 {
+    if *((this + 0xb1) as *const u8) == 0 {
+        return 0;
+    }
+    if fases != 1 || *((this + 0x44) as *const u8) != 0xff {
+        return 1;
+    }
+    let mut i = 0i32;
+    while i <= read_usize(this + 0x30) as i32 {
+        let fase = read_usize(read_usize(this + 0xc).wrapping_add(i as usize * 4));
+        let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(fase) + 0x10));
+        if completa(fase, 0, 1) == 0 {
+            return 0; // uma fase incompleta
+        }
+        i += 1;
+    }
+    (read_usize(this + 0x30) as i32 >= (read_usize(this + 0x2c) as i32).wrapping_sub(1)) as u8
+}
+
+/// Comparador: pelo valor (o método das fases só lê).
+pub(crate) unsafe extern "thiscall" fn comparar_copa_completa(this: usize, fases: u32, x: u32) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(863)(this, fases, x);
+    let n = copa_completa(this, fases, x);
+    PLACAR.registrar(r == n, || format!("copa_completa({:x}, {}) original={} rust={}", this, fases, r, n));
+    r
+}
+
+/// in rounds with set dates, each round fixture moves to the weekday and time slot of its slot, with the news, the
+/// stadium and the calendar; the used slot becomes empty
+/// Original: `Cup::move_round_fixtures_to_set_dates` (0x51ebe0, Cup.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x51ebe0 } (thiscall, ret 8, Cup.cpp, quadro SEH sem destrutor no caminho normal: as notícias, a data e a lista
+/// locais): `Cup::move_round_fixtures_to_set_dates(data, rodada)`, da montagem da rodada (0x51c800, em Rust). A notícia
+/// 0x14 local é montada logo (0x77bbe0). Rodada (0x68 bytes em +0xa3) com o bit 0x100 em +0xd e a primeira vaga
+/// marcada (+0x29 ≠ 0xff): os jogos da copa na data e fatia (cqc7_jogos_da_rodada). Com jogos, a notícia leva o id da
+/// copa, +0x3a, o código da rodada (+7) e a rodada de duas mãos (+0x21 = 2). Cada jogo do tipo da liga (+0x42) ocupa
+/// uma vaga (7 bytes a partir de +0x23: +0 regras do estádio, +4 dia da semana, +5 fatia, +6 tipo; até 8, até a
+/// primeira 0xff): na data da rodada, vai ao dia da semana da vaga (0x549ef0 num bloco de 8 bytes de 0x944cf1, 0x54a2d0,
+/// liberado depois), com a notícia 3 aos clubes fora do tipo 3, sai do calendário (0x5abc30), ganha a data, a fatia e
+/// o tipo da vaga, o estádio (0x85c260) e volta (0x5aa680); sem a copa ainda em [0xadadfc], para; senão a vaga fica
+/// 0xff. Com ou sem a mudança, a notícia 0x14 vai aos clubes se um é de técnico humano. Sem vaga (fim das vagas ou
+/// vaga vazia): só a notícia, com os dados do jogo.
+pub(crate) unsafe extern "thiscall" fn copa_levar_jogos_as_datas(this: usize, data: usize, rodada: u32) {
+    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
+    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
+    let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
+    let mut noticia = [0u32; 0x38];
+    let n1 = noticia.as_mut_ptr() as usize;
+    construir(n1, 0x14, 0);
+    let id = read_u32_as_usize(read_u32_as_usize(this + 4));
+    let e = cqc7_rodada(this, rodada);
+    if read_i16(e + 0xd) as u16 & 0x100 == 0 || read_u8(e + 0x29) == 0xff {
+        return;
+    }
+    let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let mut lista = [0u8; 0x10];
+    let l = lista.as_mut_ptr() as usize;
+    criar(l);
+    if cqc7_jogos_da_rodada(this, data, rodada, l) != 0 {
+        gravar(n1, 0, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
+        gravar(n1, 1, read_i16(this + 0x3a) as i32 as u32);
+        gravar(n1, 2, read_i16(cqc7_rodada(this, rodada) + 7) as i32 as u32);
+        gravar(n1, 5, (read_u8(cqc7_rodada(this, rodada) + 0x21) == 2) as u32);
+        // a notícia 0x14 do jogo (dados 3, 4, 6, 7, 8) aos dois clubes, se um deles é de técnico humano
+        let noticia_do_jogo = |c1: usize, c2: usize, i1: usize, i2: usize, est: usize, dia: u16, ano: u16| {
+            if cqc7_humano(c1) || cqc7_humano(c2) {
+                if cqc7_humano(c1) {
+                    gravar(n1, 3, i1 as u32);
+                    gravar(n1, 4, i2 as u32);
+                } else {
+                    gravar(n1, 3, i2 as u32);
+                    gravar(n1, 4, i1 as u32);
+                }
+                gravar(n1, 6, est as u32);
+                gravar(n1, 7, dia as u32);
+                gravar(n1, 8, ano as u32);
+                entregar(read_u32_as_usize(0xb7431c), n1, c1);
+                entregar(read_u32_as_usize(0xb7431c), n1, c2);
+            }
+        };
+        write_u32_from_usize(l + 0xa, read_u32_as_usize(l + 2));
+        let mut j = 0usize;
+        let mut f = proximo(l);
+        while f != 0 {
+            if read_u8(this + 0x44) == read_u8(f + 0x42) {
+                let e = cqc7_rodada(this, rodada);
+                if j < 0x38 && read_u8(e + j + 0x29) != 0xff {
+                    let mut buf = [0u8; 0x50];
+                    let r = buf.as_mut_ptr() as usize;
+                    core::ptr::copy_nonoverlapping(f as *const u8, r as *mut u8, 0x4f);
+                    if cqc7_na_data_da_rodada(this, e, f) {
+                        let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+                        let nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
+                        let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+                        let ajustar: unsafe extern "thiscall" fn(usize, u32, usize) -> u32 = core::mem::transmute(FN_DATE_GET_NEAREST_WEEKDAY);
+                        let p = alocar(8);
+                        let dp = if p != 0 { nova(p, read_i16(f + 0x2a) as u16 as u32, read_i16(f + 0x28) as u16 as u32) } else { 0 };
+                        let mut t = [0u8; 8];
+                        let pt = t.as_mut_ptr() as usize;
+                        padrao(pt);
+                        let e = cqc7_rodada(this, rodada);
+                        ajustar(dp, read_u8(e + j + 0x27) as i8 as i16 as u16 as u32, pt); // cqc7: o dia da semana marcado
+                        if read_u8(cqc7_rodada(this, rodada) + j + 0x29) != 3 {
+                            let mut noticia2 = [0u32; 0x38];
+                            let n2 = noticia2.as_mut_ptr() as usize;
+                            construir(n2, 3, 0);
+                            gravar(n2, 0, read_u32_as_usize(r + 0xc) as u32);
+                            gravar(n2, 1, read_u32_as_usize(r + 0x10) as u32);
+                            gravar(n2, 2, read_u32_as_usize(r) as u32);
+                            gravar(n2, 3, read_i16(r + 0x32) as i32 as u32);
+                            gravar(n2, 4, read_i16(r + 0x30) as i32 as u32);
+                            gravar(n2, 5, read_i16(r + 0x2a) as u16 as u32);
+                            gravar(n2, 6, read_i16(r + 0x28) as u16 as u32);
+                            gravar(n2, 7, read_u8(r + 0x3f) as u32);
+                            gravar(n2, 8, read_i16(pt) as i32 as u32);
+                            gravar(n2, 9, read_i16(pt + 2) as u16 as u32);
+                            gravar(n2, 10, read_u8(cqc7_rodada(this, rodada) + j + 0x28) as i8 as i32 as u32);
+                            gravar(n2, 11, read_u8(cqc7_rodada(this, rodada) + j + 0x29) as i8 as i32 as u32);
+                            entregar(read_u32_as_usize(0xb7431c), n2, read_u32_as_usize(r + 0x1c));
+                            entregar(read_u32_as_usize(0xb7431c), n2, read_u32_as_usize(r + 0x20));
+                        }
+                        let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
+                        tirar(read_u32_as_usize(0xae2a58), r);
+                        crate::comparacao::ramo("cqc_7 jogo levado a data");
+                        write_u16(r + 0x2a, read_i16(pt) as u16); // cqc7: o dia marcado
+                        write_u16(r + 0x28, read_i16(pt + 2) as u16);
+                        let v = cqc7_rodada(this, rodada) + j;
+                        write_u8(r + 0x3f, read_u8(v + 0x28)); // cqc7: a fatia marcada
+                        write_u8(r + 0x3b, read_u8(v + 0x29));
+                        let estadio: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
+                        estadio(read_u32_as_usize(0xdd7ef4), read_u32_as_usize(cqc7_rodada(this, rodada) + j + 0x23), r, read_u32_as_usize(this + 0x24));
+                        let juntar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
+                        juntar(read_u32_as_usize(0xae2a58), r, 1);
+                        if dp != 0 {
+                            let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+                            liberar(dp);
+                        }
+                        if read_u32_as_usize(read_u32_as_usize(0xadadfc) + id * 4) == 0 {
+                            destruir(l);
+                            return;
+                        }
+                        write_u8(cqc7_rodada(this, rodada) + j + 0x29, 0xff);
+                    }
+                    noticia_do_jogo(read_u32_as_usize(r + 0x1c), read_u32_as_usize(r + 0x20), read_u32_as_usize(r + 0xc), read_u32_as_usize(r + 0x10), read_u32_as_usize(r + 4),
+                        read_i16(r + 0x2a) as u16, read_i16(r + 0x28) as u16);
+                    j += 7;
+                } else {
+                    noticia_do_jogo(read_u32_as_usize(f + 0x1c), read_u32_as_usize(f + 0x20), read_u32_as_usize(f + 0xc), read_u32_as_usize(f + 0x10), read_u32_as_usize(f + 4),
+                        read_i16(f + 0x2a) as u16, read_i16(f + 0x28) as u16);
+                }
+            }
+            f = proximo(l);
+        }
+    }
+    destruir(l);
+}
+
+/// Comparador da 0x51ebe0: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, e as notícias
+/// vão aos técnicos). O plano, feito antes: os jogos da copa na data e fatia (0x5abd90 numa lista provisória), na
+/// ordem da lista; cada um do tipo da liga ocupa a vaga seguinte (de 7 em 7 bytes, até 0x38 e até a primeira 0xff), e
+/// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
+/// conferir.
+pub(crate) unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: usize, data: usize, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1524);
+    let e = cqc7_rodada(this, rodada);
+    if read_i16(e + 0xd) as u16 & 0x100 == 0 || read_u8(e + 0x29) == 0xff {
+        return o(this, data, rodada);
+    }
+    let id = read_u32_as_usize(read_u32_as_usize(this + 4));
+    let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_LLIST);
+    let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LLIST_DESTRUCTOR_LLIST);
+    let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
+    let mut lista = [0u8; 0x10];
+    let l = lista.as_mut_ptr() as usize;
+    criar(l);
+    let mut esperado = [0u8; 8];
+    for k in 0..8 {
+        esperado[k] = read_u8(e + k * 7 + 0x29);
+    }
+    if cqc7_jogos_da_rodada(this, data, rodada, l) != 0 {
+        write_u32_from_usize(l + 0xa, read_u32_as_usize(l + 2));
+        let mut j = 0usize;
+        let mut f = proximo(l);
+        while f != 0 {
+            if read_u8(this + 0x44) == read_u8(f + 0x42) && j < 0x38 && esperado[j / 7] != 0xff {
+                if cqc7_na_data_da_rodada(this, e, f) {
+                    esperado[j / 7] = 0xff;
+                }
+                j += 7;
+            }
+            f = proximo(l);
+        }
+    }
+    destruir(l);
+    o(this, data, rodada);
+    if read_u32_as_usize(read_u32_as_usize(0xadadfc) + id * 4) == 0 {
+        return; // ponytail: a copa saiu do jogo; nada a conferir
+    }
+    let e = cqc7_rodada(this, rodada);
+    let depois: [u8; 8] = core::array::from_fn(|k| read_u8(e + k * 7 + 0x29));
+    PLACAR.registrar(depois == esperado, || format!("copa_levar_jogos_as_datas(rodada {}) vagas {:02x?} (esperado {:02x?})",
+        rodada, depois, esperado));
+}
+
+/// allocates the ties of each round, clears them, links each tie to a slot in the next round (by pair or drawn, the
+/// side by a coin; with no slot, two rounds ahead), puts each round's teams into its ties (drawn, the cup nation's club
+/// at home) and numbers the first tie of each round
+/// Original: `Cup::map_fixture_tree` (0x518790, Cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x518790 } (thiscall, ret 0, Cup.cpp): `Cup::map_fixture_tree()`, da criação das copas (22 chamadas até
+/// 2002-06-01). Os vetores dos confrontos de cada rodada (0x944e46: 4 por rodada e 0x35 por confronto; sem memória, a
+/// caixa "Memory Allocation Error" da linha 0x8b ou 0x9e e o jogo para; rodada sem confrontos, a caixa da linha 0x95 e
+/// -1); a marca +5 de cada time (+0xa7, 6 bytes) e +0xab/+0xac zeradas. Com clubes (+0x45): cada confronto vazio (os
+/// times e as vagas −1, +8 = 0, +0x14..+0x31 = 0xff, +0x32..+0x34 = 0). Nas rodadas até a penúltima (a antepenúltima com
+/// a última do tipo 0x8c): a ordem dos confrontos (embaralhada aos pares sorteados se a rodada seguinte tem menos da
+/// metade); cada um ganha a vaga na rodada seguinte: pelo par (rodada +0xd bit 0x200: p/2) ou sorteada (com o bit 0x400,
+/// a primeira vaga toda livre a partir dela), o lado pela moeda (0x90cfc0(2); ocupada, a vaga seguinte e outra moeda);
+/// sem vaga livre, uma vaga sorteada duas rodadas adiante (sem ela, o jogo para: linhas 0x175 e 0x1a0). O confronto
+/// guarda a vaga (+6), o lado (+8: 1 mandante) e a rodada de destino (+0x12); a vaga guarda o confronto (+0xa/+0xc) e a
+/// rodada de origem (+0xe/+0x10). Depois os times de cada rodada (+0x1c, a partir de +0x1e) entram nos confrontos dela:
+/// o primeiro pelo par ou sorteado (0x400: o primeiro todo livre), o lado pela moeda, e numa vaga ocupada o time da
+/// nação +0x24 vira mandante (sem vaga, a caixa da linha 0x1c2 ou 0x222 e -1). Sem confrontos na primeira rodada, +0xb1
+/// = 1. Por fim o número do primeiro confronto de cada rodada (+0x5b), de trás para a frente. Devolve 1.
+pub(crate) unsafe extern "thiscall" fn copa_arvore_dos_confrontos(this: usize) -> i32 {
+    let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
+    let t = reservar((read_i16(this + 0x3c) as i32 as u32) << 2);
+    write_u32_from_usize(this + 0xad, t);
+    if t == 0 {
+        cpq11_sem_memoria(0x8b, 0x9b5600);
+    }
+    let mut i = 0i32;
+    while i < read_i16(this + 0x3c) as i32 {
+        let n = read_i16(cqd7_rodada(this, i) + 0x1a);
+        if n < 1 {
+            aviso_em(0x9b55ac, 0x95);
+            return -1;
+        }
+        let v = reservar((n as i32 * 0x35) as u32);
+        write_u32_from_usize(read_u32_as_usize(this + 0xad) + i as usize * 4, v);
+        if read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4) == 0 {
+            cpq11_sem_memoria(0x9e, 0x9b55d8);
+        }
+        i += 1;
+    }
+    if read_u32_as_usize(this + 0xa7) != 0 {
+        let mut k = 0i32;
+        while k < read_i16(this + 0x3e) as i32 {
+            write_u8(read_u32_as_usize(this + 0xa7) + k as usize * 6 + 5, 0);
+            k += 1;
+        }
+    }
+    write_u8(this + 0xab, 0);
+    write_u8(this + 0xac, 0);
+    if read_u32_as_usize(this + 0x45) == 0 {
+        return 1;
+    }
+    let mut i = 0i32;
+    while i < read_i16(this + 0x3c) as i32 {
+        let mut j = 0i32;
+        while j < read_i16(cqd7_rodada(this, i) + 0x1a) as i32 {
+            let c = cqd7_confronto(this, i, j);
+            for k in [0usize, 2, 6, 0xa, 0xc, 0xe, 0x10, 0x12] {
+                write_u16(c + k, 0xffff);
+            }
+            write_u16(c + 8, 0);
+            for k in 0x14..=0x31usize {
+                write_u8(c + k, 0xff);
+            }
+            write_u8(c + 0x32, 0);
+            write_u8(c + 0x33, 0);
+            write_u8(c + 0x34, 0);
+            j += 1;
+        }
+        i += 1;
+    }
+    let nr = read_i16(this + 0x3c);
+    let m = (if read_i16(cqd7_rodada(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
+    let mut r = 0i32;
+    while r < m - 1 {
+        let n = read_i16(cqd7_rodada(this, r) + 0x1a);
+        let ordem = if n != 0 { reservar(n as i32 as u32) } else { 0 };
+        let mut k = 0i32;
+        while k < read_i16(cqd7_rodada(this, r) + 0x1a) as i32 {
+            write_u8(ordem + k as usize, k as u8);
+            k += 1;
+        }
+        let nn = read_i16(cqd7_rodada(this, r) + 0x1a) as i32;
+        let prox = read_i16(cqd7_rodada(this, r) + 0x82) as i32;
+        if prox < nn / 2 && nn > 0 {
+            let (mut q, mut conta) = (0i32, nn);
+            loop {
+                let a = sorteio(conta) as usize;
+                let b = sorteio(read_i16(cqd7_rodada(this, r) + 0x1a) as i32) as usize;
+                let x = read_u8(ordem + a);
+                write_u8(ordem + a, read_u8(ordem + b));
+                write_u8(ordem + b, x);
+                q += 1;
+                conta = read_i16(cqd7_rodada(this, r) + 0x1a) as i32;
+                if q >= conta {
+                    break;
+                }
+            }
+        }
+        let mut k = 0i32;
+        while k < read_i16(cqd7_rodada(this, r) + 0x1a) as i32 {
+            let rr = cqd7_rodada(this, r);
+            let p = read_u8(ordem + k as usize) as i8 as i32;
+            let mut s: i32;
+            let mut inicio: i32;
+            if read_i16(rr + 0x75) as u16 & 0x200 != 0 {
+                s = p / 2; // cqd7: a vaga pelo par
+                inicio = s;
+            } else {
+                s = sorteio(read_i16(rr + 0x82) as i32);
+                inicio = s;
+                if read_i16(rr + 0x75) as u16 & 0x400 != 0 {
+                    loop {
+                        let v = cqd7_confronto(this, r + 1, s as i16 as i32);
+                        if read_i16(v + 0xa) == -1 && read_i16(v + 0xc) == -1 {
+                            inicio = s;
+                            break;
+                        }
+                        s += 1;
+                        if s as i16 >= read_i16(rr + 0x82) {
+                            s = 0;
+                        }
+                        if s as i16 == inicio as i16 {
+                            break;
+                        }
+                    }
+                }
+            }
+            let (mut s, inicio) = (s, inicio); // cqd7: a vaga inicial na rodada seguinte
+            let c = cqd7_confronto(this, r, p);
+            loop {
+                let moeda = sorteio(2);
+                let v = cqd7_confronto(this, r + 1, s as i16 as i32);
+                let primeiro_a = moeda != 0; // cqd7: a moeda do lado na rodada seguinte
+                let lado = if primeiro_a {
+                    if read_i16(v + 0xa) == -1 { Some(true) } else if read_i16(v + 0xc) == -1 { Some(false) } else { None }
+                } else if read_i16(v + 0xc) == -1 {
+                    Some(false)
+                } else if read_i16(v + 0xa) == -1 {
+                    Some(true)
+                } else {
+                    None
+                };
+                if let Some(a) = lado {
+                    crate::comparacao::ramo("cqd_7 vaga na rodada seguinte");
+                    write_u16(v + if a { 0xa } else { 0xc }, p as u16);
+                    write_u16(v + if a { 0xe } else { 0x10 }, r as u16);
+                    write_u16(c + 6, s as u16);
+                    write_u16(c + 8, a as u16);
+                    write_u16(c + 0x12, (r + 1) as u16);
+                    break;
+                }
+                if (s as i16 as i32) < read_i16(cqd7_rodada(this, r) + 0x82) as i32 - 1 {
+                    s += 1;
+                } else {
+                    s = 0;
+                }
+                if inicio as i16 == s as i16 {
+                    // sem vaga livre: uma vaga sorteada duas rodadas adiante
+                    if r >= m - 2 {
+                        erro_em(0x9b55ac, 0x175);
+                    }
+                    let mut t = sorteio(read_i16(cqd7_rodada(this, r) + 0xea) as i32);
+                    let ini = t;
+                    loop {
+                        let v = cqd7_confronto(this, r + 2, t as i16 as i32);
+                        let a = if read_i16(v + 0xa) == -1 {
+                            true
+                        } else if read_i16(v + 0xc) == -1 {
+                            false
+                        } else {
+                            if (t as i16 as i32) < read_i16(cqd7_rodada(this, r) + 0xea) as i32 - 1 {
+                                t += 1;
+                            } else {
+                                t = 0;
+                            }
+                            if t as i16 == ini as i16 {
+                                erro_em(0x9b55ac, 0x1a0);
+                            }
+                            continue;
+                        };
+                        write_u16(v + if a { 0xa } else { 0xc }, p as u16);
+                        write_u16(v + if a { 0xe } else { 0x10 }, r as u16);
+                        write_u16(c + 6, t as u16);
+                        write_u16(c + 8, a as u16);
+                        break;
+                    }
+                    write_u16(c + 0x12, (r + 2) as u16);
+                    break;
+                }
+            }
+            k += 1;
+        }
+        if ordem != 0 {
+            soltar(ordem);
+        }
+        r += 1;
+    }
+    if read_i16(cqd7_rodada(this, 0) + 0x1a) == 0 {
+        write_u8(this + 0xb1, 1);
+        return 1;
+    }
+    // os times de cada rodada nos confrontos dela; `inicio` segue de um time para o outro, como na original
+    let mut inicio: i32 = -1;
+    let mut r = 0i32;
+    while r < m {
+        if read_i16(cqd7_rodada(this, r) + 0x1c) > 0 {
+            let mut q = 0i32;
+            loop {
+                let rr = cqd7_rodada(this, r);
+                let mut di: i32;
+                if read_i16(rr + 0xd) as u16 & 0x200 != 0 {
+                    di = 0;
+                    if read_i16(rr + 0x1a) <= 0 {
+                        aviso_em(0x9b55ac, 0x1c2);
+                        return -1;
+                    }
+                } else {
+                    di = sorteio(read_i16(rr + 0x1a) as i32);
+                    inicio = di;
+                    let rr = cqd7_rodada(this, r);
+                    if read_i16(rr + 0xd) as u16 & 0x400 != 0 {
+                        loop {
+                            let c = cqd7_confronto(this, r, di as i16 as i32);
+                            if read_i16(c) == -1 && read_i16(c + 2) == -1 {
+                                inicio = di;
+                                break;
+                            }
+                            di += 1;
+                            if di as i16 >= read_i16(rr + 0x1a) {
+                                di = 0;
+                            }
+                            if di as i16 == inicio as i16 {
+                                break;
+                            }
+                        }
+                    }
+                }
+                loop {
+                    let moeda = sorteio(2);
+                    let x = di as i16 as i32;
+                    let c = cqd7_confronto(this, r, x);
+                    let livre2 = || read_i16(c + 2) == -1 && read_i16(c + 0xc) == -1;
+                    let primeiro_0 = moeda != 0; // cqd7: a moeda do lado na primeira rodada
+                    let v0 = read_i16(c) as u16;
+                    let livre0 = v0 == 0xffff && read_i16(c + 0xa) == -1;
+                    let lado = if primeiro_0 {
+                        if livre0 { Some(0usize) } else if livre2() { Some(2) } else { None }
+                    } else if livre2() {
+                        Some(2)
+                    } else if livre0 {
+                        Some(0)
+                    } else {
+                        None
+                    };
+                    if let Some(o) = lado {
+                        crate::comparacao::ramo("cqd_7 time na primeira rodada");
+                        write_u16(c + o, (read_i16(cqd7_rodada(this, r) + 0x1e) as u16).wrapping_add(q as u16));
+                        break;
+                    }
+                    // a vaga ocupada: o time da nação +0x24 no lado de fora vira mandante
+                    if read_u32_as_usize(this + 0x24) as u32 != u32::MAX && v0 != 0xffff {
+                        let fora = read_i16(c + 2);
+                        if fora != -1 {
+                            let clube = read_u32_as_usize(read_u32_as_usize(this + 0xa7) + (fora as isize * 6) as usize);
+                            if clube != 0 {
+                                let nacao = read_u32_as_usize(clube + 0x69);
+                                if nacao != 0 && read_u32_as_usize(nacao) == read_u32_as_usize(this + 0x24) {
+                                    write_u16(c, fora as u16);
+                                    write_u16(c + 2, v0);
+                                }
+                            }
+                        }
+                    }
+                    if x < read_i16(cqd7_rodada(this, r) + 0x1a) as i32 - 1 {
+                        di += 1;
+                    } else {
+                        di = 0;
+                    }
+                    if inicio as i16 == di as i16 {
+                        aviso_em(0x9b55ac, 0x222);
+                        return -1;
+                    }
+                }
+                q += 1;
+                if q >= read_i16(cqd7_rodada(this, r) + 0x1c) as i32 {
+                    break;
+                }
+            }
+        }
+        r += 1;
+    }
+    let nr = read_i16(this + 0x3c);
+    if nr > 0 && read_i16(cqd7_rodada(this, nr as i32).wrapping_sub(0x61)) == 0x8c {
+        let mut k = nr.wrapping_sub(3) as i32;
+        let mut n: u8 = 5;
+        while k >= 0 {
+            write_u8(cqd7_rodada(this, k) + 0x5b, n);
+            n = n.wrapping_add(read_u8(cqd7_rodada(this, k) + 0x1a));
+            k -= 1;
+        }
+    } else {
+        let mut n = read_u8(cqd7_rodada(this, nr as i32).wrapping_sub(0x50)).wrapping_add(1);
+        let mut k = nr.wrapping_sub(2) as i32;
+        while k >= 0 {
+            write_u8(cqd7_rodada(this, k) + 0x5b, n);
+            n = n.wrapping_add(read_u8(cqd7_rodada(this, k) + 0x1a));
+            k -= 1;
+        }
+    }
+    1
+}
+
+/// O comparador da árvore dos confrontos: só a original (ponytail: aloca os vetores dos confrontos e sorteia; não
+/// roda duas vezes). Confere o que ela garante quando devolve 1 com clubes: cada confronto das rodadas mapeadas aponta
+/// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
+/// +0xc/+0x10 visitante).
+pub(crate) unsafe extern "thiscall" fn comparar_copa_arvore_dos_confrontos(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1558);
+    let r = o(this);
+    if r != 1 || read_u32_as_usize(this + 0x45) == 0 {
+        return r;
+    }
+    let nr = read_i16(this + 0x3c);
+    let m = (if read_i16(cqd7_rodada(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
+    let mut erro: Option<(i32, i32)> = None;
+    'fora: for rd in 0..(m - 1).max(0) {
+        for p in 0..read_i16(cqd7_rodada(this, rd) + 0x1a) as i32 {
+            let c = cqd7_confronto(this, rd, p);
+            let destino = read_i16(c + 0x12) as i32;
+            let a = read_i16(c + 8) == 1;
+            let ok = (destino == rd + 1 || destino == rd + 2) && {
+                let v = cqd7_confronto(this, destino, read_i16(c + 6) as i32);
+                read_i16(v + if a { 0xa } else { 0xc }) as i32 == p && read_i16(v + if a { 0xe } else { 0x10 }) as i32 == rd
+            };
+            if !ok {
+                erro = Some((rd, p));
+                break 'fora;
+            }
+        }
+    }
+    PLACAR.registrar(erro.is_none(), || format!("copa_arvore_dos_confrontos: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
+    r
+}
+
+/// sorts the cup clubs by strength and gives each one the predicted position of the round it goes out in, in the cup
+/// statistics
+/// Original: `Cup::rank_teams` (0x5223a0, Cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x5223a0 } (thiscall, ret 0, Cup.cpp): `Cup::rank_teams()`: copia os clubes da copa ([+0xa7], registros de 6
+/// bytes, +0x3e deles) para um vetor (0x944e46), ordena pela força (0x4c08f0) e dá a cada um a posição prevista pela
+/// rodada em que sai (0x4a2540 na estatística [+8]); libera o vetor (0x9452ca). Sem estatística: a caixa (linha
+/// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
+pub(crate) unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
+    if read_u32_as_usize(this + 8) == 0 {
+        return aviso_em(0x9b55ac, 0x1827);
+    }
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let ordenar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
+    let n = read_i16(this + 0x3e) as i32;
+    let v = alocar((n << 2) as u32);
+    if v == 0 {
+        return orig::<unsafe extern "thiscall" fn(usize)>(1191)(this);
+    }
+    for i in 0..n.max(0) as usize {
+        *((v + i * 4) as *mut u32) = read_u32_as_usize(read_u32_as_usize(this + 0xa7) + i * 6) as u32;
+    }
+    ordenar(v, n);
+    cpt13_posicoes(this, v as *const u32, 1);
+    liberar(v);
+}
+
+/// Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
+/// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
+/// de ter em +0x72 a última posição dele.
+pub(crate) unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1191);
+    let n = read_i16(this + 0x3e) as i32;
+    if read_u32_as_usize(this + 8) == 0 || n <= 0 {
+        return o(this); // ponytail: a caixa ou nada a ordenar, só a original
+    }
+    let mut v: Vec<u32> = (0..n as usize).map(|i| read_u32_as_usize(read_u32_as_usize(this + 0xa7) + i * 6) as u32).collect();
+    let mut k = vec![0i32; n as usize];
+    cpt13_ordenar_com(v.as_mut_ptr(), k.as_mut_ptr(), n);
+    // ponytail: com mais vagas nas rodadas que clubes, a original lê além do vetor (sobra do bloco); o plano lê 0
+    v.extend(core::iter::repeat(0).take(0x100));
+    let plano = cpt13_posicoes(this, v.as_ptr(), 0);
+    o(this);
+    let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
+    let mut erros = Vec::new();
+    for (i, &(c, p)) in plano.iter().enumerate() {
+        if c == 0 || plano[i + 1..].iter().any(|x| x.0 == c) {
+            continue;
+        }
+        let e = buscar(read_u32_as_usize(this + 8), c);
+        if e == 0 || *((e + 0x72) as *const u8) != p {
+            erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
+        }
+    }
+    PLACAR.registrar(erros.is_empty(), || format!("posicoes_previstas_da_copa({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
+}
+
+/// stores one of the eight cup round match days: the venue flags, the weekday, the time slot and the code
+/// Original: `cup_set_round_match_day` (0x521f10, Cup.cpp, cdecl).
+///
+/// [pt] { 0x521f10 } (cdecl, Cup.cpp): o dia `vaga` (0 a 7) da rodada `rodada` (registros de 104 bytes):
+/// em 7 bytes a partir de +0x23, o mando (4 bytes), o dia da semana (−1 a 6), o horário (−1 a 2) e o
+/// código (−1 a 3). Fora da faixa: a original (caixa de erro e fim do jogo). Devolve o mando.
+pub(crate) unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+    if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
+        return orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(539)(rodadas, rodada, vaga, semana, hora, codigo, mando);
+    }
+    let e = rodadas.wrapping_add((rodada as isize * 104 + vaga as isize * 7) as usize);
+    *((e + 0x27) as *mut u8) = semana as u8; // dia da semana
+    *((e + 0x28) as *mut u8) = hora as u8;
+    *((e + 0x29) as *mut u8) = codigo as u8;
+    core::ptr::write_unaligned((e + 0x23) as *mut u32, mando);
+    mando
+}
+
+pub(crate) unsafe extern "C" fn comparar_dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(539);
+    if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
+        return o(rodadas, rodada, vaga, semana, hora, codigo, mando);
+    }
+    let e = rodadas.wrapping_add((rodada as isize * 104 + vaga as isize * 7) as usize);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x23, 7)], || o(rodadas, rodada, vaga, semana, hora, codigo, mando),
+        || dia_da_rodada_da_copa(rodadas, rodada, vaga, semana, hora, codigo, mando));
+    PLACAR.registrar(igual && r == n, || format!("dia_da_rodada_da_copa({}, {}) {:x?} x {:x?}", rodada, vaga, mo, mr));
+    r
+}
+
+/// tells whether the club is in the cup's team table
+/// Original: `Cup::has_club` (0x522910, Cup.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x522910 } (thiscall, ret 4, Cup.cpp; virtual +0x80 das copas, chamada pela 0x4ae300 da projeção da diretoria):
+/// `Cup::has_club(clube)`: 1 se o clube está na tabela de times da copa (+0xa7, 6 bytes por time, +0 o clube; conta
+/// +0x3e); senão 0.
+pub(crate) unsafe extern "thiscall" fn copa_tem_o_clube(this: usize, clube: u32) -> u32 {
+    let n = *((this + 0x3e) as *const i16);
+    let times = read_u32(this + 0xa7) as usize;
+    for i in 0..n.max(0) as usize {
+        if read_u32(times + i * 6) == clube {
+            crate::comparacao::ramo("cpr_13 copa tem o clube");
+            return 1; // está na copa
+        }
+    }
+    0
+}
+
+/// Comparador: pelo valor (só lê).
+pub(crate) unsafe extern "thiscall" fn comparar_copa_tem_o_clube(this: usize, clube: u32) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(1114)(this, clube);
+    let n = copa_tem_o_clube(this, clube);
+    PLACAR.registrar(r == n, || format!("copa_tem_o_clube(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
+    r
+}

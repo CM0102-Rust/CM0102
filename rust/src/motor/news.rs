@@ -21,438 +21,6 @@ pub(crate) unsafe fn cpo6_tipo(contrato: usize) -> u8 {
 /// A notícia guardada: 0xdf bytes (+0xd6 id, +0xda lida).
 pub(crate) const CPO6_NOTICIA: usize = 0xdf;
 
-/// the AI manager's response 1, 2 or 3 to a story of the given type about the player: by the contract, the player's
-/// story rating (× 5), the manager's likes and dislikes and chains of draws per family of types; some types add the
-/// player to the manager's rejected list
-/// Original: `Media::pick_ai_manager_response` (0x735870, media.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x735870 } (thiscall, ret 0xc, media.cpp, 3,7 KB): `Media::pick_ai_manager_response(tecnico, jogador, tipo)`: a
-/// resposta (1, 2 ou 3) do técnico da máquina a uma história do `tipo` sobre o jogador. Sem técnico, sem a ficha de
-/// técnico (+0x69), jogador sem ficha (+0x61), o próprio técnico, sem clube (+0x39, senão a seleção +0x24) ou sem
-/// contrato do jogador com ele (0x4cf5f0): 3. A nota é trunc(5 × 0x736720(jogador, clube, contrato, tipo, 3, 0)); sem
-/// jogador, a palavra do argumento fica no lugar (o ponteiro do técnico, como no original). Depois, pelo tipo: 0x83
-/// pelo tipo de contrato e o conhecimento (0x544410); 0x82 pelas preferências do técnico (0x547840/0x547810) e
-/// sorteios; 0x1f pela lista de transferências (0x544520) e o contrato; os outros, antes, pelas preferências com a
-/// nota, e depois por famílias de tipos, cada uma com a sua cadeia de sorteios (0x90cfc0); 8/0x25 e 3/4 podem pôr o
-/// jogador entre os rejeitados do técnico (0x547af0).
-pub(crate) unsafe extern "thiscall" fn resposta_do_tecnico_da_maquina(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    let contrato_com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let nota_da_historia: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_MEDIA_RATE_PLAYER_FORM_FOR_STORY);
-    let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
-    let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
-    let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_DISLIKED_STAFF);
-    let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
-    let listada_pelo_clube: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED);
-    let criterio: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_WANTS_TO_LEAVE);
-    let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
-    if tecnico == 0 || read_usize(tecnico + 0x69) == 0 {
-        return 3;
-    }
-    if jogador != 0 && read_usize(jogador + 0x61) == 0 {
-        return 3;
-    }
-    if tecnico == jogador {
-        return 3;
-    }
-    let mut clube = read_usize(tecnico + 0x39);
-    if clube == 0 {
-        clube = read_usize(tecnico + 0x24);
-        if clube == 0 {
-            return 3;
-        }
-    }
-    let contrato = contrato_com_clube(read_usize(0xae1050), jogador, clube);
-    if contrato == 0 {
-        return 3;
-    }
-    let mut nota = tecnico as i32; // sem jogador: o argumento que ocupa a vaga
-    if jogador != 0 {
-        nota = ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * *(0x968990 as *const f32) as f64);
-    }
-    let f = || read_usize(tecnico + 0x69); // a ficha de técnico
-    let ch = |o: usize| chance(f(), *((f() + o) as *const i8)) as i8 as i32; // o conhecimento pelo atributo +o
-    let k = tipo as i16;
-    if k == 0x83 {
-        let t = cpo6_tipo(contrato);
-        if t == 0x10 || t == 0x20 {
-            return 1;
-        }
-        if t == 0x30 && cpo6_c(contrato + 0x3f) > 1 {
-            return 1;
-        }
-        if read_i16(read_usize(jogador + 0x61) + 0xb) < 0x1482 && ch(0x14) > 0xf {
-            return 2;
-        }
-        if cpo6_tipo(contrato) == 0x70 && ch(0x14) > 0xa {
-            return 2;
-        }
-        return if sorteio(ch(0x19)) != 0 { 1 } else { 3 };
-    }
-    if k == 0x82 {
-        if nao_gosta(jogador, tecnico) != 0 {
-            let a = cpo6_c(tecnico + 0x5b);
-            if a < 0xf && sorteio(a) == 0 {
-                let x = sorteio(ch(0x19));
-                let y = sorteio(0x14);
-                if x < y {
-                    return 2;
-                }
-            }
-            let a = cpo6_c(tecnico + 0x5b);
-            if a <= 0xe || sorteio(a) <= 10 {
-                return 3;
-            }
-            let x = sorteio(ch(0x19));
-            let y = sorteio(0x14);
-            return if x <= y { 3 } else { 1 };
-        }
-        if gosta(jogador, tecnico) != 0 {
-            let x = sorteio(cpo6_c(tecnico + 0x5b));
-            let y = sorteio(10);
-            if x >= y {
-                return 3;
-            }
-            let x = sorteio(ch(0x19));
-            let y = sorteio(0xf);
-            return if x <= y { 3 } else { 1 };
-        }
-        if cpo6_c(tecnico + 0x5d) < 6 {
-            let y = sorteio(0x14);
-            if cpo6_c(tecnico + 0x5d) < y {
-                return 1;
-            }
-        }
-        let x = sorteio(ch(0x19));
-        let y = sorteio(0x14);
-        if x > y {
-            return 1;
-        }
-        if cpo6_c(tecnico + 0x5c) <= 0xf {
-            return 3;
-        }
-        let y = sorteio(10);
-        return if cpo6_c(tecnico + 0x5c) <= y { 3 } else { 2 };
-    }
-    if k == 0x1f {
-        if listada(jogador, clube) != 0 {
-            return 2;
-        }
-        let b = cpo6_c(contrato + 0x3d);
-        if b <= sorteio(100) {
-            return 3;
-        }
-        if criterio(contrato) != 0 || *((contrato + 0x49) as *const u8) != 0 {
-            return 3;
-        }
-        return if sorteio(3) != 0 { 1 } else { 3 };
-    }
-    // as preferências do técnico com a nota
-    if nao_gosta(jogador, tecnico) != 0 && nota < 5 {
-        if sorteio(cpo6_c(tecnico + 0x5b)) != 0 {
-            return 3;
-        }
-        let x = sorteio(ch(0x19));
-        let y = sorteio(0x14);
-        return if x >= y { 3 } else { 2 };
-    }
-    if gosta(jogador, tecnico) != 0 && nota > -5 {
-        let x = sorteio(cpo6_c(tecnico + 0x5b));
-        let y = sorteio(10);
-        if x >= y {
-            return 3;
-        }
-        let x = sorteio(ch(0x19));
-        let y = sorteio(0x14);
-        return if x >= y { 3 } else { 1 };
-    }
-    // a soma do conhecimento (+0x19), de +0x1d da ficha e de +0x59 do técnico
-    let soma = || ch(0x19) + cpo6_c(f() + 0x1d) + cpo6_c(tecnico + 0x59);
-    match k as i32 {
-        0x3c | 0x3d => {
-            let x = sorteio(ch(0x1b));
-            let y = sorteio(0x17);
-            if x > y {
-                let x = sorteio(cpo6_c(f() + 0x1d));
-                let y = sorteio(10);
-                if x < y {
-                    return 2;
-                }
-            }
-            if sorteio(cpo6_c(tecnico + 0x5a)) == 0 {
-                return 1;
-            }
-            let x = sorteio(cpo6_c(tecnico + 0x59));
-            let y = sorteio(0x28);
-            if x > y {
-                return 1;
-            }
-            let x = sorteio(cpo6_c(f() + 0x1d));
-            let y = sorteio(0x32);
-            if x <= y { 3 } else { 1 }
-        }
-        0x28..=0x3b => {
-            let x = sorteio(cpo6_c(jogador + 0x5b));
-            let y = sorteio(0x14);
-            if x > y {
-                let a = sorteio(ch(0x19));
-                let b = sorteio(0x14 - nota);
-                if a > b {
-                    return 1;
-                }
-                if sorteio(ch(0x19)) != 0 {
-                    return 3;
-                }
-                return if nota >= 0xa { 3 } else { 2 };
-            }
-            let a = sorteio(ch(0x19));
-            let b = sorteio(10);
-            if a > b {
-                let mut arg = 0;
-                if *((read_usize(jogador + 0x61) + 0x44) as *const u8) != 0 {
-                    // o registro de 0x4f bytes da pessoa em [0xae2d0c] (+0xa, +0xb bit 7)
-                    let reg = |o: usize| *((read_usize(0xae2d0c).wrapping_add((cpo6_i(jogador) as usize).wrapping_mul(0x4f)) + o) as *const u8);
-                    let e = sorteio((2 - (reg(0xb) >> 7) as i32) * 20);
-                    if sorteio(reg(0xa) as i32) > e {
-                        arg = 1;
-                    }
-                }
-                if sorteio(arg) == 0 && nota < 0xa {
-                    return 2;
-                }
-            }
-            if sorteio(cpo6_c(read_usize(jogador + 0x61) + 0x45)) == 0 {
-                return 1;
-            }
-            let x = sorteio(cpo6_c(tecnico + 0x59));
-            let y = sorteio(0x14 - nota);
-            if x <= y { 3 } else { 1 }
-        }
-        0 | 0xd | 0x11 | 0x52 | 0x23 | 0xe | 2 | 0x21 | 0x22 | 9 | 0xc => {
-            crate::comparacao::ramo("cpo_6 tipos comuns");
-            let t = cpo6_tipo(contrato);
-            if t == 0x30 || t == 0x10 || t == 0x20 {
-                let e = entrada(read_usize(read_usize(0xde1f54) + 0x856), clube, jogador, 0, 0);
-                if e != 0 && read_usize(e + 0xf) == read_usize(jogador) && nota > -10 {
-                    crate::comparacao::ramo("cpo_6 sorteio descartado");
-                    sorteio(cpo6_c(tecnico + 0x59)); // o original descarta o resultado
-                }
-            }
-            let x = sorteio(ch(0x19));
-            let y = sorteio(10);
-            if x < y {
-                let x = sorteio(cpo6_c(tecnico + 0x5d));
-                let y = sorteio(10);
-                if x < y {
-                    let x = sorteio(cpo6_c(f() + 0x1d));
-                    let y = sorteio(10);
-                    if x < y {
-                        let x = sorteio(cpo6_c(tecnico + 0x59));
-                        let y = sorteio(10);
-                        if x < y {
-                            let x = sorteio(nota);
-                            let y = sorteio(-5);
-                            if x < y {
-                                return 2;
-                            }
-                        }
-                    }
-                }
-            }
-            let x = sorteio(soma());
-            let y = sorteio(0x24);
-            if x <= y {
-                return 3;
-            }
-            let x = sorteio(nota);
-            let y = sorteio(-5);
-            if x > y { 1 } else { 3 }
-        }
-        8 | 0x25 => {
-            if sorteio(cpo6_c(f() + 0x1d) * 2) == 0 {
-                rejeitar(tecnico, jogador, 1);
-            }
-            if ch(0x19) < 0xa {
-                let x = sorteio(cpo6_c(tecnico + 0x5d));
-                let y = sorteio(10);
-                if x < y {
-                    let x = sorteio(cpo6_c(f() + 0x1d));
-                    let y = sorteio(10);
-                    if x < y && sorteio(ch(0x19)) == 0 {
-                        return 2;
-                    }
-                }
-            }
-            let x = sorteio(soma());
-            let y = sorteio(0x24);
-            if x <= y { 3 } else { 1 }
-        }
-        1 => {
-            if sorteio(ch(0x19)) == 0 {
-                let x = sorteio(cpo6_c(tecnico + 0x5d));
-                let y = sorteio(10);
-                if x < y {
-                    let x = sorteio(cpo6_c(f() + 0x1d));
-                    let y = sorteio(5);
-                    if x < y && sorteio(ch(0x19)) == 0 {
-                        return 2;
-                    }
-                }
-            }
-            let x = sorteio(soma());
-            let y = sorteio(0x1e);
-            if x <= y { 3 } else { 1 }
-        }
-        0x1e | 0x20 => {
-            let x = sorteio(cpo6_c(tecnico + 0x5d));
-            let y = sorteio(0x14);
-            if x < y {
-                let x = sorteio(cpo6_c(f() + 0x1d));
-                let y = sorteio(0xf);
-                if x < y {
-                    return 2;
-                }
-            }
-            let x = sorteio(cpo6_c(f() + 0x1d) + cpo6_c(tecnico + 0x59));
-            let y = sorteio(0x96);
-            if x > y {
-                if read_i16(read_usize(jogador + 0x61) + 0xb) as i32 <= read_i16(clube + 0x80) as i32 + 0x1f4 {
-                    return 2;
-                }
-                let x = sorteio(cpo6_c(f() + 0x14));
-                let y = sorteio(5);
-                return if x >= y { 3 } else { 1 };
-            }
-            let x = sorteio(cpo6_c(f() + 0x14));
-            let y = sorteio(5);
-            if x < y {
-                return 1;
-            }
-            let x = sorteio(cpo6_c(f() + 0x14));
-            let y = sorteio(0x14);
-            if x <= y { 3 } else { 2 }
-        }
-        0x63 | 0x62 | 0x5d | 0x3f | 0x5f | 0x60 | 0x43 | 0x5c | 0x5a | 0x44 | 0x5b | 0x42 | 0x61 | 0x40 | 0x41 => {
-            let mut base: i32 = match k {
-                0x5d => 5,
-                0x61 => 10,
-                0x62 => -7,
-                _ => 0,
-            };
-            if sorteio(cpo6_c(tecnico + 0x5a)) == 0 {
-                base += sorteio(10);
-                base -= sorteio(10);
-            }
-            let x = sorteio(cpo6_c(f() + 0x14));
-            let y = sorteio(0xf - base);
-            if x > y {
-                return 2;
-            }
-            let x = sorteio(cpo6_c(tecnico + 0x57));
-            let y = sorteio(base + 0xf);
-            if x <= y { 3 } else { 1 }
-        }
-        3 | 4 => {
-            let x = sorteio(cpo6_c(f() + 0x14));
-            let y = sorteio(0x32);
-            if x > y && sorteio(cpo6_c(f() + 0x1d)) == 0 {
-                let x = sorteio(nota);
-                let y = sorteio(-5);
-                if x < y {
-                    rejeitar(tecnico, jogador, 1);
-                    return 2;
-                }
-            }
-            let t = cpo6_tipo(contrato);
-            if t != 0 && t != 0x70 && t != 0x80 && listada_pelo_clube(jogador, 0) == 0 {
-                let x = sorteio(cpo6_c(tecnico + 0x59));
-                let y = sorteio(6);
-                if x > y {
-                    let x = sorteio(ch(0x19));
-                    let y = sorteio(6);
-                    if x > y {
-                        let x = sorteio(nota);
-                        let y = sorteio(-5);
-                        if x > y {
-                            return 1;
-                        }
-                    }
-                }
-            }
-            let t = cpo6_tipo(contrato);
-            if t != 0x70 && t != 0x40 {
-                return 3;
-            }
-            let x = sorteio(cpo6_c(tecnico + 0x59));
-            let y = sorteio(5);
-            if x >= y {
-                return 3;
-            }
-            let x = sorteio(cpo6_c(tecnico + 0x5b));
-            let y = sorteio(5);
-            if x >= y {
-                return 3;
-            }
-            let x = sorteio(nota);
-            let y = sorteio(-5);
-            if x >= y { 3 } else { 2 }
-        }
-        5 => {
-            if sorteio(cpo6_c(tecnico + 0x59)) != 0 && sorteio(ch(0x19)) != 0 && sorteio(cpo6_c(jogador + 0x5b)) != 0 {
-                let x = sorteio(nota);
-                let y = sorteio(-5);
-                if x > y {
-                    return 1;
-                }
-            }
-            if sorteio(ch(0x19)) != 0 {
-                return 3;
-            }
-            let x = sorteio(cpo6_c(jogador + 0x5a));
-            let y = sorteio(10);
-            if x >= y {
-                return 3;
-            }
-            let x = sorteio(nota);
-            let y = sorteio(-5);
-            if x >= y { 3 } else { 2 }
-        }
-        6 => {
-            if sorteio(cpo6_c(tecnico + 0x59)) != 0 {
-                let x = sorteio(cpo6_c(f() + 0x1f));
-                let y = sorteio(10);
-                if x > y {
-                    let x = sorteio(cpo6_c(jogador + 0x5b));
-                    let y = sorteio(5);
-                    if x > y {
-                        let x = sorteio(cpo6_c(read_usize(jogador + 0x61) + 0x25));
-                        let y = sorteio(0x1e);
-                        if x < y {
-                            let x = sorteio(nota);
-                            let y = sorteio(-5);
-                            if x > y {
-                                return 1;
-                            }
-                        }
-                    }
-                }
-            }
-            if sorteio(ch(0x19)) != 0 || sorteio(cpo6_c(f() + 0x1f)) != 0 {
-                return 3;
-            }
-            let x = sorteio(cpo6_c(read_usize(jogador + 0x61) + 0x25));
-            let y = sorteio(0x32);
-            if x <= y {
-                return 3;
-            }
-            let x = sorteio(nota);
-            let y = sorteio(-5);
-            if x >= y { 3 } else { 2 }
-        }
-        _ => 3,
-    }
-}
 
 /// marks read the first unread item with the id in the human's ring unless it needs a reply (button 0x782b70), takes it
 /// off the count and, when asked, repeats it for the humans on the same network machine
@@ -554,22 +122,6 @@ pub(crate) unsafe extern "thiscall" fn achar_noticia_pelo_id(this: usize, tecnic
     0
 }
 
-/// Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
-/// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
-pub(crate) unsafe extern "thiscall" fn comparar_resposta_do_tecnico_da_maquina(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(982);
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    if tecnico != 0 && read_usize(tecnico + 0x65) != 0 {
-        regioes.push((read_usize(tecnico + 0x65) + 0x1c, 0x18));
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
-        &regioes,
-        || o(this, tecnico, jogador, tipo),
-        || crate::aleatorio::sem_contar(|| resposta_do_tecnico_da_maquina(this, tecnico, jogador, tipo)),
-    );
-    PLACAR.registrar(igual && r == n, || format!("resposta_do_tecnico_da_maquina(tipo {:#x}) original={} rust={} {:x?} x {:x?}", tipo as i16, r, n, mo.0, mr.0));
-    r
-}
 
 /// Comparador: lado a lado no vetor das notícias (News +0, +4 vagas), nas entradas dos 16 humanos (News +8) e no texto
 /// do botão (0xde1f64; a 0x782b70 só consulta). Caixa "Error": só a original.
@@ -1181,43 +733,6 @@ pub(crate) unsafe extern "thiscall" fn texto_do_dado_da_noticia(noticia: usize, 
     1
 }
 
-/// news 0x1790 (id, reputation, draw of 2) to the managers of the nation, or to all for a big club (9000+)
-/// Original: `Media::post_financial_trouble_news` (0x74ae60, media.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x74ae60 } (thiscall, ret 4, media.cpp, quadro SEH sem destrutor): `Media::post_financial_trouble_news(clube)`:
-/// com o clube, a nação (+0x53), a ficha (+0x69, com +0x38) e a divisão (+0x57), monta a notícia 0x1790 numa local
-/// (0x77bbe0 com 0) com os dados 0 = id do clube, 1 = reputação (+0x80) e 2 = sorteio(2) (0x90cfc0); clube de
-/// reputação 9000 ou mais numa divisão com +0x69 acima de 12: para todos os técnicos (0x786780); senão para os da
-/// nação (0x7863f0). A notícia local tem 0xe0 bytes (a entrega copia só até +0xde).
-pub(crate) unsafe extern "thiscall" fn noticia_de_apuro_financeiro(_this: usize, clube: usize) {
-    if clube == 0 || read_usize(clube + 0x53) == 0 {
-        return;
-    }
-    let ficha = read_usize(clube + 0x69);
-    if ficha == 0 || read_usize(ficha + 0x38) == 0 || read_usize(clube + 0x57) == 0 {
-        return;
-    }
-    crate::comparacao::ramo("cpk_6 apuro financeiro");
-    let mut local = [0u32; 0x38];
-    let n = local.as_mut_ptr() as usize;
-    let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
-    let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    construir(n, 0x1790, 0);
-    gravar(n, 0, read_usize(clube) as u32);
-    gravar(n, 1, read_i16(clube + 0x80) as i32 as u32);
-    let v = sorteio(2); // o sorteio da notícia
-    gravar(n, 2, v as u32);
-    let noticias = read_usize(0xb7431c);
-    let divisao = read_usize(clube + 0x57);
-    if read_i16(clube + 0x80) >= 9000 && divisao != 0 && read_i16(divisao + 0x69) > 12 {
-        let todos: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-        todos(noticias, n);
-    } else {
-        let pais: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_MANAGERS);
-        pais(noticias, n, read_usize(clube + 0x53));
-    }
-}
 
 /// O clube que a 0x7f9190 usa: o `clube`, ou o do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]] + 0x39).
 pub(crate) unsafe fn cpk6_clube(clube: usize) -> usize {
@@ -1227,28 +742,6 @@ pub(crate) unsafe fn cpk6_clube(clube: usize) -> usize {
     read_usize(read_usize(0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize as usize) + 0x39)
 }
 
-/// poor (balance < 1,000,000) and small (reputation < 5000) club outside the nation's region: 0; else 1
-/// Original: `SCOUT_MANAGER::can_club_scout_nation` (0x7f9190, scout_manager.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x7f9190 } (thiscall, ret 8, scout_manager.cpp; `this` não é lido): `SCOUT_MANAGER::can_club_scout_nation(nacao,
-/// clube)`: o clube (ou o do humano da vez) não cobre a nação só se tem as finanças (0x5a0590 em [0xae2a38]) com saldo
-/// de 64 bits abaixo de 1.000.000, reputação (+0x80) abaixo de 5000 e a região (+0x76) da nação dele (+0x53) diferente
-/// da região da `nacao`: 0. Senão 1. Sem clube nenhum: a original (caixa "Error" e 0).
-pub(crate) unsafe extern "thiscall" fn olheiros_cobrem_a_nacao(this: usize, nacao: usize, clube: usize) -> u32 {
-    let c = cpk6_clube(clube);
-    if c == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(900)(this, nacao, clube); // caixa: só a original
-    }
-    let financas_do_clube: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let f = financas_do_clube(read_usize(0xae2a38), c);
-    if f != 0 && core::ptr::read_unaligned(f as *const i64) < 1_000_000 && read_i16(c + 0x80) < 5000 {
-        if *((read_usize(c + 0x53) + 0x76) as *const u8) != *((nacao + 0x76) as *const u8) { // fora da região
-            crate::comparacao::ramo("cpk_6 olheiro fora da regiao");
-            return 0;
-        }
-    }
-    1
-}
 
 /// Comparador: lado a lado pelos `n` bytes do destino.
 pub(crate) unsafe extern "thiscall" fn comparar_texto_do_dado_da_noticia(noticia: usize, dado: u32, destino: *mut u8, n: i32) -> u32 {
@@ -1263,23 +756,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_texto_do_dado_da_noticia(noticia
     r
 }
 
-/// Comparador: a notícia sorteia (0x90cfc0) e vai para as caixas dos técnicos: só a original (a prova é a carreira e o
-/// modo Rust).
-pub(crate) unsafe extern "thiscall" fn comparar_noticia_de_apuro_financeiro(this: usize, clube: usize) {
-    crate::comparacao::ramo("noticia_de_apuro_financeiro");
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(899)(this, clube)
-}
 
-/// Comparador: pelo valor (a 0x5a0590 só procura).
-pub(crate) unsafe extern "thiscall" fn comparar_olheiros_cobrem_a_nacao(this: usize, nacao: usize, clube: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(900)(this, nacao, clube);
-    if cpk6_clube(clube) == 0 {
-        return r;
-    }
-    let n = olheiros_cobrem_a_nacao(this, nacao, clube);
-    PLACAR.registrar(r == n, || format!("olheiros_cobrem_a_nacao({:x}, {:x}) original={} rust={}", nacao, clube, r, n));
-    r
-}
 
 // ---------- 246a leva: as notícias para os técnicos humanos: para todos, para os da divisão e para os da nação (clube ou seleção) ----------
 
@@ -1418,61 +895,7 @@ pub(crate) unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
     Some(p)
 }
 
-/// with the scout checked and some assignment set (+0x190, +0x18c, +0x194, +0x195, +0x199, +0x19d), copies the six and
-/// returns 1; else 0
-/// Original: `PLAYER_SEARCH::get_scout_assignment` (0x7aefd0, player_search.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x7aefd0 } (thiscall, ret 0x18, player_search.cpp): `PLAYER_SEARCH::get_scout_assignment(clube, nacao, regiao,
-/// comp, base, adversario)`: com o olheiro conferido, se alguma das missões está marcada (clube +0x190, nação +0x18c,
-/// região +0x194 byte, competição +0x195 acima de −1; base +0x199, adversário +0x19d não nulos), copia as seis para
-/// as saídas e devolve 1; nenhuma: 0. Olheiro que não confere: a original (caixa "Error" e 0).
-pub(crate) unsafe extern "thiscall" fn missao_do_olheiro(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
-    if cpi6_olheiro(this).is_none() {
-        return orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(862)(this, clube, nacao, regiao, comp, base, adversario); // caixa: só a original
-    }
-    let marcada = read_usize(this + 0x190) as i32 > -1
-        || read_usize(this + 0x18c) as i32 > -1
-        || *((this + 0x194) as *const i8) > -1
-        || read_usize(this + 0x195) as i32 > -1 // a competição
-        || read_usize(this + 0x199) != 0
-        || read_usize(this + 0x19d) != 0;
-    if !marcada {
-        return 0;
-    }
-    clube.write_unaligned(read_usize(this + 0x190) as u32);
-    nacao.write_unaligned(read_usize(this + 0x18c) as u32);
-    *regiao = *((this + 0x194) as *const u8);
-    comp.write_unaligned(read_usize(this + 0x195) as u32);
-    base.write_unaligned(read_usize(this + 0x199) as u32);
-    adversario.write_unaligned(read_usize(this + 0x19d) as u32);
-    1
-}
 
-/// the cup started (+0xb1) and, asking for the stages with no stage set (+0x44), all up to the current complete and the
-/// current is the last
-/// Original: `Cup::check_complete` (0x521e00, Cup.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x521e00 } (thiscall, ret 8, Cup.cpp): `Cup::check_complete(fases, _)`: 0 se a copa não começou (+0xb1). Com
-/// `fases` = 1 e sem fase marcada (+0x44 = 0xff): cada fase de 0 até a atual (+0x30, vetor +0xc) tem de estar completa
-/// (método +0x10 com 0, 1) e a atual tem de ser a última (+0x2c − 1); senão 0. Fora isso, 1.
-pub(crate) unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x: u32) -> u8 {
-    if *((this + 0xb1) as *const u8) == 0 {
-        return 0;
-    }
-    if fases != 1 || *((this + 0x44) as *const u8) != 0xff {
-        return 1;
-    }
-    let mut i = 0i32;
-    while i <= read_usize(this + 0x30) as i32 {
-        let fase = read_usize(read_usize(this + 0xc).wrapping_add(i as usize * 4));
-        let completa: unsafe extern "thiscall" fn(usize, u32, u32) -> u8 = core::mem::transmute(read_usize(read_usize(fase) + 0x10));
-        if completa(fase, 0, 1) == 0 {
-            return 0; // uma fase incompleta
-        }
-        i += 1;
-    }
-    (read_usize(this + 0x30) as i32 >= (read_usize(this + 0x2c) as i32).wrapping_sub(1)) as u8
-}
 
 /// Comparador: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
@@ -1481,26 +904,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_da_naca
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(861)(this, noticia, nacao)
 }
 
-/// Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_missao_do_olheiro(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(862);
-    if cpi6_olheiro(this).is_none() {
-        return o(this, clube, nacao, regiao, comp, base, adversario);
-    }
-    let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (adversario as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, clube, nacao, regiao, comp, base, adversario),
-        || missao_do_olheiro(this, clube, nacao, regiao, comp, base, adversario));
-    PLACAR.registrar(igual && r == n, || format!("missao_do_olheiro original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
-    r
-}
 
-/// Comparador: pelo valor (o método das fases só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_completa(this: usize, fases: u32, x: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(863)(this, fases, x);
-    let n = copa_completa(this, fases, x);
-    PLACAR.registrar(r == n, || format!("copa_completa({:x}, {}) original={} rust={}", this, fases, r, n));
-    r
-}
 
 // ---------- 213a leva: as notícias não lidas, a marca gravada na notícia da caixa e o clube de técnico humano (news.cpp) ----------
 
@@ -1661,3 +1065,302 @@ pub(crate) unsafe extern "stdcall" fn comparar_clube_de_tecnico_humano(clube: us
     r
 }
 
+/// gives the default replies for the manager's club and national team (0x7874b0) and empties his inbox (the 100 news
+/// items with +0xd6 = 0 and +0xda = 1)
+/// Original: `News::clear_inbox` (0x787630, news.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x787630 } (thiscall, ret 4, news.cpp): `News::clear_inbox(tecnico)`, pela 0x6b28b0 e pela carga do jogo
+/// (0x82a9c0): as respostas padrão das notícias do clube (+0x39) e da seleção (+0x24) do técnico (0x7874b0); depois a
+/// caixa do humano (registro de 12 bytes em [this+8], pelo id − [0xae2364] + 16): +4 = +0 e +8 = 0; com a primeira
+/// notícia (+0, −1 nenhuma), as 100 notícias de 0xdf bytes a partir dela ([this]) com +0xd6 = 0 e +0xda = 1. Sem técnico
+/// ou com índice negativo: a caixa de erro (linhas 0x24c1 e 0x24cc).
+pub(crate) unsafe extern "thiscall" fn esvaziar_caixa_de_entrada(this: usize, tecnico: usize) {
+    if tecnico == 0 {
+        aviso_em(0xa693ec, 0x24c1);
+        return;
+    }
+    let h = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    if h < 0 {
+        aviso_em(0xa693ec, 0x24cc);
+        return;
+    }
+    let caixa = (read_i32(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
+    let responder: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
+    for o in [0x39usize, 0x24] {
+        let c = read_i32(tecnico + o) as usize;
+        if c != 0 {
+            responder(this, tecnico, c);
+        }
+    }
+    let primeira = read_i32(caixa);
+    core::ptr::write_unaligned((caixa + 8) as *mut i32, 0);
+    core::ptr::write_unaligned((caixa + 4) as *mut i32, primeira);
+    if primeira != -1 {
+        crate::comparacao::ramo("esvaziar_caixa_de_entrada");
+        for k in 0..0x64u32 {
+            let n = (read_i32(this) as u32).wrapping_add(k.wrapping_add(read_i32(caixa) as u32).wrapping_mul(0xdf)) as usize;
+            core::ptr::write_unaligned((n + 0xd6) as *mut i32, 0);
+            core::ptr::write_unaligned((n + 0xda) as *mut i32, 1);
+        }
+    }
+}
+
+/// Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
+/// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
+pub(crate) unsafe extern "thiscall" fn comparar_esvaziar_caixa_de_entrada(this: usize, tecnico: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1262);
+    if tecnico == 0 {
+        return o(this, tecnico);
+    }
+    let h = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    if h < 0 {
+        return o(this, tecnico);
+    }
+    let caixa = (read_i32(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
+    if read_i32(tecnico + 0x39) != 0 || read_i32(tecnico + 0x24) != 0 {
+        o(this, tecnico);
+        let primeira = read_i32(caixa);
+        let noticias = cpv10_regioes_da_caixa(this, caixa);
+        let ok = read_i32(caixa + 4) == primeira && read_i32(caixa + 8) == 0
+            && noticias[1..].iter().all(|&(n, _)| read_i32(n) == 0 && read_i32(n + 4) == 1);
+        PLACAR.registrar(ok, || format!("esvaziar_caixa_de_entrada({:x}) plano: caixa {:x?}", tecnico, (primeira, read_i32(caixa + 4), read_i32(caixa + 8))));
+        return;
+    }
+    let reg = cpv10_regioes_da_caixa(this, caixa);
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico), || esvaziar_caixa_de_entrada(this, tecnico));
+    PLACAR.registrar(igual, || format!("esvaziar_caixa_de_entrada({:x}) {:x?} x {:x?}", tecnico, mo, mr));
+}
+
+/// builds the news item: type (+0), important byte (+4), the 50 data slots cleared, today's date (+0xcd), byte
+/// [0xae2c88] at +0xd5, id and +0xda cleared; in DESLIGADAS since 2026-10-29: with the detour the career in Rust mode
+/// left the reference be54a138 (bisection of batch 251's 39 routines; with 0x77bbe0, the news constructor, the game
+/// later crashed in 0x7c6650 on a broken index); the cause (stack residue or a difference in the copy) is not isolated
+/// yet; the copy stays in the code and does not run
+/// Original: `NewsItem::NewsItem` (0x77bbe0, news.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x77bbe0 } (thiscall, ret 8, news.cpp, quadro SEH só da data, destrutor vazio 0x5a53c0): `NewsItem::NewsItem(tipo,
+/// importante)`: inicia a data (+0xcd, 0x54a110), grava o tipo (+0), o byte importante (+4) e zera os 50 dados (+5);
+/// a data de hoje ([0xae2c90], pela atribuição 0x417c10 com retorno numa temporária), o byte [0xae2c88] em +0xd5, o id
+/// (+0xd6) e +0xda zerados. Devolve a notícia.
+pub(crate) unsafe extern "thiscall" fn construir_noticia(this: usize, tipo: u32, importante: u32) -> usize {
+    let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
+    let atribuir_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
+    iniciar_data(this + 0xcd);
+    cpo5_por(this, tipo as usize);
+    *((this + 4) as *mut u8) = importante as u8;
+    for k in 0..50 {
+        cpo5_por(this + 5 + 4 * k, 0);
+    }
+    let mut temporaria = [0u32; 2];
+    atribuir_data(this + 0xcd, temporaria.as_mut_ptr() as usize, 0xae2c90);
+    *((this + 0xd5) as *mut u8) = *(0xae2c88 as *const u8);
+    cpo5_por(this + 0xd6, 0);
+    cpo5_por(this + 0xda, 0);
+    this
+}
+
+/// Comparador: pela memória da notícia (0xde bytes; a original usa só uma temporária na pilha) e pela devolução.
+pub(crate) unsafe extern "thiscall" fn comparar_construir_noticia(this: usize, tipo: u32, importante: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(979);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xde)], || o(this, tipo, importante), || construir_noticia(this, tipo, importante));
+    PLACAR.registrar(igual && r == n, || format!("construir_noticia(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
+    r
+}
+
+/// a new array with the human's inbox items, newest first, only those of one category when asked, and the count
+/// Original: `News::get_inbox_items` (0x786960, news.cpp, thiscall, ret 0xc).
+///
+/// [pt] { 0x786960 } (thiscall, ret 0xc, news.cpp): `News::get_inbox_items(tecnico, conta, categoria)`: um vetor novo de 100
+/// notícias (malloc 0x944e46 de 0x571c, na primeira achada; `*conta` = 0) com as notícias do anel do humano, da mais nova
+/// para a mais antiga até a vaga vazia, só as da `categoria` (0x785670) se ela não for 0, copiadas (0x786010); `*conta`
+/// soma uma por notícia. Devolve o vetor (0 sem nenhuma; `*conta` intocada). Sem técnico ou técnico da máquina: a caixa
+/// "Error" e 0.
+pub(crate) unsafe extern "thiscall" fn noticias_da_caixa(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
+    if tecnico == 0 {
+        aviso_em(0xa693ec, 0x21fa);
+        return 0;
+    }
+    let idx = cpn3_i(tecnico).wrapping_sub(cpn3_i(0xae2364)).wrapping_add(0x10);
+    if idx < 0 {
+        aviso_em(0xa693ec, 0x2205);
+        return 0;
+    }
+    let e = read_usize(this + 8) + idx as usize * 12;
+    if cpn3_i(e) == -1 {
+        return 0;
+    }
+    let tipo: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
+    let copiar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
+    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let mut vetor = 0usize;
+    let mut k = cpn3_i(e + 4) - 1;
+    loop {
+        if k < cpn3_i(e) {
+            k = cpn3_i(e) + 0x63;
+        }
+        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA));
+        if read_usize(vaga + 0xd6) == 0 {
+            return vetor;
+        }
+        if categoria as u8 == 0 || tipo(vaga) as u8 == categoria as u8 {
+            if vetor == 0 {
+                vetor = alocar(0x571c);
+                if vetor == 0 {
+                    aviso_em(0xa693ec, 0x222a);
+                    return 0;
+                }
+                *conta = 0;
+            }
+            let n = *conta;
+            *conta = n + 1;
+            copiar(vetor.wrapping_add((n as usize).wrapping_mul(CPN3_NOTICIA)), read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA)));
+        }
+        k -= 1;
+        if k == cpn3_i(e + 4) - 1 {
+            return vetor;
+        }
+    }
+}
+
+/// Comparador: a original aloca o vetor: roda só ela e confere o plano feito antes (a conta e os ids, na ordem).
+pub(crate) unsafe extern "thiscall" fn comparar_noticias_da_caixa(this: usize, tecnico: usize, conta: *mut i32, categoria: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(954);
+    if tecnico == 0 || cpn3_i(tecnico).wrapping_sub(cpn3_i(0xae2364)).wrapping_add(0x10) < 0 {
+        return o(this, tecnico, conta, categoria);
+    }
+    let e = read_usize(this + 8) + (cpn3_i(tecnico).wrapping_sub(cpn3_i(0xae2364)).wrapping_add(0x10)) as usize * 12;
+    let mut ids = Vec::new();
+    if cpn3_i(e) != -1 {
+        let tipo: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_CATEGORY);
+        let mut k = cpn3_i(e + 4) - 1;
+        loop {
+            if k < cpn3_i(e) {
+                k = cpn3_i(e) + 0x63;
+            }
+            let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA));
+            if read_usize(vaga + 0xd6) == 0 {
+                break;
+            }
+            if categoria as u8 == 0 || tipo(vaga) as u8 == categoria as u8 {
+                ids.push(read_usize(vaga + 0xd6));
+            }
+            k -= 1;
+            if k == cpn3_i(e + 4) - 1 {
+                break;
+            }
+        }
+    }
+    let r = o(this, tecnico, conta, categoria);
+    let ok = if ids.is_empty() {
+        r == 0
+    } else {
+        r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * CPN3_NOTICIA + 0xd6) == id))
+    };
+    PLACAR.registrar(ok, || format!("noticias_da_caixa(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
+    r
+}
+
+/// the news category by the thousands range of its type
+/// Original: `NewsItem::get_category` (0x785670, news.cpp, thiscall).
+///
+/// [pt] { 0x785670 } (thiscall, news.cpp): a categoria da notícia pelo milhar do tipo (+0): 1..999 → 2,
+/// 1000.. → 7, 2000.. → 3, 3000.. → 4, 4000.. → 5, 5000.. → 1, 6000..0x1790 → 6. Fora disso: a original
+/// (caixa de erro). Devolve o eax inteiro como a original (o tipo com o al trocado).
+pub(crate) unsafe extern "thiscall" fn categoria_da_noticia(noticia: usize) -> u32 {
+    let t = *(noticia as *const i32);
+    let c = match t {
+        1..=999 => 2,
+        1000..=1999 => 7,
+        2000..=2999 => 3,
+        3000..=3999 => 4,
+        4000..=4999 => 5,
+        5000..=5999 => 1,
+        6000..=0x1790 => 6,
+        _ => return orig::<unsafe extern "thiscall" fn(usize) -> u32>(507)(noticia),
+    };
+    (t as u32 & 0xffff_ff00) | c
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_categoria_da_noticia(noticia: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(507);
+    let t = *(noticia as *const i32);
+    if !(1..=0x1790).contains(&t) {
+        return o(noticia);
+    }
+    let r = o(noticia);
+    let n = categoria_da_noticia(noticia);
+    PLACAR.registrar(r == n, || format!("categoria_da_noticia({}) original={:x} rust={:x}", t, r, n));
+    r
+}
+
+/// the value of one of the 50 news item slots
+/// Original: `NewsItem::get_slot` (0x785830, news.cpp, thiscall).
+///
+/// [pt] { 0x785830 } (thiscall, ret 4, news.cpp): o valor da vaga `vaga` (0 a 49) da notícia (+5, 4 bytes
+/// cada). Fora da faixa: a original (caixa de erro, devolve 0).
+pub(crate) unsafe extern "thiscall" fn vaga_da_noticia(noticia: usize, vaga: i8) -> u32 {
+    if !(0..0x32).contains(&vaga) {
+        return orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(450)(noticia, vaga);
+    }
+    core::ptr::read_unaligned((noticia + 5 + vaga as usize * 4) as *const u32)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_vaga_da_noticia(noticia: usize, vaga: i8) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> u32>(450)(noticia, vaga);
+    if !(0..0x32).contains(&vaga) {
+        return r;
+    }
+    let n = vaga_da_noticia(noticia, vaga);
+    PLACAR.registrar(r == n, || format!("vaga_da_noticia({}) original={:#x} rust={:#x}", vaga, r, n));
+    r
+}
+
+/// stores news field 0..49
+/// Original: `set_news_field` (0x785790, news.cpp, thiscall).
+///
+/// [pt] { 0x785790 } (thiscall, ret 8, news.cpp): grava `valor` no dado `k` 0..49 da notícia (+5, 4 bytes
+/// cada). Devolve 1. `k` fora: a original (caixa de erro).
+pub(crate) unsafe extern "thiscall" fn gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
+    if !(0..0x32).contains(&k) {
+        return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(399)(t, k, valor);
+    }
+    core::ptr::write_unaligned((t + 5 + 4 * k as usize) as *mut u32, valor);
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(399);
+    let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, k, valor), || gravar_dado_da_noticia(t, k, valor));
+    PLACAR.registrar(igual && r == v, || format!("gravar_dado_da_noticia({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
+    r
+}
+
+/// copies the news item (0xdf bytes): +0, +4, the 50 tokens (+5), the date (+0xcd), +0xd5, +0xd6, +0xda and +0xde
+/// Original: `NewsItem::operator=` (0x786010, news.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x786010 } (thiscall, ret 4, news.cpp): `NewsItem::operator=`: copia a notícia (0xdf bytes) de `origem`: +0
+/// (dupla), +4 (byte), as 50 fichas de +5 (duplas, na ordem), a data em +0xcd, +0xd5 (byte), +0xd6 e +0xda (duplas) e
+/// +0xde (byte). Devolve `this`.
+pub(crate) unsafe extern "thiscall" fn copiar_noticia(this: usize, origem: usize) -> usize {
+    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
+    let b = |o: usize| *((this + o) as *mut u8) = *((origem + o) as *const u8);
+    d(0);
+    b(4);
+    for k in 0..50 {
+        d(5 + 4 * k); // as fichas da notícia
+    }
+    cpg1_data(this + 0xcd, origem + 0xcd);
+    b(0xd5);
+    d(0xd6);
+    d(0xda);
+    b(0xde);
+    this
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_copiar_noticia(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(817);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0xdf)], || o(this, origem), || copiar_noticia(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("copiar_noticia {:x?} x {:x?}", mo, mr));
+    r
+}

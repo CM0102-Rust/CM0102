@@ -650,3 +650,20 @@ pub(crate) unsafe extern "thiscall" fn decisao_da_falta(
     res
 }
 
+/// the referee constructor (zeroes +0 and +4)
+/// Original: `construct_referee` (0x6e9460, match_official.cpp, thiscall).
+///
+/// [pt] { 0x6e9460 } (thiscall, match_official.cpp): o construtor do árbitro: zera o motor (+0) e o oficial
+/// (+4). Devolve `this`.
+pub(crate) unsafe extern "thiscall" fn construir_arbitro(a: usize) -> usize {
+    core::ptr::write_unaligned(a as *mut u32, 0);
+    core::ptr::write_unaligned((a + 4) as *mut u32, 0);
+    a
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_construir_arbitro(a: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(377);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(a, 8)], || o(a), || construir_arbitro(a));
+    PLACAR.registrar(igual && r == v, || format!("construir_arbitro({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
+    r
+}

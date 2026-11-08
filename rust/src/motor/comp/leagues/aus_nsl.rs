@@ -268,26 +268,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_nsl(this: usize) 
     r
 }
 
-/// MLS: 32 games per team (+0xa7; four round robins in +0x3c); win 3, draw 1; tie-break by goal difference, goals
-/// scored and head-to-head; 1 top place in the overall table (rule word 0x48: 0x8 next stage, the play-offs; 0x40 fixed
-/// round order); nobody goes up or down; the word +0xab = 0xc2 copied to each match. No schedule here: the games are
-/// built by hand (0x9086e0)
-/// Original: `UsaMls::set_up_rules` (0x908660, usa_mls.cpp, thiscall).
-///
-/// [pt] { 0x908660 } (thiscall, usa_mls.cpp): `UsaMls::set_up_rules`, as regras da MLS; devolve 1 (o eax que ela usa como
-/// valor).
-pub(crate) unsafe extern "thiscall" fn cqj8_regras_da_mls(this: usize) -> u32 {
-    cqj8_regras_mls(this);
-    crate::comparacao::ramo("cqj_8 regras da mls");
-    1
-}
 
-/// Comparador: lado a lado sobre o objeto da liga (0xee; só grava nele); a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj8_regras_da_mls(this: usize) -> u32 {
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xee)], || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1725)(this), || cqj8_regras_da_mls(this));
-    PLACAR.registrar(igual && r == n, || format!("cqj8_regras_da_mls({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}
 
 /// O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
 /// [[this+0xc]].
@@ -298,27 +279,7 @@ pub(crate) unsafe fn cqj8_historico_do_estagio(this: usize) -> u32 {
     f(e)
 }
 
-/// end of a state league (nine of them): records the honours of the first stage (the table) and calls 0x42bba0, which,
-/// once the twelve state leagues are over, puts the champions into the Champions Cup
-/// Original: `BraRegGaucho::record_season_honours` (0x432970, bra_reg_gaucho.cpp, thiscall).
-///
-/// [pt] { 0x432970 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::record_season_honours` (slot 13 de nove estaduais: Baiano,
-/// Centro-Oeste, Gaúcho, Goiano, Norte, Nordeste, Pernambucano, Catarinense e Paulista): o histórico do primeiro estágio
-/// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
-/// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
-pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -> u32 {
-    cqj8_historico_do_estagio(this); // cqj8: o histórico do estadual
-    crate::comparacao::ramo("cqj_8 historico do estadual");
-    let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
-    campeoes()
-}
 
-/// Comparador: só a original (ponytail: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
-/// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas
-/// mutações e pelas duas carreiras Rust.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(1726)(this)
-}
 
 /// end of the Argentine second division and Series A and B: the honours come from the first stage, not the overall
 /// table
@@ -336,3 +297,62 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_primeiro_estag
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(1727)(this)
 }
 
+/// NSL: at the end of the regular season, the six clubs through to the finals series get the qualification record
+/// (stage 0x435, weight 0x28); in the finals, those who go through get the record (round 0x96) and those who fall the
+/// failed-to-qualify one; the champion (grand final) gets the champion record. No fate written to the table
+/// Original: `AusNsl::update_staff_records_for_status` (0x411980, aus_nsl.cpp, thiscall).
+///
+/// [pt] { 0x411980 } (thiscall, ret 0x18, aus_nsl.cpp): `AusNsl::update_staff_records_for_status`: na temporada regular, os
+/// seis classificados (6) ganham o registro de classificação para a fase final (fase 0x435); os de fora (-2) devolvem
+/// -1; na fase final (fase 0), quem avança (6) ganha o registro (rodada 0x96) e quem cai (-2) o de não classificado
+/// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
+pub(crate) unsafe extern "thiscall" fn cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let _ = (a4, a5, a6);
+    cqk7_nsl(this, clube, situacao, fase, true).0
+}
+
+/// Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
+pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_na_nsl(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+    let (n, _, _) = cqk7_nsl(this, clube, situacao, fase, false);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(1733)(this, clube, situacao, fase, a4, a5, a6);
+    PLACAR.registrar(r == n, || format!("cqk7_destino_na_nsl({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
+    r
+}
+
+/// the Australian NSL has 13 clubs, those of the division in database order; with fewer, the game shows the error box;
+/// no prize fund nor TV money
+/// Original: `AusNsl::create_table` (0x411b70, aus_nsl.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
+/// ordem do banco, até encher (o contador num int, comparado no word); sem encher: a caixa da linha 0x252 e 0; cheia: 1,
+/// sem fundo de prêmios nem TV. Fonte 0x987c20 (a caixa de memória na linha 0x241).
+pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
+    if cqm9_alocar(this, 0xd, 0x987c20, 0x241) == 0 {
+        return 0;
+    }
+    let mut k: u32 = 0;
+    let mut i: i16 = 0;
+    let mut clube = read_usize(0xae23b4);
+    while (i as i32) < read_usize(0xae235c) as i32 {
+        if (k as i16) >= read_i16(this + 0x3e) {
+            break;
+        }
+        if cqm9_da_divisao(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
+            cqm9_linha(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
+            k = k.wrapping_add(1);
+        }
+        i = i.wrapping_add(1);
+        clube = clube.wrapping_add(0x245);
+    }
+    if k as i16 != read_i16(this + 0x3e) {
+        aviso_em(0x987c20, 0x252);
+        return 0;
+    }
+    crate::comparacao::ramo("cqm_9 nsl cheia");
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_nsl(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1842);
+    cqm9_comparar("cqm9_tabela_da_nsl", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
+}

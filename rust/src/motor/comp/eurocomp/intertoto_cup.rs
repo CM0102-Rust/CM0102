@@ -78,56 +78,7 @@ pub(crate) const CQP13_CONCACAF: [Cql10R; 3] = [
     cql10r((2, 9, 0, 0), (4, 9, 0, 2, 2, 0), 0x96, (0, 3, 0), 8, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
 ];
 
-/// rule: the CONCACAF Champions' Cup has 8 teams in single matches: quarter-finals drawn on 1/8 and played on 28/8,
-/// semi-final on 1/9 and final on 4/9; category 8, tie-break 3; no per-round prize (−1)
-/// Original: `ConChamp::create_round_table` (0x4c0f00, con_champ.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x4c0f00 } (thiscall, ret 0x10, con_champ.cpp; a virtual +0x3c): `ConChamp::create_round_table(fase, &rodadas,
-/// &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 3, extra = 0; a tabela (0x944e46 de 0x138; sem
-/// memória, a caixa da linha 0x97 e 0) com as 3 rodadas e, nas duas primeiras, o dia 0 do confronto vazio (0x521f10
-/// com −1, −1, −1 e mando 0; a original o chama entre o jogo e os campos, que não se sobrepõem). Fora da −1, 0.
-pub(crate) unsafe extern "thiscall" fn cqp13_concacaf_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    if fase as u8 != 0xff {
-        return 0;
-    }
-    if !saida.is_null() {
-        *saida = 0;
-    }
-    *rodadas = 3;
-    *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(0x138);
-    if t == 0 {
-        aviso_em(0x9a7d30, 0x97);
-        return 0;
-    }
-    crate::comparacao::ramo("cqp_13 tabela da concacaf");
-    let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    for (i, r) in CQP13_CONCACAF.iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
-        if i < 2 {
-            elo(t, i as i32, 0, -1, -1, -1, 0);
-        }
-    }
-    t
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp13_concacaf_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1976);
-    let a = cql10_comparar("cqp13_concacaf_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqp13_concacaf_tabela(this, fase, r, e, s));
-    // ponytail: a cql10_comparar não olha os dias dos confrontos (+0x23..); o dia 0 das duas primeiras rodadas é
-    // conferido aqui contra o valor fixo que a cópia grava
-    if a != 0 {
-        let ok = (0..2usize).all(|r| {
-            let e = a + r * 0x68 + 0x23;
-            core::ptr::read_unaligned(e as *const u32) == 0 && core::slice::from_raw_parts((e + 4) as *const u8, 3) == [0xff, 0xff, 0xff]
-        });
-        PLACAR.registrar(ok, || format!("cqp13_concacaf_tabela: o dia 0 dos confrontos da original difere"));
-    }
-    a
-}
 
 // ---------- 281a leva: a Copa da UEFA e a Intertoto: as rodadas da Copa da UEFA, os inscritos da Intertoto e a lista dos seus clubes (uefa_cup.cpp, intertoto_cup.cpp) ----------
 
@@ -174,48 +125,7 @@ pub(crate) fn cqq10_uefa_rodadas(b: i8) -> ([Cql10R; 9], usize) {
     (t, n)
 }
 
-/// rule: the UEFA Cup has, only when there are preliminary clubs (+0xb2, those with coefficient 10 or more
-/// [inference]), a preliminary round drawn on 28/6 and played on 6/7 (b teams); then: 1st qualifying round drawn on
-/// 28/7 and played on 10/8 (82 teams, 0x52 − b/2 new), 2nd on 14/9 (96 teams, 55 new), 1st round on 19/10 (48 teams),
-/// 2nd on 23/11 (32 teams, 8 new), 3rd on 1/3 of the following year, round of 16 on 15/3, quarter-finals on 5/4 and the
-/// single-match final on 16/5 (venue 4, prize of 1.5 million to the winner); two legs 14 days apart (7 in the 3rd round
-/// and the round of 16); category 7 in qualifying and 8 after
-/// Original: `UefaCup::create_round_table` (0x9025c0, uefa_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x9025c0 } (thiscall, ret 0x10, uefa_cup.cpp; a virtual +0x3c da Copa da UEFA): `UefaCup::create_round_table(fase,
-/// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
-/// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `cqq10_uefa_rodadas` e rodadas = as gravadas. Fora da −1,
-/// 0.
-pub(crate) unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    if fase as u8 != 0xff {
-        return 0;
-    }
-    if !saida.is_null() {
-        *saida = 0;
-    }
-    *rodadas = 9;
-    *extra = 0;
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(0x3a8);
-    if t == 0 {
-        aviso_em(0xaa19e0, 0xe0);
-        return 0;
-    }
-    crate::comparacao::ramo("cqq_10 tabela da uefa");
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    let (tab, n) = cqq10_uefa_rodadas(*((this + 0xb2) as *const i8));
-    for (i, r) in tab[..n].iter().enumerate() {
-        cql10_rodada(t, i as u32, r, ano);
-    }
-    *rodadas = n as i16;
-    t
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1977);
-    cql10_comparar("cqq10_uefa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqq10_uefa_tabela(this, fase, r, e, s))
-}
 
 
 
@@ -584,40 +494,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: 
     r
 }
 
-/// rule: in the UEFA Cup, the winner, the runner-up and every knocked-out club leave European competition (the club
-/// mark goes back to −1); the career records are the base cup ones (winner, runner-up, qualification and knock-out by
-/// round)
-/// Original: `UefaCup::update_staff_records_for_status` (0x9030e0, uefa_cup.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x9030e0 } (thiscall, ret 0x18, uefa_cup.cpp; a virtual +0x44 da Copa da UEFA): `UefaCup::
-/// update_staff_records_for_status(clube, desfecho, a3, a4, jogo, a6)`: com o desfecho (byte) 1, 2 ou 0xff (campeão,
-/// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
-/// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
-pub(crate) unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let d = desfecho as u8;
-    if d == 1 || d == 2 || d == 0xff {
-        if d == 0xff {
-            crate::comparacao::ramo("cqi_10 caiu na uefa");
-        }
-        core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
-    }
-    let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    base(this, clube, desfecho, a3, a4, jogo, a6)
-}
 
 // ponytail: a base grava os registros (histórico, reputação, moral) e pode dar a vaga da UEFA ao campeão: não roda duas
 // vezes. Só a original roda; o plano confere o +0x1db do clube (−1 nos desfechos 1, 2 e 0xff, intacto nos outros).
-pub(crate) unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1687);
-    if clube == 0 {
-        return o(this, clube, desfecho, a3, a4, jogo, a6);
-    }
-    let d = desfecho as u8;
-    let antes = read_u32_as_usize(clube + 0x1db);
-    let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
-    let r = o(this, clube, desfecho, a3, a4, jogo, a6);
-    let depois = read_u32_as_usize(clube + 0x1db);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_uefa_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
-    r
-}
 

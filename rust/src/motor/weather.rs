@@ -217,32 +217,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_financas_do_clube(this: usize, c
     r
 }
 
-/// bookings qsort: by date (+4), then by stadium id (+0)
-/// Original: `stadium_compare_bookings` (0x85e380, stadium.cpp, cdecl).
-///
-/// [pt] { 0x85e380 } (cdecl, stadium.cpp): `stadium_compare_bookings(a, b)`, a ordem das reservas do estádio (qsort em
-/// 0x85ba1b, 0x85c4ba, 0x85ddf3, 0x85df26): pela data (+4, Date::operator< 0x456770 e > 0x456740), depois pelo id do
-/// estádio (+0).
-pub(crate) unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
-    let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
-    let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
-    let (d0, d1) = (read_usize(b + 4) as u32, read_usize(b + 8) as u32);
-    if antes(a + 4, d0, d1) != 0 {
-        return -1;
-    }
-    if depois(a + 4, d0, d1) != 0 {
-        return 1;
-    }
-    cpu5_i(a).wrapping_sub(cpu5_i(b))
-}
 
-/// Comparador: pelo valor.
-pub(crate) unsafe extern "C" fn comparar_ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(1208)(a, b);
-    let n = ordem_das_reservas_do_estadio(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_reservas_do_estadio({:#x}, {:#x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 // ---------- 257a leva: o clima da partida: o vento, a chuva e a temperatura do jogo, a temperatura pela faixa e o estado do gramado (weather.cpp) ----------
 
@@ -690,3 +665,70 @@ pub(crate) unsafe extern "thiscall" fn comparar_ler_periodo_do_clima(this: usize
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(1169)(this, f, periodo)
 }
 
+/// reads CM3_DATA\weather.cfg: the region count, the regions (0x922c40) and the city table, with the three readings
+/// ((random(100) + random(100)) × 0.5) and the wind (random(3)) drawn; a file or memory error stops the game
+/// Original: `Weather::load_config` (0x922810, weather.cpp, thiscall).
+///
+/// [pt] { 0x922810 } (thiscall, weather.cpp): `Weather::load_config()`, na criação do jogo (0x9226c0, Setup.cpp). Abre o
+/// CM3_DATA\weather.cfg (0x90bde0, fopen 0x945b00 "r"); a primeira linha (0x90cba0, buffer de 1000) dá quantas regiões
+/// ("%ld" em +8); as regiões (malloc de 0x6e bytes cada em +0) e a tabela das cidades (malloc de 4 bytes por cidade
+/// [0xae2354] em +4); cada região pela 0x922c40 (a primeira que falha para o jogo; as outras só encerram a leitura);
+/// cada cidade sorteia as três medidas ((sorteio(100) + sorteio(100)) × 0,5) e o vento (sorteio(3)). Fecha o arquivo
+/// (0x945a09). Os erros (arquivo, linha, contagem, memória) são a caixa "Error" de weather.cpp e o jogo para.
+pub(crate) unsafe extern "thiscall" fn ler_o_clima(this: usize) {
+    let pasta: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
+    let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
+    let ler_linha: unsafe extern "C" fn(usize, *mut u8) -> i32 = core::mem::transmute(FN_UTILS_READ_CONFIG_LINE);
+    let ler: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
+    let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
+    let regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(FN_WEATHER_READ_REGION);
+    let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FCLOSE);
+    let f = abrir(pasta(0x9b5348, 0xad4e18), 0x9899fc);
+    if f == 0 {
+        erro_em(0xad4dec, 0x68);
+    }
+    let mut linha = [0u8; 1000];
+    if ler_linha(f, linha.as_mut_ptr()) == 0 {
+        erro_em(0xad4dec, 0x6f);
+    }
+    if ler(linha.as_ptr(), 0x98c11c, this + 8) != 1 {
+        erro_em(0xad4dec, 0x75);
+    }
+    let r = malloc(read_usize(this + 8).wrapping_mul(0x6e));
+    *(this as *mut usize) = r;
+    if r == 0 {
+        erro_em(0xad4dec, 0x7e);
+    }
+    let c = malloc(read_usize(0xae2354).wrapping_mul(4));
+    *((this + 4) as *mut usize) = c;
+    if c == 0 {
+        erro_em(0xad4dec, 0x86);
+    }
+    let mut i = 0i32;
+    while i < cpt7_i(this + 8) {
+        if regiao(this, f, read_usize(this) + i as usize * 0x6e) == 0 {
+            if i == 0 {
+                erro_em(0xad4dec, 0x92);
+            }
+            break;
+        }
+        i += 1;
+    }
+    let mut k = 0usize;
+    while (k as i32) < cpt7_i(0xae2354) {
+        crate::comparacao::ramo("cpt_7 clima inicial");
+        for j in 0..3usize {
+            let a = cpt7_sortear(100);
+            let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida
+            *((read_usize(this + 4) + k * 4 + j) as *mut u8) = ftol(a.wrapping_add(b) as f64 * f64_em(0x968968)) as u8;
+        }
+        let v = cpt7_sortear(3); // cpt7: o vento inicial
+        *((read_usize(this + 4) + k * 4 + 3) as *mut u8) = v as u8;
+        k += 1;
+    }
+    fechar(f);
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_ler_o_clima(this: usize) {
+    orig::<unsafe extern "thiscall" fn(usize)>(1175)(this)
+}

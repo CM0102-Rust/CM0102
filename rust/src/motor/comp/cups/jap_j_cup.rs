@@ -543,3 +543,18 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn12_copa_do_imperador_inscrito
     cqn12_comparar("cqn12_copa_do_imperador_inscritos", this, || o(this), || cqn12_copa_do_imperador(this))
 }
 
+/// rule: the same turn in the Japanese League Cup (J-League Cup): tables freed, history archived, year +1, the 28
+/// entrants (JapJCup::collect_entrants), the rounds, the tree and the predicted positions
+/// Original: `JapJCup::start_new_season` (0x665bc0, jap_j_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x665bc0 } (thiscall, ret 0, jap_j_cup.cpp; a virtual +0x08 da Copa da Liga japonesa): `JapJCup::start_new_season()`,
+/// a virada (`cqr5_virada`) com os inscritos de 0x665a00 (thiscall, ret 0) e as caixas do jap_j_cup.cpp nas linhas 0x1a3,
+/// 0x1aa e 0x1b1.
+pub(crate) unsafe extern "thiscall" fn cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
+    cqr5_virada(this, 0x665a00, 0x9eaf14, [0x1a3, 0x1aa, 0x1b1], 1, "cqr_5 virada da copa da liga japonesa") // cqr5: a Copa da Liga japonesa
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2001);
+    cqr5_comparar("cqr5_virada_copa_da_liga_japonesa", this, || o(this))
+}

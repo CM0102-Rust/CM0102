@@ -1580,3 +1580,118 @@ pub(crate) unsafe extern "C" fn comparar_montar_resumo_do_save(resumo: *mut u8) 
     });
 }
 
+/// releases the screens, destroys the subsystems held in globals (destructor + delete, free, virtual destructor) in the
+/// original order, deletes the *.tmp files, frees the database tables, resets the game date and clears three flags;
+/// returns 1
+/// Original: `free_game_data` (0x82ff40, Setup.cpp, cdecl).
+///
+/// [pt] { 0x82ff40 } (cdecl, Setup.cpp): `free_game_data(tela)`: o gerente de telas (0xb74450) solta as
+/// telas (0x7ff5f0) e, se `tela` ≠ 0, mais 0x7fc5e0; 0x6d5b50; depois cada subsistema guardado num
+/// global, na ordem da original: destrutor (thiscall) + `delete` (0x944c94) e o global zerado; os
+/// vetores soltos pelo `free` (0x9452ca); dois objetos pelo destrutor virtual (vtable[0](1)); os
+/// `*.tmp` da pasta temporária (0x90cd50), [0xae2338], as tabelas do banco (0x528080), a data do
+/// jogo (0x54a130: 1, 0, 2001, −1) e três marcas zeradas. Devolve 1.
+pub(crate) unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
+    let soltar_telas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SCREENMANAGER_END_NETWORK_SESSION);
+    let soltar_mais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SCREENMANAGER_CLOSE_ALL_SCREENS);
+    let antes: unsafe extern "C" fn() = core::mem::transmute(FN_MATCH_EVENTS_FREE_EVENT_TABLES);
+    let competicoes: unsafe extern "C" fn() = core::mem::transmute(FN_KEY_NATION_DELETE_ALL_COMPS);
+    let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let livre: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let limpar_temporarios: unsafe extern "C" fn(usize) = core::mem::transmute(FN_UTILS_CLEAR_TEMP_FOLDER);
+    let liberar_tabelas: unsafe extern "C" fn() = core::mem::transmute(FN_DATABASE_FREE_ALL_TABLES);
+    let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(FN_DATE_SET);
+    crate::comparacao::ramo("save liberar dados do jogo");
+    // destrutor + delete + global zerado
+    let objetos = |lista: &[(usize, usize)]| {
+        for &(g, destrutor) in lista {
+            let p = *(g as *const usize);
+            if p != 0 {
+                let d: unsafe extern "thiscall" fn(usize) = core::mem::transmute(destrutor);
+                d(p);
+                apagar(p);
+                *(g as *mut usize) = 0;
+            }
+        }
+    };
+    // free + global zerado
+    let soltos = |lista: &[usize]| {
+        for &g in lista {
+            let p = *(g as *const usize);
+            if p != 0 {
+                livre(p);
+                *(g as *mut usize) = 0;
+            }
+        }
+    };
+    // destrutor virtual (vtable[0], com 1 = apagar) + global zerado
+    let virtual_ = |g: usize| {
+        let p = *(g as *const usize);
+        if p != 0 {
+            let d: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(**(p as *const *const usize));
+            d(p, 1);
+            *(g as *mut usize) = 0;
+        }
+    };
+    soltar_telas(0xb74450);
+    if tela != 0 {
+        soltar_mais(0xb74450);
+    }
+    antes();
+    objetos(&[(0xb67a50, 0x6b4190)]);
+    let p = *(0xadadfc as *const usize);
+    if p != 0 {
+        livre(p);
+        *(0xadadfc as *mut usize) = 0;
+        *(0xadadf8 as *mut usize) = 0;
+    }
+    competicoes();
+    objetos(&[(0xb6b7c8, 0x72b200), (0xae2a60, 0x5af6a0), (0xb67a44, 0x68e0e0), (0xad9da8, 0x442e20),
+              (0xad9dac, 0x4448a0), (0xde1d08, 0x8961e0), (0xae28f0, 0x555790), (0xde1f44, 0x8b1070),
+              (0xad9c60, 0x413410), (0xde1f54, 0x8bbe20), (0xb63d28, 0x62a8a0), (0xae2a3c, 0x5a5120),
+              (0xad9c6c, 0x4185f0), (0xae2a30, 0x5698d0), (0xb7433c, 0x794ba0), (0xdd7ef4, 0x85b7f0)]);
+    virtual_(0xae2c74);
+    objetos(&[(0xb74318, 0x76a710), (0xde2f70, 0x90d2e0), (0xde1f58, 0x903570), (0xae1000, 0x5a8f60),
+              (0xdd7f00, 0x8687c0), (0xb6b7c0, 0x7293c0), (0xb74350, 0x7c0d00), (0xb5e134, 0x58e330),
+              (0xae2a58, 0x5aa0d0), (0xb63c98, 0x5fb730), (0xb74448, 0x7f6aa0), (0xb7431c, 0x785d00)]);
+    // [0xdd7ef0]: só o delete, sem destrutor
+    let p = *(0xdd7ef0 as *const usize);
+    if p != 0 {
+        apagar(p);
+        *(0xdd7ef0 as *mut usize) = 0;
+    }
+    virtual_(0xb74434);
+    objetos(&[(0xae1050, 0x4c74f0), (0xae2a38, 0x59a5a0)]);
+    soltos(&[0xae2d0c, 0xae2d14, 0xae2d1c, 0xae2d20, 0xae2d24]);
+    objetos(&[(0xb7434c, 0x7a56f0), (0xb74340, 0x79b800), (0xdd7ee4, 0x84be10), (0xde2f74, 0x9227d0),
+              (0xb74430, 0x7da690)]);
+    limpar_temporarios(0xa813ac);
+    soltos(&[0xae2338]);
+    liberar_tabelas();
+    acertar_data(0xae2c90, 1, 0, 0x7d1, -1);
+    *(0xae2c88 as *mut u8) = 0;
+    *(0xdd711c as *mut u32) = 0;
+    *(0xdd7130 as *mut u32) = 0;
+    1
+}
+
+pub(crate) unsafe extern "C" fn comparar_liberar_dados_do_jogo(tela: u32) -> u32 {
+    orig::<unsafe extern "C" fn(u32) -> u32>(573)(tela)
+}
+
+/// the heading text colour (two colours by the flag)
+/// Original: `get_heading_colour` (0x839590, Setup.cpp, cdecl).
+///
+/// [pt] { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
+/// original só troca `ax`: os 16 bits de cima da devolução são os de `x`.
+pub(crate) unsafe extern "C" fn cor_do_titulo(x: u32) -> u32 {
+    let c = if x != 0 { *(0xae3184 as *const u16) } else { *(0xae31a8 as *const u16) };
+    (x & 0xffff_0000) | c as u32
+}
+
+pub(crate) unsafe extern "C" fn comparar_cor_do_titulo(x: u32) -> u32 {
+    let r = orig::<unsafe extern "C" fn(u32) -> u32>(435)(x);
+    let n = cor_do_titulo(x);
+    PLACAR.registrar(r == n, || format!("cor_do_titulo({:#x}) original={:#x} rust={:#x}", x, r, n));
+    r
+}

@@ -373,18 +373,6 @@ pub(crate) unsafe fn cqk4_primera() -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from
-/// nation bit 4]; B teams cannot go up (marked by the table, 0x855b40)
-/// Original: `SpaSecond::set_up_rules` (0x855cc0, spa_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
-/// pontos, o 4º desempate 3, 3 sobem direto (+0xbe), nenhum play-off de acesso, 4 caem (+0xc1), a Primera acima
-/// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
-/// da nação [inferência]), senão −1; +0x52 = 2.
-pub(crate) unsafe extern "thiscall" fn regras_da_segunda(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da segunda");
-    cqk4_regras(this, &cqk4_segunda(this))
-}
 
 pub(crate) unsafe fn cqk4_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = cqk4_comuns();
@@ -396,17 +384,6 @@ pub(crate) unsafe fn cqk4_segunda(this: usize) -> Vec<(usize, u8, u32)> {
     v
 }
 
-/// the lower division (22: B teams and the best minor clubs by reputation): 2 go up directly and 2 go to the promotion
-/// play-off, 4 go down; the league above stored is La Primera (as in the original)
-/// Original: `SpaLower::set_up_rules` (0x853790, spa_lower.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x853790 } (thiscall, ret 0, spa_lower.cpp): `SpaLower::set_up_rules()`. A divisão de baixo (os times B e os
-/// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
-/// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
-pub(crate) unsafe extern "thiscall" fn regras_da_divisao_de_baixo(this: usize) -> u32 {
-    crate::comparacao::ramo("cqk_4 regras da divisao de baixo");
-    cqk4_regras(this, &cqk4_baixo())
-}
 
 pub(crate) unsafe fn cqk4_baixo() -> Vec<(usize, u8, u32)> {
     let mut v = cqk4_comuns();
@@ -447,15 +424,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_primera(this: usize) -
     cqk4_comparar("regras_da_primera", this, cqk4_primera(), || o(this), || regras_da_primera(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_segunda(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1763);
-    cqk4_comparar("regras_da_segunda", this, cqk4_segunda(this), || o(this), || regras_da_segunda(this))
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_divisao_de_baixo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1764);
-    cqk4_comparar("regras_da_divisao_de_baixo", this, cqk4_baixo(), || o(this), || regras_da_divisao_de_baixo(this))
-}
 
 // ---------- 275a leva: a Primera espanhola (a tabela, a TV, a divisão de baixo genérica e a situação nas estatísticas) e os registros da Série C2/A italiana pela situação na tabela, no play-off e no play-out (spa_first.cpp, ita_ser_c2a.cpp) ----------
 
@@ -726,3 +695,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_primera(this: usize,
     PLACAR.registrar(igual, || format!("situacao_na_primera({:#x}, {:#x}) original={:x?} rust={:x?}", this, clube, mo, mr));
 }
 
+/// the Primera: discipline 0x1a, only the league; finally, if the nation lacks bit 4 of +0x11c [inference: the lower
+/// division playable], it creates the Spanish lower division (the B teams and the best of Segunda B) at +0xee
+/// Original: `SpaFirst::SpaFirst` (0x84e130, spa_first.cpp, thiscall, ret 8).
+///
+/// [pt] { 0x84e130 } (thiscall, ret 8, spa_first.cpp, 606 bytes): `SpaFirst::SpaFirst(ano, registro)`: a Primera,
+/// disciplina 0x1a, só a liga, e a divisão de baixo espanhola em +0xee.
+pub(crate) unsafe extern "thiscall" fn construir_primera(this: usize, ano: u32, registro: usize) -> usize {
+    cqm5_construir(this, ano, registro, &CQM5_PRIMERA)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_construir_primera(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(1872);
+    cqm5_comparar("construir_primera", this, ano, registro, &CQM5_PRIMERA, || o(this, ano, registro))
+}

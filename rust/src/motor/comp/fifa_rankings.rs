@@ -335,52 +335,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usiz
 // ---------- 256a leva: a nação-chave da competição e a ordem do ranking da FIFA: o índice da nação-chave da competição, a ordem das seleções no ranking e a comparação das pontuações (key_nation.cpp, fifa_rankings.cpp) ----------
 
 
-/// the competition's key nation row: the nation's, 0 for the World Cup, 1 for national side tournaments, 2 for the club
-/// world cups, the continent's or 3
-/// Original: `key_nation_index_of_comp` (0x669470, key_nation.cpp, cdecl).
-///
-/// [pt] { 0x669470 } (cdecl, key_nation.cpp): `key_nation_index_of_comp(competição)` (pelo alcance das regras da partida
-/// 0x8d2fa0, pela liga do dia 0x6847c0, pelos registros da copa 0x519890 e pela nação-chave do jogo 0x48dd70 da cpt_3):
-/// competição de nação (+0x5d): a linha dela na tabela das 35 nações-chave (0xb63d60, 72 bytes), ou 4. Sem nação: Copa
-/// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
-/// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
-/// conferir a competição nula (o caso de erro nunca chega à caixa). Chamada a cada partida: sem contador.
-pub(crate) unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
-    let nacao = read_usize(comp + 0x5d);
-    if nacao != 0 {
-        let linha = (0..0x23usize).find(|&k| read_usize(0xb63d60 + 72 * k) == nacao); // cpt4: a busca da nacao
-        return match linha {
-            Some(k) => k as u8, // cpt4: a linha da nacao
-            None => 4,
-        };
-    }
-    let id = read_usize(comp);
-    let copa = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT]; // cpt4: a Copa e as eliminatorias
-    if copa.iter().any(|&g| read_usize(g) == id) {
-        return 0;
-    }
-    let internacional: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_IS_INTERNATIONAL_COMP);
-    if internacional(comp) != 0 {
-        return 1;
-    }
-    if id == read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP) || id == read_usize(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) {
-        return 2;
-    }
-    for k in 0..0x23usize {
-        let c = read_usize(comp + 0x59);
-        if read_usize(0xb63d60 + 72 * k) == 0 && c != 0 && c == read_usize(0xb63d64 + 72 * k) {
-            return k as u8; // cpt4: a linha do continente
-        }
-    }
-    3
-}
 
-pub(crate) unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(1164)(comp);
-    let n = indice_da_nacao_chave(comp);
-    PLACAR.registrar(r == n, || format!("indice_da_nacao_chave(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
-    r
-}
 
 /// a new array with the ranking entries of the nations with a national side, sorted by score, and the count
 /// Original: `FIFA_RANKINGS::collect_ranked_order` (0x58d610, fifa_rankings.cpp, thiscall, ret 4).
@@ -452,3 +407,72 @@ pub(crate) unsafe extern "C" fn comparar_ordem_das_pontuacoes(a: usize, b: usize
     r
 }
 
+/// the initial FIFA ranking rule: each nation's points are its database strength ÷ 35, repeated as the points of each
+/// of the 6 years [inference] (× 1000); the position comes from the points order
+/// Original: `FIFA_RANKINGS::create_default_table` (0x58dd50, fifa_rankings.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x58dd50 } (thiscall, ret 0, fifa_rankings.cpp, `FIFA_RANKINGS::create_default_table`): a tabela inicial do
+/// ranking da FIFA (registros de 0x2c bytes, um por nação, calloc 0x945501 de [0xae2350] × 0x2c em +0; sem memória, a
+/// caixa da linha 0x2da). Cada registro: +0 o índice da nação; a força da nação (+0xa8, double, nações de 0x122 bytes em
+/// [0xae23a8]) × 1/35 dá os pontos (+0xc, float) e, × 1000 (truncado, _ftol), os 6 dwords +0x14..+0x28 [inferência: os
+/// pontos de cada um dos últimos anos]. Depois a ordem pelos pontos (0x58d610(this, &conta), thiscall, a lista ordenada
+/// das nações com continente) dá a posição: +0x12 = a posição de antes (+0x10) e +0x10 = 1, 2, 3...; a lista é solta.
+pub(crate) unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
+    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
+    let ordem: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(FN_FIFA_RANKINGS_COLLECT_RANKED_ORDER);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    let t = calloc(read_u32(0xae2350), 0x2c);
+    *(this as *mut usize) = t;
+    if t == 0 {
+        aviso_em(0x9c74f4, 0x2da);
+        return;
+    }
+    let c1 = core::ptr::read_unaligned(0x96a348 as *const f64);
+    let c2 = core::ptr::read_unaligned(0x968908 as *const f64);
+    let mut k = 0i32;
+    while k < read_u32(0xae2350) as i32 {
+        let r = t + 0x2c * k as usize;
+        *(r as *mut i32) = k;
+        let a = core::ptr::read_unaligned((read_u32(0xae23a8) as usize + 0x122 * k as usize + 0xa8) as *const f64) * c1;
+        let p = (a * c2) as i32;
+        for j in 0..6 {
+            *((r + 0x14 + 4 * j) as *mut i32) = p;
+        }
+        *((r + 0xc) as *mut f32) = a as f32;
+        k += 1;
+    }
+    let mut n = 0i32;
+    let l = ordem(this, &mut n);
+    for i in 0..n.max(0) as usize {
+        let r = read_u32(l + 4 * i) as usize;
+        *((r + 0x12) as *mut u16) = *((r + 0x10) as *const u16);
+        *((r + 0x10) as *mut u16) = (i + 1) as u16;
+    }
+    soltar(l);
+}
+
+/// Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
+/// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
+pub(crate) unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1823);
+    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
+    o(this);
+    let mut s = [0usize; 1];
+    ranking_fifa_inicial(s.as_mut_ptr() as usize);
+    let (ta, tb) = (read_u32(this) as usize, s[0]);
+    let n = (read_u32(0xae2350) as i32).max(0) as usize * 0x2c;
+    let igual = if ta != 0 && tb != 0 {
+        core::slice::from_raw_parts(ta as *const u8, n) == core::slice::from_raw_parts(tb as *const u8, n)
+    } else {
+        ta == tb
+    };
+    let dif = if igual || ta == 0 || tb == 0 {
+        None
+    } else {
+        (0..n).find(|&i| *((ta + i) as *const u8) != *((tb + i) as *const u8))
+    };
+    if tb != 0 {
+        soltar(tb);
+    }
+    PLACAR.registrar(igual, || format!("ranking_fifa_inicial: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
+}

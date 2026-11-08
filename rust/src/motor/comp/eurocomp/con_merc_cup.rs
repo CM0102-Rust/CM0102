@@ -108,22 +108,7 @@ pub(crate) unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: us
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-/// rule: the Libertadores knockout has 16 clubs: the top 2 (+0xbe) of each of the 8 groups (group 1 in table order, the
-/// others by position in each stage's table), in a cup stage (stage 7) with the cup's round table and year; the first
-/// round is drawn at once
-/// Original: `ConmebolLiber::create_knockout_stage` (0x4c3d10, conmebol_liber.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
-/// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
-/// lista) e 0x26a (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
-    cqs10_mata_mata(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2037);
-    cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
-}
 
 /// rule: the Merconorte semi-finals have 4 clubs: the winner (+0xbe = 1) of each of the 4 groups, in a cup stage (stage
 /// 3); the first round is drawn at once
@@ -367,35 +352,9 @@ pub(crate) unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, origi
     PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, f, depois));
 }
 
-/// rule: the Mercosur moves on one stage when the current one ends; after the 4 group stages (on reaching 4) it builds
-/// the quarter-finals; going past the last stage is an error
-/// Original: `ConmebolMerc::advance_stage` (0x4c5140, conmebol_merc.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
-/// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
-pub(crate) unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
-    cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2041);
-    cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
-}
 
-/// rule: the Copa América moves on one stage when the current one ends; after the 2 group stages (on reaching 2) it
-/// builds the knockout; going past the last stage is an error
-/// Original: `GoldCup::advance_stage` (0x5e1620, goldcup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
-/// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
-pub(crate) unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
-    cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(2042);
-    cqs11_comparar_fase_seguinte("cqs11_copa_america_fase_seguinte", this, || o(this))
-}
 
 // ---------- 282a leva: a Merconorte: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros grupos (con_merc_cup.cpp) ----------
 
@@ -645,3 +604,36 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usi
     r
 }
 
+/// rule: the Copa Merconorte starts with groups (stages below 3, id 0x3e9 + stage: 4 groups [inference]) of six rounds
+/// on Tuesdays every 15 days, from 9/9 to 18/11; the knockout (stage 3): semi-final drawn on 19/11 and played on 25/11
+/// over two legs (7 days), final drawn on 3/12 and a single match on 9/12; category 8; tie-break 3
+/// Original: `ConMercCup::create_schedule` (0x4c1960, con_merc_cup.cpp, thiscall, ret 0x10).
+///
+/// [pt] { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
+/// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`cqp10_merconorte_fase`).
+pub(crate) unsafe extern "thiscall" fn cqp10_merconorte_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    cqp10_tabela(this, cqp10_merconorte_fase(fase), rodadas, extra, liga, 0x9a7d6c)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqp10_merconorte_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1964);
+    cqp10_comparar("cqp10_merconorte_tabela", fase, cqp10_merconorte_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| cqp10_merconorte_tabela(this, fase, r, e, l))
+}
+
+/// rule: the Copa Merconorte groups are home and away, 3/1 points, tiebreak 1, 2, 3, one qualifier per group, category
+/// 7, starts on day 1 of month 7 [inference: 1 August], prize fund of 2,000,000
+/// Original: `ConMercCup::set_up_rules` (0x4c1ed0, con_merc_cup.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x4c1ed0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x8c; quadro SEH só da data local): `ConMercCup::
+/// set_up_rules()`: os grupos da Copa Merconorte em dois turnos, 3/1 pontos, desempates (1, 2, 3, 0), um classificado
+/// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
+pub(crate) unsafe extern "thiscall" fn cqj11_merconorte_regras(this: usize) -> u32 {
+    crate::comparacao::ramo("cqj_11 regras da merconorte");
+    cqj11_regras(this, &CQJ11_MERCONORTE, CQJ11_MERCONORTE.dia, 3)
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqj11_merconorte_regras(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1698);
+    cqj11_confere("cqj11_merconorte_regras", this, &CQJ11_MERCONORTE, || o(this))
+}

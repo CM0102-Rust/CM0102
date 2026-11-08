@@ -279,58 +279,65 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_paranaense(this: 
     r
 }
 
-/// North and Pernambuco (the same routine in the two vtables): 4 top places (the final stage of 4); 2 relegated; double
-/// round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league
-/// above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to the next
-/// stage; no champion band); 7 bench substitutes and 3 substitutions; category 2 (league) matches. Then the main stage
-/// schedule
-/// Original: `BraRegPern::set_up_rules` (0x439430, bra_reg_pern.cpp, thiscall).
+/// The Parana state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
+/// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
+/// the state clubs, the fixtures, the order, the statistics and the predicted positions
+/// Original: `BraRegParana::BraRegParana` (0x437400, bra_reg_parana.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x439430 } (thiscall, bra_reg_pern.cpp): `BraRegPern::set_up_rules`, nas vtables do Norte (0x968338) e do
-/// Pernambucano (0x968554); devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) -> u32 {
-    cqi9_regras_pernambucano(this);
-    crate::comparacao::ramo("cqi_9 regras do pernambucano");
-    cqi9_calendario(this);
-    1
+/// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
+pub(crate) unsafe extern "thiscall" fn cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
+    cqt3_construir(this, ano, registro, &CQT3_PARANAENSE, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
 }
 
-/// Comparador: como o do Paranaense.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_pernambucano(this: usize) -> u32 {
-    let reg = cqi9_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1719)(this), || {
-        cqi9_regras_pernambucano(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_pernambucano({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
+pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2053);
+    cqt3_comparar("cqt3_construir_paranaense", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
 }
 
-/// Minas Gerais and Rio (the same routine in the two vtables): no top places in the overall table (the halves have
-/// stages of their own, created by add_result 0x43af20 / 0x435130 [inference: they decide the title]); 2 relegated;
-/// double round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no
-/// league above or below (the relegated go to the non-playable pool [inference]); rule word 8 (the top places lead to
-/// the next stage; no champion band); 7 bench substitutes and 3 substitutions; category 2 (league) matches. Then the
-/// main stage schedule
-/// Original: `BraRegRio::set_up_rules` (0x43a600, bra_reg_rio.cpp, thiscall).
+/// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
+/// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
+/// Original: `BraRegParana::create_table` (0x437ec0, bra_reg_parana.cpp, thiscall, ret 0).
 ///
-/// [pt] { 0x43a600 } (thiscall, bra_reg_rio.cpp): `BraRegRio::set_up_rules`, nas vtables do Mineiro (0x968284) e do
-/// Carioca (0x968608); devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u32 {
-    cqi9_regras_carioca(this);
-    crate::comparacao::ramo("cqi_9 regras do carioca");
-    cqi9_calendario(this);
-    1
+/// [pt] { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
+/// Fonte 0x98af98, linha 0x169.
+pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_paranaense(this: usize) -> u32 {
+    cqm7_tabela(this, 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
 }
 
-/// Comparador: como o do Paranaense.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_carioca(this: usize) -> u32 {
-    let reg = cqi9_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1720)(this), || {
-        cqi9_regras_carioca(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_carioca({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
+pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_paranaense(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1835);
+    cqm7_comparar("cqm7_tabela_do_paranaense", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
 }
 
+/// One half of the Parana state league: when the first game of a half is processed, it builds that half's round-robin
+/// stage (a league with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as
+/// the league, and one top place, the half winner's); the first half goes to stage 0 and the second (from round 12, by
+/// the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `BraRegParana::create_half_stage` (0x438760, bra_reg_parana.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
+/// caixa da linha 0x3d5).
+pub(crate) unsafe extern "thiscall" fn cqr1_turno_do_paranaense(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: os pontos por vitória no Paranaense
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_paranaense(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1988);
+    cqr1_comparar("cqr1_turno_do_paranaense", this, k, || o(this, k))
+}
+
+/// The Parana state league turnover: archives the season in the statistics, clears the table, the schedule and the
+/// stages (the two halves and the final) and prepares three new stage slots; moves to the next year and rebuilds the
+/// rules, the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the
+/// referee renewal. The halves are only built at each one's first game (cqr_1)
+/// Original: `BraRegParana::start_new_season` (0x438060, bra_reg_parana.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
+pub(crate) unsafe extern "thiscall" fn cqr2_virada_do_paranaense(this: usize) -> u32 {
+    cqr2_virada(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_paranaense(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1992);
+    cqr2_comparar("cqr2_virada_do_paranaense", this, || o(this))
+}

@@ -2625,24 +2625,6 @@ pub(crate) unsafe extern "thiscall" fn estadio_em_uso(this: usize, estadio: usiz
 
 comparar_valor!(comparar_estadio_em_uso, estadio_em_uso, 786, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
 
-/// the date (+3) through 0x54a130 from the day (+1), month (+2), given year and weekday (+0); the high half of the
-/// arguments comes from the year (the caller eax)
-/// Original: `friendly_international_date_resolve` (0x5cbdd0, friendly.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5cbdd0 } (thiscall, ret 4, friendly.cpp): `friendly_international_date_resolve(ano)`: a data (+3) da entrada
-/// de data internacional `this` pela 0x54a130 (Date.cpp: dia, mês, ano, dia da semana) com o dia (+1) e o dia da
-/// semana (+0) em byte com sinal e o mês (+2). A original monta os argumentos sobre o eax e o edx de entrada: o edx é o
-/// ano (metade alta do dia), o eax é o ano também no único chamador (0x5cbc18, `push eax; call`; metade alta do mês e
-/// do dia da semana). O eax devolvido é lixo: o endereço de pilha do temporário que a 0x417c10 copia no fim da 0x54a2d0
-/// (muda com a profundidade da pilha), e o chamador o descarta (0x5cbc1d `mov eax, [esp+14h]`); só a data (+3..+0xb) conta.
-pub(crate) unsafe extern "thiscall" fn data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
-    let acertar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_DATE_SET);
-    let b = |o: usize| *((this + o) as *const i8) as i16 as u16 as u32;
-    let alto = ano & 0xffff_0000;
-    let semana = alto | b(0);
-    let mes = alto | (b(0) & 0xff00) | *((this + 2) as *const u8) as u32;
-    acertar(this + 3, alto | b(1), mes, ano, semana) // a data com o ano dado
-}
 
 /// A original (ret 4) com eax = ano, como no único chamador.
 pub(crate) unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
@@ -2659,12 +2641,175 @@ pub(crate) unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
-    let o = orig::<usize>(787);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || cpc1_data_original(o, this, ano),
-        || data_do_amistoso_internacional(this, ano));
-    PLACAR.registrar(igual /* o eax é lixo de pilha: só a memória */, || format!("data_do_amistoso_internacional({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
-        this, ano, r, n, mo, mr));
+/// the fixture time slice (1 weekend, 2 otherwise) by competition nation and weekday
+/// Original: `FIXTURE_MANAGER::get_time_slice` (0x5af2f0, fix_man.cpp, thiscall).
+///
+/// [pt] { 0x5af2f0 } (thiscall, ret 8, fix_man.cpp; `this` não é lido): a faixa de horário do jogo da
+/// competição `comp` no dia `dia` (palavra): Holanda, Irlanda, Bélgica e França (id da nação +0x5d
+/// em [0x9cf338], [0x9cf2dc], [0x9cf244], [0x9cf300]) só têm 1 no dia 6; as outras, 1 nos dias 5 e 6;
+/// senão 2. Devolve só `al`.
+pub(crate) unsafe extern "thiscall" fn faixa_do_horario(_this: usize, comp: usize, dia: u32) -> u8 {
+    let dia = dia as i16;
+    if comp != 0 {
+        let nacao = core::ptr::read_unaligned((comp + 0x5d) as *const usize);
+        if nacao != 0 {
+            let id = *(nacao as *const u32);
+            if [KEY_NATION_HOLLAND, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_BELGIUM, KEY_NATION_FRANCE].iter().any(|&g| id == *(g as *const u32)) {
+                return if dia != 6 { 2 } else { 1 };
+            }
+        }
+    }
+    if dia == 6 || dia == 5 { 1 } else { 2 }
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_faixa_do_horario(this: usize, comp: usize, dia: u32) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(518)(this, comp, dia);
+    let n = faixa_do_horario(this, comp, dia);
+    PLACAR.registrar(r == n, || format!("faixa_do_horario(dia {}) original={} rust={}", dia as i16, r, n));
     r
 }
 
+/// with the stadium in a third-world country, gives the visiting clubs the illness risk on the day before the fixture
+/// Original: `FIXTURE_MANAGER::add_away_trip_illness_risk` (0x5ab3c0, fix_man.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x5ab3c0 } (thiscall, ret 4, fix_man.cpp; o `this` não é usado): `FIXTURE_MANAGER::add_away_trip_illness_risk(jogo)`:
+/// com o estádio do jogo (+0x18), a cidade (+0x38) e a nação dela (+0x1f) num país do terceiro mundo (+0x7e = 3), cada
+/// clube visitante de outra nação (+0x53) — o mandante (+0x1c, id +0xc) e o visitante (+0x20, id +0x10) — ganha o risco
+/// de doença na véspera do jogo.
+pub(crate) unsafe extern "thiscall" fn risco_de_doenca_na_viagem(_this: usize, f: usize) {
+    let estadio = read_u32_as_usize(f + 0x18);
+    if estadio == 0 {
+        return;
+    }
+    let cidade = read_u32_as_usize(estadio + 0x38);
+    if cidade == 0 {
+        return;
+    }
+    let nacao = read_u32_as_usize(cidade + 0x1f);
+    if nacao == 0 {
+        return;
+    }
+    if read_u8(nacao + 0x7e) != 3 { // cps13: só o terceiro mundo
+        return;
+    }
+    let casa = read_u32_as_usize(f + 0x1c);
+    if casa != 0 && read_u32_as_usize(casa + 0x53) != nacao {
+        crate::comparacao::ramo("cps_13 doenca do mandante");
+        // a original empurra o ano no eax do clube e o dia no ecx da nação (metades altas dos ponteiros)
+        cps13_doenca(f, read_u32_as_usize(f + 0xc), read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(f + 0x18) + 0x38) + 0x1f), nacao as u32, casa as u32);
+    }
+    let fora = read_u32_as_usize(f + 0x20);
+    if fora != 0 && read_u32_as_usize(fora + 0x53) != read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(f + 0x18) + 0x38) + 0x1f) {
+        crate::comparacao::ramo("cps_13 doenca do visitante");
+        // o ano no ecx do estádio e o dia no edx da cidade
+        let (e, c) = (read_u32_as_usize(f + 0x18), read_u32_as_usize(read_u32_as_usize(f + 0x18) + 0x38));
+        cps13_doenca(f, read_u32_as_usize(f + 0x10), read_u32_as_usize(c + 0x1f), c as u32, e as u32);
+    }
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_risco_de_doenca_na_viagem(this: usize, f: usize) {
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(1154)(this, f)
+}
+
+/// for an English or Welsh club, the active key-nation index of the other nation; otherwise 0xff
+/// Original: `fix_man_get_partner_key_nation_index` (0x5af5b0, fix_man.cpp, cdecl).
+///
+/// [pt] { 0x5af5b0 } (cdecl, fix_man.cpp; das buscas de jogos 0x5acbe0, 0x5acee0 e 0x5ad780): `fix_man_get_partner_key_nation_index(clube)`:
+/// para clube da Inglaterra ([0x9cf2e4]) ou do País de Gales ([0x9cf510]) (nação +0x53, id +0), o índice da nação-chave
+/// ativa da outra (os 35 registros de 72 bytes em 0xb63d60: +0 a nação, ativa em +0x11c, +0x14 o índice); senão 0xff.
+pub(crate) unsafe extern "C" fn nacao_parceira_do_clube(clube: usize) -> u8 {
+    let nacao = read_u32(clube + 0x53) as usize;
+    if nacao == 0 {
+        return 0xff;
+    }
+    let (id, inglaterra, gales) = (read_u32(nacao), read_u32(KEY_NATION_ENGLAND), read_u32(KEY_NATION_WALES));
+    let outra = if id == inglaterra {
+        gales
+    } else if id == gales {
+        inglaterra
+    } else {
+        return 0xff;
+    };
+    let alvo = read_u32(0xae23a8).wrapping_add(outra.wrapping_mul(0x122)) as usize;
+    for i in 0..0x23usize {
+        let p = read_u32(0xb63d60 + i * 72) as usize;
+        if p != 0 && *((p + 0x11c) as *const u8) != 0 && p == alvo {
+            return *((0xb63d74 + i * 72) as *const u8);
+        }
+    }
+    0xff
+}
+
+/// Comparador: pelo valor (só lê).
+pub(crate) unsafe extern "C" fn comparar_nacao_parceira_do_clube(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(1115)(clube);
+    let n = nacao_parceira_do_clube(clube);
+    PLACAR.registrar(r == n, || format!("nacao_parceira_do_clube({:x}) original={:x} rust={:x}", clube, r, n));
+    r
+}
+
+/// the fixture list (0x5abf10 of the manager [0xae2a58]) for the year (+2) and day (+0) of the date, in the given slice
+/// and group
+/// Original: `FIXTURE_MANAGER::get_fixture_list_for_date` (0x5ae6a0, fix_man.cpp, stdcall, ret 0xc).
+///
+/// [pt] { 0x5ae6a0 } (stdcall, ret 0xc, fix_man.cpp): `get_fixture_list_for_date(data, fatia, grupo)`: a lista de partidas
+/// da 0x5abf10 do gerenciador [0xae2a58] para o ano (+2) e o dia (+0) da data. O argumento do ano leva na metade alta a
+/// do ponteiro da data (`mov ax, [eax+2]`), reproduzida; o do dia leva a do ecx do chamador, que a 0x5abf10 descarta
+/// (`and 0xffff`): a cópia passa zero. No dia de jogos (montar_o_dia 0x6b3c10, Rust, cada lista do dia), nos
+/// amistosos (0x5cbf3e), no técnico humano (0x5fe83a), na mídia (0x7776a8) e em 0x7e6498, 0x7e6ac9.
+pub(crate) unsafe extern "stdcall" fn lista_da_data(data: usize, fatia: u32, grupo: u32) -> usize {
+    let lista: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_GET_FIXTURE_LIST);
+    let ano = (data as u32 & 0xffff_0000) | core::ptr::read_unaligned((data + 2) as *const u16) as u32;
+    let dia = core::ptr::read_unaligned(data as *const u16) as u32;
+    lista(*(0xae2a58 as *const usize), ano, dia, fatia, grupo) // o gerenciador de partidas
+}
+
+pub(crate) unsafe extern "stdcall" fn comparar_lista_da_data(data: usize, fatia: u32, grupo: u32) -> usize {
+    let r = orig::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(784)(data, fatia, grupo);
+    let n = lista_da_data(data, fatia, grupo);
+    PLACAR.registrar(r == n, || format!("lista_da_data({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, fatia, grupo, r, n));
+    r
+}
+
+/// marks the match year in both clubs' entries (year × 2 + bit, 2001 rule)
+/// Original: `mark_calendar_year` (0x5af180, fix_man.cpp, cdecl).
+///
+/// [pt] { 0x5af180 } (cdecl, fix_man.cpp): marca o ano (+0x28, palavra) do jogo `jogo` nas entradas dos
+/// dois clubes (+0xc e +0x10) da tabela [0xae2a5c] (palavras: ano × 2 + bit 0). Entrada vazia: o
+/// bit 0 liga, ou a entrada zera em 2001, e o ano entra; senão em 2001 o bit 0 apaga e o ano sobe se
+/// for maior. Tabela nula: a original (caixa de erro).
+pub(crate) unsafe extern "C" fn marcar_ano_no_calendario(jogo: usize) {
+    let tabela = *(0xae2a5c as *const usize);
+    if tabela == 0 {
+        return orig::<unsafe extern "C" fn(usize)>(366)(jogo);
+    }
+    let ano = core::ptr::read_unaligned((jogo + 0x28) as *const u16);
+    for o in [0xc, 0x10] {
+        let e = tabela.wrapping_add((*((jogo + o) as *const i32) as usize).wrapping_mul(2)) as *mut u16;
+        let v = core::ptr::read_unaligned(e);
+        if v & 0xfffe == 0 {
+            let w = if ano == 0x7d1 { 0 } else { v | 1 };
+            core::ptr::write_unaligned(e, w & 1 | ano << 1);
+        } else {
+            if v & 1 != 0 && ano == 0x7d1 {
+                core::ptr::write_unaligned(e, v & 0xfffe);
+            }
+            let v = core::ptr::read_unaligned(e);
+            if ano > v >> 1 {
+                core::ptr::write_unaligned(e, ano.wrapping_mul(2) | v & 1);
+            }
+        }
+    }
+}
+
+pub(crate) unsafe extern "C" fn comparar_marcar_ano_no_calendario(jogo: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(366);
+    let tabela = *(0xae2a5c as *const usize);
+    let reg: Vec<(usize, usize)> = if tabela == 0 {
+        vec![]
+    } else {
+        [0xc, 0x10].iter().map(|&o| (tabela.wrapping_add((*((jogo + o) as *const i32) as usize).wrapping_mul(2)), 2)).collect()
+    };
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(jogo), || marcar_ano_no_calendario(jogo));
+    PLACAR.registrar(igual, || format!("marcar_ano_no_calendario({:#x}) {:x?} x {:x?}", jogo, mo, mr));
+}

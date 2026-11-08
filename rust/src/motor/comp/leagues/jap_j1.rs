@@ -301,38 +301,6 @@ pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
     cqm9_japao(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, 0, "cqm_9 j2 cheia")
 }
 
-/// the Australian NSL has 13 clubs, those of the division in database order; with fewer, the game shows the error box;
-/// no prize fund nor TV money
-/// Original: `AusNsl::create_table` (0x411b70, aus_nsl.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
-/// ordem do banco, até encher (o contador num int, comparado no word); sem encher: a caixa da linha 0x252 e 0; cheia: 1,
-/// sem fundo de prêmios nem TV. Fonte 0x987c20 (a caixa de memória na linha 0x241).
-pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
-    if cqm9_alocar(this, 0xd, 0x987c20, 0x241) == 0 {
-        return 0;
-    }
-    let mut k: u32 = 0;
-    let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
-        if (k as i16) >= read_i16(this + 0x3e) {
-            break;
-        }
-        if cqm9_da_divisao(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
-            cqm9_linha(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
-            k = k.wrapping_add(1);
-        }
-        i = i.wrapping_add(1);
-        clube = clube.wrapping_add(0x245);
-    }
-    if k as i16 != read_i16(this + 0x3e) {
-        aviso_em(0x987c20, 0x252);
-        return 0;
-    }
-    crate::comparacao::ramo("cqm_9 nsl cheia");
-    1
-}
 
 /// O comparador dos três: a original aloca a tabela (e a J1 paga a TV com notícia): só ela. O plano, feito antes: os
 /// clubes da divisão na ordem do banco (todos). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0), as
@@ -379,8 +347,45 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_j2(this: usize) -
     cqm9_comparar("cqm9_tabela_da_j2", this, 0xc, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2, true, 0, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm9_tabela_da_nsl(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1842);
-    cqm9_comparar("cqm9_tabela_da_nsl", this, 0xd, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE, false, 0, || o(this))
+/// J1: double round robin (the two stages of the year, created by add_result 0x663940 [inference]); win 3, draw 1;
+/// tie-break by goal difference, goals scored and away goals; no top places in the overall table (rule word 8, no
+/// champion band: the champion comes from the final between the stage winners [inference]); 2 go down to J2; no league
+/// above; 5 bench substitutes and 3 substitutions; fixed squad numbers; the word +0xab = 0x82 copied to each match.
+/// Then the schedule
+/// Original: `JapJ1::set_up_rules` (0x663620, jap_j1.cpp, thiscall).
+///
+/// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
+pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
+    cqj7_regras_j1(this);
+    crate::comparacao::ramo("cqj_7 regras da j1");
+    cqj7_calendario(this);
+    1
 }
 
+/// Comparador: como o do Goiano.
+pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
+    let reg = cqj7_regioes(this);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1722)(this), || {
+        cqj7_regras_j1(this);
+        1
+    });
+    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_da_j1({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    r
+}
+
+/// One half of the J1: when the first game of a half is processed, it builds that half's round-robin stage (a league
+/// with all the clubs of the table, the same points for a win and a draw and the same tie-breakers as the league, and
+/// one top place, the half winner's); the first half goes to stage 0 and the second (from round 16, by the match +0x34)
+/// to stage 1; each half winner (the top of the stage table) goes to the final
+/// Original: `JapJ1::create_half_season_stage` (0x663c20, jap_j1.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x663c20 } (thiscall, ret 4, jap_j1.cpp): `JapJ1::create_half_season_stage(k)`, um turno da J1 (a caixa da linha
+/// 0x278; o 20º argumento do construtor é 0xf).
+pub(crate) unsafe extern "thiscall" fn cqr1_turno_da_j1(this: usize, k: u32) {
+    cqr1_turno(this, k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: os pontos por vitória na J1
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_da_j1(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(1989);
+    cqr1_comparar("cqr1_turno_da_j1", this, k, || o(this, k))
+}

@@ -443,61 +443,6 @@ pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_b(this: usize) -> u3
     cql7_tabela(this, 0x1c, 0x98ab64, 0x1aa, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, 0, "cql_7 serie b cheia")
 }
 
-/// Series C takes up to 56 clubs (those of the division, in database order), which are drawn (3 swaps per club); the
-/// first 7 of the draw make the first table, of 7 clubs, and the drawn list is kept for the other groups [inference: 8
-/// groups of 7 in the first stage]
-/// Original: `BraNatThird::create_table` (0x42dc90, bra_nat_third.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x42dc90 } (thiscall, ret 0, bra_nat_third.cpp): `BraNatThird::create_table()`: +0x3e = 7; a lista dos
-/// participantes (+0xee) refeita (a velha liberada, 0x9452ca push; add esp -> cdecl; a nova com 0xe0 bytes = 56
-/// ponteiros; sem memória: a caixa da linha 0x18f e devolve 1, como a original); a tabela (+0xb1, 7 × 0x3b; sem
-/// memória: a caixa da linha 0x196 e 0); a lista recebe, na ordem do banco, até 56 clubes cuja divisão (+0x57) é a
-/// própria Série C (o registro em [this+4]); a lista é embaralhada (comp_util_shuffle_pointer_array 0x4afb40: push
-/// conta (word); push lista; add esp, 8 -> cdecl; 3 × conta trocas sorteadas) e os 7 primeiros do sorteio entram nas
-/// linhas 0..6 (0x687430, a linha num dword limpo). Fonte 0x98aba4. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let embaralhar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 7);
-    let velha = read_usize(this + 0xee);
-    if velha != 0 {
-        soltar(velha);
-    }
-    let lista = alocar(0xe0);
-    core::ptr::write_unaligned((this + 0xee) as *mut usize, lista);
-    if lista == 0 {
-        aviso_em(0x98aba4, 0x18f);
-        return 1;
-    }
-    let t = alocar((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
-    if t == 0 {
-        aviso_em(0x98aba4, 0x196);
-        return 0;
-    }
-    let mut k: u8 = 0;
-    let mut i: i32 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while i < read_usize(0xae235c) as i32 {
-        if (k as i8) >= 0x38 {
-            break;
-        }
-        if read_usize(clube + 0x57) == read_usize(this + 4) {
-            core::ptr::write_unaligned((read_usize(this + 0xee) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
-            k = k.wrapping_add(1);
-        }
-        i += 1;
-        clube = clube.wrapping_add(0x245);
-    }
-    crate::comparacao::ramo("cql_7 serie c sorteio");
-    embaralhar(read_usize(this + 0xee), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
-    for j in 0..7usize {
-        iniciar(this, j as u32, read_usize(read_usize(this + 0xee) + j * 4), 0, 0);
-    }
-    1
-}
 
 /// Os clubes da competição do global `g` (ponteiro em `campo`), na ordem do banco, até `n`.
 pub(crate) unsafe fn cql7_plano(n: usize, campo: usize, g: usize) -> Vec<usize> {
@@ -541,35 +486,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_b(this: usi
     cql7_comparar("cql7_tabela_da_serie_b", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, || o(this))
 }
 
-/// O comparador da Série C: a original libera e aloca e sorteia: só ela. O plano, feito antes: os clubes cuja divisão é
-/// [this+4], na ordem do banco, até 56. Depois: a devolução 1, +0x3e = 7, a lista (+0xee) com os clubes do plano em
-/// alguma ordem (o sorteio) e as linhas 0..6 da tabela com os 7 primeiros da lista.
-pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_c(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1827);
-    let mut plano = Vec::new();
-    let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && plano.len() < 0x38 {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
-        if read_usize(clube + 0x57) == read_usize(this + 4) {
-            plano.push(clube);
-        }
-        i += 1;
-    }
-    let r = o(this);
-    let (lista, t) = (read_usize(this + 0xee), read_usize(this + 0xb1));
-    let mut igual = r == 1 && read_i16(this + 0x3e) == 7 && lista != 0 && t != 0 && plano.len() >= 7;
-    let mut sorteados: Vec<usize> = Vec::new();
-    if igual {
-        sorteados = (0..plano.len()).map(|k| read_usize(lista + k * 4)).collect();
-        let linhas_ok = (0..7usize).all(|j| read_usize(t + j * 0x3b) == sorteados[j]);
-        let (mut a, mut b) = (sorteados.clone(), plano.clone());
-        a.sort_unstable();
-        b.sort_unstable();
-        igual = linhas_ok && a == b;
-    }
-    PLACAR.registrar(igual, || format!("cql7_tabela_da_serie_c({:#x}) original={} plano={:x?} lista={:x?}", this, r, plano, sorteados));
-    r
-}
 
 // ---------- 274a leva: as regras das três divisões nacionais do Brasil (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------
 
@@ -710,30 +626,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_b(this: usi
     r
 }
 
-/// Series C: double round robin (home-and-away groups [inference: the groups of 7 of the 0x42d620 schedule]); win 3,
-/// draw 1; tie-break by goal difference, goals scored and away goals; promotes to Series B, no league below; 2 top
-/// places leading to the next stage (rule word 8) and 2 bottom ones [inference: no effect, there is no league below]; 7
-/// substitutes, 3 substitutions, fixed numbers. Then the schedule
-/// Original: `BraNatThird::set_up_rules` (0x42de50, bra_nat_third.cpp, thiscall).
-///
-/// [pt] { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
-pub(crate) unsafe extern "thiscall" fn cqi7_regras_da_serie_c(this: usize) -> u32 {
-    cqi7_regras_serie_c(this);
-    crate::comparacao::ramo("cqi_7 regras da serie c");
-    cqi7_calendario(this);
-    1
-}
 
-/// Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_c(this: usize) -> u32 {
-    let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1714)(this), || {
-        cqi7_regras_serie_c(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_c({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}
 
 // ---------- 274a leva: o destino de cada clube no fim das fases da Série A, da Série C e do Baiano (bra_nat_first.cpp, bra_nat_third.cpp, bra_reg_bahia.cpp) ----------
 
@@ -958,52 +851,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_na_serie_a(this: us
     r
 }
 
-/// Series C: in the groups, the qualified get the qualification record; in stage 7, those who go through; in the final
-/// group (stages 8 and 9), the two promoted get the promotion (weight 0x32) and qualification records and fate 0
-/// (promotion) in the first table that has them; in the final (stage 10), the champion gets the champion record
-/// Original: `BraNatThird::update_staff_records_for_status` (0x42eb00, bra_nat_third.cpp, thiscall).
-///
-/// [pt] { 0x42eb00 } (thiscall, ret 0x18, bra_nat_third.cpp): `BraNatThird::update_staff_records_for_status`: nos grupos
-/// (fase < 7), os classificados (6) ganham o registro de classificação; na fase 7, quem passa (1) também (os outros: -1);
-/// no quadrangular (fases 8 e 9), os que sobem (0) ganham os registros de acesso e de classificação e o destino 0 na
-/// primeira tabela que os tiver (a liga ou os estágios 0..6); na final (10), o campeão (1) ganha o registro de campeão.
-/// Devolve 0, ou -1 nas situações que a fase não espera.
-pub(crate) unsafe extern "thiscall" fn cqj9_destino_na_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let _ = (a4, a5, a6);
-    cqj9_serie_c(this, clube, situacao, fase, true).0
-}
 
-/// Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_na_serie_c(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_serie_c(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(1729)(this, clube, situacao, fase, a4, a5, a6);
-    let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("cqj9_destino_na_serie_c({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
-    r
-}
 
-/// Bahia, Gaucho, North, Northeast, Pernambuco, Santa Catarina and Paulista: at the end of the round robin, the clubs
-/// through to the final stage get the qualification record (round 0x82, weight 0x32) and the relegated the relegation
-/// record; in the knockout, the champion gets the champion record and fate 5; the eliminated, the knocked-out record
-/// weighted 30 to 50 by the round they fell in, and fate -2
-/// Original: `BraRegBahia::update_staff_records_for_status` (0x430210, bra_reg_bahia.cpp, thiscall).
-///
-/// [pt] { 0x430210 } (thiscall, ret 0x18, bra_reg_bahia.cpp): `BraRegBahia::update_staff_records_for_status` (o slot 18 de
-/// sete estaduais: Baiano, Gaúcho, Norte, Nordeste, Pernambucano, Catarinense e Paulista): na fase de pontos corridos, os
-/// classificados (6) ganham o registro de classificação (rodada 0x82, peso 0x32) e os rebaixados (3) o de rebaixamento;
-/// no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5; os eliminados (2 ou -1), o registro
-/// de eliminação com o peso da rodada (0x4bf850: de 30 a 50 pela rodada do jogo) e o destino -2. Devolve 0.
-pub(crate) unsafe extern "thiscall" fn cqj9_destino_no_baiano(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let _ = (a4, a6);
-    cqj9_baiano(this, clube, situacao, fase, jogo, true).0
-}
 
-/// Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_no_baiano(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let (n, l, dest) = cqj9_baiano(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(1730)(this, clube, situacao, fase, a4, jogo, a6);
-    let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("cqj9_destino_no_baiano({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
-    r
-}
 

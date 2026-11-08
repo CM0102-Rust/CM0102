@@ -468,22 +468,7 @@ pub(crate) unsafe fn cqm10_trofeu(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-/// rule: the League Trophy (Auto Windscreens) has two 28-club sections; the second takes the last 28 of the 56 chosen
-/// clubs (the array at +0xb2, already sorted by latitude and reputation: the southern section [inference]), in order,
-/// class and status 0
-/// Original: `EngAutoCup::collect_entrants` (0x56b3c0, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: o Troféu da Liga (Auto Windscreens) tem duas chaves de 28 clubes; a segunda leva os 28 últimos dos 56
-/// escolhidos (o vetor em +0xb2, já ordenado pela latitude e pela reputação: a chave do sul [inferência]), na ordem,
-/// classe e situação 0
-pub(crate) unsafe extern "thiscall" fn cqm10_trofeu_inscritos(this: usize) -> i32 {
-    cqm10_trofeu(this).0
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm10_trofeu_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1782);
-    cqm10_comparar("cqm10_trofeu_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm10_trofeu(this), |_, n| n.max(0) as usize * 6)
-}
 
 /// O clube que terminou em `lugar` (0 o campeão, 1 o vice) na última temporada da competição de id [id] (a competição do
 /// banco: [0xae23d0] + 0x6b × id; 0x4afd80: push lugar; push competição; add esp, 8 -> cdecl).
@@ -709,28 +694,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn10_copa_da_inglaterra_dia(thi
     r
 }
 
-/// rule: the two MLS All-Star selections are called up on the day of Date(26, 6, year, 6): 26 July moved to weekday 6
-/// [inference: the following Saturday]; the match is on 2 August (see cqm_12); then, every day, the cup update
-/// Original: `UsaMlsAllStars::update_for_date` (0x90a900, usa_mls_all_stars.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x90a900 } (thiscall, ret 8, usa_mls_all_stars.cpp; a virtual +0x14 do Jogo das Estrelas; quadro SEH pela Date
-/// local, sem destrutor): `UsaMlsAllStars::update_for_date(hoje, fase)`: com a fase diferente de 0, no dia de Date(26, 6,
-/// ano de hoje, dia da semana 6) (o sábado de 26 de julho em diante [inferência]), a convocação das duas seleções
-/// (0x90a980, mov ecx -> thiscall, ret 0); depois a atualização da copa.
-pub(crate) unsafe extern "thiscall" fn cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
-    let ano = read_i16(hoje + 2) as u16 as u32;
-    let d = cqn10_data(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
-    if fase != 0 && cqn10_e_hoje(d, hoje) {
-        crate::comparacao::ramo("cqn_10 convocacao do jogo das estrelas");
-        let convocar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_USAMLSALLSTARS_SELECT_SQUADS);
-        convocar(this);
-    }
-    cqn10_base(this, hoje, fase)
-}
 
 // ponytail: a convocação mexe nos elencos e a atualização da copa joga: não rodam duas vezes. Só a original roda.
-pub(crate) unsafe extern "thiscall" fn comparar_cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1792)(this, hoje, fase)
-}
 

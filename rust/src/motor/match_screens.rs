@@ -381,40 +381,6 @@ pub(crate) unsafe extern "C" fn ordem_dos_eventos(a: *const u8, b: *const u8) ->
     (*a as i8 as i32 >> 1) - (*b as i8 as i32 >> 1)
 }
 
-/// removes a language from the player's language table (binary search) and shifts the later entries down
-/// Original: `PlayerStats::remove_language` (0x7c6bf0, player_stats.cpp, thiscall).
-///
-/// [pt] { 0x7c6bf0 } (thiscall, ret 8, player_stats.cpp): tira o idioma `idioma` do jogador `ficha` da
-/// tabela de idiomas ([this+0x3c], [this+0x44] entradas de 6 bytes: id, idioma, fluência), achado por
-/// busca binária (0x946464 com 0x7c6d40): as seguintes descem uma casa, a última vira id −1 e
-/// idioma 0 e a contagem cai. Sem tabela ou sem a entrada: nada.
-pub(crate) unsafe extern "thiscall" fn tirar_idioma_do_jogador(estat: usize, ficha: usize, idioma: i8) {
-    let tabela = *((estat + 0x3c) as *const usize);
-    if tabela == 0 {
-        return;
-    }
-    let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    // ponytail: o byte 5 da chave fica com lixo de pilha na original; o comparador 0x7c6d40 só lê id e idioma
-    let mut chave = [0u8; 6];
-    chave[..4].copy_from_slice(&(*(ficha as *const u32)).to_le_bytes());
-    chave[4] = idioma as u8;
-    let contagem = (estat + 0x44) as *mut i32;
-    let achada = buscar(chave.as_ptr() as usize, tabela, *contagem as u32, 6, 0x7c6d40);
-    if achada == 0 {
-        return;
-    }
-    let mut i = (achada.wrapping_sub(tabela) as u32 / 6) as i32;
-    while i < *contagem - 1 {
-        let (para, de) = (tabela + 6 * i as usize, tabela + 6 * (i + 1) as usize);
-        core::ptr::write_unaligned(para as *mut u32, core::ptr::read_unaligned(de as *const u32));
-        core::ptr::write_unaligned((para + 4) as *mut u16, core::ptr::read_unaligned((de + 4) as *const u16));
-        i += 1;
-    }
-    let ultima = (tabela as isize + *contagem as isize * 6) as usize;
-    core::ptr::write_unaligned((ultima - 6) as *mut u32, u32::MAX);
-    *((ultima - 2) as *mut u8) = 0;
-    *contagem -= 1;
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_preencher_registro_da_partida(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(523);
@@ -440,17 +406,6 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_eventos(a: *const u8, b: *con
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tirar_idioma_do_jogador(estat: usize, ficha: usize, idioma: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(525);
-    let tabela = *((estat + 0x3c) as *const usize);
-    let contagem = *((estat + 0x44) as *const i32);
-    if tabela == 0 || contagem <= 0 {
-        return o(estat, ficha, idioma);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(estat + 0x44, 4), (tabela, contagem as usize * 6)],
-        || o(estat, ficha, idioma), || tirar_idioma_do_jogador(estat, ficha, idioma));
-    PLACAR.registrar(igual, || format!("tirar_idioma_do_jogador({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
-}
 
 // ---------- 209a leva: as telas da partida (14): a montagem e a resposta da tela da partida ao vivo e a montagem da tela de detalhes (match_screens.cpp) ----------
 
@@ -5372,20 +5327,6 @@ pub(crate) unsafe extern "C" fn comparar_contar_placar_ao_vivo(partida: usize, i
 
 // ---------- 199a leva: as estatísticas da partida: a estatística de liga do jogador, a entrada do jogo e o balde do registro (player_stats.cpp, match_stats.cpp) ----------
 
-/// the player's league appearances (field 1) or league goals (field 2) at the club, as a float
-/// Original: `PlayerStats::get_club_league_stat` (0x7c47b0, player_stats.cpp, thiscall).
-///
-/// [pt] { 0x7c47b0 } (thiscall, ret 8, player_stats.cpp): a estatística de liga do jogador no clube, como
-/// float (fild): campo 1 as partidas (palavra +0x20) e campo 2 os gols (palavra +0x22) do registro de
-/// 39 bytes em [this+0x30] + id × 39. Jogador nulo ou outro campo: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn estatistica_da_liga_do_jogador(estat: usize, jogador: usize, campo: i8) -> f32 {
-    if jogador == 0 || !(1..=2).contains(&campo) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(469)(estat, jogador, campo);
-    }
-    let registro = (*((estat + 0x30) as *const usize) as isize + *(jogador as *const i32) as isize * 39) as usize;
-    let deslocamento = if campo == 1 { 0x20 } else { 0x22 };
-    core::ptr::read_unaligned((registro + deslocamento) as *const i16) as f32
-}
 
 /// reports whether a match statistics entry holds the two given clubs in either order and the given date
 /// Original: `Match_Stats::fixture_entry_matches` (0x729500, match_screens.cpp, thiscall).
@@ -5471,15 +5412,6 @@ pub(crate) unsafe extern "stdcall" fn balde_do_registro(jogo: usize, registro: u
     }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_liga_do_jogador(estat: usize, jogador: usize, campo: i8) -> f32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(469)(estat, jogador, campo);
-    if jogador == 0 || !(1..=2).contains(&campo) {
-        return r;
-    }
-    let n = estatistica_da_liga_do_jogador(estat, jogador, campo);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("estatistica_da_liga_do_jogador({}) original={} rust={}", campo, r, n));
-    r
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_entrada_do_jogo_bate(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(470);
@@ -6270,3 +6202,174 @@ pub(crate) unsafe extern "C" fn comparar_abrir_tela_de_espera(vaga: u32) {
     orig::<unsafe extern "C" fn(u32)>(414)(vaga)
 }
 
+/// draws the latest scores panel: title, badge, the day's groups and matches, table and buttons
+/// Original: `draw_latest_scores_panel` (0x723d20, match_screens.cpp, cdecl).
+///
+/// [pt] { 0x723d20 } (cdecl, match_screens.cpp): desenha o painel dos últimos placares a partir de `*topo`
+/// até `*base`. Título (dentro da partida, parâmetro 0 ≠ 0: "<competição> Latest" à esquerda 0x6e e
+/// largura 0x30c, `*topo` += 0x28; na tela avulsa o nome em 0x64/0x316, += 0x41) e o selo da competição
+/// (0x804030, fora dos amistosos 0x5c2990 e das seleções 0x7e6f20). Com mais de uma rodada no dia
+/// ([[0xb67a50]+0x2a] > 1) a lista dos grupos do dia ([+1], 0x18 bytes, [+9] quantos) com as partidas
+/// de cada um ([+0xd], 84 bytes, de +4 a +8 do grupo): cabeçalho do grupo (Copa do Mundo, Internacional,
+/// Continental ou o nome da nação) e uma linha por partida (0x55f990). Depois a tabela de 4 colunas
+/// com as linhas que cabem (0x5e5cd0, a altura da fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
+/// os três botões do alto (0x804030, 6 a 8) e o redesenho dos placares (0x724520).
+pub(crate) unsafe extern "C" fn painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
+    crate::comparacao::ramo("telas painel dos ultimos placares");
+    type T9 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+    type T11 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+    type T12 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+    type T18 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+    let titulo: T11 = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
+    let caixa: T12 = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
+    let celula: T11 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
+    let texto_da_celula: T9 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
+    let linha: T18 = core::mem::transmute(FN_DISPLAY_ADD_ITEM);
+    let lista: T11 = core::mem::transmute(FN_DISPLAY_ADD_AREA);
+    let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
+    let cor = |a: usize| *(a as *const u16) as usize;
+    let display = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
+    let sm = GERENTE_DE_TELAS;
+    const BUF: usize = 0xde1f64;
+    let sem_selo = |c: usize| {
+        let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
+        let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
+        amistoso(*(0xae2c74 as *const usize), c) == 0 && selecao(*(0xb74434 as *const usize), c) == 0
+    };
+
+    let partida = parametro_da_tela(0);
+    let entrada = parametro_da_tela(0xe);
+    let comp = (*(0xae23d0 as *const usize) as isize + *(entrada as *const i32) as isize * 107) as usize;
+    let t = *topo as usize;
+    let (esquerda, largura);
+    if partida != 0 {
+        esquerda = 0x6e;
+        largura = 0x30c;
+        let mais_de_uma = core::ptr::read_unaligned((entrada + 8) as *const i32) > core::ptr::read_unaligned((entrada + 4) as *const i32);
+        let chave = *(comp as *const usize);
+        if chave == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && mais_de_uma {
+            texto(BUF, 0xa16b28, 0xad9c64);
+        } else if chave == *(KEY_CLUB_COMP_RESERVE as *const usize) && mais_de_uma {
+            texto(BUF, 0xa16aec, 0xad9c64);
+        } else {
+            let g = *((comp + 0x52) as *const i8) as i32;
+            texto(BUF, 0xa16ac8, g, g, comp + 0x38);
+        }
+        titulo(sm, 0x6e, t, 0x30c, t + 0x23, 2, 0, 0xc, 3, cor(0xaebdec), BUF, 1);
+        if sem_selo(comp) {
+            caixa(sm, 0x9b, t, 0x276, t + 0x23, 1, 0, 0xc, 3, cor(0xaebdec), 0, 0x7d0, comp);
+        }
+        *topo += 0x28;
+    } else {
+        esquerda = 0x64;
+        largura = 0x316;
+        nome_da_competicao_no_painel(comp, entrada);
+        titulo(sm, 0x64, t, 0x316, t + 0x2d, 2, 0, 0xc, 6, cor(0xaebdec), BUF, 1);
+        if sem_selo(comp) {
+            caixa(sm, 0x91, t, 0x280, t + 0x2d, 1, 0, 0xc, 6, cor(0xaebdec), 0, 0x7d0, comp);
+        }
+        *topo += 0x41;
+    }
+
+    let md = *(0xb67a50 as *const usize);
+    if *((md + 0x2a) as *const i8) > 1 {
+        let cabeca = caixa(sm, esquerda + 5, t + 5, esquerda + 0x14, t + 0x19, 0x30, cor(0xaebdea), 0xc, 1, cor(0xae3184), 0, 0, 0);
+        let h = lista(display(), 0, 0, 0, 0, 0, 0, 0, 0, 0x30, cor(0xae31aa), cabeca);
+        let grupos = core::ptr::read_unaligned((md + 9) as *const i32);
+        for i in 0..grupos.max(0) as usize {
+            let g = core::ptr::read_unaligned((md + 1) as *const usize) + i * 0x18;
+            if *((g + 0x14) as *const u32) == 0 {
+                continue;
+            }
+            let pai = if *((md + 0x29) as *const u8) == 1 {
+                h
+            } else {
+                let tipo = *(g as *const i32);
+                match tipo {
+                    0 => {
+                        texto(BUF, 0xa16284);
+                    }
+                    1 => {
+                        texto(BUF, 0xa16248, 0xad9c64);
+                    }
+                    3..=7 => {
+                        texto(BUF, 0xa16a90, 0xad9c64);
+                    }
+                    _ => {
+                        let nacao = *((0xb63d60 + tipo as isize * 72) as *const usize);
+                        if nacao != 0 {
+                            copiar_para_o_texto(nacao + 4);
+                        } else {
+                            texto(BUF, 0xa16a90, 0xad9c64);
+                        }
+                    }
+                }
+                let r = linha(display(), 2, 0, 0, 0, 0, 0, 0, 0x10, cor(0xae31aa), cor(0xaebdec), 1, 1, cor(0xaebdea), BUF, 0, 0, 0, h);
+                lista(display(), 0, 0, 0, 0, 0, 0, 0, 0, 0x30, cor(0xae31aa), r)
+            };
+            let mut k = *((g + 4) as *const i32);
+            while k <= *((g + 8) as *const i32) {
+                let m = (core::ptr::read_unaligned((md + 0xd) as *const usize) as isize + k as isize * 84) as usize;
+                if *((m + 0x10) as *const u32) != 0 {
+                    let c = (*(0xae23d0 as *const usize) as isize + *(m as *const i32) as isize * 107) as usize;
+                    nome_da_competicao_no_painel(c, m);
+                    linha(display(), 2, 0, 0, 0, 0, 0, 0, 0x10, cor(0xae31aa), cor(0xaebdec), 1, 1, cor(0xaebdea), BUF, 0, 5, m, pai);
+                }
+                k += 1;
+            }
+        }
+    }
+
+    let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
+    let a = altura(3);
+    let n = ((*base - *topo - 0x10) / a) as u8;
+    gravar_parametro_da_tela(0xf, n as usize);
+    let mut colunas: [u8; 4] = [0x16, 4, 0x16, 4];
+    // a original passa o byte das linhas por cima do ponteiro `base` na pilha (os 3 bytes de cima ficam)
+    let linhas = (base as usize & !0xff) | n as usize;
+    let tabela = lista(display(), 0x6e, *topo as usize, 0x30c, *base as usize, 4, colunas.as_mut_ptr() as usize, linhas, 0, 2, 0, usize::MAX);
+    for s in 0..n as usize {
+        let r = celula(sm, tabela, 0, s, 1, 0, 1, 3, cor(0xaebde8), 0, 0, 0) as u16 as i16;
+        if s == 0 {
+            gravar_parametro_da_tela(0x10, r as i32 as usize);
+        }
+        for _ in 0..3 {
+            texto_da_celula(sm, tabela, 1, s, 1, 0, 0xc, 3, cor(0xaebdec), 0);
+        }
+        celula(sm, tabela, 2, s, 1, 0, 1, 3, cor(0xaebde8), 0, 0, 0);
+        texto_da_celula(sm, tabela, 3, s, 1, 0, 0xc, 2, cor(0xae3184), 0);
+    }
+    let marca = if *(0x9cc2c4 as *const i32) != -1 { 0 } else { 1 };
+    caixa(sm, largura - 0x7c, t + 5, largura - 0x68, t + 0x19, 1, cor(0xaebe04), 0xc, marca, cor(0xae3184), 0, 6, 0);
+    caixa(sm, largura - 0x66, t + 5, largura - 0x1b, t + 0x19, 1, 0, 0xc, 2, cor(0xaebdec), 0, 7, 0);
+    caixa(sm, largura - 0x19, t + 5, largura - 5, t + 0x19, 1, cor(0xaebe04), 0xc, marca, cor(0xae3184), 0, 8, 0);
+    let redesenhar: unsafe extern "C" fn() = core::mem::transmute(FN_REFRESH_LATEST_SCORES_ROWS);
+    redesenhar();
+}
+
+/// O painel é comparado de verdade: as duas desenham a partir do mesmo estado e o gerente de telas, o
+/// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
+/// `*topo` e o texto 0xde1f64 têm de sair iguais.
+pub(crate) unsafe extern "C" fn comparar_painel_dos_ultimos_placares(topo: *mut i32, base: *mut i32) {
+    let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(433);
+    let mut reg = regioes_da_tela();
+    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
+    let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
+    if bloco != 0 {
+        reg.push((bloco, 0xb4));
+        reg.push((bloco + 0xb8, 0x200 - 0xb8));
+    }
+    reg.push((topo as usize, 4));
+    reg.push((0xde1f64, 0x100));
+    // a lista (0x55fba0) escreve num buffer de rede ([0xae2908] na posicao [0xae290c]): a posicao volta
+    // para a segunda rodada escrever no mesmo lugar
+    reg.push((0xae290c, 4));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || painel_dos_ultimos_placares(topo, base));
+    PLACAR.registrar(igual, || {
+        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
+            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
+            Some(format!("{:#x}+{:#x}", a, k))
+        }).collect();
+        format!("painel_dos_ultimos_placares: diferencas em {:?}", dif)
+    });
+}

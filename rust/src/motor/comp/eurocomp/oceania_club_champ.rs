@@ -806,33 +806,22 @@ pub(crate) unsafe fn cqq12_comparar_times(nome: &str, this: usize, o: impl FnOnc
     a
 }
 
-/// rule: the Asian Club Championship has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
-/// class and status 0
-/// Original: `AsiaClubChamp::build_team_table` (0x40b620, asia_club_champ.cpp, thiscall, ret 0).
+/// rule: the Oceania Club Championship groups are single round robin, 3/1 points, tiebreak by codes 1, 2 and 4, two
+/// qualifiers per group (the top ones go on, the others are out: rule bits 0x28), category 8 (the deciding stages one),
+/// 3 substitutes on the bench and 3 changes; starts on day 20 of month 7 moved to weekday 5 [inference]; no prize fund
+/// Original: `OceaniaClubChamp::set_up_rules` (0x7979b0, oceania_club_champ.cpp, thiscall, ret 0).
 ///
-/// [pt] { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
-/// linha 0x1cd sem memória).
-pub(crate) unsafe extern "thiscall" fn cqq12_asia_clubes_times(this: usize) -> i32 {
-    cqq12_times(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: os times da Liga dos Campeões asiática
+/// [pt] { 0x7979b0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x8c; quadro SEH só da data local):
+/// `OceaniaClubChamp::set_up_rules()`: os grupos do Campeonato de Clubes da Oceania em turno único, 3/1 pontos,
+/// desempates (1, 2, 4, 0), dois classificados, categoria 8, 3 no banco e 3 substituições, +0x43 = 2, os bits de regra
+/// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
+pub(crate) unsafe extern "thiscall" fn cqj11_oceania_clubes_regras(this: usize) -> u32 {
+    crate::comparacao::ramo("cqj_11 regras da oceania");
+    let dia = 0x14; // cqj11: o dia do começo na Oceania
+    cqj11_regras(this, &CQJ11_OCEANIA, dia, 3)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq12_asia_clubes_times(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1984);
-    cqq12_comparar_times("cqq12_asia_clubes_times", this, || o(this), || cqq12_asia_clubes_times(this))
+pub(crate) unsafe extern "thiscall" fn comparar_cqj11_oceania_clubes_regras(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1699);
+    cqj11_confere("cqj11_oceania_clubes_regras", this, &CQJ11_OCEANIA, || o(this))
 }
-
-/// rule: the Asian Cup Winners' Cup has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
-/// class and status 0
-/// Original: `AsiaCupWinner::create_team_entries` (0x40d4d0, asia_cup_winner.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x40d4d0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::create_team_entries()`: os 16 times (a caixa
-/// da linha 0x185 sem memória).
-pub(crate) unsafe extern "thiscall" fn cqq12_asia_recopa_times(this: usize) -> i32 {
-    cqq12_times(this, 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: os times da Recopa asiática
-}
-
-pub(crate) unsafe extern "thiscall" fn comparar_cqq12_asia_recopa_times(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1985);
-    cqq12_comparar_times("cqq12_asia_recopa_times", this, || o(this), || cqq12_asia_recopa_times(this))
-}
-

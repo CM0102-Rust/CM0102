@@ -33,75 +33,6 @@ pub(crate) unsafe extern "thiscall" fn registrar_nota_do_arbitro(this: usize, r:
     }
 }
 
-/// the match referee (+0xf5b6, id ≠ −1), except in friendly competitions (0x5c6710 on [0xae2c74]). Cards (+0xf5cb and
-/// +0xf601 on both sides) and fouls (+0xf5cc and +0xf602); the grade starts at +0xf5ba / 1000, loses 2 with more than 2
-/// cards, 1 with 2, gains 1 with none; loses 1 with more than 5 fouls, gains 1 with fewer than 3; below 4 becomes 4
-/// (except 1 in 500), above 8 becomes 8 (except 1 in 25), and stays within 1 to 10. Records through 0x79ce10 on
-/// [0xb74340] (8-byte record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by
-/// side (draws and the referee's record)
-/// Original: `referee_grade` (0x6d4a20, match_eng.cpp (336 bytes, called by 0x6b98c0), thiscall).
-///
-/// [pt] { 0x6d4a20 } (match_eng.cpp, chamada pela 0x6b98c0): a nota do arbitro da partida (+0xf5b6, id
-/// != -1), fora das competicoes amistosas (0x5c6710 em [0xae2c74]). Os cartoes (+0xf5cb e +0xf601 dos
-/// dois lados) e as faltas (+0xf5cc e +0xf602); a nota parte de +0xf5ba / 1000, perde 2 com mais de 2
-/// cartoes, 1 com 2, ganha 1 sem cartao; perde 1 com mais de 5 faltas, ganha 1 com menos de 3. Abaixo
-/// de 4 vira 4 (salvo 1 em 500), acima de 8 vira 8 (salvo 1 em 25), e fica entre 1 e 10. Grava pela
-/// 0x79ce10 em [0xb74340].
-pub(crate) unsafe extern "thiscall" fn nota_do_arbitro(m: usize) {
-    let arbitro = *((m + 0xf5b6) as *const usize);
-    if arbitro == 0 || *(arbitro as *const i32) == -1 {
-        return;
-    }
-    let partida = *((m + 0x4792) as *const usize);
-    if partida == 0 {
-        return;
-    }
-    let comp = *((partida + 0x14) as *const usize);
-    if comp == 0 {
-        return;
-    }
-    let amistosos = *(0xae2c74 as *const usize);
-    if amistosos != 0 {
-        let amistosa: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-        if amistosa(amistosos, comp) != 0 {
-            crate::comparacao::ramo("nota do arbitro amistoso");
-            return;
-        }
-    }
-    let cartoes = (*((m + 0xf601) as *const u8)).wrapping_add(*((m + 0xf5cb) as *const u8)) as i8;
-    let faltas = (*((m + 0xf602) as *const u8)).wrapping_add(*((m + 0xf5cc) as *const u8)) as i8;
-    let mut nota = (*((m + 0xf5ba) as *const i16) as i32 / 1000) as i8;
-    if cartoes > 2 {
-        nota = nota.wrapping_sub(2);
-    } else if cartoes > 1 {
-        nota = nota.wrapping_sub(1);
-    } else if cartoes == 0 {
-        nota = nota.wrapping_add(1);
-    }
-    if faltas > 5 {
-        nota = nota.wrapping_sub(1);
-    } else if faltas < 3 {
-        nota = nota.wrapping_add(1);
-    }
-    if nota < 4 && sortear(500) != 0 {
-        nota = 4;
-    } else if nota > 8 && sortear(0x19) != 0 {
-        nota = 8;
-    } else if nota < 1 {
-        crate::comparacao::ramo("nota do arbitro minima");
-        nota = 1;
-    } else if nota > 10 {
-        crate::comparacao::ramo("nota do arbitro maxima");
-        nota = 10;
-    }
-    let mut r = [0u8; 8];
-    r[..4].copy_from_slice(&(*(arbitro as *const i32)).to_le_bytes());
-    r[4] = cartoes as u8;
-    r[5] = faltas as u8;
-    r[6] = nota as u8;
-    let registrar: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(FN_OFFICIALSMANAGER_RECORD_MATCH_STATS);
-    registrar(*(0xb74340 as *const usize), r.as_ptr());
-}
 
 /// A ficha do arbitro que a 0x79ce10 mexe (vazia se o id nao vale).
 pub(crate) unsafe fn ficha_do_arbitro(gerente: usize, id: i32) -> Vec<(usize, usize)> {
@@ -122,20 +53,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_registrar_nota_do_arbitro(this: 
     PLACAR.registrar(igual, || format!("registrar_nota_do_arbitro(nota {}) {:x?} x {:x?}", *r.add(6), mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_nota_do_arbitro(m: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(302);
-    if gravando_no_topo() {
-        return o(m);
-    }
-    // o sorteio e a ficha do arbitro
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let arbitro = *((m + 0xf5b6) as *const usize);
-    if arbitro != 0 && *(0xb74340 as *const usize) != 0 {
-        reg.extend(ficha_do_arbitro(*(0xb74340 as *const usize), *(arbitro as *const i32)));
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m), || nota_do_arbitro(m));
-    PLACAR.registrar(igual, || format!("nota_do_arbitro {:x?} x {:x?}", mo, mr));
-}
 
 // ---------- 271a leva: os árbitros do jogo novo: os que ficam por nação, as vagas das competições e a parte de cada uma; a ordem das vagas pelo nível da competição (officials_manager.cpp) ----------
 
@@ -1020,3 +937,54 @@ pub(crate) unsafe extern "thiscall" fn comparar_copiar_ficha_de_arbitro(this: us
     r
 }
 
+/// writes [0xae2390] officials (0x11 bytes from [+0]), [0xae2350] nations (0x102 bytes from [+0xc]) and one byte per
+/// official from [+8] into the off.dat item; returns 1 in the low byte; with no officials or on error the "Error" box,
+/// closes the item and 0
+/// Original: `OfficialsManager::save_official_stats` (0x79bb80, officials_manager.cpp, thiscall).
+///
+/// [pt] { 0x79bb80 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::save_official_stats(save)`: grava no item
+/// `off.dat` a quantidade de árbitros [0xae2390], os registros de 0x11 bytes de [+0] (um por árbitro), a quantidade de
+/// nações [0xae2350], os registros de 0x102 bytes de [+0xc] (um por nação) e um byte por árbitro de [+8]; devolve 1
+/// (no byte baixo). Sem contêiner ou erro ao abrir: a caixa "Error" (officials_manager.cpp 0x142, 0x14a) e 0; sem
+/// árbitros ou erro ao gravar: a caixa (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), fecha o item e 0.
+pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
+    const FONTE: usize = 0xa6a22c;
+    let arbitros = || *(0xae2390 as *const u32);
+    let nacoes = || *(0xae2350 as *const u32);
+    crate::comparacao::ramo("cpx_7 gravar estatisticas dos arbitros");
+    if save == 0 {
+        aviso_em(FONTE, 0x142);
+        return 0;
+    }
+    let mut z = cpx7_abrir(save, 0xa6a260);
+    if z == 0 {
+        aviso_em(FONTE, 0x14a);
+        return 0;
+    }
+    if cpx7_gravar(0xae2390, 4, 1, z) != 1 {
+        return cpx7_falha_dos_arbitros(0x150, &mut z);
+    }
+    if arbitros() == 0 {
+        return cpx7_falha_dos_arbitros(0x156, &mut z);
+    }
+    if cpx7_gravar(read_usize(this), 0x11, arbitros(), z) != arbitros() {
+        return cpx7_falha_dos_arbitros(0x15c, &mut z);
+    }
+    if cpx7_gravar(0xae2350, 4, 1, z) != 1 {
+        return cpx7_falha_dos_arbitros(0x164, &mut z);
+    }
+    if cpx7_gravar(read_usize(this + 0xc), 0x102, nacoes(), z) != nacoes() { // cpx7: os registros das nações
+        return cpx7_falha_dos_arbitros(0x16c, &mut z);
+    }
+    if cpx7_gravar(read_usize(this + 8), 1, arbitros(), z) != arbitros() {
+        return cpx7_falha_dos_arbitros(0x174, &mut z);
+    }
+    cpx7_fechar(&mut z);
+    1
+}
+
+/// Comparador da 0x79bb80: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_dos_arbitros(this: usize, save: usize) -> u8 {
+    // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(1504)(this, save)
+}

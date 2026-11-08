@@ -1281,3 +1281,63 @@ pub(crate) unsafe extern "C" fn comparar_ler_historico_de_competicoes_de_pessoal
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(633)(stream, use_zip, registros, entrada)
 }
 
+/// reads version 1 club_comp.dat / nation_comp.dat field by field (104 bytes on file for 107-byte records, holes at
+/// +0x37 and +0x52), the reputation in one byte; 0 at the first read that does not come, 1 if everything came
+/// Original: `db_files_read_comps_v1` (0x54ffd0, Db_files.cpp, cdecl).
+///
+/// [pt] { 0x54ffd0 } (cdecl, Db_files.cpp): `db_files_read_comps_v1(stream, use_zip, registros, n)`: para cada um dos
+/// `n` registros de 107 bytes, os campos de `COMPETICAO_V1`, cada um lido sozinho (tamanho, 1) por `zread`
+/// 0x932c30 (use_zip ≠ 0) ou `fread` 0x945bfe; a reputação lida num byte (a original o lê num argumento da
+/// própria pilha, já usado) vira u16 sem conta. A primeira leitura que não vem dá 0 (o que já veio fica); tudo,
+/// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
+/// são versão 2. Sem SEH e sem variável local lida sem valor.
+pub(crate) unsafe extern "C" fn ler_competicoes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    crate::comparacao::ramo("banco ler competições v1");
+    let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
+        core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
+    for i in 0..n as usize {
+        let r = registros + i * 107;
+        for &(o, t, q) in &COMPETICAO_V1 {
+            for k in 0..q {
+                if t == 0 {
+                    let mut b = 0u8;
+                    if ler(&mut b as *mut u8 as usize, 1, 1, stream) == 0 {
+                        return 0;
+                    }
+                    ((r + o) as *mut u16).write_unaligned(b as u16); // reputação da competição
+                } else if ler(r + o + k * t as usize, t, 1, stream) == 0 {
+                    return 0;
+                }
+            }
+        }
+    }
+    1
+}
+
+pub(crate) unsafe extern "C" fn comparar_ler_competicoes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    let o = orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(673);
+    if use_zip != 0 {
+        return o(stream, use_zip, registros, n);
+    }
+    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FTELL);
+    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
+    let pos = ftell(stream);
+    let (mut fim_o, mut fim_r) = (0, 0);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(registros, n as usize * 107)],
+        || {
+            let r = o(stream, use_zip, registros, n);
+            fim_o = ftell(stream);
+            r
+        },
+        || {
+            fseek(stream, pos, 0);
+            let r = ler_competicoes_v1(stream, use_zip, registros, n);
+            fim_r = ftell(stream);
+            r
+        });
+    PLACAR.registrar(igual && r == x && fim_o == fim_r, || {
+        let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
+        format!("ler_competicoes_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
+    });
+    r
+}

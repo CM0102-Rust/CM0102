@@ -171,22 +171,7 @@ pub(crate) const CQL12_SUPERCOPA_DA_ESPANHA: [Cql12R; 1] = [
     cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: a ida da Supercopa da Espanha
 ];
 
-/// rule: the Spanish Super Cup is played over two legs (7 days apart) between 2 clubs, without a draw (+0xd = 0x200:
-/// the built order), drawn on 5/7 with the first leg on 20/8 (moved to weekday 6) at the home side [inference: venue
-/// 0]; two-leg tiebreak 1 [inference: away goals and penalties]; no prize; category 6
-/// Original: `SpaSuper::create_round_table` (0x858960, spa_super.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
-pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1779);
-    cql12_comparar("cql12_supercopa_da_espanha_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cql12_supercopa_da_espanha_tabela(this, fase, r, e, s))
-}
 
 /// A Supercopa do Japão: um jogo em março no estádio neutro, 150 mil por vencer.
 pub(crate) const CQL12_SUPERCOPA_DO_JAPAO: [Cql12R; 1] = [
@@ -208,4 +193,20 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_do_japao_tabela(
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(1780);
     cql12_comparar("cql12_supercopa_do_japao_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
         |r, e, s| cql12_supercopa_do_japao_tabela(this, fase, r, e, s))
+}
+
+/// rule: the French Super Cup is between the First Division champion and the Coupe de France winner; if the same club
+/// won both, the First Division runner-up takes its place; if one is missing, the error box
+/// Original: `FraSuper::select_teams` (0x5bf770, fra_super.cpp, thiscall, ret 0).
+///
+/// [pt] regra: a Supercopa da França é entre o campeão da Primeira e o da Copa da França; se o mesmo clube ganhou as duas,
+/// entra o vice da Primeira; sem algum deles, a caixa de erro
+pub(crate) unsafe extern "thiscall" fn cqm11_supercopa_clubes(this: usize) -> i32 {
+    cqm11_supercopa(this).0
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqm11_supercopa_clubes(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(1786);
+    cqm11_comparar("cqm11_supercopa_clubes", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_supercopa(this),
+        |r, _| if r == 1 { 12 } else { 0 })
 }

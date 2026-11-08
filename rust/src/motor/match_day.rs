@@ -65,135 +65,6 @@ pub(crate) unsafe fn erro_de_match_man(linha: u32) -> ! {
     sair(-1)
 }
 
-/// sets up one side's tactics (manager, players, club, opponent, match, home side) and selects: at the human's club the
-/// stored lines (0x5fbe20/0x5fbd00) and the automatic 0x6dbc50 mode 1 or the regulars (0x6dbb80); otherwise the
-/// automatic mode 2 and the count of the home players; the substitutes by the bench and the club's tactical line.
-/// Returns how many it selected
-/// Original: `select_side` (0x6db500, match_man.cpp, thiscall, ret 0x24).
-///
-/// [pt] { 0x6db500 } (ret 0x24, match_man.cpp): monta a tatica `t` de um lado (+0x9032 ou +0x9102 do
-/// motor) e escala o time: o tecnico e a ficha dele, os jogadores do bloco, o lado, o clube, o
-/// adversario e a partida; o modo (+0x19 humano/+0x1a 3) pelo mando. No clube do humano, as linhas
-/// taticas guardadas (0x5fbe20/0x5fbd00) e, sem o tecnico humano, a escalacao automatica no modo 1
-/// (0x6dbc50, com o tecnico do clube 0x600e90) ou os titulares (0x6dbb80); fora isso, a automatica no
-/// modo 2 e a conta dos da casa. Os reservas (+0x17) pelo banco da partida; le a linha tatica do
-/// clube. Devolve quantos foram escalados; em `*vagas`, o tamanho do time.
-#[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
-    let b = |o: usize| (t + o) as *mut u8;
-    let d = |o: usize| (t + o) as *mut usize;
-    let u = |q: usize, o: usize| *((q + o) as *const usize);
-    if m == 0 {
-        erro_de_match_man(0x69);
-    }
-    if linhas == 0 {
-        erro_de_match_man(0x6b);
-    }
-    if jogadores == 0 {
-        erro_de_match_man(0x6d);
-    }
-    if clube == 0 {
-        erro_de_match_man(0x6f);
-    }
-    if outro == 0 {
-        erro_de_match_man(0x71);
-    }
-    if tecnico != 0 {
-        *d(0x1b) = tecnico;
-        *d(0x1f) = u(tecnico, 0x69);
-    } else {
-        *d(0x1b) = 0;
-        *d(0x1f) = 0;
-    }
-    *d(0x23) = jogadores;
-    *b(0x18) = lado as u8;
-    *d(0x27) = linhas;
-    *d(0x2f) = clube;
-    *d(0x12) = m;
-    *d(0x37) = jogo;
-    *d(0x3b) = 0;
-    *d(0xe) = 0;
-    *d(0xa) = 0;
-    *d(6) = 0;
-    *d(0x2b) = m + 0x91e2 + (lado as u8 as i8 as isize * 0x18e3) as usize;
-    *d(0x33) = outro;
-    let mandante = (clube == u(jogo, 0x1c) && byte(jogo, 0x40) == 0) || (clube == u(jogo, 0x20) && byte(jogo, 0x41) == 0);
-    if mandante {
-        *b(0x19) = 1;
-        *b(0x1a) = 0;
-    } else {
-        *b(0x19) = 0;
-        *b(0x1a) = 3;
-    }
-    let ficha = *d(0x1f);
-    if ficha != 0 {
-        *((t) as *mut u16) = *((ficha + 0xa) as *const u16);
-        *((t + 2) as *mut u16) = *((ficha + 8) as *const u16);
-        *((t + 4) as *mut u16) = *((ficha + 0xc) as *const u16);
-    }
-    let humano_usa: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
-    let tecnico_do_clube: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_STAND_IN_MANAGER);
-    let automatica: unsafe extern "thiscall" fn(usize, usize, u32) -> i8 = core::mem::transmute(FN_MATCH_MAN_PICK_TEAM);
-    let gerente = *(0xb63c98 as *const usize);
-    let n: i8;
-    if *(m as *const u8) == 0 && humano_usa(clube) != 0 && clube_humano(clube, 0, 1, 0, 0) != 0 {
-        if e_segunda_selecao(clube) != 0 {
-            *d(0x1b) = u(selecao_principal(u(clube, 0x53)), 0xcf);
-        }
-        let preparar: unsafe extern "thiscall" fn(usize, i32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
-        let guardadas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
-        preparar(gerente, byte(t, 0x19) as i32, clube, u(clube, 0xcf));
-        let r = guardadas(gerente, u(clube, 0xcf));
-        if r == 0 || *d(0x2b) == 0 {
-            erro_de_match_man(0xbc);
-        }
-        core::ptr::copy_nonoverlapping(r as *const u8, *d(0x2b) as *mut u8, 0x18e3);
-        let sem_tecnico = |t: usize| {
-            let x = tecnico_do_clube(*((t + 0x2f) as *const usize));
-            *((t + 0x1b) as *mut usize) = x;
-            *((t + 0x1f) as *mut usize) = if x != 0 { *((x + 0x69) as *const usize) } else { 0 };
-            automatica(t, outro, 1)
-        };
-        n = if *b(0x19) == 0 {
-            titulares(t) as i8
-        } else if e_selecao(clube) == 0 {
-            if tecnico_9a05(gerente, u(clube, 0xcf)) == 0 { sem_tecnico(t) } else { titulares(t) as i8 }
-        } else if tecnico_9a06(gerente, u(clube, 0xcf), core::ptr::null_mut()) == 0 {
-            sem_tecnico(t)
-        } else {
-            titulares(t) as i8
-        };
-        *vagas = ((*((jogo + 0x4d) as *const u8) & 0xf) + 0xb) as i8;
-    } else {
-        let x = *d(0x1b);
-        if x != 0 {
-            let base = *(0xae2364 as *const i32);
-            let id = *(x as *const i32);
-            if id >= base - 0x10 && id < base && byte(x, 0x5f) != 0 {
-                let y = tecnico_do_clube(*d(0x2f));
-                *d(0x1b) = y;
-                *d(0x1f) = if y != 0 { u(y, 0x69) } else { 0 };
-            }
-        }
-        n = automatica(t, outro, 2);
-        *vagas = 0;
-        let total = (*((jogo + 0x4d) as *const u8) & 0xf) + 0xb;
-        let mut k = 0u8;
-        while (k as i8) < total as i8 {
-            let p = u(jogadores + k as usize * 0x1be, 0x69);
-            if p != 0 && *(p as *const i32) < *(0xae2364 as *const i32) {
-                *vagas = (*vagas).wrapping_add(1);
-            }
-            k += 1;
-        }
-    }
-    let banco = (*((jogo + 0x4d) as *const u8) >> 4) & 0xf;
-    let sobra = (n as u8).wrapping_sub(0xb) as i8;
-    let r = if banco as i8 >= sobra { sobra } else { banco as i8 };
-    *b(0x17) = if r <= 0 { 0 } else if (banco as i8) < sobra { banco } else { sobra as u8 };
-    ler_linha_tatica(*(0xde1d08 as *const usize), *d(0x2f), (t + 0x3f) as *mut u8, byte(t, 0x19) as i32 as u32);
-    n
-}
 
 /// frees the global list, the day's vectors and, for each match, the engine (0x6b97a0), the summary and the +0x5f
 /// object
@@ -299,10 +170,6 @@ pub(crate) unsafe extern "thiscall" fn escolher_partida_do_dia(dia: usize) -> u3
 // ponytail: a escalacao de cada lado chama a automatica (0x6dbc50, que aloca a lista e le a pilha) e o
 // dia de jogos libera motores e listas: sem comparacao propria, validados pela carreira (Rust x
 // original), como o nascimento e o fim do motor. As rotinas que chamam seguem comparadas.
-#[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(328)(t, m, tecnico, linhas, jogadores, lado, clube, outro, jogo, vagas)
-}
 pub(crate) unsafe extern "thiscall" fn comparar_encerrar_dia(dia: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(329)(dia)
 }
@@ -1116,63 +983,12 @@ pub(crate) unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, mod
     dia
 }
 
-/// the player's side (+0x27)
-/// Original: `player_side` (0x714d30, match_pl.cpp, thiscall).
-///
-/// [pt] { 0x714d30 } (thiscall, match_pl.cpp): o lado do jogador `j` (+0x27).
-pub(crate) unsafe extern "thiscall" fn lado_do_jogador(j: usize) -> u8 {
-    *((j + 0x27) as *const u8)
-}
 
-/// have the sounds of the 16 marked events played and passed their window (clock 0x90c510; stops the finished channels,
-/// 0x802a50)?
-/// Original: `sounds_finished` (0x6d8c70, match_events.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6d8c70 } (thiscall, ret 4, match_events.cpp): os sons dos eventos `ativos` (16 marcas) ja
-/// tocaram? Para cada marcado, o canal (+0x10 + k; -1 livre, -2 espera) que ainda toca (0x8029f0 em
-/// 0xb74450) segura; o que acabou e parado (0x802a50) e liberado. Devolve 1 so se todos os marcados
-/// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
-pub(crate) unsafe extern "thiscall" fn sons_terminados(e: usize, ativos: *const u32) -> u8 {
-    let relogio: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
-    let tocando: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_IS_SOUND_PLAYING);
-    let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
-    let agora = relogio();
-    crate::comparacao::ramo("sons dos eventos");
-    for k in 0..16usize {
-        if *ativos.add(k) == 0 {
-            continue;
-        }
-        let ini = *((e + 0x2d6c + 4 * k) as *const u32);
-        let fim = (*((e + 0x2dac) as *const u32)).wrapping_add(ini);
-        let passou = agora > fim || agora < ini;
-        let canal = (e + 0x10 + k) as *mut u8;
-        if *canal != 0xff {
-            if *canal == 0xfe {
-                return 0;
-            }
-            if tocando(0xb74450, (ini & !0xff) | *canal as u32) != 0 {
-                return 0;
-            }
-            parar(0xb74450, *canal as u32);
-            *canal = 0xff;
-        }
-        if !passou {
-            return 0;
-        }
-    }
-    1
-}
 
 // ponytail: a montagem do dia aloca os vetores e chama rotinas ainda originais; o lado e os sons sao
 // so leitura e tela. Sem comparacao propria, validadas pela carreira (Rust x original).
 pub(crate) unsafe extern "thiscall" fn comparar_montar_o_dia(dia: usize, data: usize, modo: u32) -> usize {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(336)(dia, data, modo)
-}
-pub(crate) unsafe extern "thiscall" fn comparar_lado_do_jogador(j: usize) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u8>(337)(j)
-}
-pub(crate) unsafe extern "thiscall" fn comparar_sons_terminados(e: usize, ativos: *const u32) -> u8 {
-    orig::<unsafe extern "thiscall" fn(usize, *const u32) -> u8>(338)(e, ativos)
 }
 
 // ---------- centesima trigesima quarta leva: o interesse do humano no dia de jogos (0x6b5040) ----------
@@ -1942,123 +1758,289 @@ pub(crate) unsafe extern "thiscall" fn comparar_ficha_do_registro(estat: usize, 
 
 // ---------- 170a leva: o fechamento do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
 
-/// the day's match order (qsort): competition, record fields and the club name
-/// Original: `day_match_order` (0x6b6510, match_eng.cpp, cdecl).
+/// one step of the human's match on a network, by the clock and the humans' scoreboard (everyone sees each state;
+/// sounds, events, engine step, end, half time, goals, minute); records it (0x729ff0) and picks the day's human match
+/// Original: `network_step` (0x6b55c0, match_day.cpp, thiscall, ret 4).
 ///
-/// [pt] { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
-/// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome
-/// do primeiro clube (+0x20 → +0x38) na comparação de textos 0x90c1d0 (sem maiúsculas).
-pub(crate) unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
-    let d = core::ptr::read_unaligned((a + 4) as *const i32).wrapping_sub(core::ptr::read_unaligned((b + 4) as *const i32));
-    if d != 0 {
-        return d;
-    }
-    let d = *((a + 0x46) as *const i8) as i32 - *((b + 0x46) as *const i8) as i32;
-    if d != 0 {
-        return d;
-    }
-    for o in [0x36, 0x38, 0x34] {
-        let d = core::ptr::read_unaligned((a + o) as *const i16) as i32 - core::ptr::read_unaligned((b + o) as *const i16) as i32;
-        if d != 0 {
-            return d;
+/// [pt] { 0x6b55c0 } (thiscall, ret 4, match_day.cpp): um passo da partida do humano `p` em rede, pelo
+/// relogio (0x90c510) e pelo placar dos humanos (+0x5b: +0 estado, +1 evento, +0x85 quem ja viu,
+/// +0x105 humanos, +0x107 vistos, +0x108 pausa, +0x109 espera, +0x10d hora, +0x111 pode andar,
+/// +0x115 lance). Sem `p`, anda a atual (0x6b5ce0) e comeca a proxima (0x6b5a70). Espera todos verem
+/// o estado; depois os sons (0x6d8c70) e o tempo; mostra o proximo evento (0x6d78b0, lance pela
+/// tabela 0x6d5cd0) ou da um passo do motor (0x6b98c0 com 1) e marca o estado: fim (2/8), intervalo
+/// (4), gols de cada lado (+0xf5bd/+0xf5f3 contra o resumo), lance, +0x8eb2, o minuto (+0x8ed0 / 11)
+/// contra o resumo (espera 0x226 - 50 x +0x51); com estado, registra (0x729ff0) e a do humano do dia
+/// (+0x34) passa a ser a de maior competicao (0x6b6570) ou mais adiantada. Devolve 1 se mudou.
+pub(crate) unsafe extern "thiscall" fn passo_em_rede(dia: usize, p: usize) -> u32 {
+    let u = |q: usize, o: usize| core::ptr::read_unaligned((q + o) as *const usize);
+    let por = |q: usize, o: usize, v: u32| core::ptr::write_unaligned((q + o) as *mut u32, v);
+    let andar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_DAY_STEP_BACKGROUND_MATCH);
+    let iniciar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_MATCH_DAY_START_NEXT_BACKGROUND_MATCH);
+    let relogio: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
+    let sons: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_MATCH_EVENTS_IS_LINE_FINISHED);
+    let proximo_evento: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_GET_NEXT_EVENT);
+    let tabela: unsafe extern "thiscall" fn(usize, u32) -> u8 = core::mem::transmute(FN_MATCH_EVENTS_GET_EVENT_PRIORITY);
+    let laco: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_RUN_MATCH_STEPS);
+    let registrar: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
+    let competicao: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_MATCH_DAY_GET_PERIOD_RANK);
+    let seguir = || {
+        if andar(dia, 0) != 0 {
+            iniciar(dia);
         }
+        0u32
+    };
+    if p == 0 {
+        return seguir();
     }
-    let textos: unsafe extern "C" fn(usize, usize, i32, u32) -> i32 = core::mem::transmute(FN_UTILS_STRING_COMPARE);
-    let nome = |x: usize| core::ptr::read_unaligned((x + 0x20) as *const usize).wrapping_add(0x38);
-    textos(nome(a), nome(b), 1, 0)
-}
-
-/// the players' order on the engine's turn (qsort): the marked ones first, then by strength
-/// Original: `action_order` (0x6bd840, match_eng.cpp, cdecl).
-///
-/// [pt] { 0x6bd840 } (cdecl, qsort, match_eng.cpp): a ordem dos jogadores na vez do motor ([0xb67a64]):
-/// com +0x8eb2 ligado, o de +0xf582 vem primeiro; depois o de +0x91de; os demais pela força
-/// (+0x104 + +0x105) × (+0x3b × 0,005 + 0,5) × +0x4d (f32), truncada, do maior para o menor.
-pub(crate) unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
-    let (pa, pb) = (*a, *b);
-    let m = *(0xb67a64 as *const usize);
-    if *((m + 0x8eb2) as *const u8) != 0 {
-        let primeiro = core::ptr::read_unaligned((m + 0xf582) as *const usize);
-        if pa == primeiro {
-            return -1;
+    let pl = u(p, 0x5b);
+    crate::comparacao::ramo("passo em rede");
+    let motor = u(p, 0x57);
+    let estado = pl as *mut u8;
+    let eu = *(0xb77c7a as *const i16) as isize;
+    let visto = |i: isize| ((pl as isize) + 0x85 + 4 * i) as *mut u32;
+    // todos viram de novo: so o humano da vez marca e espera
+    let rever = || {
+        core::ptr::write_bytes((pl + 0x85) as *mut u8, 0, 0x40);
+        core::ptr::write_unaligned(visto(eu), 1);
+        *((pl + 0x107) as *mut u8) = 1;
+    };
+    let mostrar_evento = |ev: usize| {
+        if tabela(u(motor, 0x8f7a), *(ev as *const u16) as u32) == 2 {
+            por(pl, 0x115, 1);
         }
-        if pb == primeiro {
+        por(pl, 1, ev as u32);
+        *estado = 8;
+        rever();
+        por(pl, 0x109, 0);
+    };
+    if *estado != 0 && *((pl + 0x107) as *const u8) != *((pl + 0x105) as *const u8) {
+        if core::ptr::read_unaligned(visto(eu)) != 0 {
+            return 0;
+        }
+        core::ptr::write_unaligned(visto(eu), 1);
+        *((pl + 0x107) as *mut u8) += 1;
+        por(pl, 0x10d, relogio());
+        return 1;
+    }
+    if *((pl + 0x108) as *const u8) != 0 {
+        return seguir();
+    }
+    if *estado & 8 != 0 && sons(u(motor, 0x8f7a), pl + 5) == 0 {
+        return seguir();
+    }
+    let espera = if *((u(motor, 0x8f7a) + 0x2db0) as *const u8) == 0x14 { 0 } else { u(pl, 0x109) as u32 };
+    if relogio() < (u(pl, 0x10d) as u32).wrapping_add(espera) {
+        return seguir();
+    }
+    if *estado & 8 != 0 {
+        let ev = proximo_evento(u(motor, 0x8f7a), 0);
+        if ev != 0 {
+            mostrar_evento(ev);
+            por(pl, 0x10d, relogio());
             return 1;
         }
     }
-    let c = core::ptr::read_unaligned((m + 0x91de) as *const usize);
-    if c == pa {
-        return -1;
-    }
-    if c == pb {
-        return 1;
-    }
-    let forca = |p: usize| {
-        let s = *((p + 0x105) as *const i8) as i32 + *((p + 0x104) as *const i8) as i32;
-        let w = core::ptr::read_unaligned((p + 0x3b) as *const i16) as f64;
-        ftol(s as f64 * (w * f64_em(0x968ef0) + f64_em(0x968968)) * core::ptr::read_unaligned((p + 0x4d) as *const f32) as f64)
-    };
-    forca(pb).wrapping_sub(forca(pa))
-}
-
-/// swaps the commentary event for a variant, by a draw and by the play type
-/// Original: `event_variant` (0x6d5d80, match_events.cpp, stdcall).
-///
-/// [pt] { 0x6d5d80 } (stdcall, ret 0xc, match_events.cpp): troca o evento da narração por uma variante:
-/// com sorteio(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
-/// outro sorteio(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
-/// byte de cima 3..5 troca 0x1f4b por 0x217e.
-pub(crate) unsafe extern "system" fn variante_do_evento(e: *const i16, lados: u32, tipo: u8) -> i16 {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    if sorteio(3) != 0 {
-        return *e;
-    }
-    let v = *e;
-    let tabela: &[(i16, i16)] = match tipo {
-        1 => &[(0x216f, 0x2199), (0x2150, 0x2197), (0x2112, 0x2195), (0x1fee, 0x218d), (0x1f49, 0x2182), (0x205a, 0x2190), (0x205b, 0x2191), (0x2079, 0x2192)],
-        2 => &[(0x216f, 0x2199), (0x2150, 0x2197), (0x2112, 0x2195), (0x1fe6, 0x2193), (0x1fee, 0x218d), (0x1f48, 0x2181), (0x1f41, 0x2180), (0x1f44, 0x2187), (0x1f86, 0x2189), (0x1fa2, 0x218a)],
-        8 => &[(0x216f, 0x2199), (0x2150, 0x2197), (0x2112, 0x2195), (0x1fe6, 0x2193), (0x1fee, 0x218d), (0x205a, 0x218e), (0x205b, 0x218f), (0x1f4b, 0x2183), (0x1f41, 0x2184), (0x1f4a, 0x2188)],
-        0x10 => &[(0x1f48, 0x2185)],
-        0x20 if sorteio(3) == 0 => &[(0x216f, 0x2199), (0x1fee, 0x218d), (0x1f42, 0x217c), (0x1f4b, 0x217d), (0x1f48, 0x2186)],
-        _ => &[],
-    };
-    if let Some(&(_, n)) = tabela.iter().find(|&&(de, _)| de == v) {
-        return n;
-    }
-    if matches!(lados as u8, 2..=4) {
-        let lance: &[(i16, i16)] = &[(0x2112, 0x2196), (0x1fa6, 0x2194), (0x1f8b, 0x218b), (0x1fbf, 0x218c), (0x211f, 0x217f)];
-        if let Some(&(_, n)) = lance.iter().find(|&&(de, _)| de == v) {
-            return n;
+    if u(pl, 0x111) != 0 {
+        por(pl, 0x115, 0);
+        let r = laco(motor, 1) as u8;
+        *((p + 0x67) as *mut u8) = r;
+        if r == 2 || r == 8 {
+            *((dia + 0x25) as *mut i32) += 1;
+        }
+        if *((u(motor, 0x8f7a) + 5) as *const u8) != 0 {
+            let ev = proximo_evento(u(motor, 0x8f7a), 0);
+            if ev != 0 {
+                mostrar_evento(ev);
+                por(pl, 0x10d, relogio());
+                por(pl, 0x111, 0);
+                return 1;
+            }
         }
     }
-    if matches!((lados >> 8) as u8, 3..=5) && v == 0x1f4b {
-        return 0x217e;
+    *estado = 0;
+    let fim = *((p + 0x67) as *const u8);
+    let resumo = u(p, 0x5f);
+    let marcar = |bit: u8| {
+        por(pl, 0x109, 0);
+        *(pl as *mut u8) |= bit;
+    };
+    if fim == 2 {
+        *estado = 0x40;
+        por(pl, 0x109, 0);
     }
-    v
-}
-
-pub(crate) unsafe extern "C" fn comparar_ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(382)(a, b);
-    let n = ordem_das_partidas_do_dia(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_partidas_do_dia({:#x}, {:#x}) original={} rust={}", a, b, r, n));
-    r
-}
-
-pub(crate) unsafe extern "C" fn comparar_ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(383)(a, b);
-    let n = ordem_de_acao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_de_acao({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
-    r
-}
-
-pub(crate) unsafe extern "system" fn comparar_variante_do_evento(e: *const i16, lados: u32, tipo: u8) -> i16 {
-    let o = orig::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(384);
-    if gravando_no_topo() {
-        return o(e, lados, tipo);
+    if *((p + 0x67) as *const u8) == 8 {
+        marcar(0x40);
     }
-    let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, lados, tipo), || crate::aleatorio::sem_contar(|| variante_do_evento(e, lados, tipo)));
-    PLACAR.registrar(igual && r == n, || format!("variante_do_evento({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, tipo, r, n, mo, mr));
-    r
+    if *((p + 0x67) as *const u8) == 4 {
+        marcar(0x20);
+    }
+    if byte(motor, 0xf5bd) as i32 > *((resumo + 0x11f) as *const u8) as i32 {
+        marcar(1);
+    }
+    if byte(motor, 0xf5f3) as i32 > *((u(p, 0x5f) + 0x744) as *const u8) as i32 {
+        marcar(2);
+    }
+    if u(pl, 0x115) != 0 {
+        marcar(0x10);
+    }
+    if *((motor + 0x8eb2) as *const u8) != 0 {
+        marcar(0x80);
+    }
+    let r = u(p, 0x5f);
+    if *((motor + 0x8ed0) as *const i16) as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
+        *estado |= 4;
+        por(pl, 0x109, (0x226 - 50 * *((u(p, 0x5f) + 0x51) as *const i16) as i32) as u32);
+    }
+    por(pl, 0x111, 1);
+    if *estado == 0 {
+        return 0;
+    }
+    rever();
+    por(pl, 0x10d, relogio());
+    registrar(u(0xb6b7c0, 0), motor, u(p, 0x5f), 1);
+    let s = u(u(dia, 0x34), 0x5f);
+    let trocar = if s != 0 {
+        let a = competicao(*((u(p, 0x5f) + 0x4f) as *const u16) as u32, 1) as i8;
+        let b = competicao(*((s + 0x4f) as *const u16) as u32, 1) as i8;
+        a > b || *((u(p, 0x5f) + 0x4d) as *const i16) > *((u(u(dia, 0x34), 0x5f) + 0x4d) as *const i16)
+    } else {
+        true
+    };
+    if trocar {
+        por(dia, 0x34, p as u32);
+    }
+    1
 }
 
+pub(crate) unsafe extern "thiscall" fn comparar_passo_em_rede(dia: usize, p: usize) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(341)(dia, p)
+}
+
+/// each human confirms the network match; with all of them, creates the engine and prepares it for watching, or plays
+/// it to the end and records it
+/// Original: `confirm_network_match` (0x6b5260, match_day.cpp, thiscall, ret 4).
+///
+/// [pt] { 0x6b5260 } (thiscall, ret 4, match_day.cpp): o humano da vez ([0xb77c7a]) confirma a partida
+/// `p` em rede (placar dos humanos +0x5b: +0x45 quem confirmou, +0x105 humanos, +0x106 confirmados).
+/// Com todos: cria o motor (0x6b7e50) e o prepara para ver (0x6b7f20 com o ultimo 1). Se ele nao
+/// for de ver (devolve 0), joga ate o fim (contando em [0xb67a50]+0x25), cria o resumo, registra
+/// (0x7293f0), libera o motor, tira da fila e marca +0x119; se for, avisa o narrador (+0x8f7a = 3),
+/// cria o resumo e registra para ver (0x729ff0) e devolve 1. Erros 0x4b8 (sem partida), 0x4d0, 0x4ea,
+/// 0x511 (sem memoria).
+pub(crate) unsafe extern "thiscall" fn confirmar_partida_em_rede(_dia: usize, p: usize) -> u32 {
+    let u = |q: usize, o: usize| core::ptr::read_unaligned((q + o) as *const usize);
+    let por = |q: usize, o: usize, v: usize| core::ptr::write_unaligned((q + o) as *mut usize, v);
+    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
+    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_OPERATOR_DELETE);
+    let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CM3_MATCH_ENGINE_CM3_MATCH_ENGINE);
+    let preparar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_INIT_MATCH);
+    let laco: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(FN_CM3_MATCH_ENGINE_RUN_MATCH_STEPS);
+    let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
+    let registrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MATCH_STATS_RECORD_MATCH);
+    let registrar_para_ver: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
+    let destruir_motor: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_DESTRUCTOR_CM3_MATCH_ENGINE);
+    let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_VIRTUAL_STAFF_RELEASE_FIXTURE);
+    const FONTE: usize = 0xa15708; // match_day.cpp
+    if p == 0 {
+        aviso_em(FONTE, 0x4b8);
+        return 0;
+    }
+    let pl = u(p, 0x5b);
+    let eu = *(0xb77c7a as *const i16) as isize;
+    let confirmou = (pl as isize + eu * 4 + 0x45) as *mut u32;
+    if core::ptr::read_unaligned(confirmou) == 0 {
+        core::ptr::write_unaligned(confirmou, 1);
+        *((pl + 0x106) as *mut u8) = (*((pl + 0x106) as *const u8)).wrapping_add(1);
+    }
+    if *((pl + 0x106) as *const u8) != *((pl + 0x105) as *const u8) {
+        return 0;
+    }
+    crate::comparacao::ramo("partida em rede confirmada");
+    let mem = novo(0xf63b);
+    let motor = if mem != 0 { construir(mem) } else { 0 };
+    por(p, 0x57, motor);
+    if motor == 0 {
+        aviso_em(FONTE, 0x4d0);
+        return 0;
+    }
+    let novo_resumo = || {
+        let r = novo(0xd7a);
+        if r != 0 {
+            vetor(r + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
+        }
+        por(p, 0x5f, r);
+        r
+    };
+    if preparar(motor, p + 4, 0, 0, 1) as i8 == 0 {
+        let terminou = |e: u8| e == 2 || e == 8;
+        let estado = (p + 0x67) as *mut u8;
+        while !terminou(*estado) {
+            let e = laco(u(p, 0x57), -1) as u8;
+            *estado = e;
+            if terminou(e) {
+                *((u(0xb67a50, 0) + 0x25) as *mut i32) += 1;
+            }
+        }
+        let r = novo_resumo();
+        if r == 0 {
+            aviso_em(FONTE, 0x4ea);
+            return 0;
+        }
+        registrar(u(0xb6b7c0, 0), u(p, 0x57), r);
+        let m = u(p, 0x57);
+        if m != 0 {
+            destruir_motor(m);
+            liberar(m);
+        }
+        por(p, 0x57, 0);
+        tirar(u(0xde2f70, 0), p + 4);
+        por(pl, 0x119, 1);
+        return 0;
+    }
+    let narrador = u(u(p, 0x57), 0x8f7a);
+    if narrador != 0 {
+        *(narrador as *mut u8) = 3;
+    }
+    let r = novo_resumo();
+    if r == 0 {
+        aviso_em(FONTE, 0x511);
+        return 0;
+    }
+    registrar_para_ver(u(0xb6b7c0, 0), u(p, 0x57), r, 1);
+    1
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_confirmar_partida_em_rede(dia: usize, p: usize) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(344)(dia, p)
+}
+
+/// the number by code (0: 5/4, 1: 11/10, 0x1ef: 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; the first with the second
+/// argument 1); any other code: the original (error box). Compared by the result
+/// Original: `competition_number` (0x6b6570, match_day.cpp (304 bytes), cdecl).
+///
+/// [pt] { 0x6b6570 } (cdecl, match_day.cpp): o numero da competicao pelo codigo (0: 5/4, 1: 11/10, 0x1ef:
+/// 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; o primeiro com `segunda` 1). Outro codigo: a original
+/// (caixa de erro).
+pub(crate) unsafe extern "C" fn numero_da_competicao(codigo: u32, segunda: u32) -> u32 {
+    let s = (segunda as u8 == 1) as u32;
+    crate::comparacao::ramo("numero da competicao");
+    match codigo as u16 as i16 {
+        0 => 4 + s,
+        1 => 10 + s,
+        0x1ef => s,
+        0x3de => 2 + s,
+        0x483 => 6 + s,
+        0x528 => 8 + s,
+        _ => orig::<unsafe extern "C" fn(u32, u32) -> u32>(306)(codigo, segunda),
+    }
+}
+
+pub(crate) unsafe extern "C" fn comparar_numero_da_competicao(codigo: u32, segunda: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(306);
+    let r = o(codigo, segunda);
+    if matches!(codigo as u16 as i16, 0 | 1 | 0x1ef | 0x3de | 0x483 | 0x528) {
+        let n = numero_da_competicao(codigo, segunda);
+        PLACAR.registrar(r as u8 == n as u8, || format!("numero_da_competicao({:#x}, {}) original={} rust={}", codigo as u16, segunda as u8, r as u8, n as u8));
+    }
+    r
+}

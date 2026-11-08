@@ -135,15 +135,6 @@ pub(crate) unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u
     cqt2_construir(this, ano, registro, &CQT2_GOIANO, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
 }
 
-/// The Minas Gerais state league at career creation: the year and the database competition, disciplinary rule 7 and,
-/// with no saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table
-/// with the state clubs, the fixtures, the order, the statistics and the predicted positions
-/// Original: `BraRegMinasGerais::BraRegMinasGerais` (0x433d50, bra_reg_minas_gerais.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
-    cqt2_construir(this, ano, registro, &CQT2_MINEIRO, 7, true, "cqt_2 mineiro novo") // cqt2: a disciplina e as posições previstas do Mineiro
-}
 
 /// The North state league at career creation: the year and the database competition, disciplinary rule 7 and, with no
 /// saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table with
@@ -160,10 +151,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_goiano(this: usiz
     cqt2_comparar("cqt2_construir_goiano", this, ano, registro, &CQT2_GOIANO, || o(this, ano, registro))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_mineiro(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2050);
-    cqt2_comparar("cqt2_construir_mineiro", this, ano, registro, &CQT2_MINEIRO, || o(this, ano, registro))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(2051);
@@ -320,26 +307,7 @@ pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) 
     cqp8_fase_seguinte(this, 0x98af14, 0x1f8, 0x4360c0);
 }
 
-/// The Northeast turnover: archives the season in the statistics, clears the previous table and stages, moves to the
-/// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
-/// then the predicted positions and the renewal of the state referees
-/// Original: `BraRegNortheast::start_new_season` (0x436e90, bra_reg_northeast.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
-/// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
-pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
-    cqp8_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
-}
 
-/// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
-/// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
-/// Original: `BraRegNortheast::advance_stage` (0x437040, bra_reg_northeast.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
-/// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
-pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
-    cqp8_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_goiano(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1932);
@@ -361,15 +329,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_norte(this
     cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_norte", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1936);
-    cqp8_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
-}
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(1937);
-    cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
-}
 
 // ---------- 277a leva: a tabela dos estaduais: Goiano, Mineiro e Norte (bra_reg_goias.cpp, bra_reg_minas_gerais.cpp, bra_reg_north.cpp) ----------
 
@@ -431,15 +391,6 @@ pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32
     cql9_tabela(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
 
-/// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
-/// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
-/// Original: `BraRegMinasGerais::create_table` (0x434810, bra_reg_minas_gerais.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
-/// Fonte 0x98aed0, linha 0x169.
-pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
-    cql9_tabela(this, 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
-}
 
 /// the North league has 10 clubs: those with it as their reserve division in the database (the field that holds the
 /// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
@@ -482,10 +433,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_goiano(this: usiz
     cql9_comparar("cql9_tabela_do_goiano", this, 0xe, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_mineiro(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1832);
-    cql9_comparar("cql9_tabela_do_mineiro", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, || o(this))
-}
 
 pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1833);
@@ -609,31 +556,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usiz
     r
 }
 
-/// J1: double round robin (the two stages of the year, created by add_result 0x663940 [inference]); win 3, draw 1;
-/// tie-break by goal difference, goals scored and away goals; no top places in the overall table (rule word 8, no
-/// champion band: the champion comes from the final between the stage winners [inference]); 2 go down to J2; no league
-/// above; 5 bench substitutes and 3 substitutions; fixed squad numbers; the word +0xab = 0x82 copied to each match.
-/// Then the schedule
-/// Original: `JapJ1::set_up_rules` (0x663620, jap_j1.cpp, thiscall).
-///
-/// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
-    cqj7_regras_j1(this);
-    crate::comparacao::ramo("cqj_7 regras da j1");
-    cqj7_calendario(this);
-    1
-}
 
-/// Comparador: como o do Goiano.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
-    let reg = cqj7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(1722)(this), || {
-        cqj7_regras_j1(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_da_j1({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}
 
 /// J2: four round robins; win 3, draw 1; tie-break by goal difference, goals scored and away goals; 2 go up to J1 (the
 /// rule word stays the base one, 3: champion and promotion), no relegation, no league below; 5 bench substitutes, 3
@@ -659,3 +582,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -
     r
 }
 
+/// Goias: after the round robin, the top 8 go to the quarter-finals: 1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th (the
+/// seeds are the positions [inference: two legs])
+/// Original: `BraRegGoias::create_knockout_stage` (0x433930, bra_reg_goias.cpp, thiscall, ret 0).
+///
+/// [pt] { 0x433930 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
+/// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae90, linhas 0x214 (sem lista) e 0x22c (sem fase).
+pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_goiano(this: usize) {
+    cqn9_mata_mata(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae90, 0x214, 0x22c, "cqn_9 goiano"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Goiano
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_goiano(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(1851);
+    cqn9_comparar("cqn9_mata_mata_do_goiano", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
+}
