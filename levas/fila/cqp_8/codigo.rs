@@ -111,66 +111,66 @@ unsafe fn cqp8_comparar_fase_seguinte(nome: &str, this: usize, original: impl Fn
 
 /// { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
 /// 0x433540; caixas nas linhas 0x1c3, 0x1ca, 0x1d0 e 0x1d7).
-unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_goias_start_new_season(this: usize) -> u32 {
     cqp8_virada(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: o ano seguinte do Goiano
 }
 
 /// { 0x4338a0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::advance_stage()`, a fase seguinte do Goiano: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x433930); a caixa da linha 0x1f1.
-unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize) {
+unsafe extern "thiscall" fn bra_reg_goias_advance_stage(this: usize) {
     cqp8_fase_seguinte(this, 0x98ae90, 0x1f1, 0x433930);
 }
 
 /// { 0x435e80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::start_new_season()`, a virada da temporada do Norte (a tabela:
 /// 0x435d80; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_goias_start_new_season_435e80(this: usize) -> u32 {
     cqp8_virada(this, 0x435d80, 0x98af14, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_8 virada do norte") // cqp8: o ano seguinte do Norte
 }
 
 /// { 0x436030 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::advance_stage()`, a fase seguinte do Norte: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4360c0); a caixa da linha 0x1f8.
-unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) {
+unsafe extern "thiscall" fn bra_reg_goias_advance_stage_436030(this: usize) {
     cqp8_fase_seguinte(this, 0x98af14, 0x1f8, 0x4360c0);
 }
 
 /// { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
 /// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
-unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_northeast_start_new_season(this: usize) -> u32 {
     cqp8_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
 /// { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
-unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
+unsafe extern "thiscall" fn bra_reg_northeast_advance_stage(this: usize) {
     cqp8_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_virada_do_goiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqp8_comparar_virada("cqp8_virada_do_goiano", this, || o(this))
+    cqp8_comparar_virada("bra_reg_goias_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_goiano(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_goiano", this, || o(this))
+    cqp8_comparar_fase_seguinte("bra_reg_goias_advance_stage", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_virada_do_norte(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_start_new_season_435e80(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqp8_comparar_virada("cqp8_virada_do_norte", this, || o(this))
+    cqp8_comparar_virada("bra_reg_goias_start_new_season_435e80", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_norte(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_advance_stage_436030(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
-    cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_norte", this, || o(this))
+    cqp8_comparar_fase_seguinte("bra_reg_goias_advance_stage_436030", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_northeast_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I4%%);
-    cqp8_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
+    cqp8_comparar_virada("bra_reg_northeast_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_northeast_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I5%%);
-    cqp8_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
+    cqp8_comparar_fase_seguinte("bra_reg_northeast_advance_stage", this, || o(this))
 }

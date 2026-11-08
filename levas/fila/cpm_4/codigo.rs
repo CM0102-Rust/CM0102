@@ -99,7 +99,7 @@ unsafe fn cpm4_jogo(this: usize, id: u32, regra: u32, conta: u32) -> Cpm4Jogo {
 /// da pessoa no órgão da `regra` (plano em `cpm4_jogo`): por jogos, grava o contador novo (+1); cumprida, vai para o
 /// histórico (0x58e340 sobre [this+0x18] com o começo e o último deslocamento do registro de 29 bytes) e é solta
 /// (0x556d00). Sem SEH, sem sorteio, sem caixa.
-unsafe extern "thiscall" fn contar_jogo_da_suspensao(this: usize, id: u32, regra: u32, conta: u32) {
+unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32, regra: u32, conta: u32) {
     let j = cpm4_jogo(this, id, regra, conta);
     if let Some(n) = j.contador {
         *((j.suspensao + 1) as *mut u8) = n;
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn contar_jogo_da_suspensao(this: usize, id: u32, regra
 /// (0x7e8590); na quarta, o item da pessoa sai do índice das nações (o último vem para o lugar, conta +0x12 − 1, qsort
 /// 0x945333 com 0x55e5f0; sem achar, caixa "Error" e segue). Por fim a suspensão fica livre (+0 = 0xff, +2 = −1).
 /// Devolve a suspensão.
-unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, indice: u32) -> usize {
+unsafe extern "thiscall" fn release_ban(this: usize, id: u32, indice: u32) -> usize {
     let s = cpm4_d(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
     let esquecer: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7e8590usize);
     for k in 0..4usize {
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn soltar_suspensao(this: usize, id: u32, indice: u32) 
 /// { 0x55e1d0 } (thiscall, ret 4, discipline.cpp): `Discipline::clear_ban_history(pessoa)`: o histórico de suspensões
 /// da pessoa (registro de 29 bytes do id em [this+0x14]) fica sem o último (0x58f110 sobre [this+0x18]: +0x18 = −1).
 /// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
-unsafe extern "thiscall" fn apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn clear_ban_history(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 || cpm4_d(pessoa + 0x61) == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, pessoa); // caixa fatal: só a original
     }
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn apagar_historico_de_suspensoes(this: usize, pessoa: 
 
 /// Comparador: a 0x58e340 grava o histórico no arquivo (não pode rodar duas vezes): o plano antes, a original roda;
 /// confere o contador, ou a suspensão solta (livre e a entrada do órgão sem índice), ou nada mudado.
-unsafe extern "thiscall" fn comparar_contar_jogo_da_suspensao(this: usize, id: u32, regra: u32, conta: u32) {
+unsafe extern "thiscall" fn comparar_update_ban_progress(this: usize, id: u32, regra: u32, conta: u32) {
     let j = cpm4_jogo(this, id, regra, conta);
     let antes = if j.suspensao != 0 { *((j.suspensao + 1) as *const u8) } else { 0 };
     orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(%%I0%%)(this, id, regra, conta);
@@ -180,14 +180,14 @@ unsafe extern "thiscall" fn comparar_contar_jogo_da_suspensao(this: usize, id: u
         contador == j.contador.unwrap_or(antes)
     };
     PLACAR.registrar(ok, || {
-        format!("contar_jogo_da_suspensao({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
+        format!("update_ban_progress({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
             id, regra as u8, conta, contador, j.contador, antes, j.cumprida, jogos, dias, cpm4_w(j.entrada + 6))
     });
 }
 
 /// Comparador: lado a lado pela suspensão, o índice das nações (conta e itens) e as entradas da pessoa nos órgãos das
 /// regras (achadas antes, sem criar). Quarta regra sem o item no índice: só a original (caixa).
-unsafe extern "thiscall" fn comparar_soltar_suspensao(this: usize, id: u32, indice: u32) -> usize {
+unsafe extern "thiscall" fn comparar_release_ban(this: usize, id: u32, indice: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(%%I1%%);
     let s = cpm4_d(this + 4).wrapping_add((indice as u16 as i16 as i32 as usize).wrapping_mul(20));
     if *((s + 0xf) as *const u8) != 0xff && cpm4_no_indice(this, id) == 0 {
@@ -207,19 +207,19 @@ unsafe extern "thiscall" fn comparar_soltar_suspensao(this: usize, id: u32, indi
             }
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id, indice), || soltar_suspensao(this, id, indice));
-    PLACAR.registrar(igual && r == m, || format!("soltar_suspensao({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id, indice), || release_ban(this, id, indice));
+    PLACAR.registrar(igual && r == m, || format!("release_ban({}, {}) {:x?} x {:x?}", id, indice as u16 as i16, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
-unsafe extern "thiscall" fn comparar_apagar_historico_de_suspensoes(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn comparar_clear_ban_history(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || cpm4_d(pessoa + 0x61) == 0 {
         return o(this, pessoa);
     }
     let r = cpm4_registro(this, cpm4_d(pessoa));
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || apagar_historico_de_suspensoes(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("apagar_historico_de_suspensoes({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || clear_ban_history(this, pessoa));
+    PLACAR.registrar(igual && a == b, || format!("clear_ban_history({}) {:x?} x {:x?}", cpm4_d(pessoa), mo, mr));
     a
 }

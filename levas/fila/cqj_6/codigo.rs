@@ -65,7 +65,7 @@ unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usize) -> Opti
 /// { 0x5bc2b0 } (thiscall, ret 0, fra_first.cpp): `FraFirst::create_table()`: 18 clubes na temporada 2001 (+0x40 =
 /// 0x7d1) e 20 depois ([0x9cf5cc]), +0xa7 = −1; cheia, o fundo pela cota de 200.000 e a TV de 6.000.000 a cada clube;
 /// 1 (0 sem encher). Fonte 0x9ccb5c, linha 0x1d3.
-unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
     core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
 /// fundo (+0x28 = 0, +0xe1 = 2: nada a pagar no fim) e a TV pela divisão de onde o clube veio (+0x5b): 2.000.000 aos
 /// que caíram da primeira ([0x9cf5cc]), 1.500.000 aos que ficaram ([0x9cf5d0]) e 1.500.000 aos que subiram do
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
-unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
     if cqj6_encher(this, 0x9ccc0c, 0x171, 0x9cf5d0) != Some(true) {
         return 0;
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
 
 /// { 0x5c05d0 } (thiscall, ret 0, fra_third.cpp): `FraThird::create_table()`: 20 clubes ([0x9cf5d4]); cheia, o fundo
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
-unsafe extern "thiscall" fn tabela_da_franca_3(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
     if cqj6_encher(this, 0x9ccc80, 0x15d, 0x9cf5d4) != Some(true) {
         return 0;
@@ -147,18 +147,18 @@ unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<
     r
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_franca_1(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_first_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
-    cqj6_comparar("tabela_da_franca_1", this, n, 0x9cf5cc, Some(0x30d40), || o(this))
+    cqj6_comparar("fra_first_create_table", this, n, 0x9cf5cc, Some(0x30d40), || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_franca_2(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_second_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj6_comparar("tabela_da_franca_2", this, 0x14, 0x9cf5d0, None, || o(this))
+    cqj6_comparar("fra_second_create_table", this, 0x14, 0x9cf5d0, None, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_franca_3(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj6_comparar("tabela_da_franca_3", this, 0x14, 0x9cf5d4, Some(0x4e20), || o(this))
+    cqj6_comparar("fra_third_create_table", this, 0x14, 0x9cf5d4, Some(0x4e20), || o(this))
 }

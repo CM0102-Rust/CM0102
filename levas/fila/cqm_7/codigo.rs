@@ -56,19 +56,19 @@ unsafe fn cqm7_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 
 /// { 0x436d90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_table()`: o Nordeste tem 16 clubes (divisão reserva +0x60 = [0x9cf9a4]).
 /// Fonte 0x98af54, linha 0x159.
-unsafe extern "thiscall" fn cqm7_tabela_do_nordeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_northeast_create_table(this: usize) -> u32 {
     cqm7_tabela(this, 0x10, 0x98af54, 0x159, 0x9cf9a4, 0, "cqm_7 nordeste cheio")
 }
 
 /// { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
 /// Fonte 0x98af98, linha 0x169.
-unsafe extern "thiscall" fn cqm7_tabela_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) -> u32 {
     cqm7_tabela(this, 0xc, 0x98af98, 0x169, 0x9cf9d0, 0, "cqm_7 paranaense cheio")
 }
 
 /// { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
 /// Fonte 0x98afd8, linha 0x167.
-unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) -> u32 {
     cqm7_tabela(this, 0xa, 0x98afd8, 0x167, 0x9cf9bc, 0, "cqm_7 pernambucano cheio")
 }
 
@@ -98,17 +98,17 @@ unsafe fn cqm7_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqm7_tabela_do_nordeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqm7_comparar("cqm7_tabela_do_nordeste", this, 0x10, 0x9cf9a4, || o(this))
+    cqm7_comparar("bra_reg_northeast_create_table", this, 0x10, 0x9cf9a4, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqm7_tabela_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_parana_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqm7_comparar("cqm7_tabela_do_paranaense", this, 0xc, 0x9cf9d0, || o(this))
+    cqm7_comparar("bra_reg_parana_create_table", this, 0xc, 0x9cf9d0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqm7_tabela_do_pernambucano(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_pern_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqm7_comparar("cqm7_tabela_do_pernambucano", this, 0xa, 0x9cf9bc, || o(this))
+    cqm7_comparar("bra_reg_pern_create_table", this, 0xa, 0x9cf9bc, || o(this))
 }

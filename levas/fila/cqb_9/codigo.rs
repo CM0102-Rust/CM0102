@@ -36,7 +36,7 @@ unsafe fn cqb9_itens(this: usize, time: usize) -> (usize, usize) {
 /// nação do time no índice das nações (cqb9_itens) vão para uma lista (0x68d0d0 com o item e 4: a cópia do id, porque
 /// a contagem pode soltar a suspensão e reordenar o índice) e, para cada uma, um jogo cumprido na regra 0
 /// (0x556e90 com 0 e 1). No fim a lista é destruída.
-unsafe extern "thiscall" fn cumprir_suspensoes_internacionais(this: usize, time: usize) {
+unsafe extern "thiscall" fn serve_international_bans(this: usize, time: usize) {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn cumprir_suspensoes_internacionais(this: usize, time:
 /// Comparador: a contagem (0x556e90) grava o histórico no arquivo quando a suspensão termina e não pode rodar duas
 /// vezes: o plano antes (as pessoas da nação e, de cada uma, o que a 0x556e90 fará, cpm4_jogo), a original roda;
 /// confere, pessoa a pessoa, o contador novo ou a suspensão solta (livre: +0 = 0xff, +2 = −1).
-unsafe extern "thiscall" fn comparar_cumprir_suspensoes_internacionais(this: usize, time: usize) {
+unsafe extern "thiscall" fn comparar_serve_international_bans(this: usize, time: usize) {
     let (ini, fim) = cqb9_itens(this, time);
     let mut plano = Vec::new();
     let mut e = ini;
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn comparar_cumprir_suspensoes_internacionais(this: usi
             erro = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.contador, antes, j.cumprida, jogos, dias));
         }
     }
-    PLACAR.registrar(erro.is_none(), || format!("cumprir_suspensoes_internacionais(time {:#x}, {} pessoas): {}", time, plano.len(), erro.clone().unwrap_or_default()));
+    PLACAR.registrar(erro.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", time, plano.len(), erro.clone().unwrap_or_default()));
 }
 
 /// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
@@ -151,7 +151,7 @@ unsafe fn cqb9_recurso(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos
 /// jogos (+0 ≠ 0xff): `novo` ≠ 0xff tira `novo` jogos (abaixo de 0: zera e solta), senão `reduz` tira `menos_jogos` e
 /// solta se ficar até o contador (+1), senão solta; por dias: `dias_fixo` ≠ −1 tira `menos_dias` (até 0: zera e solta),
 /// senão `reduz` tira e solta até 0, senão solta. Soltar: 0x556d00 com o índice.
-unsafe extern "thiscall" fn recurso_da_suspensao(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32, _x: u32) {
+unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32, _x: u32) {
     let tirar_pendentes: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x7e91d0usize);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
     let r = cqb9_recurso(this, id, regra, reduz, menos_jogos, menos_dias, novo, dias_fixo);
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn recurso_da_suspensao(this: usize, id: u32, regra: u3
 /// Comparador: o órgão tira as suspensões pendentes (0x7e91d0, lista que solta nós) e a 0x556d00 pode gravar o
 /// histórico: só a original, com o plano antes; confere a suspensão solta (+0 = 0xff, +2 = −1) ou os jogos e os dias
 /// novos.
-unsafe extern "thiscall" fn comparar_recurso_da_suspensao(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32, x: u32) {
+unsafe extern "thiscall" fn comparar_apply_appeal_result(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32, x: u32) {
     let r = cqb9_recurso(this, id, regra, reduz, menos_jogos, menos_dias, novo, dias_fixo);
     orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32)>(%%I1%%)(this, id, regra, reduz, menos_jogos, menos_dias, novo, dias_fixo, x);
     if r.suspensao == 0 {
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn comparar_recurso_da_suspensao(this: usize, id: u32, 
     let s = r.suspensao;
     let (jogos, dias) = (*(s as *const u8), cqb9_w(s + 2));
     let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.jogos && dias == r.dias };
-    PLACAR.registrar(ok, || format!("recurso_da_suspensao({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, regra as i8, jogos, dias, r.jogos, r.dias, r.solta));
+    PLACAR.registrar(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, regra as i8, jogos, dias, r.jogos, r.dias, r.solta));
 }
 
 /// A vaga `vaga` (byte com sinal) da suspensão da pessoa no registro de 29 bytes ([this+0x14]: 5 bytes por vaga): o
@@ -196,7 +196,7 @@ unsafe fn cqb9_vaga(this: usize, pessoa: usize, vaga: u32) -> u8 {
 /// tela da pessoa (0x87618a, com 0xc8). Pessoa de id a partir de [0xae2364]: 0. A regra da vaga (cqb9_vaga) 0xff: 0;
 /// senão o texto do órgão dela ([[this] + 4 × regra], 0x7e88d0 com a pessoa, a saída e o tamanho). Pessoa nula: a
 /// original (lê o id de 0).
-unsafe extern "thiscall" fn texto_da_vaga_da_suspensao(this: usize, pessoa: usize, vaga: u32, saida: usize, tamanho: u32) -> u32 {
+unsafe extern "thiscall" fn get_slot_text(this: usize, pessoa: usize, vaga: u32, saida: usize, tamanho: u32) -> u32 {
     if pessoa == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(%%I2%%)(this, pessoa, vaga, saida, tamanho);
     }
@@ -213,14 +213,14 @@ unsafe extern "thiscall" fn texto_da_vaga_da_suspensao(this: usize, pessoa: usiz
 
 /// Comparador: sem regra na vaga (ou pessoa fora da tabela), a devolução (0, sem gravar nada); com regra, o texto do órgão
 /// (0x7e88d0) pode contar a suspensão por dias (0x556e90, que grava o histórico no arquivo): só a original.
-unsafe extern "thiscall" fn comparar_texto_da_vaga_da_suspensao(this: usize, pessoa: usize, vaga: u32, saida: usize, tamanho: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_slot_text(this: usize, pessoa: usize, vaga: u32, saida: usize, tamanho: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(%%I2%%);
     if pessoa == 0 || (cqb9_d(pessoa) as i32) < cqb9_d(0xae2364) as i32 && cqb9_vaga(this, pessoa, vaga) != 0xff {
         // ponytail: o texto do órgão não roda duas vezes; a cópia só repassa a ele
         return o(this, pessoa, vaga, saida, tamanho);
     }
     let r = o(this, pessoa, vaga, saida, tamanho);
-    let n = texto_da_vaga_da_suspensao(this, pessoa, vaga, saida, tamanho);
-    PLACAR.registrar(r == n, || format!("texto_da_vaga_da_suspensao(pessoa {:#x}, vaga {}) original={} rust={}", pessoa, vaga as i8, r, n));
+    let n = get_slot_text(this, pessoa, vaga, saida, tamanho);
+    PLACAR.registrar(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", pessoa, vaga as i8, r, n));
     r
 }

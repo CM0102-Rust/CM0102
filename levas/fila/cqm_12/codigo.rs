@@ -70,7 +70,7 @@ unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
-unsafe extern "thiscall" fn cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i32 {
     cqm12_espanha(this).0
 }
 
@@ -105,9 +105,9 @@ unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     a
 }
 
-unsafe extern "thiscall" fn comparar_cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_spa_super_select_teams(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqm12_comparar("cqm12_supercopa_da_espanha_clubes", this, || o(this), || cqm12_espanha(this))
+    cqm12_comparar("spa_super_select_teams", this, || o(this), || cqm12_espanha(this))
 }
 
 /// { 0x666160 } (thiscall, ret 0, jap_super.cpp): `JapSuper::select_teams()`: a lista (sem memória, a caixa da linha
@@ -148,13 +148,13 @@ unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
-unsafe extern "thiscall" fn cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn spa_super_select_teams_666160(this: usize) -> i32 {
     cqm12_japao(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_spa_super_select_teams_666160(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqm12_comparar("cqm12_supercopa_do_japao_clubes", this, || o(this), || cqm12_japao(this))
+    cqm12_comparar("spa_super_select_teams_666160", this, || o(this), || cqm12_japao(this))
 }
 
 /// { 0x90a400 } (thiscall, ret 0x10, usa_mls_all_stars.cpp; a virtual +0x3c do Jogo das Estrelas): `UsaMlsAllStars::
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize
 /// sorteio em 15 do mês 5 (junho) levado ao dia da semana 5, o jogo em 2 do mês 7 (agosto) levado ao dia 6, turno 1,
 /// mando 0 (0x521e60 e 0x521eb0, cdecl, com o ano +0x40); nome 0, +0xd = 0x20, categoria 8, 2 times, 1 jogo, 2 novos,
 /// 1 jogo por confronto, sem prêmio.
-unsafe extern "thiscall" fn cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -217,24 +217,24 @@ unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
 /// fase −1, só a original (nenhuma grava nada).
-unsafe extern "thiscall" fn comparar_cqm12_jogo_das_estrelas_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_usa_mls_all_stars_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
     if fase as u8 != 0xff {
         let a = o(this, fase, rodadas, extra, saida);
-        PLACAR.registrar(a == 0, || format!("cqm12_jogo_das_estrelas_tabela(fase {}) devolveu {:#x}", fase as u8 as i8, a));
+        PLACAR.registrar(a == 0, || format!("usa_mls_all_stars_create_round_table(fase {}) devolveu {:#x}", fase as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rodadas, *extra);
     let mut s2 = if saida.is_null() { 0 } else { *saida };
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, fase, rodadas, extra, saida),
-        || cqm12_jogo_das_estrelas_tabela(this, fase, &mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
+        || usa_mls_all_stars_create_round_table(this, fase, &mut r2, &mut e2, if saida.is_null() { core::ptr::null_mut() } else { &mut s2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (saida.is_null() || *saida == s2);
     let tabela = if a != 0 && b != 0 { cqm12_gravados(a) == cqm12_gravados(b) } else { a == 0 && b == 0 };
     if b != 0 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("cqm12_jogo_das_estrelas_tabela: saídas {} tabela {}", saidas, tabela));
+    PLACAR.registrar(igual && saidas && tabela, || format!("usa_mls_all_stars_create_round_table: saídas {} tabela {}", saidas, tabela));
     a
 }

@@ -18,7 +18,7 @@ static mut CPW11_ENSAIO: bool = false;
 /// caixas e 0. Partida de outra fase (+0x42 ≠ +0x44, que não é 0xfe): 0. Senão soma a partida na tabela (0x685f60 na
 /// tabela +0xb1 com as +0x3e linhas, marcando) e, fora das fases 0xfe, com a competição ([0xadadfc] pelo id de +4) e a
 /// estatística dela (+8) e com o jogo: 0x49f570 com os pontos dos dois; devolve 1. Partida nula: a caixa e −1.
-unsafe extern "thiscall" fn somar_resultado_na_liga(liga: usize, p: usize, jogo: usize) -> i32 {
+unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize) -> i32 {
     if p == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%)(liga, p, jogo);
     }
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn somar_resultado_na_liga(liga: usize, p: usize, jogo:
 /// original. Nos outros casos, o ensaio: a cópia sem a estatística (0x49f570 acha ou cria registros) e a original a
 /// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
 /// da partida e a devolução.
-unsafe extern "thiscall" fn comparar_somar_resultado_na_liga(liga: usize, p: usize, jogo: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_league_add_result(liga: usize, p: usize, jogo: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     if p == 0 || (*((liga + 0x44) as *const u8) == 0xff && *((p + 0x42) as *const u8) != 0xff) {
         return o(liga, p, jogo); // ponytail: a caixa ou a fase, só a original
@@ -74,13 +74,13 @@ unsafe extern "thiscall" fn comparar_somar_resultado_na_liga(liga: usize, p: usi
     regioes.extend(cpe2_regioes(p, cpw11_d(liga + 0xb1), n, core::ptr::null_mut(), core::ptr::null_mut()));
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW11_ENSAIO = true;
-    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| somar_resultado_na_liga(liga, p, jogo)));
+    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| league_add_result(liga, p, jogo)));
     CPW11_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let ro = o(liga, p, jogo);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(ro == rr && mo == mr, || format!("somar_resultado_na_liga({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", liga, p, ro, mo, rr, mr));
+    PLACAR.registrar(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", liga, p, ro, mo, rr, mr));
     ro
 }
 
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn comparar_somar_resultado_na_liga(liga: usize, p: usi
 /// original). Aloca as linhas (0x944e46, 0x3b cada; sem memória: a caixa 0x1061 e 0) e copia; com os confrontos na
 /// primeira linha (+5), cada linha ganha um vetor novo de (linhas − 1) × 14 bytes com a cópia dos dela; com a forma
 /// (+9), um de +0xa7 bytes. Devolve a cópia. As alocações dos vetores não são conferidas (como na original).
-unsafe extern "thiscall" fn copiar_tabela_da_liga(liga: usize) -> usize {
+unsafe extern "thiscall" fn copy_table(liga: usize) -> usize {
     let tab = cpw11_d(liga + 0xb1);
     let n = cpw11_w(liga + 0x3e);
     if tab == 0 || n == 0 {
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn copiar_tabela_da_liga(liga: usize) -> usize {
 /// Comparador: aloca (não roda duas vezes): só a original, com o plano completo conferido depois: o +0xa7 esperado
 /// (calculado antes) e a cópia devolvida igual à tabela, linha a linha (fora os ponteiros dos vetores novos), com os
 /// vetores de confrontos e de forma iguais aos da tabela.
-unsafe extern "thiscall" fn comparar_copiar_tabela_da_liga(liga: usize) -> usize {
+unsafe extern "thiscall" fn comparar_copy_table(liga: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     let tab = cpw11_d(liga + 0xb1);
     let n = cpw11_w(liga + 0x3e);
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_copiar_tabela_da_liga(liga: usize) -> usize
             }
         }
     }
-    PLACAR.registrar(c != 0 && erros.is_empty(), || format!("copiar_tabela_da_liga({:x}) n {} copia {:x}: {}", liga, n, c, erros.join("; ")));
+    PLACAR.registrar(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copia {:x}: {}", liga, n, c, erros.join("; ")));
     c
 }
 
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn comparar_copiar_tabela_da_liga(liga: usize) -> usize
 /// (linha 0x189e). Copia os clubes das +0x3e linhas da tabela (+0xb1, 0x3b cada) para um vetor (0x944e46; sem memória:
 /// a caixa 0x18a6, sem soltar), ordena pela força (0x4c08f0) e grava a posição i + 1 de cada clube não nulo na
 /// estatística (0x4a2540); solta o vetor (0x9452ca).
-unsafe extern "thiscall" fn posicoes_previstas_da_liga(liga: usize) {
+unsafe extern "thiscall" fn league_set_predicted_positions(liga: usize) {
     if cpw11_d(liga + 8) == 0 {
         return aviso_em(0x9f15f4, 0x189e);
     }
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn posicoes_previstas_da_liga(liga: usize) {
 /// Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia
 /// do vetor ordenada pelo núcleo da 0x4c08f0 (chaves num Vec); depois, o registro de cada clube (a última vez que ele
 /// aparece) tem de ter em +0x72 a posição planejada.
-unsafe extern "thiscall" fn comparar_posicoes_previstas_da_liga(liga: usize) {
+unsafe extern "thiscall" fn comparar_league_set_predicted_positions(liga: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let n = cpw11_w(liga + 0x3e) as i32;
     if cpw11_d(liga + 8) == 0 || n <= 0 {
@@ -240,5 +240,5 @@ unsafe extern "thiscall" fn comparar_posicoes_previstas_da_liga(liga: usize) {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("posicoes_previstas_da_liga({:x}) {} clubes: {}", liga, n, erros.join("; ")));
+    PLACAR.registrar(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", liga, n, erros.join("; ")));
 }

@@ -12,7 +12,7 @@ unsafe fn cpx5_clubes() -> u32 {
 /// grava no item `finance.dat` (0x9326e0 gravando) as finanças de todos os clubes, 0x167 bytes × [0xae235c] a partir
 /// de [this]. Sem contêiner, nada; erro ao abrir ou ao gravar: a caixa "Error" (finance.CPP 0x115e, 0x1166), sem
 /// fechar o item (como a original).
-unsafe extern "thiscall" fn gravar_financas(this: usize, save: usize) {
+unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn gravar_financas(this: usize, save: usize) {
 }
 
 /// Comparador da 0x59b3b0: só a original.
-unsafe extern "thiscall" fn comparar_gravar_financas(this: usize, save: usize) {
+unsafe extern "thiscall" fn comparar_save_finance_dat(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .qst gravado no modo rust com e sem a leva, item a item)
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, save)
@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn comparar_gravar_financas(this: usize, save: usize) {
 /// (0x9326e0 lendo) as finanças de todos os clubes, 0x167 bytes × [0xae235c] em [this], e devolve 1. Sem contêiner,
 /// 0 sem caixa; erro ao abrir ou leitura curta: a caixa "Error" (finance.CPP 0x1137, 0x113f), 0 e o item fica aberto
 /// (como a original). Com 0, o construtor (0x59a55c) refaz as finanças de cada clube do zero (0x5961d0).
-unsafe extern "thiscall" fn carregar_financas(this: usize, save: usize) -> u32 {
+unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) -> u32 {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn carregar_financas(this: usize, save: usize) -> u32 {
 }
 
 /// Comparador da 0x59b2a0: só a original.
-unsafe extern "thiscall" fn comparar_carregar_financas(this: usize, save: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_load_from_save(this: usize, save: usize) -> u32 {
     // ponytail: lê do contêiner (a posição do item anda; não pode rodar duas vezes); a cópia é provada pela carga
     // do save de férias na prova do save (levas/N/CARGA)
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, save)
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn comparar_carregar_financas(this: usize, save: usize)
 /// o u16 em +0 do gerente de elencos, estendido a 4 bytes (a original zera eax antes do `mov ax`), e devolve 1. Erro
 /// ao abrir ou ao gravar: a caixa "Error" (squad_manager.cpp 0x68, 0x6f) e 0, sem fechar o item. Não confere o
 /// contêiner nulo (o 0x9326e0 recebe como vier).
-unsafe extern "thiscall" fn gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
+unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn gravar_gerente_de_elencos(this: usize, save: usize) 
 }
 
 /// Comparador da 0x859cc0: só a original.
-unsafe extern "thiscall" fn comparar_gravar_gerente_de_elencos(this: usize, save: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_squad_manager_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, save)
 }

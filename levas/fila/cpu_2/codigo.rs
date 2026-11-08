@@ -29,7 +29,7 @@ unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
 /// datas vão para `início` e `fim` quando não nulos. Pelo clube na temporada 0x547770, pela forma física 0x62a920,
 /// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. Chamada a cada
 /// jogador: sem contador.
-unsafe extern "C" fn clube_na_temporada(clube: usize, inicio: usize, fim: usize) -> u32 {
+unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
     let mut linha = 0xb63e38usize;
     let mut c: i16 = 0x28;
     let nacao = cpu2_d(clube + 0x53);
@@ -74,10 +74,10 @@ unsafe extern "C" fn clube_na_temporada(clube: usize, inicio: usize, fim: usize)
     1 // cpu2: entre o inicio e o fim do ano
 }
 
-unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio: usize, fim: usize) -> u32 {
+unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%)(clube, inicio, fim);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
-    let n = clube_na_temporada(
+    let n = key_nation_club_in_season(
         clube,
         if inicio != 0 { i.as_mut_ptr() as usize } else { 0 },
         if fim != 0 { f.as_mut_ptr() as usize } else { 0 },
@@ -86,14 +86,14 @@ unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio: usize, fi
     let (oi, of) = (ler(inicio), ler(fim));
     let ok = r == n && (inicio == 0 || oi == i) && (fim == 0 || of == f);
     PLACAR.registrar(ok, || {
-        format!("clube_na_temporada(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
+        format!("key_nation_club_in_season(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
     });
     r
 }
 
 /// { 0x6695c0 } (cdecl, key_nation.cpp): `key_nation_get_main_continent()`: o continente (+0x71) da nação do humano
 /// ([0xae2d08]); sem ela ou sem continente, o da primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
-unsafe extern "C" fn continente_principal() -> usize {
+unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     let h = cpu2_d(0xae2d08);
     if h != 0 && cpu2_d(h + 0x71) != 0 {
         return cpu2_d(h + 0x71);
@@ -107,16 +107,16 @@ unsafe extern "C" fn continente_principal() -> usize {
     0
 }
 
-unsafe extern "C" fn comparar_continente_principal() -> usize {
+unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
     let r = orig::<unsafe extern "C" fn() -> usize>(%%I1%%)();
-    let n = continente_principal();
-    PLACAR.registrar(r == n, || format!("continente_principal() original={:x} rust={:x}", r, n));
+    let n = key_nation_get_main_continent();
+    PLACAR.registrar(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
     r
 }
 
 /// { 0x669600 } (cdecl, key_nation.cpp): `key_nation_get_main_nation()`: a nação do humano ([0xae2d08]); sem ela, a
 /// primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
-unsafe extern "C" fn nacao_principal() -> usize {
+unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     let h = cpu2_d(0xae2d08);
     if h != 0 {
         return h;
@@ -130,9 +130,9 @@ unsafe extern "C" fn nacao_principal() -> usize {
     0
 }
 
-unsafe extern "C" fn comparar_nacao_principal() -> usize {
+unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
     let r = orig::<unsafe extern "C" fn() -> usize>(%%I2%%)();
-    let n = nacao_principal();
-    PLACAR.registrar(r == n, || format!("nacao_principal() original={:x} rust={:x}", r, n));
+    let n = key_nation_get_main_nation();
+    PLACAR.registrar(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
     r
 }

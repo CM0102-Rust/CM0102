@@ -35,7 +35,7 @@ unsafe fn cqd9_aplicar(this: usize, p: usize, d: &[i8; 8]) {
 /// ou sem a ficha: a caixa "Error" (linha 0x621). Tirar (`devolver` = 0): guarda os cinco meios bytes do progresso da
 /// entrada do treino em 0xde1f3c..0xde1f40 (categoria 3, 2, 4, 0, 1) e aplica o progresso negado (0x8b2be0); devolver:
 /// aplica o guardado.
-unsafe extern "thiscall" fn tirar_ou_devolver_o_progresso(this: usize, p: usize, devolver: u32) {
+unsafe extern "thiscall" fn remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
     if p == 0 || cqd9_d(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x621);
         return;
@@ -66,22 +66,22 @@ unsafe extern "thiscall" fn tirar_ou_devolver_o_progresso(this: usize, p: usize,
 
 /// Comparador: lado a lado na ficha (+0xf..+0x41), na entrada do treino (6 bytes) e no guardado (0xde1f3c, 5 bytes);
 /// sem pessoa ou sem ficha (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_tirar_ou_devolver_o_progresso(this: usize, p: usize, devolver: u32) {
+unsafe extern "thiscall" fn comparar_remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if p == 0 || cqd9_d(p + 0x61) == 0 {
         return o(this, p, devolver);
     }
     let f = cqd9_d(p + 0x61);
     let reg = [(f + 0xf, 0x33), (cqd9_entrada(this, p), 6), (0xde1f3c, 5)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, devolver), || tirar_ou_devolver_o_progresso(this, p, devolver));
-    PLACAR.registrar(igual, || format!("tirar_ou_devolver_o_progresso(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, devolver), || remove_or_restore_training_progress(this, p, devolver));
+    PLACAR.registrar(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p, devolver, mo.0, mr.0));
 }
 
 /// { 0x8b37c0 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::get_training_attribute_change(pessoa,
 /// atributo)`, pela tela do treino (0x8b8184): o atributo (0x5431e0) menos o mesmo atributo sem o progresso do treino
 /// (aplica o progresso negado, lê e reaplica o progresso), no al. Pessoa nula ou sem a ficha: a caixa "Error" (linha
 /// 0x657) e 0.
-unsafe extern "thiscall" fn mudanca_do_atributo_pelo_treino(this: usize, p: usize, atributo: u32) -> u8 {
+unsafe extern "thiscall" fn get_training_attribute_change(this: usize, p: usize, atributo: u32) -> u8 {
     if p == 0 || cqd9_d(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x657);
         return 0;
@@ -104,15 +104,15 @@ unsafe extern "thiscall" fn mudanca_do_atributo_pelo_treino(this: usize, p: usiz
 }
 
 /// Comparador: lado a lado na ficha e na entrada do treino, com a devolução; sem pessoa ou sem ficha, só a original.
-unsafe extern "thiscall" fn comparar_mudanca_do_atributo_pelo_treino(this: usize, p: usize, atributo: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_get_training_attribute_change(this: usize, p: usize, atributo: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%);
     if p == 0 || cqd9_d(p + 0x61) == 0 {
         return o(this, p, atributo);
     }
     let f = cqd9_d(p + 0x61);
     let reg = [(f + 0xf, 0x33), (cqd9_entrada(this, p), 6)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, atributo), || mudanca_do_atributo_pelo_treino(this, p, atributo));
-    PLACAR.registrar(igual && r == n, || format!("mudanca_do_atributo_pelo_treino(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, p, atributo), || get_training_attribute_change(this, p, atributo));
+    PLACAR.registrar(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p, atributo as u8 as i8, r as i8, n as i8, mo.0, mr.0));
     r
 }
 
@@ -128,7 +128,7 @@ fn cqd9_mascara_valida(m: i32) -> bool {
 /// +0x3e, +0x39 e +0x32, por 4; meio e frente (8, 0x10, 0x20) +0x37, +0x32, +0x40 e +0x3f, por 5; 0x40 +0x33, +0x27,
 /// +0x40 e +0x36, por 5; 0x80 +0x30, por 2; 0x200 só a adaptabilidade (no al, os bytes de cima com a máscara); 0x800
 /// +0x3b, por 2 (divisões truncadas). Outra máscara: a caixa "Error" (linha 0x945) e 0.
-unsafe extern "thiscall" fn aptidao_para_a_posicao(this: usize, p: usize, mascara: u32) -> u32 {
+unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usize, mascara: u32) -> u32 {
     let _ = this;
     let m = mascara as u16 as i16 as i32;
     if !cqd9_mascara_valida(m) {
@@ -172,13 +172,13 @@ unsafe extern "thiscall" fn aptidao_para_a_posicao(this: usize, p: usize, mascar
 }
 
 /// Comparador: a devolução inteira (só lê); máscara fora (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_aptidao_para_a_posicao(this: usize, p: usize, mascara: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_position_aptitude(this: usize, p: usize, mascara: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     if !cqd9_mascara_valida(mascara as u16 as i16 as i32) {
         return o(this, p, mascara);
     }
     let r = o(this, p, mascara);
-    let n = aptidao_para_a_posicao(this, p, mascara);
-    PLACAR.registrar(r == n, || format!("aptidao_para_a_posicao(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mascara as u16, r, n));
+    let n = get_position_aptitude(this, p, mascara);
+    PLACAR.registrar(r == n, || format!("get_position_aptitude(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mascara as u16, r, n));
     r
 }

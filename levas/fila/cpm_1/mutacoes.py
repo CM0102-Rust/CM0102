@@ -1,6 +1,6 @@
 # Mutacoes (com o ramo de cada uma). O jogo de copa decidido na prorrogacao a favor do mandante dado ao visitante (o
 # comparando acusa pelo lado e pelo codigo; a carreira pelo time que segue na copa). O confronto empatado no agregado
-# dado ao primeiro lado, sem W.O., gols fora nem penaltis (idem, nos confrontos de ida e volta das copas europeias e
+# dado ao primeiro lado, sem W.O., gols fora nem penalties (idem, nos confrontos de ida e volta das copas europeias e
 # nacionais). A ordem dos cabecas de chave invertida (o comparando acusa pelo valor; a carreira pelo sorteio da rodada:
 # poucas chamadas da 0x51d2d0/0x51d9f0 ate 2002-06-01).
 MUTACOES = [

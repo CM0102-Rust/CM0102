@@ -69,7 +69,7 @@ pub(crate) unsafe fn cqm12_espanha(this: usize) -> (i32, i32) {
 ///
 /// [pt] regra: a Supercopa da Espanha é entre o campeão da Copa do Rei (o mandante da ida [inferência]) e o campeão da Liga;
 /// se o mesmo clube ganhou as duas, entra o vice da Copa do Rei; sem algum deles, a caixa de erro
-pub(crate) unsafe extern "thiscall" fn cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i32 {
     cqm12_espanha(this).0
 }
 
@@ -104,9 +104,9 @@ pub(crate) unsafe fn cqm12_comparar(nome: &str, this: usize, o: impl FnOnce() ->
     a
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_da_espanha_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM12_SUPERCOPA_DA_ESPANHA_CLUBES);
-    cqm12_comparar("cqm12_supercopa_da_espanha_clubes", this, || o(this), || cqm12_espanha(this))
+pub(crate) unsafe extern "thiscall" fn comparar_spa_super_select_teams(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_SUPER_SELECT_TEAMS);
+    cqm12_comparar("spa_super_select_teams", this, || o(this), || cqm12_espanha(this))
 }
 
 /// { 0x666160 } (thiscall, ret 0, jap_super.cpp): `JapSuper::select_teams()`: a lista (sem memória, a caixa da linha
@@ -155,13 +155,13 @@ pub(crate) unsafe fn cqm12_japao(this: usize) -> (i32, i32) {
 /// [pt] regra: a Supercopa do Japão é entre o campeão da J1 e o da Copa do Imperador; um campeão sem nação (+0x53 = 0, clube
 /// que não existe mais [inferência]) dá a vaga ao vice; se é o mesmo clube, entra o vice da Copa do Imperador e, se
 /// ainda coincidir, o vice da J1; sem algum deles, a caixa de erro
-pub(crate) unsafe extern "thiscall" fn cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn spa_super_select_teams_666160(this: usize) -> i32 {
     cqm12_japao(this).0
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm12_supercopa_do_japao_clubes(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM12_SUPERCOPA_DO_JAPAO_CLUBES);
-    cqm12_comparar("cqm12_supercopa_do_japao_clubes", this, || o(this), || cqm12_japao(this))
+pub(crate) unsafe extern "thiscall" fn comparar_spa_super_select_teams_666160(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SPA_SUPER_SELECT_TEAMS_666160);
+    cqm12_comparar("spa_super_select_teams_666160", this, || o(this), || cqm12_japao(this))
 }
 
 
@@ -181,12 +181,12 @@ pub(crate) unsafe fn cqm12_gravados(t: usize) -> Vec<u8> {
 ///
 /// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
-pub(crate) unsafe extern "thiscall" fn cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn spa_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql12_tabela(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql12_supercopa_da_espanha_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL12_SUPERCOPA_DA_ESPANHA_TABELA);
-    cql12_comparar("cql12_supercopa_da_espanha_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cql12_supercopa_da_espanha_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_spa_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SUPER_CREATE_ROUND_TABLE);
+    cql12_comparar("spa_super_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| spa_super_create_round_table(this, fase, r, e, s))
 }

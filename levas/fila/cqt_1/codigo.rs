@@ -127,31 +127,31 @@ const CQT1_GAUCHO: Cqt1Estadual = Cqt1Estadual {
 };
 
 /// { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
-unsafe extern "thiscall" fn cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
     cqt1_construir(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
 }
 
 /// { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
-unsafe extern "thiscall" fn cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
     cqt1_construir(this, ano, registro, &CQT1_CENTRO_OESTE, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
 }
 
 /// { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
-unsafe extern "thiscall" fn cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
     cqt1_construir(this, ano, registro, &CQT1_GAUCHO, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
 }
 
-unsafe extern "thiscall" fn comparar_cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqt1_comparar("cqt1_construir_baiano", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
+    cqt1_comparar("construct_bra_reg_bahia", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqt1_comparar("cqt1_construir_centro_oeste", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
+    cqt1_comparar("construct_bra_reg_central", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cqt1_comparar("cqt1_construir_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
+    cqt1_comparar("construct_bra_reg_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
 }

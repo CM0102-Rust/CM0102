@@ -11,7 +11,7 @@ include!("adjetivos_nacao.rs");
 /// texto: em cada cadeia a primeira chave igual ao id (+0) copia a fonte da forma (0..4, as outras pela 6ª coluna; 0
 /// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
 /// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
-unsafe extern "C" fn adjetivo_da_nacao(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
     core::ptr::write_volatile(texto as *mut u8, 0); // antes dos testes, como a original (texto nulo: a mesma falha)
     if nacao == 0 || texto == 0 || (tamanho as u16 as i16) < 50 {
         return 0;
@@ -42,7 +42,7 @@ unsafe extern "C" fn adjetivo_da_nacao(nacao: usize, texto: usize, tamanho: u32,
     1
 }
 
-unsafe extern "C" fn comparar_adjetivo_da_nacao(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     if texto == 0 {
         return o(nacao, texto, tamanho, genero);
@@ -50,8 +50,8 @@ unsafe extern "C" fn comparar_adjetivo_da_nacao(nacao: usize, texto: usize, tama
     // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
     let n = ((tamanho as u16 as i16).max(1) as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nacao, texto, tamanho, genero),
-        || adjetivo_da_nacao(nacao, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("adjetivo_da_nacao({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
+        || nation_get_nationality_adjective(nacao, texto, tamanho, genero));
+    PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
         nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
     r
 }

@@ -133,7 +133,7 @@ unsafe fn cqa12_colocado(this: usize, clube: usize, jogo: usize, partida: usize,
 /// { 0x86b0b0 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
 /// add_cup_runners_up_record(clube, jogo, partida)`, pela final das copas (Cup 0x519890, Liga dos Campeões 0x584ae0 e
 /// as copas de cada nação): `cqa12_colocado` com o tipo 1. Clube, jogo ou partida nulos: a caixa (linha 0x5f6).
-unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return aviso_em(0xa83b78, 0x5f6);
     }
@@ -141,9 +141,9 @@ unsafe extern "thiscall" fn vice_da_copa_nos_registros(this: usize, clube: usize
 }
 
 /// { 0x86b710 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
-/// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com disputa de terceiro: `cqa12_colocado` com o tipo
+/// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com contest de terceiro: `cqa12_colocado` com o tipo
 /// 2. Nulos: a caixa (linha 0x67b).
-unsafe extern "thiscall" fn terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return aviso_em(0xa83b78, 0x67b);
     }
@@ -168,16 +168,16 @@ unsafe fn cqa12_comparar_colocado(nome: &str, clube: usize, jogo: usize, partida
     PLACAR.registrar(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_vice_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn comparar_add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
-    cqa12_comparar_colocado("vice_da_copa_nos_registros", clube, jogo, partida, || o(this, clube, jogo, partida),
-        || vice_da_copa_nos_registros(this, clube, jogo, partida))
+    cqa12_comparar_colocado("add_cup_runners_up_record", clube, jogo, partida, || o(this, clube, jogo, partida),
+        || add_cup_runners_up_record(this, clube, jogo, partida))
 }
 
-unsafe extern "thiscall" fn comparar_terceiro_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn comparar_add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
-    cqa12_comparar_colocado("terceiro_da_copa_nos_registros", clube, jogo, partida, || o(this, clube, jogo, partida),
-        || terceiro_da_copa_nos_registros(this, clube, jogo, partida))
+    cqa12_comparar_colocado("add_cup_third_place_record", clube, jogo, partida, || o(this, clube, jogo, partida),
+        || add_cup_third_place_record(this, clube, jogo, partida))
 }
 
 /// A data em `src` copiada para `dst` (0x417c10; a cópia de retorno vai para uma data local).
@@ -203,13 +203,13 @@ unsafe fn cqa12_dias(a: usize, b: usize) -> i32 {
 /// +0x56 = 13/11/1975 da 0x549f70) e +1 em +0xb4. Na seleção, contratado = 1: +1 em +0xb5. Os históricos: do técnico
 /// (tipo 0x96: clube, contratado), do presidente do clube (+0xbf; tipo 0x97 com o técnico e as três chaves) e do clube
 /// (tipo 0x96 no +8, o técnico, as chaves e contratado). Técnico ou clube nulos: a caixa (linha 0x3b1).
-unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico: usize, clube: usize, contratado: u32) {
+unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usize, clube: usize, contratado: u32) {
     if clube == 0 || tecnico == 0 {
         return aviso_em(0xa83b78, 0x3b1);
     }
     let contratado = contratado as u8 as i8;
     let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
-    if e_selecao(clube) == 0 {
+    if is_national_team(clube) == 0 {
         let r = registro(this, tecnico, 1);
         if r != 0 {
             let hoje = 0xae2c90usize;
@@ -290,13 +290,13 @@ unsafe extern "thiscall" fn troca_de_tecnico_nos_registros(this: usize, tecnico:
 /// Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
 /// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
 /// 0x54cdb0). Nulos: só a original.
-unsafe extern "thiscall" fn comparar_troca_de_tecnico_nos_registros(this: usize, tecnico: usize, clube: usize, contratado: u32) {
+unsafe extern "thiscall" fn comparar_record_manager_job_change(this: usize, tecnico: usize, clube: usize, contratado: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%);
     if clube == 0 || tecnico == 0 {
         return o(this, tecnico, clube, contratado);
     }
     let mut reg = vec![(0xae2470usize, 8usize)];
-    if e_selecao(clube) == 0 || contratado as u8 == 1 {
+    if is_national_team(clube) == 0 || contratado as u8 == 1 {
         let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x86f5b0usize);
         let r = registro(this, tecnico, 1);
         if r != 0 {
@@ -305,11 +305,11 @@ unsafe extern "thiscall" fn comparar_troca_de_tecnico_nos_registros(this: usize,
     }
     let antes = crate::comparacao::Memoria::ler(&reg);
     CQA12_ENSAIO = true;
-    troca_de_tecnico_nos_registros(this, tecnico, clube, contratado);
+    record_manager_job_change(this, tecnico, clube, contratado);
     CQA12_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     o(this, tecnico, clube, contratado);
     let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("troca_de_tecnico_nos_registros(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
 }

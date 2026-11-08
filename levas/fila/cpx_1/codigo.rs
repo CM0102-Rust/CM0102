@@ -145,9 +145,9 @@ unsafe fn cpx1_ofertas_de_contrato(this: usize, o: usize, vendedor: usize, compr
     }
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if cpx1_d(o + 4) != 0 && vendedor != 0 && humano(vendedor, 0, 1, 0, 0) == 0 {
-        let na_lista: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x842080usize);
+        let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x842080usize);
         for e in cpx1_itens(cpx1_d(o + 4)) {
-            if na_lista(cpx1_listas(this), cpx1_pessoa(cpx1_d(e)), comprador) != 0 {
+            if in_list(cpx1_listas(this), cpx1_pessoa(cpx1_d(e)), comprador) != 0 {
                 cpx1_situacao_na_lista(this, cpx1_pessoa(cpx1_d(e)), comprador, 1, 0);
             }
         }
@@ -203,7 +203,7 @@ unsafe fn cpx1_agendar(this: usize, o: usize, dias: u32) {
 /// rival em aberto, a marca de oferta da pessoa sai (+0x86e). A lista de observação do comprador (0x849ce0, 0x843e10),
 /// as ofertas de contrato (0x4cca70, 0x4ccb30) e +0x10 = 0; com troca e vendedor do computador, os jogadores da troca
 /// na lista do comprador (0x842080, 0x843e10).
-unsafe extern "thiscall" fn recusar_oferta_de_transferencia(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
     let vendedor = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
     let comprador = cpx1_clube(cpx1_d(o + 8));
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn recusar_oferta_de_transferencia(this: usize, vaga: *
 /// 4; a oferta volta em 10 dias (0x8c6220). Sem rival em aberto, a marca de oferta da pessoa sai. Motivo 2: o jogador
 /// pode se desassossegar (0x8c1290). A lista de observação do comprador, a notícia (0x8d5170), as ofertas de contrato e
 /// +0x10 = 0; com troca e vendedor do computador, os jogadores da troca na lista do comprador.
-unsafe extern "thiscall" fn retirar_oferta_de_transferencia(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
     let vendedor = cpx1_clube_do_contrato(cpx1_pessoa(cpx1_d(o + 0xc)));
     let comprador = cpx1_clube(cpx1_d(o + 8));
@@ -311,14 +311,14 @@ unsafe fn cpx1_comparar(nome: &str, this: usize, vaga: *mut usize, original: imp
     PLACAR.registrar(igual, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", nome, o, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_recusar_oferta_de_transferencia(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn comparar_reject_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
-    cpx1_comparar("recusar_oferta_de_transferencia", this, vaga, || o(this, vaga, marcar, motivo), || recusar_oferta_de_transferencia(this, vaga, marcar, motivo))
+    cpx1_comparar("reject_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_transfer_offer(this, vaga, marcar, motivo))
 }
 
-unsafe extern "thiscall" fn comparar_retirar_oferta_de_transferencia(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn comparar_withdraw_transfer_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I1%%);
-    cpx1_comparar("retirar_oferta_de_transferencia", this, vaga, || o(this, vaga, marcar, motivo), || retirar_oferta_de_transferencia(this, vaga, marcar, motivo))
+    cpx1_comparar("withdraw_transfer_offer", this, vaga, || o(this, vaga, marcar, motivo), || withdraw_transfer_offer(this, vaga, marcar, motivo))
 }
 
 /// { 0x8d5170 } (thiscall, ret 8, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
@@ -327,7 +327,7 @@ unsafe extern "thiscall" fn comparar_retirar_oferta_de_transferencia(this: usize
 /// a pessoa (o id e as três chaves), o clube do contrato (sem contrato de tipo 5; nenhum no motivo 6 com +0x2f), o
 /// comprador, a lista da troca (+4), o estado, o motivo, +0x1f, o valor total (0x8e7a70 com 0, 0, 0, 1) e a divisão do
 /// clube do contrato (+0x57); a cada destinatário, na vaga 12, 1 se for o comprador ou o clube do contrato.
-unsafe extern "thiscall" fn noticia_oferta_recusada(this: usize, o: usize, motivo: u32) {
+unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -376,6 +376,6 @@ unsafe extern "thiscall" fn noticia_oferta_recusada(this: usize, o: usize, motiv
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_oferta_recusada(this: usize, o: usize, motivo: u32) {
+unsafe extern "thiscall" fn comparar_post_offer_rejected_news(this: usize, o: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, o, motivo)
 }

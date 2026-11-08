@@ -41,7 +41,7 @@ unsafe fn liberar_foto_da_partida() {
 
 /// O fundo das telas da partida: a foto (0x41c670), senão o da competição (0x41c410), senão o do clube
 /// (0x41c250 e 0x41bfb0). Devolve o `eax` da última chamada (a original empilha o byte da cor do
-/// uniforme por cima dele).
+/// kit por cima dele).
 unsafe fn fundo_da_partida(foto: usize, competicao: usize, clube: usize) -> usize {
     let pela_foto: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c670usize);
     let pela_competicao: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c410usize);
@@ -80,10 +80,10 @@ unsafe fn erro_das_telas_da_partida(linha: u32) {
 unsafe fn nome_do_time_na_partida(time: usize, so_o_nome: u8) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let b_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if so_o_nome != 0 {
         formatar(0xde1f64, 0x987ff0, time + 0x38);
-    } else if selecao_b(time) != 0 {
+    } else if b_national_team(time) != 0 {
         let c = *((time + 0x37) as *const i8) as i32;
         texto(0xde1f64, 0xa164a4, c, c, time + 4);
     } else {
@@ -110,7 +110,7 @@ unsafe fn linha_de_velocidade(lista: usize, valor: u16, v: u32, sujo: (usize, us
 /// +0xea da ficha do humano (0x765480) e libera a foto do parâmetro 0x1d. Modo 1 (parâmetro 1): só a
 /// figura de fundo vazia (0x41c0d0). Senão: tira a marca de "saiu" (−911) do humano nos espectadores
 /// ([partida+0x5b] +0xc5 + 4h, contando em +0x108); o fundo; os cabeçalhos dos dois times (cores do
-/// uniforme 0x53b640, nome, caixa do clube, placar ou "A" de abandonada) e o agregado ([+0x4f] ≥ 0;
+/// kit 0x53b640, nome, caixa do clube, placar ou "A" de abandonada) e o agregado ([+0x4f] ≥ 0;
 /// somado ao placar fora do modo 2 de [+0x67]); a área da narração (fundo "match.mbr"), a do relógio
 /// (minuto [+0x4d] no parâmetro 3), as setas "<<<"/">>>" (ou os símbolos da fonte [0x9cc2c4]), o
 /// controle (0x725a70, parâmetro 4) e os botões táticos dos dois times (parâmetros 5 e 6; o do
@@ -120,7 +120,7 @@ unsafe fn linha_de_velocidade(lista: usize, valor: u16, v: u32, sujo: (usize, us
 /// estatísticas dos times, Ratings, Latest Scores e, para liga de verdade sem seleções, League Table),
 /// −1 no parâmetro 8, o painel da aba (parâmetro 2), o estádio e, com o parâmetro 8 em −1, o painel de
 /// narração (com o lance do parâmetro 7 narrado por 0x6d7b00) no parâmetro 8.
-unsafe extern "C" fn montar_tela_da_partida() {
+unsafe extern "C" fn build_match_screen() {
     crate::comparacao::ramo("telas montar a partida");
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
@@ -171,7 +171,7 @@ unsafe extern "C" fn montar_tela_da_partida() {
     fundo_da_partida(rd(p + 0x1c), rd(p + 0x18), rd(p + 0x20));
 
     // os cabeçalhos: as cores u16 (o resto das variáveis da original é lixo da pilha, aqui 0); o byte do
-    // uniforme vai num registrador sujo (estendido)
+    // kit vai num registrador sujo (estendido)
     let (mut cor_a, mut cor_b) = (0u32, 0u32);
     cores(rd(p + 0x20), rb(st + 0x152) as usize, &mut cor_a, &mut cor_b);
     nome_do_time_na_partida(rd(p + 0x20), rb(p + 0x44));
@@ -413,8 +413,8 @@ unsafe extern "C" fn montar_tela_da_partida() {
 /// saindo, −911) e depois a aba decide (os painéis 0x71d9e0, 0x71e750, 0x720320 (id 4 troca o período
 /// do parâmetro 0xa), 0x723350; as respostas 0x722dc0 e 0x725860; a 10 converte o parâmetro 0x26 no
 /// 0x25). Por fim −11 com [0xb6b7b0] ou o redesenho (0x802d00) com [0xb6b7a8].
-unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
-    crate::comparacao::ramo("telas responder a partida");
+unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
+    crate::comparacao::ramo("telas respond a partida");
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
     let g = |a: usize| *(a as *const u32);
@@ -805,7 +805,7 @@ unsafe extern "C" fn responder_tela_da_partida(item: u32) -> i32 {
 /// caixa "Error" e nada mais); o fundo, os cabeçalhos dos dois times (cores 0x53b640, nome, caixa do
 /// clube, placar ou "Match Abandoned"), o agregado ([+0x4b] ≥ 0), a barra de menu, as 7 abas, os
 /// botões de voltar e avançar e o painel da aba (parâmetro 2).
-unsafe extern "C" fn montar_detalhes_da_partida() {
+unsafe extern "C" fn build_match_details_screen() {
     crate::comparacao::ramo("telas montar os detalhes");
     let sm = GERENTE_DE_TELAS;
     const BUF: usize = 0xde1f64;
@@ -868,7 +868,7 @@ unsafe extern "C" fn montar_detalhes_da_partida() {
     caixa(sm, 0x64, 0xa, 0x1bc, 0x46, 1, 0, 1, 7, 0, 0, 2, rd(reg + 0x1c));
     let r = if rb(foto + 0x11f) == 0xfd { texto(BUF, 0xa164c4, 0xad9c64) } else { formatar(BUF, 0x98806c, rb(foto + 0x11f) as u32) };
     texto_do_gerente(sm, 0x18f, 0xf, 0x1b7, 0x41, 0x30, cor_em(0xae3184), 0xc, 6, cor_sobre(r as usize, 0xaebdea), BUF, 1);
-    // o byte do uniforme do segundo time vai num ecx sujo (estendido)
+    // o byte do kit do segundo time vai num ecx sujo (estendido)
     cores(rd(reg + 0x20), rb(foto + 0x777) as usize, &mut cor_a, &mut cor_b);
     formatar(BUF, 0x987ff0, rd(reg + 0x20) + 0x38);
     texto_do_gerente(sm, 0x1be, 0xa, 0x316, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);
@@ -954,7 +954,7 @@ unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], ori
 /// do humano (+0x12f4fe) e o volume do narrador (+0x2db0). Só a original quando há o que não roda duas
 /// vezes: a foto do parâmetro 0x1d a liberar, o lance do parâmetro 7 a narrar (som, 0x6d7b00) ou as
 /// abas 1 (o resumo também narra), 3 (as zonas alocam a foto) e 10 (a tabela ao vivo).
-unsafe extern "C" fn comparar_montar_tela_da_partida() {
+unsafe extern "C" fn comparar_build_match_screen() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
     let aba = parametro_da_tela(2) as u8;
     // as abas 2 (estatisticas) e 7 (notas) alocam a copia do estado 0x1d quando ela falta: tambem so a original
@@ -983,19 +983,19 @@ unsafe extern "C" fn comparar_montar_tela_da_partida() {
             extra.push((rd(pm + 0x8f7a) + 0x2db0, 1));
         }
     }
-    comparar_montagem_da_partida("montar_tela_da_partida", &extra, || o(), || montar_tela_da_partida());
+    comparar_montagem_da_partida("build_match_screen", &extra, || o(), || build_match_screen());
 }
 
 // ponytail: a resposta mexe em telas, menu, rede, narração (som) e tática (não roda duas vezes): no modo
 // comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust (contador "telas ...")
-unsafe extern "C" fn comparar_responder_tela_da_partida(item: u32) -> i32 {
+unsafe extern "C" fn comparar_handle_match_screen_input(item: u32) -> i32 {
     orig::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
 /// A tela de detalhes é comparada pela lista de exibição quando o registro e a foto da partida já
 /// existem (parâmetros 0x1f e 0x20) e não há foto 0x1d a liberar. Só a original quando eles nascem aqui
 /// (alocação) ou nas abas 1 (o resumo narra com som), 3 (as zonas alocam a foto) e 4 (o relatório nasce).
-unsafe extern "C" fn comparar_montar_detalhes_da_partida() {
+unsafe extern "C" fn comparar_build_match_details_screen() {
     let o = orig::<unsafe extern "C" fn()>(%%I2%%);
     let aba = parametro_da_tela(2) as u8;
     // as abas 2 (estatisticas) e 6 (notas) alocam a copia do estado 0x1d: tambem so a original
@@ -1003,5 +1003,5 @@ unsafe extern "C" fn comparar_montar_detalhes_da_partida() {
         // ponytail: alocar, liberar e narrar não rodam duas vezes; esses casos se provam no modo Rust
         return o();
     }
-    comparar_montagem_da_partida("montar_detalhes_da_partida", &[], || o(), || montar_detalhes_da_partida());
+    comparar_montagem_da_partida("build_match_details_screen", &[], || o(), || build_match_details_screen());
 }

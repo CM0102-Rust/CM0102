@@ -1,4 +1,4 @@
-# Mutacoes da dbh_3. gravar_nomes: a contagem de todos os nomes antes de gravar (vai para o .qst).
+# Mutacoes da dbh_3. db_files_write_or_read_records_0x3c: a contagem de todos os nomes antes de gravar (vai para o .qst).
 # abrir: na criacao do jogo (load_database pela pasta Data), first_names.dat abre o second_names.dat (mais
 # registros, os mesmos 60 bytes e ids 0..N): a tabela de primeiros nomes muda e vai para o .qst. (Fazer o
 # fopen falhar nao serve: com use_zip = 0 o load_database chama fclose(0) e o jogo cai.)

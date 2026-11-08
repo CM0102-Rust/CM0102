@@ -22,7 +22,7 @@ unsafe fn cpo12_idioma(this: usize, pessoa: usize, idioma: u8) -> usize {
 /// ordenar)`: a tabela dos idiomas (6 bytes por registro em [this+0x3c], capacidade +0x40, conta +0x44) nasce com 100
 /// (malloc 0x258) e cresce 100 (realloc) quando cheia; o registro novo no fim: o id da pessoa, o idioma e a fluência
 /// (no máximo 10, com sinal); com `ordenar`, qsort pela comparação 0x7c6d40. Sem memória: caixa fatal.
-unsafe extern "thiscall" fn acrescentar_idioma(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
+unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
     if cpo12_d(this + 0x3c) == 0 {
         let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
         let p = malloc(0x258);
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn acrescentar_idioma(this: usize, pessoa: usize, idiom
 /// { 0x7c6ca0 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::improve_language(pessoa, idioma, aumento,
 /// ordenar)`: sem tabela, ou sem o registro da pessoa no idioma (`cpo12_idioma`), acrescenta-o com a fluência
 /// `aumento` (0x7c6a30); com ele, soma o aumento à fluência (byte), no máximo 10 (com sinal).
-unsafe extern "thiscall" fn melhorar_idioma(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
+unsafe extern "thiscall" fn improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x7c6a30usize);
     if cpo12_d(this + 0x3c) == 0 {
         acrescentar(this, pessoa, idioma, aumento, ordenar);
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn melhorar_idioma(this: usize, pessoa: usize, idioma: 
 /// registro de 32 bytes de [this+4]; +1 nos livres [this+0x38]) e fica −1; zera +0x20, +0x22 (palavras) e +0x24..+0x26
 /// (as notas recentes) e esvazia o histórico (0x58f110 sobre [this] com +0x18/+0x1c). Pessoa nula ou não jogadora
 /// (+0x61): a original (caixa fatal). Devolve o que a 0x58f110 devolve. Do regen (0x7a59e0).
-unsafe extern "thiscall" fn zerar_estatisticas_do_jogador(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 || cpo12_d(pessoa + 0x61) == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, pessoa); // caixa fatal: só a original
     }
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn zerar_estatisticas_do_jogador(this: usize, pessoa: u
 /// Comparador: a 0x7c6a30 aloca e realoca a tabela (não pode rodar duas vezes): o plano antes (a conta e a
 /// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
 /// com `ordenar`, em algum lugar da tabela).
-unsafe extern "thiscall" fn comparar_acrescentar_idioma(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
+unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
     let (n, cap) = if cpo12_d(this + 0x3c) == 0 { (cpo12_d(this + 0x44), 100) } else { (cpo12_d(this + 0x44), cpo12_d(this + 0x40)) };
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
     let f = fluencia as u8;
@@ -128,26 +128,26 @@ unsafe extern "thiscall" fn comparar_acrescentar_idioma(this: usize, pessoa: usi
     if ok {
         ok = if ordenar == 0 { e(n) == novo } else { (0..conta).any(|i| e(i) == novo) };
     }
-    PLACAR.registrar(ok, || format!("acrescentar_idioma({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
+    PLACAR.registrar(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
         novo, ordenar, conta, n.wrapping_add(1), cpo12_d(this + 0x40), cap));
 }
 
 /// Comparador: sem tabela ou sem o registro, só a original (o acréscimo 0x7c6a30 tem o comparador dele); com o
 /// registro, lado a lado nos 6 bytes dele.
-unsafe extern "thiscall" fn comparar_melhorar_idioma(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
+unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%);
     let r = if cpo12_d(this + 0x3c) == 0 { 0 } else { cpo12_idioma(this, pessoa, idioma as u8) };
     if r == 0 {
         return o(this, pessoa, idioma, aumento, ordenar);
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 6)],
-        || o(this, pessoa, idioma, aumento, ordenar), || melhorar_idioma(this, pessoa, idioma, aumento, ordenar));
-    PLACAR.registrar(igual, || format!("melhorar_idioma({}, idioma {}, +{}) {:x?} x {:x?}", cpo12_d(pessoa), idioma as u8, aumento as u8, mo, mr));
+        || o(this, pessoa, idioma, aumento, ordenar), || improve_language(this, pessoa, idioma, aumento, ordenar));
+    PLACAR.registrar(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", cpo12_d(pessoa), idioma as u8, aumento as u8, mo, mr));
 }
 
 /// Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
-unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     if pessoa == 0 || cpo12_d(pessoa + 0x61) == 0 {
         return o(this, pessoa);
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(this: usize, 
             reg.push((cpo12_d(this + 4).wrapping_add(i << 5) + 0xe, 2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || zerar_estatisticas_do_jogador(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("zerar_estatisticas_do_jogador({}) {:x?} x {:x?}", cpo12_d(pessoa), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || player_stats_reset_player(this, pessoa));
+    PLACAR.registrar(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", cpo12_d(pessoa), mo, mr));
     a
 }

@@ -119,7 +119,7 @@ fn cpx12_categorias(cat: u8) -> [Option<u8>; 2] {
 /// reserva desconta a entrada +0x32). Na categoria 2 ou com a competição contando (0x4b0700): +1 jogo e os gols no
 /// registro do jogador ([this+0x30], 0x27 bytes) e, sem ficha (0x4cf6d0), +1 no +0x3b do contrato (0x4cf5a0). Por
 /// fim a forma (+0x24..+0x26) anda meio byte e recebe a nota. Devolve 1.
-unsafe extern "thiscall" fn registrar_partida_nas_estatisticas(this: usize, p: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     if p == 0 || jogo == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, p, jogo); // as caixas
     }
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn registrar_partida_nas_estatisticas(this: usize, p: u
 /// trecho +0x20..+0x27 do registro do jogador e o +0x3b do contrato; no jogo simulado (competição −2), também o estado
 /// do sorteio (e as duas categorias possíveis), com o sorteio da cópia fora da contagem. Partida ou jogo nulos, a caixa
 /// de uma competição sem tipo conhecido ou registro de categoria a criar (0x7c5d80 cresce o vetor): só a original.
-unsafe extern "thiscall" fn comparar_registrar_partida_nas_estatisticas(this: usize, p: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if p == 0 || jogo == 0 {
         return o(this, p, jogo); // ponytail: as caixas, só a original
@@ -266,9 +266,9 @@ unsafe extern "thiscall" fn comparar_registrar_partida_nas_estatisticas(this: us
         regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     }
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, p, jogo), || {
-        crate::aleatorio::sem_contar(|| registrar_partida_nas_estatisticas(this, p, jogo))
+        crate::aleatorio::sem_contar(|| player_stats_record_match(this, p, jogo))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("registrar_partida_nas_estatisticas({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
+    PLACAR.registrar(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
     ro
 }
 
@@ -340,7 +340,7 @@ unsafe fn cpx12_cadeia(liga0: usize) -> Vec<usize> {
 /// reputação maior (melhor) ou menor (pior), ou a mesma com posição melhor ou pior: grava a posição (+0/+7), a
 /// competição (+1/+8) e o ano (+5/+0xc; 0 na temporada, 0x669950 em sempre). Em sempre (com `sempre`; id acima de
 /// [0xae2378] também é "sem"), a fila da notícia (cpx12_fila_do_recorde). Devolve 1.
-unsafe extern "thiscall" fn recordes_de_posicao_na_liga(this: usize, liga0: usize, sempre: u32) -> u32 {
+unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
     if liga0 == 0 || cpx12_b(liga0 + 0x44) != 0xff {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, liga0, sempre); // as caixas
     }
@@ -406,7 +406,7 @@ unsafe extern "thiscall" fn recordes_de_posicao_na_liga(this: usize, liga0: usiz
 /// em ensaio (sem ordenar), a partir dos mesmos recordes: os 14 primeiros bytes dos registros da temporada e de sempre
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
-unsafe extern "thiscall" fn comparar_recordes_de_posicao_na_liga(this: usize, liga0: usize, sempre: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if liga0 == 0 || cpx12_b(liga0 + 0x44) != 0xff {
         return o(this, liga0, sempre); // ponytail: as caixas, só a original
@@ -445,11 +445,11 @@ unsafe extern "thiscall" fn comparar_recordes_de_posicao_na_liga(this: usize, li
     let mo = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     CPX12_ENSAIO = true;
-    let rr = crate::aleatorio::pausar_rastro(|| recordes_de_posicao_na_liga(this, liga0, sempre));
+    let rr = crate::aleatorio::pausar_rastro(|| update_league_position_records(this, liga0, sempre));
     CPX12_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     mo.escrever();
-    PLACAR.registrar(ro == rr && mo == mr, || format!("recordes_de_posicao_na_liga({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
+    PLACAR.registrar(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
     ro
 }
 
@@ -462,7 +462,7 @@ static mut CPX12_ENSAIO_FILA: bool = false;
 /// 0x4528d0) ou de sempre (0x452710), sem criar; entregue à nação (0x7863f0) da seleção ou ao técnico do clube
 /// (0x7861e0). Fila com capacidade (+0x28) de 100 ou mais: solta (0x9452ca) e zera +0x24/+0x28. A conta (+0x2c) volta
 /// a 0. Devolve 1.
-unsafe extern "thiscall" fn noticias_de_recordes(this: usize) -> u32 {
+unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
     if cpx12_d(this + 0x24) == 0 {
         return 1;
     }
@@ -512,17 +512,17 @@ unsafe extern "thiscall" fn noticias_de_recordes(this: usize) -> u32 {
 
 /// Comparador: a cópia em ensaio (sem preencher nem entregar, sem soltar) roda antes, enquanto a fila está viva, e a
 /// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
-unsafe extern "thiscall" fn comparar_noticias_de_recordes(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_send_record_news(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let regioes = [(this + 0x24, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX12_ENSAIO_FILA = true;
-    let rr = crate::aleatorio::pausar_rastro(|| noticias_de_recordes(this));
+    let rr = crate::aleatorio::pausar_rastro(|| send_record_news(this));
     CPX12_ENSAIO_FILA = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let ro = o(this);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(ro == rr && mo == mr, || format!("noticias_de_recordes({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
+    PLACAR.registrar(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
     ro
 }

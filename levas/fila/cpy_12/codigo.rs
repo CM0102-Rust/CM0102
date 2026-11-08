@@ -69,7 +69,7 @@ static mut CPY12_SEMEOU: bool = false;
 /// (0x598800) veta 0x800; acima do limite, o menor valor (pelo clube e pelo do contrato) + 0,65 × limite + a faixa de
 /// riqueza (0x5986b0: 1,25 milhão, 650 mil ou 65 mil) truncado abaixo de 0,275 × valor perde 250/500/500 e veta 0x800.
 /// Senão 0.
-unsafe extern "thiscall" fn veto_dos_fisios_e_da_diretoria(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
+unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let semear: unsafe extern "C" fn(u32) = core::mem::transmute(0x9469fausize);
     let relogio: unsafe extern "C" fn(*mut i32) -> i32 = core::mem::transmute(0x946ebbusize);
@@ -233,14 +233,14 @@ unsafe extern "thiscall" fn veto_dos_fisios_e_da_diretoria(this: usize, j: usize
 
 /// Comparador: lado a lado a partir do mesmo estado do registro da diretoria do clube, do contrato guardado em
 /// [0xae1080] e do sorteio; a devolução e tudo isso têm de bater (o rand da CRT, só sem a semente do relógio).
-unsafe extern "thiscall" fn comparar_veto_dos_fisios_e_da_diretoria(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_check_board_transfer_veto(this: usize, j: usize, clube: usize, valor: i32, comprando: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(%%I0%%);
     let regioes = [(cpy12_diretoria(this, clube), 0x49), (0xae1080, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, j, clube, valor, comprando),
-        || crate::aleatorio::sem_contar(|| veto_dos_fisios_e_da_diretoria(this, j, clube, valor, comprando)));
+        || crate::aleatorio::sem_contar(|| check_board_transfer_veto(this, j, clube, valor, comprando)));
     let partes = if CPY12_SEMEOU { 3 } else { 4 };
     let igual = (0..partes).all(|i| mo.0[i] == mr.0[i]);
-    PLACAR.registrar(igual && r == n, || format!("veto_dos_fisios_e_da_diretoria(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, valor, comprando as u8, r, n, mo, mr));
     r
 }
 
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn comparar_veto_dos_fisios_e_da_diretoria(this: usize,
 /// (+0x57), técnico (+0xcf) e a competição: a notícia 0x178d com o técnico (o id e as três chaves), o clube, o adversário,
 /// a competição e um sorteio(5); clube de reputação (+0x80) abaixo de 5750, ao técnico do clube (0x7861e0); senão, por
 /// sorteio(3), aos técnicos da divisão (0x7862d0) ou aos do país (+0x53, 0x7863f0).
-unsafe extern "thiscall" fn noticia_do_ultimato(_this: usize, clube: usize, adversario: usize, comp: usize) {
+unsafe extern "thiscall" fn post_board_ultimatum_news(_this: usize, clube: usize, adversario: usize, comp: usize) {
     if clube == 0 || cpy12_d(clube + 0x57) == 0 || cpy12_d(clube + 0xcf) == 0 || comp == 0 {
         return;
     }
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn noticia_do_ultimato(_this: usize, clube: usize, adve
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca) e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_ultimato(this: usize, clube: usize, adversario: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_post_board_ultimatum_news(this: usize, clube: usize, adversario: usize, comp: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, clube, adversario, comp)
 }
 
@@ -292,7 +292,7 @@ unsafe extern "thiscall" fn comparar_noticia_do_ultimato(this: usize, clube: usi
 /// competição), os nomes (+4 dos clubes, +0x38 da competição) e o do técnico, na `saída` (0x4ae660), e as ligações
 /// (0x4ae8a0): o técnico (0x7da, se os nomes conferem pela 0x53e990), o clube e o adversário (0x7d5). Título: 0xa12d64
 /// com o gênero (+0x52) e o nome curto (+0x38) do clube.
-unsafe extern "stdcall" fn texto_do_ultimato(noticia: usize, corpo: u32, saida: usize) {
+unsafe extern "stdcall" fn news_board_ultimatum_text(noticia: usize, corpo: u32, saida: usize) {
     let campo: unsafe extern "thiscall" fn(usize, i8) -> u32 = core::mem::transmute(0x785830usize);
     let nome_da_pessoa: unsafe extern "C" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x53dba0usize);
     let confere: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x53e990usize);
@@ -328,7 +328,7 @@ unsafe extern "stdcall" fn texto_do_ultimato(noticia: usize, corpo: u32, saida: 
 }
 
 /// Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original.
-unsafe extern "stdcall" fn comparar_texto_do_ultimato(noticia: usize, corpo: u32, saida: usize) {
+unsafe extern "stdcall" fn comparar_news_board_ultimatum_text(noticia: usize, corpo: u32, saida: usize) {
     // ponytail: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
     orig::<unsafe extern "stdcall" fn(usize, u32, usize)>(%%I2%%)(noticia, corpo, saida);
 }

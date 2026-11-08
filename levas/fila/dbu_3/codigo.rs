@@ -45,7 +45,7 @@ const DBU3_REGIOES: [(usize, usize); 14] = [
 /// 0xff) ou de regionalidade, com o vazio 0xad9c64. Devolve 1. Texto nulo, região fora da faixa ou tamanho (curto
 /// com sinal) < 100: a original (caixa). Na ordem das regiões (0x545dc0, em Rust), na busca de jogadores
 /// (player_search, search_screens) e em telas sem módulo (0x7db360, 0x7e13d0, 0x7e29e0).
-unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
         return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%)(regiao, texto, tamanho, forma);
@@ -90,7 +90,7 @@ unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, for
     1
 }
 
-unsafe extern "C" fn comparar_nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I0%%);
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
@@ -98,8 +98,8 @@ unsafe extern "C" fn comparar_nome_da_regiao(regiao: u32, texto: usize, tamanho:
     }
     // os 100 primeiros bytes (o tamanho mínimo aceito)
     let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
-        || nome_da_regiao(regiao, texto, tamanho, forma));
-    PLACAR.registrar(igual && x == n, || format!("nome_da_regiao({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
+        || get_region_name(regiao, texto, tamanho, forma));
+    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
     x
 }
 
@@ -137,7 +137,7 @@ const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
 /// +0 comparado às chaves [0x9cfa08..0x9cfa18], nessa ordem) e pela forma do adjetivo (0x545a60, já em Rust, pelo
 /// endereço do jogo). Devolve 1. Continente ou texto nulos ou tamanho (curto com sinal) < 50: a original (0). Na
 /// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
-unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
         return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%)(continente, texto, tamanho, forma);
     }
@@ -168,14 +168,14 @@ unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto: usize, tam
     1
 }
 
-unsafe extern "C" fn comparar_adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
         return o(continente, texto, tamanho, forma);
     }
     // os 50 primeiros bytes (o tamanho mínimo aceito)
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
-        || adjetivo_do_continente(continente, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == n, || format!("adjetivo_do_continente({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
+        || get_continent_adjective(continente, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
     r
 }

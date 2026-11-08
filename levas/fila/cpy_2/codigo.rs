@@ -86,7 +86,7 @@ unsafe fn cpy2_bloquear(v: usize, entrada: usize, pessoa: usize, contrato: usize
 /// tipo 0: só elas) com a pessoa no alvo (+0xf; no evento 4, também em +0x13): 1 = a vaga se esvazia e é preenchida de
 /// novo (0x83f3a0); 2 e 5 = bloqueio de 120 e 14 dias (0x54c5b0); 3 = esvazia, data de hoje − 120 (0x54c8e0); 4 =
 /// solta +0x13 e o alvo, data de hoje − 120. Devolve 1.
-unsafe extern "thiscall" fn situacao_na_lista_de_observacao(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
+unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
     // 0x68d020/0x68d040/0x68d1b0: thiscall(lista); 0x842180: thiscall(this, pessoa, lista, 0, 3, 0) (5 push); a
     // recursão: thiscall(this, pessoa, clube, 1, 2) (4 push); 0x600a50: cdecl(clube, 0, 1, 0, 0) (add esp, 0x14);
     // 0x4cf5f0: thiscall([0xae1050], pessoa, clube) (2 push); 0x83f3a0: thiscall(this, vaga, clube, pessoa) (3 push)
@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn situacao_na_lista_de_observacao(this: usize, pessoa:
     let interessados: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x842180usize);
     let situacao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(0x843e10usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let preencher: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x83f3a0usize);
     let mut lista = [0u8; 0x10]; // a LLIST local (0xe bytes)
     let l = lista.as_mut_ptr() as usize;
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn situacao_na_lista_de_observacao(this: usize, pessoa:
         }
     }
     let entrada = cpy2_entrada(this, clube);
-    let contrato = contrato_de(cpy2_d(0xae1050), pessoa, clube);
+    let contrato = contract_of(cpy2_d(0xae1050), pessoa, clube);
     for i in 0..40usize {
         let v = cpy2_d(entrada).wrapping_add(i * 0x25);
         let t = tipo as u8;
@@ -215,7 +215,7 @@ unsafe fn cpy2_so_a_original(this: usize, pessoa: usize, clube: usize, evento: u
 /// Comparador: lado a lado pelos dois vetores de pares e suas contas, pelo byte da conta de listas da pessoa, pelas 40
 /// vagas e o +8 da entrada do clube, pelo byte +0x4f do contrato e pelas datas estáticas, e a devolução. Na recursão do
 /// evento 4 e no evento 1 que preenche a vaga, só a original (a cópia leva os ramos).
-unsafe extern "thiscall" fn comparar_situacao_na_lista_de_observacao(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_update_staff_status(this: usize, pessoa: usize, clube: usize, evento: u32, tipo: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%);
     if cpy2_so_a_original(this, pessoa, clube, evento, tipo) {
         return o(this, pessoa, clube, evento, tipo);
@@ -232,15 +232,15 @@ unsafe extern "thiscall" fn comparar_situacao_na_lista_de_observacao(this: usize
         let entrada = cpy2_entrada(this, clube);
         reg.push((cpy2_d(entrada), 40 * 0x25));
         reg.push((entrada + 8, 1));
-        let contrato_de: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-        let c = contrato_de(cpy2_d(0xae1050), pessoa, clube);
+        let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+        let c = contract_of(cpy2_d(0xae1050), pessoa, clube);
         if c != 0 {
             reg.push((c + 0x4f, 1));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, clube, evento, tipo),
-        || situacao_na_lista_de_observacao(this, pessoa, clube, evento, tipo));
-    PLACAR.registrar(igual && r == n, || format!("situacao_na_lista_de_observacao(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
+        || update_staff_status(this, pessoa, clube, evento, tipo));
+    PLACAR.registrar(igual && r == n, || format!("update_staff_status(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
         pessoa, clube, evento as u8, tipo as u8, r, n, mo, mr));
     r
 }
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn comparar_situacao_na_lista_de_observacao(this: usize
 /// { 0x8442b0 } (stdcall, ret 4, shortlist_manager.cpp): `shortlist_manager_add_to_loan_list(pessoa)`, pelas telas de
 /// transferência (0x8f6770, 0x8f8120). Com contrato (0x4cf5a0, sem guardar em [0xae1080]), o bit 1 de +0x4e (na lista
 /// de empréstimos) liga. Devolve o eax que a original deixa: o contrato.
-unsafe extern "stdcall" fn por_na_lista_de_emprestimos(pessoa: usize) -> usize {
+unsafe extern "stdcall" fn shortlist_manager_add_to_loan_list(pessoa: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpy2_d(0xae1050), pessoa);
     if c != 0 {
@@ -258,13 +258,13 @@ unsafe extern "stdcall" fn por_na_lista_de_emprestimos(pessoa: usize) -> usize {
 }
 
 /// Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
-unsafe extern "stdcall" fn comparar_por_na_lista_de_emprestimos(pessoa: usize) -> usize {
+unsafe extern "stdcall" fn comparar_shortlist_manager_add_to_loan_list(pessoa: usize) -> usize {
     let o = orig::<unsafe extern "stdcall" fn(usize) -> usize>(%%I1%%);
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = f(cpy2_d(0xae1050), pessoa);
     let reg = if c != 0 { vec![(c + 0x4e, 1)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || por_na_lista_de_emprestimos(pessoa));
-    PLACAR.registrar(igual && r == n, || format!("por_na_lista_de_emprestimos(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || shortlist_manager_add_to_loan_list(pessoa));
+    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -272,7 +272,7 @@ unsafe extern "stdcall" fn comparar_por_na_lista_de_emprestimos(pessoa: usize) -
 /// estatuto)`, pela tela de contrato (0x4dd0f0, ecx = o Shortlist_Manager em +0x856 da gerência de transferências).
 /// Sem pessoa ou sem ficha de jogador (+0x61): −1. Senão o teto da vaga (0x84b230) com as posições fortes do jogador
 /// (0x5b7d20) e o estatuto.
-unsafe extern "thiscall" fn teto_de_preco_pelo_estatuto(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
+unsafe extern "thiscall" fn shortlist_manager_max_fee_for_player_status(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
     // 0x5b7d20: cdecl(ficha) (add esp, 4); 0x84b230: chamada com mov ecx, esi (o this) e 3 push (clube, posições,
     // estatuto), ret 0xc: thiscall daqui (a cópia stdcall do motor não lê o ecx)
     if pessoa == 0 || cpy2_d(pessoa + 0x61) == 0 {
@@ -285,10 +285,10 @@ unsafe extern "thiscall" fn teto_de_preco_pelo_estatuto(this: usize, clube: usiz
 }
 
 /// Comparador: a devolução (rotina pura).
-unsafe extern "thiscall" fn comparar_teto_de_preco_pelo_estatuto(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_shortlist_manager_max_fee_for_player_status(this: usize, clube: usize, pessoa: usize, estatuto: u32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(%%I2%%);
     let r = o(this, clube, pessoa, estatuto);
-    let n = teto_de_preco_pelo_estatuto(this, clube, pessoa, estatuto);
-    PLACAR.registrar(r == n, || format!("teto_de_preco_pelo_estatuto(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));
+    let n = shortlist_manager_max_fee_for_player_status(this, clube, pessoa, estatuto);
+    PLACAR.registrar(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", clube, pessoa, estatuto as i8, r, n));
     r
 }

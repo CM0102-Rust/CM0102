@@ -24,19 +24,19 @@ unsafe fn tirar_da_lista_de_pagamentos(gerente: usize, id: *const i32, bit: u8, 
 
 /// { 0x8cb4f0 } (thiscall, ret 4, transfer_manager.cpp): tira o percentual da próxima venda (bit 8;
 /// lista +0x880, quantos +0x888, o id em +9).
-unsafe extern "thiscall" fn tirar_percentual_da_proxima_venda(gerente: usize, id: *const i32) {
+unsafe extern "thiscall" fn remove_next_sale_percentage(gerente: usize, id: *const i32) {
     tirar_da_lista_de_pagamentos(gerente, id, 8, 0x880, 0x888, 9);
 }
 
 /// { 0x8cb590 } (thiscall, ret 4, transfer_manager.cpp): tira o bônus por jogo no time principal (bit 2;
 /// lista +0x88c, quantos +0x894, o id em +0).
-unsafe extern "thiscall" fn tirar_bonus_por_jogo(gerente: usize, id: *const i32) {
+unsafe extern "thiscall" fn remove_first_team_appearance_money(gerente: usize, id: *const i32) {
     tirar_da_lista_de_pagamentos(gerente, id, 2, 0x88c, 0x894, 0);
 }
 
 /// { 0x8cb630 } (thiscall, ret 4, transfer_manager.cpp): tira o bônus por jogo pela seleção (bit 4;
 /// lista +0x898, quantos +0x8a0, o id em +0).
-unsafe extern "thiscall" fn tirar_bonus_pela_selecao(gerente: usize, id: *const i32) {
+unsafe extern "thiscall" fn remove_international_team_appearance_money(gerente: usize, id: *const i32) {
     tirar_da_lista_de_pagamentos(gerente, id, 4, 0x898, 0x8a0, 0);
 }
 
@@ -58,14 +58,14 @@ unsafe fn comparar_lista_de_pagamentos(nome: &str, k: usize, rust: unsafe extern
     PLACAR.registrar(igual, || format!("{}({}) {:x?} x {:x?}", nome, *id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_tirar_percentual_da_proxima_venda(gerente: usize, id: *const i32) {
-    comparar_lista_de_pagamentos("tirar_percentual_da_proxima_venda", %%I0%%, tirar_percentual_da_proxima_venda, gerente, id, 0x880, 0x888);
+unsafe extern "thiscall" fn comparar_remove_next_sale_percentage(gerente: usize, id: *const i32) {
+    comparar_lista_de_pagamentos("remove_next_sale_percentage", %%I0%%, remove_next_sale_percentage, gerente, id, 0x880, 0x888);
 }
 
-unsafe extern "thiscall" fn comparar_tirar_bonus_por_jogo(gerente: usize, id: *const i32) {
-    comparar_lista_de_pagamentos("tirar_bonus_por_jogo", %%I1%%, tirar_bonus_por_jogo, gerente, id, 0x88c, 0x894);
+unsafe extern "thiscall" fn comparar_remove_first_team_appearance_money(gerente: usize, id: *const i32) {
+    comparar_lista_de_pagamentos("remove_first_team_appearance_money", %%I1%%, remove_first_team_appearance_money, gerente, id, 0x88c, 0x894);
 }
 
-unsafe extern "thiscall" fn comparar_tirar_bonus_pela_selecao(gerente: usize, id: *const i32) {
-    comparar_lista_de_pagamentos("tirar_bonus_pela_selecao", %%I2%%, tirar_bonus_pela_selecao, gerente, id, 0x898, 0x8a0);
+unsafe extern "thiscall" fn comparar_remove_international_team_appearance_money(gerente: usize, id: *const i32) {
+    comparar_lista_de_pagamentos("remove_international_team_appearance_money", %%I2%%, remove_international_team_appearance_money, gerente, id, 0x898, 0x8a0);
 }

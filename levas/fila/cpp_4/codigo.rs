@@ -44,7 +44,7 @@ unsafe fn cpp4_reputacao_vista(clube: usize) -> i16 {
 /// clube nem seleção; seleção da nação dele com reputação abaixo de 6750, sem clube, ou com o clube dele mais fraco
 /// (abaixo de 7750 e 750 abaixo da seleção) há tempo; clube acima de 7750 com a reputação vista acima da do clube dele
 /// + 25 × +0x59 + 250. Senão, o interesse dele no cargo (0x844780, float) não abaixo de `nota_minima`.
-unsafe extern "thiscall" fn serve_para_o_cargo(_this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
+unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let ficha = cpp4_d(pessoa + 0x69) as usize;
     if ficha == 0 || clube == 0 {
         return 0;
@@ -72,8 +72,8 @@ unsafe extern "thiscall" fn serve_para_o_cargo(_this: usize, pessoa: usize, club
     if cpp4_b(pessoa + 0x3d) == 0xb {
         let jogador = cpp4_d(pessoa + 0x61) as usize;
         if jogador != 0 && cpp4_w(jogador + 0xb) > 0x128e && rep(clube) < 0x1a5e {
-            let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-            let c = contrato_de(cpp4_d(0xae1050) as usize, pessoa);
+            let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+            let c = contract_of(cpp4_d(0xae1050) as usize, pessoa);
             if c != 0 {
                 let faixa = cpp4_b(c + 0x4f) >> 4;
                 if faixa != 0 && faixa <= 3 {
@@ -164,10 +164,10 @@ unsafe extern "thiscall" fn serve_para_o_cargo(_this: usize, pessoa: usize, club
 }
 
 /// Comparador: a rotina só lê (o interesse 0x844780 sem a saída das razões): pela devolução.
-unsafe extern "thiscall" fn comparar_serve_para_o_cargo(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
+unsafe extern "thiscall" fn comparar_is_staff_suitable_for_job(this: usize, pessoa: usize, clube: usize, nota_minima: f64) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(%%I0%%)(this, pessoa, clube, nota_minima);
-    let n = serve_para_o_cargo(this, pessoa, clube, nota_minima);
-    PLACAR.registrar(r == n, || format!("serve_para_o_cargo(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
+    let n = is_staff_suitable_for_job(this, pessoa, clube, nota_minima);
+    PLACAR.registrar(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", pessoa, clube, nota_minima, r, n));
     r
 }
 
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_serve_para_o_cargo(this: usize, pessoa: usi
 /// jogador 12 ou mais: 1; senão, não jogador no cargo 8, 6 ou 5. 8: de 30 anos, não jogador ou acima de 36 ou (+0x2f ≥ 12
 /// e +0x57 < 10) fora dos cargos 5 e 10: 1; senão como o 6. 9: não jogador no cargo 9. 10: não jogador no cargo 10 ou com
 /// +0x28 = 10. 11: jogador (+0x61). 13 e 15: jogador e não jogador, ou acima de 34, ou de 30 anos com +0x2f ≥ 12.
-unsafe extern "stdcall" fn pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn staff_can_take_job(cargo: u32, pessoa: usize) -> u32 {
     let k = (cargo as u8 as i8 as i32).wrapping_sub(6);
     if k as u32 > 9 || k == 1 || k == 6 || k == 8 {
         return 0;
@@ -228,10 +228,10 @@ unsafe extern "stdcall" fn pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u3
     r as u32
 }
 
-unsafe extern "stdcall" fn comparar_pode_assumir_o_cargo(cargo: u32, pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_staff_can_take_job(cargo: u32, pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%)(cargo, pessoa);
-    let n = pode_assumir_o_cargo(cargo, pessoa);
-    PLACAR.registrar(r == n, || format!("pode_assumir_o_cargo(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
+    let n = staff_can_take_job(cargo, pessoa);
+    PLACAR.registrar(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", cargo as u8 as i8, pessoa, r, n));
     r
 }
 
@@ -349,7 +349,7 @@ unsafe fn cpp4_janela_aberta(pessoa: usize, clube: usize) -> bool {
 /// a queixa 4 (0x8674e0 e 0x867700 com 4); no principal (0x4cbb60 = 1), nota acima de 1250, mais de 23 anos e
 /// sorteio(+0x59 + 5) = 0: a queixa 0x10; até 21 anos, no principal com sorteio(+0x57) > 5, mais forte que o clube e
 /// acima de 1250: a queixa 0x10. Por fim a moral (+0x44) cai m, entre −100 e 100.
-unsafe extern "thiscall" fn baixar_moral_pela_partida(this: usize, pessoa: usize, clube: usize, contrato: usize) {
+unsafe extern "thiscall" fn contract_manager_lower_match_morale(this: usize, pessoa: usize, clube: usize, contrato: usize) {
     let Some(m) = cpp4_queda_da_moral(pessoa, clube, contrato) else {
         return;
     };
@@ -414,7 +414,7 @@ unsafe extern "thiscall" fn baixar_moral_pela_partida(this: usize, pessoa: usize
 
 /// Comparador: as queixas (0x867700) sorteiam e podem abrir pedido de transferência: só a original; o plano (a queda
 /// `m`, calculada antes, sem efeito) diz a moral +0x44 que ela deixa (as queixas não a gravam) ou que ela não mexe.
-unsafe extern "thiscall" fn comparar_baixar_moral_pela_partida(this: usize, pessoa: usize, clube: usize, contrato: usize) {
+unsafe extern "thiscall" fn comparar_contract_manager_lower_match_morale(this: usize, pessoa: usize, clube: usize, contrato: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     if contrato == 0 {
         return o(this, pessoa, clube, contrato);
@@ -429,5 +429,5 @@ unsafe extern "thiscall" fn comparar_baixar_moral_pela_partida(this: usize, pess
     o(this, pessoa, clube, contrato);
     let depois = cpp4_b(contrato + 0x44) as i8;
     let esperada = plano.map_or(antes, |m| cpp4_moral_nova(antes, m));
-    PLACAR.registrar(depois == esperada, || format!("baixar_moral_pela_partida(queda {:?}) moral {} -> original {} plano {}", plano, antes, depois, esperada));
+    PLACAR.registrar(depois == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plano, antes, depois, esperada));
 }

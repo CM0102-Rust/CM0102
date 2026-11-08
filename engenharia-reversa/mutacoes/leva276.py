@@ -31,7 +31,7 @@ MUTACOES = [
     ('cql1_ninguem_usa_numeros', '1 // cql1: usa números', '0 // mutacao', 'cql_1 usa numeros'),
     ('cql1_numero_com_sinal_trocado', '*((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato', '*((k + 0x3a) as *mut i8) = n.wrapping_neg(); // mutacao', 'cql_1 grava no contrato'),
     ('cql2_posicao_e_mais_um', 'return; // cql2: o número da posição', '// mutacao', 'cql_2 numero da posicao'),
-    ('cql2_escala_sem_goleiro', '0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares', '0x4, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // mutacao', 'cql_2 escala'),
+    ('cql2_escala_sem_goleiro', '0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os starters', '0x4, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // mutacao', 'cql_2 escala'),
     ('cql2_regrava_um_abaixo', 'gravar(this, x, c, v as u8 as u32); // cql2: regrava negativo', 'gravar(this, x, c, v.wrapping_sub(1) as u8 as u32); // mutacao', 'cql_2 regrava negativo'),
     ('cql3_nenhuma_liga_numerada', 'cada(c); // cql3: numera a liga', '// mutacao', 'cql_3 numera a liga'),
     ('cql3_numero_do_banco_zero', 'gravar(this, p, c, k as u32); // cql3: o número do banco', 'gravar(this, p, c, 0); // mutacao', 'cql_3 numero do banco'),

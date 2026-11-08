@@ -74,9 +74,9 @@ unsafe fn cqb7_marcas(this: usize, p: usize) -> usize {
 /// da seleção ([[0xb74318]+4] + id da nação × 0x6e + 2; cada um empurra um bit zero) e a conta fica. A janela: 16
 /// jogos, ou os do período de dois anos (0x58d710, até 16) a partir de 2003; com mais de 11 jogos marcados (sorteio:
 /// 11 − sorteio(3) + sorteio(3)) ou mais de 70% (70 − sorteio(10) + sorteio(10)): sai.
-unsafe extern "thiscall" fn permissao_concedida(this: usize, p: usize, _nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cqb7_d(0xae1050), p);
+unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cqb7_d(0xae1050), p);
     let (emprestimo, contrato) = if c != 0 && cqb7_b(c + 0x35) & 0x3f != 2 { (0, c) } else { (c, 0) };
     let mut reg = registro;
     let tem_registro = if reg != 0 {
@@ -203,15 +203,15 @@ unsafe extern "thiscall" fn permissao_concedida(this: usize, p: usize, _nacao: u
 
 /// Comparador da 0x8c7950: lado a lado nas marcas da pessoa (8 bytes), no sorteio e na devolução (a cópia em
 /// sem_contar).
-unsafe extern "thiscall" fn comparar_permissao_concedida(this: usize, p: usize, nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_is_work_permit_granted(this: usize, p: usize, nacao: usize, oferta: usize, registro: usize, sorteio: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%);
     let mut regioes = vec![crate::aleatorio::REGIOES_DO_ESTADO[0], crate::aleatorio::REGIOES_DO_ESTADO[1]];
     if p != 0 && (cqb7_d(p) as i32) < cqb7_d(0xae2364) as i32 {
         regioes.push((cqb7_marcas(this, p), 8));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, p, nacao, oferta, registro, sorteio),
-        || crate::aleatorio::sem_contar(|| permissao_concedida(this, p, nacao, oferta, registro, sorteio)));
-    PLACAR.registrar(igual && r == n, || format!("permissao_concedida(pessoa {:#x}, oferta {:#x}, registro {:#x}, sorteio {}) original={} {:x?} rust={} {:x?}", p, oferta, registro, sorteio, r, mo, n, mr));
+        || crate::aleatorio::sem_contar(|| is_work_permit_granted(this, p, nacao, oferta, registro, sorteio)));
+    PLACAR.registrar(igual && r == n, || format!("is_work_permit_granted(pessoa {:#x}, oferta {:#x}, registro {:#x}, sorteio {}) original={} {:x?} rust={} {:x?}", p, oferta, registro, sorteio, r, mo, n, mr));
     r
 }
 
@@ -219,9 +219,9 @@ unsafe extern "thiscall" fn comparar_permissao_concedida(this: usize, p: usize, 
 /// (pessoa, motivo)`, pela tela da oferta. O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) dá o clube; o
 /// contrato com ele (0x4cf5f0); sem ele, 0. O motivo (16 bits com sinal) 0x200 dá 1, 0x400 dá 2, 0x2000 dá 5; os
 /// outros, o estatuto do contrato (+0x4f >> 4). Devolve no al.
-unsafe extern "thiscall" fn estatuto_pelo_motivo(_this: usize, p: usize, motivo: u32) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cqb7_d(0xae1050), p);
+unsafe extern "thiscall" fn transfer_manager_get_squad_status_for_reason(_this: usize, p: usize, motivo: u32) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cqb7_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let cc = com_clube(cqb7_d(0xae1050), p, cqb7_clube_do_contrato(c));
@@ -237,17 +237,17 @@ unsafe extern "thiscall" fn estatuto_pelo_motivo(_this: usize, p: usize, motivo:
 }
 
 /// Comparador da 0x8c5800: lado a lado em [0xae1080] e no al devolvido.
-unsafe extern "thiscall" fn comparar_estatuto_pelo_motivo(this: usize, p: usize, motivo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_transfer_manager_get_squad_status_for_reason(this: usize, p: usize, motivo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, motivo), || estatuto_pelo_motivo(this, p, motivo));
-    PLACAR.registrar(igual && r as u8 == n as u8, || format!("estatuto_pelo_motivo(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, motivo), || transfer_manager_get_squad_status_for_reason(this, p, motivo));
+    PLACAR.registrar(igual && r as u8 == n as u8, || format!("transfer_manager_get_squad_status_for_reason(pessoa {:#x}, motivo {:#x}) original={} {:x?} rust={} {:x?}", p, motivo, r as u8, mo, n as u8, mr));
     r
 }
 
 /// { 0x8c6200 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::get_negotiation_slot(i)`, pela resposta
 /// automática às notícias (0x782f70) e pelas telas: o endereço da vaga `i` do vetor de negociações ([this+0xc], conta
 /// [this+0x10], com sinal); fora da conta, o começo do vetor.
-unsafe extern "thiscall" fn vaga_da_negociacao(this: usize, i: i32) -> usize {
+unsafe extern "thiscall" fn get_negotiation_slot(this: usize, i: i32) -> usize {
     if i < cqb7_d(this + 0x10) as i32 {
         cqb7_d(this + 0xc).wrapping_add((i as usize).wrapping_mul(4))
     } else {
@@ -256,9 +256,9 @@ unsafe extern "thiscall" fn vaga_da_negociacao(this: usize, i: i32) -> usize {
 }
 
 /// Comparador da 0x8c6200: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_vaga_da_negociacao(this: usize, i: i32) -> usize {
+unsafe extern "thiscall" fn comparar_get_negotiation_slot(this: usize, i: i32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, i);
-    let n = vaga_da_negociacao(this, i);
-    PLACAR.registrar(r == n, || format!("vaga_da_negociacao({}) original={:#x} rust={:#x}", i, r, n));
+    let n = get_negotiation_slot(this, i);
+    PLACAR.registrar(r == n, || format!("get_negotiation_slot({}) original={:#x} rust={:#x}", i, r, n));
     r
 }

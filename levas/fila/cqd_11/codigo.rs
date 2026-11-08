@@ -77,14 +77,14 @@ unsafe fn cqd11_tirar(this: usize, pessoa: usize, bit: u8, lista: usize, falta: 
 /// { 0x4196a0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_awol(pessoa)`, pelo fim da ausência sem contrato (0x418f60),
 /// pelas aposentadorias (0x7a59e0) e pelas transferências (0x8c1af0, 0x8c2180, 0x8c9720). Pessoa e tabela de marcas
 /// ([this+0xc]) não nulas e o bit 1 da marca: troca o bit e tira o registro da pessoa da lista das ausências ([this]).
-unsafe extern "thiscall" fn limpar_ausencia(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn clear_awol(this: usize, pessoa: usize) {
     cqd11_tirar(this, pessoa, 1, 0, false);
 }
 
 /// { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
 /// sem contrato (0x418ff0, que os jogadores do dia consultam) e pelas aposentadorias (0x7a59e0). Pessoa e tabela de
 /// marcas não nulas e o bit 2 da marca: troca o bit e tira o registro da pessoa da lista das faltas ([this+4]).
-unsafe extern "thiscall" fn limpar_falta_ao_treino(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn clear_missed_training(this: usize, pessoa: usize) {
     cqd11_tirar(this, pessoa, 2, 4, true);
 }
 
@@ -123,12 +123,12 @@ unsafe fn cqd11_comparar(this: usize, pessoa: usize, bit: u8, lista: usize, o: u
         nome, pessoa, marca, marca.map(|(p, _)| *(p as *const u8)), fica, depois));
 }
 
-unsafe extern "thiscall" fn comparar_limpar_ausencia(this: usize, pessoa: usize) {
-    cqd11_comparar(this, pessoa, 1, 0, orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%), "limpar_ausencia");
+unsafe extern "thiscall" fn comparar_clear_awol(this: usize, pessoa: usize) {
+    cqd11_comparar(this, pessoa, 1, 0, orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%), "clear_awol");
 }
 
-unsafe extern "thiscall" fn comparar_limpar_falta_ao_treino(this: usize, pessoa: usize) {
-    cqd11_comparar(this, pessoa, 2, 4, orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%), "limpar_falta_ao_treino");
+unsafe extern "thiscall" fn comparar_clear_missed_training(this: usize, pessoa: usize) {
+    cqd11_comparar(this, pessoa, 2, 4, orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%), "clear_missed_training");
 }
 
 /// O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
@@ -164,7 +164,7 @@ unsafe fn cqd11_sortear(n: i32) -> i32 {
 /// sorteio o auxiliar (+0xd3); sem ninguém (ou id −1), −1 nos quatro. Clube de humano (0x7875e0): ao clube do jogador
 /// (+0x39, 0x7861e0); senão, com nação (+0x53) e reputação do jogador (+0x61, +0xb) acima de 7250, às caixas da nação
 /// (0x7863f0).
-unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
     let _ = this;
     if jogador == 0 || cqd11_d(jogador + 0x61) == 0 || clube == 0 || cqd11_d(clube + 0xcf) == 0 { // cqd11: sem jogador ou técnico
         return;
@@ -251,19 +251,19 @@ unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, jogador: usi
 /// Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
 /// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
 /// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
-unsafe extern "thiscall" fn comparar_noticia_da_falta_ao_treino(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_awol_post_missed_training_news(this: usize, jogador: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let ((), fita) = crate::aleatorio::rastrear(|| o(this, jogador, clube));
     let n = fita.len();
     *core::ptr::addr_of_mut!(CQD11_FITA) = Some((fita, 0, false));
     CQD11_DESTINO = (0, 0);
-    crate::aleatorio::sem_contar(|| noticia_da_falta_ao_treino(this, jogador, clube));
+    crate::aleatorio::sem_contar(|| awol_post_missed_training_news(this, jogador, clube));
     let (k, falhou) = match &*core::ptr::addr_of!(CQD11_FITA) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
     };
     *core::ptr::addr_of_mut!(CQD11_FITA) = None;
     let destino = CQD11_DESTINO;
-    PLACAR.registrar(!falhou && k <= n, || format!("noticia_da_falta_ao_treino(jogador {:#x}, clube {:#x}) fita de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
+    PLACAR.registrar(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) fita de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
         jogador, clube, n, k, falhou, destino));
 }

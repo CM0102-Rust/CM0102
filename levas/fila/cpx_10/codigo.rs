@@ -165,7 +165,7 @@ unsafe fn cpx10_comparar(nome: &str, regioes: Vec<(usize, usize)>, original: imp
 /// o boato (11): sorteio(10), ou 1 se o técnico conhece bem o clube (0x544410 do não jogador +0x69 com +0x1b acima de
 /// 10). Entrega: técnico humano, a todos; clube de reputação acima de 5000, aos do país; senão aos da divisão (+0x57)
 /// que não seja a [0x9cf764]. Por fim a data de hoje em +0x18 da linha (0x417c10).
-unsafe extern "thiscall" fn noticia_da_pressao(this: usize, clube: usize, tipo: u32) {
+unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube: usize, tipo: u32) {
     if clube == 0 {
         return;
     }
@@ -227,14 +227,14 @@ unsafe extern "thiscall" fn noticia_da_pressao(this: usize, clube: usize, tipo: 
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut data = [0u32; 2];
-    crate::comparacao::ramo("cpx_10 data da pressao");
+    crate::comparacao::ramo("cpx_10 data da pressure");
     copiar(cpx10_linha(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha
 }
 
-unsafe extern "thiscall" fn comparar_noticia_da_pressao(this: usize, clube: usize, tipo: u32) {
+unsafe extern "thiscall" fn comparar_post_manager_under_pressure_news(this: usize, clube: usize, tipo: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let regioes = if clube != 0 { vec![(cpx10_linha(this, clube), 0x49)] } else { Vec::new() };
-    cpx10_comparar("noticia_da_pressao", regioes, || o(this, clube, tipo), || noticia_da_pressao(this, clube, tipo));
+    cpx10_comparar("post_manager_under_pressure_news", regioes, || o(this, clube, tipo), || post_manager_under_pressure_news(this, clube, tipo));
 }
 
 /// { 0x6a1b00 } (thiscall, ret 0x14, manager_manager.cpp): `MANAGER_MANAGER::post_manager_departure_news(tecnico, tipo,
@@ -242,7 +242,7 @@ unsafe extern "thiscall" fn comparar_noticia_da_pressao(this: usize, clube: usiz
 /// tipo 5: nada. A notícia 6000: o técnico (0..3), o tipo (4), o clube (5), o cargo (7), as chaves do presidente (+0xbf:
 /// 8..10; sem ele, −1) e o motivo (11). Técnico humano: os nomes dele a partir do dado 13 (o próximo livre no 12) e a
 /// todos; senão pelo clube (0x544820; seleção ou reputação acima de 7250 a todos, senão aos do país).
-unsafe extern "thiscall" fn noticia_da_saida_do_tecnico(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
+unsafe extern "thiscall" fn post_manager_departure_news(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
     let _ = this;
     if tec == 0 || clube == 0 || cpx10_antes_da_data() {
         return;
@@ -273,9 +273,9 @@ unsafe extern "thiscall" fn noticia_da_saida_do_tecnico(this: usize, tec: usize,
     }
 }
 
-unsafe extern "thiscall" fn comparar_noticia_da_saida_do_tecnico(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
+unsafe extern "thiscall" fn comparar_post_manager_departure_news(this: usize, tec: usize, tipo: u32, motivo: u32, clube: usize, cargo: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32)>(%%I1%%);
-    cpx10_comparar("noticia_da_saida_do_tecnico", Vec::new(), || o(this, tec, tipo, motivo, clube, cargo), || noticia_da_saida_do_tecnico(this, tec, tipo, motivo, clube, cargo));
+    cpx10_comparar("post_manager_departure_news", Vec::new(), || o(this, tec, tipo, motivo, clube, cargo), || post_manager_departure_news(this, tec, tipo, motivo, clube, cargo));
 }
 
 /// { 0x6a2e00 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::post_manager_appointment_news(tecnico,
@@ -284,7 +284,7 @@ unsafe extern "thiscall" fn comparar_noticia_da_saida_do_tecnico(this: usize, te
 /// [0xadadfc], ou seleção (0x53b900) de nação ativa. A notícia 0x1787: o técnico (0..3), o clube anterior (4; −1), o
 /// clube (5), o cargo (6) e a função anterior (7: +0x28 numa seleção, +0x3d num clube; sem anterior, −1). Técnico
 /// humano: os nomes a partir do dado 8 (o próximo livre no 7) e a todos; senão pelo clube, como a da saída.
-unsafe extern "thiscall" fn noticia_do_tecnico_novo(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
+unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
     let _ = this;
     if tec == 0 || clube == 0 || cpx10_antes_da_data() {
         return;
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn noticia_do_tecnico_novo(this: usize, tec: usize, ant
     }
 }
 
-unsafe extern "thiscall" fn comparar_noticia_do_tecnico_novo(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
+unsafe extern "thiscall" fn comparar_post_manager_appointment_news(this: usize, tec: usize, anterior: usize, clube: usize, cargo: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I2%%);
-    cpx10_comparar("noticia_do_tecnico_novo", Vec::new(), || o(this, tec, anterior, clube, cargo), || noticia_do_tecnico_novo(this, tec, anterior, clube, cargo));
+    cpx10_comparar("post_manager_appointment_news", Vec::new(), || o(this, tec, anterior, clube, cargo), || post_manager_appointment_news(this, tec, anterior, clube, cargo));
 }

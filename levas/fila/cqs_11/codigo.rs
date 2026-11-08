@@ -124,14 +124,14 @@ unsafe fn cqs11_convidados(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs11_merconorte_convidados(this: usize) -> u32 {
+unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: usize) -> u32 {
     cqs11_convidados(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
-unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) ->
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqs11_merconorte_convidados({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -190,22 +190,22 @@ unsafe fn cqs11_comparar_fase_seguinte(nome: &str, this: usize, original: impl F
 
 /// { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
-unsafe extern "thiscall" fn cqs11_mercosul_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) {
     cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
-unsafe extern "thiscall" fn comparar_cqs11_mercosul_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn comparar_conmebol_merc_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqs11_comparar_fase_seguinte("cqs11_mercosul_fase_seguinte", this, || o(this))
+    cqs11_comparar_fase_seguinte("conmebol_merc_advance_stage", this, || o(this))
 }
 
 /// { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
-unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
     cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
-unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqs11_comparar_fase_seguinte("cqs11_copa_america_fase_seguinte", this, || o(this))
+    cqs11_comparar_fase_seguinte("goldcup_advance_stage", this, || o(this))
 }

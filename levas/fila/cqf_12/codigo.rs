@@ -39,7 +39,7 @@ static mut CQF12_ENSAIO: bool = false;
 /// ano o pedido é processado (e sai), salvo jogador sem nação ou de clube que joga nos 14 dias seguintes, que fica.
 unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usize, usize) {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let contrato_com: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
@@ -57,7 +57,7 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
     if cqf12_d(jogador + 0x39) == clube {
         return (true, false, 0, 0, 0);
     }
-    let c = contrato_de(cqf12_d(0xae1050), jogador);
+    let c = contract_of(cqf12_d(0xae1050), jogador);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
     let do_contrato = if c != 0 { cqf12_clube(cqf12_d(c + 4)) } else { 0 };
     if do_contrato == clube {
@@ -117,7 +117,7 @@ unsafe fn cqf12_julgar(pedido: usize, catorze: usize) -> (bool, bool, usize, usi
 /// registro (0x67 bytes) entra na lista local se o byte +0x66 ficou ≥ 0. Depois os relatórios (0x7f9890), a ordem dos
 /// pedidos (0x945333 com 0x7fc270) e uma busca (0x7b3e20) em cada uma das 10 listas dos técnicos humanos (as 16 últimas
 /// pessoas com +0x5f = 1). Devolve 1.
-unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
+unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn cqf12_olheiros_do_dia(this: usize) -> u32 {
 /// Comparador da 0x7f8750: os relatórios sorteiam e alocam e as buscas mexem nas listas dos humanos: só a original
 /// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
 /// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
-unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     if cqf12_b(0xae2c88) != 2 {
         return o(this);
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let a1080 = cqf12_d(0xae1080);
     CQF12_ENSAIO = true;
-    crate::aleatorio::sem_contar(|| cqf12_olheiros_do_dia(this));
+    crate::aleatorio::sem_contar(|| scout_manager_daily_update(this));
     CQF12_ENSAIO = false;
     estado.escrever();
     core::ptr::write_unaligned(0xae1080 as *mut usize, a1080);
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_cqf12_olheiros_do_dia(this: usize) -> u32 {
     let r = o(this);
     let n2 = cqf12_i(this + 0x64).max(0) as usize;
     let agora: Vec<u8> = (0..n2 * 0x11).map(|k| cqf12_b(cqf12_d(this + 0x5c) + k)).collect();
-    PLACAR.registrar(r == 1 && agora == plano, || format!("cqf12_olheiros_do_dia: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
+    PLACAR.registrar(r == 1 && agora == plano, || format!("scout_manager_daily_update: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
     r
 }
 
@@ -245,7 +245,7 @@ static mut CQF12_GRUPOS: Option<Vec<(u32, u32, u8)>> = None;
 /// memória, a caixa da linha 0x7dd) com cópias dos registros, ordenado (0x945333 com 0x7fc2a0); cada grupo seguido do
 /// mesmo jogador (+0x2b) e do mesmo clube (+0x50) vira uma notícia de relatório (0x7f9a60 com o primeiro e quantos).
 /// Libera o vetor (0x9452ca). A lista fica com o cursor no começo.
-unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
+unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: usize) {
     let conta = cqf12_w(lista);
     if conta == 0 {
         return;
@@ -306,18 +306,18 @@ unsafe extern "thiscall" fn cqf12_relatorios_dos_olheiros(this: usize, lista: us
 /// Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
 /// chamadas da original têm de ser essas.
-unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, lista: usize) {
+unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let cursor = cqf12_d(lista + 0xa);
     *core::ptr::addr_of_mut!(CQF12_GRUPOS) = Some(Vec::new());
     CQF12_ENSAIO = true;
-    cqf12_relatorios_dos_olheiros(this, lista);
+    send_scout_reports(this, lista);
     CQF12_ENSAIO = false;
     let plano = (*core::ptr::addr_of_mut!(CQF12_GRUPOS)).replace(Vec::new()).unwrap_or_default();
     core::ptr::write_unaligned((lista + 0xa) as *mut usize, cursor);
     o(this, lista);
     let feito = (*core::ptr::addr_of_mut!(CQF12_GRUPOS)).take().unwrap_or_default();
-    PLACAR.registrar(feito == plano, || format!("cqf12_relatorios_dos_olheiros(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
+    PLACAR.registrar(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
 }
 
 /// { 0x7f9a60 } (thiscall, ret 8, scout_manager.cpp, quadro SEH da notícia local): `SCOUT_MANAGER::
@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn comparar_cqf12_relatorios_dos_olheiros(this: usize, 
 /// 3), +0x66, o olheiro (0x7e5160 com +0x1f), +0x59, +0x5a, o clube +0x50, os dados do jogo (0x7e4de0), +0x5e, +0x62,
 /// +0x58, +0x54, de cada um dos registros (+0x37 + 0x67 × k) +0xc, +0, +4, +8 e +0x26 + 8 × +0x25, 0x420e9 e as forças
 /// do jogador (+0x2b) para o clube (0x546ab0); vai ao técnico do clube (0x7861e0).
-unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
+unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: usize, quantos: u32) {
     let _ = this;
     let n = (quantos as u8 as i8).min(3);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -376,7 +376,7 @@ unsafe extern "thiscall" fn cqf12_noticia_do_relatorio(this: usize, r: usize, qu
 
 /// Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
 /// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
-unsafe extern "thiscall" fn comparar_cqf12_noticia_do_relatorio(this: usize, r: usize, quantos: u32) {
+unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usize, r: usize, quantos: u32) {
     if let Some(g) = &mut *core::ptr::addr_of_mut!(CQF12_GRUPOS) {
         g.push((cqf12_d(r + 0x2b) as u32, cqf12_d(r + 0x50) as u32, quantos as u8));
     }

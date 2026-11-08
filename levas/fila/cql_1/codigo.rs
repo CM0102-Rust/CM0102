@@ -23,7 +23,7 @@ unsafe fn cql1_vale_no_clube(k: usize, c: usize) -> bool {
 /// (0x4cf5a0, thiscall em [0xae1050], push pessoa), se a pessoa é jogador (0x53b620 com o +0x3d, cdecl de 1) e o
 /// contrato vale no clube: o +0x3a do contrato; senão o contrato de empréstimo (0x4cf6d0, thiscall em [0xae1050], push
 /// pessoa), se vale no clube: o +0x3a dele; senão 0.
-unsafe extern "thiscall" fn numero_de_camisa(_this: usize, p: usize, c: usize) -> i8 {
+unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -> i8 {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let jogador: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
@@ -46,11 +46,11 @@ unsafe extern "thiscall" fn numero_de_camisa(_this: usize, p: usize, c: usize) -
 }
 
 /// A devolução das duas (a rotina só lê; as chamadas de dentro são buscas).
-unsafe extern "thiscall" fn comparar_numero_de_camisa(this: usize, p: usize, c: usize) -> i8 {
+unsafe extern "thiscall" fn comparar_get_squad_number(this: usize, p: usize, c: usize) -> i8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i8>(%%I0%%);
     let r = o(this, p, c);
-    let n = numero_de_camisa(this, p, c);
-    PLACAR.registrar(r == n, || format!("numero_de_camisa(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
+    let n = get_squad_number(this, p, c);
+    PLACAR.registrar(r == n, || format!("get_squad_number(pessoa {:x}, clube {:x}): original {} rust {}", p, c, r, n));
     r
 }
 
@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn comparar_numero_de_camisa(this: usize, p: usize, c: 
 /// 1 se o clube usa números de camisa: a competição da divisão do clube (o id em [[c+0x57]], o objeto na tabela
 /// [0xadadfc]) existe e tem o bit 2 do +0x52 e, com `outra` (Comp*), a outra competição (a da tabela pelo id [outra])
 /// também tem o bit. Sem divisão ou sem a competição, 0; sem clube, a caixa da linha 0x4b0 e 0.
-unsafe extern "thiscall" fn clube_usa_numeros(_this: usize, c: usize, outra: usize) -> u32 {
+unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, outra: usize) -> u32 {
     if c == 0 {
         aviso_em(0xa82b88, 0x4b0);
         return 0;
@@ -86,21 +86,21 @@ unsafe extern "thiscall" fn clube_usa_numeros(_this: usize, c: usize, outra: usi
 }
 
 /// A devolução das duas (a rotina só lê); sem clube, só a original (a caixa não roda duas vezes).
-unsafe extern "thiscall" fn comparar_clube_usa_numeros(this: usize, c: usize, outra: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_club_uses_squad_numbers(this: usize, c: usize, outra: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if c == 0 {
         return o(this, c, outra);
     }
     let r = o(this, c, outra);
-    let n = clube_usa_numeros(this, c, outra);
-    PLACAR.registrar(r == n, || format!("clube_usa_numeros(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
+    let n = club_uses_squad_numbers(this, c, outra);
+    PLACAR.registrar(r == n, || format!("club_uses_squad_numbers(clube {:x}, outra {:x}): original {} rust {}", c, outra, r, n));
     r
 }
 
 /// { 0x85a850 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::set_squad_number`; o this não é lido): grava o
 /// número `n` (char de −50 a 50; fora disso a caixa da linha 0x332) no +0x3a do contrato da pessoa `p` (0x4cf5a0) se ele
 /// vale no clube `c`, senão no do contrato de empréstimo (0x4cf6d0) se ele vale no clube. Sem pessoa ou sem clube, nada.
-unsafe extern "thiscall" fn gravar_numero_de_camisa(_this: usize, p: usize, c: usize, n: u32) {
+unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n: u32) {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     if p == 0 || c == 0 {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn gravar_numero_de_camisa(_this: usize, p: usize, c: u
 
 /// Lado a lado: o +0x3a dos dois contratos da pessoa (achados antes; as buscas só leem). Número fora da faixa (a caixa),
 /// sem pessoa ou sem clube: só a original.
-unsafe extern "thiscall" fn comparar_gravar_numero_de_camisa(this: usize, p: usize, c: usize, n: u32) {
+unsafe extern "thiscall" fn comparar_set_squad_number(this: usize, p: usize, c: usize, n: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
@@ -138,6 +138,6 @@ unsafe extern "thiscall" fn comparar_gravar_numero_de_camisa(this: usize, p: usi
             reg.push((k + 0x3a, 1));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, c, n), || gravar_numero_de_camisa(this, p, c, n));
-    PLACAR.registrar(igual, || format!("gravar_numero_de_camisa(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, c, n), || set_squad_number(this, p, c, n));
+    PLACAR.registrar(igual, || format!("set_squad_number(pessoa {:x}, clube {:x}, {}): original {:?} rust {:?}", p, c, n as u8 as i8, mo.0, mr.0));
 }

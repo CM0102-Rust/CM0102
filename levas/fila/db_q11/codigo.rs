@@ -3,7 +3,7 @@
 /// { 0x53a980 } (cdecl, Database.cpp): o inverso de 0x53a8b0: o byte de baixo de cada uma das 21
 /// células de 3 bytes do `vetor` volta ao `nao_jogador` na ordem `ORDEM_DO_NAO_JOGADOR`. A pessoa não
 /// é usada. eax na saída: o vetor com o último byte copiado no byte de baixo (os chamadores não usam).
-unsafe extern "C" fn vetor_para_o_nao_jogador(nao_jogador: usize, _pessoa: usize, vetor: usize) -> u32 {
+unsafe extern "C" fn database_vector_to_non_player(nao_jogador: usize, _pessoa: usize, vetor: usize) -> u32 {
     let mut ultimo = 0u8;
     for (k, &d) in ORDEM_DO_NAO_JOGADOR.iter().enumerate() {
         ultimo = *((vetor + 3 * k) as *const u8);
@@ -15,7 +15,7 @@ unsafe extern "C" fn vetor_para_o_nao_jogador(nao_jogador: usize, _pessoa: usize
 /// { 0x53aa10 } (cdecl, Database.cpp): o inverso de 0x53a610: o byte de baixo das células 0..53 do
 /// `vetor` volta ao `jogador` nos deslocamentos de `CELULAS_DO_VETOR` e o da célula 54 à `pessoa`
 /// +0x58. eax na saída: o vetor com o último byte no byte de baixo (os chamadores não usam).
-unsafe extern "C" fn vetor_para_o_jogador(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+unsafe extern "C" fn database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     for (i, &(d, _)) in CELULAS_DO_VETOR.iter().enumerate() {
         *((jogador + d as usize) as *mut u8) = *((vetor + 3 * i) as *const u8);
     }
@@ -32,7 +32,7 @@ unsafe extern "C" fn vetor_para_o_jogador(jogador: usize, pessoa: usize, vetor: 
 /// cargo +0x3d ou +0x28 = 10, as células ficam ≤ −80 e a 19 ≥ 0; (3) na 1ª passada, com soma > 28,
 /// tira (soma − 28) / quantas das não marcadas (mínimo 0). No fim, 0x53a980 grava de volta. Pessoa
 /// ou não jogador nulos: nada.
-unsafe extern "C" fn normalizar_atributos_do_nao_jogador(pessoa: usize) {
+unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: usize) {
     if pessoa == 0 {
         return;
     }
@@ -137,30 +137,30 @@ unsafe extern "C" fn normalizar_atributos_do_nao_jogador(pessoa: usize) {
     devolver(nj, pessoa, v as usize);
 }
 
-unsafe extern "C" fn comparar_vetor_para_o_nao_jogador(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nao_jogador + 0x0e, 21)],
-        || o(nao_jogador, pessoa, vetor), || vetor_para_o_nao_jogador(nao_jogador, pessoa, vetor));
-    PLACAR.registrar(igual && r == n, || format!("vetor_para_o_nao_jogador({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
+        || o(nao_jogador, pessoa, vetor), || database_vector_to_non_player(nao_jogador, pessoa, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_vetor_para_o_jogador(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%);
     // os deslocamentos de CELULAS_DO_VETOR ficam em +0x0f..+0x44
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(jogador + 0x0f, 0x44 - 0x0f + 1), (pessoa + 0x58, 1)],
-        || o(jogador, pessoa, vetor), || vetor_para_o_jogador(jogador, pessoa, vetor));
-    PLACAR.registrar(igual && r == n, || format!("vetor_para_o_jogador({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
+        || o(jogador, pessoa, vetor), || database_vector_to_player(jogador, pessoa, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_normalizar_atributos_do_nao_jogador(pessoa: usize) {
+unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(pessoa: usize) {
     let o = orig::<unsafe extern "C" fn(usize)>(%%I2%%);
     let nj = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + 0x69) as *const usize) };
     if nj == 0 {
         return o(pessoa); // não faz nada: só a original
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nj + 0x0e, 21)], || o(pessoa),
-        || normalizar_atributos_do_nao_jogador(pessoa));
-    PLACAR.registrar(igual, || format!("normalizar_atributos_do_nao_jogador({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+        || staff_normalise_non_player_attributes(pessoa));
+    PLACAR.registrar(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }

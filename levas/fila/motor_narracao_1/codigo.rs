@@ -1,10 +1,10 @@
-// ---------- %%LEVA%%a leva: o fechamento do motor (3): a fila da narracao (match_events.cpp) ----------
+// ---------- %%LEVA%%a leva: o match_wrap_up do motor (3): a fila da narracao (match_events.cpp) ----------
 
 /// { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
 /// a posição de escrita (+8, anel de 12) recua uma casa (de 0 vai a 11); se o último da fila (+6
 /// itens, palavra +0x712 de 14 bytes) é o mesmo evento da nova posição (+0x30), a fila perde um;
 /// depois enfileira pela 0x6d6f70 com os mesmos 7 argumentos.
-unsafe extern "thiscall" fn evento_na_frente(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
+unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
     let w = |o: usize| core::ptr::read_unaligned((t + o) as *const i16);
     let pos = w(8);
     let pos = if pos == 0 { 0xb } else { pos.wrapping_sub(1) };
@@ -21,7 +21,7 @@ unsafe extern "thiscall" fn evento_na_frente(t: usize, a: u32, b: u32, c: u32, d
 /// os campos (+0x2db0 = 125, +1 e +0xa = −1, +0x2d68 = −1), os globais de evento (0xb68670..), lê os
 /// eventos (0x6d9e50), marca as 16 vagas (+0x10, +0x20) com −1 e zera os 16 tempos (+0x2d6c); com
 /// `torcida`, toca o loop da torcida do lado da vez ([0xb77c7a]) pela 0x8025e0. Devolve `this`.
-unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torcida: u8) -> usize {
+unsafe extern "thiscall" fn construct_commentary_queue(t: usize, torcida: u8) -> usize {
     let b = |o: usize, v: u8| *((t + o) as *mut u8) = v;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
     w(0xa, 0xffff);
@@ -42,8 +42,8 @@ unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torcida: u8) ->
     *(0xb68674 as *mut u8) = 0;
     *(0xb68778 as *mut u32) = 0xad9c64;
     *(0xb6877c as *mut u32) = 0xad9c64;
-    let ler_eventos_cfg: unsafe extern "C" fn() = core::mem::transmute(0x6d9e50usize);
-    ler_eventos_cfg();
+    let read_events_cfg: unsafe extern "C" fn() = core::mem::transmute(0x6d9e50usize);
+    read_events_cfg();
     for k in 0..16 {
         b(0x10 + k, 0xff);
         b(0x20 + k, 0xff);
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torcida: u8) ->
 /// entradas de 0x12 bytes de 0xb68790 a 0xb6b72a com tabela própria (nem nula, nem a padrão
 /// 0xb68670), os dois textos (+0x108, +0x10c) de cada registro de 0x110 bytes e a tabela; depois
 /// zera 0xb6b723 e põe −1 em 0xa1599c.
-unsafe extern "C" fn liberar_tabelas_de_eventos() {
+unsafe extern "C" fn free_event_tables() {
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut e = 0xb68790usize;
     while e < 0xb6b72a {
@@ -91,14 +91,14 @@ unsafe extern "C" fn liberar_tabelas_de_eventos() {
 
 // ponytail: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem
 // comparacao propria, provadas pela carreira (fila de 19414 partidas, 285 mil eventos na frente).
-unsafe extern "thiscall" fn comparar_evento_na_frente(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32>(%%I0%%)(t, a, b, c, d, e, f, g)
 }
 
-unsafe extern "thiscall" fn comparar_construir_fila_da_narracao(t: usize, torcida: u8) -> usize {
+unsafe extern "thiscall" fn comparar_construct_commentary_queue(t: usize, torcida: u8) -> usize {
     orig::<unsafe extern "thiscall" fn(usize, u8) -> usize>(%%I1%%)(t, torcida)
 }
 
-unsafe extern "C" fn comparar_liberar_tabelas_de_eventos() {
+unsafe extern "C" fn comparar_free_event_tables() {
     orig::<unsafe extern "C" fn()>(%%I2%%)()
 }

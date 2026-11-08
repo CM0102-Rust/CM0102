@@ -16,7 +16,7 @@ unsafe fn cqp1_fechar(liga: usize) {
 /// dela (slot 0xa4) e, descendo a cadeia (+0x20 o índice da liga de baixo na tabela [0xadadfc], até negativo), fecha a
 /// de baixo e troca os que sobem e descem entre as duas (0x689c80 com contratos = 1, `aos_pares`, sem contagem
 /// esperada: −1, −1; o ecx é o desta liga).
-unsafe extern "thiscall" fn cadeia_de_acessos(this: usize, aos_pares: u32) {
+unsafe extern "thiscall" fn league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
     if (cqp1_d(this + 0x1c) as i32) >= 0 {
         return;
     }
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn cadeia_de_acessos(this: usize, aos_pares: u32) {
 
 // ponytail: fecha temporadas e move clubes entre as ligas (contratos, técnicos, notícias): não roda duas vezes; só a
 // original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_cadeia_de_acessos(this: usize, aos_pares: u32) {
+unsafe extern "thiscall" fn comparar_league_process_promotion_relegation_chain(this: usize, aos_pares: u32) {
     orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, aos_pares)
 }
 
@@ -51,7 +51,7 @@ unsafe fn cqp1_humano(clube: usize) -> bool {
 /// a reputação (+0x80), a notícia 0x1a (0x77bbe0): 0 a competição ([this+4]), 1 o valor, 2 o clube, 3 a posição, 4 a
 /// rodada, 7 o tipo; com a partida, 5 o adversário e 6 se o clube venceu (+0x3d/+0x3e o vencedor nos pênaltis
 /// [inferência], senão +0x4b/+0x4c, senão +0x43/+0x44 o placar); sem ela −1 e 0. Entregue a ele (0x7861e0).
-unsafe extern "thiscall" fn noticia_do_premio(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
+unsafe extern "thiscall" fn send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
     if !cqp1_humano(clube) {
         return;
     }
@@ -91,14 +91,14 @@ unsafe extern "thiscall" fn noticia_do_premio(this: usize, clube: usize, lo: u32
 }
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_premio(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
+unsafe extern "thiscall" fn comparar_send_prize_money_news(this: usize, clube: usize, lo: u32, hi: i32, posicao: u32, rodada: u32, partida: usize, tipo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(%%I1%%)(this, clube, lo, hi, posicao, rodada, partida, tipo)
 }
 
 /// { 0x48ea40 } (thiscall, ret 8, comp.cpp, `Comp::send_tv_rights_news(clube, valor)`; quadro SEH só pela notícia local):
 /// para o técnico humano do clube (0x7875e0), a notícia 0x1f (0x77bbe0): 0 o clube, 1 a competição ([this+4]), 2 o
 /// valor, 3 o ano da competição (+0x40), entregue a ele (0x7861e0).
-unsafe extern "thiscall" fn noticia_da_tv(this: usize, clube: usize, valor: u32) {
+unsafe extern "thiscall" fn send_tv_rights_news(this: usize, clube: usize, valor: u32) {
     if !cqp1_humano(clube) {
         return;
     }
@@ -117,6 +117,6 @@ unsafe extern "thiscall" fn noticia_da_tv(this: usize, clube: usize, valor: u32)
 }
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_da_tv(this: usize, clube: usize, valor: u32) {
+unsafe extern "thiscall" fn comparar_send_tv_rights_news(this: usize, clube: usize, valor: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, valor)
 }

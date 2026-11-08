@@ -59,7 +59,7 @@ unsafe fn cpq2_pensar(this: usize, selecao: usize) {
 /// depois de 730; −2: −1250 (1..3000), saída depois de 730 dias, senão sorteio(15000) + 1250; −3: −1750 (1..3000) e a
 /// saída. A avaliação vai para a notícia (0x6a5a60) logo depois da mudança. As saídas vão com motivo 6 (2, 0 e −1 com
 /// mais tempo) ou 0.
-unsafe extern "thiscall" fn avaliar_a_selecao_na_competicao(this: usize, comp: usize, selecao: usize) {
+unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: usize, selecao: usize) {
     let tec = cpq2_d(selecao + 0xcf);
     let objeto = || cpq2_d(cpq2_d(0xadadfc).wrapping_add(cpq2_d(comp).wrapping_mul(4)));
     if tec == 0 || objeto() == 0 {
@@ -145,14 +145,14 @@ unsafe extern "thiscall" fn avaliar_a_selecao_na_competicao(this: usize, comp: u
 
 // ponytail: solta a notícia da avaliação (0x6a5a60), sorteia e aloca a saída (ou chama a 0x69aba0): só a original;
 // a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_avaliar_a_selecao_na_competicao(this: usize, comp: usize, selecao: usize) {
+unsafe extern "thiscall" fn comparar_review_national_team_performance(this: usize, comp: usize, selecao: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, comp, selecao)
 }
 
 /// { 0x69eb50 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::is_club_in_financial_trouble(clube)`: clube
 /// dirigível (0x544820), fora da seleção (0x53b900), com a confiança da diretoria em +8 da linha abaixo de 3000 e o saldo
 /// (64 bits no registro de finanças, 0x5a0590 de [0xae2a38]) negativo: 1. Senão 0. Pelo motor (cantos da torcida).
-unsafe extern "thiscall" fn clube_em_apuro_financeiro(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -169,24 +169,24 @@ unsafe extern "thiscall" fn clube_em_apuro_financeiro(this: usize, clube: usize)
     (core::ptr::read_unaligned(f as *const i64) < 0) as u8
 }
 
-unsafe extern "thiscall" fn comparar_clube_em_apuro_financeiro(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_is_club_in_financial_trouble(this: usize, clube: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
-    let n = clube_em_apuro_financeiro(this, clube);
-    PLACAR.registrar(r == n, || format!("clube_em_apuro_financeiro(clube {:x}) original={} rust={}", clube, r, n));
+    let n = is_club_in_financial_trouble(this, clube);
+    PLACAR.registrar(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x690b70 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::get_board_confidence_band(clube)`: a faixa
 /// (0..6) da confiança da diretoria (+6 da linha) pelos limites 3000, 3500, 4275, 6500, 8500 e 9500. Pelo texto do
 /// relatório da diretoria (0x690d80).
-unsafe extern "thiscall" fn faixa_da_confianca_da_diretoria(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn get_board_confidence_band(this: usize, clube: usize) -> u8 {
     let v = cpq2_w(cpq2_linha(this, clube) + 6);
     [0xbb8i16, 0xdac, 0x10b3, 0x1964, 0x2134, 0x251c].iter().take_while(|&&l| v >= l).count() as u8
 }
 
-unsafe extern "thiscall" fn comparar_faixa_da_confianca_da_diretoria(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_board_confidence_band(this: usize, clube: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, clube);
-    let n = faixa_da_confianca_da_diretoria(this, clube);
-    PLACAR.registrar(r == n, || format!("faixa_da_confianca_da_diretoria(clube {:x}) original={} rust={}", clube, r, n));
+    let n = get_board_confidence_band(this, clube);
+    PLACAR.registrar(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }

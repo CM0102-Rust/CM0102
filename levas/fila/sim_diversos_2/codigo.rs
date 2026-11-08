@@ -16,7 +16,7 @@ unsafe fn oferta_pelo_jogador(this: usize, id: i32) -> usize {
 /// oferta: 0. A oferta achada sem lista própria (+0) conta 1 (acrescenta +0x20); com lista, percorre
 /// os índices dela (cursor +0xa reiniciado de +2) e conta os que apontam para ofertas da mesma pessoa.
 /// Sem `todas`, ficam de fora as encerradas (0x8d0d90, aqui embutida como na original).
-unsafe extern "thiscall" fn ofertas_pelo_jogador(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
+unsafe extern "thiscall" fn get_offers_for_player(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
     // a original lê o id antes de testar o ponteiro
     let id = core::ptr::read_volatile(pessoa);
     if !pessoa.is_null() && id >= *(0xae2364 as *const i32) {
@@ -30,7 +30,7 @@ unsafe extern "thiscall" fn ofertas_pelo_jogador(this: usize, pessoa: *const i32
     let proximo: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x68d1b0usize);
     let l = *(e as *const usize);
     if l == 0 {
-        if todas == 0 && oferta_fechada(e) != 0 {
+        if todas == 0 && transfer_offer_closed(e) != 0 {
             return 0;
         }
         if lista != 0 {
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn ofertas_pelo_jogador(this: usize, pessoa: *const i32
         if o == 0 || *((o + 0xc) as *const i32) != id {
             continue;
         }
-        if todas == 0 && oferta_fechada(o) != 0 {
+        if todas == 0 && transfer_offer_closed(o) != 0 {
             continue;
         }
         if lista != 0 {
@@ -71,7 +71,7 @@ unsafe fn registro_da_lista_de_compras(this: usize, clube: usize) -> usize {
 /// (0x600a50 com 1, 1), o técnico (+0xcf) ajusta por (+0x57 − ficha +0x1d) × 0,0125; o presidente
 /// (+0xbf, com ficha) por (+0x57 − ficha +0x1d) / 60 e por (ficha +0x20 − 10) × 0,025 (cada um
 /// multiplica 1 + fator, truncando). Nunca abaixo de +0x80 nem acima de 10000. Devolve o valor.
-unsafe extern "thiscall" fn reputacao_alvo_do_clube(this: usize, clube: usize) -> i32 {
+unsafe extern "thiscall" fn update_club_target_reputation(this: usize, clube: usize) -> i32 {
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let r = registro_da_lista_de_compras(this, clube);
     let alvo = (r + 5) as *mut i16;
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn reputacao_alvo_do_clube(this: usize, clube: usize) -
 /// +0x4b, +0x4c, +0x47, +0x48, +0x2a, +0x28, +8 (bytes e palavras +0x30/+0x32 com sinal; +0x28 e
 /// +0x2a sem). Devolve o que a última gravação devolveu. A original guarda o índice do 18º dado no
 /// byte baixo do próprio argumento `cursor` (só a parte baixa chega à 0x785790).
-unsafe extern "C" fn gravar_jogo_na_noticia(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
+unsafe extern "C" fn comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let d = |o: usize| core::ptr::read_unaligned((jogo + o) as *const u32);
     let b = |o: usize| byte(jogo, o) as i32 as u32;
@@ -127,7 +127,7 @@ unsafe extern "C" fn gravar_jogo_na_noticia(jogo: usize, noticia: usize, cursor:
     r
 }
 
-unsafe extern "thiscall" fn comparar_ofertas_pelo_jogador(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_offers_for_player(this: usize, pessoa: *const i32, lista: usize, todas: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, usize, u32) -> u32>(%%I0%%);
     // ponytail: com `lista` a original aloca nós (0x68d0d0) e não pode rodar duas vezes; só ela
     if lista != 0 || pessoa.is_null() {
@@ -137,20 +137,20 @@ unsafe extern "thiscall" fn comparar_ofertas_pelo_jogador(this: usize, pessoa: *
     let e = oferta_pelo_jogador(this, *pessoa);
     let l = if e == 0 { 0 } else { *(e as *const usize) };
     let reg = if l == 0 { vec![] } else { vec![(l, 0xe)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, lista, todas), || ofertas_pelo_jogador(this, pessoa, lista, todas));
-    PLACAR.registrar(igual && r == n, || format!("ofertas_pelo_jogador({}, todas {}) original={} rust={} {:x?} x {:x?}", *pessoa, todas, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, lista, todas), || get_offers_for_player(this, pessoa, lista, todas));
+    PLACAR.registrar(igual && r == n, || format!("get_offers_for_player({}, todas {}) original={} rust={} {:x?} x {:x?}", *pessoa, todas, r, n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_reputacao_alvo_do_clube(this: usize, clube: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_update_club_target_reputation(this: usize, clube: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%);
     let reg = [(registro_da_lista_de_compras(this, clube) + 5, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || reputacao_alvo_do_clube(this, clube));
-    PLACAR.registrar(igual && r == n, || format!("reputacao_alvo_do_clube({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || update_club_target_reputation(this, clube));
+    PLACAR.registrar(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(clube as *const i32), r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_gravar_jogo_na_noticia(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
+unsafe extern "C" fn comparar_comp_util_write_fixture_to_news_slots(jogo: usize, noticia: usize, cursor: *mut u8) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, *mut u8) -> u32>(%%I2%%);
     let k = *cursor as i8;
     // índice fora de 0..49 em algum dos 18: a 0x785790 abre a caixa de erro; só a original
@@ -158,7 +158,7 @@ unsafe extern "C" fn comparar_gravar_jogo_na_noticia(jogo: usize, noticia: usize
         return o(jogo, noticia, cursor);
     }
     let reg = [(noticia + 5, 200), (cursor as usize, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(jogo, noticia, cursor), || gravar_jogo_na_noticia(jogo, noticia, cursor));
-    PLACAR.registrar(igual && r == n, || format!("gravar_jogo_na_noticia(cursor {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(jogo, noticia, cursor), || comp_util_write_fixture_to_news_slots(jogo, noticia, cursor));
+    PLACAR.registrar(igual && r == n, || format!("comp_util_write_fixture_to_news_slots(cursor {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

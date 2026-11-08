@@ -3,7 +3,7 @@
 /// { 0x69fc60 } (thiscall, ret 4, manager_manager.cpp): a pessoa `*p` está na lista [this+8]
 /// (palavra da quantidade em +0, iterador 0x68d1b0 com posição em +0xa, recomeçada de +2 e
 /// devolvida no fim)? Lista que acaba antes da quantidade: a original (caixa de erro). Devolve só `al`.
-unsafe extern "thiscall" fn pessoa_na_lista(t: usize, p: *const i32) -> u8 {
+unsafe extern "thiscall" fn person_in_list(t: usize, p: *const i32) -> u8 {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let lista = *((t + 8) as *const usize);
     let guardado = core::ptr::read_unaligned((lista + 0xa) as *const u32);
@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn pessoa_na_lista(t: usize, p: *const i32) -> u8 {
 /// { 0x4cf6d0 } (thiscall, ret 4, contract_manager.cpp): a ficha de contrato (0x50 bytes, a partir de
 /// [this]) da pessoa `*p`, pelo índice em +4 do registro de 79 bytes em [0xae2d0c]; 0 sem pessoa, com
 /// id fora de [0xae2364] ou índice negativo.
-unsafe extern "thiscall" fn ficha_de_contrato(t: usize, p: *const i32) -> usize {
+unsafe extern "thiscall" fn contract_record(t: usize, p: *const i32) -> usize {
     if p.is_null() {
         return 0;
     }
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn ficha_de_contrato(t: usize, p: *const i32) -> usize 
 /// pessoa em [0xae23bc]) e negativo, zera; senão, de −500 para cima e com idade ≥ sorteio(25), desce
 /// 13, e nos outros casos desce sorteio(13); goleiro (posição +0xf da ficha = 20) fica até 1050.
 /// Id fora de [0xae2364]: nada.
-unsafe extern "thiscall" fn desgaste_diario(t: usize, id: i32) {
+unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
     if id >= *(0xae2364 as *const i32) {
         return;
     }
@@ -74,15 +74,15 @@ unsafe extern "thiscall" fn desgaste_diario(t: usize, id: i32) {
     }
 }
 
-comparar_valor!(comparar_pessoa_na_lista, pessoa_na_lista, %%I0%%, (p: *const i32) -> u8);
-comparar_valor!(comparar_ficha_de_contrato, ficha_de_contrato, %%I1%%, (p: *const i32) -> usize);
+comparar_valor!(comparar_person_in_list, person_in_list, %%I0%%, (p: *const i32) -> u8);
+comparar_valor!(comparar_contract_record, contract_record, %%I1%%, (p: *const i32) -> usize);
 
-unsafe extern "thiscall" fn comparar_desgaste_diario(t: usize, id: i32) {
+unsafe extern "thiscall" fn comparar_daily_wear(t: usize, id: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if id < *(0xae2364 as *const i32) {
         reg.push(((*(t as *const usize)).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc), 2));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, id), || crate::aleatorio::sem_contar(|| desgaste_diario(t, id)));
-    PLACAR.registrar(igual, || format!("desgaste_diario({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, id), || crate::aleatorio::sem_contar(|| daily_wear(t, id)));
+    PLACAR.registrar(igual, || format!("daily_wear({:#x}, {}) {:x?} x {:x?}", t, id, mo, mr));
 }

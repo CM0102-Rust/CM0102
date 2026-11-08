@@ -23,7 +23,7 @@ const CPA1_LINHA: usize = 0x3b;
 /// trocar: empate em pontos (ou na comparação própria +0xa3) decidido pela 0x683210; senão qsort com 0x683210.
 /// Por fim (+0x44 ≠ 0xfe, sem coluna) grava a posição em +4 e no histórico +9 (rodada +0x11 até +0xa7). Guarda a
 /// liga em [0xb679fc] e a comparação própria em [0xb67a00]. Devolve 1. Sem SEH, sem sorteio.
-unsafe extern "thiscall" fn ordenar_tabela_da_liga(liga: usize, linhas: usize) -> u32 {
+unsafe extern "thiscall" fn sort_table(liga: usize, linhas: usize) -> u32 {
     let n = || cpa1_w(liga + 0x3e);
     let linhas = if linhas == 0 { cpa1_d(liga + 0xb1) } else { linhas };
     if cpa1_w(liga + 0xa7) == -1 && n() > 0 && cpa1_d(liga + 0x45) != 0 {
@@ -183,11 +183,11 @@ unsafe fn cpa1_regioes_da_ordem(liga: usize, linhas: usize) -> Vec<(usize, usize
     reg
 }
 
-unsafe extern "thiscall" fn comparar_ordenar_tabela_da_liga(liga: usize, linhas: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_sort_table(liga: usize, linhas: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = cpa1_regioes_da_ordem(liga, linhas);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(liga, linhas), || ordenar_tabela_da_liga(liga, linhas));
-    PLACAR.registrar(igual && r == n, || format!("ordenar_tabela_da_liga({:x}, {:x}) {}/{} {:x?} x {:x?}", liga, linhas, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(liga, linhas), || sort_table(liga, linhas));
+    PLACAR.registrar(igual && r == n, || format!("sort_table({:x}, {:x}) {}/{} {:x?} x {:x?}", liga, linhas, r, n, mo, mr));
     r
 }
 
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_ordenar_tabela_da_liga(liga: usize, linhas:
 /// +8/+0xa/+0xc em +0x15/+0x17/+0x19); ordena com 0x6834f0 e grava em +4 de cada linha a posição, que começa no
 /// número de clubes e desce a cada par da minitabela que a 0x6834f0 separa. Solta a minitabela (0x9452ca). Sem
 /// memória: a original (a caixa do league.cpp). Chamada pela 0x6827d0 na regra 4.
-unsafe extern "thiscall" fn mini_tabela_do_confronto(liga: usize, linhas: usize) {
+unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usize) {
     let n = || cpa1_w(liga + 0x3e);
     let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(0x945501usize);
     let t = calloc(n() as i32, CPA1_LINHA as u32);
@@ -274,20 +274,20 @@ unsafe extern "thiscall" fn mini_tabela_do_confronto(liga: usize, linhas: usize)
     free(t);
 }
 
-unsafe extern "thiscall" fn comparar_mini_tabela_do_confronto(liga: usize, linhas: usize) {
+unsafe extern "thiscall" fn comparar_build_h2h_table(liga: usize, linhas: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if linhas == 0 {
         return o(liga, linhas);
     }
     let reg = [(linhas, CPA1_LINHA * cpa1_w(liga + 0x3e).max(0) as usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(liga, linhas), || mini_tabela_do_confronto(liga, linhas));
-    PLACAR.registrar(igual, || format!("mini_tabela_do_confronto({:x}, {:x}) {:x?} x {:x?}", liga, linhas, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(liga, linhas), || build_h2h_table(liga, linhas));
+    PLACAR.registrar(igual, || format!("build_h2h_table({:x}, {:x}) {:x?} x {:x?}", liga, linhas, mo, mr));
 }
 
 /// { 0x687970 } (thiscall, league.cpp): `League::free_table(tabela)`: `tabela` nula = a da liga (+0xb1). Com clubes
 /// (+0x3e ≥ 1) e tabela: solta (0x9452ca) os vetores +5 de cada linha (se o da primeira não é nulo), depois os +9
 /// (idem) e a tabela; sendo a da liga, zera +0x3e e +0xb1. Sem SEH, sem sorteio.
-unsafe extern "thiscall" fn liberar_tabela_da_liga(liga: usize, tabela: usize) {
+unsafe extern "thiscall" fn free_table(liga: usize, tabela: usize) {
     let (t, propria) = if tabela == 0 { (cpa1_d(liga + 0xb1), true) } else { (tabela, false) };
     if cpa1_w(liga + 0x3e) < 1 || t == 0 {
         return;
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn liberar_tabela_da_liga(liga: usize, tabela: usize) {
 
 /// Comparador: liberar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as liberações da 232ª); a prova é a carreira e o ramo da cópia no modo Rust.
-unsafe extern "thiscall" fn comparar_liberar_tabela_da_liga(liga: usize, tabela: usize) {
+unsafe extern "thiscall" fn comparar_free_table(liga: usize, tabela: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(liga, tabela)
 }
 
@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn comparar_liberar_tabela_da_liga(liga: usize, tabela:
 /// com +0xa9 > 8 e sem +0xe6, os registros de fim de liga (0x86a070), e sem +0xe6 os prêmios (0x682e10). Com
 /// `fases` = 1 na fase única: cada fase de +0xc (0..=+0x30) tem de estar completa (virtual +0x10 com 0, 1) e
 /// +0x30 ≥ +0x2c − 1, senão 0. Marca +0xdd (antes, com `avisar`, a virtual +0x94) e devolve 1. Sem SEH, sem sorteio.
-unsafe extern "thiscall" fn liga_completa(liga: usize, fases: u32, avisar: u32) -> u8 {
+unsafe extern "thiscall" fn league_check_complete(liga: usize, fases: u32, avisar: u32) -> u8 {
     let tab = cpa1_d(liga + 0xb1);
     if tab == 0 || cpa1_b(liga + 0xb5) != 0 || cpa1_d(liga + 0x45) == 0 {
         return 0;
@@ -408,12 +408,12 @@ unsafe fn cpa1_completa_so_le(liga: usize, fases: u32) -> bool {
     (0..n.max(0) as usize).any(|i| ((cpa1_b(tab + 0x3b * i + 0x11) as i8) as i16) < total)
 }
 
-unsafe extern "thiscall" fn comparar_liga_completa(liga: usize, fases: u32, avisar: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_league_check_complete(liga: usize, fases: u32, avisar: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I3%%);
     if !cpa1_completa_so_le(liga, fases) {
         return o(liga, fases, avisar); // fim de liga (registros, prêmios, fases, aviso): só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(liga + 0xa7, 2)], || o(liga, fases, avisar), || liga_completa(liga, fases, avisar));
-    PLACAR.registrar(igual && r == n, || format!("liga_completa({:x}, {}, {}) {}/{} {:x?} x {:x?}", liga, fases, avisar, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(liga + 0xa7, 2)], || o(liga, fases, avisar), || league_check_complete(liga, fases, avisar));
+    PLACAR.registrar(igual && r == n, || format!("league_check_complete({:x}, {}, {}) {}/{} {:x?} x {:x?}", liga, fases, avisar, r, n, mo, mr));
     r
 }

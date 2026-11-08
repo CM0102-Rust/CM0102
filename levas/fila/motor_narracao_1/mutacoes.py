@@ -1,4 +1,4 @@
-# Mutacoes do fechamento do motor (3). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
+# Mutacoes do match_wrap_up do motor (3). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
 MUTACOES = [
     ('f_anel', "    let pos = if pos == 0 { 0xb } else { pos.wrapping_sub(1) };", "    let pos = if pos == 0 { 0xa } else { pos.wrapping_sub(1) };"),
     ('f_repetido', "        core::ptr::write_unaligned((t + 6) as *mut i16, n - 1);", "        core::ptr::write_unaligned((t + 6) as *mut i16, n);"),

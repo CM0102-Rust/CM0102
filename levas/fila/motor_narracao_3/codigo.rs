@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o fechamento do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
+// ---------- %%LEVA%%a leva: o match_wrap_up do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
 
 /// Avança a posição de leitura da fila da narração (+0xc, anel de 12): marca a nova vaga (+0x3d =
 /// −1, tira o bit 0x8000 do evento) e, chegando na de escrita (+8, e então +0x2d68 = −1) ou na
@@ -27,7 +27,7 @@ unsafe fn avancar_leitura(t: usize) -> bool {
 /// − 8000)], registro +2 de 0x110 bytes, +0x108) anda até a próxima parte separada por `|` (a parte
 /// atual em +0xd; o bit 0x8000 marca que há mais) e, acabado o texto, avança a leitura. Em `saida`,
 /// o registro de 0x86 bytes da vaga (+0xd8).
-unsafe extern "thiscall" fn proximo_evento(t: usize, saida: *mut usize) -> usize {
+unsafe extern "thiscall" fn next_event(t: usize, saida: *mut usize) -> usize {
     if *((t + 5) as *const u8) == 0 {
         return 0;
     }
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn proximo_evento(t: usize, saida: *mut usize) -> usize
 /// algum dos 100 jogadores de um dos dois clubes (+0, +4; lista da 0x541f90) com outro id ou outro
 /// nome tem a mesma forma 5, a forma `longa`.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn nome_do_jogador_na_narracao(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, _x: u32, longa: u32) {
+unsafe extern "C" fn commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, _x: u32, longa: u32) {
     let nome: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(0x53e140usize);
     let r = (pt as isize + jogador as isize * 0x49 + lado as isize * 0x625) as usize;
     let d = |o: usize| *((r + o) as *const u32);
@@ -128,7 +128,7 @@ unsafe extern "C" fn nome_do_jogador_na_narracao(pt: usize, jogador: i8, lado: i
 /// ruído pseudoaleatório (id do jogador + [0xdd7120] + id do observador) que encolhe com o
 /// conhecimento do observador (0x544410 da ficha +0x69, níveis +0x17/+0x18, até 20). Com a ficha
 /// do observador, conhecimento alto e a semente favorável, a habilidade atual exata.
-unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
     let mut semente = (*(p as *const i32)).wrapping_add(*(0xdd7120 as *const i32));
     let mut rep = if rep > -1 {
         rep / 50
@@ -147,7 +147,7 @@ unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, re
         conhece = *((o + 0x69) as *const usize);
         semente = semente.wrapping_add(*(o as *const i32));
         if conhece != 0 && tipo == 2 && rep > 0x32 {
-            let k = chance_de_conhecer(conhece, *((conhece + 0x17) as *const i8)) as i8 as i32;
+            let k = chance_to_know(conhece, *((conhece + 0x17) as *const i8)) as i8 as i32;
             if rep as i32 + (k - 10) * 10 > semente % 200 {
                 return core::ptr::read_unaligned((ficha + 5) as *const i16);
             }
@@ -160,7 +160,7 @@ unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, re
             f * f32_em(0x96afb0) as f64
         } else {
             let nivel = *((conhece + if tipo == 2 { 0x17 } else { 0x18 }) as *const i8);
-            (chance_de_conhecer(conhece, nivel) as i8 as f64) * f
+            (chance_to_know(conhece, nivel) as i8 as f64) * f
         };
         certeza = (ftol(x + f64_em(0x968968)) as i8).min(0x14);
     }
@@ -178,30 +178,30 @@ unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, re
     (((verdade + ruido) * peso + (20 - peso) * rep as i32) / 20) as i16
 }
 
-unsafe extern "C" fn comparar_habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
     let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(%%I2%%)(o, p, c, tipo, rep);
-    let n = habilidade_vista(o, p, c, tipo, rep);
-    PLACAR.registrar(r == n, || format!("habilidade_vista({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
+    let n = perceived_ability(o, p, c, tipo, rep);
+    PLACAR.registrar(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_proximo_evento(t: usize, saida: *mut usize) -> usize {
+unsafe extern "thiscall" fn comparar_next_event(t: usize, saida: *mut usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize) -> usize>(%%I0%%);
     let mut reg = vec![(t, 0x2db4)];
     if !saida.is_null() {
         reg.push((saida as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, saida), || proximo_evento(t, saida));
-    PLACAR.registrar(igual && r == n, || format!("proximo_evento({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, saida), || next_event(t, saida));
+    PLACAR.registrar(igual && r == n, || format!("next_event({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", t, r, n, mo, mr));
     r
 }
 
 // ponytail: escreve em `buf` e chama a 0x53e140 e a 0x541f90 (efeitos fora); comparação pelo texto
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn comparar_nome_do_jogador_na_narracao(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
+unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogador: i8, lado: i8, buf: *mut u8, tam: u32, curto: u8, x: u32, longa: u32) {
     let o = orig::<unsafe extern "C" fn(usize, i8, i8, *mut u8, u32, u8, u32, u32)>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((buf as usize, tam as usize));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| nome_do_jogador_na_narracao(pt, jogador, lado, buf, tam, curto, x, longa)));
-    PLACAR.registrar(igual, || format!("nome_do_jogador_na_narracao({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pt, jogador, lado, buf, tam, curto, x, longa), || crate::aleatorio::sem_contar(|| commentary_player_name(pt, jogador, lado, buf, tam, curto, x, longa)));
+    PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
 }

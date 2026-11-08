@@ -60,9 +60,9 @@ unsafe fn cqf3_bonus(c: usize, f: f64) {
 /// os bônus × valor / max(teto, 1) e o valor = teto. As queixas limpas (0x867520). Com `saida`: copia o contrato e 1;
 /// senão, no modo 2, ou com contrato atual no modo 1 que acaba antes de hoje + 150 dias, a proposta (0x4cc490); 1.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn contrato_oferecido(this: usize, pessoa: usize, clube_arg: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
+unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa: usize, clube_arg: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x85e410usize);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let tipo_11_15: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
     let dirigivel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn contrato_oferecido(this: usize, pessoa: usize, clube
             return 0;
         }
     }
-    if e_selecao(clube) != 0 {
+    if is_national_team(clube) != 0 {
         return 0;
     }
     if cqf3_b(cqf3_d(0xae2d0c).wrapping_add(cqf3_d(pessoa).wrapping_mul(0x4f)) + 0xb) & 0x30 != 0 {
@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn contrato_oferecido(this: usize, pessoa: usize, clube
 /// Comparador da 0x4cda70: com `saida`, lado a lado (a saída, [0xae1080] e o estado do sorteador; a cópia sem contar os
 /// sorteios); sem `saida` (pode propor o contrato, que aloca), só a original.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_contrato_oferecido(this: usize, pessoa: usize, clube: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_contract_manager_offer_contract(this: usize, pessoa: usize, clube: usize, saida: usize, vaga: i32, fator: f64, modo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, f64, u32) -> u32>(%%I0%%);
     if saida == 0 {
         return o(this, pessoa, clube, saida, vaga, fator, modo); // ponytail: só a original
@@ -334,7 +334,7 @@ unsafe extern "thiscall" fn comparar_contrato_oferecido(this: usize, pessoa: usi
     let regioes = [(saida, 0x50usize), (0xae1080usize, 4usize), est[0], est[1]];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
         || o(this, pessoa, clube, saida, vaga, fator, modo),
-        || crate::aleatorio::sem_contar(|| contrato_oferecido(this, pessoa, clube, saida, vaga, fator, modo)));
+        || crate::aleatorio::sem_contar(|| contract_manager_offer_contract(this, pessoa, clube, saida, vaga, fator, modo)));
     // ponytail: o STAFF_CONTRACT local da original não tem valor em +0x38..+0x39 (do dword +0x36), +0x44 e no nibble
     // baixo de +0x4f (nem a 0x85e410 nem a 0x85fc50 os gravam: sobra de pilha, copiada para a saída); a cópia deixa 0
     // (montada em memória zerada). A comparação ignora esses bits.
@@ -348,7 +348,7 @@ unsafe extern "thiscall" fn comparar_contrato_oferecido(this: usize, pessoa: usi
     };
     let igual = igual || (sem_sobra(&mo) == sem_sobra(&mr) && mo.0[1..] == mr.0[1..]);
     PLACAR.registrar(igual && r == n, || format!(
-        "contrato_oferecido(pessoa {:#x}, clube {:#x}, vaga {}, fator {}, modo {}): original {} rust {}, memória {:x?} x {:x?}",
+        "contract_manager_offer_contract(pessoa {:#x}, clube {:#x}, vaga {}, fator {}, modo {}): original {} rust {}, memória {:x?} x {:x?}",
         pessoa, clube, vaga, fator, modo, r, n, mo, mr));
     r
 }

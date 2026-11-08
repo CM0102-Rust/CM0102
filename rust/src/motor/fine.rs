@@ -37,12 +37,12 @@ pub(crate) static mut CPZ9_MONTARIA: bool = false;
 /// personalidade (+0x5d + +0x5b abaixo de 12, +0x59 abaixo de 6 e reputação +0xb acima de 5250), prazo 1, o contrato
 /// de tipo 7 (+0x4f), a transferência futura (0x8cca10), os efeitos e o jogo pelo tipo (+0x4f 1 com mais de 23 anos,
 /// ou 2).
-pub(crate) unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
+pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
     if jogador == 0 {
         return;
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contrato_de(read_usize(G_CONTRACT_MANAGER), jogador);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let k = contract_of(read_usize(G_CONTRACT_MANAGER), jogador);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
     if k == 0 {
         return;
@@ -92,14 +92,14 @@ pub(crate) unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, mot
 
 /// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
 /// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
-pub(crate) unsafe extern "stdcall" fn comparar_noticia_reacao_a_multa(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
-    let o = orig::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_NOTICIA_REACAO_A_MULTA);
+pub(crate) unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
+    let o = orig::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_POST_FINE_REACTION_NEWS);
     let mut regioes = vec![(0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPZ9_ENSAIO = true;
     CPZ9_MONTARIA = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| noticia_reacao_a_multa(jogador, motivo, reacao, prazo, efeitos)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_fine_reaction_news(jogador, motivo, reacao, prazo, efeitos)));
     CPZ9_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
@@ -107,7 +107,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_noticia_reacao_a_multa(jogador: u
     let mo = crate::comparacao::Memoria::ler(&regioes);
     let montaria = CPZ9_MONTARIA;
     let igual = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
-    PLACAR.registrar(igual, || format!("noticia_reacao_a_multa(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
+    PLACAR.registrar(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
 }
 
 /// player and coach with a record and nation, player with a club: news 0x1394 with the outcome and draw(5)
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_noticia_reacao_a_multa(jogador: u
 /// (jogador, treinador, desfecho)`, pelo diário das multas (0x5a5820: o retorno marcado vencido, mais de 30 dias de
 /// casa e sem lesão grave; a original deixa o Fine em ecx). Os dois com ficha (+0x61) e nação (+0x1a), o jogador com
 /// clube (+0x39): a notícia 0x1394 (o jogador e o treinador, id e chaves; o desfecho; sorteio(5)) ao clube do jogador.
-pub(crate) unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usize, treinador: usize, desfecho: u32) {
+pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
     if jogador == 0 || read_usize(jogador + 0x61) == 0 || read_usize(jogador + 0x1a) == 0 || read_usize(jogador + 0x39) == 0 {
         return;
     }
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usiz
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
 // notícia as duas não fazem nada.
-pub(crate) unsafe extern "stdcall" fn comparar_noticia_retorno_do_treinador(jogador: usize, treinador: usize, desfecho: u32) {
-    orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_NOTICIA_RETORNO_DO_TREINADOR)(jogador, treinador, desfecho)
+pub(crate) unsafe extern "stdcall" fn comparar_post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
+    orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_POST_COACH_FINE_FEEDBACK_NEWS)(jogador, treinador, desfecho)
 }
 

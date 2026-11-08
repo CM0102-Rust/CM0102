@@ -24,7 +24,7 @@ unsafe fn dbp_preferencias(pessoa: usize) -> usize {
 /// favoritos da pessoa (preferências +4/+8/+0xc, o primeiro que bate). Pessoa, preferências ou clube nulos: nada.
 /// Devolve o eax da original (as preferências; pessoa nula: 0). No diário das pessoas (0x5ce2d0), quando o
 /// apego ao clube acaba.
-unsafe extern "C" fn tirar_clube_favorito(pessoa: usize, clube: usize) -> usize {
+unsafe extern "C" fn staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
     let pref = dbp_preferencias(pessoa);
     if pref != 0 && clube != 0 {
         dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos
@@ -32,34 +32,34 @@ unsafe extern "C" fn tirar_clube_favorito(pessoa: usize, clube: usize) -> usize 
     pref
 }
 
-unsafe extern "C" fn comparar_tirar_clube_favorito(pessoa: usize, clube: usize) -> usize {
+unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
     let pref = dbp_preferencias(pessoa);
     if pref == 0 {
         return o(pessoa, clube); // não escreve nada
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 4, 12)], || o(pessoa, clube), || tirar_clube_favorito(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("tirar_clube_favorito({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 4, 12)], || o(pessoa, clube), || staff_remove_favoured_club(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
 /// { 0x547bd0 } (cdecl, Database.cpp): `club_remove_favoured_staff(clube, pessoa)`: tira a pessoa das três pessoas
 /// favoritas do clube (+0x9b/+0x9f/+0xa3, o primeiro que bate). Clube ou pessoa nulos: nada. Devolve o clube (o eax
 /// da original). Nas audiências das disputas (DISPUTE::process_hearings 0x569ed0).
-unsafe extern "C" fn clube_tirar_pessoa_favorita(clube: usize, pessoa: usize) -> usize {
+unsafe extern "C" fn club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
     if clube != 0 && pessoa != 0 {
         dbp_tirar_de_tres(clube + 0x9b, pessoa); // os favoritos do clube
     }
     clube
 }
 
-unsafe extern "C" fn comparar_clube_tirar_pessoa_favorita(clube: usize, pessoa: usize) -> usize {
+unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(clube, pessoa);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x9b, 12)], || o(clube, pessoa), || clube_tirar_pessoa_favorita(clube, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("clube_tirar_pessoa_favorita({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x9b, 12)], || o(clube, pessoa), || club_remove_favoured_staff(clube, pessoa));
+    PLACAR.registrar(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
     r
 }
 
@@ -68,7 +68,7 @@ unsafe extern "C" fn comparar_clube_tirar_pessoa_favorita(clube: usize, pessoa: 
 /// nada. Devolve o eax da original (as preferências; pessoa nula: 0). Nas disputas (0x569ed0), nas relações do
 /// elenco (game_update_squad_relationships 0x5d6d10, diária), na volta da lesão (0x630ee0), no MANAGER_MANAGER
 /// (0x697a7a) e na mídia (0x75a340).
-unsafe extern "C" fn tirar_pessoa_favorita(pessoa: usize, alvo: usize) -> usize {
+unsafe extern "C" fn staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
     let pref = dbp_preferencias(pessoa);
     if pref != 0 && alvo != 0 {
         dbp_tirar_de_tres(pref + 0x1c, alvo); // as pessoas favoritas
@@ -76,13 +76,13 @@ unsafe extern "C" fn tirar_pessoa_favorita(pessoa: usize, alvo: usize) -> usize 
     pref
 }
 
-unsafe extern "C" fn comparar_tirar_pessoa_favorita(pessoa: usize, alvo: usize) -> usize {
+unsafe extern "C" fn comparar_staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
     let pref = dbp_preferencias(pessoa);
     if pref == 0 {
         return o(pessoa, alvo);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x1c, 12)], || o(pessoa, alvo), || tirar_pessoa_favorita(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("tirar_pessoa_favorita({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x1c, 12)], || o(pessoa, alvo), || staff_remove_favoured_staff(pessoa, alvo));
+    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
     r
 }

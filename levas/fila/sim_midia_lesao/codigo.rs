@@ -5,7 +5,7 @@
 /// vetor de 0x17 bytes, [+8] quantas; em +8 o id do jogador, em +0x11 o tipo (palavra). Jogador nulo ou
 /// com +0x39 zerado: 0.
 // ponytail: só o ax é fiel; os 16 bits altos do eax da original são resto de registrador (quem chama usa ax)
-unsafe extern "thiscall" fn historia_punivel_do_jogador(midia: usize, jogador: usize) -> u16 {
+unsafe extern "thiscall" fn get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
     if jogador == 0 || *((jogador + 0x39) as *const u32) == 0 {
         return 0;
     }
@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn historia_punivel_do_jogador(midia: usize, jogador: u
 /// qualquer) e fica com o menor sorteio (menor que 100); o tipo recorrente do jogador ([this] + 31 × id +
 /// 0x12) sorteia só 0..2 − 1. Gravidade 3: nenhum (0xff).
 // ponytail: só o al é fiel (a original devolve char)
-unsafe extern "thiscall" fn escolher_tipo_de_lesao(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
+unsafe extern "thiscall" fn choose_injury_type(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
     let atual: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let mut melhor: i8 = 0x64;
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn escolher_tipo_de_lesao(lesoes: usize, categoria: i8,
 /// { 0x785670 } (thiscall, news.cpp): a categoria da notícia pelo milhar do tipo (+0): 1..999 → 2,
 /// 1000.. → 7, 2000.. → 3, 3000.. → 4, 4000.. → 5, 5000.. → 1, 6000..0x1790 → 6. Fora disso: a original
 /// (caixa de erro). Devolve o eax inteiro como a original (o tipo com o al trocado).
-unsafe extern "thiscall" fn categoria_da_noticia(noticia: usize) -> u32 {
+unsafe extern "thiscall" fn get_category(noticia: usize) -> u32 {
     let t = *(noticia as *const i32);
     let c = match t {
         1..=999 => 2,
@@ -105,14 +105,14 @@ unsafe extern "thiscall" fn categoria_da_noticia(noticia: usize) -> u32 {
     (t as u32 & 0xffff_ff00) | c
 }
 
-unsafe extern "thiscall" fn comparar_historia_punivel_do_jogador(midia: usize, jogador: usize) -> u16 {
+unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u16>(%%I0%%)(midia, jogador);
-    let n = historia_punivel_do_jogador(midia, jogador);
-    PLACAR.registrar(r == n, || format!("historia_punivel_do_jogador original={} rust={}", r, n));
+    let n = get_finable_story_kind(midia, jogador);
+    PLACAR.registrar(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_escolher_tipo_de_lesao(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_choose_injury_type(lesoes: usize, categoria: i8, gravidade: i8, jogador: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8>(%%I1%%);
     // ponytail: jogador nulo abre a caixa de erro do 0x62ed70; não roda duas vezes
     if jogador == 0 {
@@ -124,19 +124,19 @@ unsafe extern "thiscall" fn comparar_escolher_tipo_de_lesao(lesoes: usize, categ
     let atual: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     atual(lesoes, jogador);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
-        || o(lesoes, categoria, gravidade, jogador), || crate::aleatorio::sem_contar(|| escolher_tipo_de_lesao(lesoes, categoria, gravidade, jogador)));
-    PLACAR.registrar(igual && r == n, || format!("escolher_tipo_de_lesao({}, {}) original={} rust={} sorteio igual={}", categoria, gravidade, r, n, igual));
+        || o(lesoes, categoria, gravidade, jogador), || crate::aleatorio::sem_contar(|| choose_injury_type(lesoes, categoria, gravidade, jogador)));
+    PLACAR.registrar(igual && r == n, || format!("choose_injury_type({}, {}) original={} rust={} sorteio igual={}", categoria, gravidade, r, n, igual));
     r
 }
 
-unsafe extern "thiscall" fn comparar_categoria_da_noticia(noticia: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_get_category(noticia: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let t = *(noticia as *const i32);
     if !(1..=0x1790).contains(&t) {
         return o(noticia);
     }
     let r = o(noticia);
-    let n = categoria_da_noticia(noticia);
-    PLACAR.registrar(r == n, || format!("categoria_da_noticia({}) original={:x} rust={:x}", t, r, n));
+    let n = get_category(noticia);
+    PLACAR.registrar(r == n, || format!("get_category({}) original={:x} rust={:x}", t, r, n));
     r
 }

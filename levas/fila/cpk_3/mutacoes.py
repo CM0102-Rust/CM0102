@@ -1,7 +1,7 @@
 # Mutacoes (com o ramo de cada uma). A clausula acionada com 3 em vez de 2 (o comparando acusa pelo plano; a carreira,
 # no fim da temporada 2001/02, pelos contratos dos rebaixados). A oferta tirada sem descontar a pendente (o comparando
 # acusa pelo byte; a carreira pelas ofertas da pessoa depois). O suspenso sem a suspensao da competicao (o comparando
-# acusa pelo valor no primeiro suspenso; a carreira pela escalacao automatica, que passa a escalar os suspensos).
+# acusa pelo valor no primeiro suspenso; a carreira pela escalacao automatica, que passa a pick os suspensos).
 MUTACOES = [
     ('cpk_clausula_estado', '*((contrato + 0x1f) as *mut u8) = 2; // a cláusula acionada',
      '*((contrato + 0x1f) as *mut u8) = 3; // mutacao: 3',

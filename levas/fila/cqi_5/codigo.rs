@@ -72,7 +72,7 @@ unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 
 /// { 0x574a20 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::create_table()`: 20 clubes ([0x9cf5bc]), cota 250.000 do
 /// fundo de prêmios e a TV: 12.000.000 a cada clube depois de 1999 (5.000.000 antes). Fonte 0x9c43b0, linha 0x1ee.
-unsafe extern "thiscall" fn tabela_da_premier(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 {
     cqi5_tabela(this, 0x14, 0x9c43b0, 0x1ee, 0x9cf5bc, 0x3d090, || {
         let valor = if cqi5_depois_de_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: a TV da Premier
         cqi5_pagar(this, valor, 0)
@@ -81,13 +81,13 @@ unsafe extern "thiscall" fn tabela_da_premier(this: usize) -> u32 {
 
 /// { 0x576630 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_table()`: 24 clubes ([0x9cf5c4]), cota 20.000
 /// e a TV: 2.500.000 depois de 1999 (300.000 antes). Fonte 0x9c43e8, linha 0x1f5.
-unsafe extern "thiscall" fn tabela_da_second(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_second_create_table(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c43e8, 0x1f5, 0x9cf5c4, 0x4e20, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0x2625a0 } else { 0x493e0 }, 0))
 }
 
 /// { 0x577f70 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_table()`: 24 clubes ([0x9cf5c8]), cota 10.000
 /// e a TV: 1.000.000 depois de 1999 (200.000 antes). Fonte 0x9c4424, linha 0x1fa.
-unsafe extern "thiscall" fn tabela_da_third(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_prm_create_table_577f70(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c4424, 0x1fa, 0x9cf5c8, 0x2710, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0xf4240 } else { 0x30d40 }, 0))
 }
 
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn tabela_da_third(this: usize) -> u32 {
 /// e a TV pela divisão de onde o clube veio (+0x5b): depois de 1999, 5.877.777 aos que caíram da Premier (o registro
 /// de [0x9cf5bc]), 4.099.999 aos que já estavam na First (o próprio registro, +4) e 4.099.999 aos que subiram da
 /// Second ([0x9cf5c4]); antes, 1.000.000 a todos. Fonte 0x9c4374, linha 0x22d.
-unsafe extern "thiscall" fn tabela_da_first(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c4374, 0x22d, 0x9cf5c0, 0x11170, || {
         if cqi5_depois_de_1999() {
             cqi5_pagar(this, 0x59b011, cqi5_registro(0x9cf5bc)); // cqi5: a TV de quem caiu da Premier
@@ -138,22 +138,22 @@ unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, cota: i32, or
     r
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_premier(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_prm_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqi5_comparar("tabela_da_premier", this, 0x14, 0x9cf5bc, 0x3d090, || o(this))
+    cqi5_comparar("eng_prm_create_table", this, 0x14, 0x9cf5bc, 0x3d090, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_second(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_second_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqi5_comparar("tabela_da_second", this, 0x18, 0x9cf5c4, 0x4e20, || o(this))
+    cqi5_comparar("eng_second_create_table", this, 0x18, 0x9cf5c4, 0x4e20, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_third(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_prm_create_table_577f70(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqi5_comparar("tabela_da_third", this, 0x18, 0x9cf5c8, 0x2710, || o(this))
+    cqi5_comparar("eng_prm_create_table_577f70", this, 0x18, 0x9cf5c8, 0x2710, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_first(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_first_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqi5_comparar("tabela_da_first", this, 0x18, 0x9cf5c0, 0x11170, || o(this))
+    cqi5_comparar("eng_first_create_table", this, 0x18, 0x9cf5c0, 0x11170, || o(this))
 }

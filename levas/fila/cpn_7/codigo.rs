@@ -19,7 +19,7 @@ unsafe fn cpn7_b(a: usize) -> u8 {
 /// (+0x194, byte com sinal, = +0x76 da nação), ou com a base (+0x199) a mesma região. Sem missão: as duas nações com
 /// +0x7f = 2, a mesma região (+0x76) da nação do clube, a nação não estrangeira para o olheiro (0x53d980 com 1) ou os
 /// olheiros do clube cobrindo a nação (0x7f9190 do [0xb74448]). Devolve 1 ou 0.
-unsafe extern "thiscall" fn busca_cobre_a_nacao(this: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: usize) -> u32 {
     let mut pessoa = 0usize;
     let i = cpn7_d(this + 0x180) as i32;
     if i > -1 {
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn busca_cobre_a_nacao(this: usize, nacao: usize) -> u3
 /// fim), com `limpar_vaga` zera a vaga do amistoso marcado (0x5c6740 pelo dia +0, ano +2, clube +0x14 e adversário
 /// +0x10 do jogo: +0x10 = 0 e +0x18 = 0) e tira o jogo da lista [+0x34c8] (0x68d1f0, que o libera). Jogo nulo ou sem
 /// a lista +0x34c8: a original (caixa "Error").
-unsafe extern "thiscall" fn tirar_amistoso_marcado(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
+unsafe extern "thiscall" fn remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
     if jogo == 0 || cpn7_d(this + 0x34c8) == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, limpar_vaga);
     }
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn tirar_amistoso_marcado(this: usize, jogo: usize, lim
 /// novo de 0x20 bytes (malloc 0x944e46) com os pares de nações que não jogam amistoso entre si: Irã e EUA, Iraque e
 /// qualquer uma (−1), Vietnã e EUA, as duas Coreias (as chaves [0x9cf354], [0x9cf4f8], [0x9cf358], [0x9cf508],
 /// [0x9cf404], [0x9cf484]). Sem memória: a caixa "Error" (linha 0x1800) e +0x3506 = 0.
-unsafe extern "thiscall" fn iniciar_pares_proibidos_de_amistoso(this: usize) {
+unsafe extern "thiscall" fn init_banned_nation_pairs(this: usize) {
     *((this + 0x3506) as *mut u8) = 4;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar(0x20);
@@ -134,18 +134,18 @@ unsafe extern "thiscall" fn iniciar_pares_proibidos_de_amistoso(this: usize) {
 }
 
 /// Comparador: lado a lado pelo valor e pelas missões +0x18c..+0x1a0 (a 0x7aefd0 as copia sobre elas mesmas).
-unsafe extern "thiscall" fn comparar_busca_cobre_a_nacao(this: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let reg = [(this + 0x18c, 0x15)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || busca_cobre_a_nacao(this, nacao));
-    PLACAR.registrar(igual && r == n, || format!("busca_cobre_a_nacao(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
+    PLACAR.registrar(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
 /// Comparador: a 0x68d1f0 libera o que tira: o plano antes (os itens que ficam nas duas listas e a vaga do amistoso);
 /// a original roda; confere as listas, o cursor da +0x34d4 no começo e a vaga zerada. Jogo nulo ou sem a lista
 /// +0x34c8: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_tirar_amistoso_marcado(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_remove_friendly_match(this: usize, jogo: usize, limpar_vaga: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if jogo == 0 || cpn7_d(this + 0x34c8) == 0 {
         return o(this, jogo, limpar_vaga);
@@ -171,12 +171,12 @@ unsafe extern "thiscall" fn comparar_tirar_amistoso_marcado(this: usize, jogo: u
         && (l4 == 0 || cpn7_d(l4 + 0xa) == cpn7_d(l4 + 2))
         && itens8 == esperado8
         && (v == 0 || (cpn7_d(v + 0x10) == 0 && cpn7_b(v + 0x18) == 0));
-    PLACAR.registrar(ok, || format!("tirar_amistoso_marcado({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", jogo, limpar_vaga, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
+    PLACAR.registrar(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", jogo, limpar_vaga, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
     r
 }
 
 /// Comparador: o malloc não pode rodar duas vezes: a original roda e confere o vetor e a conta com o plano.
-unsafe extern "thiscall" fn comparar_iniciar_pares_proibidos_de_amistoso(this: usize) {
+unsafe extern "thiscall" fn comparar_init_banned_nation_pairs(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let v = cpn7_d(this + 0x3502);
     let ok = if v == 0 {
@@ -185,5 +185,5 @@ unsafe extern "thiscall" fn comparar_iniciar_pares_proibidos_de_amistoso(this: u
         let esperado = [cpn7_d(0x9cf354), cpn7_d(0x9cf4f8), cpn7_d(0x9cf358), usize::MAX, cpn7_d(0x9cf508), cpn7_d(0x9cf4f8), cpn7_d(0x9cf404), cpn7_d(0x9cf484)];
         cpn7_b(this + 0x3506) == 4 && (0..8).all(|k| cpn7_d(v + 4 * k) == esperado[k])
     };
-    PLACAR.registrar(ok, || format!("iniciar_pares_proibidos_de_amistoso: conta {} vetor {:#x}", cpn7_b(this + 0x3506), v));
+    PLACAR.registrar(ok, || format!("init_banned_nation_pairs: conta {} vetor {:#x}", cpn7_b(this + 0x3506), v));
 }

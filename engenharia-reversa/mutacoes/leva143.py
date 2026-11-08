@@ -18,7 +18,7 @@ MUTACOES = [
     ('m_direcao', "let dx = byte(m, 0x8ea7) as i32 + 4 + nx as i32;", "let dx = byte(m, 0x8ea7) as i32 + 5 + nx as i32;"),
     ('m_perde', "            somar(p, -0x96);", "            somar(p, -0x95);", "movimento perde a bola"),
     ('m_vence', "ganho = ftol(ganho as f64 * f64_em(0x969520)) as i16;", "ganho = ftol(ganho as f64 * f64_em(0x969520) * 1.01) as i16;", "movimento desafiante vence"),
-    ('m_penalti', "if sortear(byte(u(e, 0x69), 0x5a) as i32 + 6) == 0 {", "if sortear(byte(u(e, 0x69), 0x5a) as i32 + 7) == 0 {", "movimento penalti"),
+    ('m_penalti', "if sortear(byte(u(e, 0x69), 0x5a) as i32 + 6) == 0 {", "if sortear(byte(u(e, 0x69), 0x5a) as i32 + 7) == 0 {", "movimento penalty"),
     ('m_acao', "            narrar(chamar, 0x1f4c, u32::MAX);", "            narrar(chamar, 0x1f4d, u32::MAX);"),
     ('m_2173', "if forte && sortear(ftol(f32_em(p + 0x95) as f64)) < sortear(0x1e) { 0x2173 } else { 0x1f4a }", "if forte && sortear(ftol(f32_em(p + 0x95) as f64)) < sortear(0x1f) { 0x2173 } else { 0x1f4a }"),
     ('m_so_vira', "        *w(p, 0x198) = 0x6f;\n        return;", "        *w(p, 0x198) = 0x70;\n        return;", "movimento so vira"),

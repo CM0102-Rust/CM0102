@@ -16,7 +16,7 @@ unsafe fn soltar_tabela_do_banco(tabela: usize) {
 /// pessoas ([0xae23cc], 17 bytes) presente, solta (0x9670f4 ou 0x9452ca, pelo modo do banco) e zera o ponteiro
 /// e a contagem [0xae2374]. Chamada por PlayerStats::PlayerStats (0x7c0ccd): o histórico passa a viver no
 /// `player stats history.tmp`. Sem quadro de pilha.
-unsafe extern "C" fn liberar_historico_de_pessoas() {
+unsafe extern "C" fn database_free_staff_history_table() {
     let tabela = *(0xae23cc as *const usize);
     if tabela == 0 {
         return;
@@ -29,13 +29,13 @@ unsafe extern "C" fn liberar_historico_de_pessoas() {
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_liberar_historico_de_pessoas() {
+unsafe extern "C" fn comparar_database_free_staff_history_table() {
     orig::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 /// { 0x527f20 } (cdecl, Database.cpp): `database_free_staff_comp_history_table()`: o mesmo para o histórico
 /// de prêmios ([0xae23e4], 58 bytes; contagem [0xae238c]). Chamada por AWARD_MANAGER::AWARD_MANAGER (0x413360).
-unsafe extern "C" fn liberar_historico_de_premios() {
+unsafe extern "C" fn database_free_staff_comp_history_table() {
     let tabela = *(0xae23e4 as *const usize);
     if tabela == 0 {
         return;
@@ -48,7 +48,7 @@ unsafe extern "C" fn liberar_historico_de_premios() {
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_liberar_historico_de_premios() {
+unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
     orig::<unsafe extern "C" fn()>(%%I1%%)()
 }
 
@@ -57,7 +57,7 @@ unsafe extern "C" fn comparar_liberar_historico_de_premios() {
 /// `n` à contagem, guarda o bloco, refaz o ponteiro da parte das seleções [0xae23dc] (a partir da linha [0xae2384])
 /// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. Chamada por
 /// comp_util_add_history_record (0x4afd2c), no fim de competição. Sem quadro de pilha.
-unsafe extern "C" fn crescer_historico_de_competicoes(n: i32) -> u32 {
+unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
     crate::comparacao::ramo("banco crescer histórico de competições");
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     let total = (*(0xae237c as *const i32)).wrapping_add(n);
@@ -80,7 +80,7 @@ unsafe extern "C" fn crescer_historico_de_competicoes(n: i32) -> u32 {
 
 /// Comparador: o `realloc` não se desfaz (crescer duas vezes deixaria a tabela com 2n linhas a mais).
 // ponytail: só a original; a prova é o .qst (a tabela vai para o save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_crescer_historico_de_competicoes(n: i32) -> u32 {
+unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32) -> u32 {
     orig::<unsafe extern "C" fn(i32) -> u32>(%%I2%%)(n)
 }
 

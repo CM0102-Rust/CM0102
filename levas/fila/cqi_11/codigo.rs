@@ -81,7 +81,7 @@ unsafe fn cqi11_listas() -> Cqi11Listas {
 /// caribenho; 0 e 1: sem o objeto da competição [0x9cf728], os dois primeiros da MLS; com ele, o último campeão da MLS
 /// (0x4afd80(competição [0x9cf590], 0): push 0; push comp; add esp, 8 -> cdecl) e o da [0x9cf728] (a mesma com +4 do
 /// objeto) e, se for o mesmo clube, o 0 passa ao último vice da MLS (lugar 1). Depois +4 e +5 de cada time zerados.
-unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
+unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32 {
     let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize) -> u32 {
 /// Comparador da 0x4c11a0: lado a lado nos oito times (+0xa7, 48 bytes), em +0x3e e no estado do sorteador (a 0x4afbd0
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
-unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_con_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let l = cqi11_listas();
     let outro = cqi11_d(cqi11_d(0xadadfc).wrapping_add(cqi11_d(0x9cf728).wrapping_mul(4)));
@@ -139,8 +139,8 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -
     if historico != 0 {
         regioes.push((historico, cqi11_d(0xae237c).wrapping_mul(0x1a)));
     }
-    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| cqi11_concacaf_classificados(this)));
-    PLACAR.registrar(igual && r == rr, || format!("cqi11_concacaf_classificados({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
+    let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| con_champ_select_qualified_clubs(this)));
+    PLACAR.registrar(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
     r
 }
 
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -
 /// Com a tabela de times vazia (o clube do time 0 = 0) e fase ≠ 0: os classificados (0x4c11a0: mov ecx, this ->
 /// thiscall, ret 0; negativo, a caixa da linha 0x1ba e devolve 0) e as posições previstas (virtual +0x5c). Depois a
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
-unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     if cqi11_d(cqi11_d(this + 0xa7)) == 0 && fase != 0 {
         let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x4c11a0usize);
         if classificar(this) < 0 {
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn cqi11_concacaf_dia(this: usize, hoje: usize, fase: u
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano: com a
 // tabela vazia e fase ≠ 0, a copa sai com 8 times e o time 0 preenchido (a 0x4c11a0 tem o seu comparador); senão +0x3e
 // não muda.
-unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_con_champ_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if cqi11_d(this + 0xa7) == 0 {
         return o(this, hoje, fase);
@@ -176,14 +176,14 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_dia(this: usize, hoje: usize
     let n = cqi11_w(this + 0x3e);
     let r = o(this, hoje, fase);
     let igual = if seleciona { cqi11_w(this + 0x3e) == 8 } else { cqi11_w(this + 0x3e) == n };
-    PLACAR.registrar(igual, || format!("cqi11_concacaf_dia({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, cqi11_w(this + 0x3e)));
+    PLACAR.registrar(igual, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, fase, seleciona, n, cqi11_w(this + 0x3e)));
     r
 }
 
 /// { 0x4c15f0 } (thiscall, ret 0, con_champ.cpp; a virtual +0x8c): `ConChamp::set_up_rounds()`; devolve 1. O fundo de
 /// prêmios (+0x28) de 2.000.000 e a tabela das rodadas (+0xa3) da virtual +0x3c (push 0; push &+0x3a; push &+0x3c;
 /// push −1; mov ecx, this -> thiscall, ret 0x10).
-unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u32 {
+unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x1e8480);
     let tabela: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(cqi11_d(cqi11_d(this) + 0x3c));
     let t = tabela(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
@@ -193,8 +193,8 @@ unsafe extern "thiscall" fn cqi11_concacaf_rodadas(this: usize) -> u32 {
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere o fundo de
 // prêmios (+0x28 = 2.000.000) e a devolução 1.
-unsafe extern "thiscall" fn comparar_cqi11_concacaf_rodadas(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_con_champ_set_up_rounds(this: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
-    PLACAR.registrar(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("cqi11_concacaf_rodadas({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
+    PLACAR.registrar(r == 1 && cqi11_d(this + 0x28) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, cqi11_d(this + 0x28)));
     r
 }

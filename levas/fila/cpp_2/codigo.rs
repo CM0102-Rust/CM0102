@@ -109,7 +109,7 @@ unsafe fn cpp2_data(destino: usize, origem: usize) {
 /// que ela já tem; senão na primeira livre (−1) do vetor, que fica com o índice (e aí a original sai sem refazer as
 /// folhas); senão no fim (cheio: +100 vagas, realloc 0x945667 ou malloc 0x944e46; sem memória, caixa da linha 0x1708
 /// e segue), pelo STAFF_CONTRACT::operator= 0x4cc810. Por fim refaz as folhas de salários do clube dono e do novo.
-unsafe extern "thiscall" fn assinar_contrato_de_emprestimo(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn sign_loan_contract(this: usize, contrato: usize) {
     let mut guardada = [0u8; 8];
     let construir: unsafe extern "thiscall" fn(*mut [u8; 8]) -> usize = core::mem::transmute(0x54a110usize);
     construir(&mut guardada);
@@ -154,14 +154,14 @@ unsafe extern "thiscall" fn assinar_contrato_de_emprestimo(this: usize, contrato
     let emp = cpp2_d(cpp2_vaga(pessoa) + 4) as i32;
     if emp > -1 {
         // ponytail: a original copia em linha, igual ao STAFF_CONTRACT::operator= (0x4cc810, portado)
-        copiar_contrato_de_pessoal(cpp2_contrato(cpp2_d(this), emp), contrato);
+        contract_manager_operator(cpp2_contrato(cpp2_d(this), emp), contrato);
     } else {
         let n = cpp2_d(this + 8) as i32;
         let vetor = cpp2_d(this);
         let mut i = 0i32;
         while i < n {
             if cpp2_d(cpp2_contrato(vetor, i)) as i32 == -1 {
-                copiar_contrato_de_pessoal(cpp2_contrato(vetor, i), contrato);
+                contract_manager_operator(cpp2_contrato(vetor, i), contrato);
                 cpp2_por(cpp2_vaga(pessoa) + 4, i as u32);
                 return; // a original sai sem refazer as folhas
             }
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn assinar_contrato_de_emprestimo(this: usize, contrato
     cpp2_folha(novo);
 }
 
-unsafe extern "thiscall" fn comparar_assinar_contrato_de_emprestimo(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn comparar_sign_loan_contract(this: usize, contrato: usize) {
     // ponytail: mexe no elenco, nas táticas, nas listas e realoca o vetor: só a original; a cópia prova no modo Rust
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato)
 }
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_assinar_contrato_de_emprestimo(this: usize,
 /// volta ao dono (+0x39) e às marcas de elenco (0x540980): com time reserva (0x542740), 2 se o contrato principal tem o
 /// bit 0x40 de +0x35, senão 1; senão 1 e, com clube parceiro, fica no parceiro se está nas 50 vagas dele. A situação
 /// +0x6d 0x10 vira 4.
-unsafe extern "thiscall" fn encerrar_o_emprestimo(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn end_loan(this: usize, pessoa: usize) {
     let mut clube = cpp2_d(pessoa + 0x39) as usize;
     if clube == 0 {
         cpp2_erro(0x1729);
@@ -272,7 +272,7 @@ unsafe extern "thiscall" fn encerrar_o_emprestimo(this: usize, pessoa: usize) {
     }
 }
 
-unsafe extern "thiscall" fn comparar_encerrar_o_emprestimo(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_end_loan(this: usize, pessoa: usize) {
     // ponytail: mexe no elenco, nas táticas, nas listas e nas disputas (0x556570 libera itens): só a original
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa)
 }
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn comparar_encerrar_o_emprestimo(this: usize, pessoa: 
 /// 0. Emprestada a este clube: sai das listas, do elenco e das táticas do outro e entra no destino com o cargo; com
 /// contrato de empréstimo de outro clube: troca o bit 0x40 e passa ao destino como jogador (0xb); senão como o
 /// emprestado, sem gravar. Devolve 1 (clube nulo também). Sem contrato principal a original lê [0x35] e cai.
-unsafe extern "thiscall" fn trocar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn toggle_squad_placement(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
     if clube == 0 {
         return 1;
     }
@@ -367,7 +367,7 @@ unsafe extern "thiscall" fn trocar_lugar_no_elenco(this: usize, pessoa: usize, c
     1
 }
 
-unsafe extern "thiscall" fn comparar_trocar_lugar_no_elenco(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_toggle_squad_placement(this: usize, pessoa: usize, clube: usize, saida: usize) -> u32 {
     // ponytail: mexe no elenco, nas táticas e nas listas: só a original; a cópia prova no modo Rust
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, clube, saida)
 }

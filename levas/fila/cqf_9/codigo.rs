@@ -14,7 +14,7 @@ unsafe fn cqf9_strncmp(a: usize, b: usize, n: u32) -> i32 {
 /// da linha de lesão do player_setup.cfg (strncmp com os 76 nomes, cada um pelo seu tamanho, na ordem; o primeiro que
 /// bate); nenhum: 0x4b. Pela aplicação das linhas (0x7a3a10) na criação do jogo. A devolução vale pelo al (a original
 /// deixa o resto do eax do strncmp).
-unsafe extern "C" fn lesao_pelo_nome(nome: usize) -> u32 {
+unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
     for &(n, texto, tipo) in CQF9_LESOES.iter() {
         if cqf9_strncmp(nome, texto, n) == 0 {
             crate::comparacao::ramo("cqf_9 lesao pelo nome");
@@ -25,10 +25,10 @@ unsafe extern "C" fn lesao_pelo_nome(nome: usize) -> u32 {
 }
 
 /// Comparador: a devolução (o al; só lê).
-unsafe extern "C" fn comparar_lesao_pelo_nome(nome: usize) -> u32 {
+unsafe extern "C" fn comparar_player_setup_injury_from_name(nome: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(nome);
-    let n = lesao_pelo_nome(nome);
-    PLACAR.registrar(r as u8 == n as u8, || format!("lesao_pelo_nome({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
+    let n = player_setup_injury_from_name(nome);
+    PLACAR.registrar(r as u8 == n as u8, || format!("player_setup_injury_from_name({:x}) original={:x} rust={:x}", nome, r as u8, n as u8));
     r
 }
 
@@ -92,7 +92,7 @@ unsafe fn cqf9_gostar_mais(p: usize, clube: usize) {
 /// +0x57) acima de 10: o técnico gosta mais. Estágio 1, tipos 'O' e 'N': o resultado pelo sorteio, a forma e a marca
 /// +0xc do registro de 79 bytes ([0xae2d0c]) cai. Dados 9 (resultado) e 10; a entrega pelo alcance `forcar` (0x786090:
 /// o clube, a nação do clube ou da pessoa e o continente dela).
-unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
+unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
     if p == 0 {
         return;
     }
@@ -129,8 +129,8 @@ unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize, p: usize, 
         let s = cqf9_sortear(32000) as i16;
         if tp == 0x51 {
             res = 0;
-            let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-            let c = contrato_de(cqf9_d(0xae1050), p);
+            let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+            let c = contract_of(cqf9_d(0xae1050), p);
             if c == 0 || cqf9_d(p + 0x61) == 0 || clube == 0 {
                 f1 = 1;
             } else {
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn noticia_da_volta_aos_treinos(this: usize, p: usize, 
 /// depois a original a partir do mesmo estado; compara o registro do jogador (0x6e), a ficha (0x46), o contrato (0x4f),
 /// o registro de forma (31), o byte +0xc do registro de 79 bytes, o registro do técnico do clube e o estado do sorteio.
 /// Com a fuga na cópia (a original põe na lista, sorteia e manda notícia): só a original.
-unsafe extern "thiscall" fn comparar_noticia_da_volta_aos_treinos(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
+unsafe extern "thiscall" fn comparar_post_recovery_news(this: usize, p: usize, estagio: u32, tipo: u32, forcar: u32, dias: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
     if p == 0 {
         return o(this, p, estagio, tipo, forcar, dias);
@@ -325,9 +325,9 @@ unsafe extern "thiscall" fn comparar_noticia_da_volta_aos_treinos(this: usize, p
     if cqf9_d(p + 0x61) != 0 {
         reg.push((cqf9_d(p + 0x61), 0x46));
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let antes_1080 = cqf9_d(0xae1080);
-    let c = contrato_de(cqf9_d(0xae1050), p);
+    let c = contract_of(cqf9_d(0xae1050), p);
     *(0xae1080 as *mut usize) = antes_1080;
     if c != 0 {
         reg.push((c, 0x4f));
@@ -342,7 +342,7 @@ unsafe extern "thiscall" fn comparar_noticia_da_volta_aos_treinos(this: usize, p
     let antes = crate::comparacao::Memoria::ler(&reg);
     CQF9_ENSAIO = true;
     CQF9_FUGIU = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| noticia_da_volta_aos_treinos(this, p, estagio, tipo, forcar, dias)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_recovery_news(this, p, estagio, tipo, forcar, dias)));
     CQF9_ENSAIO = false;
     let fugiu = CQF9_FUGIU;
     let mr = crate::comparacao::Memoria::ler(&reg);
@@ -352,14 +352,14 @@ unsafe extern "thiscall" fn comparar_noticia_da_volta_aos_treinos(this: usize, p
         return;
     }
     let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("noticia_da_volta_aos_treinos(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, tipo as u8, mo.0, mr.0));
+    PLACAR.registrar(mo == mr, || format!("post_recovery_news(pessoa {:x}, estagio {}, tipo {:x}) {:x?} x {:x?}", p, estagio as u8, tipo as u8, mo.0, mr.0));
 }
 
 /// { 0x630c50 } (stdcall, ret 0xc, injury.cpp): `injury_get_category_name(categoria, texto, tamanho)`: o nome traduzido
 /// (0x66f4e0) da categoria da lesão 0..12 (interna, pé, canela, joelho, coxa, virilha, tronco, mão, braço, ombro,
 /// pescoço, cabeça, recuperação); fora disso a caixa (linha 0x10e7). Devolve 2 com o idioma 3 (0x66f4d0), senão 0 (o
 /// gênero do nome). Tamanho abaixo de 20: a caixa (linha 0x10d0) e o al zerado.
-unsafe extern "stdcall" fn nome_da_categoria_da_lesao(categoria: u32, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "stdcall" fn injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
     if tamanho < 0x14 {
         aviso_em(0x9e7f28, 0x10d0);
         return 0;
@@ -377,12 +377,12 @@ unsafe extern "stdcall" fn nome_da_categoria_da_lesao(categoria: u32, texto: usi
 }
 
 /// Comparador: lado a lado no texto (o tamanho, até 0x100) e na devolução; o tamanho curto (a caixa): só a original.
-unsafe extern "stdcall" fn comparar_nome_da_categoria_da_lesao(categoria: u32, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "stdcall" fn comparar_injury_get_category_name(categoria: u32, texto: usize, tamanho: i32) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(u32, usize, i32) -> u32>(%%I2%%);
     if tamanho < 0x14 || texto == 0 {
         return o(categoria, texto, tamanho);
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(texto, (tamanho as usize).min(0x100))], || o(categoria, texto, tamanho), || nome_da_categoria_da_lesao(categoria, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("nome_da_categoria_da_lesao({}) original={} rust={}", categoria as u8 as i8, r, n));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(texto, (tamanho as usize).min(0x100))], || o(categoria, texto, tamanho), || injury_get_category_name(categoria, texto, tamanho));
+    PLACAR.registrar(igual && r == n, || format!("injury_get_category_name({}) original={} rust={}", categoria as u8 as i8, r, n));
     r
 }

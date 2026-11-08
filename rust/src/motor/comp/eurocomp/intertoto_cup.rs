@@ -19,14 +19,14 @@ pub(crate) const CQP13_INTERTOTO: [Cql10R; 5] = [
 ///
 /// [pt] { 0x633300 } (thiscall, ret 0x10, intertoto_cup.cpp; a virtual +0x3c): `IntertotoCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0xe4 sem memória.
-pub(crate) unsafe extern "thiscall" fn cqp13_intertoto_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQP13_INTERTOTO, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp13_intertoto_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP13_INTERTOTO_TABELA);
-    cql10_comparar("cqp13_intertoto_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqp13_intertoto_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE);
+    cql10_comparar("intertoto_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| intertoto_cup_create_round_table(this, fase, r, e, s))
 }
 
 /// A Copa Intercontinental: jogo único em 1º de dezembro (sorteio em 10 de outubro), mando 4 (Tóquio [inferência]).
@@ -40,14 +40,14 @@ pub(crate) const CQP13_INTERCONTINENTAL: [Cql10R; 1] = [
 ///
 /// [pt] { 0x92b770 } (thiscall, ret 0x10, world_club_cup.cpp; a virtual +0x3c): `WorldClubCup::create_round_table(...)`:
 /// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
-pub(crate) unsafe extern "thiscall" fn cqp13_intercontinental_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_92b770(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQP13_INTERCONTINENTAL, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp13_intercontinental_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP13_INTERCONTINENTAL_TABELA);
-    cql10_comparar("cqp13_intercontinental_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqp13_intercontinental_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_92b770(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE_92B770);
+    cql10_comparar("intertoto_cup_create_round_table_92b770", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| intertoto_cup_create_round_table_92b770(this, fase, r, e, s))
 }
 
 /// A Copa Interamericana: ida e volta a partir de 26 de janeiro do ano seguinte (sorteio em 10 de outubro), 7 dias.
@@ -61,14 +61,14 @@ pub(crate) const CQP13_INTERAMERICANA: [Cql10R; 1] = [
 ///
 /// [pt] { 0x632340 } (thiscall, ret 0x10, inter_amer_cup.cpp; a virtual +0x3c): `InterAmerCup::create_round_table(...)`:
 /// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
-pub(crate) unsafe extern "thiscall" fn cqp13_interamericana_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_632340(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQP13_INTERAMERICANA, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp13_interamericana_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP13_INTERAMERICANA_TABELA);
-    cql10_comparar("cqp13_interamericana_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqp13_interamericana_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table_632340(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_INTERTOTO_CUP_CREATE_ROUND_TABLE_632340);
+    cql10_comparar("intertoto_cup_create_round_table_632340", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| intertoto_cup_create_round_table_632340(this, fase, r, e, s))
 }
 
 /// A Copa dos Campeões da CONCACAF: quartas (28/8), semifinal (1/9) e final (4/9) em jogo único, 8 times.
@@ -193,14 +193,14 @@ pub(crate) unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
 /// [pt] regra: entram na Intertoto os 60 clubes que as regras europeias puseram nela (copa europeia +0x1db = a Intertoto),
 /// pela ordem da tabela de clubes; cada um com a classe = o seu coeficiente (+0x1df), e a lista é ordenada pela classe
 /// (as sementes); com menos de 60, a caixa de erro
-pub(crate) unsafe extern "thiscall" fn cqq10_intertoto_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usize) -> i32 {
     cqq10_intertoto(this).0
 }
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQQ10_INTERTOTO_INSCRITOS);
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_INTERTOTO_CUP_COLLECT_ENTRANTS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: 
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqq10_intertoto_inscritos({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -268,14 +268,14 @@ pub(crate) unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) ->
 ///
 /// [pt] regra: a lista dos clubes da Intertoto (para quem chama): todos os inscritos, ou só os ainda vivos (situação 0 ou 1)
 /// quando pedido
-pub(crate) unsafe extern "thiscall" fn cqq10_intertoto_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     cqq10_lista(this, saida, ativos)
 }
 
 /// Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
 /// própria, comparada na conta e nos ponteiros, e a libera.
-pub(crate) unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_CQQ10_INTERTOTO_LISTA);
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_INTERTOTO_CUP_COLLECT_CLUB_LIST);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, saida, ativos), || cqq10_lista(this, &mut s2, ativos));
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usiz
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(s2);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqq10_intertoto_lista({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
     a
 }
 
@@ -345,7 +345,7 @@ pub(crate) unsafe fn cqi10_vencedores(this: usize, uefa: usize) -> ([usize; 3], 
 /// +0x36 sobe); depois as posições previstas da UEFA (virtual +0x5c: mov ecx, uefa -> thiscall, ret 0), +0xb2 = 1 e de
 /// novo as posições previstas (a original relê a UEFA). Sempre, no fim, a atualização da copa (0x51f890: push fase;
 /// push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
-pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     if read_u32_as_usize(this + 0xb2) == 0 {
         let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x10));
         if acabou(this, 0, 1) as u8 != 0 {
@@ -399,8 +399,8 @@ pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: us
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano, feito
 // antes: se +0xb2 passa de 0 a 1 com a Copa da UEFA, o livro dela (+0x14) ganha os vencedores (cqi10_vencedores), em
 // ordem e com a situação 4, e +0x36 sobe tanto quanto; senão o livro não cresce.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQI10_INTERTOTO_DIA);
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_FOR_DATE);
     let uefa = cqi10_uefa();
     if uefa == 0 || read_u32_as_usize(this + 0xb2) != 0 {
         return o(this, hoje, fase);
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize,
             igual &= read_u32_as_usize(l) == c && read_u8(l + 4) == 4;
         }
     }
-    PLACAR.registrar(igual, || format!("cqi10_intertoto_dia({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
+    PLACAR.registrar(igual, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, read_i16(uefa + 0x36), previsto, &v[..k]));
     r
 }
 
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize,
 ///   byte de baixo sobe: inc al).
 /// - 0xff ou 2 (caiu): a eliminação (0x86c000) no Intertoto, fase 0, rodada +0x30 do jogo, peso(0x14, 0x50), e o clube
 ///   sai da competição europeia (+0x1db = −1).
-pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     match desfecho as u8 {
         1 => {
             let peso = cpz4_escala(0x3c, 0x64, read_i16(jogo + 0x34), read_i16(this + 0x3c) as u16 as u32);
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, cl
             }
             let div = n as i32 - 1;
             if div == 0 {
-                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQI10_INTERTOTO_REGISTROS)(this, clube, desfecho, a3, a4, jogo, a6); // ponytail: a original cai na divisão
+                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, desfecho, a3, a4, jogo, a6); // ponytail: a original cai na divisão
             }
             let q = (r as i32 * 99) / div;
             let peso = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
@@ -477,8 +477,8 @@ pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, cl
 
 // ponytail: os registros vão para o histórico das pessoas (reputação, moral): não rodam duas vezes. Só a original roda;
 // o plano confere o +0x1db do clube: [0x9cf6f0] para o vencedor, −1 para quem cai, intacto nos outros.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQI10_INTERTOTO_REGISTROS);
+pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
@@ -490,7 +490,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: 
     };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
     let depois = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_intertoto_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
+    PLACAR.registrar(r == 0 && depois == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
     r
 }
 

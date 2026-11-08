@@ -7,7 +7,7 @@
 /// o clube +0x39, sem data, desligando a pessoa, não como jogador), pulando os goleiros (jogador +0x61 com +0xf ≥ 15,
 /// byte com sinal) enquanto restarem 3 ou menos. Contadores de 8 bits com sinal, como os da original. Sem sorteio;
 /// a local `eh_a` só é lida quando 0x540a50 devolve parceiro (e então ela foi gravada).
-unsafe extern "C" fn cortar_elencos_de_a_e_b() {
+unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -69,7 +69,7 @@ unsafe extern "C" fn cortar_elencos_de_a_e_b() {
 /// do jogo 0xae2c90, gravando na pessoa). Treinador (+0xcf): com os dois, o do B só sai; só o do B: sai e entra no A
 /// com o cargo dele (+0x3d, lido depois da saída; a original empurra o byte com lixo em cima, e a 0x53bd10 só usa o
 /// byte), sem data. Auxiliar (+0xd3): com os dois, o do B sai. Sem sorteio.
-unsafe extern "C" fn juntar_o_time_b_ao_a() {
+unsafe extern "C" fn database_merge_b_team_staff() {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let tirar: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x53c190usize);
@@ -130,7 +130,7 @@ unsafe extern "C" fn juntar_o_time_b_ao_a() {
 /// comuns ([0xae23f8], [0xae23a0]), linhas de 60 bytes com a nação em +0x37 (0..[0xae2350]) e o peso em +0x3b
 /// (byte com sinal): linhas seguidas da mesma nação formam um grupo, gravado na entrada do id (+0) da nação quando
 /// a nação muda. Erro do original, copiado: o último grupo de cada tabela não é gravado. Sem memória: a original.
-unsafe extern "C" fn montar_indice_de_nomes() {
+unsafe extern "C" fn database_build_nation_name_index() {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let nacoes = *(0xae2350 as *const i32);
     let t = alocar((nacoes as u32).wrapping_mul(0x24));
@@ -230,34 +230,34 @@ unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust
     mr.0.clear();
 }
 
-unsafe extern "C" fn comparar_cortar_elencos_de_a_e_b() {
+unsafe extern "C" fn comparar_database_trim_senior_and_b_team_squads() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
-    comparar_times_a_e_b("cortar_elencos_de_a_e_b", || o(), || cortar_elencos_de_a_e_b());
+    comparar_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
 }
 
-unsafe extern "C" fn comparar_juntar_o_time_b_ao_a() {
+unsafe extern "C" fn comparar_database_merge_b_team_staff() {
     let o = orig::<unsafe extern "C" fn()>(%%I1%%);
-    comparar_times_a_e_b("juntar_o_time_b_ao_a", || o(), || juntar_o_time_b_ao_a());
+    comparar_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
 }
 
 /// Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
 /// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
 /// impressão dele não é critério).
-unsafe extern "C" fn comparar_montar_indice_de_nomes() {
+unsafe extern "C" fn comparar_database_build_nation_name_index() {
     orig::<unsafe extern "C" fn()>(%%I2%%)();
     let t = *(0xae2338 as *const usize);
     let n = (*(0xae2350 as *const i32)).max(0) as usize * 0x24;
     if t == 0 || n == 0 {
         return;
     }
-    montar_indice_de_nomes();
+    database_build_nation_name_index();
     let r = *(0xae2338 as *const usize);
     let original = core::slice::from_raw_parts(t as *const u8, n);
     let copia = core::slice::from_raw_parts(r as *const u8, n);
     let onde = original.iter().zip(copia).position(|(a, b)| a != b);
     PLACAR.registrar(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
-        format!("montar_indice_de_nomes: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
+        format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
             core::ptr::read_unaligned((t + k) as *const i32), core::ptr::read_unaligned((r + k) as *const i32))
     });
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);

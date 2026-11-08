@@ -36,7 +36,7 @@ unsafe fn cpv8_nivel(partida: usize, vaga: usize) -> i8 {
     }
 }
 
-/// { 0x62c080 } (thiscall, ret 8, injury.cpp): `Injury::apply_match_effects(jogo, partida)`, pela fechar_partida_do_dia
+/// { 0x62c080 } (thiscall, ret 8, injury.cpp): `Injury::apply_match_effects(jogo, partida)`, pela close_day_match
 /// (0x6b5f00) e pelas estatísticas simuladas (0x84be20), em toda partida: para os dois lados da partida (0x625 bytes a
 /// partir de +0x1c0), as 20 vagas de 0x49 bytes com pessoa (id em −0x30). O ritmo: o nível (+0x5a nas onze primeiras
 /// com a marca +0x4c da partida; senão o da vaga, menos o +2 nas reservas, que com 0xff dá 0) mais (10000 − condição
@@ -46,13 +46,13 @@ unsafe fn cpv8_nivel(partida: usize, vaga: usize) -> i8 {
 /// (−0x11) e a lista das batidas da partida (+0x28): cada batida da pessoa (o tipo 7 só com a ficha +0xf de 15 ou
 /// mais) tem a gravidade por +5 (acima de 95: 2; de 66: 1; de 51: 0; senão a da batida anterior) e o tipo da lesão
 /// (0x62d140); tipo válido: fim da lesão atual (0x62e700) e a lesão nova (0x62d250 com o jogo, ou 0 no jogo −2).
-unsafe extern "thiscall" fn efeitos_fisicos_da_partida(this: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partida: usize) {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let recuperar: unsafe extern "thiscall" fn(usize, usize, i16, i16) = core::mem::transmute(0x62bd10usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let tipo_de_lesao: unsafe extern "thiscall" fn(usize, i8, i8, usize) -> u8 = core::mem::transmute(0x62d140usize);
-    let fim_da_lesao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62e700usize);
+    let end_player_injury: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62e700usize);
     let nova_lesao: unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, i32, u32, u32) = core::mem::transmute(0x62d250usize);
     // ponytail: a gravidade é uma local da original que passa de uma batida para a outra; sem batida acima de 51 antes,
     // a original lê sobra de pilha e a cópia usa 0 (o comparador deixa toda partida com batida para a original).
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn efeitos_fisicos_da_partida(this: usize, jogo: usize,
                     let t = tipo_de_lesao(this, tipo, gravidade, pessoa);
                     if (t as i8) >= 0 {
                         crate::comparacao::ramo("cpv_8 batida vira lesao");
-                        fim_da_lesao(this, pessoa, 0);
+                        end_player_injury(this, pessoa, 0);
                         let j = if cpv8_d(jogo) == -2 { 0 } else { jogo };
                         nova_lesao(this, t as u32, 0, pessoa, j, 1, -1, 0, 0);
                     }
@@ -138,7 +138,7 @@ unsafe fn cpv8_tem_batida(this: usize, id: i32, pessoa: usize) -> bool {
 /// Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
-unsafe extern "thiscall" fn comparar_efeitos_fisicos_da_partida(this: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn comparar_apply_match_effects(this: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let mut batida = false;
@@ -156,20 +156,20 @@ unsafe extern "thiscall" fn comparar_efeitos_fisicos_da_partida(this: usize, jog
         }
     }
     if batida {
-        crate::comparacao::ramo("efeitos_fisicos_da_partida com batida");
+        crate::comparacao::ramo("apply_match_effects com batida");
         return o(this, jogo, partida);
     }
     if cpv8_d(this + 0x28) != 0 {
         reg.push((cpv8_d(this + 0x28) as usize + 0xa, 4)); // o cursor da lista das batidas
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, partida), || crate::aleatorio::sem_contar(|| efeitos_fisicos_da_partida(this, jogo, partida)));
-    PLACAR.registrar(igual, || format!("efeitos_fisicos_da_partida({:x}, {:x}) {:x?} x {:x?}", jogo, partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, partida), || crate::aleatorio::sem_contar(|| apply_match_effects(this, jogo, partida)));
+    PLACAR.registrar(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", jogo, partida, mo, mr));
 }
 
 /// { 0x62bf60 } (thiscall, ret 4, injury.cpp): `Injury::find_match_injury(pessoa)`: o item da lista das batidas da
 /// partida (+0x28; cursor +0xa recomeça de +2, 0x68d1b0) com o id da pessoa, ou 0 (sem lista também). Pelas telas do
 /// pessoal (0x870650, 0x885820).
-unsafe extern "thiscall" fn batida_do_jogador(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn find_match_injury(this: usize, pessoa: usize) -> usize {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let lista = cpv8_d(this + 0x28) as usize;
     if lista == 0 {
@@ -187,28 +187,28 @@ unsafe extern "thiscall" fn batida_do_jogador(this: usize, pessoa: usize) -> usi
 }
 
 /// Comparador: lado a lado no cursor da lista e na devolução.
-unsafe extern "thiscall" fn comparar_batida_do_jogador(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_match_injury(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let lista = cpv8_d(this + 0x28) as usize;
     let reg: &[(usize, usize)] = if lista == 0 { &[] } else { &[(lista + 0xa, 4)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, pessoa), || batida_do_jogador(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("batida_do_jogador({:x}) original={:x} {:x?} rust={:x} {:x?}", pessoa, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, pessoa), || find_match_injury(this, pessoa));
+    PLACAR.registrar(igual && r == n, || format!("find_match_injury({:x}) original={:x} {:x?} rust={:x} {:x?}", pessoa, r, mo, n, mr));
     r
 }
 
 /// { 0x631550 } (ret 4, injury.cpp; `this` não é lido): `Injury::is_player_on_holiday(pessoa)`: 1 se a lesão atual
 /// da pessoa (0x62ed70 no [0xb63d28]) é de férias (tipo 0x51). Pela tela do clube (0x4849f0).
-unsafe extern "thiscall" fn jogador_de_ferias(_this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn is_player_on_holiday(_this: usize, pessoa: usize) -> u8 {
     let atual: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let e = atual(cpv8_d(0xb63d28) as usize, pessoa);
     (e != 0 && *(e as *const u8) == 0x51) as u8
 }
 
 /// Comparador: a devolução (só o al).
-unsafe extern "thiscall" fn comparar_jogador_de_ferias(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_is_player_on_holiday(this: usize, pessoa: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let r = o(this, pessoa);
-    let n = jogador_de_ferias(this, pessoa);
-    PLACAR.registrar(r == n, || format!("jogador_de_ferias({:x}) original={} rust={}", pessoa, r, n));
+    let n = is_player_on_holiday(this, pessoa);
+    PLACAR.registrar(r == n, || format!("is_player_on_holiday({:x}) original={} rust={}", pessoa, r, n));
     r
 }

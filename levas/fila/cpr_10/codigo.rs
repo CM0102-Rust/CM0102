@@ -35,7 +35,7 @@ unsafe fn cpr10_estado(this: usize, pessoa: usize) -> u8 {
 /// { 0x62c400 } (thiscall, ret 4, injury.cpp): `Injury::get_player_injury_status(pessoa)`: pessoa nula, a caixa
 /// "Error" (linha 0x556) e 0; id a partir de [0xae2364], 0. Senão a forma do dia (0x62c680) e o estado
 /// (cpr10_estado). Quente (escalação automática): sem contador.
-unsafe extern "thiscall" fn estado_da_lesao(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn get_player_injury_status(this: usize, pessoa: usize) -> u8 {
     if pessoa == 0 {
         aviso_em(0x9e7f28, 0x556);
         return 0;
@@ -121,7 +121,7 @@ unsafe fn cpr10_procurar(this: usize, id: i32, limite: &[u8; 8], alterar: bool) 
 /// oferta com +0x2f e menos de 4 dias: hoje + 4 + sorteio(2). Sem vaga (−1): chegada a data, ela vira hoje e a fatia
 /// sobe (até a do dia [0xae2c88]); se o contrato da pessoa ([this] + 80 × índice do registro de 79 bytes) acaba antes
 /// de hoje + 180, hoje + 4 + sorteio(4). No fim, a data não passa de hoje + 14, e +0x1c sobe.
-unsafe extern "thiscall" fn marcar_decisao_da_oferta(this: usize, id: i32, vaga: i32) {
+unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: i32) {
     let mut limite = [0u8; 8];
     cpr10_mais(0xae2c90, 0xe, &mut limite);
     let mut e = cpr10_procurar(this, id, &limite, true);
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn marcar_decisao_da_oferta(this: usize, id: i32, vaga:
 /// `Staff_Records::get_manager_of_year_candidates(clubes, n)` (pela 0x768940): o qsort dos `n` clubes (0x870220) e, na
 /// ordem, até três cujo técnico (+0xcf) chegou (+0x3e) antes de hoje − 28 semanas (0x54cab0; ano sem sinal, dia com
 /// sinal) e tem registro (0x86f5b0 com 1) com jogos (+0x8e), copiados para o começo do próprio vetor. Devolve quantos.
-unsafe extern "thiscall" fn candidatos_a_tecnico_do_ano(this: usize, clubes: usize, n: u32) -> u8 {
+unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usize, clubes: usize, n: u32) -> u8 {
     let semanas: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54cab0usize);
     let mut lim = [0u8; 8];
     semanas(0xae2c90, lim.as_mut_ptr(), 0x1c);
@@ -231,11 +231,11 @@ unsafe extern "thiscall" fn candidatos_a_tecnico_do_ano(this: usize, clubes: usi
 
 /// Comparador: a original (com a forma do dia) e o estado relido pela regra (cpr10_estado, sem rodar a 0x62c680 de
 /// novo: a original já a rodou).
-unsafe extern "thiscall" fn comparar_estado_da_lesao(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_player_injury_status(this: usize, pessoa: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, pessoa);
     if pessoa != 0 && (cpr10_d(pessoa) as i32) < cpr10_d(0xae2364) as i32 {
         let n = cpr10_estado(this, pessoa);
-        PLACAR.registrar(r == n, || format!("estado_da_lesao(pessoa {:x}) original={} rust={}", pessoa, r, n));
+        PLACAR.registrar(r == n, || format!("get_player_injury_status(pessoa {:x}) original={} rust={}", pessoa, r, n));
     }
     r
 }
@@ -245,7 +245,7 @@ const CPR10_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xa
 
 /// Comparador: sem a entrada (a 0x4cd6d0 acrescenta e pode realocar) só a original; com ela, lado a lado pelo sorteio,
 /// as datas estáticas, o vetor das decisões e +0x1c (a cópia sem contar).
-unsafe extern "thiscall" fn comparar_marcar_decisao_da_oferta(this: usize, id: i32, vaga: i32) {
+unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i32, vaga: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I1%%);
     let mut limite = [0u8; 8];
     cpr10_mais(0xae2c90, 0xe, &mut limite);
@@ -257,17 +257,17 @@ unsafe extern "thiscall" fn comparar_marcar_decisao_da_oferta(this: usize, id: i
     reg.push((this + 0x1c, 4));
     reg.push((cpr10_d(this + 0xc), cpr10_d(this + 0x14).wrapping_mul(14)));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id, vaga),
-        || crate::aleatorio::sem_contar(|| marcar_decisao_da_oferta(this, id, vaga)));
-    PLACAR.registrar(igual, || format!("marcar_decisao_da_oferta(id {}, vaga {}) {:x?} x {:x?}", id, vaga, mo, mr));
+        || crate::aleatorio::sem_contar(|| schedule_offer_decision(this, id, vaga)));
+    PLACAR.registrar(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, vaga, mo, mr));
 }
 
 /// Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
 /// técnicos que a 0x86f5b0 cria na original já existem para a cópia).
-unsafe extern "thiscall" fn comparar_candidatos_a_tecnico_do_ano(this: usize, clubes: usize, n: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(this: usize, clubes: usize, n: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I2%%);
     let k = (n as u16 as i16).max(0) as usize;
     let reg = [(clubes, 4 * k), (0xae24c8, 8), (0xae24aa, 1)];
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, n), || candidatos_a_tecnico_do_ano(this, clubes, n));
-    PLACAR.registrar(igual && r == c, || format!("candidatos_a_tecnico_do_ano({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, n), || get_manager_of_year_candidates(this, clubes, n));
+    PLACAR.registrar(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
     r
 }

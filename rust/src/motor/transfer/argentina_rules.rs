@@ -29,15 +29,15 @@ pub(crate) const CQN1_ARGENTINA: [[u8; 6]; 4] = [
 ///
 /// [pt] { 0x40a620 } (thiscall, ret 0, argentina_rules.cpp, `ARGENTINA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Argentina (regra 1), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQN1_ARGENTINA`.
-pub(crate) unsafe extern "thiscall" fn janelas_argentina(this: usize) {
+pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqn_1 argentina");
     cqk1_janelas(this, 2, &CQN1_ARGENTINA, 0x987960, 0x50);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_janelas_argentina(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_ARGENTINA);
-    cqk1_comparar("janelas_argentina", this, || o(this), |s| janelas_argentina(s));
+pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ARGENTINA_RULES_INIT_TRANSFER_WINDOWS);
+    cqk1_comparar("argentina_rules_init_transfer_windows", this, || o(this), |s| argentina_rules_init_transfer_windows(s));
 }
 
 /// As janelas de Portugal: duas janelas, de 1º de junho a 1º de setembro; de 15 de dezembro a 15 de janeiro.
@@ -53,15 +53,15 @@ pub(crate) const CQN1_PORTUGAL: [[u8; 6]; 4] = [
 ///
 /// [pt] { 0x7d3df0 } (thiscall, ret 0, portugal_rules.cpp, `PORTUGAL_RULES::init_transfer_windows`; chamada pelo construtor das regras de Portugal (regra 19), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQN1_PORTUGAL`.
-pub(crate) unsafe extern "thiscall" fn janelas_portugal(this: usize) {
+pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows_7d3df0(this: usize) {
     crate::comparacao::ramo("cqn_1 portugal");
     cqk1_janelas(this, 2, &CQN1_PORTUGAL, 0xa78844, 0x4f);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_janelas_portugal(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_PORTUGAL);
-    cqk1_comparar("janelas_portugal", this, || o(this), |s| janelas_portugal(s));
+pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows_7d3df0(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ARGENTINA_RULES_INIT_TRANSFER_WINDOWS_7D3DF0);
+    cqk1_comparar("argentina_rules_init_transfer_windows_7d3df0", this, || o(this), |s| argentina_rules_init_transfer_windows_7d3df0(s));
 }
 
 /// As janelas da Coreia do Sul: uma janela, de 25 de novembro (andando para o domingo [inferência]) a 25 de julho.
@@ -75,7 +75,7 @@ pub(crate) const CQN1_COREIA: [[u8; 6]; 2] = [
 /// Original: `KOREA_RULES::KOREA_RULES` (0x66e630, korea_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x66e630 } (thiscall, ret 0x14, korea_rules.cpp, `KOREA_RULES::KOREA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Coreia do Sul (regra 27): a base (0x8e84a0), a vtable 0x96cfec, 1 janela(s) de `CQN1_COREIA`; o +0x13 = 7 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_coreia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_korea_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqn_1 coreia");
     cqn1_construir(this, [a1, a2, a3, a4, a5], 0x96cfec, 1, &CQN1_COREIA, 0x9eb20c, 0x51);
     *((this + 0x13) as *mut u8) = 7;
@@ -83,11 +83,11 @@ pub(crate) unsafe extern "thiscall" fn regras_coreia(this: usize, a1: u32, a2: u
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_coreia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_COREIA);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_korea_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_KOREA_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_coreia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_coreia(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_korea_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_korea_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }

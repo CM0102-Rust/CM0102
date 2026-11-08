@@ -3,7 +3,7 @@
 /// { 0x53ab90 } (cdecl, Database.cpp): a idade da `pessoa` em anos completos na `data` (palavra +0 dia
 /// do ano, +2 ano): ano − ano de nascimento (+0x12), menos 1 se o dia de nascimento (+0x10) ainda não
 /// chegou. Pessoa nula: caixa "Error" e 0xff (a original). Só o ax é devolvido (quem chama usa al).
-unsafe extern "C" fn idade_da_pessoa(pessoa: usize, data: *const u16) -> u16 {
+unsafe extern "C" fn database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
     if pessoa == 0 {
         return orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%)(pessoa, data);
     }
@@ -19,7 +19,7 @@ unsafe extern "C" fn idade_da_pessoa(pessoa: usize, data: *const u16) -> u16 {
 /// { 0x544670 } (cdecl, Database.cpp): 1 se a `nacao` tem transferência livre: com as regras novas da
 /// FIFA ([0xae233c] = 1), no Brasil ou numa nação da Europa (continente +0x71, [0x9cfa10]) fora de
 /// Polônia, Turquia, Croácia e Rússia.
-unsafe extern "C" fn nacao_com_transferencia_livre(nacao: usize) -> u32 {
+unsafe extern "C" fn nation_allows_free_transfers(nacao: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     if *(0xae233c as *const u8) == 1 {
         return 1;
@@ -42,7 +42,7 @@ unsafe extern "C" fn nacao_com_transferencia_livre(nacao: usize) -> u32 {
 /// `nacao_do_clube`: nacionalidade (+0x1a) ou segunda (+0x1e) com a marca de UE (nação +0x7f = 2) ou
 /// Suíça ([0x9cf4ac]); na Alemanha, qualquer europeu (nação +0x71 = o continente [0x9cfa10] na tabela
 /// [0xae23a4], 198 bytes); em [0x9cf360], todos; na Dinamarca, [0x9cf348], Noruega e [0x9cf3a0].
-unsafe extern "C" fn pessoa_e_comunitaria(pessoa: usize, nacao_do_clube: usize) -> u32 {
+unsafe extern "C" fn database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let g = |a: usize| *(a as *const u32);
     let n = ler(pessoa, 0x1a);
@@ -74,27 +74,27 @@ unsafe extern "C" fn pessoa_e_comunitaria(pessoa: usize, nacao_do_clube: usize) 
     0
 }
 
-unsafe extern "C" fn comparar_idade_da_pessoa(pessoa: usize, data: *const u16) -> u16 {
+unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
     let o = orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(%%I0%%);
     if pessoa == 0 {
         return o(pessoa, data); // caixa: só a original
     }
     let r = o(pessoa, data);
-    let n = idade_da_pessoa(pessoa, data);
-    PLACAR.registrar(r == n, || format!("idade_da_pessoa({:x}) original={} rust={}", pessoa, r, n));
+    let n = database_get_staff_age(pessoa, data);
+    PLACAR.registrar(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_nacao_com_transferencia_livre(nacao: usize) -> u32 {
+unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(nacao);
-    let n = nacao_com_transferencia_livre(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_com_transferencia_livre({:x}) original={} rust={}", nacao, r, n));
+    let n = nation_allows_free_transfers(nacao);
+    PLACAR.registrar(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_pessoa_e_comunitaria(pessoa: usize, nacao_do_clube: usize) -> u32 {
+unsafe extern "C" fn comparar_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(pessoa, nacao_do_clube);
-    let n = pessoa_e_comunitaria(pessoa, nacao_do_clube);
-    PLACAR.registrar(r == n, || format!("pessoa_e_comunitaria({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
+    let n = database_is_staff_eu_national(pessoa, nacao_do_clube);
+    PLACAR.registrar(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
     r
 }

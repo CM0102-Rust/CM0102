@@ -26,7 +26,7 @@ unsafe fn cpt11_depois(a: usize, b: usize) -> bool {
 /// 0x5c5820) e responde as dos amistosos (+0x34d4, 0x5c5f40), tira os pedidos sem clubes ou vencidos (+0x34c8), cancela
 /// os torneios fora de uso cuja data − 2 dias (0x54c8e0) já passou e zera os convites vencidos (+0x34cc, 10 de 0x19
 /// bytes por item, a data em +9, a marca em +0x15). Devolve 1.
-unsafe extern "thiscall" fn atualizar_amistosos_do_dia(this: usize, hoje: usize, ativo: u32) -> u32 {
+unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, ativo: u32) -> u32 {
     if ativo == 0 {
         return 1;
     }
@@ -149,11 +149,11 @@ unsafe extern "thiscall" fn atualizar_amistosos_do_dia(this: usize, hoje: usize,
 /// nação e faixa (0x5c5290); põe as janelas (0x5c2d40), planeja torneios e excursões (0x5c3040) e os amistosos
 /// (0x5c4770); libera as listas dos candidatos (0x68d040 + 0x944c94) e os dois vetores (0x9452ca). Sem memória para os
 /// candidatos: a caixa (linha 0x18a).
-unsafe extern "thiscall" fn planejar_pre_temporada_da_ia(this: usize) {
+unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let janelas: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(0x5c2d40usize);
     let torneios: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x5c3040usize);
     let amistosos: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x5c4770usize);
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn planejar_pre_temporada_da_ia(this: usize) {
     let mut i: i32 = 0;
     if cpt11_d(0xae235c) as i32 > 0 {
         loop {
-            if e_selecao(clube) == 0 && cpt11_d(clube + 0x53) != 0 {
+            if is_national_team(clube) == 0 && cpt11_d(clube + 0x53) != 0 {
                 let r = v + n as usize * 0x16;
                 let rep = cpt11_w(clube + 0x80) as i16 as i32;
                 crate::comparacao::ramo("cpt_11 candidato da pré-temporada");
@@ -308,25 +308,25 @@ unsafe fn cpt11_janelas(ptrs: usize, n: i32, gravar: bool) -> Vec<(usize, i16, i
 /// { 0x5c2d40 } (thiscall, ret 8, friendly.cpp): `Friendly::set_preseason_windows(candidatos, n)`: a janela da
 /// pré-temporada de cada nação nos candidatos dela (ver `cpt11_janelas`); o `this` não é lido. A original constrói e
 /// destrói duas datas locais que não usa (0x9463af / 0x9462bb com 0x54a110 / 0x5a53c0).
-unsafe extern "thiscall" fn janelas_da_pre_temporada(_this: usize, ptrs: usize, n: i32) {
+unsafe extern "thiscall" fn set_preseason_windows(_this: usize, ptrs: usize, n: i32) {
     cpt11_janelas(ptrs, n, true);
 }
 
 /// Comparador: anda o calendário e planeja (aloca, sorteia): só a original.
-unsafe extern "thiscall" fn comparar_atualizar_amistosos_do_dia(this: usize, hoje: usize, ativo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_friendly_update_for_date(this: usize, hoje: usize, ativo: u32) -> u32 {
     // ponytail: cancela torneios, tira pedidos e cria amistosos (não roda duas vezes); a cópia se prova pela carreira
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, ativo)
 }
 
 /// Comparador: monta e planeja os amistosos da IA (aloca, sorteia): só a original.
-unsafe extern "thiscall" fn comparar_planejar_pre_temporada_da_ia(this: usize) {
+unsafe extern "thiscall" fn comparar_plan_ai_preseason_friendlies(this: usize) {
     // ponytail: os torneios, as excursões e os amistosos sorteiam e alocam; a cópia se prova pela carreira
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
 /// Comparador: grava as janelas e cria listas (não roda duas vezes): o plano antes (sem gravar), a original grava;
 /// cada candidato planejado tem de ter a janela e, quando é a ponta da tabela, uma lista em +0x12.
-unsafe extern "thiscall" fn comparar_janelas_da_pre_temporada(this: usize, ptrs: usize, n: i32) {
+unsafe extern "thiscall" fn comparar_set_preseason_windows(this: usize, ptrs: usize, n: i32) {
     let plano = cpt11_janelas(ptrs, n, false);
     orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I2%%)(this, ptrs, n);
     let erros: Vec<String> = plano.iter()
@@ -337,5 +337,5 @@ unsafe extern "thiscall" fn comparar_janelas_da_pre_temporada(this: usize, ptrs:
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
             core::ptr::read_unaligned((c + 0xe) as *const i16), core::ptr::read_unaligned((c + 0x10) as *const i16), cpt11_d(c + 0x12)))
         .collect();
-    PLACAR.registrar(erros.is_empty(), || format!("janelas_da_pre_temporada(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
+    PLACAR.registrar(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plano.len(), erros.join("; ")));
 }

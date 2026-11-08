@@ -937,7 +937,7 @@ static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-unsafe extern "C" fn casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
+unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     let mut r = 0i32;
     for cadeia in CHAVES_DE_CLUBE.iter() {
@@ -955,7 +955,7 @@ unsafe extern "C" fn casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
 /// { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
 /// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CHAVES_DE_CLUBE_NA_TROCA) que
 /// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
-unsafe extern "C" fn remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
+unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32 {
     for &g in CHAVES_DE_CLUBE_NA_TROCA.iter() {
         if *(g as *const u32) == antigo {
             *(g as *mut u32) = novo; // chave remapeada
@@ -970,7 +970,7 @@ unsafe extern "C" fn remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-unsafe extern "C" fn casar_chave_de_nacao(nome: usize, linha: u32) -> u32 {
+unsafe extern "C" fn match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     let mut r = 0i32;
     for cadeia in CHAVES_DE_NACAO.iter() {
@@ -999,32 +999,32 @@ fn chaves_diferentes(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Me
     s
 }
 
-unsafe extern "C" fn comparar_casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
+unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I0%%);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_clube(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_clube(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
+        format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }
 
-unsafe extern "C" fn comparar_remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
+unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(%%I1%%);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remapear_chave_de_clube(antigo, novo));
-    PLACAR.registrar(igual && r == n, || format!("remapear_chave_de_clube({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, chaves_diferentes(&mo, &mr)));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
+    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, chaves_diferentes(&mo, &mr)));
     r
 }
 
-unsafe extern "C" fn comparar_casar_chave_de_nacao(nome: usize, linha: u32) -> u32 {
+unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%);
     let reg: [(usize, usize); 1] = [(0x9cf200, 0x348)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_nacao(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_nacao(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
+        format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }

@@ -64,7 +64,7 @@ unsafe fn cpr12_passa(f: usize, clube: u32, comp: u32, tipo: u8, lado: u8) -> bo
 /// competição (−1 qualquer). Devolve a conta (palavra); a cópia que falha mostra a caixa (linha 0x93b) e para ali.
 /// Quente (288 mil chamadas até 2002-06-01): sem contador.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
+unsafe extern "thiscall" fn find_fixtures(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                       lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
     let (tipo, lado) = (tipo as u8, lado as u8);
     let mut nacoes = [0xffu8; 8];
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn achar_jogos_do_calendario(this: usize, dia0: u32, an
 /// competição (+0; −1 qualquer), da rodada (+0x34, palavra; −1 qualquer) e do tipo (+0x42; 0xfe qualquer). Devolve
 /// quantos (palavra); a cópia que falha mostra a caixa (linha 0x634) e para ali.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
+unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                        tipo: u32, lista: usize) -> u32 {
     let tipo = tipo as u8;
     // ponytail: a original empurra o local da nação com bytes altos de sobra de pilha; a 0x5abf10 só lê o byte
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn jogos_da_competicao_no_dia(this: usize, ano: u32, di
 /// `fix_man_comp_has_fixture_on_date(data, comp)` (das eliminatórias da Eurocopa 0x57fd60): 1 se a competição tem
 /// jogo (+0 = comp) na data em alguma das três fatias do calendário [0xae2a58], na lista da nação-chave dela
 /// (0x48dd70). Competição −1 ou abaixo: 0; data nula: a caixa (linha 0xe89) e 0.
-unsafe extern "stdcall" fn competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
+unsafe extern "stdcall" fn fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     if (comp as i32) <= -1 {
         return 0;
     }
@@ -241,43 +241,43 @@ unsafe fn cpr12_com_lista_nova(lista: usize, conta_antes: u16, cauda_antes: u32,
 /// Comparador: sem lista, pela devolução (a original e a cópia só andam os cursores das listas do calendário). Com
 /// lista, a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_achar_jogos_do_calendario(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
+unsafe extern "thiscall" fn comparar_find_fixtures(this: usize, dia0: u32, ano0: u32, dia1: u32, ano1: u32, clube: u32,
                                                                lista: usize, comp: u32, tipo: u32, lado: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32>(%%I0%%);
     if lista == 0 {
         let r = o(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
-        let n = achar_jogos_do_calendario(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
-        PLACAR.registrar(r as u16 == n as u16, || format!("achar_jogos_do_calendario({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
+        let n = find_fixtures(this, dia0, ano0, dia1, ano1, clube, 0, comp, tipo, lado);
+        PLACAR.registrar(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
             dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, tipo as u8, lado as u8, r as u16, n as u16));
         return r;
     }
     let (conta, cauda) = (*(lista as *const u16), cpr12_d(lista + 6));
     let r = o(this, dia0, ano0, dia1, ano1, clube, lista, comp, tipo, lado);
     let (n, iguais) = cpr12_com_lista_nova(lista, conta, cauda,
-        |p| achar_jogos_do_calendario(this, dia0, ano0, dia1, ano1, clube, p, comp, tipo, lado));
-    PLACAR.registrar(iguais && r as u16 == n as u16, || format!("achar_jogos_do_calendario({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
+        |p| find_fixtures(this, dia0, ano0, dia1, ano1, clube, p, comp, tipo, lado));
+    PLACAR.registrar(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
         dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, clube as i32, comp as i32, tipo as u8, lado as u8, r as u16, n as u16, iguais));
     r
 }
 
 /// Comparador: a original enche a lista real e a cópia uma provisória: a conta (palavra) e os itens acrescentados.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_jogos_da_competicao_no_dia(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
+unsafe extern "thiscall" fn comparar_collect_comp_fixtures_on_day(this: usize, ano: u32, dia: u32, fatia: u32, comp: u32, rodada: u32,
                                                                 tipo: u32, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(%%I1%%);
     let (conta, cauda) = (*(lista as *const u16), cpr12_d(lista + 6));
     let r = o(this, ano, dia, fatia, comp, rodada, tipo, lista);
     let (n, iguais) = cpr12_com_lista_nova(lista, conta, cauda,
-        |p| jogos_da_competicao_no_dia(this, ano, dia, fatia, comp, rodada, tipo, p));
-    PLACAR.registrar(iguais && r as u16 == n as u16, || format!("jogos_da_competicao_no_dia({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
+        |p| collect_comp_fixtures_on_day(this, ano, dia, fatia, comp, rodada, tipo, p));
+    PLACAR.registrar(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
         dia as u16, ano as u16, fatia as u8, comp as i32, rodada as i32, tipo as u8, r as u16, n as u16, iguais));
     r
 }
 
 /// Comparador: pela devolução (só anda os cursores das listas do calendário).
-unsafe extern "stdcall" fn comparar_competicao_tem_jogo_na_data(data: usize, comp: u32) -> u8 {
+unsafe extern "stdcall" fn comparar_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize, u32) -> u8>(%%I2%%)(data, comp);
-    let n = competicao_tem_jogo_na_data(data, comp);
-    PLACAR.registrar(r == n, || format!("competicao_tem_jogo_na_data(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
+    let n = fix_man_comp_has_fixture_on_date(data, comp);
+    PLACAR.registrar(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r
 }

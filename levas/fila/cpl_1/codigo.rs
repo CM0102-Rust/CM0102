@@ -45,7 +45,7 @@ unsafe fn cpl1_fora(pessoa: usize) -> bool {
 /// { 0x8cdc90 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::club_has_offer_for_player(pessoa,
 /// clube)`: 1 se a pessoa marcada como sob oferta (bit 0 de [this+0x86e] + id × 8) tem, entre as ofertas em aberto
 /// (0x8c5cf0 sem `todas`), uma do clube (+8 da oferta = id do clube); senão 0 (id fora da tabela também).
-unsafe extern "thiscall" fn clube_tem_oferta_pelo_jogador(this: usize, pessoa: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn club_has_offer_for_player(this: usize, pessoa: usize, clube: usize) -> u32 {
     if cpl1_fora(pessoa) || !cpl1_marcada(this, cpl1_d(pessoa)) {
         return 0;
     }
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn clube_tem_oferta_pelo_jogador(this: usize, pessoa: u
 /// { 0x8cdd80 } (thiscall, ret 0xc, transfer_manager.cpp): `TRANSFER_MANAGER::find_club_offer_for_player(pessoa,
 /// clube, todas)`: a oferta do clube pela pessoa (a primeira da lista da 0x8c5cf0, com `todas` também as encerradas),
 /// ou 0. Sem `todas`, a pessoa tem de estar marcada como sob oferta; id fora da tabela: 0.
-unsafe extern "thiscall" fn oferta_do_clube_pelo_jogador(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
+unsafe extern "thiscall" fn find_club_offer_for_player(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
     if cpl1_fora(pessoa) || (todas == 0 && !cpl1_marcada(this, cpl1_d(pessoa))) {
         return 0;
     }
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn oferta_do_clube_pelo_jogador(this: usize, pessoa: us
 /// { 0x8cd150 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::player_has_pending_offer(pessoa)`: 1 se
 /// a pessoa está sob oferta (0x8cde70 sem a visão do humano) e uma das ofertas em aberto (0x8c5cf0) está na situação
 /// (+0x2c) 0, 1, 5 ou 6; senão 0. O índice além da conta (+4) lê a oferta 0, como a original.
-unsafe extern "thiscall" fn jogador_com_oferta_pendente(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn player_has_pending_offer(this: usize, pessoa: usize) -> u32 {
     let sob_oferta: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cde70usize);
     // ponytail: a original constrói a lista antes de perguntar; vazia, a 0x68d020/0x68d040 não alocam (nada a imitar)
     if sob_oferta(this, pessoa, 0) == 0 {
@@ -112,35 +112,35 @@ unsafe fn cpl1_regioes(this: usize, pessoa: usize) -> [(usize, usize); 1] {
 }
 
 // ponytail: as três só leem (a lista local nasce e morre nelas); com a pessoa nula, só a original (lê o endereço 0)
-unsafe extern "thiscall" fn comparar_clube_tem_oferta_pelo_jogador(this: usize, pessoa: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_club_has_offer_for_player(this: usize, pessoa: usize, clube: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa, clube);
     }
     let reg = cpl1_regioes(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube), || clube_tem_oferta_pelo_jogador(this, pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("clube_tem_oferta_pelo_jogador({}, clube {}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube), || club_has_offer_for_player(this, pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("club_has_offer_for_player({}, clube {}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), r, n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_oferta_do_clube_pelo_jogador(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
+unsafe extern "thiscall" fn comparar_find_club_offer_for_player(this: usize, pessoa: usize, clube: usize, todas: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> usize>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa, clube, todas);
     }
     let reg = cpl1_regioes(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, todas), || oferta_do_clube_pelo_jogador(this, pessoa, clube, todas));
-    PLACAR.registrar(igual && r == n, || format!("oferta_do_clube_pelo_jogador({}, clube {}, todas {}) original={:x} rust={:x} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), todas, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, todas), || find_club_offer_for_player(this, pessoa, clube, todas));
+    PLACAR.registrar(igual && r == n, || format!("find_club_offer_for_player({}, clube {}, todas {}) original={:x} rust={:x} {:x?} x {:x?}", cpl1_d(pessoa), cpl1_d(clube), todas, r, n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_jogador_com_oferta_pendente(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_player_has_pending_offer(this: usize, pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
     let reg = cpl1_regioes(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || jogador_com_oferta_pendente(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("jogador_com_oferta_pendente({}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || player_has_pending_offer(this, pessoa));
+    PLACAR.registrar(igual && r == n, || format!("player_has_pending_offer({}) original={} rust={} {:x?} x {:x?}", cpl1_d(pessoa), r, n, mo, mr));
     r
 }

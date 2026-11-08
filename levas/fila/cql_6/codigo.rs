@@ -133,25 +133,25 @@ const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
 
 /// { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
 /// (+0x2c = 0, +0xc = 0) e o estádio mínimo de 10.000 lugares, todos sentados.
-unsafe extern "thiscall" fn construir_premier(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_PREMIER)
 }
 
 /// { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
 /// liga (o play-off de acesso), sem estádio mínimo.
-unsafe extern "thiscall" fn construir_first(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_FIRST)
 }
 
 /// { 0x5754a0 } (thiscall, ret 8, eng_second.cpp): `EngSecond::EngSecond(ano, registro)`. A Second Division: 1 fase além
 /// da liga (o play-off), sem estádio mínimo.
-unsafe extern "thiscall" fn construir_second(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_eng_second(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_SECOND)
 }
 
 /// { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
 /// liga (o play-off) e o estádio mínimo de 6.000 lugares, 1.000 sentados.
-unsafe extern "thiscall" fn construir_third(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_THIRD)
 }
 
@@ -172,22 +172,22 @@ unsafe fn cql6_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &
     r
 }
 
-unsafe extern "thiscall" fn comparar_construir_premier(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cql6_comparar("construir_premier", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
+    cql6_comparar("construct_eng_prm", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_first(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cql6_comparar("construir_first", this, ano, registro, &CQL6_FIRST, || o(this, ano, registro))
+    cql6_comparar("construct_eng_first", this, ano, registro, &CQL6_FIRST, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_second(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_eng_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cql6_comparar("construir_second", this, ano, registro, &CQL6_SECOND, || o(this, ano, registro))
+    cql6_comparar("construct_eng_second", this, ano, registro, &CQL6_SECOND, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_third(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
-    cql6_comparar("construir_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
+    cql6_comparar("construct_eng_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
 }

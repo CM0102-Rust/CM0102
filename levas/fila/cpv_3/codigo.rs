@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: as ofertas em espera no fechamento da janela, a notícia das expectativas da federação e a do protesto da torcida (transfer_manager.cpp, manager_manager.cpp) ----------
+// ---------- %%LEVA%%a leva: as ofertas em espera no match_wrap_up da janela, a notícia das expectativas da federação e a do protesto da torcida (transfer_manager.cpp, manager_manager.cpp) ----------
 
 unsafe fn cpv3_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
@@ -24,8 +24,8 @@ unsafe fn cpv3_pessoa(id: usize) -> usize {
 
 /// O contrato principal da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz depois de cada chamada.
 unsafe fn cpv3_contrato(p: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpv3_d(0xae1050), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpv3_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     c
 }
@@ -82,14 +82,14 @@ unsafe fn cpv3_em_espera(o: usize) {
 /// humano, senão retirada (0x8bfcb0); comprador do computador (0x600a50): status 3 e reagendada em 1 dia. Senão, com
 /// jogadores na troca e vendedor da nação, pelos mesmos testes com o vendedor nas regras: em espera; a notícia, ou
 /// recusada (0x8bf680); e o mesmo reagendamento.
-unsafe extern "thiscall" fn ofertas_em_espera_na_janela(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, nacao: usize) {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let completar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c34e0usize);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let noticia_da_espera: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8e1150usize);
     let retirar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8bfcb0usize);
     let recusar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8bf680usize);
-    let clube_humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let human_club: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     let da_nacao = cpv3_d(selecao(nacao) + 0x53);
     let mut regras = 0usize;
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn ofertas_em_espera_na_janela(this: usize, nacao: usiz
                 // a vaga relida de [this] como na original
                 retirar(this, cpv3_d(this).wrapping_add((i - 1) * 4), 0, 0); // cpv3: o comprador retira
             }
-            if clube_humano(cpv3_clube(cpv3_d(o + 8)), 0, 1, 0, 0) == 0 {
+            if human_club(cpv3_clube(cpv3_d(o + 8)), 0, 1, 0, 0) == 0 {
                 crate::comparacao::ramo("cpv_3 reagendada na janela");
                 cpv3_pb(o + 0x2c, 3); // cpv3: status 3
                 agendar(this, o, 1, 0); // cpv3: de volta amanhã
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn ofertas_em_espera_na_janela(this: usize, nacao: usiz
             crate::comparacao::ramo("cpv_3 recusada na janela");
             recusar(this, cpv3_d(this).wrapping_add((i - 1) * 4), 0, 0); // cpv3: o vendedor recusa
         }
-        if clube_humano(cpv3_clube(cpv3_d(o + 8)), 0, 1, 0, 0) == 0 {
+        if human_club(cpv3_clube(cpv3_d(o + 8)), 0, 1, 0, 0) == 0 {
             cpv3_pb(o + 0x2c, 3);
             agendar(this, o, 1, 0);
         }
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn ofertas_em_espera_na_janela(this: usize, nacao: usiz
 /// { 0x6a44a0 } (thiscall, ret 0xc, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
 /// post_fa_expectations_news(seleção, expectativa, competição)`: a notícia 0x177e (local): 0 = o id da seleção, 1 = a
 /// expectativa (palavra com sinal), 2 = a competição; pelo alcance (0x786090) com a seleção.
-unsafe extern "thiscall" fn noticia_das_expectativas_da_federacao(_this: usize, selecao: usize, expectativa: u32, competicao: u32) {
+unsafe extern "thiscall" fn post_fa_expectations_news(_this: usize, selecao: usize, expectativa: u32, competicao: u32) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let por_alcance: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x786090usize);
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn noticia_das_expectativas_da_federacao(_this: usize, 
 /// { 0x6a5d10 } (thiscall, ret 4, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
 /// post_supporter_protest_news(clube)`: antes da data das notícias ([0xdd6ec8]), nada. A notícia 0x1782 (local): 0 = o
 /// id do clube, 1..4 o técnico (+0xcf: o id e as três chaves +0x33 de +4, +8, +0xc); pelo alcance (0x786090).
-unsafe extern "thiscall" fn noticia_do_protesto_da_torcida(_this: usize, clube: usize) {
+unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize, clube: usize) {
     let dia = *(0xdd6ec8 as *const i16);
     let ano = *(0xdd6eca as *const u16);
     let hoje_ano = *(0xae2c92 as *const u16);
@@ -235,16 +235,16 @@ unsafe extern "thiscall" fn noticia_do_protesto_da_torcida(_this: usize, clube: 
 
 // ponytail: completa, retira, recusa e reagenda ofertas (as chamadas liberam e alocam): não roda duas vezes. Só a
 // original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_ofertas_em_espera_na_janela(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn comparar_hold_offers_at_window_close(this: usize, nacao: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, nacao)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_das_expectativas_da_federacao(this: usize, selecao: usize, expectativa: u32, competicao: u32) {
+unsafe extern "thiscall" fn comparar_post_fa_expectations_news(this: usize, selecao: usize, expectativa: u32, competicao: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, selecao, expectativa, competicao)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_protesto_da_torcida(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_post_supporter_protest_news(this: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, clube)
 }

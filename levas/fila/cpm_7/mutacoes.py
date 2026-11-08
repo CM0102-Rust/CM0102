@@ -1,5 +1,5 @@
 # Mutacoes. O amistoso perto da data sem conferir o dia antes e sem conferir o dia depois (o planejamento 0x5c4380
-# aceita a primeira data em vez de passar para a seguinte: os amistosos mudam de dia, e com eles as partidas e os
+# aceita a primeira data em vez de pass_ball para a seguinte: os amistosos mudam de dia, e com eles as partidas e os
 # sorteios da carreira). O amistoso planejado com o mandante e o visitante trocados (a partida muda de casa: publico,
 # renda e o mando). Nenhuma na competicao na data (chamada pelas copas e ligas a cada data: quente, sem contador).
 MUTACOES = [

@@ -127,7 +127,7 @@ unsafe fn cpr2_pode(this: usize, jogador: usize, clube: usize, ignorar_abertas: 
 /// transferência futura (0x13) (0x20). Pelo clube: basco (0x53d7f0) com jogador estrangeiro na nação [0x9cf424] (0x19);
 /// da nação [0x9cf4dc] fora da [0x9cf8d8] (+0x57) com jogador estrangeiro (0x28); os clubes [0x9d0128]/[0x9d01a0] com
 /// jogador sem a nação [0x9cf424] (0x1a). Senão pode (1, motivo 0).
-unsafe extern "thiscall" fn clube_pode_chegar_ao_jogador(this: usize, jogador: usize, clube: usize, motivo: *mut u16, ignorar_abertas: u32) -> u32 {
+unsafe extern "thiscall" fn can_club_bid_for_player(this: usize, jogador: usize, clube: usize, motivo: *mut u16, ignorar_abertas: u32) -> u32 {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mut lista = [0u8; 0x10];
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn clube_pode_chegar_ao_jogador(this: usize, jogador: u
 /// pessoa)`: `k` negativo ou fora da conta (+4): a caixa "Error" (0xdc3 ou 0xdc8). Na oferta `k` (vazia: nada), pela
 /// lista dos jogadores da troca (+4), marca (+4 do item) o da `pessoa`; nenhum item marcado: o estado (+0x2c) vira 8 (se
 /// era 7) ou 6.
-unsafe extern "thiscall" fn termos_ao_jogador_da_troca(this: usize, k: i32, pessoa: u32) {
+unsafe extern "thiscall" fn note_terms_offered_to_exchange_player(this: usize, k: i32, pessoa: u32) {
     if k < 0 {
         aviso_em(0xa8d514, 0xdc3);
         return;
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn termos_ao_jogador_da_troca(this: usize, k: i32, pess
 /// { 0x8c1780 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::count_club_free_transfer_queue(clube)`:
 /// clube nulo: a caixa "Error" 0xc04 e 0. Senão conta as pessoas da fila da transferência livre (+0x92c; o cursor volta
 /// ao começo) com o clube do contrato (+0x39) igual ao clube ou ao parceiro dele (0x540a50 com 0 e 1), não nulo.
-unsafe extern "thiscall" fn fila_livre_do_clube(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn count_club_free_transfer_queue(this: usize, clube: usize) -> u8 {
     if clube == 0 {
         aviso_em(0xa8d514, 0xc04);
         return 0;
@@ -204,19 +204,19 @@ unsafe extern "thiscall" fn fila_livre_do_clube(this: usize, clube: usize) -> u8
 /// Comparador: lado a lado pelo motivo, pela marca da pessoa (+0x86e) e pelo cursor da fila livre, e pela devolução.
 /// As outras gravações (tirar a marca 0x40, marcar +0x2d da oferta em negociação) a cópia repete sobre o que a original
 /// deixou e chega ao mesmo.
-unsafe extern "thiscall" fn comparar_clube_pode_chegar_ao_jogador(this: usize, jogador: usize, clube: usize, motivo: *mut u16, ignorar_abertas: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_can_club_bid_for_player(this: usize, jogador: usize, clube: usize, motivo: *mut u16, ignorar_abertas: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u32>(%%I0%%);
     let marca = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8));
     let regioes = [(marca, 1), (this + 0x936, 4), (motivo as usize, 2)];
     let n = if motivo.is_null() { 2 } else { 3 };
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes[..n], || o(this, jogador, clube, motivo, ignorar_abertas), || clube_pode_chegar_ao_jogador(this, jogador, clube, motivo, ignorar_abertas));
-    PLACAR.registrar(igual && r == c, || format!("clube_pode_chegar_ao_jogador(jogador {}, clube {:x}, {}) original={} rust={} {:x?} x {:x?}", cpr2_d(jogador), clube, ignorar_abertas, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes[..n], || o(this, jogador, clube, motivo, ignorar_abertas), || can_club_bid_for_player(this, jogador, clube, motivo, ignorar_abertas));
+    PLACAR.registrar(igual && r == c, || format!("can_club_bid_for_player(jogador {}, clube {:x}, {}) original={} rust={} {:x?} x {:x?}", cpr2_d(jogador), clube, ignorar_abertas, r, c, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo estado da oferta, pelas marcas (+4) dos itens da troca e pelo cursor da lista. Fora da
 /// conta: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_termos_ao_jogador_da_troca(this: usize, k: i32, pessoa: u32) {
+unsafe extern "thiscall" fn comparar_note_terms_offered_to_exchange_player(this: usize, k: i32, pessoa: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, u32)>(%%I1%%);
     if k < 0 || k >= cpr2_d(this + 4) as i32 || cpr2_d(cpr2_d(this).wrapping_add((k as usize).wrapping_mul(4))) == 0 {
         return o(this, k, pessoa);
@@ -227,17 +227,17 @@ unsafe extern "thiscall" fn comparar_termos_ao_jogador_da_troca(this: usize, k: 
     for e in cpr2_itens(l) {
         regioes.push((e + 4, 1));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, k, pessoa), || termos_ao_jogador_da_troca(this, k, pessoa));
-    PLACAR.registrar(igual, || format!("termos_ao_jogador_da_troca({}, pessoa {}) {:x?} x {:x?}", k, pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, k, pessoa), || note_terms_offered_to_exchange_player(this, k, pessoa));
+    PLACAR.registrar(igual, || format!("note_terms_offered_to_exchange_player({}, pessoa {}) {:x?} x {:x?}", k, pessoa, mo, mr));
 }
 
 /// Comparador: lado a lado pelo cursor da fila e pela devolução (só lê). Clube nulo: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_fila_livre_do_clube(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_count_club_free_transfer_queue(this: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     if clube == 0 {
         return o(this, clube);
     }
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x936, 4)], || o(this, clube), || fila_livre_do_clube(this, clube));
-    PLACAR.registrar(igual && r == c, || format!("fila_livre_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x936, 4)], || o(this, clube), || count_club_free_transfer_queue(this, clube));
+    PLACAR.registrar(igual && r == c, || format!("count_club_free_transfer_queue({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
     r
 }

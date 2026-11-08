@@ -19,7 +19,7 @@ unsafe fn vaga_da_copa(copa: usize, v: i16) -> usize {
 /// [jogo+0x34]) para as marcas do jogo (+0x38, OU). Com a marca 0x800 (decide quem passa no empate), o
 /// nível (byte +4 da vaga, com sinal) dos dois lados da chave `chave` decide: mandante menor tira 0x800 e
 /// põe 0x1000; maior mantém 0x800; igual tira 0x800 e põe 1.
-unsafe extern "thiscall" fn regras_da_rodada_no_jogo(copa: usize, jogo: usize, chave: i32) {
+unsafe extern "thiscall" fn apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
     let r = *((jogo + 0x34) as *const i16) as i32;
     let marcas = (jogo + 0x38) as *mut u16;
     let m = core::ptr::read_unaligned(marcas) | core::ptr::read_unaligned((rodada_da_copa(copa, r) + 0xf) as *const u16);
@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn regras_da_rodada_no_jogo(copa: usize, jogo: usize, c
 /// { 0x519c90 } (thiscall, ret 4, Cup.cpp): a chave da rodada do jogo (+0x34) em que está o clube
 /// mandante do jogo (+0xc), olhando os dois lados de cada chave (53 bytes; vaga negativa é vazia); -1 se
 /// nenhuma. O número de chaves é a palavra +0x1a da rodada. Jogo nulo: a original (caixa de erro).
-unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i32 {
+unsafe extern "thiscall" fn find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
     if jogo == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%)(copa, jogo);
     }
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i
 /// continente e a mesma região (+0x75); abaixo, nenhum (0). Candidatos: os outros países (lista
 /// [0xae23a8], 0x122 bytes, [0xae2350] países) com +0x86 ≥ 20, +0x7e = 1, +0x84 ≤ 2 e +0x8e ≥ 5; cada um
 /// tira 0x90cfc0(100) e fica o maior (estrito, comparado como byte com sinal).
-unsafe extern "thiscall" fn pais_da_excursao(_this: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn pick_tour_nation(_this: usize, clube: usize) -> usize {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let proprio = *((clube + 0x53) as *const usize);
     let alcance: i8 = match *((clube + 0x80) as *const i16) {
@@ -107,28 +107,28 @@ unsafe extern "thiscall" fn pais_da_excursao(_this: usize, clube: usize) -> usiz
     }
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_rodada_no_jogo(copa: usize, jogo: usize, chave: i32) {
+unsafe extern "thiscall" fn comparar_apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(%%I0%%);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(jogo + 0x38, 2)], || o(copa, jogo, chave),
-        || regras_da_rodada_no_jogo(copa, jogo, chave));
-    PLACAR.registrar(igual, || format!("regras_da_rodada_no_jogo(chave {}) {:x?} x {:x?}", chave, mo, mr));
+        || apply_round_rules_to_match(copa, jogo, chave));
+    PLACAR.registrar(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", chave, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(%%I1%%)(copa, jogo);
     if jogo == 0 {
         return r;
     }
-    let n = chave_do_jogo_na_copa(copa, jogo);
-    PLACAR.registrar(r == n, || format!("chave_do_jogo_na_copa original={} rust={}", r, n));
+    let n = find_tree_slot_for_fixture(copa, jogo);
+    PLACAR.registrar(r == n, || format!("find_tree_slot_for_fixture original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_pais_da_excursao(this: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn comparar_pick_tour_nation(this: usize, clube: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube),
-        || crate::aleatorio::sem_contar(|| pais_da_excursao(this, clube)));
-    PLACAR.registrar(igual && r == n, || format!("pais_da_excursao({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| pick_tour_nation(this, clube)));
+    PLACAR.registrar(igual && r == n, || format!("pick_tour_nation({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

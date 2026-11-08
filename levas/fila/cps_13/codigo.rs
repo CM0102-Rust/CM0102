@@ -57,7 +57,7 @@ unsafe fn cps13_fase(this: usize, i: usize) -> usize {
 /// (+7 = 0x8c) sorteia na data dela (0x51c410); sem +0xb1, sorteia as rodadas a partir de +0xac cuja data chegou, até
 /// não avançar ou acabar. Fase ≠ 0 (com +0x45): o mesmo com a montagem das rodadas (0x51c800) a partir de +0xab, que
 /// também monta na data pendente da rodada (+0x34 da fase da rodada). Devolve 0.
-unsafe extern "thiscall" fn atualizar_copa_no_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let sortear: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51c410usize);
     let montar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51c800usize);
     if cps13_b(this + 0x44) == 0xff {
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn atualizar_copa_no_dia(this: usize, hoje: usize, fase
 /// confronto marcado (+0x34 = 1 adiado, 2 já: 0x51cb90; depois do 2, sem a copa em [0xadadfc][id]: 1), leva os jogos às
 /// datas da rodada (data +3/+5 num bloco de 8 bytes, 0x51ebe0, liberado depois) e, com a copa em [0xadadfc][id], passa à
 /// rodada seguinte (fora da final 0x8c) e leva +0xac junto. Devolve 1.
-unsafe extern "thiscall" fn montar_rodada_da_copa(this: usize, rodada: u32) -> u32 {
+unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
     let id = cps13_d(cps13_d(this + 4));
     let ativa = || cps13_d(cps13_d(0xadadfc) + id * 4) != 0;
     if cps13_d(this + 0x45) == 0 {
@@ -309,7 +309,7 @@ unsafe fn cps13_doenca(f: usize, id: usize, nacao: usize, alto_dia: u32, alto_an
 /// com o estádio do jogo (+0x18), a cidade (+0x38) e a nação dela (+0x1f) num país do terceiro mundo (+0x7e = 3), cada
 /// clube visitante de outra nação (+0x53) — o mandante (+0x1c, id +0xc) e o visitante (+0x20, id +0x10) — ganha o risco
 /// de doença na véspera do jogo.
-unsafe extern "thiscall" fn risco_de_doenca_na_viagem(_this: usize, f: usize) {
+unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, f: usize) {
     let estadio = cps13_d(f + 0x18);
     if estadio == 0 {
         return;
@@ -342,17 +342,17 @@ unsafe extern "thiscall" fn risco_de_doenca_na_viagem(_this: usize, f: usize) {
 
 // ponytail: sorteia e monta rodadas (aloca jogos): não roda duas vezes. Só a original; a cópia leva os ramos (sorteio e
 // montagem; a atualização é diária em cada copa, 29.934 chamadas até 2002-06-01: sem ramo no caminho comum).
-unsafe extern "thiscall" fn comparar_atualizar_copa_no_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%)(this, hoje, fase)
 }
 
 // ponytail: sorteia, cria os jogos e passa a rodada: não roda duas vezes. Só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_montar_rodada_da_copa(this: usize, rodada: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_up_round(this: usize, rodada: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, rodada)
 }
 
 // ponytail: acrescenta o risco de doença (não roda duas vezes; o caminho comum não faz nada). Só a original; a cópia leva
 // os ramos.
-unsafe extern "thiscall" fn comparar_risco_de_doenca_na_viagem(this: usize, f: usize) {
+unsafe extern "thiscall" fn comparar_add_away_trip_illness_risk(this: usize, f: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, f)
 }

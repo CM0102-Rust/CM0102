@@ -11,7 +11,7 @@ unsafe fn dbt1_parceiro(clube: usize, eh_a: *mut u32) -> usize {
 /// { 0x53c9b0 } (cdecl, Database.cpp): `database_count_club_physios(clube)`: quantos dos 3 fisioterapeutas
 /// (+0x1cf) do clube e do time B ligado (0x540a50) são pessoas válidas (não nulas, id +0 < [0xae2364] com sinal).
 /// Só `al`. Clube nulo: a original (caixa e 0). Nas telas da pessoa (staff_screens, 0x8740c8 e 0x87412b).
-unsafe extern "C" fn contar_fisioterapeutas(clube: usize) -> u8 {
+unsafe extern "C" fn database_count_club_physios(clube: usize) -> u8 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     }
@@ -25,20 +25,20 @@ unsafe extern "C" fn contar_fisioterapeutas(clube: usize) -> u8 {
     validos(clube) + if b != 0 { validos(b) } else { 0 } // os do clube e os do time B (dbt)
 }
 
-unsafe extern "C" fn comparar_contar_fisioterapeutas(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_database_count_club_physios(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
     if clube == 0 {
         return r; // caixa: só a original
     }
-    let n = contar_fisioterapeutas(clube);
-    PLACAR.registrar(r == n, || format!("contar_fisioterapeutas({:x}) original={} rust={}", clube, r, n));
+    let n = database_count_club_physios(clube);
+    PLACAR.registrar(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x5448c0 } (cdecl, Database.cpp): `club_is_b_team(clube)`: 1 se o clube tem parceiro (0x540a50 com `ativo`) e
 /// é o B dele (`eh_a` = 0), senão 0 (o eax inteiro). A local `eh_a` só é lida com parceiro, e então a 0x540a50 a
 /// escreveu. Clube nulo: a original (caixa e 0). Na tela da pessoa (staff_screens, 0x87272d).
-unsafe extern "C" fn clube_e_time_b(clube: usize) -> u32 {
+unsafe extern "C" fn club_is_b_team(clube: usize) -> u32 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(clube);
     }
@@ -46,13 +46,13 @@ unsafe extern "C" fn clube_e_time_b(clube: usize) -> u32 {
     (dbt1_parceiro(clube, &mut eh_a) != 0 && eh_a == 0) as u32 // é o B (dbt)
 }
 
-unsafe extern "C" fn comparar_clube_e_time_b(clube: usize) -> u32 {
+unsafe extern "C" fn comparar_club_is_b_team(clube: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(clube);
     if clube == 0 {
         return r;
     }
-    let n = clube_e_time_b(clube);
-    PLACAR.registrar(r == n, || format!("clube_e_time_b({:x}) original={} rust={}", clube, r, n));
+    let n = club_is_b_team(clube);
+    PLACAR.registrar(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -61,7 +61,7 @@ unsafe extern "C" fn comparar_clube_e_time_b(clube: usize) -> u32 {
 /// de +0xbf (técnico, auxiliar, ...) e os 15 de +0x19f (treinadores, olheiros, fisioterapeutas), as não nulas, até
 /// `max` (byte com sinal); devolve quantas em `al`. Clube nulo: a original (caixa e 0). Na aba de informações da
 /// tela do clube (club_screen_draw_info_tab 0x460590, 0x4616fa).
-unsafe extern "C" fn pessoas_fora_do_elenco(clube: usize, saida: *mut usize, max: u32) -> u8 {
+unsafe extern "C" fn club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(%%I2%%)(clube, saida, max);
     }
@@ -83,13 +83,13 @@ unsafe extern "C" fn pessoas_fora_do_elenco(clube: usize, saida: *mut usize, max
     n as u8
 }
 
-unsafe extern "C" fn comparar_pessoas_fora_do_elenco(clube: usize, saida: *mut usize, max: u32) -> u8 {
+unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(%%I2%%);
     if clube == 0 {
         return o(clube, saida, max);
     }
     let reg = [(saida as usize, 4 * (max as i8).max(0) as usize)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, saida, max), || pessoas_fora_do_elenco(clube, saida, max));
-    PLACAR.registrar(igual && r == n, || format!("pessoas_fora_do_elenco({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, saida, max), || club_collect_non_playing_staff(clube, saida, max));
+    PLACAR.registrar(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
     r
 }

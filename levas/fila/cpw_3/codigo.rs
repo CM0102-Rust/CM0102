@@ -24,8 +24,8 @@ unsafe fn cpw3_pessoa(id: usize) -> usize {
 
 /// O contrato principal da pessoa (0x4cf5a0).
 unsafe fn cpw3_contrato(p: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    contrato_de(cpw3_d(0xae1050), p)
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    contract_of(cpw3_d(0xae1050), p)
 }
 
 /// O interesse da pessoa em ir para o clube (Shortlist_Manager::staff_interest_in_joining_club 0x846920: thiscall(lista,
@@ -55,9 +55,9 @@ unsafe fn cpw3_antes(a: usize, b: usize) -> bool {
 /// do contrato, antes de 4 semanas do começo da janela da nação-chave (0x669360, [0xb63d8a]) ou a menos de 3 semanas de
 /// hoje: −1. A porcentagem do salário (100 com reputação 2500 acima do dono, 0 com 1500 abaixo, senão 50) e a oferta
 /// (0x8bed60).
-unsafe extern "thiscall" fn tentar_emprestimo_pelo_jogador(this: usize, jogador: usize, clube: usize) -> i32 {
-    let entrada_da_lista: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
-    let entrada = entrada_da_lista(this, clube, jogador, 0, 0);
+unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usize, clube: usize) -> i32 {
+    let shortlist_entry: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
+    let entrada = shortlist_entry(this, clube, jogador, 0, 0);
     let c = cpw3_contrato(jogador);
     *(0xae1080 as *mut usize) = c;
     let dono = if c != 0 { cpw3_clube(cpw3_d(c + 4)) } else { 0 };
@@ -162,14 +162,14 @@ unsafe extern "thiscall" fn tentar_emprestimo_pelo_jogador(this: usize, jogador:
 /// O comparador: a cópia em ensaio e a original a partir do mesmo estado ([0xae1080], o sorteio e as estáticas das
 /// operações de data). A cópia recusou (−1): a original também, com a mesma memória. A cópia atualizaria a lista (−3):
 /// a original devolve −1. A cópia faria a oferta (−2): a original não devolve −1.
-unsafe extern "thiscall" fn comparar_tentar_emprestimo_pelo_jogador(this: usize, jogador: usize, clube: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: usize, jogador: usize, clube: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     regioes.extend(CPQ5_ESTATICAS);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW3_ENSAIO = true;
-    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| tentar_emprestimo_pelo_jogador(this, jogador, clube)));
+    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| try_loan_offer_for_player(this, jogador, clube)));
     CPW3_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn comparar_tentar_emprestimo_pelo_jogador(this: usize,
         -3 => r == -1,
         _ => r != -1,
     };
-    PLACAR.registrar(igual, || format!("tentar_emprestimo_pelo_jogador(jogador {:#x}, clube {:#x}) original={} {:x?} rust={} {:x?}", cpw3_d(jogador), cpw3_d(clube), r, mo, n, mr));
+    PLACAR.registrar(igual, || format!("try_loan_offer_for_player(jogador {:#x}, clube {:#x}) original={} {:x?} rust={} {:x?}", cpw3_d(jogador), cpw3_d(clube), r, mo, n, mr));
     r
 }
 
@@ -205,7 +205,7 @@ unsafe fn cpw3_nacao_ativa(nacao: usize) -> bool {
 /// sinal), `bosman` e, na vaga 8, se a pessoa tem ficha (+0x61). Com `avisar_interessados` (anulado se a nação do clube,
 /// +0x53, não estiver ativa, 0x544670): os clubes interessados no jogador (0x842180 numa LLIST local, com 1, 1, 0) de
 /// outra nação ativa também a recebem.
-unsafe extern "thiscall" fn noticia_contrato_acabando(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
+unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x24f0);
@@ -254,14 +254,14 @@ unsafe extern "thiscall" fn noticia_contrato_acabando(this: usize, contrato: usi
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_contrato_acabando(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
+unsafe extern "thiscall" fn comparar_post_contract_expiry_news(this: usize, contrato: usize, periodo: u32, bosman: u32, avisar: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I1%%)(this, contrato, periodo, bosman, avisar)
 }
 
 /// { 0x4d6d70 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da notícia local): `CONTRACT_MANAGER::
 /// post_bosman_departure_news(contrato, destino)`. Sem contrato: a caixa "Error" (linha 0x2611). Senão a notícia 0xbbe ao
 /// técnico do clube (0x7861e0): o clube, a pessoa e o clube de destino (−1 sem ele).
-unsafe extern "thiscall" fn noticia_saida_pela_lei_bosman(this: usize, contrato: usize, destino: usize) {
+unsafe extern "thiscall" fn post_bosman_departure_news(this: usize, contrato: usize, destino: usize) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2611);
@@ -282,6 +282,6 @@ unsafe extern "thiscall" fn noticia_saida_pela_lei_bosman(this: usize, contrato:
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_saida_pela_lei_bosman(this: usize, contrato: usize, destino: usize) {
+unsafe extern "thiscall" fn comparar_post_bosman_departure_news(this: usize, contrato: usize, destino: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, contrato, destino)
 }

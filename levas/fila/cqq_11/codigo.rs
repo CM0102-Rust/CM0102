@@ -22,13 +22,13 @@ unsafe fn cqq11_europeia(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
-unsafe extern "thiscall" fn cqq11_europeia_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn eur_super_cup_select_teams(this: usize) -> i32 {
     cqq11_europeia(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqq11_europeia_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqm12_comparar("cqq11_europeia_clubes", this, || o(this), || cqq11_europeia(this))
+    cqm12_comparar("eur_super_cup_select_teams", this, || o(this), || cqq11_europeia(this))
 }
 
 /// { 0x410a50 } (thiscall, ret 0, asia_super_cup.cpp): `AsiaSuperCup::select_teams()`: a lista de dois (sem memória, a
@@ -57,13 +57,13 @@ unsafe fn cqq11_asiatica(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
-unsafe extern "thiscall" fn cqq11_asiatica_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn eur_super_cup_select_teams_410a50(this: usize) -> i32 {
     cqq11_asiatica(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqq11_asiatica_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_eur_super_cup_select_teams_410a50(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqm12_comparar("cqq11_asiatica_clubes", this, || o(this), || cqq11_asiatica(this))
+    cqm12_comparar("eur_super_cup_select_teams_410a50", this, || o(this), || cqq11_asiatica(this))
 }
 
 /// { 0x63c9d0 } (thiscall, ret 0, ita_c1_super.cpp): `ItaC1Super::init_team_list()`: a lista de dois (sem memória, a
@@ -80,11 +80,11 @@ unsafe fn cqq11_c1(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
-unsafe extern "thiscall" fn cqq11_c1_vagas(this: usize) -> i32 {
+unsafe extern "thiscall" fn eur_super_cup_init_team_list(this: usize) -> i32 {
     cqq11_c1(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqq11_c1_vagas(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_eur_super_cup_init_team_list(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqm12_comparar("cqq11_c1_vagas", this, || o(this), || cqq11_c1(this))
+    cqm12_comparar("eur_super_cup_init_team_list", this, || o(this), || cqq11_c1(this))
 }

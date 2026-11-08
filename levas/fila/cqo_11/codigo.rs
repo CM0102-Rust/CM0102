@@ -195,7 +195,7 @@ unsafe fn cqo11_copa_da_italia(this: usize) -> (i32, i32) {
     (1, m)
 }
 
-unsafe extern "thiscall" fn cqo11_copa_da_italia_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn ita_cup_select_entrants(this: usize) -> i32 {
     cqo11_copa_da_italia(this).0
 }
 
@@ -236,9 +236,9 @@ unsafe fn cqo11_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     a
 }
 
-unsafe extern "thiscall" fn comparar_cqo11_copa_da_italia_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_ita_cup_select_entrants(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqo11_comparar("cqo11_copa_da_italia_inscritos", this, || o(this), || cqo11_copa_da_italia(this))
+    cqo11_comparar("ita_cup_select_entrants", this, || o(this), || cqo11_copa_da_italia(this))
 }
 
 /// { 0x63dfe0 } (thiscall, ret 0, ita_c_cup.cpp): `ItaCCup::select_entrants()`: os 90 inscritos da Copa da Série C (+0xf2
@@ -300,13 +300,13 @@ unsafe fn cqo11_copa_c(this: usize) -> (i32, i32) {
     (1, m)
 }
 
-unsafe extern "thiscall" fn cqo11_copa_c_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn ita_cup_select_entrants_63dfe0(this: usize) -> i32 {
     cqo11_copa_c(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqo11_copa_c_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_ita_cup_select_entrants_63dfe0(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqo11_comparar("cqo11_copa_c_inscritos", this, || o(this), || cqo11_copa_c(this))
+    cqo11_comparar("ita_cup_select_entrants_63dfe0", this, || o(this), || cqo11_copa_c(this))
 }
 
 /// { 0x65fa60 } (thiscall, ret 0, ita_super.cpp): `ItaSuper::init_team_list()`: a lista de dois (+0x3e = 2, 0xc bytes
@@ -337,11 +337,11 @@ unsafe fn cqo11_supercopa(this: usize) -> (i32, i32) {
     cqm12_fim(l)
 }
 
-unsafe extern "thiscall" fn cqo11_supercopa_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn ita_cup_init_team_list(this: usize) -> i32 {
     cqo11_supercopa(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqo11_supercopa_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_ita_cup_init_team_list(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqm12_comparar("cqo11_supercopa_clubes", this, || o(this), || cqo11_supercopa(this))
+    cqm12_comparar("ita_cup_init_team_list", this, || o(this), || cqo11_supercopa(this))
 }

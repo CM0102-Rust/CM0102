@@ -117,13 +117,13 @@ pub(crate) unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: us
 /// [pt] { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
 /// Merconorte: os 4 (o primeiro do grupo 1 e das 3 fases de grupo) na fase 3; caixas nas linhas 0x21d (sem lista) e
 /// 0x23b (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqs10_merconorte_semifinais(this: usize) {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this: usize) {
     cqs10_mata_mata(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS10_MERCONORTE_SEMIFINAIS);
-    cqs10_comparar_mata_mata("cqs10_merconorte_semifinais", this, 4, 3, 3, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_CREATE_SEMI_FINAL_STAGE);
+    cqs10_comparar_mata_mata("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
 }
 
 /// rule: the Merconorte moves on one stage when the current one ends; after the 3 group stages (on reaching 3) it
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this
 /// [pt] { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
 /// Merconorte: na última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x1c7; senão +0x30 sobe e, chegando a 3
 /// (depois dos grupos), as semifinais (0x4c2330: mov ecx, this -> thiscall, ret 0).
-pub(crate) unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9a7d6c, 0x1c7);
@@ -149,13 +149,13 @@ pub(crate) unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usiz
 
 // ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa e não muda nada).
-pub(crate) unsafe extern "thiscall" fn comparar_cqs10_merconorte_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS10_MERCONORTE_FASE_SEGUINTE);
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CON_MERC_CUP_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     let ultima = f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("cqs10_merconorte_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 // ---------- 283a leva: os convidados da Merconorte e a fase seguinte da Mercosul e da Copa América (con_merc_cup.cpp, conmebol_merc.cpp, goldcup.cpp) ----------
@@ -288,15 +288,15 @@ pub(crate) unsafe fn cqs11_convidados(this: usize) -> u32 {
 /// lista ordenada pela reputação, com a faixa de cima embaralhada: 3 vezes as vagas) e 2 da liga americana (com a
 /// competição dela: o campeão do último registro da MLS e o da outra competição dela, e o vice da MLS se forem o mesmo;
 /// sem ela, os 2 melhores clubes da MLS); a lista final é embaralhada (3 × 16 trocas) antes dos grupos
-pub(crate) unsafe extern "thiscall" fn cqs11_merconorte_convidados(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: usize) -> u32 {
     cqs11_convidados(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
 /// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
-pub(crate) unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS11_MERCONORTE_CONVIDADOS);
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs11_merconorte_convidados(this
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqs11_merconorte_convidados({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -383,7 +383,7 @@ pub(crate) unsafe fn cqr12_sorteado(this: usize, k: usize) -> usize {
 /// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e volta 0 sem o dia de liga. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
-pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMERCCUP_SELECT_INVITED_CLUBS);
     let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMERCCUP_CREATE_FIRST_GROUP_TABLE);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
@@ -428,8 +428,8 @@ pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_dia(this: usize, hoje: u
 // ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 3 fases
 // criadas e a fase atual (+0x30) a última delas.
-pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQR12_MERCONORTE_DIA);
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_MERC_CUP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -443,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize
             && fases != 0
             && (0..3).all(|g| read_u32_as_usize(fases + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 2;
-        PLACAR.registrar(ok, || format!("cqr12_merconorte_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.registrar(ok, || format!("con_merc_cup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -457,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_dia(this: usize
 /// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
-pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -481,8 +481,8 @@ pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_primeiro_grupo(this: usi
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR12_MERCONORTE_PRIMEIRO_GRUPO);
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_first_group_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_CREATE_FIRST_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -497,7 +497,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(
         }
     }
     let igual = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("cqr12_merconorte_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.registrar(igual, || format!("con_merc_cup_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_primeiro_grupo(
 /// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x1ff e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
-pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -584,8 +584,8 @@ pub(crate) unsafe extern "thiscall" fn cqr12_merconorte_grupo(this: usize, g: i3
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CQR12_MERCONORTE_GRUPO);
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_group_stage(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CON_MERC_CUP_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..3).contains(&g) {
         return o(this, g);
@@ -599,7 +599,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usi
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("cqr12_merconorte_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        PLACAR.registrar(ok, || format!("con_merc_cup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }
@@ -611,14 +611,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr12_merconorte_grupo(this: usi
 ///
 /// [pt] { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`cqp10_merconorte_fase`).
-pub(crate) unsafe extern "thiscall" fn cqp10_merconorte_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp10_tabela(this, cqp10_merconorte_fase(fase), rodadas, extra, liga, 0x9a7d6c)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp10_merconorte_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP10_MERCONORTE_TABELA);
-    cqp10_comparar("cqp10_merconorte_tabela", fase, cqp10_merconorte_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqp10_merconorte_tabela(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CON_MERC_CUP_CREATE_SCHEDULE);
+    cqp10_comparar("con_merc_cup_create_schedule", fase, cqp10_merconorte_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| con_merc_cup_create_schedule(this, fase, r, e, l))
 }
 
 /// rule: the Copa Merconorte groups are home and away, 3/1 points, tiebreak 1, 2, 3, one qualifier per group, category
@@ -628,12 +628,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp10_merconorte_tabela(this: us
 /// [pt] { 0x4c1ed0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x8c; quadro SEH só da data local): `ConMercCup::
 /// set_up_rules()`: os grupos da Copa Merconorte em dois turnos, 3/1 pontos, desempates (1, 2, 3, 0), um classificado
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
-pub(crate) unsafe extern "thiscall" fn cqj11_merconorte_regras(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da merconorte");
     cqj11_regras(this, &CQJ11_MERCONORTE, CQJ11_MERCONORTE.dia, 3)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqj11_merconorte_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ11_MERCONORTE_REGRAS);
-    cqj11_confere("cqj11_merconorte_regras", this, &CQJ11_MERCONORTE, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SET_UP_RULES);
+    cqj11_confere("con_merc_cup_set_up_rules", this, &CQJ11_MERCONORTE, || o(this))
 }

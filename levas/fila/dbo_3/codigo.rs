@@ -33,50 +33,50 @@ unsafe fn dbo3_contar(clube: usize, posicao: usize, atributo: usize, teto: i32) 
 /// { 0x5494d0 } (cdecl, Database.cpp): `club_lacks_aerial_strikers(clube)`: clube nulo: 0; senão 1 se no máximo 1
 /// atacante (posição +0x15) passa dos limites com o atributo +0x2e (o jogo pelo alto) acima de reputação/500 + 5 (no
 /// máximo 13). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20, relatório de um clube).
-unsafe extern "C" fn faltam_atacantes_pelo_alto(clube: usize) -> u8 {
+unsafe extern "C" fn club_lacks_aerial_strikers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
     (dbo3_contar(clube, 0x15, 0x2e, 13) <= 1) as u8 // atacantes pelo alto (dbo)
 }
 
-unsafe extern "C" fn comparar_faltam_atacantes_pelo_alto(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
-    let n = faltam_atacantes_pelo_alto(clube);
-    PLACAR.registrar(r == n, || format!("faltam_atacantes_pelo_alto({:x}) original={} rust={}", clube, r, n));
+    let n = club_lacks_aerial_strikers(clube);
+    PLACAR.registrar(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x5495b0 } (cdecl, Database.cpp): `club_lacks_aerial_defenders(clube)`: clube nulo: 0; senão 1 se no máximo 1
 /// zagueiro (posição +0x11) passa dos limites com o atributo +0x2e acima de reputação/500 + 5 (no máximo 13). Só
 /// `al`. Só pelo olheiro.
-unsafe extern "C" fn faltam_zagueiros_pelo_alto(clube: usize) -> u8 {
+unsafe extern "C" fn club_lacks_aerial_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
     (dbo3_contar(clube, 0x11, 0x2e, 13) <= 1) as u8 // zagueiros pelo alto (dbo)
 }
 
-unsafe extern "C" fn comparar_faltam_zagueiros_pelo_alto(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
-    let n = faltam_zagueiros_pelo_alto(clube);
-    PLACAR.registrar(r == n, || format!("faltam_zagueiros_pelo_alto({:x}) original={} rust={}", clube, r, n));
+    let n = club_lacks_aerial_defenders(clube);
+    PLACAR.registrar(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x549690 } (cdecl, Database.cpp): `club_lacks_fast_defenders(clube)`: clube nulo: 0; senão 1 se no máximo 1
 /// zagueiro (posição +0x11) passa dos limites com o atributo +0x36 (a velocidade) acima de reputação/500 + 5 (no
 /// máximo 10). Só `al`. Só pelo olheiro.
-unsafe extern "C" fn faltam_zagueiros_rapidos(clube: usize) -> u8 {
+unsafe extern "C" fn club_lacks_fast_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
     (dbo3_contar(clube, 0x11, 0x36, 10) <= 1) as u8 // zagueiros rapidos (dbo)
 }
 
-unsafe extern "C" fn comparar_faltam_zagueiros_rapidos(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
-    let n = faltam_zagueiros_rapidos(clube);
-    PLACAR.registrar(r == n, || format!("faltam_zagueiros_rapidos({:x}) original={} rust={}", clube, r, n));
+    let n = club_lacks_fast_defenders(clube);
+    PLACAR.registrar(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }

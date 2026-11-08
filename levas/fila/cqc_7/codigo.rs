@@ -99,7 +99,7 @@ unsafe fn cqc7_na_data_da_rodada(copa: usize, e: usize, f: usize) -> bool {
 /// o tipo da vaga, o estádio (0x85c260) e volta (0x5aa680); sem a copa ainda em [0xadadfc], para; senão a vaga fica
 /// 0xff. Com ou sem a mudança, a notícia 0x14 vai aos clubes se um é de técnico humano. Sem vaga (fim das vagas ou
 /// vaga vazia): só a notícia, com os dados do jogo.
-unsafe extern "thiscall" fn copa_levar_jogos_as_datas(this: usize, data: usize, rodada: u32) {
+unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn copa_levar_jogos_as_datas(this: usize, data: usize, 
 /// ordem da lista; cada um do tipo da liga ocupa a vaga seguinte (de 7 em 7 bytes, até 0x38 e até a primeira 0xff), e
 /// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
 /// conferir.
-unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: usize, data: usize, rodada: u32) {
+unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let e = cqc7_rodada(this, rodada);
     if cqc7_w(e + 0xd) as u16 & 0x100 == 0 || cqc7_b(e + 0x29) == 0xff {
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: usize, data
     }
     let e = cqc7_rodada(this, rodada);
     let depois: [u8; 8] = core::array::from_fn(|k| cqc7_b(e + k * 7 + 0x29));
-    PLACAR.registrar(depois == esperado, || format!("copa_levar_jogos_as_datas(rodada {}) vagas {:02x?} (esperado {:02x?})",
+    PLACAR.registrar(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
         rodada, depois, esperado));
 }
 
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: usize, data
 /// em alguma oferta (+2 do registro): as ofertas dela pelo clube (0x8c5e40 numa lista local), menos esta; em cada uma, sai
 /// da lista da troca (a lista vazia sai) e, desde a primeira que a tinha, o preço vira +0x52 + o preço, a notícia (motivo
 /// 0) e a oferta segue.
-unsafe extern "thiscall" fn tirar_jogador_da_troca(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
+unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
     let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -307,8 +307,8 @@ unsafe extern "thiscall" fn tirar_jogador_da_troca(this: usize, pessoa: usize, o
             menos_uma(pessoa);
             let v = cqc7_d(pessoa + 0x52).wrapping_add(cqc7_d(oferta + 0x1b));
             noticia(this, oferta, pessoa, v, motivo);
-            let clube_humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-            if dono != 0 && clube_humano(dono, 0, 1, 0, 0) == 0 {
+            let human_club: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+            if dono != 0 && human_club(dono, 0, 1, 0, 0) == 0 {
                 let resposta: unsafe extern "thiscall" fn(usize, *mut usize, u32) = core::mem::transmute(0x8c8090usize);
                 resposta(this, &mut oferta, 1);
                 let s = cqc7_b(oferta + 0x2c);
@@ -366,7 +366,7 @@ unsafe extern "thiscall" fn tirar_jogador_da_troca(this: usize, pessoa: usize, o
 /// Comparador da 0x8c41c0: só a original (os nós da troca são liberados, a notícia vai aos técnicos e a oferta segue
 /// pela 0x8c2f50, que pode fechar a transferência e tirar outros jogadores das trocas, ou ser respondida pelo vendedor
 /// do computador, 0x8c8090, que pode mudar a oferta da vaga).
-unsafe extern "thiscall" fn comparar_tirar_jogador_da_troca(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
+unsafe extern "thiscall" fn comparar_remove_exchange_player(this: usize, pessoa: usize, oferta: usize, so_esta: u32, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, pessoa, oferta, so_esta, motivo) // ponytail: o efeito segue por outras rotinas
 }
 
@@ -398,7 +398,7 @@ unsafe fn cqc7_permissao(this: usize, pessoa: usize, clube: usize) -> (bool, usi
 /// (0x8e35a0 com o valor +0x52 + o preço), sai da troca (0x68d1f0), o registro de 8 bytes dele perde uma oferta e o
 /// preço (+0x1b) vira o valor; concedido sem `quieto`, a notícia. A lista vazia sai; sem `quieto`, a oferta segue
 /// (0x8c2f50). Devolve 1.
-unsafe extern "thiscall" fn permissoes_da_oferta(this: usize, oferta: usize, quieto: u32) -> u32 {
+unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize, quieto: u32) -> u32 {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let concedida_noticia: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x8e3130usize);
     let alvo = cqc7_pessoa(cqc7_d(oferta + 0xc));
@@ -472,12 +472,12 @@ unsafe extern "thiscall" fn permissoes_da_oferta(this: usize, oferta: usize, qui
 /// Comparador da 0x8c7690: só a original (as notícias alocam, a oferta é reagendada e segue pela 0x8c2f50). O plano,
 /// feito antes pelas consultas sem efeito (0x8c7560, 0x4cc9e0, 0x8c7950 sem sorteio): o alvo recusado devolve 0 com a
 /// oferta no status 0x10; senão 1.
-unsafe extern "thiscall" fn comparar_permissoes_da_oferta(this: usize, oferta: usize, quieto: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_check_offer_work_permits(this: usize, oferta: usize, quieto: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let (precisa, proposta, concedida) = cqc7_permissao(this, cqc7_pessoa(cqc7_d(oferta + 0xc)), cqc7_clube(cqc7_d(oferta + 8)));
     let recusada = precisa && proposta != 0 && !concedida;
     let r = o(this, oferta, quieto);
     let ok = if recusada { r == 0 && cqc7_b(oferta + 0x2c) == 0x10 } else { r == 1 };
-    PLACAR.registrar(ok, || format!("permissoes_da_oferta(oferta {:x}) recusada prevista {} devolveu {}", oferta, recusada, r));
+    PLACAR.registrar(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", oferta, recusada, r));
     r
 }

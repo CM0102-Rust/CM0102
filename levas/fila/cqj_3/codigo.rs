@@ -24,7 +24,7 @@ unsafe fn cqj3_sedes(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
 /// `ano` (short): a primeira entrada da competição com o ano (ou ano 0) que já tem a candidatura escolhida (as duas
 /// sedes dela), a padrão fixa ou a votação aberta (a sede padrão), ou, com `padrao`, a votação ainda fechada (a padrão).
 /// Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
-unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
+unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
     let n = cqj3_w(this + 4) as i16;
     let mut e = cqj3_d(this) as usize;
     let mut i = 0i16;
@@ -50,21 +50,21 @@ unsafe extern "thiscall" fn sede_da_edicao(this: usize, comp: u32, ano: u32, a: 
 }
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_sede_da_edicao(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_find_hosts(this: usize, comp: u32, ano: u32, a: *mut u32, b: *mut u32, padrao: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut u32, *mut u32, u32) -> u32>(%%I0%%);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, ano, a, b, padrao);
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
-    let c = sede_da_edicao(this, comp, ano, &mut ca, &mut cb, padrao);
-    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("sede_da_edicao({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, ano as u16, r as u8, oa, ob, c as u8, ca, cb));
+    let c = find_hosts(this, comp, ano, &mut ca, &mut cb, padrao);
+    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_hosts({:x}, {}): original {} {:x} {:x} rust {} {:x} {:x}", comp, ano as u16, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 
 /// { 0x5fa7d0 } (thiscall, ret 0xc, host_country.cpp, `HostCountry::find_next_hosts`): as sedes da próxima edição da
 /// competição `comp`: a primeira entrada dela com a candidatura escolhida (as duas sedes) ou com a padrão fixa (a
 /// padrão). Grava as duas e devolve quantas valem; sem entrada, 0 sem gravar.
-unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
+unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
     let n = cqj3_w(this + 4) as i16;
     let mut e = cqj3_d(this) as usize;
     let mut i = 0i16;
@@ -86,14 +86,14 @@ unsafe extern "thiscall" fn proxima_sede(this: usize, comp: u32, a: *mut u32, b:
 }
 
 /// A devolução (o al) e as duas saídas (a rotina só lê).
-unsafe extern "thiscall" fn comparar_proxima_sede(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
+unsafe extern "thiscall" fn comparar_find_next_hosts(this: usize, comp: u32, a: *mut u32, b: *mut u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32) -> u32>(%%I1%%);
     let (va, vb) = (*a, *b);
     let r = o(this, comp, a, b);
     let (oa, ob) = (*a, *b);
     let (mut ca, mut cb) = (va, vb);
-    let c = proxima_sede(this, comp, &mut ca, &mut cb);
-    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("proxima_sede({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
+    let c = find_next_hosts(this, comp, &mut ca, &mut cb);
+    PLACAR.registrar(r as u8 == c as u8 && oa == ca && ob == cb, || format!("find_next_hosts({:x}): original {} {:x} {:x} rust {} {:x} {:x}", comp, r as u8, oa, ob, c as u8, ca, cb));
     r
 }
 
@@ -133,7 +133,7 @@ unsafe fn cqj3_primeira(inicio: usize, n: i16, ano: u16, dia: u16) -> usize {
 /// a candidatura vencedora é sorteada (0x90cfc0(3)). No 1º de janeiro, as entradas de anos passados (≠ 0) andam o
 /// intervalo (+0x21) e, fora da padrão fixa, a votação fecha (−2); a tabela é reordenada (qsort 0x945333 com 0x5fb3f0).
 /// Por fim a notícia das entradas da lista (0x5faec0).
-unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn host_country_daily_update(this: usize, hoje: usize) {
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let por: unsafe extern "thiscall" fn(usize, *const usize, u32) = core::mem::transmute(0x68d0d0usize);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn calendario_das_sedes(this: usize, hoje: usize) {
 }
 
 /// Só a original (sorteia, monta a lista local e entrega notícias); a cópia leva os contadores.
-unsafe extern "thiscall" fn comparar_calendario_das_sedes(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn comparar_host_country_daily_update(this: usize, hoje: usize) {
     // ponytail: entrega notícias pela 0x5faec0 e mexe na lista: não dá para rodar duas vezes
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje)
 }

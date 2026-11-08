@@ -17,7 +17,7 @@ MUTACOES = [
     ('f_somaS', "let soma = byte(pessoa, 0x36).wrapping_add(byte(pessoa, 0x1b));", "let soma = byte(pessoa, 0x36).wrapping_add(byte(pessoa, 0x1c));"),
     ('f_faixa', "('>', 0x32, 0x96d3b0), ('>', 0x23, 0),", "('>', 0x32, 0x96d3b0), ('>', 0x24, 0),"),
     ('f_p4', "(13, 0x96d358, [1, 0x968f20", "(13, 0x96d358, [1, 0x968918"),
-    ('f_desg', "desgastar(p, (30 - byte(pessoa, 0x3c) as i32) as f32, -1);", "desgastar(p, (31 - byte(pessoa, 0x3c) as i32) as f32, -1);"),
+    ('f_desg', "tire_fatigue(p, (30 - byte(pessoa, 0x3c) as i32) as f32, -1);", "tire_fatigue(p, (31 - byte(pessoa, 0x3c) as i32) as f32, -1);"),
     ('f_abs', "*w(0x1de) = ftol(*((this + 0x1de) as *const i16) as f64 * f32_em(k) as f64) as i16;", "*w(0x1de) = ftol(*w(0x1de) as f64 * f32_em(k) as f64) as i16;"),
     ('f_2f', "(byte(pessoa, 0x2f) >> 2)", "(byte(pessoa, 0x2f) >> 3)"),
     ('f_kw8', "} else if papel & 8 != 0 {" + chr(10) + "                0x96d3c0", "} else if papel & 8 != 0 {" + chr(10) + "                0x967898"),

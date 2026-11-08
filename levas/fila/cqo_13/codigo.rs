@@ -124,15 +124,15 @@ const CQO13_LIBERTADORES: [Cql10R; 4] = [
 /// { 0x4c31c0 } (thiscall, ret 0x10, conmebol_liber.cpp; a virtual +0x3c da Libertadores): `ConmebolLiber::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (a caixa da linha 0x9f), o mata-mata na
 /// fase 7 (a caixa da linha 0xc5).
-unsafe extern "thiscall" fn cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo13_tabela(this, fase, rodadas, extra, liga, 7, &CQO13_LIBERTADORES_GRUPOS, &CQO13_LIBERTADORES, &[], 0x9a7de4, 0x9f, 0xc5,
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
 }
 
-unsafe extern "thiscall" fn comparar_cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqo13_comparar("cqo13_libertadores_tabela", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqo13_libertadores_tabela(this, fase, r, e, l))
+    cqo13_comparar("conmebol_liber_create_schedule", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
+        |r, e, l| conmebol_liber_create_schedule(this, fase, r, e, l))
 }
 
 /// A Mercosul, grupos: seis rodadas às terças, de 29 de julho a 14 de outubro.
@@ -152,15 +152,15 @@ const CQO13_MERCOSUL_A_MAIS: [(usize, usize, u16); 1] = [(2, 0x11, 3)];
 /// { 0x4c4930 } (thiscall, ret 0x10, conmebol_merc.cpp; a virtual +0x3c da Mercosul): `ConmebolMerc::create_schedule(
 /// fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 4 (a caixa da linha 0x97), o mata-mata na fase 4 (a caixa
 /// da linha 0xbd).
-unsafe extern "thiscall" fn cqo13_mercosul_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo13_tabela(this, fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_GRUPOS, &CQO13_MERCOSUL, &CQO13_MERCOSUL_A_MAIS, 0x9a7e5c, 0x97, 0xbd,
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
-unsafe extern "thiscall" fn comparar_cqo13_mercosul_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    cqo13_comparar("cqo13_mercosul_tabela", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqo13_mercosul_tabela(this, fase, r, e, l))
+    cqo13_comparar("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &CQO13_MERCOSUL_A_MAIS, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| conmebol_merc_create_schedule(this, fase, r, e, l))
 }
 
 unsafe fn cqo13_d(a: usize) -> usize {
@@ -199,13 +199,13 @@ unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-unsafe extern "thiscall" fn cqo13_mercosul_convidados(this: usize) -> i32 {
+unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: usize) -> i32 {
     cqo13_convidados(this).0
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
-unsafe extern "thiscall" fn comparar_cqo13_mercosul_convidados(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -234,6 +234,6 @@ unsafe extern "thiscall" fn comparar_cqo13_mercosul_convidados(this: usize) -> i
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqo13_mercosul_convidados({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
+    PLACAR.registrar(igual && a == b && lista, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
     a
 }

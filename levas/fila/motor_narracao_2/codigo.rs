@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o fechamento do motor (5): a narração combinada e o comentário de contexto ----------
+// ---------- %%LEVA%%a leva: o match_wrap_up do motor (5): a narração combinada e o comentário de contexto ----------
 
 /// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
@@ -19,12 +19,12 @@ enum Rotulo {
 /// anterior para `e`. `m` é o motor (0 fora da partida): dá o lado da posse (+0x8eab) e a bola na
 /// área (0x6d58f0). As duas chamadas da 0x6cb960 do original não têm efeito e o valor delas é
 /// descartado (ficam de fora).
-unsafe extern "thiscall" fn combinar_com_o_anterior(t: usize, e: usize, m: usize) -> i16 {
+unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let b = |p: usize, o: usize| *((p + o) as *const i8);
     let w = |p: usize| core::ptr::read_unaligned(p as *const i16);
     let s2 = w(e);
-    let (posse, area) = if m == 0 { (0, 0) } else { (b(m, 0x8eab), bola_na_area(m)) };
+    let (posse, area) = if m == 0 { (0, 0) } else { (b(m, 0x8eab), ball_goal_end(m)) };
     if w(t + 8) == w(t + 6) {
         return 0;
     }
@@ -55,13 +55,13 @@ unsafe extern "thiscall" fn combinar_com_o_anterior(t: usize, e: usize, m: usize
     if s3 == 0x1f7d && b(e, 6) != b(q, 6) && s2 == 0x1f46 {
         return -0x219d;
     }
-    let chute = (0x1f87..=0x1fbd).contains(&s2);
-    if (chute || (s2 == 0x1f5f && area != 0)) && s3 == 0x1f7e {
+    let shot = (0x1f87..=0x1fbd).contains(&s2);
+    if (shot || (s2 == 0x1f5f && area != 0)) && s3 == 0x1f7e {
         core::ptr::write_unaligned(q as *mut i16, 0x219c);
         core::ptr::write_unaligned((q + 2) as *mut i16, sorteio(2) as i16);
         return 0;
     }
-    if chute && s3 == 8000 {
+    if shot && s3 == 8000 {
         core::ptr::write_unaligned(q as *mut i16, 0x219b);
         return 0;
     }
@@ -350,7 +350,7 @@ unsafe extern "thiscall" fn combinar_com_o_anterior(t: usize, e: usize, m: usize
 /// +0x2d/+0x55), o minuto (+0x8ed0 / 11), as notícias do clube nos últimos 10 ou 30 dias (0x757da0 na
 /// mídia [0xb6b7c8]) e a média dos 20 jogadores do lado (+0x47cb, passo 0x1be, os marcados em −0x1c);
 /// os da tabela gravam o valor em `saida`. Os eventos da faixa fora dos 13 casos: sim.
-unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
+unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
     let hoje = 0xae2c90usize;
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) = core::mem::transmute(0x54c8e0usize);
     let (mut d10, mut d30) = ([0u8; 8], [0u8; 8]);
@@ -369,7 +369,7 @@ unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u32, evento: 
         return 0;
     }
     let (mut casa, mut fora, mut classificado, mut ida, mut fase3) = (0i8, 0i8, 0u8, 0u8, 0u8);
-    let agregado = placar_agregado(m, l, &mut casa, &mut fora, &mut classificado, &mut ida, &mut fase3, 0) as i8 as i32;
+    let agregado = aggregate_score(m, l, &mut casa, &mut fora, &mut classificado, &mut ida, &mut fase3, 0) as i8 as i32;
     let competicao = *((*(0xadadfc as *const usize)) as *const usize).add(*(c as *const u32) as usize);
     let clube = *((c + if l != 0 { 0x20 } else { 0x1c }) as *const usize);
     let mut linha = 0usize;
@@ -518,19 +518,19 @@ unsafe extern "thiscall" fn comentario_de_contexto(m: usize, lado: u32, evento: 
     }
 }
 
-unsafe extern "thiscall" fn comparar_combinar_com_o_anterior(t: usize, e: usize, m: usize) -> i16 {
+unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i16>(%%I0%%);
     if gravando_no_topo() {
         return o(t, e, m);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(e, 14), (t + 0x30, 12 * 14)]);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, e, m), || crate::aleatorio::sem_contar(|| combinar_com_o_anterior(t, e, m)));
-    PLACAR.registrar(igual && r == n, || format!("combinar_com_o_anterior({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, e, m), || crate::aleatorio::sem_contar(|| combine_with_previous(t, e, m)));
+    PLACAR.registrar(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_comentario_de_contexto(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
+unsafe extern "thiscall" fn comparar_context_commentary(m: usize, lado: u32, evento: u32, saida: *mut i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32>(%%I1%%);
     if gravando_no_topo() {
         return o(m, lado, evento, saida);
@@ -539,15 +539,15 @@ unsafe extern "thiscall" fn comparar_comentario_de_contexto(m: usize, lado: u32,
     if !saida.is_null() {
         reg.push((saida as usize, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, lado, evento, saida), || crate::aleatorio::sem_contar(|| comentario_de_contexto(m, lado, evento, saida)));
-    PLACAR.registrar(igual && r == n, || format!("comentario_de_contexto({}, {:#x}) original={} rust={} {:x?} x {:x?}", lado as u8, evento as u16, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, lado, evento, saida), || crate::aleatorio::sem_contar(|| context_commentary(m, lado, evento, saida)));
+    PLACAR.registrar(igual && r == n, || format!("context_commentary({}, {:#x}) original={} rust={} {:x?} x {:x?}", lado as u8, evento as u16, r, n, mo, mr));
     r
 }
 
 /// { 0x6eada0 } (thiscall, match_pl.cpp): o construtor do jogador da partida (0x1bc bytes): zera os
 /// campos, com −1 em +0, +0x28, +0x2b e +0x5d/+0x61/+0x65, 0xfb em +0x19, 6 em +0x1b e 0x17d4 em +0x35.
 /// Devolve `this`.
-unsafe extern "thiscall" fn construir_jogador_da_partida(j: usize) -> usize {
+unsafe extern "thiscall" fn construct_match_player(j: usize) -> usize {
     let b = |o: usize, v: u8| *((j + o) as *mut u8) = v;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((j + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((j + o) as *mut u32, v);
@@ -575,9 +575,9 @@ unsafe extern "thiscall" fn construir_jogador_da_partida(j: usize) -> usize {
     j
 }
 
-unsafe extern "thiscall" fn comparar_construir_jogador_da_partida(j: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_match_player(j: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(j, 0x1bc)], || o(j), || construir_jogador_da_partida(j));
-    PLACAR.registrar(igual && r == n, || format!("construir_jogador_da_partida({:#x}) {:x?} x {:x?}", j, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(j, 0x1bc)], || o(j), || construct_match_player(j));
+    PLACAR.registrar(igual && r == n, || format!("construct_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
     r
 }

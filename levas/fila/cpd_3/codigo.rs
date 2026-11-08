@@ -21,7 +21,7 @@ unsafe fn cpd3_avisar_tecnicos(nacao: usize) {
 /// { 0x775000 } (thiscall, ret 4, national_teams.cpp): `clear_current_competition(nacao)`: a competição atual do
 /// registro da nação ([this+4] + 0x6e × id, +4) vira −1; havendo a seguinte ([this+8][id] ≠ −1), ela passa a ser a
 /// atual, a seguinte vira −1 e o gerenciador dos técnicos é avisado (0x6a3770). Sem SEH, sem caixa, sem locais.
-unsafe extern "thiscall" fn limpar_competicao_atual(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn clear_current_competition(this: usize, nacao: usize) {
     let id = *(nacao as *const i32);
     let atual = cpd3_d(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize) + 4;
     core::ptr::write_unaligned(atual as *mut i32, -1);
@@ -37,7 +37,7 @@ unsafe extern "thiscall" fn limpar_competicao_atual(this: usize, nacao: usize) {
 
 /// Comparador: a competição atual e a seguinte; com a seguinte (o aviso 0x6a3770 sorteia e mexe nos técnicos), só a
 /// original.
-unsafe extern "thiscall" fn comparar_limpar_competicao_atual(this: usize, nacao: usize) {
+unsafe extern "thiscall" fn comparar_clear_current_competition(this: usize, nacao: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let id = *(nacao as *const i32);
     let seguinte = cpd3_d(this + 8).wrapping_add((id as usize).wrapping_mul(4));
@@ -45,8 +45,8 @@ unsafe extern "thiscall" fn comparar_limpar_competicao_atual(this: usize, nacao:
         return o(this, nacao);
     }
     let reg = [(cpd3_d(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize) + 4, 4), (seguinte, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || limpar_competicao_atual(this, nacao));
-    PLACAR.registrar(igual, || format!("limpar_competicao_atual({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || clear_current_competition(this, nacao));
+    PLACAR.registrar(igual, || format!("clear_current_competition({:x}, {:x}) {:x?} x {:x?}", this, nacao, mo, mr));
 }
 
 /// A competição `v` (−1: nenhuma) acabou para a 0x775070? Sem `fim_de_fase`, quando +0x59 da competição
@@ -64,7 +64,7 @@ unsafe fn cpd3_acabou(v: i32, fim_de_fase: bool) -> bool {
 /// a cada nação ([0xae23a8], 0x122 bytes) do continente (+0x71), a competição atual (registro +4) e a seguinte
 /// ([this+8][i]) que acabaram (cpd3_acabou) viram −1; se a atual ficou −1 e há seguinte, a seguinte passa a atual e o
 /// gerenciador dos técnicos é avisado (0x6a3770). Sem SEH, sem caixa, sem locais.
-unsafe extern "thiscall" fn liberar_competicoes_do_continente(this: usize, continente: usize, fim_de_fase: u32) {
+unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
     let fim = fim_de_fase as u8 != 0;
     let mut i = 0i32;
     while i < *(0xae2350 as *const i32) {
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn liberar_competicoes_do_continente(this: usize, conti
 /// Comparador: o aviso 0x6a3770 sorteia e mexe nos técnicos (não pode rodar duas vezes): só a original; a prova é a
 /// carreira e o ramo da cópia no modo Rust.
 // ponytail: só a original (4 chamadas na carreira); comparar pedia separar a decisão do aviso.
-unsafe extern "thiscall" fn comparar_liberar_competicoes_do_continente(this: usize, continente: usize, fim_de_fase: u32) {
+unsafe extern "thiscall" fn comparar_release_competitions_of_continent(this: usize, continente: usize, fim_de_fase: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, continente, fim_de_fase)
 }
 
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn comparar_liberar_competicoes_do_continente(this: usi
 /// senão o bit 3 de +0x5e) só depois da data do tipo (+0x3a; 0x456770) e, sendo o 0, se o clube deixa (0x600a50):
 /// sai de lá (0x7762f0). Entra (0x776250), a vaga do tipo (+0x45) desce 1 e sai a notícia (0x76fd10). Ninguém: zera
 /// +0x45. Sem SEH, sem sorteio; a local do tipo do outro elenco é gravada antes de ler (só o byte vale).
-unsafe extern "thiscall" fn convocar_substituto(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
+unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
     let posicoes: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(0x5b7d20usize);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
@@ -195,6 +195,6 @@ unsafe extern "thiscall" fn convocar_substituto(this: usize, nacao: usize, tipo:
 /// Comparador: a entrada no elenco sai com a notícia (0x76fd10) e a saída do outro mexe na tática: só a original
 /// (a 0x776250 e a 0x7762f0 que ela chama passam pelos comparadores delas).
 // ponytail: só a original; a prova é a carreira (140 chamadas) e o ramo da cópia no modo Rust.
-unsafe extern "thiscall" fn comparar_convocar_substituto(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
+unsafe extern "thiscall" fn comparar_call_up_replacement(this: usize, nacao: usize, tipo: u32, nivel: u32, saindo: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize)>(%%I2%%)(this, nacao, tipo, nivel, saindo)
 }

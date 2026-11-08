@@ -48,7 +48,7 @@ unsafe fn cpl6_ordenar(base: usize, n: usize) {
 /// [0xae2c90]), o id de `a` (+8) e o de `b` (+0xc) (−1 sem eles), o `tipo` (+0x13), o `subtipo` (byte com sinal, em
 /// palavra +0x11) e a `resposta` (+0x10); a conta sobe e o registro é reordenado (qsort 0x945333 com 0x757ee0). Sem
 /// registro, aloca 20 (0x944e46; sem memória, caixa 0x6e11 e fim); cheio, cresce 20 (realloc 0x945667; caixa 0x6e1c).
-unsafe extern "thiscall" fn registrar_historia_da_midia(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
+unsafe extern "thiscall" fn log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
     crate::comparacao::ramo("cpl_6 registrar historia");
     if cpl6_d(this) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn registrar_historia_da_midia(this: usize, a: usize, b
 /// limite (hoje − 100 dias; a do time, tipo 0xbdf, hoje − (40 + sorteio(40)), um sorteio 0x90cfc0 por história dessas
 /// a cada passada; datas da 0x54c8e0 sobre [0xae2c90]) recebe por cima a última (23 bytes), a conta desce e o mesmo
 /// lugar é visto de novo. Sobrando alguma, reordena (qsort com 0x757ee0). Sem registro, nada.
-unsafe extern "thiscall" fn expirar_historias_da_midia(this: usize) {
+unsafe extern "thiscall" fn expire_story_log(this: usize) {
     if cpl6_d(this) == 0 {
         return;
     }
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn expirar_historias_da_midia(this: usize) {
 /// `a` nem a data: 1 se achou. As outras: busca binária (bsearch 0x946464 com 0x757ee0) pela chave {id de `a` ou −1,
 /// id de `b`, tipo, subtipo} (a data padrão 0x54a110 na chave, que a comparação não lê); achou e sem `desde`, 1; com
 /// `desde`, 1 se a história não é anterior a ela. Senão 0. `b` não pode ser nulo (a original lê sem conferir).
-unsafe extern "thiscall" fn historia_ja_registrada(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
+unsafe extern "thiscall" fn has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
     let mut chave = [0u8; 0x17];
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     padrao(chave.as_mut_ptr() as usize);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn historia_ja_registrada(this: usize, a: usize, b: usi
 
 /// Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
 /// que o registro esperado está na lista (a ordem é a do qsort).
-unsafe extern "thiscall" fn comparar_registrar_historia_da_midia(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
+unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
     let n = cpl6_d(this + 8);
     let esperado = cpl6_registro(a, b, tipo, subtipo, resposta);
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, a, b, tipo, subtipo, resposta);
@@ -166,13 +166,13 @@ unsafe extern "thiscall" fn comparar_registrar_historia_da_midia(this: usize, a:
         core::slice::from_raw_parts(cpl6_d(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &esperado[..]
     });
     PLACAR.registrar(m == n.wrapping_add(1) && achou, || {
-        format!("registrar_historia_da_midia(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", tipo, subtipo as u8 as i8, n, m, esperado, achou)
+        format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", tipo, subtipo as u8 as i8, n, m, esperado, achou)
     });
 }
 
 /// Comparador: lado a lado pelo registro (ponteiro, capacidade e conta; as histórias) e o estado do sorteio (a cópia
 /// sem contar os sorteios).
-unsafe extern "thiscall" fn comparar_expirar_historias_da_midia(this: usize) {
+unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cpl6_d(this) == 0 {
         return o(this);
@@ -180,15 +180,15 @@ unsafe extern "thiscall" fn comparar_expirar_historias_da_midia(this: usize) {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((this, 0xc));
     reg.push((cpl6_d(this), (cpl6_d(this + 8) as i32).max(0) as usize * 0x17));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| expirar_historias_da_midia(this)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| expire_story_log(this)));
     // mo.0[2] e mr.0[2]: ponteiro, capacidade e conta depois de cada lado
-    PLACAR.registrar(igual, || format!("expirar_historias_da_midia {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
+    PLACAR.registrar(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
 }
 
 /// Comparador: pelo valor (a busca e a data padrão da chave só leem).
-unsafe extern "thiscall" fn comparar_historia_ja_registrada(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(%%I2%%)(this, a, b, tipo, subtipo, desde);
-    let n = historia_ja_registrada(this, a, b, tipo, subtipo, desde);
-    PLACAR.registrar(r == n, || format!("historia_ja_registrada(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
+    let n = has_logged_story(this, a, b, tipo, subtipo, desde);
+    PLACAR.registrar(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
     r
 }

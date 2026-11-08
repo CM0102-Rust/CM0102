@@ -57,7 +57,7 @@ pub(crate) unsafe fn cqi8_regras_catarinense(o: usize) {
 ///
 /// [pt] { 0x430ff0 } (thiscall, bra_reg_central.cpp): `BraRegCentral::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
     cqi8_regras_centro(this);
     crate::comparacao::ramo("cqi_8 regras do centro-oeste");
     cqi7_calendario(this);
@@ -66,13 +66,13 @@ pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) 
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI8_REGRAS_DO_CENTRO_OESTE)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_CENTRAL_SET_UP_RULES)(this), || {
         cqi8_regras_centro(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi8_regras_do_centro_oeste({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_central_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this
 ///
 /// [pt] { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
 /// Catarinense (0x9686bc); devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
     cqi8_regras_catarinense(this);
     crate::comparacao::ramo("cqi_8 regras do catarinense");
     cqi7_calendario(this);
@@ -95,13 +95,13 @@ pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -
 }
 
 /// Comparador: como o do Centro-Oeste.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI8_REGRAS_DO_CATARINENSE)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_CENTRAL_SET_UP_RULES_43BC70)(this), || {
         cqi8_regras_catarinense(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi8_regras_do_catarinense({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_central_set_up_rules_43bc70({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -252,18 +252,18 @@ pub(crate) unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u3
 /// [pt] { 0x4314e0 } (thiscall, ret 0x18, bra_reg_central.cpp): `BraRegCentral::update_staff_records_for_status` (slot 18
 /// do Centro-Oeste e do Goiano): os classificados e rebaixados dos pontos corridos; no mata-mata (fase 0), o campeão
 /// (destino 5) e os eliminados (destino -2, registro de eliminação com peso de 30 a 50 em 3 rodadas). Devolve 0.
-pub(crate) unsafe extern "thiscall" fn cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
     cqk7_centro(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação, rodada antes): a devolução e o destino na linha.
-pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqk7_centro(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQK7_DESTINO_NO_CENTRO_OESTE)(this, clube, situacao, fase, a4, jogo, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_CENTRAL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("cqk7_destino_no_centro_oeste({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_central_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 
@@ -273,13 +273,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk7_destino_no_centro_oeste(thi
 /// Original: `BraRegCentral::BraRegCentral` (0x4304b0, bra_reg_central.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
     cqt1_construir(this, ano, registro, &CQT1_CENTRO_OESTE, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_centro_oeste(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT1_CONSTRUIR_CENTRO_OESTE);
-    cqt1_comparar("cqt1_construir_centro_oeste", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_CENTRAL);
+    cqt1_comparar("construct_bra_reg_central", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
 }
 
 /// The Centre-West turnover: archives the season in the statistics, clears the previous table and stages, moves to the
@@ -289,13 +289,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_centro_oeste(this
 ///
 /// [pt] { 0x431090 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::start_new_season()`, a virada da temporada do Centro-Oeste (a tabela:
 /// 0x430ef0; caixas nas linhas 0x1cb, 0x1d2, 0x1d8 e 0x1df).
-pub(crate) unsafe extern "thiscall" fn cqp7_virada_do_centro_oeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_start_new_season(this: usize) -> u32 {
     cqp7_virada(this, 0x430ef0, 0x98ae10, [0x1cb, 0x1d2, 0x1d8, 0x1df], 1, "cqp_7 virada do centro_oeste") // cqp7: o ano seguinte do Centro-Oeste
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_centro_oeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP7_VIRADA_DO_CENTRO_OESTE);
-    cqp7_comparar_virada("cqp7_virada_do_centro_oeste", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_CENTRAL_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_reg_central_start_new_season", this, || o(this))
 }
 
 /// The Centre-West next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 8 go to the
@@ -304,13 +304,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_centro_oeste(this
 ///
 /// [pt] { 0x431240 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::advance_stage()`, a fase seguinte do Centro-Oeste: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x4312d0); a caixa da linha 0x1f9.
-pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_centro_oeste(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_advance_stage(this: usize) {
     cqp7_fase_seguinte(this, 0x98ae10, 0x1f9, 0x4312d0);
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_centro_oeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP7_FASE_SEGUINTE_DO_CENTRO_OESTE);
-    cqp7_comparar_fase_seguinte("cqp7_fase_seguinte_do_centro_oeste", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_CENTRAL_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_reg_central_advance_stage", this, || o(this))
 }
 
 /// the Centre-West league has 15 clubs: those with it as their reserve division in the database (the field that holds
@@ -319,13 +319,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_centro_oes
 ///
 /// [pt] { 0x430ef0 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::load_region_clubs()`: o Centro-Oeste tem 15 clubes (divisão reserva +0x60 = [0x9cf998]).
 /// Fonte 0x98ae10, linha 0x168.
-pub(crate) unsafe extern "thiscall" fn cql8_tabela_do_centro_oeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_load_region_clubs(this: usize) -> u32 {
     cql8_tabela(this, 0xf, 0x98ae10, 0x168, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, 0, "cql_8 centro_oeste cheio")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_centro_oeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL8_TABELA_DO_CENTRO_OESTE);
-    cql8_comparar("cql8_tabela_do_centro_oeste", this, 0xf, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_load_region_clubs(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_CENTRAL_LOAD_REGION_CLUBS);
+    cql8_comparar("bra_reg_central_load_region_clubs", this, 0xf, KEY_CLUB_COMP_BRAZILIAN_CENTRAL_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Centre-West: after the round robin, the top 8 go to the quarter-finals: 1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th
@@ -334,11 +334,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_centro_oeste(this
 ///
 /// [pt] { 0x4312d0 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae10, linhas 0x21c (sem lista) e 0x234 (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_centro_oeste(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_central_create_knockout_stage(this: usize) {
     cqn9_mata_mata(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae10, 0x21c, 0x234, "cqn_9 centro_oeste"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Centro-Oeste
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_centro_oeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN9_MATA_MATA_DO_CENTRO_OESTE);
-    cqn9_comparar("cqn9_mata_mata_do_centro_oeste", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_create_knockout_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_CENTRAL_CREATE_KNOCKOUT_STAGE);
+    cqn9_comparar("bra_reg_central_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }

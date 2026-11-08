@@ -70,13 +70,13 @@ unsafe fn cqn5_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
 
 /// { 0x642a70 } (thiscall, ret 0, ita_ser_a.cpp, 11.650 bytes): `ItaSerA::create_fixed_fixtures()`: os 306 jogos da
 /// Série A 2001/02 (34 rodadas de 9, com o dia, o mês (0 = janeiro) e o ano que a original empurra). Fonte 0x9ea2a8, linha 0x60f.
-unsafe extern "thiscall" fn calendario_fixo_da_serie_a(this: usize) {
+unsafe extern "thiscall" fn create_fixed_fixtures(this: usize) {
     cqn5_fixos(this, &CQN5_SERIE_A, 0x9ea2a8, 0x60f)
 }
 
 /// { 0x647230 } (thiscall, ret 0, ita_ser_b.cpp, 14.388 bytes): `ItaSerB::set_up_fixed_fixtures()`: os 380 jogos da
 /// Série B 2001/02 (38 rodadas de 10). Fonte 0x9ea384, linha 0x39a.
-unsafe extern "thiscall" fn calendario_fixo_da_serie_b(this: usize) {
+unsafe extern "thiscall" fn ita_ser_a_set_up_fixed_fixtures(this: usize) {
     cqn5_fixos(this, &CQN5_SERIE_B, 0x9ea384, 0x39a)
 }
 
@@ -90,14 +90,14 @@ unsafe fn cqn5_comparar(nome: &str, this: usize, original: impl FnOnce()) {
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
 
-unsafe extern "thiscall" fn comparar_calendario_fixo_da_serie_a(this: usize) {
+unsafe extern "thiscall" fn comparar_create_fixed_fixtures(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn5_comparar("calendario_fixo_da_serie_a", this, || o(this))
+    cqn5_comparar("create_fixed_fixtures", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_calendario_fixo_da_serie_b(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_fixed_fixtures(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn5_comparar("calendario_fixo_da_serie_b", this, || o(this))
+    cqn5_comparar("ita_ser_a_set_up_fixed_fixtures", this, || o(this))
 }
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do

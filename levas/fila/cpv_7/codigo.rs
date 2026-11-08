@@ -24,7 +24,7 @@ unsafe fn cpv7_b(a: usize) -> u8 {
 /// acima de 1750 com 0,75 do excedente, e os demais grupos com o excedente acima de 2500/1250/750 pelo fator (0,75/0,75/
 /// 0,3, ou reputação/50 / nível × 0,1 × ele, até 1); com liga (+0x57), × peso da liga (+0x69) × 0,2. Pela faixa das
 /// finanças (0x5986b0): −2 × 0,75, −1 × 0,95, 1 × 1,5, 2 × 2. Limitado ao teto do clube (+0x14) e à faixa do cargo.
-unsafe extern "thiscall" fn teto_salarial_do_pessoal(this: usize, cargo: i8) -> i32 {
+unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let id = cpv7_d(this + 8);
@@ -121,17 +121,17 @@ unsafe extern "thiscall" fn teto_salarial_do_pessoal(this: usize, cargo: i8) -> 
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_teto_salarial_do_pessoal(this: usize, cargo: i8) -> i32 {
+unsafe extern "thiscall" fn comparar_get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, i8) -> i32>(%%I0%%)(this, cargo);
-    let n = teto_salarial_do_pessoal(this, cargo);
-    PLACAR.registrar(r == n, || format!("teto_salarial_do_pessoal(fin {:#x}, cargo {}) original={} rust={}", this, cargo, r, n));
+    let n = get_max_staff_wage(this, cargo);
+    PLACAR.registrar(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, cargo, r, n));
     r
 }
 
 /// { 0x599960 } (thiscall, ret 4, finance.cpp): `Finance::pay_bonuses(valor)`, pelo fim do jogo dos contratos
 /// (CONTRACT_MANAGER::update_after_match 0x4ca6d0, três chamadas): soma o valor nas despesas de bônus (+0x138 e +0x98)
 /// e o tira do saldo (i64 em +0, estendido com sinal).
-unsafe extern "thiscall" fn pagar_os_bonus(this: usize, valor: i32) {
+unsafe extern "thiscall" fn pay_bonuses(this: usize, valor: i32) {
     for o in [0x138usize, 0x98] {
         core::ptr::write_unaligned((this + o) as *mut i32, cpv7_i(this + o).wrapping_add(valor));
     }
@@ -141,23 +141,23 @@ unsafe extern "thiscall" fn pagar_os_bonus(this: usize, valor: i32) {
 }
 
 /// Comparador: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_pagar_os_bonus(this: usize, valor: i32) {
+unsafe extern "thiscall" fn comparar_pay_bonuses(this: usize, valor: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pagar_os_bonus(this, valor));
-    PLACAR.registrar(igual, || format!("pagar_os_bonus(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_bonuses(this, valor));
+    PLACAR.registrar(igual, || format!("pay_bonuses(fin {:#x}, {}) original={:x?} rust={:x?}", this, valor, mo, mr));
 }
 
 /// { 0x598340 } (thiscall, ret 4, finance.cpp): `Finance::adjust_max_wage(percentual)`, pela resposta da diretoria
 /// (MANAGER_MANAGER::handle_board_request 0x6a91b0) e pela 0x6acee8: o teto salarial (+0x14) vira (percentual + 100) ×
 /// 0,01 × teto, truncado.
-unsafe extern "thiscall" fn ajustar_o_teto_salarial(this: usize, percentual: i8) {
+unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentual: i8) {
     let v = ftol((percentual as i32 + 100) as f64 * f64_em(0x967898) * cpv7_i(this + 0x14) as f64);
     core::ptr::write_unaligned((this + 0x14) as *mut i32, v);
 }
 
 /// Comparador: lado a lado no teto salarial (+0x14).
-unsafe extern "thiscall" fn comparar_ajustar_o_teto_salarial(this: usize, percentual: i8) {
+unsafe extern "thiscall" fn comparar_adjust_max_wage(this: usize, percentual: i8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, percentual), || ajustar_o_teto_salarial(this, percentual));
-    PLACAR.registrar(igual, || format!("ajustar_o_teto_salarial(fin {:#x}, {}) original={:x?} rust={:x?}", this, percentual, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x14, 4)], || o(this, percentual), || adjust_max_wage(this, percentual));
+    PLACAR.registrar(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this, percentual, mo, mr));
 }

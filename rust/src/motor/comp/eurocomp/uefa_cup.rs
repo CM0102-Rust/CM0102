@@ -120,14 +120,14 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
     1
 }
 
-pub(crate) unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
     cqs9_inscritos(this)
 }
 
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
-pub(crate) unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQS9_UEFA_INSCRITOS);
+pub(crate) unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);
     let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize)
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && listas, || format!("cqs9_uefa_inscritos({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
+    PLACAR.registrar(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
     a
 }
 
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize)
 /// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
 /// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `cqq10_uefa_rodadas` e rodadas = as gravadas. Fora da −1,
 /// 0.
-pub(crate) unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -198,10 +198,10 @@ pub(crate) unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32,
     t
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQQ10_UEFA_TABELA);
-    cql10_comparar("cqq10_uefa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqq10_uefa_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_UEFA_CUP_CREATE_ROUND_TABLE);
+    cql10_comparar("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| uefa_cup_create_round_table(this, fase, r, e, s))
 }
 
 /// rule: in the UEFA Cup, the winner, the runner-up and every knocked-out club leave European competition (the club
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, f
 /// update_staff_records_for_status(clube, desfecho, a3, a4, jogo, a6)`: com o desfecho (byte) 1, 2 ou 0xff (campeão,
 /// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
 /// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
-pub(crate) unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let d = desfecho as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
@@ -225,8 +225,8 @@ pub(crate) unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: 
     base(this, clube, desfecho, a3, a4, jogo, a6)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQI10_UEFA_REGISTROS);
+pub(crate) unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
     }
@@ -235,6 +235,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
     let depois = read_u32_as_usize(clube + club::EURO_FLAG);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_uefa_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
+    PLACAR.registrar(r == 0 && depois == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
     r
 }

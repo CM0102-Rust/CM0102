@@ -2,9 +2,9 @@
 
 /// { 0x539b90 } (cdecl, Database.cpp): um primeiro nome (linha de 60 bytes em [0xae23f0]) pelo peso.
 /// Nação com mais de 15 primeiros nomes (`indice_de_nomes_da_nacao` +0x18): 3 sorteios na faixa dela,
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com
+/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com
 /// até 15: sorteio na tabela inteira ([0xae2398], no máximo 0x7fff). Só o rand() da CRT.
-unsafe extern "C" fn primeiro_nome_pelo_peso(nacao: usize) -> usize {
+unsafe extern "C" fn database_pick_first_name_by_weight(nacao: usize) -> usize {
     let linha = |i: i32| (*(0xae23f0 as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao != 0 {
         let e = indice_de_nomes_da_nacao(nacao);
@@ -30,7 +30,7 @@ unsafe extern "C" fn primeiro_nome_pelo_peso(nacao: usize) -> usize {
 /// +0x38, +0x39 da cor e formato 0): `frente` e `fundo`, que começam com [0xae3184] e [0xaebe04]. As
 /// cores vêm do registro +0x5d (+0x90 e +0x94 dele) ou, sem ele, da própria competição (+0x61 e +0x65);
 /// cor nula deixa o padrão. Devolve 1. Competição nula: a original (padrões, caixa "Error" e 0).
-unsafe extern "C" fn cores_da_competicao(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
+unsafe extern "C" fn database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
     if competicao == 0 {
         return orig::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(%%I1%%)(competicao, frente, fundo);
     }
@@ -67,7 +67,7 @@ unsafe fn vaga_no_cargo(clube: usize, d: usize, n: usize, pessoa: usize) -> bool
 /// sinal, tabela de salto 0x53bcc8): 1 +0xbf; 2..4 +0xc3 (3); 5 +0xcf; 6, 7 +0xd3; 8 +0x19f (5); 9 +0x1b3
 /// (7); 10 +0x1cf (3); 11 elenco +0xd7 (50); 12 e 13: +0xcf / +0xd3 livre ou dela e vaga no elenco; 15:
 /// vaga em +0x19f e no elenco. Clube ou pessoa nulos, cargo 14 ou fora de 1..15: a original (caixa e 0).
-unsafe extern "C" fn clube_tem_vaga_para_cargo(clube: usize, cargo: u32, pessoa: usize) -> u32 {
+unsafe extern "C" fn database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
     let c = cargo as u8 as i8;
     if clube == 0 || pessoa == 0 || !(1..=15).contains(&c) || c == 14 {
         return orig::<unsafe extern "C" fn(usize, u32, usize) -> u32>(%%I2%%)(clube, cargo, pessoa);
@@ -89,35 +89,35 @@ unsafe extern "C" fn clube_tem_vaga_para_cargo(clube: usize, cargo: u32, pessoa:
     tem as u32
 }
 
-unsafe extern "C" fn comparar_primeiro_nome_pelo_peso(nacao: usize) -> usize {
+unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| primeiro_nome_pelo_peso(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("primeiro_nome_pelo_peso({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_first_name_by_weight(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_cores_da_competicao(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
+unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(%%I1%%);
     if competicao == 0 {
         return o(competicao, frente, fundo); // caixa: só a original
     }
     let regioes = [(frente as usize, 2), (fundo as usize, 2)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(competicao, frente, fundo),
-        || cores_da_competicao(competicao, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("cores_da_competicao({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
+        || database_get_comp_colours(competicao, frente, fundo));
+    PLACAR.registrar(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_clube_tem_vaga_para_cargo(clube: usize, cargo: u32, pessoa: usize) -> u32 {
+unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, u32, usize) -> u32>(%%I2%%);
     let r = o(clube, cargo, pessoa);
     let c = cargo as u8 as i8;
     if clube == 0 || pessoa == 0 || !(1..=15).contains(&c) || c == 14 {
         return r; // caixa: só a original
     }
-    let n = clube_tem_vaga_para_cargo(clube, cargo, pessoa);
-    PLACAR.registrar(r == n, || format!("clube_tem_vaga_para_cargo({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
+    let n = database_club_has_room_for_job(clube, cargo, pessoa);
+    PLACAR.registrar(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
     r
 }

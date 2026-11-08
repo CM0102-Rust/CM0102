@@ -14,7 +14,7 @@ unsafe fn cps9_i(a: usize) -> i32 {
 /// (+0x61), a caixa (linha 0xb5d) e 0. Senão a tabela da carreira (0x7c3e40 do [0xb74350]: entradas de 0x2b bytes,
 /// seis por temporada e clube) e a soma, em 16 bits, do byte +8 da sexta entrada de cada grupo (+0xdf); a tabela é
 /// liberada (0x9452ca, também quando nula). Quente (cada jogador de cada partida): sem contador.
-unsafe extern "stdcall" fn gols_na_carreira(pessoa: usize) -> u16 {
+unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usize) -> u16 {
     if pessoa == 0 {
         aviso_em(0xa78310, 0xb4b);
         return 0;
@@ -43,14 +43,14 @@ unsafe extern "stdcall" fn gols_na_carreira(pessoa: usize) -> u16 {
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-unsafe extern "stdcall" fn comparar_gols_na_carreira(pessoa: usize) -> u16 {
+unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize) -> u16 {
     let o = orig::<unsafe extern "stdcall" fn(usize) -> u16>(%%I0%%);
     if pessoa == 0 || (cps9_i(pessoa) < cps9_i(0xae2364) && cps9_d(pessoa + 0x61) == 0) {
         return o(pessoa);
     }
     let r = o(pessoa);
-    let n = gols_na_carreira(pessoa);
-    PLACAR.registrar(r == n, || format!("gols_na_carreira(pessoa {:x}) original={} rust={}", pessoa, r, n));
+    let n = player_stats_get_career_goals(pessoa);
+    PLACAR.registrar(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
@@ -59,7 +59,7 @@ unsafe extern "stdcall" fn comparar_gols_na_carreira(pessoa: usize) -> u16 {
 /// dele (+0xcf), o histórico do técnico (tipo 0x69: o clube, a pessoa e os três ids +0x33 de +4, +8 e +0xc dela, e o id
 /// de `de`); depois, na mesma entrada, o da pessoa (tipo 0x6a: o clube e o id de `de`), no arquivo (0x58e340). O clube
 /// é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
-unsafe extern "thiscall" fn registrar_o_emprestimo(this: usize, pessoa: usize, de: usize, clube: usize) {
+unsafe extern "thiscall" fn add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
     crate::comparacao::ramo("cps_9 emprestimo");
     let mut e = cpq4_entrada();
     if clube != 0 && cps9_d(clube + 0xcf) != 0 {
@@ -84,14 +84,14 @@ unsafe extern "thiscall" fn registrar_o_emprestimo(this: usize, pessoa: usize, d
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_registrar_o_emprestimo(this: usize, pessoa: usize, de: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%)(this, pessoa, de, clube)
 }
 
 /// { 0x632040 } (cdecl, injury.cpp): `injury_compare_entry_dates(chave, item)`, a ordem do bsearch (0x946464) da fila
 /// das voltas aos treinos (entradas de 0x16 bytes) em Injury::post_due_recovery_news (0x62e010, todo dia): a data em
 /// +8 da chave antes da do item (0x456770), −1; depois (0x456740), 1; igual, 0.
-unsafe extern "C" fn ordem_da_volta_aos_treinos(chave: usize, item: usize) -> i32 {
+unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     if antes(chave + 8, cps9_d(item + 8) as u32, cps9_d(item + 0xc) as u32) != 0 {
@@ -104,9 +104,9 @@ unsafe extern "C" fn ordem_da_volta_aos_treinos(chave: usize, item: usize) -> i3
     0 // cps9: a volta de hoje achada
 }
 
-unsafe extern "C" fn comparar_ordem_da_volta_aos_treinos(chave: usize, item: usize) -> i32 {
+unsafe extern "C" fn comparar_injury_compare_entry_dates(chave: usize, item: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(chave, item);
-    let n = ordem_da_volta_aos_treinos(chave, item);
-    PLACAR.registrar(r == n, || format!("ordem_da_volta_aos_treinos(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
+    let n = injury_compare_entry_dates(chave, item);
+    PLACAR.registrar(r == n, || format!("injury_compare_entry_dates(chave {:x}, item {:x}) original={} rust={}", chave, item, r, n));
     r
 }

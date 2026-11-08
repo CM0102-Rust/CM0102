@@ -34,7 +34,7 @@ unsafe fn dbo4_contar(clube: usize, teto: i32, posicao: impl Fn(usize) -> bool, 
 /// (posição +0x15 = 20) passa dos limites com o atributo +0x36 (a velocidade, byte com sinal) acima de
 /// reputação/500 + 5 (no máximo 17). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20, relatório de
 /// um clube).
-unsafe extern "C" fn clube_tem_atacante_rapido(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_fast_striker(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -42,17 +42,17 @@ unsafe extern "C" fn clube_tem_atacante_rapido(clube: usize) -> u8 {
     (n > 0) as u8 // atacante rapido (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_atacante_rapido(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
-    let n = clube_tem_atacante_rapido(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_atacante_rapido({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_fast_striker(clube);
+    PLACAR.registrar(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x549940 } (cdecl, Database.cpp): `club_has_two_creative_midfielders(clube)`: clube nulo: 0; senão 1 se mais de
 /// 1 meia (posição +0x14, +0x12 ou +0x13 = 20) passa dos limites com os atributos +0x43 e +0x37 (bytes com sinal)
 /// acima de reputação/500 + 5 (no máximo 14). Só `al`. Só pelo olheiro.
-unsafe extern "C" fn clube_tem_meias_criativos(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_two_creative_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -61,10 +61,10 @@ unsafe extern "C" fn clube_tem_meias_criativos(clube: usize) -> u8 {
     (n > 1) as u8 // meias criativos (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_meias_criativos(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
-    let n = clube_tem_meias_criativos(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_meias_criativos({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_two_creative_midfielders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -78,7 +78,7 @@ unsafe extern "C" fn comparar_clube_tem_meias_criativos(clube: usize) -> u8 {
 /// competição (+0x57 igual), a diferença de reputação (16 bits) > 1250 tira 1 (faixa > 0, byte +4 da tabela
 /// [0xae2d14] de 6 bytes por id: do outro ≥ 0 e do clube ≤ 0); < 1250 soma 1 (faixa < 5, do clube ≥ 0 e do outro
 /// ≤ 0). No fim, entre 0 e 6. Só `al`. Só pelo olheiro.
-unsafe extern "C" fn faixa_de_forca_do_elenco(clube: usize, outro: usize) -> u8 {
+unsafe extern "C" fn club_squad_strength_band(clube: usize, outro: usize) -> u8 {
     if clube == 0 {
         return 3;
     }
@@ -147,9 +147,9 @@ unsafe extern "C" fn faixa_de_forca_do_elenco(clube: usize, outro: usize) -> u8 
     f.clamp(0, 6) as u8
 }
 
-unsafe extern "C" fn comparar_faixa_de_forca_do_elenco(clube: usize, outro: usize) -> u8 {
+unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(clube, outro);
-    let n = faixa_de_forca_do_elenco(clube, outro);
-    PLACAR.registrar(r == n, || format!("faixa_de_forca_do_elenco({:x}, {:x}) original={} rust={}", clube, outro, r, n));
+    let n = club_squad_strength_band(clube, outro);
+    PLACAR.registrar(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));
     r
 }

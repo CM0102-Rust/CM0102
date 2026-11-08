@@ -5,7 +5,7 @@
 /// resposta dela. DESLIGADA (DESLIGADAS no motor.rs): o save_database grava no index.dat 408 bytes de
 /// locais sem valor (lixo de ponteiro, a partir de +0x5cb); chamado desta cópia ele roda na pilha
 /// particular e o lixo gravado muda (prova do save da 219a). Volta quando a cópia reproduzir o resíduo.
-unsafe extern "C" fn gravar_banco_no_save(save: usize, a4: u32, tipo: u32) -> u32 {
+unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
     let gravar_banco: unsafe extern "C" fn(usize, u32, u32, u32) -> u32 = core::mem::transmute(0x52dad0usize);
     crate::comparacao::ramo("save gravar banco");
     gravar_banco(save, 1, a4, tipo)
@@ -13,14 +13,14 @@ unsafe extern "C" fn gravar_banco_no_save(save: usize, a4: u32, tipo: u32) -> u3
 
 // ponytail: grava as tabelas do banco no contêiner; não roda duas vezes. Só a original; a cópia
 // leva o ramo e é provada pela prova do save.
-unsafe extern "C" fn comparar_gravar_banco_no_save(save: usize, a4: u32, tipo: u32) -> u32 {
+unsafe extern "C" fn comparar_save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
     orig::<unsafe extern "C" fn(usize, u32, u32) -> u32>(%%I0%%)(save, a4, tipo)
 }
 
 /// { 0x524d10 } (cdecl, Database.cpp): `load_database_from_stream(save, compartilhado)`: o passo 2
 /// do `load_game_data`: `load_database(save, compartilhado, 1)` (0x528540, do contêiner), devolvendo
 /// a resposta dela (1 = certo).
-unsafe extern "C" fn carregar_banco_do_save(save: usize, compartilhado: u32) -> u32 {
+unsafe extern "C" fn load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
     let carregar_banco: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x528540usize);
     crate::comparacao::ramo("save carregar banco");
     carregar_banco(save, compartilhado, 1)
@@ -28,7 +28,7 @@ unsafe extern "C" fn carregar_banco_do_save(save: usize, compartilhado: u32) -> 
 
 // ponytail: carrega o banco inteiro do contêiner (aloca as tabelas); não roda duas vezes. Só a
 // original; a cópia leva o ramo (a etapa de carregar da prova do save a exercita).
-unsafe extern "C" fn comparar_carregar_banco_do_save(save: usize, compartilhado: u32) -> u32 {
+unsafe extern "C" fn comparar_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
     orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(save, compartilhado)
 }
 
@@ -38,7 +38,7 @@ unsafe extern "C" fn comparar_carregar_banco_do_save(save: usize, compartilhado:
 /// vetores soltos pelo `free` (0x9452ca); dois objetos pelo destrutor virtual (vtable[0](1)); os
 /// `*.tmp` da pasta temporária (0x90cd50), [0xae2338], as tabelas do banco (0x528080), a data do
 /// jogo (0x54a130: 1, 0, 2001, −1) e três marcas zeradas. Devolve 1.
-unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
+unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     let soltar_telas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7ff5f0usize);
     let soltar_mais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x7fc5e0usize);
     let antes: unsafe extern "C" fn() = core::mem::transmute(0x6d5b50usize);
@@ -124,6 +124,6 @@ unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
 
 // ponytail: destrói todos os subsistemas e apaga os *.tmp; não roda duas vezes. Só a original; a
 // cópia leva o ramo e roda no modo Rust (abertura da carreira, fim do início rápido).
-unsafe extern "C" fn comparar_liberar_dados_do_jogo(tela: u32) -> u32 {
+unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
     orig::<unsafe extern "C" fn(u32) -> u32>(%%I2%%)(tela)
 }

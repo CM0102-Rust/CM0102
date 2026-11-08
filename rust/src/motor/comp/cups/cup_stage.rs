@@ -25,7 +25,7 @@ use super::*;
 /// senão Cup::map_fixture_tree (0x518790), as duas thiscall, ret 0 (sorteiam); negativa, a caixa da linha 0x62 ou 0x6a.
 /// Devolve this.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
+pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
     const F: usize = 0x9b5944;
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
@@ -92,10 +92,10 @@ pub(crate) unsafe extern "thiscall" fn cqs7_fase_de_copa(this: usize, pai: usize
 /// Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
 /// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
+pub(crate) unsafe extern "thiscall" fn comparar_construct_cup_stage(this: usize, pai: usize, n: u32, times: usize, rodadas: u32, a5: u32, modelo: usize, ano: u32, fase: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, por_ordem: u32, a14: u32, sementes: usize) -> usize {
     #[allow(clippy::type_complexity)]
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(IDX_CQS7_FASE_DE_COPA);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(IDX_CONSTRUCT_CUP_STAGE);
     let k = (n as u16 as i16).max(0) as usize;
     let plano: Vec<(usize, u8)> = (0..k).map(|i| {
         let s = if sementes != 0 { *((sementes + i) as *const u8) } else if por_ordem != 0 { i as u8 } else { 0 };
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, p
             b.sort_unstable();
             a == b
         };
-    PLACAR.registrar(ok, || format!("cqs7_fase_de_copa({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
+    PLACAR.registrar(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this, n as u16 as i16, rodadas as u16 as i16, ano as u16));
     r
 }
 
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs7_fase_de_copa(this: usize, p
 /// a vtable 0x969468; a lista dos times (+0xa7), a tabela das rodadas (+0xa3) e, com os confrontos (+0xad), cada vetor de
 /// confrontos das +0x3c rodadas e o próprio vetor liberados (0x9452ca, cdecl; os ponteiros ficam); por fim a base
 /// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.
-pub(crate) unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this, 0x969468);
     if read_u32_as_usize(this + 0xa7) != 0 {
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn cqs7_fim_da_fase_de_copa(this: usize) -> 
 }
 
 // ponytail: libera as tabelas e destrói a base; não pode rodar duas vezes: só a original
-pub(crate) unsafe extern "thiscall" fn comparar_cqs7_fim_da_fase_de_copa(this: usize) -> usize {
-    orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CQS7_FIM_DA_FASE_DE_COPA)(this)
+pub(crate) unsafe extern "thiscall" fn comparar_destroy_cup_stage(this: usize) -> usize {
+    orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DESTROY_CUP_STAGE)(this)
 }
 

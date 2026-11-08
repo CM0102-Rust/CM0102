@@ -46,7 +46,7 @@ unsafe fn dbp_preferencia_do_clube(clube: usize, pessoa: usize) -> i32 {
 /// reputação ±500 (pessoa que joga, com contrato no clube). Os chamadores leem só `ax`; o resto do eax segue a
 /// original (o registro que sobrou em cada caminho). Grava [0xae1080] (o contrato achado). No diário das pessoas
 /// (game_daily_staff_update 0x5ce2d0, duas chamadas).
-unsafe extern "C" fn reputacao_do_clube_para_pessoa(clube: usize, pessoa: usize) -> u32 {
+unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
     let rep = dbp_i16(clube + 0x80);
     let comp = dbp_u32(clube + 0x57);
     if comp == 0 {
@@ -118,12 +118,12 @@ unsafe extern "C" fn reputacao_do_clube_para_pessoa(clube: usize, pessoa: usize)
     ((eax as u32 & 0xffff_0000) | rep as u16 as u32).wrapping_add(bonus as u32)
 }
 
-unsafe extern "C" fn comparar_reputacao_do_clube_para_pessoa(clube: usize, pessoa: usize) -> u32 {
+unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(clube, pessoa),
-        || reputacao_do_clube_para_pessoa(clube, pessoa));
+        || club_reputation_for_staff(clube, pessoa));
     // os chamadores leem só o ax (movsx)
-    PLACAR.registrar(igual && r as u16 == n as u16, || format!("reputacao_do_clube_para_pessoa({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
+    PLACAR.registrar(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
     r
 }
 
@@ -149,26 +149,26 @@ unsafe fn dbp_contar_no_clube(pessoa: usize, clube: usize, base: usize) -> u8 {
 
 /// { 0x547c90 } (cdecl, Database.cpp): `staff_count_disliked_staff_at_club(pessoa, clube)`: quantas das três pessoas
 /// que a pessoa rejeita (preferências +0x28/+0x2c/+0x30) estão no clube. No diário das pessoas (0x5ce2d0).
-unsafe extern "C" fn contar_rejeitados_no_clube(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "C" fn staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     dbp_contar_no_clube(pessoa, clube, 0x28) // os rejeitados
 }
 
-unsafe extern "C" fn comparar_contar_rejeitados_no_clube(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I1%%)(pessoa, clube);
-    let n = contar_rejeitados_no_clube(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("contar_rejeitados_no_clube({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    let n = staff_count_disliked_staff_at_club(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
 /// { 0x547ce0 } (cdecl, Database.cpp): `staff_count_favoured_staff_at_club(pessoa, clube)`: quantas das três pessoas
 /// favoritas da pessoa (preferências +0x1c/+0x20/+0x24) estão no clube. No diário das pessoas (0x5ce2d0).
-unsafe extern "C" fn contar_favoritos_no_clube(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "C" fn staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     dbp_contar_no_clube(pessoa, clube, 0x1c) // os favoritos
 }
 
-unsafe extern "C" fn comparar_contar_favoritos_no_clube(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I2%%)(pessoa, clube);
-    let n = contar_favoritos_no_clube(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("contar_favoritos_no_clube({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    let n = staff_count_favoured_staff_at_club(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }

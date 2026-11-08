@@ -29,9 +29,9 @@ unsafe fn cpo8_pessoa(id: usize) -> usize {
 /// O contrato principal da pessoa (0x4cf5a0, guardado em [0xae1080]), o clube dele (id em +4) e o contrato com esse
 /// clube (0x4cf5f0).
 unsafe fn cpo8_contrato_com_o_clube(p: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    let c = contrato_de(cpo8_d(0xae1050), p);
+    let c = contract_of(cpo8_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     let clube = if c != 0 { cpo8_clube(cpo8_d(c + 4)) } else { 0 };
     com_clube(cpo8_d(0xae1050), p, clube)
@@ -44,7 +44,7 @@ unsafe fn cpo8_contrato_com_o_clube(p: usize) -> usize {
 /// pessoa fora dos 16 humanos, em cada vaga que serve (conta no limite: a caixa e o jogo para): as duas entradas com o
 /// id dela (+0), o id da nação (+4; sem nação em +0x1a, a 0x90cfc0 sorteia uma e a grava na pessoa), na primeira o valor
 /// (+0x52) e na segunda o +0x3d do contrato com o clube do contrato (sem contrato: 100). Roda a cada 30 dias.
-unsafe extern "thiscall" fn montar_listas_de_posicao(this: usize, _nao_usado: u32) {
+unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
     let livrar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     // ponytail: a original empurra a vaga num dword com 3 bytes de lixo da pilha acima; a 0x844300 só lê o byte
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn montar_listas_de_posicao(this: usize, _nao_usado: u3
 /// no mínimo um terço do valor. Na vaga 15 só a primeira, com o valor. Na segunda: −1000 com o bit 2 do +0x4e do
 /// contrato, 2000 com os bits 0 ou 3 ou sem jogador (+0x61), sem clube, sem divisão (+0x57) ou divisão sem marca em
 /// [0xadadfc] com reputação abaixo de 6000, ou sem contrato; senão o +0x3d do contrato.
-unsafe extern "thiscall" fn ordenar_listas_de_posicao(this: usize) {
+unsafe extern "thiscall" fn sort_position_lists(this: usize) {
     let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn ordenar_listas_de_posicao(this: usize) {
 /// do jogador) cujo clube não está suspenso (+8 da entrada de 9 bytes do clube em +0xdc abaixo de 100, salvo com
 /// `ignorar`), não é o do jogador e põe nele (+7 da vaga de 0x25 bytes com o jogador em +0xf; sem vaga, a primeira)
 /// mais que o valor (+0x52).
-unsafe extern "thiscall" fn clubes_interessados_no_jogador(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
+unsafe extern "thiscall" fn collect_interested_clubs(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     if saida != 0 {
         let limpar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d080usize);
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn clubes_interessados_no_jogador(this: usize, jogador:
     }
     if modo as u8 != 3 {
         let controla: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x600c90usize);
-        let na_lista: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
+        let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
         for k in 0..16i32 {
             let h = cpo8_pessoa(cpo8_i(0xae2364).wrapping_sub(k).wrapping_sub(1) as usize);
             let clube = cpo8_d(h + 0x39);
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn clubes_interessados_no_jogador(this: usize, jogador:
             if controla(clube, 0, 1) != 0 && modo as u8 == 2 {
                 continue;
             }
-            if na_lista(cpo8_d(0xb74448), jogador, h) != 0 {
+            if in_list(cpo8_d(0xb74448), jogador, h) != 0 {
                 let par = [cpo8_d(jogador) as u32, cpo8_d(clube) as u32];
                 acrescentar(saida, par.as_ptr() as usize, 8);
             }
@@ -289,7 +289,7 @@ unsafe fn cpo8_itens(lista: usize) -> Vec<(u32, u32)> {
 /// Comparador: só a original.
 // ponytail: a original solta e aloca os 32 vetores (e pode sortear a nação de quem não tem); não roda duas vezes. Confere
 // o resultado: as duas listas de cada vaga com os mesmos ids, cada entrada servindo para a vaga, a conta no limite.
-unsafe extern "thiscall" fn comparar_montar_listas_de_posicao(this: usize, nao_usado: u32) {
+unsafe extern "thiscall" fn comparar_build_position_lists(this: usize, nao_usado: u32) {
     orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, nao_usado);
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(0x844300usize);
     let mut ruim = None;
@@ -307,11 +307,11 @@ unsafe extern "thiscall" fn comparar_montar_listas_de_posicao(this: usize, nao_u
             }
         }
     }
-    PLACAR.registrar(ruim.is_none(), || format!("montar_listas_de_posicao: vaga e entrada {:?}", ruim));
+    PLACAR.registrar(ruim.is_none(), || format!("build_position_lists: vaga e entrada {:?}", ruim));
 }
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].
-unsafe extern "thiscall" fn comparar_ordenar_listas_de_posicao(this: usize) {
+unsafe extern "thiscall" fn comparar_sort_position_lists(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut reg = vec![(0xae1080usize, 4usize)];
     for vaga in 0..16usize {
@@ -321,15 +321,15 @@ unsafe extern "thiscall" fn comparar_ordenar_listas_de_posicao(this: usize) {
             reg.push((cpo8_d(this + 0x58 + vaga * 4), n as usize * 12));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || ordenar_listas_de_posicao(this));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || sort_position_lists(this));
     PLACAR.registrar(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).map(|(a, _)| a.0).take(8).collect();
-        format!("ordenar_listas_de_posicao: vetores diferentes {:x?}", dif)
+        format!("sort_position_lists: vetores diferentes {:x?}", dif)
     });
 }
 
 /// Comparador: a original na lista de saída e a cópia numa lista nova (0x68d020, solta com 0x68d080); compara os pares.
-unsafe extern "thiscall" fn comparar_clubes_interessados_no_jogador(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
+unsafe extern "thiscall" fn comparar_collect_interested_clubs(this: usize, jogador: usize, saida: usize, ignorar: u32, modo: u32, so_humanos: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I2%%);
     o(this, jogador, saida, ignorar, modo, so_humanos);
     if saida == 0 {
@@ -340,8 +340,8 @@ unsafe extern "thiscall" fn comparar_clubes_interessados_no_jogador(this: usize,
     let mut nova = [0u8; 0x10];
     let l = nova.as_mut_ptr() as usize;
     criar(l);
-    clubes_interessados_no_jogador(this, jogador, l, ignorar, modo, so_humanos);
+    collect_interested_clubs(this, jogador, l, ignorar, modo, so_humanos);
     let (a, b) = (cpo8_itens(saida), cpo8_itens(l));
     limpar(l);
-    PLACAR.registrar(a == b, || format!("clubes_interessados_no_jogador({:#x}) original={:x?} rust={:x?}", jogador, a, b));
+    PLACAR.registrar(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", jogador, a, b));
 }

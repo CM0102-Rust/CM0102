@@ -40,7 +40,7 @@ unsafe fn cpq10_sem_memoria(linha: u32, texto: usize) {
 /// registro de 0x20 bytes ([this+4] + 32 × índice) da categoria do jogador (cpq10_vaga), ou 0 quando o índice é −1
 /// ou menor. Sem jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10e6 e
 /// pela PlayerStats::get_stat 0x7c1e30 (as médias do motor de partida). Quente: sem contador.
-unsafe extern "thiscall" fn registro_da_categoria(this: usize, jogador: usize, categoria: u32) -> usize {
+unsafe extern "thiscall" fn get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
     let vaga = match cpq10_vaga(this, jogador, categoria) {
         Some(v) => v,
         _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria),
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn registro_da_categoria(this: usize, jogador: usize, c
 /// [this+4] (conta +0xc) com +0xe = 0xffff vira o dele (zerado; os soltos descem); senão um no fim (zerado; a conta
 /// sobe): cheio (capacidade +8), cresce de 100 em 100 (realloc 0x945667; sem memória, a caixa 0xef4 e 0). Sem
 /// jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10f9.
-unsafe extern "thiscall" fn criar_estatisticas(this: usize, jogador: usize, categoria: u32) -> usize {
+unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
     let vaga = match cpq10_vaga(this, jogador, categoria) {
         Some(v) => v,
         _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%)(this, jogador, categoria),
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn criar_estatisticas(this: usize, jogador: usize, cate
 /// pessoa (+0) está na lista de aposentadorias ([this+4], registros de 0x1a bytes, conta +8 com sinal), senão 0 (e 0
 /// sem pessoa). Pela MANAGER_MANAGER::is_staff_suitable_for_job 0x69fa4b: quem não é jogador e vai se aposentar não
 /// serve para técnico.
-unsafe extern "thiscall" fn aposentadoria_marcada(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn is_retirement_pending(this: usize, pessoa: usize) -> u8 {
     if pessoa == 0 {
         return 0;
     }
@@ -122,20 +122,20 @@ unsafe extern "thiscall" fn aposentadoria_marcada(this: usize, pessoa: usize) ->
 }
 
 /// Comparador: pelo valor (só lê); os casos de erro só na original.
-unsafe extern "thiscall" fn comparar_registro_da_categoria(this: usize, jogador: usize, categoria: u32) -> usize {
+unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, jogador, categoria);
     if cpq10_vaga(this, jogador, categoria).is_none() {
         return r;
     }
-    let n = registro_da_categoria(this, jogador, categoria);
-    PLACAR.registrar(r == n, || format!("registro_da_categoria({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
+    let n = get_category_record(this, jogador, categoria);
+    PLACAR.registrar(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
     r
 }
 
 /// Comparador: a original realoca o vetor, então só ela roda; antes, o plano (o índice que o jogador vai ter, a
 /// conta e os soltos depois); depois, o registro devolvido, o índice na vaga, a conta, os soltos e o registro
 /// zerado quando é novo. ponytail: os casos de erro e a falta de memória só na original, sem conferir.
-unsafe extern "thiscall" fn comparar_criar_estatisticas(this: usize, jogador: usize, categoria: u32) -> usize {
+unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
     let vaga = match cpq10_vaga(this, jogador, categoria) {
         Some(v) => v,
@@ -160,9 +160,9 @@ unsafe extern "thiscall" fn comparar_criar_estatisticas(this: usize, jogador: us
     let esperado = cpq10_d(this + 4).wrapping_add((indice as usize) << 5);
     let zerado = atual != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
     let igual = r == esperado && cpq10_d(vaga) as i32 == indice && cpq10_d(this + 0xc) == n2 && cpq10_d(this + 0x38) == soltos2 && zerado;
-    PLACAR.registrar(igual, || format!("criar_estatisticas({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
+    PLACAR.registrar(igual, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
         this, jogador, categoria as u8 as i8, r, esperado, cpq10_d(vaga) as i32, indice, cpq10_d(this + 0xc), n2, cpq10_d(this + 0x38), soltos2, zerado));
     r
 }
 
-comparar_valor!(comparar_aposentadoria_marcada, aposentadoria_marcada, %%I2%%, (pessoa: usize) -> u8);
+comparar_valor!(comparar_is_retirement_pending, is_retirement_pending, %%I2%%, (pessoa: usize) -> u8);

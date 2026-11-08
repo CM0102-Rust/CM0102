@@ -18,7 +18,7 @@ unsafe fn juntar_texto_c(destino: *mut u8, origem: *const u8) {
 /// `a4`/`tipo` se não existir) + `fread` em blocos de 0x30d40 no buffer de leitura do item (+0x41705)
 /// + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 no fim; 0 se nada casa. Arquivo que não abre ou
 /// item recusado: a caixa de erro (zipdir.cpp 797 / 805) e 0, sem fechar a busca (como a original).
-unsafe extern "C" fn empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
+unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
     let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(0x945b13usize);
     let primeiro: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x4c0aa0usize);
     let proximo: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x4c0b50usize);
@@ -68,7 +68,7 @@ unsafe extern "C" fn empacotar_no_conteiner(caminho: usize, pasta: usize, padrao
 
 // ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
-unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
+unsafe extern "C" fn comparar_zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
     orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(caminho, pasta, padrao, a4, tipo)
 }
 
@@ -81,7 +81,7 @@ unsafe extern "C" fn comparar_empacotar_no_conteiner(caminho: usize, pasta: usiz
 /// ou de tipo estranho) ela fecha o item de uma variável local nunca escrita; aqui ela começa em 0.
 /// Sem memória para o índice, a caixa de erro (zipdir.cpp 642) escreve o nome "zipdir" por cima da
 /// resposta (a mesma casa da pilha) e a lista segue sem os nomes (memória da alocação).
-unsafe extern "C" fn desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
+unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
     let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -177,7 +177,7 @@ unsafe extern "C" fn desempacotar_do_conteiner(caminho: usize, pasta: usize, pad
 
 // ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
-unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: usize, padrao: usize) -> u32 {
+unsafe extern "C" fn comparar_zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
     orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%)(caminho, pasta, padrao)
 }
 
@@ -185,7 +185,7 @@ unsafe extern "C" fn comparar_desempacotar_do_conteiner(caminho: usize, pasta: u
 /// temporária (a variável `CM3_TEMP` pela 0x90bc50 + "\", se houver, e o texto de [0xad9c64], copiado
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
-unsafe extern "C" fn limpar_pasta_temporaria(padrao: usize) {
+unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
     let ambiente: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x90bc50usize);
     let copiar_limitado: unsafe extern "C" fn(usize, *mut u8) = core::mem::transmute(0x90cf20usize);
     let juntar_caminho: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(0x945b13usize);
@@ -233,6 +233,6 @@ unsafe extern "C" fn limpar_pasta_temporaria(padrao: usize) {
 }
 
 // ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
-unsafe extern "C" fn comparar_limpar_pasta_temporaria(padrao: usize) {
+unsafe extern "C" fn comparar_utils_clear_temp_folder(padrao: usize) {
     orig::<unsafe extern "C" fn(usize)>(%%I2%%)(padrao)
 }

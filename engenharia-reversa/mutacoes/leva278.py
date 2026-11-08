@@ -27,5 +27,5 @@ MUTACOES = [
     ('cqn5_lista_nunca_cai', 'if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn5: um clube sem achar derruba a lista', 'if false { // mutacao: a lista nunca cai', 'cqn_5 calendario fixo'),
     ('cqn6_lista_nunca_cai', 'if read_u32_as_usize(f + 8) == 0xffff_ffff || read_u32_as_usize(f + 0xc) == 0xffff_ffff { // cqn6: um clube sem achar derruba a lista', 'if false { // mutacao: a lista nunca cai', 'cqn_6 calendario fixo'),
     ('cqn6_toco_de_dois_devolve_zero', '    1 // cqn6: o toco devolve 1', '    0 // mutacao: o toco devolve 0'),
-    ('cqn6_toco_de_um_devolve_zero', 'unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {\n    1\n}', 'unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {\n    0\n}'),
+    ('cqn6_toco_de_um_devolve_zero', 'unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {\n    1\n}', 'unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {\n    0\n}'),
 ]

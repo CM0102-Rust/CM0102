@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: a aprovação final da oferta pelos clubes, o fechamento da oferta aprovada e o acerto das cláusulas das transferências anteriores (transfer_manager.cpp) ----------
+// ---------- %%LEVA%%a leva: a aprovação final da oferta pelos clubes, o match_wrap_up da oferta aprovada e o acerto das cláusulas das transferências anteriores (transfer_manager.cpp) ----------
 
 unsafe fn cpw2_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)
@@ -68,7 +68,7 @@ unsafe fn cpw2_estado_aprovado(oferta: usize, clube: usize) -> u8 {
 /// transferência futura: uma LLIST local que não usa (0x68d020/0x68d040), o jogador (+0xc) e os da troca (lista +4)
 /// saem das outras ofertas (0x8c41c0, e 0x8c47d0 para os da troca), as ofertas guardadas pelo jogador saem (0x4cf560),
 /// a notícia (0x8e05d0) e a transferência futura (0x8cb9a0) com a data; data já chegada: agendada para hoje.
-unsafe extern "thiscall" fn confirmar_oferta_pelo_clube(this: usize, oferta: usize, clube: usize) {
+unsafe extern "thiscall" fn confirm_offer_by_club(this: usize, oferta: usize, clube: usize) {
     let data_padrao: unsafe extern "thiscall" fn(*mut [u32; 2]) -> usize = core::mem::transmute(0x54a110usize);
     let mut data = [0u32; 2];
     data_padrao(&mut data);
@@ -122,14 +122,14 @@ unsafe extern "thiscall" fn confirmar_oferta_pelo_clube(this: usize, oferta: usi
 /// Comparador: sem chegar ao acordo dos dois (estado final diferente de 0xe), só o estado muda: lado a lado sobre a
 /// oferta. Com o acordo, a oferta é agendada ou vira transferência futura (mexe nas outras ofertas e aloca): só a
 /// original.
-unsafe extern "thiscall" fn comparar_confirmar_oferta_pelo_clube(this: usize, oferta: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_confirm_offer_by_club(this: usize, oferta: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if cpw2_estado_aprovado(oferta, clube) == 0xe {
         return o(this, oferta, clube);
     }
     let regioes = [(oferta, 0x31usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta, clube), || confirmar_oferta_pelo_clube(this, oferta, clube));
-    PLACAR.registrar(igual, || format!("confirmar_oferta_pelo_clube(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta, clube), || confirm_offer_by_club(this, oferta, clube));
+    PLACAR.registrar(igual, || format!("confirm_offer_by_club(oferta {:#x}, clube {:#x}) original={:x?} rust={:x?}", oferta, clube, mo, mr));
 }
 
 /// { 0x8c34e0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::try_complete_offer(oferta, no_prazo)`, pela
@@ -140,14 +140,14 @@ unsafe extern "thiscall" fn comparar_confirmar_oferta_pelo_clube(this: usize, of
 /// outras ofertas (0x8c6ae0), as ofertas guardadas pelo jogador saem (0x4cf560), a notícia (0x8dbef0); com confirmação
 /// (+0x2f), vendedor e prazo do fim do contrato (+0x30 & 0xf = 3), a transferência futura no fim do contrato (0x8cb9a0
 /// com +0x2d do contrato); senão a transferência se conclui (0x8c9390).
-unsafe extern "thiscall" fn tentar_concluir_oferta(this: usize, oferta: usize, no_prazo: u32) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "thiscall" fn try_complete_offer(this: usize, oferta: usize, no_prazo: u32) {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let reconfirmar: unsafe extern "thiscall" fn(usize, usize, usize, *mut u32, u32) -> u8 = core::mem::transmute(0x8cfc90usize);
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let recusa: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x8c36b0usize);
     let desfazer: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x8c44e0usize);
     let p = cpw2_pessoa(cpw2_d(oferta + 0xc));
-    let c = contrato_de(cpw2_d(0xae1050), p);
+    let c = contract_of(cpw2_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     let vendedor = if c != 0 && cpw2_b(c + 0x35) & 0x3f != 5 { cpw2_clube(cpw2_d(c + 4)) } else { 0 };
     let comprador = cpw2_clube(cpw2_d(oferta + 8));
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn tentar_concluir_oferta(this: usize, oferta: usize, n
     guardadas(cpw2_d(0xae1050), cpw2_d(oferta + 0xc) as u32);
     noticia(this, oferta);
     if cpw2_b(oferta + 0x2f) != 0 && vendedor != 0 && cpw2_b(oferta + 0x30) & 0xf == 3 {
-        let c = contrato_de(cpw2_d(0xae1050), p);
+        let c = contract_of(cpw2_d(0xae1050), p);
         if c != 0 {
             crate::comparacao::ramo("cpw_2 futura no fim do contrato");
             let futura: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x8cb9a0usize);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn tentar_concluir_oferta(this: usize, oferta: usize, n
 
 // ponytail: conclui transferências, desfaz ofertas e dá notícias (aloca, não roda duas vezes): só a original; a cópia
 // leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_tentar_concluir_oferta(this: usize, oferta: usize, no_prazo: u32) {
+unsafe extern "thiscall" fn comparar_try_complete_offer(this: usize, oferta: usize, no_prazo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%)(this, oferta, no_prazo)
 }
 
@@ -226,7 +226,7 @@ unsafe fn cpw2_clausulas(this: usize, pessoa: usize, tirar: usize, oferta: usize
 /// { 0x8c91e0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::settle_previous_transfer_clauses(oferta)`,
 /// pela transferência concluída (0x8c9390): as cláusulas antigas do jogador (+0xc) e das pessoas da troca (lista +4,
 /// cursor recomeçado; a original tira o percentual da próxima venda do jogador da oferta, não o da pessoa da troca).
-unsafe extern "thiscall" fn acertar_clausulas_anteriores(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn settle_previous_transfer_clauses(this: usize, oferta: usize) {
     let p = cpw2_pessoa(cpw2_d(oferta + 0xc));
     cpw2_clausulas(this, p, p, oferta);
     let l = cpw2_d(oferta + 4);
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn acertar_clausulas_anteriores(this: usize, oferta: us
 
 /// Comparador: sem marca de cláusula (bits 2, 4 e 8) no jogador nem nas pessoas da troca, só o cursor da lista muda:
 /// lado a lado sobre a lista e as marcas. Com alguma, paga (finanças, notícias que alocam): só a original.
-unsafe extern "thiscall" fn comparar_acertar_clausulas_anteriores(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_settle_previous_transfer_clauses(this: usize, oferta: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let marcas = cpw2_d(this + 0x86e);
     let tem = |id: usize| cpw2_b(marcas.wrapping_add(id.wrapping_mul(8))) & 0xe != 0;
@@ -270,6 +270,6 @@ unsafe extern "thiscall" fn comparar_acertar_clausulas_anteriores(this: usize, o
     if alguma {
         return o(this, oferta);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || acertar_clausulas_anteriores(this, oferta));
-    PLACAR.registrar(igual, || format!("acertar_clausulas_anteriores(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || settle_previous_transfer_clauses(this, oferta));
+    PLACAR.registrar(igual, || format!("settle_previous_transfer_clauses(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
 }

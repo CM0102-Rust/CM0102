@@ -52,7 +52,7 @@ unsafe fn cpp12_muitos_convocados(this: usize, clube: usize, a: usize, b: usize)
 /// do jogo (0x549ef0 com +0x2a e +0x28), a janela de um dia antes (0x54c8e0) e um depois (0x54c5b0); jogo da competição
 /// amistosa (0x5c6710 em [0xae2c74] com +0x14): 1. Senão 0 quando o mandante (+0x1c) ou o visitante (+0x20) tem mais
 /// de 2 convocados na janela; senão 1. O quadro SEH só guarda o estado (as datas não têm destrutor).
-unsafe extern "thiscall" fn pode_marcar_jogo_do_clube(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) = core::mem::transmute(0x549ef0usize);
     let menos_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let mais_dias: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn pode_marcar_jogo_do_clube(this: usize, jogo: usize) 
 /// { 0x778e90 } (cdecl, national_teams.cpp): `compare_call_up_records_by_date(a, b)`: o qsort dos registros com a data
 /// em +0 (as convocações de 9 bytes, as lesões, as transferências): −1 se a de `a` é antes (0x456770), 1 se é depois
 /// (0x456740), senão 0. Quente (qsort): sem contador.
-unsafe extern "C" fn ordem_das_convocacoes_pela_data(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let (d0, d1) = (cpp12_d(b) as u32, cpp12_d(b + 4) as u32);
@@ -91,7 +91,7 @@ unsafe extern "C" fn ordem_das_convocacoes_pela_data(a: usize, b: usize) -> i32 
 /// { 0x7779b0 } (thiscall, ret 8, national_teams.cpp): `NationalTeams::add_qualified_nation(nacao, fase_final)`: com
 /// as duas não nulas, acrescenta o registro de 8 bytes (nação, fase final) à lista das novas classificadas em
 /// this + 0x28 (LLIST, 0x68d0d0).
-unsafe extern "thiscall" fn acrescentar_nacao_classificada(this: usize, nacao: usize, fase_final: usize) {
+unsafe extern "thiscall" fn add_qualified_nation(this: usize, nacao: usize, fase_final: usize) {
     if nacao == 0 || fase_final == 0 {
         return;
     }
@@ -103,27 +103,27 @@ unsafe extern "thiscall" fn acrescentar_nacao_classificada(this: usize, nacao: u
 }
 
 /// Comparador: pelo valor (só lê; as datas são locais).
-unsafe extern "thiscall" fn comparar_pode_marcar_jogo_do_clube(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_can_schedule_club_fixture(this: usize, jogo: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, jogo);
-    let n = pode_marcar_jogo_do_clube(this, jogo);
-    PLACAR.registrar(r == n, || format!("pode_marcar_jogo_do_clube({:x}) original={} rust={}", jogo, r, n));
+    let n = can_schedule_club_fixture(this, jogo);
+    PLACAR.registrar(r == n, || format!("can_schedule_club_fixture({:x}) original={} rust={}", jogo, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_das_convocacoes_pela_data(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_call_up_records_by_date(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_das_convocacoes_pela_data(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_convocacoes_pela_data({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_call_up_records_by_date(a, b);
+    PLACAR.registrar(r == n, || format!("compare_call_up_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: a original aloca o nó (não roda duas vezes): só ela, e confere o plano: a conta da lista (+0x28, palavra)
 /// sobe 1 com as duas não nulas e fica igual senão.
-unsafe extern "thiscall" fn comparar_acrescentar_nacao_classificada(this: usize, nacao: usize, fase_final: usize) {
+unsafe extern "thiscall" fn comparar_add_qualified_nation(this: usize, nacao: usize, fase_final: usize) {
     let antes = *((this + 0x28) as *const i16) as i32;
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, nacao, fase_final);
     let depois = *((this + 0x28) as *const i16) as i32;
     let esperado = antes + (nacao != 0 && fase_final != 0) as i32;
-    PLACAR.registrar(depois == esperado, || format!("acrescentar_nacao_classificada({:x}, {:x}) conta {} -> {}", nacao, fase_final, antes, depois));
+    PLACAR.registrar(depois == esperado, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nacao, fase_final, antes, depois));
 }

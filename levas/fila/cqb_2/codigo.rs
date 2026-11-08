@@ -42,7 +42,7 @@ unsafe fn cqb2_nacao_de_um_terco(clube: usize) -> bool {
 /// reputação e sorteio(8) zero: (reputação + 1000) × 1000. Um terço nas nações de 0x9cf4a8, 0x9cf408 e 0x9cf2c0. Em
 /// +0x154, +0xb4 e no saldo; a notícia (0x59f300) pelo tipo (pela verba 0x598800, a marca +0x82 e sorteios de 4: 3, 5,
 /// 6, 7 com +0x82 = 1, ou 1); com a ficha, o +0x20 dela cai 1 acima de 5; encerra a crise (+0x165 = 0); devolve 1.
-unsafe extern "thiscall" fn impulso_das_financas(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, fin: usize) -> u32 {
     if clube != 0 {
         let nac = cqb2_d(clube + 0x53);
         if nac != 0 {
@@ -209,7 +209,7 @@ unsafe fn cqb2_comparar(nome: &str, fin: usize, extras: &[(usize, usize)], confe
     r
 }
 
-unsafe extern "thiscall" fn comparar_impulso_das_financas(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_try_finance_boost_event(this: usize, clube: usize, fin: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let pres = if clube != 0 { cqb2_d(clube + 0xbf) } else { 0 };
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn comparar_impulso_das_financas(this: usize, clube: us
         extras.push((ficha + 0x20, 1)); // o +0x20 da ficha cai em todo evento com ela
         conferir.push(1);
     }
-    cqb2_comparar("impulso_das_financas", fin, &extras, &conferir, || o(this, clube, fin), || impulso_das_financas(this, clube, fin))
+    cqb2_comparar("try_finance_boost_event", fin, &extras, &conferir, || o(this, clube, fin), || try_finance_boost_event(this, clube, fin))
 }
 
 /// { 0x59e940 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::try_board_takeover(clube, finanças)`, pelo passe dos
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn comparar_impulso_das_financas(this: usize, clube: us
 /// ficha, o presidente novo: a nação (a do clube se sorteio(1000) ≠ 0, senão uma sorteada), os nomes (0x539c60,
 /// 0x53a5b0, 0x53a1b0) e a ficha (+0x1d, +0xf, +0x16, +0x20 = sorteio(20) + 1; o +0x20 de novo se ficou abaixo de 5); a
 /// notícia (0x59f300, tipo 2, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
-unsafe extern "thiscall" fn troca_do_presidente(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
     let rep = cpv6_w(clube + 0x80);
     let div = match cpv6_faixa(fin) {
         -2 => if rep > 0x109a { 0.4f64 } else { 0.25 },
@@ -309,25 +309,25 @@ unsafe extern "thiscall" fn troca_do_presidente(this: usize, clube: usize, fin: 
     1
 }
 
-unsafe extern "thiscall" fn comparar_troca_do_presidente(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_try_board_takeover(this: usize, clube: usize, fin: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if clube == 0 || fin == 0 {
         return o(this, clube, fin); // ponytail: sem clube ou sem finanças, só a original
     }
-    cqb2_comparar("troca_do_presidente", fin, &[], &[], || o(this, clube, fin), || troca_do_presidente(this, clube, fin))
+    cqb2_comparar("try_board_takeover", fin, &[], &[], || o(this, clube, fin), || try_board_takeover(this, clube, fin))
 }
 
 /// { 0x5999e0 } (thiscall, ret 4, fin_prm.cpp): `Finance::pay_other_costs(valor)`, pela 0x7e5b10: soma o valor aos
 /// outros custos do ano (+0x120) e do mês (+0x80) e o tira do saldo.
-unsafe extern "thiscall" fn pagar_outros_custos(this: usize, valor: i32) {
+unsafe extern "thiscall" fn pay_other_costs(this: usize, valor: i32) {
     cpv6_somar(this + 0x120, valor);
     cpv6_somar(this + 0x80, valor);
     cpz13_somar_saldo(this, -(valor as i64));
 }
 
 /// Comparador da 0x5999e0: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_pagar_outros_custos(this: usize, valor: i32) {
+unsafe extern "thiscall" fn comparar_pay_other_costs(this: usize, valor: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pagar_outros_custos(this, valor));
-    PLACAR.registrar(igual, || format!("pagar_outros_custos(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_other_costs(this, valor));
+    PLACAR.registrar(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

@@ -131,7 +131,7 @@ pub(crate) const CQT2_NORTE: Cqt2Estadual = Cqt2Estadual {
 /// Original: `BraRegGoias::BraRegGoias` (0x432b50, bra_reg_goias.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x432b50 } (thiscall, ret 8, bra_reg_goias.cpp): `BraRegGoias::BraRegGoias(ano, registro)`: o Goiano (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_GOIANO, 7, true, "cqt_2 goiano novo") // cqt2: a disciplina e as posições previstas do Goiano
 }
 
@@ -142,19 +142,19 @@ pub(crate) unsafe extern "thiscall" fn cqt2_construir_goiano(this: usize, ano: u
 /// Original: `BraRegNorth::BraRegNorth` (0x435340, bra_reg_north.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x435340 } (thiscall, ret 8, bra_reg_north.cpp): `BraRegNorth::BraRegNorth(ano, registro)`: o Norte (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
     cqt2_construir(this, ano, registro, &CQT2_NORTE, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_goiano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT2_CONSTRUIR_GOIANO);
-    cqt2_comparar("cqt2_construir_goiano", this, ano, registro, &CQT2_GOIANO, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GOIAS);
+    cqt2_comparar("construct_bra_reg_goias", this, ano, registro, &CQT2_GOIANO, || o(this, ano, registro))
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT2_CONSTRUIR_NORTE);
-    cqt2_comparar("cqt2_construir_norte", this, ano, registro, &CQT2_NORTE, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTH);
+    cqt2_comparar("construct_bra_reg_north", this, ano, registro, &CQT2_NORTE, || o(this, ano, registro))
 }
 
 // ---------- 280a leva: a virada da temporada e a fase seguinte dos estaduais: Goiano, Norte e Nordeste (bra_reg_goias.cpp, bra_reg_north.cpp, bra_reg_northeast.cpp) ----------
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt2_construir_norte(this: usize
 ///
 /// [pt] { 0x4336f0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::start_new_season()`, a virada da temporada do Goiano (a tabela:
 /// 0x433540; caixas nas linhas 0x1c3, 0x1ca, 0x1d0 e 0x1d7).
-pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_start_new_season(this: usize) -> u32 {
     cqp7_virada(this, 0x433540, 0x98ae90, [0x1c3, 0x1ca, 0x1d0, 0x1d7], 1, "cqp_8 virada do goiano") // cqp8: o ano seguinte do Goiano
 }
 
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_goiano(this: usize) -> u32
 ///
 /// [pt] { 0x4338a0 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::advance_stage()`, a fase seguinte do Goiano: no fim dos pontos corridos,
 /// o mata-mata de 8 (0x433930); a caixa da linha 0x1f1.
-pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage(this: usize) {
     cqp7_fase_seguinte(this, 0x98ae90, 0x1f1, 0x433930);
 }
 
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_goiano(this: usize)
 ///
 /// [pt] { 0x435e80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::start_new_season()`, a virada da temporada do Norte (a tabela:
 /// 0x435d80; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_start_new_season_435e80(this: usize) -> u32 {
     cqp7_virada(this, 0x435d80, 0x98af14, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_8 virada do norte") // cqp8: o ano seguinte do Norte
 }
 
@@ -202,30 +202,30 @@ pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_norte(this: usize) -> u32 
 ///
 /// [pt] { 0x436030 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::advance_stage()`, a fase seguinte do Norte: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4360c0); a caixa da linha 0x1f8.
-pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_norte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage_436030(this: usize) {
     cqp7_fase_seguinte(this, 0x98af14, 0x1f8, 0x4360c0);
 }
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_goiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP8_VIRADA_DO_GOIANO);
-    cqp7_comparar_virada("cqp8_virada_do_goiano", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_reg_goias_start_new_season", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_goiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP8_FASE_SEGUINTE_DO_GOIANO);
-    cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_goiano", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GOIAS_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_reg_goias_advance_stage", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_norte(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP8_VIRADA_DO_NORTE);
-    cqp7_comparar_virada("cqp8_virada_do_norte", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_start_new_season_435e80(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_START_NEW_SEASON_435E80);
+    cqp7_comparar_virada("bra_reg_goias_start_new_season_435e80", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_norte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP8_FASE_SEGUINTE_DO_NORTE);
-    cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_norte", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_advance_stage_436030(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GOIAS_ADVANCE_STAGE_436030);
+    cqp7_comparar_fase_seguinte("bra_reg_goias_advance_stage_436030", this, || o(this))
 }
 
 
@@ -280,7 +280,7 @@ pub(crate) unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 ///
 /// [pt] { 0x433540 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_table()`: o Goiano tem 14 clubes (divisão reserva +0x60 = [0x9cf9b4]).
 /// Fonte 0x98ae90, linha 0x160.
-pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_table(this: usize) -> u32 {
     cql9_tabela(this, 0xe, 0x98ae90, 0x160, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, 0, "cql_9 goiano cheio")
 }
 
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32
 ///
 /// [pt] { 0x435d80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_table()`: o Norte tem 10 clubes (divisão reserva +0x60 = [0x9cf994]).
 /// Fonte 0x98af14, linha 0x167.
-pub(crate) unsafe extern "thiscall" fn cql9_tabela_do_norte(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_table_435d80(this: usize) -> u32 {
     cql9_tabela(this, 0xa, 0x98af14, 0x167, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, 0, "cql_9 norte cheio")
 }
 
@@ -321,15 +321,15 @@ pub(crate) unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, or
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_goiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL9_TABELA_DO_GOIANO);
-    cql9_comparar("cql9_tabela_do_goiano", this, 0xe, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_CREATE_TABLE);
+    cql9_comparar("bra_reg_goias_create_table", this, 0xe, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, || o(this))
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL9_TABELA_DO_NORTE);
-    cql9_comparar("cql9_tabela_do_norte", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_create_table_435d80(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_CREATE_TABLE_435D80);
+    cql9_comparar("bra_reg_goias_create_table_435d80", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, || o(this))
 }
 
 // ---------- 274a leva: as regras do Goiano e das duas divisões da J-League (bra_reg_goias.cpp, jap_j1.cpp, jap_j2.cpp) ----------
@@ -417,7 +417,7 @@ pub(crate) unsafe fn cqj7_regras_j2(o: usize) {
 ///
 /// [pt] { 0x433640 } (thiscall, bra_reg_goias.cpp): `BraRegGoias::set_up_rules` (slot 36), as regras do Goiano e o
 /// calendário; devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -> u32 {
     cqj7_regras_goiano(this);
     crate::comparacao::ramo("cqj_7 regras do goiano");
     cqi7_calendario(this);
@@ -426,13 +426,13 @@ pub(crate) unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ7_REGRAS_DO_GOIANO)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_SET_UP_RULES)(this), || {
         cqj7_regras_goiano(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_do_goiano({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_goias_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usiz
 /// Original: `JapJ2::set_up_rules` (0x665140, jap_j2.cpp, thiscall).
 ///
 /// [pt] { 0x665140 } (thiscall, jap_j2.cpp): `JapJ2::set_up_rules`, as regras da J2 e o calendário; devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules_665140(this: usize) -> u32 {
     cqj7_regras_j2(this);
     crate::comparacao::ramo("cqj_7 regras da j2");
     cqi7_calendario(this);
@@ -452,13 +452,13 @@ pub(crate) unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Goiano.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules_665140(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ7_REGRAS_DA_J2)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_SET_UP_RULES_665140)(this), || {
         cqj7_regras_j2(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_da_j2({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_goias_set_up_rules_665140({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -468,11 +468,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -
 ///
 /// [pt] { 0x433930 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae90, linhas 0x214 (sem lista) e 0x22c (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_goiano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_knockout_stage(this: usize) {
     cqn9_mata_mata(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae90, 0x214, 0x22c, "cqn_9 goiano"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Goiano
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_goiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN9_MATA_MATA_DO_GOIANO);
-    cqn9_comparar("cqn9_mata_mata_do_goiano", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_create_knockout_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GOIAS_CREATE_KNOCKOUT_STAGE);
+    cqn9_comparar("bra_reg_goias_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }

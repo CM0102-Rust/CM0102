@@ -1,6 +1,6 @@
 # Mutacoes (cqv_10), no sorteio da Copa das Nacoes da Oceania (o dia do sorteio cai dentro da janela; os jogos sao
 # depois de junho): sem o sorteio da Australia e da Nova Zelandia (um sorteio a menos); as melanesias embaralhadas com
-# 1 escolha (menos trocas sorteadas); so 3 polinesias na disputa (menos trocas sorteadas).
+# 1 escolha (menos trocas sorteadas); so 3 polinesias na contest (menos trocas sorteadas).
 MUTACOES = [
     ('cqv10_sem_o_sorteio_da_australia',
      'if sorteio(2) != 0 { // cqv10: o sorteio da Austrália e da Nova Zelândia',

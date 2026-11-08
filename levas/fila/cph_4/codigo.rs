@@ -17,7 +17,7 @@ unsafe fn cph4_bsearch(chave: usize, base: usize, n: u32, tamanho: u32, comparar
 /// { 0x7549b0 } (thiscall, ret 4, media.cpp): `Media::remove_transfer_interest(pessoa)`: no vetor de interesses
 /// ([this+0xc], [this+0x14] registros de 25 bytes), cada um da pessoa (+0 = id) recebe por cima o último (6 duplas e um
 /// byte), a contagem desce e o mesmo lugar é visto de novo. Sobrando algum, reordena (qsort 0x945333 com 0x757ea0).
-unsafe extern "thiscall" fn tirar_interesses_de_transferencia(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn remove_transfer_interest(this: usize, pessoa: usize) {
     let n = (this + 0x14) as *mut i32;
     let mut i = 0i32;
     let mut off = 0usize;
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn tirar_interesses_de_transferencia(this: usize, pesso
 /// (bsearch 0x946464 com 0x7fc270, que lê só +0 clube e +4 pessoa; a data padrão da chave em +8, o byte +0x10 sem valor
 /// e a cópia usa zero) o pedido no vetor ([this+0x5c], [this+0x64] registros de 17 bytes); achou: puxa os seguintes um
 /// lugar (+0, +4, a data +8 pela 0x417c10 e o byte +0x10), a contagem desce e, sobrando algum, reordena (qsort).
-unsafe extern "thiscall" fn tirar_pedido_de_observacao(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn remove_scout_request(this: usize, pessoa: usize, clube: usize) {
     let mut chave = [0u8; 0x11];
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     padrao(chave.as_mut_ptr() as usize + 8);
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn tirar_pedido_de_observacao(this: usize, pessoa: usiz
 /// sem valor, a cópia usa zero) o apelido da pessoa `*id` entre os [+0xa6eb] de 30 bytes; achou: puxa os seguintes um
 /// lugar, o último fica com id −1 e +4 = 0 e a contagem desce. No fim reordena (qsort) só o vetor do último técnico
 /// visto (sem técnicos, o `id` faz as vezes do técnico, como no original).
-unsafe extern "thiscall" fn tirar_apelido_de_todos(this: usize, id: usize) {
+unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id: usize) {
     if id == 0 {
         return;
     }
@@ -141,25 +141,25 @@ unsafe extern "thiscall" fn tirar_apelido_de_todos(this: usize, id: usize) {
     cph4_qsort(cph4_d(ultimo + 0xa6e3) as usize, cph4_d(ultimo + 0xa6eb) as i32, 0x1e, 0x601a10);
 }
 
-unsafe extern "thiscall" fn comparar_tirar_interesses_de_transferencia(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 0x14) as *const i32)).max(0) as usize;
     let reg = [(this + 0xc, 0xc), (cph4_d(this + 0xc) as usize, n * 25)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || tirar_interesses_de_transferencia(this, pessoa));
-    PLACAR.registrar(igual, || format!("tirar_interesses_de_transferencia({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || remove_transfer_interest(this, pessoa));
+    PLACAR.registrar(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_tirar_pedido_de_observacao(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let n = (*((this + 0x64) as *const i32)).max(0) as usize;
     let reg = [(this + 0x5c, 0xc), (cph4_d(this + 0x5c) as usize, n * 17)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, clube), || tirar_pedido_de_observacao(this, pessoa, clube));
-    PLACAR.registrar(igual, || format!("tirar_pedido_de_observacao({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, clube), || remove_scout_request(this, pessoa, clube));
+    PLACAR.registrar(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
 }
 
 /// Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
 /// leria pelo `id`), só a original.
-unsafe extern "thiscall" fn comparar_tirar_apelido_de_todos(this: usize, id: usize) {
+unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: usize, id: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let n = cph4_d(this + 4) as i32;
     if id == 0 || n <= 0 {
@@ -173,6 +173,6 @@ unsafe extern "thiscall" fn comparar_tirar_apelido_de_todos(this: usize, id: usi
             reg.push((cph4_d(g + 0xa6e3) as usize, (cph4_d(g + 0xa6eb) as i32).max(0) as usize * 30));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id), || tirar_apelido_de_todos(this, id));
-    PLACAR.registrar(igual, || format!("tirar_apelido_de_todos({:x}) {:x?} x {:x?}", id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id), || remove_nickname_from_all(this, id));
+    PLACAR.registrar(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
 }

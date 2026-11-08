@@ -1,9 +1,9 @@
 // ---------- %%LEVA%%a leva: as telas da partida (6): a tela dos jogos do dia e o capitão padrão (match_screens.cpp) ----------
 
 /// { 0x717cc0 } (cdecl, match_screens.cpp): abre a tela dos jogos do dia na vaga `vaga` (0x7fe4a0 com a
-/// montagem 0x717db0 e a resposta 0x718930, sem fechamento) e grava os parâmetros dela (0x7ff130): 1 o
+/// montagem 0x717db0 e a resposta 0x718930, sem match_wrap_up) e grava os parâmetros dela (0x7ff130): 1 o
 /// grupo de jogos, 2 e 3 zero, 4 um. Grupo nulo: a original (caixa de erro e [0xb67a34] = 0).
-unsafe extern "C" fn abrir_jogos_do_dia(vaga: u32, grupo: usize) {
+unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
     if grupo == 0 {
         return orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo);
     }
@@ -23,8 +23,8 @@ unsafe extern "C" fn abrir_jogos_do_dia(vaga: u32, grupo: usize) {
 /// [0xdd6bde]): 1 abre outro grupo de jogos (0x717cc0 na vaga [0xb74c26] do humano da vez com o dado
 /// +0xba9a6 do item) e 2 o andamento da competição (0x49b830 com o dado), ambos −11; senão a barra de
 /// menu (0x7615d0, senão 0x7643d0). O item vai inteiro (32 bits) para a barra, como na original.
-unsafe extern "C" fn responder_jogos_do_dia(item: u32) -> i32 {
-    crate::comparacao::ramo("telas responder aos jogos do dia");
+unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
+    crate::comparacao::ramo("telas respond aos jogos do dia");
     let i = item as i16;
     let id = |i: i16| if i == -1 { *(0xdd6bde as *const u16) } else { id_do_item(i) };
     let dado = |i: i16| {
@@ -66,7 +66,7 @@ unsafe extern "C" fn responder_jogos_do_dia(item: u32) -> i32 {
 /// da comissão (0x8968f0 em [0xde1d08] com `contexto`, nota 0x6e1cf0(pessoa, 0, tatica), comparação i16;
 /// no empate fica a primeira), o capitão padrão; −1 (0xff) sem ninguém. Tática nula: a original (caixa
 /// de erro). Quem chama só usa `al`.
-unsafe extern "C" fn vaga_do_mais_bem_avaliado(tatica: usize, contexto: i32) -> u8 {
+unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
     if tatica == 0 {
         return orig::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
     }
@@ -87,23 +87,23 @@ unsafe extern "C" fn vaga_do_mais_bem_avaliado(tatica: usize, contexto: i32) -> 
     vaga
 }
 
-// ponytail: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
+// ponytail: abrir e respond mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-unsafe extern "C" fn comparar_abrir_jogos_do_dia(vaga: u32, grupo: usize) {
+unsafe extern "C" fn comparar_open_day_fixtures_screen(vaga: u32, grupo: usize) {
     orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo)
 }
 
-unsafe extern "C" fn comparar_responder_jogos_do_dia(item: u32) -> i32 {
+unsafe extern "C" fn comparar_handle_day_fixtures_input(item: u32) -> i32 {
     orig::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
 /// Só lê: compara a vaga devolvida (tática nula: só a original, pela caixa de erro).
-unsafe extern "C" fn comparar_vaga_do_mais_bem_avaliado(tatica: usize, contexto: i32) -> u8 {
+unsafe extern "C" fn comparar_match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, i32) -> u8>(%%I2%%)(tatica, contexto);
     if tatica == 0 {
         return r;
     }
-    let n = vaga_do_mais_bem_avaliado(tatica, contexto);
-    PLACAR.registrar(r == n, || format!("vaga_do_mais_bem_avaliado({:#x}, {}) {} x {}", tatica, contexto, r as i8, n as i8));
+    let n = match_screens_find_best_rated_starter_slot(tatica, contexto);
+    PLACAR.registrar(r == n, || format!("match_screens_find_best_rated_starter_slot({:#x}, {}) {} x {}", tatica, contexto, r as i8, n as i8));
     r
 }

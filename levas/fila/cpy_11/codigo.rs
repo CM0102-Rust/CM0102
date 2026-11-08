@@ -75,8 +75,8 @@ unsafe fn cpy11_pagar(this: usize, p: usize, jogos: i32, tipo: u32) -> u32 {
 /// o jogador marcado soma um jogo (+4 da permissão) e sai da lista; os que sobram, sem lesão (0x62c400), suspensão
 /// (0x55d270), convocação (0x7757d0) nem inelegibilidade (0x8cf5e0), e não emprestados por outro clube (0x4cf6d0 com o
 /// contrato guardado em [0xae1080]), somam uma falta (+6).
-unsafe extern "thiscall" fn jogos_das_permissoes_e_clausulas(this: usize, jogo: usize, partida: usize) {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, jogo: usize, partida: usize) {
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
@@ -94,9 +94,9 @@ unsafe extern "thiscall" fn jogos_das_permissoes_e_clausulas(this: usize, jogo: 
     while lado < 2 {
         let clube = cpy11_d(jogo + if lado == 0 { 0x1c } else { 0x20 });
         let comp = cpy11_d(jogo + 0x14);
-        let fora = comp == 0 || e_selecao(cpy11_d(jogo + 0x1c)) != 0 || amistoso(cpy11_d(0xae2c74), comp) != 0;
+        let fora = comp == 0 || is_national_team(cpy11_d(jogo + 0x1c)) != 0 || amistoso(cpy11_d(0xae2c74), comp) != 0;
         let contando = (!fora && cpy11_b(jogo + 0x40 + lado as usize) != 0) || cpy11_d(jogo) as i32 == -2;
-        let mascara: u8 = if e_selecao(clube) != 0 {
+        let mascara: u8 = if is_national_team(clube) != 0 {
             4
         } else {
             reunir(clube, elenco.as_mut_ptr(), 0);
@@ -200,18 +200,18 @@ unsafe extern "thiscall" fn jogos_das_permissoes_e_clausulas(this: usize, jogo: 
 /// Comparador: a cópia em ensaio (sem pagar os prêmios) e a original a partir do mesmo estado do vetor das permissões
 /// de trabalho; os jogos (+4) e as faltas (+6) têm de bater. Seleção em casa: o elenco local da original começa com o
 /// lixo da pilha, só a original roda. Os prêmios se provam pela própria 0x8cb340 (comparada) e pela carreira.
-unsafe extern "thiscall" fn comparar_jogos_das_permissoes_e_clausulas(this: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn comparar_update_appearance_clauses_after_match(this: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let v = cpy11_d(this + 0x93a);
     let n = cpy11_d(this + 0x93e) as i32;
-    if e_selecao(cpy11_d(jogo + 0x1c)) != 0 || v == 0 || n <= 0 {
+    if is_national_team(cpy11_d(jogo + 0x1c)) != 0 || v == 0 || n <= 0 {
         return o(this, jogo, partida); // ponytail: só a original (lixo da pilha ou sem permissões)
     }
     let regioes = [(v, n as usize * 0xe)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPY11_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| jogos_das_permissoes_e_clausulas(this, jogo, partida)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| update_appearance_clauses_after_match(this, jogo, partida)));
     CPY11_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn comparar_jogos_das_permissoes_e_clausulas(this: usiz
     PLACAR.registrar(mo == mr, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
-        format!("jogos_das_permissoes_e_clausulas(jogo {:x}) permissões diferentes nos bytes {:x?}", jogo, dif)
+        format!("update_appearance_clauses_after_match(jogo {:x}) permissões diferentes nos bytes {:x?}", jogo, dif)
     });
 }
 
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn comparar_jogos_das_permissoes_e_clausulas(this: usiz
 /// registro)`: acrescenta o prêmio por jogos na seleção (13 bytes copiados de `registro`) ao vetor [this+0x898]
 /// (capacidade +0x89c, conta +0x8a0); cheio, cresce de 50 em 50 (sem memória: caixa 0x25af e nada). Reordena pela pessoa
 /// (qsort 0x945333 com 0x8b4e00). A gêmea do time principal é a 0x8cac40.
-unsafe extern "thiscall" fn guardar_premio_por_jogos_na_selecao(this: usize, registro: usize) {
+unsafe extern "thiscall" fn add_international_team_appearance_money(this: usize, registro: usize) {
     crate::comparacao::ramo("cpy_11 premio na selecao guardado");
     if !cpl3_crescer(this, 0x898, 4, 50, 0xd, 0x25af, 0xa8ebe0) {
         return;
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn guardar_premio_por_jogos_na_selecao(this: usize, reg
 
 /// Comparador: a original acrescenta (pode realocar) e não pode rodar duas vezes: o plano antes (a conta e os 13
 /// bytes), a original roda; confere a conta e que o registro está no vetor (reordenado).
-unsafe extern "thiscall" fn comparar_guardar_premio_por_jogos_na_selecao(this: usize, registro: usize) {
+unsafe extern "thiscall" fn comparar_add_international_team_appearance_money(this: usize, registro: usize) {
     let n = cpy11_d(this + 0x8a0);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, registro);
@@ -252,7 +252,7 @@ unsafe extern "thiscall" fn comparar_guardar_premio_por_jogos_na_selecao(this: u
     }
     let conta = cpy11_d(this + 0x8a0);
     let ok = conta == n.wrapping_add(1) && cpl3_tem(cpy11_d(this + 0x898), conta, 0xd, &alvo);
-    PLACAR.registrar(ok, || format!("guardar_premio_por_jogos_na_selecao: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    PLACAR.registrar(ok, || format!("add_international_team_appearance_money: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }
 
 /// { 0x8da5e0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da data e da notícia locais): `TRANSFER_MANAGER::
@@ -263,7 +263,7 @@ unsafe extern "thiscall" fn comparar_guardar_premio_por_jogos_na_selecao(this: u
 /// (ano) e 0xd (o nibble baixo de +0x30, com sinal), senão 0, 0, 0; a conta da troca (+4) no 0xb. Ao vendedor humano
 /// (0x7875e0), fora do estado 0xc e sem troca pendente (+0x2f com nibble +0x30), e ao comprador humano, cada um no
 /// campo 0x10.
-unsafe extern "thiscall" fn noticia_transferencia_finalizada(this: usize, o: usize) {
+unsafe extern "thiscall" fn post_transfer_finalised_news(this: usize, o: usize) {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let data_padrao: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x54a110usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -326,6 +326,6 @@ unsafe extern "thiscall" fn noticia_transferencia_finalizada(this: usize, o: usi
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_transferencia_finalizada(this: usize, o: usize) {
+unsafe extern "thiscall" fn comparar_post_transfer_finalised_news(this: usize, o: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, o)
 }

@@ -118,7 +118,7 @@ unsafe fn cqc3_sem_gravidade(grav: *mut i32, vinte: bool) {
 /// push; add esp, 4 -> cdecl) e os clubes de reputação acima de 5000 pela regra da competição (+0x60); os jogos da
 /// competição de [0x9cf690] com clube da liga de [0x9cf590] dão 19; jogo já jogado (+0x43) dá 0x16. Clube ausente: a
 /// caixa e o fim do jogo (a original).
-unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
+unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
     // 0x53b900 (push; add esp, 4 -> cdecl), 0x53b3d0 (push; add esp, 4 -> cdecl)
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn conflitos_do_dia(this: usize, jogo: usize, grav: *mu
 /// O comparador dos conflitos de um dia: a cópia em ensaio (guarda os jogos em vez de acrescentar, com uma gravidade
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
-unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
+unsafe extern "thiscall" fn comparar_collect_day_clashes(this: usize, jogo: usize, grav: *mut i32, lista: usize, nacoes: usize, n: u32, data: usize, desloc: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(%%I0%%);
     if jogo == 0 || lista == 0 || grav.is_null() || cqc3_d(jogo + 0x1c) == 0 || cqc3_d(jogo + 0x20) == 0 {
         return o(this, jogo, grav, lista, nacoes, n, data, desloc);
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, 
     let mut g = *grav;
     CQC3_ACRESCIMOS.clear();
     CQC3_ENSAIO = true;
-    conflitos_do_dia(this, jogo, &mut g, lista, nacoes, n, data, desloc);
+    collect_day_clashes(this, jogo, &mut g, lista, nacoes, n, data, desloc);
     CQC3_ENSAIO = false;
     let esperado = cqc3_conteudo(&CQC3_ACRESCIMOS);
     let ne = CQC3_ACRESCIMOS.len();
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, 
     o(this, jogo, grav, lista, nacoes, n, data, desloc);
     let depois = cqc3_itens(lista);
     let igual = *grav == g && depois.len() == antes.len() + ne && depois[..antes.len()] == antes[..] && cqc3_conteudo(&depois[antes.len()..]) == esperado;
-    PLACAR.registrar(igual, || format!("conflitos_do_dia(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, depois.len().saturating_sub(antes.len()), ne));
+    PLACAR.registrar(igual, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", jogo, desloc as u8 as i8, *grav, g, depois.len().saturating_sub(antes.len()), ne));
 }
 
 /// { 0x5ad780 } (thiscall, ret 0xc, fix_man.cpp; quadro SEH da lista nova): `FIXTURE_MANAGER::find_fixture_clashes(jogo,
@@ -310,7 +310,7 @@ unsafe extern "thiscall" fn comparar_conflitos_do_dia(this: usize, jogo: usize, 
 /// o seguinte; de novo os dois antes com a marca. Sem conflito: a lista destruída e liberada (0x68d040: ecx = lista ->
 /// thiscall; 0x944c94: push; add esp, 4 -> cdecl), 0x15 na saída se a seleção não deixa (0x776fc0: ecx = [0xb74318];
 /// push jogo -> thiscall, ret 4) e 0. Senão a gravidade na saída e a lista.
-unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
+unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     if jogo == 0 || saida.is_null() {
         return orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%)(this, jogo, saida, dois_dias); // a caixa
     }
@@ -407,7 +407,7 @@ unsafe extern "thiscall" fn conflitos_do_jogo(this: usize, jogo: usize, saida: *
 /// (a original não muda o jogo: só cria a lista e mexe nos cursores das listas dos dias, que as duas refazem); confere a
 /// devolução (lista ou 0), a saída e os jogos das duas listas (0x4f bytes cada, na ordem), e destrói e libera a lista
 /// da cópia como o calendário faz (0x68d040, 0x944c94).
-unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
+unsafe extern "thiscall" fn comparar_find_fixture_clashes(this: usize, jogo: usize, saida: *mut i32, dois_dias: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(%%I1%%);
     if jogo == 0 || saida.is_null() {
         return o(this, jogo, saida, dois_dias);
@@ -415,10 +415,10 @@ unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize,
     let r = o(this, jogo, saida, dois_dias);
     let go = *saida;
     let mut gr: i32 = 0;
-    let nr = conflitos_do_jogo(this, jogo, &mut gr, dois_dias);
+    let nr = find_fixture_clashes(this, jogo, &mut gr, dois_dias);
     let (lo, lr) = (cqc3_conteudo(&cqc3_itens(r)), cqc3_conteudo(&cqc3_itens(nr)));
     let igual = (r == 0) == (nr == 0) && go == gr && lo == lr;
-    PLACAR.registrar(igual, || format!("conflitos_do_jogo(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
+    PLACAR.registrar(igual, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", jogo, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
         let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
@@ -433,7 +433,7 @@ unsafe extern "thiscall" fn comparar_conflitos_do_jogo(this: usize, jogo: usize,
 /// lista -> thiscall) e a refaz com os registros de 15 bytes do check_fixture_legs.tmp da pasta temporária (0x90bde0:
 /// 2 pushes; add esp, 8 -> cdecl; fopen 0x945b00 "rb", fread 0x945bfe, fclose 0x945a09: cdecl), pela conta de 16 bits
 /// do começo; registro curto: a caixa (linha 0x10b9) e entra o que ficou no registro (0x68d0d0).
-unsafe extern "C" fn carregar_conferencia_das_pernas() {
+unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
     let esvaziar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d080usize);
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
@@ -463,6 +463,6 @@ unsafe extern "C" fn carregar_conferencia_das_pernas() {
 
 /// O comparador da carga das conferências: só a original (ponytail: lê o arquivo e aloca os nós da lista; não pode rodar
 /// duas vezes).
-unsafe extern "C" fn comparar_carregar_conferencia_das_pernas() {
+unsafe extern "C" fn comparar_fix_man_load_fixture_leg_checks() {
     orig::<unsafe extern "C" fn()>(%%I2%%)()
 }

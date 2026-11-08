@@ -6,7 +6,7 @@
 /// da pessoa, ou reputação de jogador (+0x61, +9) + reputação do clube de quem vê (+0x80) ≥ 14000 →
 /// a média; 4 (sem quem vê, quem vê entre os 16 últimos ids = técnicos humanos, sem dados ou sem
 /// clube) → a mundial. Só o al é devolvido (quem chama usa al).
-unsafe extern "C" fn escopo_da_reputacao(pessoa: usize, quem_ve: usize) -> u8 {
+unsafe extern "C" fn database_get_reputation_scope(pessoa: usize, quem_ve: usize) -> u8 {
     let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     if quem_ve == 0 {
@@ -57,7 +57,7 @@ unsafe extern "C" fn escopo_da_reputacao(pessoa: usize, quem_ve: usize) -> u8 {
 /// `nao_jogador`, dos de não jogador (+0x69: +8, +0xa, +0xc). 4 → mundial, 2 → atual, 0 → nacional,
 /// 3 → metade da mundial + metade da atual, outro → metade da nacional + metade da atual (divisões
 /// truncadas). Só o ax é devolvido.
-unsafe extern "C" fn reputacao_vista_por(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
+unsafe extern "C" fn database_get_staff_reputation_for_viewer(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
     let escopo: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x5408c0usize);
     let e = escopo(pessoa, quem_ve);
     let (dados, atual) = if nao_jogador != 0 {
@@ -81,9 +81,9 @@ unsafe extern "C" fn reputacao_vista_por(pessoa: usize, quem_ve: usize, nao_joga
 /// Inglaterra, Escócia, País de Gales, Irlanda do Norte e Irlanda; entre Austrália e [0x9cf3f4];
 /// em [0x9cf360] com a nação [0x9cf4f0]; e em Portugal quem não é da UE (0x53d740) com contrato
 /// (0x4cf5a0) que começou até 1/1/1998 (Date 0x549f70; contrato +0x25 dia, +0x27 ano).
-unsafe extern "C" fn pessoa_e_estrangeira(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
+unsafe extern "C" fn database_is_staff_foreign(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
     let comunitaria: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x53d740usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let g = |a: usize| *(a as *const u32);
@@ -122,7 +122,7 @@ unsafe extern "C" fn pessoa_e_estrangeira(pessoa: usize, nacao: usize, grupos: u
         return 0;
     }
     if id == g(0x9cf434) && comunitaria(pessoa, 0) == 0 {
-        let contrato = contrato_de(*(0xae1050 as *const usize), pessoa);
+        let contrato = contract_of(*(0xae1050 as *const usize), pessoa);
         if contrato != 0 {
             let mut d = [0u16; 4];
             let data = construir(&mut d, 1, 0, 0x7ce, 0xffff_ffff) as *const u16; // 1/1/1998
@@ -139,24 +139,24 @@ unsafe extern "C" fn pessoa_e_estrangeira(pessoa: usize, nacao: usize, grupos: u
     1 // estrangeira
 }
 
-unsafe extern "C" fn comparar_escopo_da_reputacao(pessoa: usize, quem_ve: usize) -> u8 {
+unsafe extern "C" fn comparar_database_get_reputation_scope(pessoa: usize, quem_ve: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(pessoa, quem_ve);
-    let n = escopo_da_reputacao(pessoa, quem_ve);
-    PLACAR.registrar(r == n, || format!("escopo_da_reputacao({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
+    let n = database_get_reputation_scope(pessoa, quem_ve);
+    PLACAR.registrar(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_reputacao_vista_por(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
+unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewer(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
     let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u16>(%%I1%%)(pessoa, quem_ve, nao_jogador);
-    let n = reputacao_vista_por(pessoa, quem_ve, nao_jogador);
-    PLACAR.registrar(r == n, || format!("reputacao_vista_por({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
+    let n = database_get_staff_reputation_for_viewer(pessoa, quem_ve, nao_jogador);
+    PLACAR.registrar(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_pessoa_e_estrangeira(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
+unsafe extern "C" fn comparar_database_is_staff_foreign(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
     // a 0x4cf5a0 e o Date (num Date local) só leem: os dois lados podem rodar
     let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u32>(%%I2%%)(pessoa, nacao, grupos);
-    let n = pessoa_e_estrangeira(pessoa, nacao, grupos);
-    PLACAR.registrar(r == n, || format!("pessoa_e_estrangeira({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
+    let n = database_is_staff_foreign(pessoa, nacao, grupos);
+    PLACAR.registrar(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
     r
 }

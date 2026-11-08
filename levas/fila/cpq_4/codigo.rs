@@ -261,14 +261,14 @@ unsafe fn cpq4_transferencia(this: usize, t: usize, gravar: bool) {
 /// da pessoa (+0x3d): a maior venda (+0x25..+0x49 se passa +0x3d), as vendas (+0xa2), a receita (+0xac), os recebidos
 /// (+0xa0) e o valor deles (+0xa4). Os históricos (tipos 0x64 compra, 0x65 venda, 0x66 transferência) do técnico do
 /// comprador, do vendedor, da pessoa e dos jogadores da troca, no arquivo (0x58e340).
-unsafe extern "thiscall" fn registrar_a_transferencia(this: usize, t: usize) {
+unsafe extern "thiscall" fn add_transfer_records(this: usize, t: usize) {
     cpq4_transferencia(this, t, true)
 }
 
 /// Comparador: lado a lado pela global [0xae1080], o estado do sorteador (o valor da oferta pode pedir a avaliação), a
 /// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
 /// sem os históricos em arquivo, que a original já gravou, e sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_registrar_a_transferencia(this: usize, t: usize) {
+unsafe extern "thiscall" fn comparar_add_transfer_records(this: usize, t: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let (pessoa, _, vendedor, comprador) = cpq4_lados(t);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn comparar_registrar_a_transferencia(this: usize, t: u
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, t),
         || crate::aleatorio::sem_contar(|| cpq4_transferencia(this, t, false)));
-    PLACAR.registrar(igual, || format!("registrar_a_transferencia(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    PLACAR.registrar(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// A entrada da pessoa: o clube (+8), o tipo (+0xc), a competição ou −1 (+0xd) e a fase com sinal (+0x11).
@@ -313,7 +313,7 @@ unsafe fn cpq4_fim_das_convocacoes(clube: usize, comp: usize) {
 /// { 0x86c000 } (thiscall, ret 0x14, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_knocked_out_record(clube,
 /// comp, fase, rodada, _)`: o histórico do técnico (+0xcf; tipo 4: clube, competição ou −1, a fase com sinal e a rodada
 /// base 0x4b0870) e o fim das convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x73b).
-unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, _x: u32) {
+unsafe extern "thiscall" fn add_knocked_out_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, _x: u32) {
     if clube == 0 {
         return aviso_em(0xa83b78, 0x73b);
     }
@@ -329,14 +329,14 @@ unsafe extern "thiscall" fn registrar_a_eliminacao(this: usize, clube: usize, co
 
 // ponytail: o histórico vai para o arquivo e as convocações acabam (não rodam duas vezes) e a cópia sem eles não mexe
 // em nada: só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_registrar_a_eliminacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
+unsafe extern "thiscall" fn comparar_add_knocked_out_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I1%%)(this, clube, comp, fase, rodada, x)
 }
 
 /// { 0x86c1d0 } (thiscall, ret 0x10, staff_records.cpp, SEH sem destrutor): `Staff_Records::add_failed_to_qualify_record(
 /// clube, comp, fase, _)`: o histórico do técnico (tipo 7: clube, competição ou −1, a fase com sinal) e o fim das
 /// convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x768).
-unsafe extern "thiscall" fn registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, _x: u32) {
+unsafe extern "thiscall" fn add_failed_to_qualify_record(this: usize, clube: usize, comp: usize, fase: u32, _x: u32) {
     if clube == 0 {
         return aviso_em(0xa83b78, 0x768);
     }
@@ -349,6 +349,6 @@ unsafe extern "thiscall" fn registrar_a_nao_classificacao(this: usize, clube: us
 }
 
 // ponytail: como a eliminação: só a original.
-unsafe extern "thiscall" fn comparar_registrar_a_nao_classificacao(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
+unsafe extern "thiscall" fn comparar_add_failed_to_qualify_record(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, clube, comp, fase, x)
 }

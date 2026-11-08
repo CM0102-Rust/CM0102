@@ -34,7 +34,7 @@ unsafe fn cpy3_pessoa(i: i32) -> usize {
 /// (reduções pelos lances guardados, pelo valor de +0xb sobre a soma e pelos fatores de 0x969540, 0x968968), cada uma
 /// preenchida pela 0x83f3a0; o que sobra vai à primeira vaga de jogador do próprio clube que o técnico aceitaria vender
 /// (0x846920 acima de 0x968e58, sorteios de 10 e 100 dias, ofertas 0x8c5cf0).
-unsafe extern "thiscall" fn distribuir_verba_de_transferencias(this: usize, clube: usize) {
+unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) {
     // 0x600a50: cdecl(clube, 0, 1, 0, 0) (add esp, 0x14); 0x53b900: cdecl(clube) (add esp, 4); 0x5a0590:
     // thiscall([0xae2a38], clube); 0x598800: thiscall(finanças, 0, 0, 0, 1, 0) (5 push); 0x945333: cdecl(vetor, 0x28,
     // 0x25, 0x83b690) (add esp, 0x10); 0x8c61e0: thiscall([0xde1f54], lance) (1 push); 0x83f3a0: thiscall(this, vaga,
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn distribuir_verba_de_transferencias(this: usize, club
     if limite >= 0x28 {
         return;
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestado: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x544590usize);
     let contrato_no: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let interesse: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f64 = core::mem::transmute(0x846920usize);
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn distribuir_verba_de_transferencias(this: usize, club
             if cpy3_d(p + 0x39) != clube {
                 break 'c false;
             }
-            let c = contrato_de(cpy3_d(0xae1050), p);
+            let c = contract_of(cpy3_d(0xae1050), p);
             *(0xae1080 as *mut usize) = c;
             let do_contrato = if c != 0 { cpy3_d(0xae23b4).wrapping_add(cpy3_d(c + 4).wrapping_mul(0x245)) } else { 0 };
             if do_contrato == clube || emprestado(p, 0) != 0 {
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn distribuir_verba_de_transferencias(this: usize, club
 
 // ponytail: a 0x83f3a0 (chamada por cada vaga ainda sem alvo) sorteia, acrescenta pares aos vetores com realocação e dá
 // notícias: não pode rodar duas vezes. Só a original; a cópia leva os ramos e as mutações.
-unsafe extern "thiscall" fn comparar_distribuir_verba_de_transferencias(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_allocate_transfer_budget(this: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
 }
 
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_distribuir_verba_de_transferencias(this: us
 /// `shortlist_manager_squad_status_allowed(pessoa, estatuto)`, pela tela de contrato (0x4dd0f0) e pela de transferência
 /// (0x8f6770). Os estatutos 5 e 6 (jovens) só abaixo de 24 anos (+0x18, com sinal); os outros, 1. Sem ficha de jogador
 /// (+0x61): a original (caixa "Error", 0).
-unsafe extern "stdcall" fn estatuto_permitido(pessoa: usize, estatuto: u32) -> u32 {
+unsafe extern "stdcall" fn shortlist_manager_squad_status_allowed(pessoa: usize, estatuto: u32) -> u32 {
     if cpy3_d(pessoa + 0x61) == 0 {
         return orig::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%)(pessoa, estatuto); // caixa: só a original
     }
@@ -278,14 +278,14 @@ unsafe extern "stdcall" fn estatuto_permitido(pessoa: usize, estatuto: u32) -> u
 }
 
 /// Comparador: a devolução (rotina pura); sem ficha de jogador, só a original (caixa).
-unsafe extern "stdcall" fn comparar_estatuto_permitido(pessoa: usize, estatuto: u32) -> u32 {
+unsafe extern "stdcall" fn comparar_shortlist_manager_squad_status_allowed(pessoa: usize, estatuto: u32) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(usize, u32) -> u32>(%%I1%%);
     if cpy3_d(pessoa + 0x61) == 0 {
         return o(pessoa, estatuto);
     }
     let r = o(pessoa, estatuto);
-    let n = estatuto_permitido(pessoa, estatuto);
-    PLACAR.registrar(r == n, || format!("estatuto_permitido(pessoa {:x}, estatuto {}) original={} rust={}", pessoa, estatuto as i8, r, n));
+    let n = shortlist_manager_squad_status_allowed(pessoa, estatuto);
+    PLACAR.registrar(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", pessoa, estatuto as i8, r, n));
     r
 }
 
@@ -293,7 +293,7 @@ unsafe extern "stdcall" fn comparar_estatuto_permitido(pessoa: usize, estatuto: 
 /// SCOUT_MANAGER (0x7f6760) e pelas telas de busca. O nome traduzido (0x66f4e0) da lista `indice`: 0 "Short List", 1
 /// "Player Search", 2 "Staff Search", 3..9 "Scout #<%d - number>" com `indice` − 2. Devolve 1. Índice fora de 0..9,
 /// texto nulo ou tamanho abaixo de 50: a original (caixa "Error", 0).
-unsafe extern "C" fn nome_da_lista_do_olheiro(indice: u32, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "C" fn scout_manager_write_list_name(indice: u32, texto: usize, tamanho: i32) -> u32 {
     // 0x66f4e0: cdecl(texto, formato, ...) (add esp, 8 ou 0xc)
     let k = indice as u8 as i8;
     if !(0..=9).contains(&k) || texto == 0 || tamanho < 0x32 {
@@ -311,14 +311,14 @@ unsafe extern "C" fn nome_da_lista_do_olheiro(indice: u32, texto: usize, tamanho
 
 /// Comparador: lado a lado pelo texto (até 0x100 bytes do tamanho dado), e a devolução; nos casos de erro, só a
 /// original (caixa).
-unsafe extern "C" fn comparar_nome_da_lista_do_olheiro(indice: u32, texto: usize, tamanho: i32) -> u32 {
+unsafe extern "C" fn comparar_scout_manager_write_list_name(indice: u32, texto: usize, tamanho: i32) -> u32 {
     let o = orig::<unsafe extern "C" fn(u32, usize, i32) -> u32>(%%I2%%);
     let k = indice as u8 as i8;
     if !(0..=9).contains(&k) || texto == 0 || tamanho < 0x32 {
         return o(indice, texto, tamanho);
     }
     let reg = [(texto, (tamanho as usize).min(0x100))];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(indice, texto, tamanho), || nome_da_lista_do_olheiro(indice, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("nome_da_lista_do_olheiro(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(indice, texto, tamanho), || scout_manager_write_list_name(indice, texto, tamanho));
+    PLACAR.registrar(igual && r == n, || format!("scout_manager_write_list_name(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

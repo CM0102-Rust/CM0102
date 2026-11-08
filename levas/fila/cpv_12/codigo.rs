@@ -24,12 +24,12 @@ unsafe fn cpv12_nome_do_time(time: usize, segundo: u32, buf: &mut [u8; 0x48]) ->
 /// nos tipos 1 e 2 com técnico humano que decide (0x600a50), também quando a lista [this] não tem o time com data
 /// passada e ele não deixa (0x5fd6b0). Os motivos vão para `msg` (0x66f4e0). Sem nação, ou `msg` com menos de 0x32
 /// bytes: a original (caixa e 1).
-unsafe extern "thiscall" fn pode_mudar_a_convocacao(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
+unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
     if nacao == 0 || (msg != 0 && tam < 0x32) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%)(this, nacao, tipo, p, entrando, msg, tam);
     }
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let aposentado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
     let nome_do_jogador: unsafe extern "C" fn(usize, *mut u8, u32, u32) -> u32 = core::mem::transmute(0x53dba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn pode_mudar_a_convocacao(this: usize, nacao: usize, t
     let (time, segundo, marca) = match s {
         0 => (principal(nacao), 0u32, 4u32),
         1 => (principal(nacao), 1, 8),
-        _ => (selecao_b(nacao), 0, 4),
+        _ => (b_national_team(nacao), 0, 4),
     };
     let mut tecnico = cpv12_d(principal(nacao) + 0xcf);
     if humano(principal(nacao), 0, 1, 0, 0) == 0 {
@@ -158,16 +158,16 @@ unsafe extern "thiscall" fn pode_mudar_a_convocacao(this: usize, nacao: usize, t
 /// { 0x76da80 } (stdcall, ret 0xc, national_teams.cpp): `national_teams_player_in_squad(p, nacao, tipo)`: 1 se o
 /// clube da seleção do jogador (+0x24) é o time do tipo (0 e 1 a principal 0x53b3d0, 2 o sub-21 0x53b4f0) e ele tem a
 /// marca do tipo (+0x5e: 4 nos tipos 0 e 2, 8 no 1). Sem clube ou outro tipo: 0.
-unsafe extern "stdcall" fn esta_na_convocacao(p: usize, nacao: usize, tipo: u32) -> u32 {
+unsafe extern "stdcall" fn national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
     if cpv12_d(p + 0x24) == 0 {
         return 0;
     }
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let (time, marca) = match tipo as u8 {
         0 => (principal(nacao), 4u8),
         1 => (principal(nacao), 8),
-        2 => (selecao_b(nacao), 4),
+        2 => (b_national_team(nacao), 4),
         _ => return 0,
     };
     (cpv12_d(p + 0x24) == time && cpv12_b(p + 0x5e) & marca != 0) as u32
@@ -176,7 +176,7 @@ unsafe extern "stdcall" fn esta_na_convocacao(p: usize, nacao: usize, tipo: u32)
 /// { 0x5c57d0 } (thiscall, ret 8, friendly.cpp; `this` não é lido): `Friendly::schedule_assign_opponent(agenda,
 /// adversario)`: na primeira das `[agenda+8]` (byte com sinal) vagas de 25 bytes (a partir de +0x19) sem adversário
 /// (dword +0), grava o adversário e marca o pedido (+0x21 da vaga anterior, ou seja agenda + 25·i + 0x21).
-unsafe extern "thiscall" fn marcar_adversario_do_amistoso(_this: usize, agenda: usize, adversario: usize) {
+unsafe extern "thiscall" fn schedule_assign_opponent(_this: usize, agenda: usize, adversario: usize) {
     let n = cpv12_b(agenda + 8) as i8;
     let mut i: i8 = 0;
     while i < n {
@@ -193,37 +193,37 @@ unsafe extern "thiscall" fn marcar_adversario_do_amistoso(_this: usize, agenda: 
 /// Comparador: lado a lado pela devolução e pelo motivo (a original no destino, a cópia num destino próprio do mesmo
 /// tamanho). As duas andam o cursor da lista [this] do mesmo jeito; a busca de jogos do dia monta e libera uma lista
 /// local (sem estado que fique). Sem nação ou destino curto (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_pode_mudar_a_convocacao(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
+unsafe extern "thiscall" fn comparar_national_teams_can_change_squad(this: usize, nacao: usize, tipo: u32, p: usize, entrando: u32, msg: usize, tam: i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, i32) -> u32>(%%I0%%);
     if nacao == 0 || (msg != 0 && tam < 0x32) {
         return o(this, nacao, tipo, p, entrando, msg, tam);
     }
     let r = o(this, nacao, tipo, p, entrando, msg, tam);
     let mut meu: Vec<u8> = if msg != 0 { vec![0u8; tam as usize] } else { Vec::new() };
-    let n = pode_mudar_a_convocacao(this, nacao, tipo, p, entrando, if msg != 0 { meu.as_mut_ptr() as usize } else { 0 }, tam);
+    let n = national_teams_can_change_squad(this, nacao, tipo, p, entrando, if msg != 0 { meu.as_mut_ptr() as usize } else { 0 }, tam);
     let texto = |a: *const u8, m: usize| -> Vec<u8> { (0..m).map(|i| *a.add(i)).take_while(|&c| c != 0).collect() };
     let (to, tr) = if msg != 0 { (texto(msg as *const u8, tam as usize), texto(meu.as_ptr(), tam as usize)) } else { (Vec::new(), Vec::new()) };
-    PLACAR.registrar(r == n && to == tr, || format!("pode_mudar_a_convocacao({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nacao, tipo as u8, p, entrando, r, n,
+    PLACAR.registrar(r == n && to == tr, || format!("national_teams_can_change_squad({:x}, {}, {:x}, {}) {}/{} {:?} x {:?}", nacao, tipo as u8, p, entrando, r, n,
         String::from_utf8_lossy(&to), String::from_utf8_lossy(&tr)));
     r
 }
 
 /// Comparador: pura.
-unsafe extern "stdcall" fn comparar_esta_na_convocacao(p: usize, nacao: usize, tipo: u32) -> u32 {
+unsafe extern "stdcall" fn comparar_national_teams_player_in_squad(p: usize, nacao: usize, tipo: u32) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I1%%)(p, nacao, tipo);
-    let n = esta_na_convocacao(p, nacao, tipo);
-    PLACAR.registrar(r == n, || format!("esta_na_convocacao({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
+    let n = national_teams_player_in_squad(p, nacao, tipo);
+    PLACAR.registrar(r == n, || format!("national_teams_player_in_squad({:x}, {:x}, {}) original={} rust={}", p, nacao, tipo as u8, r, n));
     r
 }
 
 /// Comparador: lado a lado pelas vagas da agenda (até a última possível, 25 · (n + 1) + 4 bytes).
-unsafe extern "thiscall" fn comparar_marcar_adversario_do_amistoso(this: usize, agenda: usize, adversario: usize) {
+unsafe extern "thiscall" fn comparar_schedule_assign_opponent(this: usize, agenda: usize, adversario: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let n = cpv12_b(agenda + 8) as i8;
     if n <= 0 {
         return o(this, agenda, adversario);
     }
     let reg = [(agenda, 25 * (n as usize + 1) + 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, agenda, adversario), || marcar_adversario_do_amistoso(this, agenda, adversario));
-    PLACAR.registrar(igual, || format!("marcar_adversario_do_amistoso({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, agenda, adversario), || schedule_assign_opponent(this, agenda, adversario));
+    PLACAR.registrar(igual, || format!("schedule_assign_opponent({:x}, {:x}) {:x?} x {:x?}", agenda, adversario, mo, mr));
 }

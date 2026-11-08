@@ -30,7 +30,7 @@ unsafe fn cqm6_na(c: usize, g: usize) -> bool {
 /// senão, só a liga (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), as regras (0x853790), a tabela (0x8533d0) e os jogos
 /// (League::create_fixtures 0x6835c0), todos mov ecx -> thiscall, ret 0; cada falha, a caixa da sua linha (0x3f,
 /// 0x46, 0x4d do fonte 0xa82880) e fim. Devolve this.
-unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x853790usize);
@@ -63,12 +63,12 @@ unsafe extern "thiscall" fn construir_divisao_de_baixo_espanhola(this: usize, an
 }
 
 /// Aloca e sorteia (pela tabela): só a original, conferindo a devolução, a vtable, o ano, a disciplina e o registro.
-unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_espanhola(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn comparar_construct_spa_lower(this: usize, ano: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I0%%);
     let r = o(this, ano);
     let ok = r == this && cqm6_d(this) == 0x96fb1c && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && cqm6_d(this + 4) == cqm6_registro(0x9cf6b0);
-    PLACAR.registrar(ok, || format!("construir_divisao_de_baixo_espanhola({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
+    PLACAR.registrar(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this, r, cqm6_d(this), cqm6_d(this + 4)));
     r
 }
 
@@ -88,7 +88,7 @@ unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
 /// lixo da pilha em cima; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret 0x10); o time B de um clube da
 /// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
-unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
+unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x682f70usize);
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
 
 /// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
-unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cqm6_d(0xae235c) as i32;
     let base = cqm6_d(0xae23b4);
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
             ok = ok && cqm6_d(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.registrar(ok, || format!("tabela_da_segunda({:#x}): devolveu {}, plano {:x?}", this, r, plano));
+    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
     r
 }
 
@@ -221,7 +221,7 @@ unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(us
 /// cada um com +0x60 = o registro. As linhas: League::init_table_row 0x687430 (push 0; push 0; push clube; push eax
 /// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
 /// 0x10). Devolve se encheu.
-unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
+unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this: usize) ->
 /// Depois: +0x3e e o clube das primeiras linhas. O +0x60 não entra: a segunda passada (a dos times B da Segunda) zera o
 /// +0x60 de todo time espanhol que não entra nela, inclusive os da Primera que a primeira acabou de pôr na tabela
 /// (comportamento da original, que a cópia repete; achado pela comparação de 8 ligas, 05/11/2026).
-unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_espanhola(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_lower_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let mut plano: Vec<usize> = Vec::new();
     let mut k: u8 = 0;
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_espanhola(this: 
             ok = ok && cqm6_d(t + i * 0x3b) == c;
         }
     }
-    PLACAR.registrar(ok, || format!("tabela_da_divisao_de_baixo_espanhola({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
+    PLACAR.registrar(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this, r, plano,
         (0..plano.len()).map(|i| if t != 0 { cqm6_d(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }

@@ -26,7 +26,7 @@ unsafe fn cpp7_clube(id: usize) -> usize {
 /// 0x11, desassossega o jogador (0x8c1290); com o clube vendedor do computador e o sorteio, retira a oferta (0x8bfcb0);
 /// com motivo 8 o resto reagenda e sai (sem o teste de tentativas). No fim: reagenda e dá a notícia do adiamento
 /// (0x8dda90 com o motivo inteiro, como a original o empurra).
-unsafe extern "thiscall" fn clube_recusa_a_oferta(this: usize, oferta: usize, clube: usize, motivo: u32) {
+unsafe extern "thiscall" fn club_rejects_offer(this: usize, oferta: usize, clube: usize, motivo: u32) {
     let estado = cpp7_b(oferta + 0x2c);
     if estado == 0x11 || estado == 0x12 {
         return;
@@ -44,8 +44,8 @@ unsafe extern "thiscall" fn clube_recusa_a_oferta(this: usize, oferta: usize, cl
             agendar(this, oferta, 7, 0);
             return;
         }
-        let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-        let c = contrato_de(cpp7_d(0xae1050), cpp7_pessoa(cpp7_d(oferta + 0xc)));
+        let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+        let c = contract_of(cpp7_d(0xae1050), cpp7_pessoa(cpp7_d(oferta + 0xc)));
         *(0xae1080 as *mut usize) = c;
         let mut no_fim = false;
         if c != 0 && cpp7_b(c + 0x35) & 0x3f != 5 {
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn clube_recusa_a_oferta(this: usize, oferta: usize, cl
 /// das outras ofertas o jogador da oferta (+0xc; 0x8c41c0 com a oferta, 0, 0) e, pela lista dos jogadores de troca
 /// (+4, relida a cada chamada, cursor recomeçado), tira cada um (0x8c41c0) e desfaz as ofertas por ele (0x8c47d0). O
 /// id do jogador de troca é relido do item depois da 0x8c41c0, como na original.
-unsafe extern "thiscall" fn soltar_jogadores_da_oferta(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn detach_offer_players(this: usize, oferta: usize) {
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn soltar_jogadores_da_oferta(this: usize, oferta: usiz
 /// `TRANSFER_MANAGER::build_cash_offer_option(clube, jogador, saída, atração, valor)`: aloca a oferta (0x944cf1(0x41) e
 /// 0x8e5680), guarda em `saída`, inicia pelo jogador, o clube comprador e o valor (0x8e78f0, que pode sortear) e põe a
 /// atração em 50. Clube sem finanças (0x5a0590 = 0): a original (caixa "Error").
-unsafe extern "thiscall" fn montar_oferta_em_dinheiro(this: usize, clube: usize, jogador: usize, saida: *mut usize, atracao: *mut u8, valor: i32) -> u32 {
+unsafe extern "thiscall" fn build_cash_offer_option(this: usize, clube: usize, jogador: usize, saida: *mut usize, atracao: *mut u8, valor: i32) -> u32 {
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     // ponytail: a 0x5a0590 só procura; consultada antes de alocar para o caso de erro ir inteiro pela original
     if financas(cpp7_d(0xae2a38), clube) == 0 {
@@ -139,22 +139,22 @@ unsafe extern "thiscall" fn montar_oferta_em_dinheiro(this: usize, clube: usize,
 
 /// Comparador: sorteia, reagenda, rejeita ou retira (pode liberar a oferta) e dá notícia: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_clube_recusa_a_oferta(this: usize, oferta: usize, clube: usize, motivo: u32) {
+unsafe extern "thiscall" fn comparar_club_rejects_offer(this: usize, oferta: usize, clube: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, oferta, clube, motivo)
 }
 
 /// Comparador: tira jogadores de ofertas e desfaz ofertas (libera itens): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_soltar_jogadores_da_oferta(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_detach_offer_players(this: usize, oferta: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
 }
 
 /// Comparador: aloca a oferta e a 0x8e78f0 pode sortear: roda só a original e confere o resultado: devolve 1, a oferta
 /// guardada em `saída` tem o valor (+0x1b) e a atração ficou em 50.
-unsafe extern "thiscall" fn comparar_montar_oferta_em_dinheiro(this: usize, clube: usize, jogador: usize, saida: *mut usize, atracao: *mut u8, valor: i32) -> u32 {
+unsafe extern "thiscall" fn comparar_build_cash_offer_option(this: usize, clube: usize, jogador: usize, saida: *mut usize, atracao: *mut u8, valor: i32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut usize, *mut u8, i32) -> u32>(%%I2%%)(this, clube, jogador, saida, atracao, valor);
     let oferta = *saida;
     let ok = r == 1 && oferta != 0 && core::ptr::read_unaligned((oferta + 0x1b) as *const i32) == valor && *atracao == 0x32;
-    PLACAR.registrar(ok, || format!("montar_oferta_em_dinheiro(jogador {:x}, valor {}) devolveu {}, oferta {:x}", cpp7_d(jogador), valor, r, oferta));
+    PLACAR.registrar(ok, || format!("build_cash_offer_option(jogador {:x}, valor {}) devolveu {}, oferta {:x}", cpp7_d(jogador), valor, r, oferta));
     r
 }

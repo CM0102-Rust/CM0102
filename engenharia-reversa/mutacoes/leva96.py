@@ -6,7 +6,7 @@ MUTACOES = [
     ('m_8000', "            pressiona = mk & 0x8000 != 0", "            pressiona = mk & 0x4000 != 0"),
     ('m_71', "        *w(0x198) = 0x71;", "        *w(0x198) = 0x72;"),
     ('m_78', "            *w(0x198) = 0x78;", "            *w(0x198) = 0x79;"),
-    ('m_2113', "if perto_do_gol { 0x2113 } else { 0x1f46 }", "if perto_do_gol { 0x1f46 } else { 0x1f46 }"),
+    ('m_2113', "if near_goal { 0x2113 } else { 0x1f46 }", "if near_goal { 0x1f46 } else { 0x1f46 }"),
     ('m_104', "        if outro != 0 && meu == 1 && b(0x10a) != 0 {", "        if outro != 0 && meu == 2 && b(0x10a) != 0 {"),
     ('m_76', "        *w(0x198) = if pressiona { 0x100 } else { 0x76 };", "        *w(0x198) = if pressiona { 0x100 } else { 0x77 };"),
     ('m_largar', "            if pm == -5 || (pm > -4 && pm < 0) {", "            if pm == -5 || (pm > -3 && pm < 0) {"),

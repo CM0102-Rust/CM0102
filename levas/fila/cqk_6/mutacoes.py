@@ -5,7 +5,7 @@
 # - na CFA, so os da primeira divisao marcados (os da segunda ficam sem a marca);
 # - na divisao de baixo, ninguem marcado (os do National ficam sem a marca).
 # Ficaram de fora (provado pelo agente): as linhas trocadas aos pares derrubam o jogo (o confronto direto da 0x687430
-# le a linha seguinte ainda vazia) e a faixa do play-out da Serie C1 nas estatisticas (situacao_na_c1a/b) escapa: nada
+# le a linha seguinte ainda vazia) e a faixa do play-out da Serie C1 nas estatisticas (ita_ser_c1a_set_club_progress/b) escapa: nada
 # le a melhor posicao prevista ate 2002-06-01.
 MUTACOES = [
     ('cqk6_marca_invertida',

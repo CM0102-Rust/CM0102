@@ -42,7 +42,7 @@ unsafe fn erro_fatal_do_setup(linha: u32) -> ! {
 ///   0x5fb810 e 0x5fd2f0(férias, 0) em [0xb63c98]; sorteia (0x90cfc0) clubes (0xae23b4, 0x245) até
 ///   um fora de seleção (0x53b900) com nação de liga de frente (bit 2) e aceito por 0x544820: a
 ///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
-unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
+unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(*const u8, usize) -> usize = core::mem::transmute(0x945b00usize);
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
@@ -62,12 +62,12 @@ unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8
     let idioma_no_banco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x535930usize);
     let criar_jogo: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x828110usize);
     let juntar: unsafe extern "C" fn(*mut u8, usize, *const u8, *const u8, usize) = core::mem::transmute(0x945b13usize);
-    let gravar_jogo: unsafe extern "C" fn(*const u8, u32) -> u32 = core::mem::transmute(0x82e430usize);
+    let save_game_data: unsafe extern "C" fn(*const u8, u32) -> u32 = core::mem::transmute(0x82e430usize);
     let liberar: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x82ff40usize);
     let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let acertar_data: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32) -> usize = core::mem::transmute(0x54a130usize);
     let novo_humano: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5fb810usize);
-    let ferias_do_humano: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fd2f0usize);
+    let set_on_holiday: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x5fd2f0usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let aceita: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
@@ -252,7 +252,7 @@ unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8
     if !qst.is_null() {
         let mut arquivo = [0u8; 0x104];
         juntar(arquivo.as_mut_ptr(), 0, pasta(0xa80204, 0xad9c64), qst, 0xa803b4);
-        gravar_jogo(arquivo.as_ptr(), 0x17);
+        save_game_data(arquivo.as_ptr(), 0x17);
         liberar(1);
         return 1;
     }
@@ -286,7 +286,7 @@ unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8
     core::ptr::write_unaligned((p + 0x39) as *mut u32, 0);
     *((p + 0x5f) as *mut u8) = 1;
     novo_humano(u(0xb63c98) as usize, p);
-    ferias_do_humano(u(0xb63c98) as usize, ferias, 0);
+    set_on_holiday(u(0xb63c98) as usize, ferias, 0);
     let clube = loop {
         let r = sorteio(i(0xae235c));
         let c = (u(0xae23b4) as usize).wrapping_add((r as usize).wrapping_mul(0x245));
@@ -311,6 +311,6 @@ unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8
 // ponytail: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
-unsafe extern "C" fn comparar_criar_jogo_pela_configuracao(cfg: *const u8, qst: *const u8) -> u32 {
+unsafe extern "C" fn comparar_create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     orig::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(%%I0%%)(cfg, qst)
 }

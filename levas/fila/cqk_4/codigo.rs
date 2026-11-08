@@ -38,7 +38,7 @@ fn cqk4_comuns() -> Vec<(usize, u8, u32)> {
 /// a virtual reescreve), as comuns, 2 turnos, 3 pontos, o 4º desempate 3 (+0xc8), +0xab e +0xdb = 0, ninguém sobe
 /// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
 /// +0x52 = 2 [sem nome].
-unsafe extern "thiscall" fn regras_da_primera(this: usize) -> u32 {
+unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_4 regras da primera");
     core::ptr::write_unaligned((this + 0xa9) as *mut u16, 0x26);
     cqk4_regras(this, &cqk4_primera())
@@ -56,7 +56,7 @@ unsafe fn cqk4_primera() -> Vec<(usize, u8, u32)> {
 /// pontos, o 4º desempate 3, 3 sobem direto (+0xbe), nenhum play-off de acesso, 4 caem (+0xc1), a Primera acima
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
-unsafe extern "thiscall" fn regras_da_segunda(this: usize) -> u32 {
+unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_4 regras da segunda");
     cqk4_regras(this, &cqk4_segunda(this))
 }
@@ -74,7 +74,7 @@ unsafe fn cqk4_segunda(this: usize) -> Vec<(usize, u8, u32)> {
 /// { 0x853790 } (thiscall, ret 0, spa_lower.cpp): `SpaLower::set_up_rules()`. A divisão de baixo (os times B e os
 /// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
-unsafe extern "thiscall" fn regras_da_divisao_de_baixo(this: usize) -> u32 {
+unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_4 regras da divisao de baixo");
     cqk4_regras(this, &cqk4_baixo())
 }
@@ -113,17 +113,17 @@ unsafe fn cqk4_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
     r
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_primera(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_first_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqk4_comparar("regras_da_primera", this, cqk4_primera(), || o(this), || regras_da_primera(this))
+    cqk4_comparar("spa_first_set_up_rules", this, cqk4_primera(), || o(this), || spa_first_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_segunda(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_second_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqk4_comparar("regras_da_segunda", this, cqk4_segunda(this), || o(this), || regras_da_segunda(this))
+    cqk4_comparar("spa_second_set_up_rules", this, cqk4_segunda(this), || o(this), || spa_second_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_divisao_de_baixo(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_lower_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqk4_comparar("regras_da_divisao_de_baixo", this, cqk4_baixo(), || o(this), || regras_da_divisao_de_baixo(this))
+    cqk4_comparar("spa_lower_set_up_rules", this, cqk4_baixo(), || o(this), || spa_lower_set_up_rules(this))
 }

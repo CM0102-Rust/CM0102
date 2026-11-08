@@ -4,15 +4,15 @@
 /// lista de transferências, pelo clube ou a pedido (vínculo +0x4e, bits 1 e 8). Sem clube, o do
 /// contrato (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id do clube na tabela [0xae23b4], 581
 /// bytes por clube).
-unsafe extern "C" fn pessoa_listada_para_transferencia(pessoa: usize, clube: usize) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "C" fn staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     if pessoa == 0 {
         return 0;
     }
     let mut clube = clube;
     if clube == 0 {
-        let c = contrato_de(*(0xae1050 as *const usize), pessoa);
+        let c = contract_of(*(0xae1050 as *const usize), pessoa);
         *(0xae1080 as *mut usize) = c;
         if c == 0 {
             return 0;
@@ -49,7 +49,7 @@ unsafe fn nota_do_atributo(v: f64) -> u8 {
 /// (+5), ou de 2 × byte + habilidade × 0,1 conforme o goleiro (+0xf: = 20 ou < 15); o 10 é o byte
 /// +0x58 da `pessoa`; uns vão a 0x544380 (ou 0x5442f0). Sem pessoa, sem jogador ou atributo fora:
 /// caixa "Error" e 0xff (a original). Só o al é devolvido.
-unsafe extern "C" fn atributo_calculado_do_jogador(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
         return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(pessoa, jogador, atributo);
@@ -100,7 +100,7 @@ unsafe extern "C" fn atributo_calculado_do_jogador(pessoa: usize, jogador: usize
 
 /// { 0x5431e0 } (cdecl, Database.cpp): o `atributo` (1..31) de jogador da `pessoa`: 0x543540 com os
 /// dados de jogador (+0x61). Sem pessoa ou atributo fora: caixa "Error" e 0xff (a original).
-unsafe extern "C" fn atributo_da_pessoa(pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) {
         return orig::<unsafe extern "C" fn(usize, u32) -> u8>(%%I2%%)(pessoa, atributo);
@@ -110,35 +110,35 @@ unsafe extern "C" fn atributo_da_pessoa(pessoa: usize, atributo: u32) -> u8 {
     calcular(pessoa, core::ptr::read_unaligned((pessoa + 0x61) as *const usize), atributo)
 }
 
-unsafe extern "C" fn comparar_pessoa_listada_para_transferencia(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_para_transferencia(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_para_transferencia({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_transfer_listed_or_requested(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_atributo_calculado_do_jogador(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn comparar_staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
         return o(pessoa, jogador, atributo); // caixa: só a original
     }
     let r = o(pessoa, jogador, atributo);
-    let n = atributo_calculado_do_jogador(pessoa, jogador, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_calculado_do_jogador({:x}, {}) original={} rust={}", jogador, a, r, n));
+    let n = staff_compute_player_attribute(pessoa, jogador, atributo);
+    PLACAR.registrar(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", jogador, a, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_atributo_da_pessoa(pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn comparar_staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize, u32) -> u8>(%%I2%%);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) {
         return o(pessoa, atributo); // caixa: só a original
     }
     let r = o(pessoa, atributo);
-    let n = atributo_da_pessoa(pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_da_pessoa({:x}, {}) original={} rust={}", pessoa, a, r, n));
+    let n = staff_get_player_attribute(pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
     r
 }

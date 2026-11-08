@@ -52,7 +52,7 @@ unsafe fn cpo13_plano_atual(this: usize, nacao: usize, comp: usize) -> Cpo13Atua
 /// competição atual da nação vira `comp` (plano em `cpo13_plano_atual`: a fase final grande em curso fica na frente e a
 /// outra vai para a fila) e o gerenciador dos técnicos é avisado (0x6a3770 com o clube da seleção principal, 0x53b3d0,
 /// e 1). Nação ou competição nula: a caixa "Error" (e volta).
-unsafe extern "thiscall" fn definir_competicao_da_selecao(this: usize, nacao: usize, comp: usize) {
+unsafe extern "thiscall" fn set_current_competition(this: usize, nacao: usize, comp: usize) {
     if nacao == 0 || comp == 0 {
         aviso_em(0xa5b2a4, 0x1bb2);
         return;
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn definir_competicao_da_selecao(this: usize, nacao: us
 
 /// Comparador: a 0x6a3770 (o aviso) não pode rodar duas vezes: o plano antes, a original roda; confere a competição
 /// atual e a da fila. Nação ou competição nula: só a original (caixa).
-unsafe extern "thiscall" fn comparar_definir_competicao_da_selecao(this: usize, nacao: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_set_current_competition(this: usize, nacao: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if nacao == 0 || comp == 0 {
         return o(this, nacao, comp);
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_definir_competicao_da_selecao(this: usize, 
     o(this, nacao, comp);
     let (atual2, fila2) = (cpo13_d(p.vaga) as u32, cpo13_d(p.fila) as u32);
     let ok = atual2 == p.nova.unwrap_or(atual) && fila2 == p.na_fila.unwrap_or(fila);
-    PLACAR.registrar(ok, || format!("definir_competicao_da_selecao(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
+    PLACAR.registrar(ok, || format!("set_current_competition(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
         cpo13_d(nacao), cpo13_d(comp), atual, atual2, p.nova, fila, fila2, p.na_fila));
 }
 
@@ -110,7 +110,7 @@ unsafe fn cpo13_nacao_marcada(c: usize) -> bool {
 /// entradas de 0x48 bytes de 0xb63df0 (a nação +0 ativa em +0x11c, ou sem nação; o grupo +0x14): sem nação, 3 para os
 /// clubes (+0x1c, +0x20) de nação ativa; com nação, 1 quando a competição do jogo (+0x14) é a da liga do mandante (+0x57)
 /// ou a +0x60 do visitante, senão 2, para os dois. Lida pela remarcação dos jogos dos clubes com convocados (0x7777e0).
-unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data: usize) {
+unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
     let n = (cpo13_d(0xae235c) as i32).wrapping_sub((cpo13_d(0xae2350) as i32).wrapping_mul(2));
     if cpo13_d(this + 0x24) == 0 {
         let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(0x945501usize);
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data: usize) {
             return;
         }
     }
-    let lista_da_data: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x5ae6a0usize);
+    let get_fixture_list_for_date: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x5ae6a0usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     for i in 0..0x21usize {
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data: usize) {
         }
         for fatia in 0..3u32 {
             // a original empurra a fatia num dword de pilha com o alto de lixo e o grupo no al: a 0x5abf10 só lê os bytes
-            let lista = lista_da_data(data, fatia, *((e + 0x14) as *const u8) as u32);
+            let lista = get_fixture_list_for_date(data, fatia, *((e + 0x14) as *const u8) as u32);
             if lista == 0 {
                 continue;
             }
@@ -165,17 +165,17 @@ unsafe extern "thiscall" fn marcar_clubes_com_jogo(this: usize, data: usize) {
 
 /// Comparador: na primeira (sem tabela: calloc) só a original; depois, lado a lado na tabela (n bytes). A lista do
 /// dia e o amistoso só leem (o cursor da lista volta ao começo a cada uso).
-unsafe extern "thiscall" fn comparar_marcar_clubes_com_jogo(this: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_mark_clubs_with_fixtures(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let n = (cpo13_d(0xae235c) as i32).wrapping_sub((cpo13_d(0xae2350) as i32).wrapping_mul(2));
     if cpo13_d(this + 0x24) == 0 || n <= 0 {
         return o(this, data);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(cpo13_d(this + 0x24), n as usize)], || o(this, data), || marcar_clubes_com_jogo(this, data));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(cpo13_d(this + 0x24), n as usize)], || o(this, data), || mark_clubs_with_fixtures(this, data));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<(usize, u8, u8)> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).map(|i| (i, a[i], b[i])).collect();
-        format!("marcar_clubes_com_jogo({:x}) clube, original, rust: {:?}", core::ptr::read_unaligned(data as *const u32), dif)
+        format!("mark_clubs_with_fixtures({:x}) clube, original, rust: {:?}", core::ptr::read_unaligned(data as *const u32), dif)
     });
 }
 
@@ -194,7 +194,7 @@ unsafe fn cpo13_entrada(orgao: usize, id: u32) -> usize {
 /// histórico de suspensões (0x55e1d0), libera as 4 vagas do registro de 29 bytes (com entrada no órgão: a suspensão
 /// solta, 0x556d00, a vaga livre e a entrada +0 = −1), tira da lista [this+0x1c] as suspensões guardadas dele
 /// (0x68d1f0, enquanto a conta +0x1c > 0) e o registro fica 0xff com a conta 0.
-unsafe extern "thiscall" fn tirar_jogador_da_disciplina(this: usize, id: u32) {
+unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
     let r = cpo13_d(this + 0x14).wrapping_add((id as usize).wrapping_mul(29));
     let apagar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x55e1d0usize);
     apagar(this, cpo13_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e)));
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn tirar_jogador_da_disciplina(this: usize, id: u32) {
 
 /// Comparador: a 0x556830 solta suspensões e tira (e libera) itens da lista: o plano antes (as entradas das vagas), a
 /// original roda; confere o registro (0xff, conta 0) e as entradas livres (+0 = −1).
-unsafe extern "thiscall" fn comparar_tirar_jogador_da_disciplina(this: usize, id: u32) {
+unsafe extern "thiscall" fn comparar_discipline_remove_player(this: usize, id: u32) {
     let r = cpo13_d(this + 0x14).wrapping_add((id as usize).wrapping_mul(29));
     let mut entradas = Vec::new();
     for k in 0..4usize {
@@ -254,5 +254,5 @@ unsafe extern "thiscall" fn comparar_tirar_jogador_da_disciplina(this: usize, id
     core::ptr::copy_nonoverlapping(r as *const u8, depois.as_mut_ptr(), 29);
     let ok = depois[..0x1c].iter().all(|&b| b == 0xff) && depois[0x1c] == 0
         && entradas.iter().all(|&e| cpo13_d(e) as u32 == 0xffff_ffff);
-    PLACAR.registrar(ok, || format!("tirar_jogador_da_disciplina({}) registro {:02x?} entradas {:x?}", id, depois, entradas));
+    PLACAR.registrar(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, depois, entradas));
 }

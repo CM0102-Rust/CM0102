@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o fechamento das propostas de contrato da oferta, a fila da transferência livre e as negociações de troca do jogador (transfer_manager.cpp) ----------
+// ---------- %%LEVA%%a leva: o match_wrap_up das propostas de contrato da oferta, a fila da transferência livre e as negociações de troca do jogador (transfer_manager.cpp) ----------
 
 /// O nó de uma lista do jogo (0x68d0d0/0x68d1b0): contagem u16 em +0, cabeça +2, cauda +6, cursor +0xa;
 /// cada nó tem o dado em +0 e o próximo em +6.
@@ -27,7 +27,7 @@ unsafe fn clube_do_contrato(pessoa: usize) -> usize {
 /// { 0x8c6db0 } (stdcall, ret 4, transfer_manager.cpp): fecha (estado +0x50 = 4) as propostas de contrato
 /// ligadas à oferta: a do jogador-alvo (0x4cc9e0 com o id +0xc e o clube +8) e a de cada jogador da troca
 /// (lista +4, com o clube do contrato do alvo, 0x4cf5a0).
-unsafe extern "stdcall" fn fechar_propostas_da_oferta(oferta: usize) {
+unsafe extern "stdcall" fn transfer_manager_close_offer_contract_offers(oferta: usize) {
     let id = *((oferta + 0xc) as *const usize);
     let pessoa = (*(0xae23bc as *const usize)).wrapping_add(id.wrapping_mul(110));
     let clube = clube_do_contrato(pessoa);
@@ -69,7 +69,7 @@ unsafe fn enfileirar_transferencia_livre_com(gerente: usize, pessoa: usize, moti
     true
 }
 
-unsafe extern "thiscall" fn enfileirar_transferencia_livre(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
+unsafe extern "thiscall" fn queue_free_transfer(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
     let anexar_9: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x68d0d0usize);
     if !enfileirar_transferencia_livre_com(gerente, pessoa, motivo, compensacao, &mut |l, r| anexar_9(l, r.as_ptr() as usize, 9)) {
         orig::<unsafe extern "thiscall" fn(usize, usize, u8, u32)>(%%I1%%)(gerente, pessoa, motivo, compensacao);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn enfileirar_transferencia_livre(gerente: usize, pesso
 /// clube do contrato do jogador (+8) cuja oferta ([gerente] + 4 × [+0x20]) segue aberta (estados 2, 3, 4,
 /// 0x10 e 0x14 não; 0xf só com +0x2e < 3) e que têm o jogador na lista da troca (+4); com `saida`, põe
 /// nela o índice da oferta (0x68d0d0, 4 bytes). Jogador fora do banco ou sem contrato: 0.
-unsafe extern "thiscall" fn negociacoes_de_troca_do_jogador(gerente: usize, pessoa: usize, saida: usize) -> i32 {
+unsafe extern "thiscall" fn get_exchange_negotiations_for_player(gerente: usize, pessoa: usize, saida: usize) -> i32 {
     if pessoa != 0 && *(pessoa as *const i32) >= *(0xae2364 as *const i32) {
         return 0;
     }
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn negociacoes_de_troca_do_jogador(gerente: usize, pess
     total
 }
 
-unsafe extern "stdcall" fn comparar_fechar_propostas_da_oferta(oferta: usize) {
+unsafe extern "stdcall" fn comparar_transfer_manager_close_offer_contract_offers(oferta: usize) {
     let o = orig::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     // as propostas que podem fechar: as do id do alvo e dos ids da troca (o clube não filtra aqui)
     let mut ids = vec![*((oferta + 0xc) as *const u32)];
@@ -158,11 +158,11 @@ unsafe extern "stdcall" fn comparar_fechar_propostas_da_oferta(oferta: usize) {
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(oferta), || fechar_propostas_da_oferta(oferta));
-    PLACAR.registrar(igual, || format!("fechar_propostas_da_oferta(id {}) {:x?} x {:x?}", ids[0], mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(oferta), || transfer_manager_close_offer_contract_offers(oferta));
+    PLACAR.registrar(igual, || format!("transfer_manager_close_offer_contract_offers(id {}) {:x?} x {:x?}", ids[0], mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_enfileirar_transferencia_livre(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
+unsafe extern "thiscall" fn comparar_queue_free_transfer(gerente: usize, pessoa: usize, motivo: u8, compensacao: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u8, u32)>(%%I1%%);
     // ponytail: a fila aloca um nó (não roda duas vezes): a cópia só monta o registro (0x4cf6d0 é
     // consulta pura), a original põe na fila e confere-se o nó novo da cauda
@@ -177,10 +177,10 @@ unsafe extern "thiscall" fn comparar_enfileirar_transferencia_livre(gerente: usi
     let cauda = core::ptr::read_unaligned((l + 6) as *const usize);
     let novo = if cauda == 0 { None } else { Some(*(*(cauda as *const usize) as *const [u8; 9])) };
     PLACAR.registrar(depois == antes.wrapping_add(1) && novo == registro,
-        || format!("enfileirar_transferencia_livre {} -> {} original={:x?} rust={:x?}", antes, depois, novo, registro));
+        || format!("queue_free_transfer {} -> {} original={:x?} rust={:x?}", antes, depois, novo, registro));
 }
 
-unsafe extern "thiscall" fn comparar_negociacoes_de_troca_do_jogador(gerente: usize, pessoa: usize, saida: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_get_exchange_negotiations_for_player(gerente: usize, pessoa: usize, saida: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I2%%);
     if saida != 0 {
         // ponytail: com lista de saída (só a tela 0x47ec79) a original anexa (aloca); só a original
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn comparar_negociacoes_de_troca_do_jogador(gerente: us
         }
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(gerente, pessoa, saida),
-        || negociacoes_de_troca_do_jogador(gerente, pessoa, saida));
-    PLACAR.registrar(igual && r == n, || format!("negociacoes_de_troca_do_jogador original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+        || get_exchange_negotiations_for_player(gerente, pessoa, saida));
+    PLACAR.registrar(igual && r == n, || format!("get_exchange_negotiations_for_player original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

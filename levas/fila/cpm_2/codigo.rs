@@ -39,7 +39,7 @@ unsafe fn cpm2_regra_dos_confrontos(this: usize) -> bool {
 /// (+0x3a); com turnos, o histórico das posições (+9, +0xa7 bytes; sem memória, caixa e fim); com a regra 4, os
 /// confrontos diretos (+5, 14 bytes por adversário, zerados). Na última linha com confrontos, cada linha recebe os
 /// adversários na ordem da tabela.
-unsafe extern "thiscall" fn iniciar_linha_da_tabela(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
+unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     if clube != 0 && cpm2_b(clube + 0x64) == 3 {
         *((clube + 0x64) as *mut u8) = 2;
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn iniciar_linha_da_tabela(this: usize, i: u32, clube: 
 
 /// { 0x687a20 } (thiscall, ret 8, league.cpp): `League::get_club_array(saida, n)`: um vetor novo (malloc 0x944e46) com
 /// os clubes das linhas da tabela (+0xb1) em `*saida` e a conta (+0x3e) em `*n`; sem memória, caixa e `*n` = 0.
-unsafe extern "thiscall" fn vetor_dos_clubes_da_liga(this: usize, saida: *mut usize, n: *mut i16) {
+unsafe extern "thiscall" fn league_get_club_array(this: usize, saida: *mut usize, n: *mut i16) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let p = alocar((cpm2_w(this + 0x3e) as i32 * 4) as u32);
     *saida = p;
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn vetor_dos_clubes_da_liga(this: usize, saida: *mut us
 /// { 0x68aa30 } (thiscall, league.cpp): `League::record_final_positions()`: cada clube da tabela (+0xb1, na ordem) que
 /// ainda está na divisão da liga (+0x57 = +4 dela) guarda a divisão como a da última temporada (+0x5b) e a posição
 /// (linha + 1) em +0x5f.
-unsafe extern "thiscall" fn gravar_posicoes_finais_da_liga(this: usize) {
+unsafe extern "thiscall" fn record_final_positions(this: usize) {
     let mut i = 0i16;
     while i < cpm2_w(this + 0x3e) {
         let divisao = cpm2_d(this + 4);
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn gravar_posicoes_finais_da_liga(this: usize) {
 /// Comparador: a original aloca (histórico e confrontos): roda só ela e confere a linha com o plano feito antes (o
 /// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
 /// adversários de cada linha).
-unsafe extern "thiscall" fn comparar_iniciar_linha_da_tabela(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
+unsafe extern "thiscall" fn comparar_init_table_row(this: usize, i: u32, clube: usize, marca: u32, linhas: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32, usize)>(%%I0%%);
     let a7 = cpm2_w(this + 0xa7);
     let n = cpm2_w(this + 0x3e);
@@ -180,12 +180,12 @@ unsafe extern "thiscall" fn comparar_iniciar_linha_da_tabela(this: usize, i: u32
             ok &= outros.enumerate().all(|(k, j)| cpm2_d(p + 14 * k) == cpm2_d(tab + j * CPM2_LINHA));
         }
     }
-    PLACAR.registrar(ok, || format!("iniciar_linha_da_tabela(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
+    PLACAR.registrar(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
         idx, clube, marca as u8, n, cpm2_w(this + 0xa7), a7_esperado, confrontos, cpm2_d(l + 5), cpm2_d(l + 9)));
 }
 
 /// Comparador: a original aloca o vetor: roda só ela e confere a conta e os clubes, na ordem da tabela.
-unsafe extern "thiscall" fn comparar_vetor_dos_clubes_da_liga(this: usize, saida: *mut usize, n: *mut i16) {
+unsafe extern "thiscall" fn comparar_league_get_club_array(this: usize, saida: *mut usize, n: *mut i16) {
     orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I1%%)(this, saida, n);
     let p = *saida;
     if p == 0 {
@@ -193,15 +193,15 @@ unsafe extern "thiscall" fn comparar_vetor_dos_clubes_da_liga(this: usize, saida
     }
     let conta = cpm2_w(this + 0x3e);
     let ok = *n == conta && (0..conta.max(0) as usize).all(|i| cpm2_d(p + 4 * i) == cpm2_d(cpm2_d(this + 0xb1) + i * CPM2_LINHA));
-    PLACAR.registrar(ok, || format!("vetor_dos_clubes_da_liga conta {} (tabela {})", *n, conta));
+    PLACAR.registrar(ok, || format!("league_get_club_array conta {} (tabela {})", *n, conta));
 }
 
 /// Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
-unsafe extern "thiscall" fn comparar_gravar_posicoes_finais_da_liga(this: usize) {
+unsafe extern "thiscall" fn comparar_record_final_positions(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let reg: Vec<(usize, usize)> = (0..cpm2_w(this + 0x3e).max(0) as usize)
         .map(|i| (cpm2_d(cpm2_d(this + 0xb1) + i * CPM2_LINHA) + 0x5b, 5))
         .collect();
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || gravar_posicoes_finais_da_liga(this));
-    PLACAR.registrar(igual, || format!("gravar_posicoes_finais_da_liga {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || record_final_positions(this));
+    PLACAR.registrar(igual, || format!("record_final_positions {:x?} x {:x?}", mo, mr));
 }

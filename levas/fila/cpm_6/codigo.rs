@@ -30,7 +30,7 @@ unsafe fn cpm6_noticia_na_fila(this: usize, id: usize, tipo: u8) -> bool {
 /// 1000 e o ano diferente do recorde, a notícia de recorde 0x1f (0x452cb0) se ainda não está na fila. O comprador, o
 /// mesmo pelo gasto (+0x365, ano +0x369, notícia 0x1e), mas o mínimo é conferido com o recorde ANTIGO e sem o ano. Os
 /// registros são criados se faltarem (o segundo argumento 1). Comprador ou vendedor nulo: nada, 1. Devolve 1.
-unsafe extern "thiscall" fn somar_totais_de_transferencia(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
+unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
     if comprador == 0 || vendedor == 0 {
         return 1;
     }
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn somar_totais_de_transferencia(this: usize, valor: i3
 /// e os `jogos` passam o recorde (+0x247; −1 = sem recorde), o recorde = `jogos` e a referência do jogador em +0x249
 /// (0x7e4920); o mesmo com o tipo 0x18 e os `gols` (+0x261, referência +0x263). Devolve 1. Jogador ou clube nulo, ou
 /// sem registro: a caixa "Error" (linhas 0x6fa e 0x702) e 0.
-unsafe extern "thiscall" fn recordes_de_carreira_no_clube(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
+unsafe extern "thiscall" fn club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
     if jogador == 0 || clube == 0 {
         aviso_em(0x98b6a0, 0x6fa);
         return 0;
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn recordes_de_carreira_no_clube(this: usize, jogador: 
 /// 6.5) e tem a maior média (estatística 0x11) vira o recorde: a nota (+0x1f1, float), os jogos (+0x20d), a referência
 /// (+0x1f5, 0x7e4920) e +0x20e = 0. Devolve 1 se alguém virou recorde. Sem jogos ou sem registro: 0. Clube nulo: a
 /// original (caixa 0x16f2, 0).
-unsafe extern "thiscall" fn recorde_de_nota_da_temporada(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usize) -> u32 {
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, clube); // caixa: só a original
     }
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn recorde_de_nota_da_temporada(this: usize, clube: usi
 /// ordem da original (vendedor: temporada, sempre; comprador: temporada, sempre; a segunda vez só acha), e com a fila
 /// de notícias sem folga para duas, só a original. Lado a lado pelos quatro registros (+0x365, 12 bytes), a conta das
 /// notícias e as duas vagas seguintes.
-unsafe extern "thiscall" fn comparar_somar_totais_de_transferencia(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(%%I0%%);
     if comprador == 0 || vendedor == 0 || (cpm6_d(this + 0x28).wrapping_sub(cpm6_d(this + 0x2c)) as i32) < 2 {
         return o(this, valor, comprador, vendedor); // ponytail: com realloc da fila, só a original
@@ -182,14 +182,14 @@ unsafe extern "thiscall" fn comparar_somar_totais_de_transferencia(this: usize, 
     let regs = [temporada(this, vendedor, 1), sempre(this, vendedor, 1), temporada(this, comprador, 1), sempre(this, comprador, 1)];
     let fila = cpm6_d(this + 0x24).wrapping_add(cpm6_d(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (fila, 12)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, valor, comprador, vendedor), || somar_totais_de_transferencia(this, valor, comprador, vendedor));
-    PLACAR.registrar(igual && r == n, || format!("somar_totais_de_transferencia({}, {}, {}) {:x?} x {:x?}", valor, cpm6_d(comprador), cpm6_d(vendedor), mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, valor, comprador, vendedor), || add_transfer_totals(this, valor, comprador, vendedor));
+    PLACAR.registrar(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", valor, cpm6_d(comprador), cpm6_d(vendedor), mo, mr));
     r
 }
 
 /// Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
 /// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_recordes_de_carreira_no_clube(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I1%%);
     if jogador == 0 || clube == 0 {
         return o(this, jogador, clube, jogos, gols);
@@ -199,13 +199,13 @@ unsafe extern "thiscall" fn comparar_recordes_de_carreira_no_clube(this: usize, 
     if reg == 0 {
         return o(this, jogador, clube, jogos, gols);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || recordes_de_carreira_no_clube(this, jogador, clube, jogos, gols));
-    PLACAR.registrar(igual && r == n, || format!("recordes_de_carreira_no_clube({}, {}, {}, {}) {:x?} x {:x?}", cpm6_d(jogador), cpm6_d(clube), jogos as i16, gols as i16, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || club_records_update_career_records(this, jogador, clube, jogos, gols));
+    PLACAR.registrar(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", cpm6_d(jogador), cpm6_d(clube), jogos as i16, gols as i16, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
-unsafe extern "thiscall" fn comparar_recorde_de_nota_da_temporada(this: usize, clube: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, clube: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     if clube == 0 {
         return o(this, clube);
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn comparar_recorde_de_nota_da_temporada(this: usize, c
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
     let t = temporada(this, clube, 0);
     let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + 0x1f1, 0x1f)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube), || recorde_de_nota_da_temporada(this, clube));
-    PLACAR.registrar(igual && r == n, || format!("recorde_de_nota_da_temporada({}) original={} rust={} {:x?} x {:x?}", cpm6_d(clube), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube), || update_season_rating_record(this, clube));
+    PLACAR.registrar(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", cpm6_d(clube), r, n, mo, mr));
     r
 }

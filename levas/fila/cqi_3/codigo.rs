@@ -46,7 +46,7 @@ unsafe fn cqi3_entra(this: usize, c: usize, fase: u8, r: i32, colocados: &mut i3
 /// Com a final guardada e os dois finalistas: uma vaga a mais para quem dos dois ainda não tem (os dois sem vaga entram
 /// na fase 10 × a conta + 3; os dois com vaga, o primeiro sem vaga da tabela). Para quando os colocados menos a conta
 /// passam de 116.
-unsafe extern "thiscall" fn uefa_vagas_copa_da_uefa(this: usize, clubes: usize, conta: u32) {
+unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
     let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
     let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x9050d0usize);
     let linha: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(0x669340usize);
@@ -244,14 +244,14 @@ fn cqi3_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memoria) ->
 
 /// Lado a lado: a classificação (com a tabela das finais em +0x440), os clubes, o sorteio (a cópia sem contar) e a marca
 /// da caixa.
-unsafe extern "thiscall" fn comparar_uefa_vagas_copa_da_uefa(this: usize, clubes: usize, conta: u32) {
+unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let n = (cqi3_d(0xae235c) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
     let mut reg = vec![(this, 0x698), (cqi3_d(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (cqi3_d(0xae23d4) as usize, (cqi3_d(0xae237c) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| uefa_vagas_copa_da_uefa(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("uefa_vagas_copa_da_uefa: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_uefa_cup_places(this, clubes, conta)));
+    PLACAR.registrar(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", cqi3_dif(&mo, &mr)));
 }
 
 /// { 0x903890 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::pick_english_intertoto_club`; quadro SEH pela notícia
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn comparar_uefa_vagas_copa_da_uefa(this: usize, clubes
 /// europeia; escolhe o voluntário sem vaga da divisão mais alta (a da Premier +4 conta o +0x5f; as outras +30); sem
 /// nenhum, sorteia clubes da Premier até um sem vaga. Entrega a notícia 0x17 com o clube (0x77bbe0, 0x785790, 0x7862d0
 /// à divisão da Premier) e devolve o clube.
-unsafe extern "thiscall" fn uefa_voluntario_ingles(this: usize) -> usize {
+unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
     if cqi3_w(0xae2c92) == 0x7d1 {
         return 0;
     }
@@ -343,14 +343,14 @@ unsafe extern "thiscall" fn uefa_voluntario_ingles(this: usize) -> usize {
 
 /// Em 2001 (devolve 0 sem efeito): a devolução das duas. Fora de 2001 só a original (sorteia, aloca a lista e entrega a
 /// notícia).
-unsafe extern "thiscall" fn comparar_uefa_voluntario_ingles(this: usize) -> usize {
+unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
     if cqi3_w(0xae2c92) != 0x7d1 {
         return o(this);
     }
     let r = o(this);
-    let c = uefa_voluntario_ingles(this);
-    PLACAR.registrar(r == c, || format!("uefa_voluntario_ingles: original {:x} rust {:x}", r, c));
+    let c = pick_english_intertoto_club(this);
+    PLACAR.registrar(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
     r
 }
 
@@ -361,7 +361,7 @@ unsafe extern "thiscall" fn comparar_uefa_voluntario_ingles(this: usize) -> usiz
 /// (0x904580) e da Intertoto (0x904e30), solta a tabela e entrega a notícia dos classificados (0x905f00). Com `diario`:
 /// no dia 100 do ano, com a Premier e a Intertoto no jogo, a notícia 0x16 do pedido de voluntários (com o ano) a cada
 /// técnico humano de clube da Premier (sem a Premier, volta sem mais nada); e o prazo das inscrições europeias (0x9058e0).
-unsafe extern "thiscall" fn uefa_virada_da_classificacao(this: usize, diario: u32) {
+unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
     if diario == 0 {
         let ano = cqi3_w(0xae2c92);
         if ano == cqi3_w(this + 0x439) {
@@ -424,7 +424,7 @@ unsafe extern "thiscall" fn uefa_virada_da_classificacao(this: usize, diario: u3
 }
 
 /// Só a original (refaz as vagas pelas rotinas de dentro, solta a tabela, entrega notícias); a cópia leva o contador.
-unsafe extern "thiscall" fn comparar_uefa_virada_da_classificacao(this: usize, diario: u32) {
+unsafe extern "thiscall" fn comparar_update_season(this: usize, diario: u32) {
     // ponytail: refaz a classificação inteira e entrega notícias: não dá para rodar duas vezes
     orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(this, diario)
 }

@@ -15,7 +15,7 @@ unsafe fn cqa6_b(a: usize) -> u8 {
 /// 0. A referência ao nome da pessoa na chave (0x7e4920: +0xc o id, o único campo que a comparação 0x7bce50 lê) e a
 /// busca binária nos resultados (0x946464 com o vetor +0x1ee, a conta, 0x2d e 0x7bce50); achada e sem a marca de
 /// removida (bit 0 de +0x20), 1; senão 0.
-unsafe extern "thiscall" fn jogador_na_busca(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let mut chave = [0u8; 0x30];
     let k = chave.as_mut_ptr() as usize;
@@ -45,14 +45,14 @@ unsafe extern "thiscall" fn jogador_na_busca(this: usize, pessoa: usize) -> u32 
 }
 
 /// Comparador da 0x7af600: pela devolução (só lê; as datas e a chave são locais). Pessoa nula: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_jogador_na_busca(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
     let r = o(this, pessoa);
-    let n = jogador_na_busca(this, pessoa);
-    PLACAR.registrar(r == n, || format!("jogador_na_busca(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
+    let n = contains_player(this, pessoa);
+    PLACAR.registrar(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
     r
 }
 
@@ -82,7 +82,7 @@ unsafe fn cqa6_trocar(l: usize, olheiro: usize) {
 /// clube (0x53cd60) que não tem lista vai para a primeira lista de olheiro sem olheiro. Depois a vaga do técnico (byte
 /// +0 − byte de [0xae2364] + 16, 0..15; fora, a caixa da linha 0x212 e 0): com a edição aberta ([this + vaga × 4 +
 /// 0xc]), ela refaz os olheiros das listas (0x8043c0). Devolve 1.
-unsafe extern "thiscall" fn sincronizar_listas_dos_olheiros(this: usize, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32 {
     let m = if tecnico != 0 { tecnico } else { cps8_gerente_da_vez() };
     if m == 0 {
         aviso_em(0xa7b094, 0x1ba);
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn sincronizar_listas_dos_olheiros(this: usize, tecnico
 
 /// Comparador da 0x7f7270: lado a lado nas 10 buscas do técnico (0x2b0 bytes cada, achadas antes pela 0x7f6cd0, que
 /// só lê) e na devolução. Sem técnico ou com a edição aberta (a 0x8043c0 mexe na edição): só a original.
-unsafe extern "thiscall" fn comparar_sincronizar_listas_dos_olheiros(this: usize, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
     let m = if tecnico != 0 { tecnico } else { cps8_gerente_da_vez() };
     if m == 0 {
@@ -164,8 +164,8 @@ unsafe extern "thiscall" fn comparar_sincronizar_listas_dos_olheiros(this: usize
             regioes.push((l, 0x2b0usize));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, tecnico), || sincronizar_listas_dos_olheiros(this, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("sincronizar_listas_dos_olheiros(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, tecnico), || sync_scout_lists(this, tecnico));
+    PLACAR.registrar(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
     r
 }
 
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_sincronizar_listas_dos_olheiros(this: usize
 /// (0x7bd310) e pelas telas (0x7f8610). A vaga com o id da pessoa; senão, com `reservar`, a primeira livre recebe o id
 /// (pessoa nula: −1), zera a palavra +4 e os bytes +0x1a0 e +0x1a1 e é devolvida (nenhuma livre: a caixa da linha
 /// 0x210d e 0); sem `reservar`, 0.
-unsafe extern "thiscall" fn vaga_do_jogador_observado(this: usize, pessoa: usize, reservar: u32) -> usize {
+unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
     if pessoa == 0 {
         // ponytail: a original lê o id da pessoa antes de conferir o ponteiro (cairia); fica com ela
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%)(this, pessoa, reservar);
@@ -207,18 +207,18 @@ unsafe extern "thiscall" fn vaga_do_jogador_observado(this: usize, pessoa: usize
 }
 
 /// Comparador da 0x7bd700: sem `reservar`, pela devolução (só lê); com ele, lado a lado nas 50 vagas e na devolução.
-unsafe extern "thiscall" fn comparar_vaga_do_jogador_observado(this: usize, pessoa: usize, reservar: u32) -> usize {
+unsafe extern "thiscall" fn comparar_player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa, reservar);
     }
     if reservar == 0 {
         let r = o(this, pessoa, reservar);
-        let n = vaga_do_jogador_observado(this, pessoa, reservar);
-        PLACAR.registrar(r == n, || format!("vaga_do_jogador_observado(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
+        let n = player_search_find_or_claim_player_slot(this, pessoa, reservar);
+        PLACAR.registrar(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
         return r;
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 4, 0x32 * 0x1a2)], || o(this, pessoa, reservar), || vaga_do_jogador_observado(this, pessoa, reservar));
-    PLACAR.registrar(igual && r == n, || format!("vaga_do_jogador_observado(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 4, 0x32 * 0x1a2)], || o(this, pessoa, reservar), || player_search_find_or_claim_player_slot(this, pessoa, reservar));
+    PLACAR.registrar(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
     r
 }

@@ -99,7 +99,7 @@ unsafe fn cql4_empate_na_fronteira(liga: usize, z: &[u8; 64]) -> bool {
 /// desempate). Sem empate na fronteira: +0xdd = 0, +0xe6 = 0 e a virtual +0x94 (League::update_positions_and_status).
 /// A regra: na Itália, empate em pontos entre clubes de faixas diferentes (título, Liga dos Campeões, Copa da UEFA,
 /// Intertoto [inferência], rebaixamento) não se decide pelo saldo: vai a um jogo extra.
-unsafe extern "thiscall" fn desempate_da_serie_a(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let dia: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x6471a0usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn desempate_da_serie_a(this: usize, hoje: usize, compl
 /// pontos na palavra de baixo e o resto do `completo` nos bits de cima, que a 0x6471a0 não lê; mov ecx -> thiscall,
 /// ret 4); havendo algum, a fase do desempate (+0x2c = 1, +0xc = malloc de 4, virtual +0x28). Sem nenhum: +0xdd = 0,
 /// +0xe6 = 0 e a virtual +0x94.
-unsafe extern "thiscall" fn desempate_da_serie_b(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: usize, hoje: usize, completo: u32) -> u32 {
     let dia: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x6471a0usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -201,14 +201,14 @@ unsafe fn cql4_comparar(nome: &str, this: usize, completo: u32, faixas: impl Fn(
     r
 }
 
-unsafe extern "thiscall" fn comparar_desempate_da_serie_a(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
-    cql4_comparar("desempate_da_serie_a", this, completo, || cql4_faixas_da_serie_a(this), || o(this, hoje, completo))
+    cql4_comparar("ita_ser_a_update_for_date", this, completo, || cql4_faixas_da_serie_a(this), || o(this, hoje, completo))
 }
 
-unsafe extern "thiscall" fn comparar_desempate_da_serie_b(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_update_for_date_647050(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
-    cql4_comparar("desempate_da_serie_b", this, completo, cql4_faixas_da_serie_b, || o(this, hoje, completo))
+    cql4_comparar("ita_ser_a_update_for_date_647050", this, completo, cql4_faixas_da_serie_b, || o(this, hoje, completo))
 }
 
 /// { 0x6471a0 } (thiscall, ret 4, ita_ser_b.cpp; chamada também pela da Série A): `ita_league_sort_clubs_level_on_points
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_desempate_da_serie_b(this: usize, hoje: usi
 /// this -> thiscall, ret 4), acha o bloco das linhas com esses pontos (a primeira e quantas; a tabela já está ordenada
 /// pelos pontos), ordena o bloco pela comparação do confronto (qsort 0x945333 com 0x683410, linhas de 0x3b: push;
 /// add esp, 0x10 -> cdecl; sem linha, o qsort recebe 0 e 0) e renumera a posição (+4) de todas as linhas.
-unsafe extern "thiscall" fn ordem_dos_empatados_na_italia(this: usize, pontos: u32) {
+unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, pontos: u32) {
     let confronto: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x682b30usize);
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
     confronto(this, cql4_d(this + 0xb1));
@@ -245,15 +245,15 @@ unsafe extern "thiscall" fn ordem_dos_empatados_na_italia(this: usize, pontos: u
 
 /// Lado a lado na tabela inteira (a 0x682b30 grava +4 de cada linha e solta a sua minitabela; o qsort só mexe no
 /// bloco).
-unsafe extern "thiscall" fn comparar_ordem_dos_empatados_na_italia(this: usize, pontos: u32) {
+unsafe extern "thiscall" fn comparar_ita_league_sort_clubs_level_on_points(this: usize, pontos: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%);
     let t = cql4_d(this + 0xb1);
     let n = cql4_w(this + 0x3e).max(0) as usize;
     if t == 0 || n == 0 {
         return o(this, pontos);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(t, n * 0x3b)], || o(this, pontos), || ordem_dos_empatados_na_italia(this, pontos));
-    PLACAR.registrar(igual, || format!("ordem_dos_empatados_na_italia({:#x}, {}) original={:x?} rust={:x?}", this, pontos as u16 as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(t, n * 0x3b)], || o(this, pontos), || ita_league_sort_clubs_level_on_points(this, pontos));
+    PLACAR.registrar(igual, || format!("ita_league_sort_clubs_level_on_points({:#x}, {}) original={:x?} rust={:x?}", this, pontos as u16 as i16, mo, mr));
 }
 
 /// { 0x641dc0 } (thiscall, ret 0x18, ita_ser_a.cpp, slot +0x44): `ItaSerA::update_staff_records_for_status(clube,
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn comparar_ordem_dos_empatados_na_italia(this: usize, 
 /// casos as duas linhas ganham a posição (+4) e o destino em aberto (+0x37 = 0xff). Depois, se nenhuma linha tem o
 /// destino 1 (o play-off de cima), fecha a temporada: +0xe6 = 0, +0xdd = 0, a virtual +0x94, a virtual +0x10 (0, 0) e
 /// +0xdd = 1. Devolve −1. A regra: quem vence o jogo de desempate fica à frente do outro.
-unsafe extern "thiscall" fn resultado_do_desempate_da_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     if fase as u8 == 0xff {
         let base: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x686940usize);
         return base(this, clube, situacao, 0xffff_ffff, a4, jogo, a6);
@@ -335,11 +335,11 @@ unsafe extern "thiscall" fn resultado_do_desempate_da_serie_a(this: usize, clube
 
 /// Na liga e no desempate com a situação 1 há chamadas que não rodam duas vezes (os registros da base, a ordenação, as
 /// virtuais): só a original. Nas outras situações a cópia só devolve −1: compara a devolução.
-unsafe extern "thiscall" fn comparar_resultado_do_desempate_da_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I3%%);
     let r = o(this, clube, situacao, fase, a4, jogo, a6);
     if fase as u8 != 0xff && situacao as u8 != 1 {
-        PLACAR.registrar(r == 0xffff_ffff, || format!("resultado_do_desempate_da_serie_a: devolveu {:#x}", r));
+        PLACAR.registrar(r == 0xffff_ffff, || format!("ita_ser_a_update_staff_records_for_status: devolveu {:#x}", r));
     }
     r
 }

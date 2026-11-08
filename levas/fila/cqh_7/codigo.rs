@@ -21,7 +21,7 @@ unsafe fn cqh7_nacao(r: usize) -> i32 {
 /// { 0x79d4e0 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_desc(a, b)`, a ordem do
 /// qsort da 0x79bf60 (os que ficam por nação): pela nação (id) e, na mesma, pela qualidade da maior para a menor; empate:
 /// o índice +0 de `b` menos o de `a`.
-unsafe extern "C" fn ordem_dos_arbitros_decrescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
     let (na, nb) = (cqh7_nacao(a), cqh7_nacao(b));
     if na != nb {
         return na.wrapping_sub(nb);
@@ -35,17 +35,17 @@ unsafe extern "C" fn ordem_dos_arbitros_decrescente(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_ordem_dos_arbitros_decrescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_dos_arbitros_decrescente(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_arbitros_decrescente({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = officials_manager_compare_nation_then_quality_desc(a, b);
+    PLACAR.registrar(r == n, || format!("officials_manager_compare_nation_then_quality_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// { 0x79d480 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_asc(a, b)`, a ordem do
 /// qsort da 0x79c5c0 (depois dos árbitros novos): pela nação e pela qualidade da menor para a maior; empate: o índice +0
 /// de `a` menos o de `b`.
-unsafe extern "C" fn ordem_dos_arbitros_crescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
     let (na, nb) = (cqh7_nacao(a), cqh7_nacao(b));
     if na != nb {
         return na.wrapping_sub(nb);
@@ -59,9 +59,9 @@ unsafe extern "C" fn ordem_dos_arbitros_crescente(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_ordem_dos_arbitros_crescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_dos_arbitros_crescente(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_arbitros_crescente({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = officials_manager_compare_nation_then_quality_asc(a, b);
+    PLACAR.registrar(r == n, || format!("officials_manager_compare_nation_then_quality_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

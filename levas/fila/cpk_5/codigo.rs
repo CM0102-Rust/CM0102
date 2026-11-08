@@ -8,7 +8,7 @@ unsafe fn cpk5_d(a: usize) -> usize {
 /// continente (+0xde = 3) e a entrega (0x785d40 com 0) a cada técnico humano ativo cujo clube (+0x39) tem a nação
 /// (+0x53) no `continente` (+0x71) ou cuja nação (+0x1a) está nele. Devolve 1, ou 0 na primeira recusada. Notícia ou
 /// continente nulos: a original (caixa "Error").
-unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_continente(this: usize, noticia: usize, continente: usize) -> u32 {
+unsafe extern "thiscall" fn send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
     if noticia == 0 || continente == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente); // caixa: só a original
     }
@@ -30,7 +30,7 @@ unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_continente(this: usize, 
 /// (+0x5d), para os técnicos da nação (0x786520); senão, com o continente (+0x59), para os do continente (0x786640);
 /// senão para todos (0x786780). Devolve o que a entrega devolve. Notícia ou competição nulas: a original (caixa
 /// "Error").
-unsafe extern "thiscall" fn noticia_para_a_regiao_da_competicao(this: usize, noticia: usize, comp: usize) -> u32 {
+unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
     if noticia == 0 || comp == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp); // caixa: só a original
     }
@@ -60,7 +60,7 @@ unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
 /// clube do dado 5 (+0x19) e 0xfb6 se é o do dado 4 (+0x15) ou do 5; categoria 6, 0x1770 se o dado 0 (+5) é um dos
 /// 16 técnicos humanos; categoria 1, 0x1388; o resto, 0. A original chama a 0x785670 até seis vezes (só lê): a cópia,
 /// uma. Pessoa nula ou tipo fora de 1..0x1790 (caixa da 0x785670): a original.
-unsafe extern "thiscall" fn noticia_importante_para_a_pessoa(noticia: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u8 {
     let t = cpk5_d(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa); // caixa: só a original
@@ -87,24 +87,24 @@ unsafe extern "thiscall" fn noticia_importante_para_a_pessoa(noticia: usize, pes
 
 /// Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_do_continente(this: usize, noticia: usize, continente: usize) -> u32 {
-    crate::comparacao::ramo("noticia_para_os_tecnicos_do_continente");
+unsafe extern "thiscall" fn comparar_send_to_continent_managers(this: usize, noticia: usize, continente: usize) -> u32 {
+    crate::comparacao::ramo("send_to_continent_managers");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, continente)
 }
 
-unsafe extern "thiscall" fn comparar_noticia_para_a_regiao_da_competicao(this: usize, noticia: usize, comp: usize) -> u32 {
-    crate::comparacao::ramo("noticia_para_a_regiao_da_competicao");
+unsafe extern "thiscall" fn comparar_send_to_comp_region(this: usize, noticia: usize, comp: usize) -> u32 {
+    crate::comparacao::ramo("send_to_comp_region");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, comp)
 }
 
 /// Comparador: pelo valor (a 0x785670 só lê).
-unsafe extern "thiscall" fn comparar_noticia_importante_para_a_pessoa(noticia: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_is_important_for(noticia: usize, pessoa: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(noticia, pessoa);
     let t = cpk5_d(noticia) as i32;
     if pessoa == 0 || !(1..=0x1790).contains(&t) {
         return r;
     }
-    let n = noticia_importante_para_a_pessoa(noticia, pessoa);
-    PLACAR.registrar(r == n, || format!("noticia_importante_para_a_pessoa(tipo {:#x}, {:x}) original={} rust={}", t, pessoa, r, n));
+    let n = is_important_for(noticia, pessoa);
+    PLACAR.registrar(r == n, || format!("is_important_for(tipo {:#x}, {:x}) original={} rust={}", t, pessoa, r, n));
     r
 }

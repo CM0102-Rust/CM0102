@@ -69,7 +69,7 @@ const CAMPOS_DAS_ESTATISTICAS: [(usize, usize); 20] = [
 /// `modo` ≠ 0 monta as células na lista `area` (0x8040a0 botão, 0x804100 texto; o primeiro item no
 /// parâmetro 0x1a se estiver em −1); `modo` 0 atualiza os itens a partir do parâmetro 0x1a (0x801c70,
 /// 0x800d30, 0x801960). Parâmetro 0x1c fora de 1 e 2 (a original lê a tabela sem valor): a original.
-unsafe extern "C" fn preencher_estatisticas_do_time(modo: u32, area: usize) {
+unsafe extern "C" fn fill_team_stats_rows(modo: u32, area: usize) {
     type T9 = unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, u32, u32, u32, usize) -> u32;
     type T11 = unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, u32, u32, u32, usize, u32, usize) -> u32;
     let celula: T11 = core::mem::transmute(0x8040a0usize);
@@ -272,7 +272,7 @@ unsafe extern "C" fn preencher_estatisticas_do_time(modo: u32, area: usize) {
 /// período 0x6b6570) e os autores dos eventos (gol, pênalti, contra, pênalti perdido, expulsão, lesão;
 /// minutos do mesmo jogador juntos) e o agregado. Só a página mostrada é escrita (segunda passada).
 /// No rodapé "<< Página x/y >>" (ou "Hold") com mais de uma página; no fim a hora no parâmetro 0x14.
-unsafe extern "C" fn atualizar_ultimos_placares() {
+unsafe extern "C" fn refresh_latest_scores_rows() {
     let texto_do_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
     let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x800d30usize);
     let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801960usize);
@@ -280,7 +280,7 @@ unsafe extern "C" fn atualizar_ultimos_placares() {
     let fonte_do_item: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801660usize);
     let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801fc0usize);
     let dado: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x8022d0usize);
-    let posicionar: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32, u32) = core::mem::transmute(0x800890usize);
+    let position_place_players: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32, u32) = core::mem::transmute(0x800890usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x5e4800usize);
@@ -312,7 +312,7 @@ unsafe extern "C" fn atualizar_ultimos_placares() {
 
     for r in 0..n {
         let it = item(r, 0);
-        posicionar(sm, it, 0, 0, 0, 0);
+        position_place_players(sm, it, 0, 0, 0, 0);
         margem(sm, it, 1);
         fonte_do_item(sm, it, 3);
         texto_do_item(sm, it, 0xad9c64);
@@ -377,20 +377,20 @@ unsafe extern "C" fn atualizar_ultimos_placares() {
                             let comp = u(m4 + 0x14);
                             let it = item(ebp, 0);
                             if amistoso(*(0xae2c74 as *const usize), comp) == 0 && selecao(*(0xb74434 as *const usize), comp) == 0 {
-                                posicionar(sm, it, 0x7d, 0, x, 0);
+                                position_place_players(sm, it, 0x7d, 0, x, 0);
                                 cor_do_texto(sm, it, cor_de(0xaebdec));
                                 texto_do_item(sm, it, BUF);
                                 ligar(sm, it, 0x7e5);
                                 let chave = ((*(comp as *const u32) << 11 | (w32 as u16 as u32 & 0x7ff)) << 11) | (w30 as u16 as u32 & 0x7ff);
                                 dado(sm, it, chave as usize);
                             } else {
-                                posicionar(sm, it, 0x7d, 0, x, 0);
+                                position_place_players(sm, it, 0x7d, 0, x, 0);
                                 cor_do_texto(sm, it, cor_de(0xaebdec));
                                 texto_do_item(sm, it, BUF);
                             }
                             ebp += 1;
                             let it = item(ebp, 0);
-                            posicionar(sm, it, 0x7d, 0, x, 0);
+                            position_place_players(sm, it, 0x7d, 0, x, 0);
                             margem(sm, it, 0xc400);
                             cor_de_fundo(sm, it, cor_de(0xaebdec));
                             ebp += 1;
@@ -703,7 +703,7 @@ unsafe extern "C" fn atualizar_ultimos_placares() {
 /// (0x7ffdd0) com a mesma partida: guarda a chave dele em [0xb77c4a] e −6. Senão fecha as telas
 /// (0x803d80; bloqueado: −11), mostra "Waiting for other players..." (0x802f80) e abre a tela da
 /// partida (0x718aa0) na vaga do humano: −4.
-unsafe extern "C" fn esperar_os_outros_jogadores() -> i32 {
+unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
     crate::comparacao::ramo("telas espera dos outros jogadores");
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let humanos: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, i32) = core::mem::transmute(0x7ffd80usize);
@@ -746,7 +746,7 @@ unsafe extern "C" fn esperar_os_outros_jogadores() -> i32 {
 /// As células são comparadas de verdade: montagem (`modo` ≠ 0) pela lista de exibição, atualização
 /// local pelo `Display` do gerente; os parâmetros (o 0x1a) e o texto 0xde1f64 também. Atualização que
 /// vai pela rede ou parâmetro 0x1c fora de 1 e 2: só a original.
-unsafe extern "C" fn comparar_preencher_estatisticas_do_time(modo: u32, area: usize) {
+unsafe extern "C" fn comparar_fill_team_stats_rows(modo: u32, area: usize) {
     let o = orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%);
     let coluna = parametro_da_tela(0x1c) as u8;
     let mut reg = match regioes_da_atualizacao(modo != 0) {
@@ -755,13 +755,13 @@ unsafe extern "C" fn comparar_preencher_estatisticas_do_time(modo: u32, area: us
     };
     reg.extend(regioes_dos_parametros());
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(modo, area), || preencher_estatisticas_do_time(modo, area));
-    PLACAR.registrar(igual, || format!("preencher_estatisticas_do_time({}, {:#x}): diferencas em {:?}", modo, area, diferencas_da_tela(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(modo, area), || fill_team_stats_rows(modo, area));
+    PLACAR.registrar(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", modo, area, diferencas_da_tela(&mo, &mr)));
 }
 
 /// O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
 /// o 0x14, a hora que a rotina grava no fim) e o texto 0xde1f64. Pela rede: só a original.
-unsafe extern "C" fn comparar_atualizar_ultimos_placares() {
+unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
     let o = orig::<unsafe extern "C" fn()>(%%I1%%);
     let mut reg = match regioes_da_atualizacao(false) {
         Some(r) => r,
@@ -775,12 +775,12 @@ unsafe extern "C" fn comparar_atualizar_ultimos_placares() {
         reg.push((bloco + 0xb8, 0x200 - 0xb8));
     }
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || atualizar_ultimos_placares());
-    PLACAR.registrar(igual, || format!("atualizar_ultimos_placares: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_latest_scores_rows());
+    PLACAR.registrar(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
 }
 
 // ponytail: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas
 // vezes: no modo comparação só a original (a cópia é provada no modo Rust pelo ramo)
-unsafe extern "C" fn comparar_esperar_os_outros_jogadores() -> i32 {
+unsafe extern "C" fn comparar_match_screens_handle_waiting_screen() -> i32 {
     orig::<unsafe extern "C" fn() -> i32>(%%I2%%)()
 }

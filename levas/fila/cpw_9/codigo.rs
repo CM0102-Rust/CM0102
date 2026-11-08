@@ -67,7 +67,7 @@ const CPW9_CASOS: [u8; 0x31] = [
 /// grave nos primeiros 1/14 dos sorteios), os atributos que a lesão gasta (+0x1b, +0x36, +0x1d da ficha) e a lesão nova
 /// (0x62d250); fora da temporada (0x62ce30) nada; categoria 7 com nota abaixo de 15 não conta. No fim as notícias da volta
 /// (0x62e010) e os surtos de doença (0x62e9e0).
-unsafe extern "thiscall" fn dia_das_lesoes(this: usize) {
+unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     let lista = cpw9_d(this + 0x28);
     if lista != 0 {
         if !CPW9_ENSAIO {
@@ -288,7 +288,7 @@ unsafe fn cpw9_gasto_da_lesao(this: usize, idx: i32, p: usize, categoria: u8, ca
 /// do fim) e a original a partir do mesmo estado (o cabeçalho do Injury, a tabela de lesões e o sorteio); a original é
 /// conferida quando chega às notícias da volta (0x62e010, desviada no mesmo item), antes das rotinas do fim. Com lesão
 /// nova (aloca e manda notícia) ou com o físico de todos (dia 180 da primeira temporada): só a original.
-unsafe extern "thiscall" fn comparar_dia_das_lesoes(this: usize) {
+unsafe extern "thiscall" fn comparar_injury_daily_update(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut reg = vec![(this, 0x2c)];
     let n = cpw9_i(this + 8);
@@ -299,7 +299,7 @@ unsafe extern "thiscall" fn comparar_dia_das_lesoes(this: usize) {
     let antes = crate::comparacao::Memoria::ler(&reg);
     CPW9_ENSAIO = true;
     CPW9_PAROU = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| dia_das_lesoes(this)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| injury_daily_update(this)));
     CPW9_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
@@ -321,7 +321,7 @@ unsafe extern "thiscall" fn comparar_dia_das_lesoes(this: usize) {
 /// notícia leva, conta +0x18): as de data A hoje (bsearch 0x946464 com 0x778e90, voltando enquanto não for antes de hoje,
 /// 0x456740) dão a notícia com os dias entre B e A (0x54cc30); as de data B hoje (bsearch com 0x632040) a notícia da volta
 /// completa; as de data B já passada saem do começo da fila.
-unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize) {
+unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
     crate::comparacao::ramo("cpw_9 noticias de volta");
     let volta: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(0x630ee0usize);
     let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x62c680usize);
@@ -465,11 +465,11 @@ unsafe extern "thiscall" fn noticias_de_volta_aos_treinos(this: usize) {
 }
 
 // ponytail: as notícias da volta (0x630ee0) alocam e o físico do dia mexe no sorteio: só a original; a cópia leva o
-// ramo. É também o ponto de conferência da fase do treino do dia das lesões (comparar_dia_das_lesoes).
-unsafe extern "thiscall" fn comparar_noticias_de_volta_aos_treinos(this: usize) {
+// ramo. É também o ponto de conferência da fase do treino do dia das lesões (comparar_injury_daily_update).
+unsafe extern "thiscall" fn comparar_post_due_recovery_news(this: usize) {
     if let Some((reg, mr)) = (*core::ptr::addr_of_mut!(CPW9_ESPERA)).take() {
         let mo = crate::comparacao::Memoria::ler(&reg);
-        PLACAR.registrar(mo == mr, || format!("dia_das_lesoes({:x}) {:x?} x {:x?}", this, mo, mr));
+        PLACAR.registrar(mo == mr, || format!("injury_daily_update({:x}) {:x?} x {:x?}", this, mo, mr));
     }
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
@@ -477,7 +477,7 @@ unsafe extern "thiscall" fn comparar_noticias_de_volta_aos_treinos(this: usize) 
 /// { 0x55d360 } (thiscall, ret 8, discipline.cpp): `Discipline::is_one_booking_from_ban(pessoa, competicao)`: com id
 /// válido, a competição ([[0xadadfc] + 4 × id]) e o órgão dela (+0x50, 0xff sem; [this] + 4 × órgão), a pergunta ao órgão
 /// (0x7e8d60 com o id, 0, 0 e o +4 da competição); senão 0. Pela tela do clube (0x4849f0).
-unsafe extern "thiscall" fn um_cartao_da_suspensao(this: usize, pessoa: usize, competicao: usize) -> u32 {
+unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
     if pessoa != 0 && cpw9_i(pessoa) >= cpw9_i(0xae2364) {
         return 0;
     }
@@ -497,9 +497,9 @@ unsafe extern "thiscall" fn um_cartao_da_suspensao(this: usize, pessoa: usize, c
     perguntar(o, cpw9_d(pessoa) as u32, 0, 0, cpw9_d(comp + 4) as u32)
 }
 
-unsafe extern "thiscall" fn comparar_um_cartao_da_suspensao(this: usize, pessoa: usize, competicao: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_is_one_booking_from_ban(this: usize, pessoa: usize, competicao: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, pessoa, competicao);
-    let n = um_cartao_da_suspensao(this, pessoa, competicao);
-    PLACAR.registrar(r == n, || format!("um_cartao_da_suspensao(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
+    let n = is_one_booking_from_ban(this, pessoa, competicao);
+    PLACAR.registrar(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", pessoa, competicao, r, n));
     r
 }

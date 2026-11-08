@@ -63,7 +63,7 @@ const CQK3_BRASIL: [[u8; 6]; 2] = [
 
 /// { 0x43f0e0 } (thiscall, ret 0x14, brazil_rules.cpp, `BRAZIL_RULES::BRAZIL_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência do Brasil (regra 4): a base (0x8e84a0), a vtable 0x968838, 1 janela(s) de `CQK3_BRASIL` e o +0x13 = 3 (o padrão da base é 50) [inferência: o limite de estrangeiros contratados]. Devolve o objeto.
-unsafe extern "thiscall" fn regras_brasil(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_3 brasil");
     cqk3_construir(this, [a1, a2, a3, a4, a5], 0x968838, 1, &CQK3_BRASIL, 0x98b104, 0x50);
     *((this + 0x13) as *mut u8) = 3; // cqk3: o limite do Brasil
@@ -71,11 +71,11 @@ unsafe extern "thiscall" fn regras_brasil(this: usize, a1: u32, a2: u32, a3: u32
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk3_comparar`).
-unsafe extern "thiscall" fn comparar_regras_brasil(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn comparar_construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
     let mut r = 0usize;
-    cqk3_comparar("regras_brasil", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_brasil(s, a1, a2, a3, a4, a5);
+    cqk3_comparar("construct_brazil_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_brazil_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -90,15 +90,15 @@ const CQK3_ALEMANHA: [[u8; 6]; 4] = [
 
 /// { 0x5dffe0 } (thiscall, ret 0, germany_rules.cpp, `GERMANY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Alemanha (regra 10), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQK3_ALEMANHA`.
-unsafe extern "thiscall" fn janelas_alemanha(this: usize) {
+unsafe extern "thiscall" fn brazil_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqk_3 alemanha");
     cqk3_janelas(this, 2, &CQK3_ALEMANHA, 0x9cd538, 0x4d);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk3_comparar`).
-unsafe extern "thiscall" fn comparar_janelas_alemanha(this: usize) {
+unsafe extern "thiscall" fn comparar_brazil_rules_init_transfer_windows(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqk3_comparar("janelas_alemanha", this, || o(this), |s| janelas_alemanha(s));
+    cqk3_comparar("brazil_rules_init_transfer_windows", this, || o(this), |s| brazil_rules_init_transfer_windows(s));
 }
 
 /// A janela da Escócia: de 30 de maio (andando para o sábado [inferência]) a 30 de março (andando para a quinta-feira [inferência]).
@@ -109,7 +109,7 @@ const CQK3_ESCOCIA: [[u8; 6]; 2] = [
 
 /// { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Escócia (regra 21): a base (0x8e84a0), a vtable 0x96f838, 1 janela(s) de `CQK3_ESCOCIA` e o dword +0x15 = 1. Devolve o objeto.
-unsafe extern "thiscall" fn regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_3 escocia");
     cqk3_construir(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &CQK3_ESCOCIA, 0xa7b058, 0x50);
     core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
@@ -117,11 +117,11 @@ unsafe extern "thiscall" fn regras_escocia(this: usize, a1: u32, a2: u32, a3: u3
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk3_comparar`).
-unsafe extern "thiscall" fn comparar_regras_escocia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+unsafe extern "thiscall" fn comparar_construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(%%I2%%);
     let mut r = 0usize;
-    cqk3_comparar("regras_escocia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_escocia(s, a1, a2, a3, a4, a5);
+    cqk3_comparar("construct_scotland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_scotland_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }

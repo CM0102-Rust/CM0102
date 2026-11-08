@@ -3,7 +3,7 @@
 /// { 0x540020 } (cdecl, Database.cpp): comparação do qsort do vetor de ids de clube (0x53db40): pela reputação
 /// (+0x80, palavra com sinal) do clube ([0xae23b4] + id × 581; id −1 ou menor = reputação 0), a maior primeiro:
 /// a de `a` menor que a de `b`: 1; maior: −1; iguais: 0.
-unsafe extern "C" fn ordem_dos_clubes_pela_reputacao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let clubes = *(0xae23b4 as *const usize);
     let reputacao = |p: usize| {
         let id = *(p as *const i32);
@@ -19,17 +19,17 @@ unsafe extern "C" fn ordem_dos_clubes_pela_reputacao(a: usize, b: usize) -> i32 
     }
 }
 
-unsafe extern "C" fn comparar_ordem_dos_clubes_pela_reputacao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_dos_clubes_pela_reputacao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_clubes_pela_reputacao({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = qsort_comparator_club_ids_by_reputation(a, b);
+    PLACAR.registrar(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// { 0x5402f0 } (cdecl, Database.cpp): comparação do qsort dos elencos (corte do conjunto A+B em 0x541e60 e as
 /// seleções da MLS em 0x90a980): ponteiros de pessoa; nula vai para o fim (a nula e b não: 1; a não e b nula: −1;
 /// as duas: 0); depois pela palavra +0xb do jogador (pessoa +0x61; sem jogador, 0), a maior primeiro (b − a).
-unsafe extern "C" fn ordem_do_elenco_pela_habilidade(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let pa = *(a as *const usize);
     let pb = *(b as *const usize);
     if pa == 0 {
@@ -45,10 +45,10 @@ unsafe extern "C" fn ordem_do_elenco_pela_habilidade(a: usize, b: usize) -> i32 
     habilidade(pb) as i32 - habilidade(pa) as i32 // a maior primeiro
 }
 
-unsafe extern "C" fn comparar_ordem_do_elenco_pela_habilidade(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_do_elenco_pela_habilidade(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_elenco_pela_habilidade({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = qsort_comparator_squad_by_player_0xb(a, b);
+    PLACAR.registrar(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -56,7 +56,7 @@ unsafe extern "C" fn comparar_ordem_do_elenco_pela_habilidade(a: usize, b: usize
 /// 0x549a30): ponteiros de pessoa; sem pessoa ou sem jogador (+0x61) em `a`: 1 (mesmo com `b` igual); em `b`:
 /// −1; depois pela habilidade atual (jogador +5, palavra com sinal) e, empatada, pela palavra +0xb, a maior
 /// primeiro (b − a).
-unsafe extern "C" fn ordem_do_elenco_pela_habilidade_atual(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let jogador = |p: usize| {
         let s = *(p as *const usize);
         if s == 0 { 0 } else { core::ptr::read_unaligned((s + 0x61) as *const usize) }
@@ -77,9 +77,9 @@ unsafe extern "C" fn ordem_do_elenco_pela_habilidade_atual(a: usize, b: usize) -
     }
 }
 
-unsafe extern "C" fn comparar_ordem_do_elenco_pela_habilidade_atual(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_do_elenco_pela_habilidade_atual(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_elenco_pela_habilidade_atual({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_staff_by_player_ability_desc(a, b);
+    PLACAR.registrar(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

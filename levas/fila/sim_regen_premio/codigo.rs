@@ -23,20 +23,20 @@ unsafe fn tirar_da_lista_de_16(regen: usize, id: i32, lista: usize, quantos: usi
 
 /// { 0x7a82b0 } (thiscall, ret 4, player_regen.cpp): tira o registro de reserva de não jogador (técnicos
 /// e afins) de id `id` (lista +0x1c, quantos +0x20).
-unsafe extern "thiscall" fn tirar_reserva_de_tecnico(regen: usize, id: i32) {
+unsafe extern "thiscall" fn remove_spare_non_player_record(regen: usize, id: i32) {
     tirar_da_lista_de_16(regen, id, 0x1c, 0x20);
 }
 
 /// { 0x7a8470 } (thiscall, ret 4, player_regen.cpp): tira do banco de jogadores livres o registro dos
 /// dados de jogador `id` (lista +0x3c, quantos +0x40).
-unsafe extern "thiscall" fn tirar_jogador_do_banco(regen: usize, id: i32) {
+unsafe extern "thiscall" fn remove_player_data_from_pool(regen: usize, id: i32) {
     tirar_da_lista_de_16(regen, id, 0x3c, 0x40);
 }
 
 /// { 0x682f70 } (thiscall, ret 4, league.cpp): o prêmio total da liga: `cota` para o último colocado e
 /// uma cota a mais por posição acima (cota × (1 + 2 + … + times), times = +0x3e). Sem times: a
 /// original (caixa de erro, devolve 0).
-unsafe extern "thiscall" fn premio_da_liga(liga: usize, cota: i32) -> i32 {
+unsafe extern "thiscall" fn calc_prize_fund(liga: usize, cota: i32) -> i32 {
     let times = *((liga + 0x3e) as *const i16);
     if times == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I2%%)(liga, cota);
@@ -60,24 +60,24 @@ unsafe fn regioes_da_lista_de_16(regen: usize, lista: usize, quantos: usize) -> 
     r
 }
 
-unsafe extern "thiscall" fn comparar_tirar_reserva_de_tecnico(regen: usize, id: i32) {
+unsafe extern "thiscall" fn comparar_remove_spare_non_player_record(regen: usize, id: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_da_lista_de_16(regen, 0x1c, 0x20), || o(regen, id), || tirar_reserva_de_tecnico(regen, id));
-    PLACAR.registrar(igual, || format!("tirar_reserva_de_tecnico({}) {:x?} x {:x?}", id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_da_lista_de_16(regen, 0x1c, 0x20), || o(regen, id), || remove_spare_non_player_record(regen, id));
+    PLACAR.registrar(igual, || format!("remove_spare_non_player_record({}) {:x?} x {:x?}", id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_tirar_jogador_do_banco(regen: usize, id: i32) {
+unsafe extern "thiscall" fn comparar_remove_player_data_from_pool(regen: usize, id: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_da_lista_de_16(regen, 0x3c, 0x40), || o(regen, id), || tirar_jogador_do_banco(regen, id));
-    PLACAR.registrar(igual, || format!("tirar_jogador_do_banco({}) {:x?} x {:x?}", id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes_da_lista_de_16(regen, 0x3c, 0x40), || o(regen, id), || remove_player_data_from_pool(regen, id));
+    PLACAR.registrar(igual, || format!("remove_player_data_from_pool({}) {:x?} x {:x?}", id, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_premio_da_liga(liga: usize, cota: i32) -> i32 {
+unsafe extern "thiscall" fn comparar_calc_prize_fund(liga: usize, cota: i32) -> i32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I2%%)(liga, cota);
     if *((liga + 0x3e) as *const i16) == 0 {
         return r;
     }
-    let n = premio_da_liga(liga, cota);
-    PLACAR.registrar(r == n, || format!("premio_da_liga({}) original={} rust={}", cota, r, n));
+    let n = calc_prize_fund(liga, cota);
+    PLACAR.registrar(r == n, || format!("calc_prize_fund({}) original={} rust={}", cota, r, n));
     r
 }

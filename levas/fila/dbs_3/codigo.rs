@@ -20,7 +20,7 @@ unsafe fn dbs3_atributo(pessoa: usize, atributo: u32) -> i32 {
     f(pessoa, dbs3_u32(pessoa + 0x61), atributo) as i8 as i32
 }
 
-/// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), lateral (+0x11, com +0x19
+/// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), throw_in (+0x11, com +0x19
 /// ou com +0x17/+0x18), zagueiros (+0x12/+0x13 sem +0x17/+0x18 a 15), meias (+0x14, +0x15). `bits` = os valores
 /// de cada caso na ordem; mais o da soma das dez posições (+0x10..+0x19) acima de 110.
 unsafe fn dbs3_posicoes(j: usize, bits: [u32; 7], soma: u32) -> u32 {
@@ -65,7 +65,7 @@ unsafe fn dbs3_posicoes(j: usize, bits: [u32; 7], soma: u32) -> u32 {
 /// 0x200000, 0x400000 (atributos 4, 0xd, 0x14, 0x15, 1), 0x8000 (+0x21), 0x10000 (atributo 0xb e a média 0xf), 0x40000
 /// (reputação e as médias 6/2 e 6/1), 0x80000 (médias 0x15, 0x10, 2 e 1). A original guarda floats nos próprios
 /// argumentos (gravados antes de lidos); a cópia não. Nulos: 0.
-unsafe extern "C" fn forcas_do_jogador(pessoa: usize, outro: usize) -> u32 {
+unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
     if outro == 0 || pessoa == 0 {
         return 0;
     }
@@ -165,7 +165,7 @@ unsafe extern "C" fn forcas_do_jogador(pessoa: usize, outro: usize) -> u32 {
 /// 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000. A original guarda bytes e floats nos próprios argumentos
 /// (gravados antes de lidos; a vaga passada à 0x5b2ae0 é o argumento `clube` com o byte da vaga por cima, e a cópia a
 /// monta igual); a cópia não grava neles. Nulos: 0. Na mídia (0x72c1f0, 0x487c70).
-unsafe extern "C" fn fraquezas_do_jogador(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
     if clube == 0 || pessoa == 0 {
         return 0;
     }
@@ -303,16 +303,16 @@ unsafe fn dbs3_comparar(o: impl Fn() -> u32, n: impl Fn() -> u32) -> (u32, u32, 
     (r, x, igual2 && r2 == x2, format!("1a {:x} x {:x}; 2a {:x} x {:x} {:x?} x {:x?}", r, x, r2, x2, mo, mr))
 }
 
-unsafe extern "C" fn comparar_forcas_do_jogador(pessoa: usize, outro: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
-    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, outro), || forcas_do_jogador(pessoa, outro));
-    PLACAR.registrar(igual, || format!("forcas_do_jogador({:x}, {:x}) {}", pessoa, outro, d));
+    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, outro), || staff_get_player_strength_flags(pessoa, outro));
+    PLACAR.registrar(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", pessoa, outro, d));
     r
 }
 
-unsafe extern "C" fn comparar_fraquezas_do_jogador(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
-    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, clube), || fraquezas_do_jogador(pessoa, clube));
-    PLACAR.registrar(igual, || format!("fraquezas_do_jogador({:x}, {:x}) {}", pessoa, clube, d));
+    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, clube), || staff_get_player_weakness_flags(pessoa, clube));
+    PLACAR.registrar(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", pessoa, clube, d));
     r
 }

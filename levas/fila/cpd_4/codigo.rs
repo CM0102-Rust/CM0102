@@ -83,7 +83,7 @@ unsafe fn cpd4_reservar(this: usize, p: usize, rec: usize, sub: u32) {
 /// da nação (cpd4_reservar) e, até 21 anos com menos de 5 jogos (+0x22), na do sub-21; e de novo pela segunda
 /// nacionalidade (+0x1e: sem jogos pela primeira, outra e não a [0x9cf434]). Sem SEH, sem caixa, sem sorteio; as
 /// locais são gravadas antes de ler (da nota guardada em 32 bits só vale o curto).
-unsafe extern "thiscall" fn montar_reservas_das_selecoes(this: usize) {
+unsafe extern "thiscall" fn build_selection_pools(this: usize) {
     let mut i = 0i32;
     while i < *(0xae2350 as *const i32) {
         for k in 0..4usize {
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn montar_reservas_das_selecoes(this: usize) {
 
 /// Comparador: os registros das nações e, em cada reserva (principal e sub-21), o trecho dos 4 níveis (a soma das
 /// vagas +0xe a partir do começo +8).
-unsafe extern "thiscall" fn comparar_montar_reservas_das_selecoes(this: usize) {
+unsafe extern "thiscall" fn comparar_build_selection_pools(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = (*(0xae2350 as *const i32)).max(0) as usize;
     let recs = cpd4_d(this + 4);
@@ -147,27 +147,27 @@ unsafe extern "thiscall" fn comparar_montar_reservas_das_selecoes(this: usize) {
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || montar_reservas_das_selecoes(this));
-    PLACAR.registrar(igual, || format!("montar_reservas_das_selecoes({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || build_selection_pools(this));
+    PLACAR.registrar(igual, || format!("build_selection_pools({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
 /// { 0x778ed0 } (cdecl, national_teams.cpp): a ordem das reservas para o qsort da 0x76abf0: pela nota (+9 da ficha
 /// +0x61) decrescente (nota de b menos a de a).
-unsafe extern "C" fn ordem_das_reservas(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_by_rating(a: usize, b: usize) -> i32 {
     (cpd4_nota(b) as i32) - cpd4_nota(a) as i32 // decrescente
 }
 
-unsafe extern "C" fn comparar_ordem_das_reservas(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_by_rating(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_das_reservas(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_reservas({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_by_rating(a, b);
+    PLACAR.registrar(r == n, || format!("compare_by_rating({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// { 0x778ef0 } (cdecl, national_teams.cpp): a ordem das pessoas pelo clube (+0x39) para os qsort das seleções
 /// (0x76c120, 0x7706c0, 0x7771c0): sem clube depois; clubes diferentes pelo id; no mesmo, o de elenco 4 (+0x5e)
 /// antes do de elenco 8.
-unsafe extern "C" fn ordem_pelo_clube(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
     let (x, y) = (cpd4_d(a), cpd4_d(b));
     let cx = if x != 0 { cpd4_d(x + 0x39) } else { 0 };
     let cy = if y != 0 { cpd4_d(y + 0x39) } else { 0 };
@@ -190,9 +190,9 @@ unsafe extern "C" fn ordem_pelo_clube(a: usize, b: usize) -> i32 {
     0
 }
 
-unsafe extern "C" fn comparar_ordem_pelo_clube(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_by_club(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_pelo_clube(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_pelo_clube({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_by_club(a, b);
+    PLACAR.registrar(r == n, || format!("compare_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

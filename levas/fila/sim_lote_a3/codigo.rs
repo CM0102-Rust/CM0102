@@ -16,7 +16,7 @@ fn registro_da_rodada(rodadas: usize, rodada: u32) -> usize {
 
 /// { 0x521e60 } (cdecl, Cup.cpp): a data do sorteio da rodada: dia do ano na palavra +0 e ano − ano-base
 /// (byte) em +2, da data de `dia`/`mes`/ano-base + `anos` levada ao dia da semana. Devolve o registro.
-unsafe extern "C" fn data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
+unsafe extern "C" fn cup_set_round_draw_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
     let (d, a) = data_da_rodada(dia, mes, base.wrapping_add(anos), semana);
     let r = registro_da_rodada(rodadas, rodada);
     core::ptr::write_unaligned(r as *mut u16, d);
@@ -26,7 +26,7 @@ unsafe extern "C" fn data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia:
 
 /// { 0x521eb0 } (cdecl, Cup.cpp): a data do jogo da rodada, como a do sorteio, em +3 (dia) e +5 (ano −
 /// ano-base); o horário (byte) em +6 e as marcas do mando em +0x13. Devolve o registro.
-unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
+unsafe extern "C" fn cup_set_round_match_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
     let (d, a) = data_da_rodada(dia, mes, base.wrapping_add(anos), semana);
     let r = registro_da_rodada(rodadas, rodada);
     core::ptr::write_unaligned((r + 3) as *mut u16, d); // dia do jogo
@@ -39,7 +39,7 @@ unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u3
 /// { 0x5c64e0 } (thiscall, ret 4, friendly.cpp): tira o `clube` dos amistosos planejados: no vetor
 /// [+0x34d8] ([+0x34e0] registros de 0x14 bytes) o id do clube em +8 vira −1; na lista [+0x34c8]
 /// (0x68d1b0), o ponteiro do clube em +0xc vira 0.
-unsafe extern "thiscall" fn tirar_clube_dos_amistosos(amistosos: usize, clube: usize) {
+unsafe extern "thiscall" fn remove_club_from_ai_plans(amistosos: usize, clube: usize) {
     let vetor = (amistosos + 0x34d8) as *const usize;
     let n = (amistosos + 0x34e0) as *const i32;
     if *vetor != 0 {
@@ -69,25 +69,25 @@ unsafe extern "thiscall" fn tirar_clube_dos_amistosos(amistosos: usize, clube: u
     }
 }
 
-unsafe extern "C" fn comparar_data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
+unsafe extern "C" fn comparar_cup_set_round_draw_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize>(%%I0%%);
     let r = registro_da_rodada(rodadas, rodada);
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 3)], || o(rodadas, rodada, dia, mes, anos, semana, base),
-        || data_do_sorteio_da_rodada(rodadas, rodada, dia, mes, anos, semana, base));
-    PLACAR.registrar(igual && a == b, || format!("data_do_sorteio_da_rodada({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+        || cup_set_round_draw_date(rodadas, rodada, dia, mes, anos, semana, base));
+    PLACAR.registrar(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
-unsafe extern "C" fn comparar_data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
+unsafe extern "C" fn comparar_cup_set_round_match_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(%%I1%%);
     let r = registro_da_rodada(rodadas, rodada);
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 3, 0x14)], || o(rodadas, rodada, dia, mes, anos, semana, hora, base, mando),
-        || data_do_jogo_da_rodada(rodadas, rodada, dia, mes, anos, semana, hora, base, mando));
-    PLACAR.registrar(igual && a == b, || format!("data_do_jogo_da_rodada({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+        || cup_set_round_match_date(rodadas, rodada, dia, mes, anos, semana, hora, base, mando));
+    PLACAR.registrar(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
-unsafe extern "thiscall" fn comparar_tirar_clube_dos_amistosos(amistosos: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_remove_club_from_ai_plans(amistosos: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let mut regioes = vec![];
     let vetor = *((amistosos + 0x34d8) as *const usize);
@@ -111,6 +111,6 @@ unsafe extern "thiscall" fn comparar_tirar_clube_dos_amistosos(amistosos: usize,
         }
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(amistosos, clube),
-        || tirar_clube_dos_amistosos(amistosos, clube));
-    PLACAR.registrar(igual, || format!("tirar_clube_dos_amistosos({:#x}) {:x?} x {:x?}", clube, mo, mr));
+        || remove_club_from_ai_plans(amistosos, clube));
+    PLACAR.registrar(igual, || format!("remove_club_from_ai_plans({:#x}) {:x?} x {:x?}", clube, mo, mr));
 }

@@ -47,7 +47,7 @@ unsafe fn cpp3_humor(q: f32) -> i16 {
 /// doubles +0x38, +0x28, +4, +5 e marcas (+2 &~0x2e, +3 &0xe0, +0x40 &7). Registra o técnico novo (0x869aa0 com 1). Com o
 /// técnico humano (id ≥ [0xae2364] − 16): cancela as ofertas do clube (0x8c4950), refaz a lista do clube (0x84abe0) e
 /// as táticas das 50 vagas (0x896c60). +1 = a faixa de riqueza das finanças (0x5986b0), 0 nas seleções ou sem finanças.
-unsafe extern "thiscall" fn diretoria_do_tecnico_novo(this: usize, clube: usize) {
+unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usize) {
     let id = cpp3_d(clube);
     *(((cpp3_linha(this, id)) + 2) as *mut u8) |= 1;
     let expectativas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a3770usize);
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn diretoria_do_tecnico_novo(this: usize, clube: usize)
     *((cpp3_linha(this, cpp3_d(clube)) + 1) as *mut u8) = faixa;
 }
 
-unsafe extern "thiscall" fn comparar_diretoria_do_tecnico_novo(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_reset_board_for_new_manager(this: usize, clube: usize) {
     // ponytail: as expectativas (0x6a3770) postam notícia e o registro (0x869aa0) grava o histórico em arquivo: não
     // rodam duas vezes; só a original, a cópia prova pela carreira no modo Rust (o ramo)
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube)
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn comparar_diretoria_do_tecnico_novo(this: usize, club
 /// bit 8 de +2: 7; +0x10 < −350: 3; +0x14 < −750: 5; humor +0xa abaixo da confiança +6 e sorteio(+0xa) < sorteio(+6):
 /// 8; +0x16 < −750 com sorteio de 3 ≠ 0: 4; o técnico há mais dias (0x54cdb0 desde +0x3e) que 1000 + sorteio de 2000:
 /// 6. Senão 0.
-unsafe extern "thiscall" fn motivo_da_saida_do_tecnico(this: usize, id: u32) -> u8 {
+unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
     let clube = (cpp3_d(0xae23b4) as usize).wrapping_add((id as usize).wrapping_mul(0x245));
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if selecao(clube) != 0 {
@@ -285,11 +285,11 @@ unsafe extern "thiscall" fn motivo_da_saida_do_tecnico(this: usize, id: u32) -> 
 
 /// Comparador: lado a lado a partir do mesmo estado do sorteador (a rotina sorteia em vários caminhos), pela devolução;
 /// a cópia sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_motivo_da_saida_do_tecnico(this: usize, id: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_get_departure_reason(this: usize, id: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, id),
-        || crate::aleatorio::sem_contar(|| motivo_da_saida_do_tecnico(this, id)));
-    PLACAR.registrar(igual && r == n, || format!("motivo_da_saida_do_tecnico(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| get_departure_reason(this, id)));
+    PLACAR.registrar(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
     r
 }
 
@@ -328,7 +328,7 @@ unsafe fn cpp3_data(destino: usize, origem: usize) {
 /// (+0xba/+0xbe) quando mudam. Com a data de [0xdd6ec8] até hoje: sem passagem (+0x4a = −1), abre a do clube atual
 /// (desde +0x3e da pessoa; +0x56 = a data 13/11/1975 da 0x549f70); a mais longa (+0x5e, +0x62..+0x6a) e a mais curta
 /// (+0x72, +0x76..+0x7e) pela 0x54cdb0, a de hoje em +0x6a / +0x7e. Devolve o registro.
-unsafe extern "thiscall" fn registro_do_tecnico(this: usize, pessoa: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar: u32) -> usize {
     if pessoa == 0 {
         let separar: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x944cffusize);
         let versao: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x90d130usize);
@@ -438,7 +438,7 @@ unsafe extern "thiscall" fn registro_do_tecnico(this: usize, pessoa: usize, cria
 
 /// Comparador: lado a lado pelo registro do técnico (e, quando a vaga é de outro, pelo registro que a original zera),
 /// pela devolução. Pessoa nula (a caixa) e o humano sem situação: só a original.
-unsafe extern "thiscall" fn comparar_registro_do_tecnico(this: usize, pessoa: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, pessoa: usize, criar: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if pessoa == 0 {
         return o(this, pessoa, criar);
@@ -454,7 +454,7 @@ unsafe extern "thiscall" fn comparar_registro_do_tecnico(this: usize, pessoa: us
             reg.push((z, 0xd2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, criar), || registro_do_tecnico(this, pessoa, criar));
-    PLACAR.registrar(igual && a == b, || format!("registro_do_tecnico(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, criar), || get_manager_record(this, pessoa, criar));
+    PLACAR.registrar(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
     a
 }

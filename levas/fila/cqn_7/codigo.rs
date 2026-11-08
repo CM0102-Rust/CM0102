@@ -68,19 +68,19 @@ unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
 
 /// { 0x430050 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98acac, linhas 0x21b (sem lista) e 0x22f (sem fase).
-unsafe extern "thiscall" fn cqn7_mata_mata_do_baiano(this: usize) {
+unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(this: usize) {
     cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
 }
 
 /// { 0x4360c0 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af14, linhas 0x21b (sem lista) e 0x22f (sem fase).
-unsafe extern "thiscall" fn cqn7_mata_mata_do_norte(this: usize) {
+unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
     cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
 }
 
 /// { 0x4370d0 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af54, linhas 0x20d (sem lista) e 0x221 (sem fase).
-unsafe extern "thiscall" fn cqn7_mata_mata_do_nordeste(this: usize) {
+unsafe extern "thiscall" fn bra_reg_northeast_create_semi_final_stage(this: usize) {
     cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
 }
 
@@ -105,17 +105,17 @@ unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], original: imp
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn7_w(fase + 0x3e)));
 }
 
-unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_baiano(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn7_comparar("cqn7_mata_mata_do_baiano", this, &[0, 3, 1, 2], || o(this))
+    cqn7_comparar("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_norte(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn7_comparar("cqn7_mata_mata_do_norte", this, &[0, 3, 1, 2], || o(this))
+    cqn7_comparar("bra_reg_bahia_create_semi_final_stage_4360c0", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_nordeste(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_semi_final_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqn7_comparar("cqn7_mata_mata_do_nordeste", this, &[0, 3, 1, 2], || o(this))
+    cqn7_comparar("bra_reg_northeast_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }

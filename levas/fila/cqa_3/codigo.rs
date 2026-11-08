@@ -94,7 +94,7 @@ unsafe fn cqa3_sem_noticia(copa: usize, r: u32) -> bool {
 /// terceiro lugar (+7 ≠ 0x8c) soma 1 em +0xac; a notícia 0x27 (a competição, +0x3a, o tipo, +0x44, a rodada, 0, e 1
 /// se +0xab + 1 < +0xac) vai a cada um dos times ainda vivos (desfecho 0) entre os primeiros (soma das entradas +0x1c
 /// das rodadas até esta) que é de técnico humano, com o id dele no dado 3.
-unsafe extern "thiscall" fn copa_sortear_rodada(copa: usize, rodada: u32) -> u32 {
+unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
     if cqa3_d(copa + 0x45) == 0 || cqa3_b(cqa3_confrontos(copa, rodada) + 0x34) != 0 {
         return 1;
     }
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn copa_sortear_rodada(copa: usize, rodada: u32) -> u32
 /// (sem +0x45 ou já sorteada), nada muda nos confrontos nem nas datas; com time em aberto, as datas previstas das
 /// rodadas (a desta mais 1 dia, as seguintes no mínimo essa); sorteada, todos os confrontos com +0x34 = 1 e +0xac com
 /// a soma prevista (as consultas da notícia não mudam com o sorteio).
-unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize, rodada: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I0%%);
     if cqa3_d(copa + 0x45) == 0 || cqa3_b(cqa3_confrontos(copa, rodada) + 0x34) != 0 {
         return o(copa, rodada); // ponytail: nada a sortear, a original não faz nada
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize, rodada: u3
         }
         let r = o(copa, rodada);
         let ok = plano.iter().all(|&(rk, d, y)| cqa3_w(rk) == d && cqa3_b(rk + 2) == y);
-        PLACAR.registrar(ok, || format!("copa_sortear_rodada(rodada {}) as datas adiadas diferem do plano", rodada as i32));
+        PLACAR.registrar(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", rodada as i32));
         return r;
     }
     let antes_ac = cqa3_b(copa + 0xac);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize, rodada: u3
     }
     let soma = if !cqa3_sem_noticia(copa, rodada) && cqa3_w(reg + 7) != 0x8c { 1 } else { 0 };
     ok &= cqa3_b(copa + 0xac) == antes_ac.wrapping_add(soma);
-    PLACAR.registrar(ok, || format!("copa_sortear_rodada(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, cqa3_b(copa + 0xac)));
+    PLACAR.registrar(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, cqa3_b(copa + 0xac)));
     r
 }
 
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize, rodada: u3
 /// sem saída ou com menos de 200 bytes, a caixa (linha 0x26a1) e 0. Zera a saída; com fase e rodada, "{fase} {rodada}"
 /// (0x66f4e0 com o modelo 0x9a7cfc, os nomes de 100 bytes da 0x4b4850 e os gêneros da 0x4ba8f0); só uma delas, o nome
 /// dela direto na saída (0x4b4850 com o tamanho); nenhuma, só o zero. Devolve 1 (0 na caixa).
-unsafe extern "C" fn nome_da_fase_e_rodada(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
+unsafe extern "C" fn comp_util_format_stage_round_name(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
     if saida.is_null() || tamanho < 0xc8 {
         return orig::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(%%I1%%)(fase, rodada, saida, tamanho, estilo); // a caixa
     }
@@ -272,14 +272,14 @@ unsafe extern "C" fn nome_da_fase_e_rodada(fase: u32, rodada: u32, saida: *mut u
 }
 
 /// Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
-unsafe extern "C" fn comparar_nome_da_fase_e_rodada(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
+unsafe extern "C" fn comparar_comp_util_format_stage_round_name(fase: u32, rodada: u32, saida: *mut u8, tamanho: i32, estilo: u32) -> i32 {
     let o = orig::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(%%I1%%);
     if saida.is_null() || tamanho < 0xc8 {
         return o(fase, rodada, saida, tamanho, estilo); // a caixa: só a original
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, (tamanho as usize).min(0x400))],
-        || o(fase, rodada, saida, tamanho, estilo), || nome_da_fase_e_rodada(fase, rodada, saida, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("nome_da_fase_e_rodada({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
+        || o(fase, rodada, saida, tamanho, estilo), || comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo));
+    PLACAR.registrar(igual && r == n, || format!("comp_util_format_stage_round_name({}, {}) {} x {} {:x?} x {:x?}", fase as i16, rodada as i16, r, n, mo, mr));
     r
 }
 
@@ -295,7 +295,7 @@ unsafe fn cqa3_nivel(clube: usize) -> i16 {
 
 /// { 0x522360 } (thiscall, ret 8, Cup.cpp; o this não é lido; a virtual +0x90 da copa base):
 /// `Cup::club_in_higher_division(a, b)`: o clube de nível menor (+0x57 → +0x69, com sinal; 0 sem divisão); empate, 0.
-unsafe extern "thiscall" fn clube_da_divisao_mais_alta(_this: usize, a: usize, b: usize) -> usize {
+unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: usize, b: usize) -> usize {
     let (na, nb) = (cqa3_nivel(a), cqa3_nivel(b));
     if na < nb {
         a
@@ -307,9 +307,9 @@ unsafe extern "thiscall" fn clube_da_divisao_mais_alta(_this: usize, a: usize, b
 }
 
 /// Comparador da 0x522360: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_clube_da_divisao_mais_alta(this: usize, a: usize, b: usize) -> usize {
+unsafe extern "thiscall" fn comparar_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, a, b);
-    let n = clube_da_divisao_mais_alta(this, a, b);
-    PLACAR.registrar(r == n, || format!("clube_da_divisao_mais_alta({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
+    let n = club_in_higher_division(this, a, b);
+    PLACAR.registrar(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
     r
 }

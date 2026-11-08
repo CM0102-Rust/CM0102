@@ -71,9 +71,9 @@ unsafe fn cqe1_caixa(arquivo: usize, linha: u32) {
 ///   fora do ensaio: a contraproposta (o nibble baixo de +0x30 da oferta na melhor e 0x8be9d0: push 0; push melhor; push
 ///   oferta). Senão a recusa (0x8bf680 com 1), com o motivo 10 se o total ficou abaixo de 0,55 do valor do alvo (+0x52)
 ///   com 2 milhões de diferença, ou de 0,1 com 100 mil (fora do ensaio). As opções são destruídas (0x8e5710) e liberadas.
-unsafe extern "thiscall" fn resposta_da_ia_ao_lance(this: usize, vaga: usize, ensaio: u32) {
+unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usize, ensaio: u32) {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     let recusar_emprestimo: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x8bfa30usize);
     let deve_aceitar: unsafe extern "stdcall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x8cd240usize);
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn resposta_da_ia_ao_lance(this: usize, vaga: usize, en
     let o = cqe1_d(vaga);
     let alvo = cqe1_pessoa(cqe1_d(o + 0xc));
     let comprador = cqe1_clube(cqe1_d(o + 8));
-    let c = contrato_de(cqe1_d(0xae1050), alvo);
+    let c = contract_of(cqe1_d(0xae1050), alvo);
     cqe1_pd(0xae1080, c);
     let vendedor = if c == 0 || cqe1_b(c + 0x35) & 0x3f == 5 { 0 } else { cqe1_clube(cqe1_d(c + 4)) };
     if cqe1_d(alvo + 0x61) == 0 {
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn resposta_da_ia_ao_lance(this: usize, vaga: usize, en
 
 /// Comparador da 0x8c8090: só a original (aceita, recusa ou contrapropõe, reagenda, mexe nas listas de observação e
 /// aloca e solta as opções).
-unsafe extern "thiscall" fn comparar_resposta_da_ia_ao_lance(this: usize, vaga: usize, ensaio: u32) {
+unsafe extern "thiscall" fn comparar_ai_respond_to_bid(this: usize, vaga: usize, ensaio: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, vaga, ensaio) // ponytail: só a original
 }
 
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn comparar_resposta_da_ia_ao_lance(this: usize, vaga: 
 /// clube +8; push alvo +0xc; lea ecx, contrato) entra na lista em this+0x946 (criada se faltar: 0x944cf1 de 0xe bytes e
 /// 0x68d020; 0x68d0d0 com 0x50 bytes) e a cópia vira negociação (0x8be9d0: push 0; push &cópia; push oferta). Devolve o
 /// +0x20 da cópia (o índice); a cópia é destruída (0x8e5710).
-unsafe extern "thiscall" fn negociacao_de_emprestimo(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+unsafe extern "thiscall" fn add_loan_negotiation(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     let novo_contrato: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x85e410usize);
     let nova_oferta: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x8e5680usize);
     let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -346,6 +346,6 @@ unsafe extern "thiscall" fn negociacao_de_emprestimo(this: usize, o: usize, a2: 
 }
 
 /// Comparador da 0x8bee50: só a original (a lista de contratos cresce, a negociação nova é alocada).
-unsafe extern "thiscall" fn comparar_negociacao_de_emprestimo(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_add_loan_negotiation(this: usize, o: usize, a2: u32, a3: u32, a4: u32, a5: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I1%%)(this, o, a2, a3, a4, a5) // ponytail: só a original
 }

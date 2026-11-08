@@ -60,7 +60,7 @@ unsafe fn cpz4_sair(clube: usize) {
 ///   final), ret 0xc) e sai; 2, o vice (0x86b0b0, idem) e sai; 0, a classificação (0, o +0x6f da rodada do jogo na
 ///   tabela de rodadas da fase do mata-mata ([+0xc] + 0x30, +0xa3, 0x68 bytes), 0x4bf850(0x4b, 0x64, rodada, 2));
 ///   0xff, a eliminação (0, +0x30 do jogo, 0x4bf850(0x4b, 0x64, rodada, 2)) e sai.
-unsafe extern "thiscall" fn registros_da_liga_dos_campeoes(this: usize, clube: usize, desfecho: u32, fase: u32, _a: u32, jogo: usize, fim: u32) -> u32 {
+unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, _a: u32, jogo: usize, fim: u32) -> u32 {
     let d = desfecho as u8;
     let f = fase as u8;
     let comp = cpz4_d(this + 4);
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn registros_da_liga_dos_campeoes(this: usize, clube: u
     } else if (f as i8) < 0xc {
         if d == 6 {
             crate::comparacao::ramo("cpz_4 passou da fase 2");
-            cpz4_classificado(clube, comp, 0, 0x78, 0x32); // cpz4: passar da fase 2 pesa 0x32
+            cpz4_classificado(clube, comp, 0, 0x78, 0x32); // cpz4: pass_ball da fase 2 pesa 0x32
         } else if d == 0xfe {
             cpz4_nao_classificado(clube, comp, 0x44a, 0x32);
             cpz4_sair(clube);
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn registros_da_liga_dos_campeoes(this: usize, clube: u
 // ponytail: os registros vão para o arquivo, mexem nas reputações e no moral (sorteiam) e o título e o vice gravam o
 // elenco da final: não rodam duas vezes. Só a original roda; o plano confere o que a rotina mesma grava (+0x1db do
 // clube: −1 nos casos em que ele sai, intacto nos outros).
-unsafe extern "thiscall" fn comparar_registros_da_liga_dos_campeoes(this: usize, clube: usize, desfecho: u32, fase: u32, a: u32, jogo: usize, fim: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_european_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a: u32, jogo: usize, fim: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%);
     let (d, f) = (desfecho as u8, fase as u8);
     // as faixas da original comparam o byte da fase com sinal (0x80 a 0xfe contam como fase 1)
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn comparar_registros_da_liga_dos_campeoes(this: usize,
     let r = o(this, clube, desfecho, fase, a, jogo, fim);
     let depois = if clube != 0 { core::ptr::read_unaligned((clube + 0x1db) as *const i32) } else { 0 };
     let igual = r == 0 && (clube == 0 || depois == if sai { -1 } else { antes });
-    PLACAR.registrar(igual, || format!("registros_da_liga_dos_campeoes({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
+    PLACAR.registrar(igual, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, clube, d, f, r, antes, depois, sai));
     r
 }
 
@@ -193,7 +193,7 @@ unsafe fn cpz4_do_grupo(this: usize, g: i8, k: u32) -> usize {
 /// as rodadas, +4, a tabela, +0x40, 0xc, 2, o extra, 0x14, 1, 0, 0, 0) na vaga [+0xc] + 0x30; a lista e a tabela
 /// liberadas (0x9452ca). Sem fase: a caixa da linha 0x78a. Senão o 3º e o 4º de cada grupo da fase 2 saem (+0x1db =
 /// −1), a rodada montada (Cup::set_up_round 0x51c800, thiscall(fase, 0)) e +0x30 = 12.
-unsafe extern "thiscall" fn sorteio_das_quartas(this: usize) {
+unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let lista = calloc(8, 4);
     if lista == 0 {
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn sorteio_das_quartas(this: usize) {
 // ponytail: o sorteio sorteia, a 0x7e9180 e o construtor alocam e a rodada cria os jogos: só a original. O plano,
 // feito antes: os 8 primeiros e segundos dos grupos e o 3º e 4º de cada um; depois, +0x30 = 12, a fase do mata-mata
 // com 8 clubes que são os primeiros e segundos (como conjunto) e o 3º e o 4º de cada grupo com +0x1db = −1.
-unsafe extern "thiscall" fn comparar_sorteio_das_quartas(this: usize) {
+unsafe extern "thiscall" fn comparar_draw_quarter_finals(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let mut vivos: Vec<usize> = Vec::new();
     let mut fora: Vec<usize> = Vec::new();
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn comparar_sorteio_das_quartas(this: usize) {
     o(this);
     let fase = cpz4_d(cpz4_d(this + 0xc) + 0x30);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("sorteio_das_quartas({:#x}) sem fase", this));
+        PLACAR.registrar(false, || format!("draw_quarter_finals({:#x}) sem fase", this));
         return;
     }
     let lista = cpz4_d(fase + 0xa7);
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_sorteio_das_quartas(this: usize) {
     esperado.sort_unstable();
     let saiu = fora.iter().all(|&c| core::ptr::read_unaligned((c + 0x1db) as *const i32) == -1);
     let igual = achou == esperado && saiu && cpz4_w(fase + 0x3e) == 8 && core::ptr::read_unaligned((this + 0x30) as *const i32) == 0xc;
-    PLACAR.registrar(igual, || format!("sorteio_das_quartas({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, esperado, achou, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
+    PLACAR.registrar(igual, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, esperado, achou, saiu, core::ptr::read_unaligned((this + 0x30) as *const i32)));
 }
 
 /// A lista dos inscritos (+0x14, 6 bytes: +0 o clube, +4 a rodada de entrada; +0x38 deles) que seguem na competição
@@ -292,7 +292,7 @@ unsafe fn cpz4_inscritos(this: usize, sem_7: bool, v: *mut usize) -> i16 {
 /// fase 11: os que seguem; noutro caso a da competição (Comp::collect_club_list 0x48e1c0, thiscall(this, &lista, 0),
 /// ret 8). A lista (malloc 0x944e46 de 0x11c bytes; sem memória: a caixa das linhas 0x7b5, 0x7cf ou 0x7e9, lista
 /// nula e 0) vai em `lista`; devolve a conta na palavra de baixo (a de cima é a do ponteiro da lista).
-unsafe extern "thiscall" fn clubes_da_liga_dos_campeoes(this: usize, saida: usize, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, saida: usize, tipo: u32) -> u32 {
     let t = tipo as u8;
     let (linha, sem_7) = match t {
         1 => (0x7b5, true),
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn clubes_da_liga_dos_campeoes(this: usize, saida: usiz
 /// Comparador da 0x586660: a original aloca a lista (só ela roda; quem chama libera). O plano, feito antes numa lista
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
 /// que vão para a 0x48e1c0 e sem lista: a devolução e a saída como a original deixou.
-unsafe extern "thiscall" fn comparar_clubes_da_liga_dos_campeoes(this: usize, saida: usize, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_european_cup_collect_club_list(this: usize, saida: usize, tipo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let t = tipo as u8;
     let sem_7 = match t {
@@ -336,11 +336,11 @@ unsafe extern "thiscall" fn comparar_clubes_da_liga_dos_campeoes(this: usize, sa
     let r = o(this, saida, tipo);
     let v = cpz4_d(saida);
     if v == 0 {
-        PLACAR.registrar(r as u16 == 0, || format!("clubes_da_liga_dos_campeoes({:#x}, {}) sem lista original={:#x}", this, t, r));
+        PLACAR.registrar(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this, t, r));
         return r;
     }
     let lista = core::slice::from_raw_parts(v as *const usize, (n.max(0) as usize).min(71));
     let igual = r as u16 as i16 == n && lista == &plano[..lista.len()];
-    PLACAR.registrar(igual, || format!("clubes_da_liga_dos_campeoes({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, lista, &plano[..lista.len()]));
+    PLACAR.registrar(igual, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, lista, &plano[..lista.len()]));
     r
 }

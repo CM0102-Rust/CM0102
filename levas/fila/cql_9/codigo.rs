@@ -56,19 +56,19 @@ unsafe fn cql9_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 
 /// { 0x433540 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_table()`: o Goiano tem 14 clubes (divisão reserva +0x60 = [0x9cf9b4]).
 /// Fonte 0x98ae90, linha 0x160.
-unsafe extern "thiscall" fn cql9_tabela_do_goiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_goias_create_table(this: usize) -> u32 {
     cql9_tabela(this, 0xe, 0x98ae90, 0x160, 0x9cf9b4, 0, "cql_9 goiano cheio")
 }
 
 /// { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
 /// Fonte 0x98aed0, linha 0x169.
-unsafe extern "thiscall" fn cql9_tabela_do_mineiro(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: usize) -> u32 {
     cql9_tabela(this, 0xc, 0x98aed0, 0x169, 0x9cf9d4, 0, "cql_9 mineiro cheio")
 }
 
 /// { 0x435d80 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_table()`: o Norte tem 10 clubes (divisão reserva +0x60 = [0x9cf994]).
 /// Fonte 0x98af14, linha 0x167.
-unsafe extern "thiscall" fn cql9_tabela_do_norte(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_goias_create_table_435d80(this: usize) -> u32 {
     cql9_tabela(this, 0xa, 0x98af14, 0x167, 0x9cf994, 0, "cql_9 norte cheio")
 }
 
@@ -98,17 +98,17 @@ unsafe fn cql9_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
     r
 }
 
-unsafe extern "thiscall" fn comparar_cql9_tabela_do_goiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cql9_comparar("cql9_tabela_do_goiano", this, 0xe, 0x9cf9b4, || o(this))
+    cql9_comparar("bra_reg_goias_create_table", this, 0xe, 0x9cf9b4, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cql9_tabela_do_mineiro(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cql9_comparar("cql9_tabela_do_mineiro", this, 0xc, 0x9cf9d4, || o(this))
+    cql9_comparar("bra_reg_minas_gerais_create_table", this, 0xc, 0x9cf9d4, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cql9_tabela_do_norte(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_create_table_435d80(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cql9_comparar("cql9_tabela_do_norte", this, 0xa, 0x9cf994, || o(this))
+    cql9_comparar("bra_reg_goias_create_table_435d80", this, 0xa, 0x9cf994, || o(this))
 }

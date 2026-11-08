@@ -2,7 +2,7 @@
 # 17/10) e uma no boato do tecnico (0x69fd50, 7 chamadas). A oferta do computador agendada em 3 dias (e nao 2) volta em
 # outro dia (outra resposta, outro dia da transferencia). Com o status 2 (e nao 1) na vaga nova, a oferta segue pelo
 # outro caminho da fila. Sem o segundo sorteio(4) do boato, a contagem de sorteios muda (pega mesmo sem humano para
-# receber a noticia; pode escapar se nenhum boato passar do primeiro sorteio e da data das noticias).
+# receber a noticia; pode escapar se nenhum boato pass_ball do primeiro sorteio e da data das noticias).
 MUTACOES = [
     ('cpv4_agendada_em_3', 'agendar(this, oferta, 2, 0); // cpv4: a oferta em 2 dias',
      'agendar(this, oferta, 3, 0); // mutacao: 3 dias',

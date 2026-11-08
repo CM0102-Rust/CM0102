@@ -27,7 +27,7 @@ pub(crate) static mut CPW6_ENSAIO: bool = false;
 /// prêmio ([+9], ou −1) e com a idade pedida; achou: grava o vencedor (0x7671c0) com o clube da pessoa (+0x39, ou −1),
 /// o mês (+0xc) e o ano (+0xd) das notas. Os bytes altos do mês e do ano vão como a original os empurra (da tabela de
 /// pessoas no registrador).
-pub(crate) unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, notas: usize, idade: u32) {
+pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, notas: usize, idade: u32) {
     let liga = {
         let l = read_usize(this + 9);
         if l != 0 {
@@ -57,14 +57,14 @@ pub(crate) unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, nota
 
 // ponytail: o trabalho dela é chamar o melhor do mês e a vaga do vencedor, que têm comparador próprio (lado a lado e em
 // ensaio); a vaga chama a notícia e o registro do prêmio, que alocam: só a original; a cópia leva o ramo.
-pub(crate) unsafe extern "thiscall" fn comparar_premiar_o_melhor_do_mes(this: usize, notas: usize, idade: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PREMIAR_O_MELHOR_DO_MES)(this, notas, idade)
+pub(crate) unsafe extern "thiscall" fn comparar_award_best_rated_player(this: usize, notas: usize, idade: u32) {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_AWARD_BEST_RATED_PLAYER)(this, notas, idade)
 }
 
 /// A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
 pub(crate) unsafe fn cpw6_reputacao(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
     if CPW6_ENSAIO {
-        return reputacao_do_premiado(pessoa, clube, nac, mundo, jogador);
+        return award_raise_winner_reputation(pessoa, clube, nac, mundo, jogador);
     }
     let f: unsafe extern "C" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_AWARD_RAISE_WINNER_REPUTATION);
     f(pessoa, clube, nac, mundo, jogador);
@@ -78,7 +78,7 @@ pub(crate) unsafe fn cpw6_reputacao(pessoa: usize, clube: usize, nac: u32, mundo
 /// do mês (12 vagas de 11 bytes: mês em +0x25, ano em +0x26); sem ela, nada. Grava a pessoa (+0x1d) e o clube (+0x21);
 /// com pessoa, a reputação do premiado (0x412f00, com as reputações +0x15 e +0x17 do prêmio e a marca de jogador
 /// +0x19); a notícia (0x767330) e o registro do prêmio (0x86c8c0 em [0xdd7f00], com o +5 do prêmio).
-pub(crate) unsafe extern "thiscall" fn gravar_vencedor_do_mes(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
+pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
     let mut vaga = None;
     for k in 0..12usize {
         let v = this + k * 11;
@@ -143,13 +143,13 @@ pub(crate) unsafe fn cpw6_comparar(nome: &str, regioes: &[(usize, usize)], origi
     PLACAR.registrar(mo == mr, || format!("{} original={:x?} rust={:x?}", nome, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_vencedor_do_mes(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(IDX_GRAVAR_VENCEDOR_DO_MES);
+pub(crate) unsafe extern "thiscall" fn comparar_set_winner(this: usize, id: i32, clube_id: i32, mes: u32, ano: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(IDX_SET_WINNER);
     let mut regioes = vec![(this + 0x1d, 12 * 11)];
     if id > -1 {
         cpw6_regioes_da_reputacao(&mut regioes, cpw5_pessoa(id), if clube_id > -1 { cpw6_clube(clube_id) } else { 0 });
     }
-    cpw6_comparar("gravar_vencedor_do_mes", &regioes, || o(this, id, clube_id, mes, ano), || gravar_vencedor_do_mes(this, id, clube_id, mes, ano));
+    cpw6_comparar("set_winner", &regioes, || o(this, id, clube_id, mes, ano), || set_winner(this, id, clube_id, mes, ano));
 }
 
 /// A palavra `a` mais o valor do _ftol (16 bits baixos, como o `add word` da original).
@@ -179,7 +179,7 @@ pub(crate) unsafe fn cpw6_teto_e_piso(a: usize, piso: i16) {
 /// gerente das listas. Não jogador (+0x69) num prêmio que não é de jogador: as três sobem até os pisos (+0xc mundial,
 /// +8 pela nação do clube, +0xa nacional) e, com clube, a confiança da diretoria (+6 da linha de 73 bytes) + 1000, entre
 /// 6500 e 10000. Só as palavras baixas das reputações valem.
-pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
+pub(crate) unsafe extern "C" fn award_raise_winner_reputation(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
     let nac = nac as u16 as i16;
     let mundo = mundo as u16 as i16;
     let p = read_usize(pessoa + staff::PLAYER);
@@ -249,10 +249,10 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
     write_i16(linha, if v < 6500 { 6500 } else { v });
 }
 
-pub(crate) unsafe extern "C" fn comparar_reputacao_do_premiado(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(IDX_REPUTACAO_DO_PREMIADO);
+pub(crate) unsafe extern "C" fn comparar_award_raise_winner_reputation(pessoa: usize, clube: usize, nac: u32, mundo: u32, jogador: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32, u32)>(IDX_AWARD_RAISE_WINNER_REPUTATION);
     let mut regioes = Vec::new();
     cpw6_regioes_da_reputacao(&mut regioes, pessoa, clube);
-    cpw6_comparar("reputacao_do_premiado", &regioes, || o(pessoa, clube, nac, mundo, jogador), || reputacao_do_premiado(pessoa, clube, nac, mundo, jogador));
+    cpw6_comparar("award_raise_winner_reputation", &regioes, || o(pessoa, clube, nac, mundo, jogador), || award_raise_winner_reputation(pessoa, clube, nac, mundo, jogador));
 }
 

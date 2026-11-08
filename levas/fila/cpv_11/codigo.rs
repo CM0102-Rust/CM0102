@@ -66,7 +66,7 @@ unsafe fn cpv11_clube_do_contrato(p: usize) -> usize {
 /// data já passada: a notícia ao clube dele (0x76f7d0), a saída, a vaga do tipo (+0x45) sobe 1, o nível (0x76d810) e,
 /// se o técnico da seleção é humano e decide (0x600a50, 0x5fd6b0), o pedido de substituto (0x7701f0); senão o
 /// substituto (0x775f90) e as convocações repetidas apagadas (0x76c060). Sem clube: a original (caixa e 0).
-unsafe extern "thiscall" fn tirar_convocado_machucado(this: usize, p: usize, dias_arg: u32) {
+unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: usize, dias_arg: u32) {
     let dias = dias_arg as u16 as i16;
     if dias < 0xe { // cpv11: o limite de dias
         return;
@@ -194,13 +194,13 @@ unsafe fn cpv11_plano(this: usize, p: usize, dias: u32) -> u8 {
 /// (0x4cf5a0) é de técnico humano (0x7875e0), monta a notícia 0x20 numa local (0x77bbe0 com 0): dados 0..3 o jogador
 /// e os de +4/+8/+0xc, 4 o id da seleção (principal 0x53b3d0 nos tipos 0 e 1, senão 0x53b4f0), 5 = (tipo == 1), 6 a
 /// gravidade da lesão; entrega ao clube +0x39 e, se for outro, ao do contrato (0x7861e0).
-unsafe extern "thiscall" fn noticia_da_saida_do_convocado(_this: usize, p: usize, nacao: usize, tipo: u32) {
+unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news(_this: usize, p: usize, nacao: usize, tipo: u32) {
     let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     if cpv11_d(p + 0x39) == 0 || humano(cpv11_d(p + 0x39)) == 0 {
         if cpv11_clube_do_contrato(p) == 0 {
             return;
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn noticia_da_saida_do_convocado(_this: usize, p: usize
     let (sel, um) = match tipo as u8 {
         0 => (principal(nacao), 0),
         1 => (principal(nacao), 1),
-        _ => (selecao_b(nacao), 0),
+        _ => (b_national_team(nacao), 0),
     };
     gravar(n, 4, cpv11_d(sel) as u32);
     gravar(n, 5, um);
@@ -236,19 +236,19 @@ unsafe extern "thiscall" fn noticia_da_saida_do_convocado(_this: usize, p: usize
 /// 0..3 o jogador, 4 o id do time (tipo 1: principal com marca 8 e 5 = 1; tipo 0: principal, senão o sub-21 0x53b4f0,
 /// marca 4 e 5 = 0), 6 a gravidade da lesão, 7 = 0, 8 os do elenco com a marca (0x53c590), 9 o nível, 0xa o tipo e 0xb
 /// o id da nação. Entrega ao time se o técnico dele é humano (0x600a50), senão ao principal se o dele for.
-unsafe extern "thiscall" fn noticia_do_pedido_de_substituto(_this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
+unsafe extern "thiscall" fn national_teams_post_replacement_needed_news(_this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
-    let selecao_b: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
+    let b_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     crate::comparacao::ramo("cpv_11 notícia do pedido");
     let (time, um, marca) = match tipo as u8 {
         0 => (principal(nacao), 0u32, 4u32),
         1 => (principal(nacao), 1, 8),
-        _ => (selecao_b(nacao), 0, 4),
+        _ => (b_national_team(nacao), 0, 4),
     };
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn noticia_do_pedido_de_substituto(_this: usize, p: usi
 /// original roda. O caminho é decidido antes, só lendo (cpv11_plano), e conferido depois: sem retirada, o clube da
 /// seleção (+0x24) e a marca de convocado (+0x28) ficam; com retirada, o jogador que estava numa das 50 vagas do time
 /// sai delas (+0x24 zerado pela 0x7762f0). Sem clube (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_tirar_convocado_machucado(this: usize, p: usize, dias: u32) {
+unsafe extern "thiscall" fn comparar_withdraw_injured_player(this: usize, p: usize, dias: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let clube = cpv11_d(p + 0x24);
     if (dias as u16 as i16) < 0xe || clube == 0 {
@@ -291,17 +291,17 @@ unsafe extern "thiscall" fn comparar_tirar_convocado_machucado(this: usize, p: u
         0 => depois == antes,
         _ => !estava || depois.0 == 0,
     };
-    PLACAR.registrar(ok, || format!("tirar_convocado_machucado({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
+    PLACAR.registrar(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p, dias as u16 as i16, plano, estava, antes, depois));
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
-unsafe extern "thiscall" fn comparar_noticia_da_saida_do_convocado(this: usize, p: usize, nacao: usize, tipo: u32) {
-    crate::comparacao::ramo("noticia_da_saida_do_convocado");
+unsafe extern "thiscall" fn comparar_national_teams_post_player_withdrawn_news(this: usize, p: usize, nacao: usize, tipo: u32) {
+    crate::comparacao::ramo("national_teams_post_player_withdrawn_news");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, nacao, tipo)
 }
 
 /// Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
-unsafe extern "thiscall" fn comparar_noticia_do_pedido_de_substituto(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
-    crate::comparacao::ramo("noticia_do_pedido_de_substituto");
+unsafe extern "thiscall" fn comparar_national_teams_post_replacement_needed_news(this: usize, p: usize, nacao: usize, tipo: u32, nivel: u32) {
+    crate::comparacao::ramo("national_teams_post_replacement_needed_news");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, p, nacao, tipo, nivel)
 }

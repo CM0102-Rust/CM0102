@@ -25,12 +25,12 @@ unsafe fn cps3_por(a: usize, v: usize) {
 /// outro de 20 (ou gostar do clube, 0x547d60) põe o técnico nos desafetos. Depois os registros da liberação (0x86d800),
 /// as ofertas canceladas (0x8df9b0) e a liberação (0x8c1af0 com motivo e compensação). No fim a cópia vira a lista
 /// vazia, a fila é limpa (0x68d080) e as duas locais são destruídas.
-unsafe extern "thiscall" fn fila_da_transferencia_livre(this: usize) {
+unsafe extern "thiscall" fn process_free_transfer_queue(this: usize) {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let limpar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d080usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let barra: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x696940usize);
     let barrado: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x6a0990usize);
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn fila_da_transferencia_livre(this: usize) {
     let mut e = proximo(a);
     while e != 0 {
         let p = cps3_d(0xae23bc).wrapping_add(cps3_d(e).wrapping_mul(0x6e));
-        let c = contrato_de(cps3_d(0xae1050), p);
+        let c = contract_of(cps3_d(0xae1050), p);
         cps3_por(0xae1080, c);
         let clube = if c != 0 { cps3_d(0xae23b4).wrapping_add(cps3_d(c + 4).wrapping_mul(0x245)) } else { 0 };
         if clube != 0 {
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn fila_da_transferencia_livre(this: usize) {
 /// find_next_window_open_date(clube, saida)`: a regra da nação do clube (+0x53) entre as 28 de +0x8ac (+0xa); de hoje
 /// ([0xae2c90]) até um ano depois (0x54c5b0 com 365), o primeiro dia com a janela aberta (0x8e8e50; sem regra, hoje) vai
 /// para `saida`; sem achar, a caixa "Error" 0x32c6. A contratação desejada (0x85fc50) regrava a data com hoje logo depois.
-unsafe extern "thiscall" fn proxima_janela_aberta(this: usize, clube: usize, saida: usize) {
+unsafe extern "thiscall" fn find_next_window_open_date(this: usize, clube: usize, saida: usize) {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn proxima_janela_aberta(this: usize, clube: usize, sai
 /// { 0x8c72d0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::find_negotiated_loan_contract(pessoa,
 /// clube)`: na lista [this+0x946] (o cursor +0xa volta ao começo), o item com a pessoa (+0) e o clube (+4) pelos ids;
 /// sem lista ou sem achar, 0.
-unsafe extern "thiscall" fn emprestimo_negociado(this: usize, pessoa: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn find_negotiated_loan_contract(this: usize, pessoa: usize, clube: usize) -> usize {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let l = cps3_d(this + 0x946);
     if l == 0 {
@@ -159,22 +159,22 @@ unsafe extern "thiscall" fn emprestimo_negociado(this: usize, pessoa: usize, clu
 
 // ponytail: sorteia (0x90cfc0) e libera os jogadores (0x8c1af0, 0x8df9b0), limpando a fila: só a original; a cópia
 // leva os ramos.
-unsafe extern "thiscall" fn comparar_fila_da_transferencia_livre(this: usize) {
+unsafe extern "thiscall" fn comparar_process_free_transfer_queue(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: lado a lado pela data de saída (a data estática da 0x54c5b0 é rascunho). Sem janela num ano, a caixa
 /// sairia duas vezes (não acontece com as regras do jogo).
-unsafe extern "thiscall" fn comparar_proxima_janela_aberta(this: usize, clube: usize, saida: usize) {
+unsafe extern "thiscall" fn comparar_find_next_window_open_date(this: usize, clube: usize, saida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 8)], || o(this, clube, saida), || proxima_janela_aberta(this, clube, saida));
-    PLACAR.registrar(igual, || format!("proxima_janela_aberta(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 8)], || o(this, clube, saida), || find_next_window_open_date(this, clube, saida));
+    PLACAR.registrar(igual, || format!("find_next_window_open_date(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 /// Comparador: pelo valor (as duas voltas deixam o cursor da lista no mesmo lugar).
-unsafe extern "thiscall" fn comparar_emprestimo_negociado(this: usize, pessoa: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_negotiated_loan_contract(this: usize, pessoa: usize, clube: usize) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%)(this, pessoa, clube);
-    let n = emprestimo_negociado(this, pessoa, clube);
-    PLACAR.registrar(r == n, || format!("emprestimo_negociado(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
+    let n = find_negotiated_loan_contract(this, pessoa, clube);
+    PLACAR.registrar(r == n, || format!("find_negotiated_loan_contract(pessoa {}, clube {}) original={:x} rust={:x}", cps3_d(pessoa), cps3_d(clube), r, n));
     r
 }

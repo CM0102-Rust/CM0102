@@ -7,7 +7,7 @@ unsafe fn cpi5_d(a: usize) -> usize {
 /// { 0x4cf560 } (thiscall, ret 4, contract_manager.cpp): `CONTRACT_MANAGER::remove_held_offers(pessoa)`: da lista das
 /// ofertas guardadas (+0x38; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item cujo +0 é o id `pessoa`
 /// (0x68d1b0 percorre). Sem lista: nada.
-unsafe extern "thiscall" fn tirar_ofertas_guardadas(this: usize, pessoa: u32) {
+unsafe extern "thiscall" fn remove_held_offers(this: usize, pessoa: u32) {
     let l = cpi5_d(this + 0x38);
     if l == 0 {
         return;
@@ -68,7 +68,7 @@ unsafe fn cpi5_vagas_a_guardar(this: usize, ficha: usize, jogador: usize) -> (us
 /// do jogador (0x4cf6d0 sobre [0xae1050]), cada suspensão do registro dele (vagas 0 a 2) que não vale no clube do
 /// empréstimo vai para a lista das guardadas (+0x1c, 0x68d0d0 com 10 bytes: o id, a vaga e os 5 bytes dela), a vaga
 /// fica −1 e o contador +0x1c do registro sobe. Sem ficha: a original (caixa "Error").
-unsafe extern "thiscall" fn guardar_suspensoes_do_emprestado(this: usize, jogador: usize) {
+unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, jogador: usize) {
     let ficha_de: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(0x4cf6d0usize);
     let ficha = ficha_de(cpi5_d(0xae1050), jogador as *const i32);
     if ficha == 0 {
@@ -114,7 +114,7 @@ unsafe fn cpi5_desempregado(clube: usize, cargo: u8) -> Option<usize> {
 /// que ficou livre é preenchida pela primeira pessoa desempregada da nação do clube no cargo procurado (6, 8, 9 e 10;
 /// 13 procura 6, 15 procura 8): 0x53bd10 com o cargo (o dword do argumento), a data de hoje [0xae2c90], gravar e sem
 /// reduzir. Clube nulo: a original (caixa "Error").
-unsafe extern "stdcall" fn preencher_vaga_da_comissao(clube: usize, cargo: u32) {
+unsafe extern "stdcall" fn fill_vacated_staff_job(clube: usize, cargo: u32) {
     if clube == 0 {
         return orig::<unsafe extern "stdcall" fn(usize, u32)>(%%I2%%)(clube, cargo); // caixa: só a original
     }
@@ -127,18 +127,18 @@ unsafe extern "stdcall" fn preencher_vaga_da_comissao(clube: usize, cargo: u32) 
 
 /// Comparador: o plano antes (a 0x68d1f0 libera o item tirado, que não pode mais ser lido); a original tira; confere
 /// que ficaram os itens de antes menos os da pessoa, na mesma ordem.
-unsafe extern "thiscall" fn comparar_tirar_ofertas_guardadas(this: usize, pessoa: u32) {
+unsafe extern "thiscall" fn comparar_remove_held_offers(this: usize, pessoa: u32) {
     let l = cpi5_d(this + 0x38);
     let antes: Vec<usize> = if l != 0 { cpd1_itens(l) } else { Vec::new() };
     let esperado: Vec<usize> = antes.iter().copied().filter(|&e| cpi5_d(e) as u32 != pessoa).collect();
     orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%)(this, pessoa);
     let depois: Vec<usize> = if l != 0 { cpd1_itens(l) } else { Vec::new() };
-    PLACAR.registrar(depois == esperado, || format!("tirar_ofertas_guardadas({:x}) {} itens, esperava {}, ficaram {}", pessoa, antes.len(), esperado.len(), depois.len()));
+    PLACAR.registrar(depois == esperado, || format!("remove_held_offers({:x}) {} itens, esperava {}, ficaram {}", pessoa, antes.len(), esperado.len(), depois.len()));
 }
 
 /// Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
 /// registro do jogador: as vagas do plano em −1, as outras iguais e o contador somado.
-unsafe extern "thiscall" fn comparar_guardar_suspensoes_do_emprestado(this: usize, jogador: usize) {
+unsafe extern "thiscall" fn comparar_hold_bans_for_loan(this: usize, jogador: usize) {
     let ficha_de: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(0x4cf6d0usize);
     let ficha = ficha_de(cpi5_d(0xae1050), jogador as *const i32);
     if ficha == 0 {
@@ -152,16 +152,16 @@ unsafe extern "thiscall" fn comparar_guardar_suspensoes_do_emprestado(this: usiz
     esperado[0x1c] = esperado[0x1c].wrapping_add(vagas.len() as u8);
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, jogador);
     let depois = core::slice::from_raw_parts(reg as *const u8, 29).to_vec();
-    PLACAR.registrar(depois == esperado, || format!("guardar_suspensoes_do_emprestado({:x}) vagas {:?} {:x?} x {:x?}", jogador, vagas, depois, esperado));
+    PLACAR.registrar(depois == esperado, || format!("hold_bans_for_loan({:x}) vagas {:?} {:x?} x {:x?}", jogador, vagas, depois, esperado));
 }
 
 /// Comparador: a escolha da cópia antes; a original preenche; a pessoa escolhida tem de estar agora no clube (+0x39).
-unsafe extern "stdcall" fn comparar_preencher_vaga_da_comissao(clube: usize, cargo: u32) {
+unsafe extern "stdcall" fn comparar_fill_vacated_staff_job(clube: usize, cargo: u32) {
     let escolhida = if clube != 0 { cpi5_cargo_procurado(cargo).and_then(|c| cpi5_desempregado(clube, c as u8)) } else { None };
     orig::<unsafe extern "stdcall" fn(usize, u32)>(%%I2%%)(clube, cargo);
     if let Some(p) = escolhida {
-        PLACAR.registrar(cpi5_d(p + 0x39) == clube, || format!("preencher_vaga_da_comissao({:x}, {}) a pessoa {:x} ficou em {:x}", clube, cargo as u8, p, cpi5_d(p + 0x39)));
+        PLACAR.registrar(cpi5_d(p + 0x39) == clube, || format!("fill_vacated_staff_job({:x}, {}) a pessoa {:x} ficou em {:x}", clube, cargo as u8, p, cpi5_d(p + 0x39)));
     } else {
-        crate::comparacao::ramo("preencher_vaga_da_comissao sem ninguem");
+        crate::comparacao::ramo("fill_vacated_staff_job sem ninguem");
     }
 }

@@ -119,7 +119,7 @@ unsafe fn vetor_do_jogador_para_reequilibrar(jogador: usize, pessoa: usize, v: *
 /// habilidade, preso em −40..0; vetor (0xff81/0x81) pelo 0x53a610, `reequilibrar_vetor_do_jogador` sem as
 /// células 0x18 e 0x1e (0x11/0x12 contam em dobro), volta pelo 0x53aa10; jogador +0xf = 20: tira as médias
 /// de +0x2a/+0x3a e o terço de +0x1e, +0x24, +0x39; devolve o progresso do treino.
-unsafe extern "C" fn normalizar_atributos_fisicos_do_jogador(pessoa: usize) {
+unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
     if pessoa == 0 {
         return;
     }
@@ -190,17 +190,17 @@ unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust:
     }
 }
 
-unsafe extern "C" fn comparar_normalizar_atributos_fisicos_do_jogador(pessoa: usize) {
-    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(%%I0%%), normalizar_atributos_fisicos_do_jogador, pessoa,
-        "normalizar_atributos_fisicos_do_jogador");
+unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(pessoa: usize) {
+    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(%%I0%%), staff_normalise_player_physical_attributes, pessoa,
+        "staff_normalise_player_physical_attributes");
 }
 
 /// { 0x53a0e0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) pelo peso. Nação com
 /// mais de 10 segundos nomes (`indice_de_nomes_da_nacao` +0x1c): 3 sorteios na faixa dela (a partir de +4),
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com até
+/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com até
 /// 10: sorteio na tabela inteira ([0xae239c], no máximo 0x7fff). Só o rand() da CRT. Chamada por
 /// OfficialsManager::add_random_officials (0x79c6b4), na criação dos árbitros do jogo novo.
-unsafe extern "C" fn segundo_nome_pelo_peso(nacao: usize) -> usize {
+unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize {
     let linha = |i: i32| (*(0xae23f4 as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao != 0 {
         let e = indice_de_nomes_da_nacao(nacao);
@@ -222,12 +222,12 @@ unsafe extern "C" fn segundo_nome_pelo_peso(nacao: usize) -> usize {
     linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)))
 }
 
-unsafe extern "C" fn comparar_segundo_nome_pelo_peso(nacao: usize) -> usize {
+unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| segundo_nome_pelo_peso(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("segundo_nome_pelo_peso({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_second_name_by_weight(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -236,7 +236,7 @@ unsafe extern "C" fn comparar_segundo_nome_pelo_peso(nacao: usize) -> usize {
 /// usadas vêm todas dele), `reequilibrar_vetor_do_jogador` com alvo −20 em todas as células do intervalo
 /// (0x11/0x12 contam ftol(valor × [0x968f98])), volta pelo 0x53aa10; jogador +0xf ≥ 15: tira as médias de
 /// +0x2a/+0x3a; devolve o progresso do treino. Roda na criação (depois de 0x538ec0) e na carga e no treino.
-unsafe extern "C" fn normalizar_atributos_do_jogador(pessoa: usize) {
+unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize) {
     if pessoa == 0 {
         return;
     }
@@ -258,7 +258,7 @@ unsafe extern "C" fn normalizar_atributos_do_jogador(pessoa: usize) {
     progresso_do_treino(pessoa, 1);
 }
 
-unsafe extern "C" fn comparar_normalizar_atributos_do_jogador(pessoa: usize) {
-    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(%%I2%%), normalizar_atributos_do_jogador, pessoa,
-        "normalizar_atributos_do_jogador");
+unsafe extern "C" fn comparar_staff_normalise_player_attributes(pessoa: usize) {
+    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(%%I2%%), staff_normalise_player_attributes, pessoa,
+        "staff_normalise_player_attributes");
 }

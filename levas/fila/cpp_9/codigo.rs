@@ -22,8 +22,8 @@ unsafe fn cpp9_sorteio(n: i32) -> i32 {
 }
 
 unsafe fn cpp9_selecao(clube: usize) -> bool {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    e_selecao(clube) != 0
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    is_national_team(clube) != 0
 }
 
 /// Os clubes sem as seleções do fim do vetor: [0xae235c] − 2 × [0xae2350].
@@ -55,7 +55,7 @@ unsafe fn cpp9_dias_de_preparo(clube: usize, inicio: &mut [u32; 2], fim: &mut [u
 /// id abaixo de [0xae2364]: jogador (+0x61): v = dias − (+0x34 do jogador)/2 − (+0x5b da pessoa)/4 (com sinal,
 /// truncado), entre 1 e 40, e a forma (+8 do registro de 31 bytes em [this]) = 10000 − 75 × v; quem não é jogador sai
 /// da vaga (0), e se o clube dele (+0x39) é este: cargo (+0x3d) 0xb fica sem clube e 8, 0xf vira 8, 0xd vira 6.
-unsafe extern "thiscall" fn forma_inicial_dos_elencos(this: usize) {
+unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
     let construir: unsafe extern "thiscall" fn(*mut u32) -> usize = core::mem::transmute(0x54a110usize);
     let mut inicio = [0u32; 2];
     let mut fim = [0u32; 2];
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn forma_inicial_dos_elencos(this: usize) {
 /// (+0x14, +0x18), +0x1d 0xff, +0x1e 50. Jogador (+0x61): o tipo sorteado de 82 com peso (+8 da tabela de 13 bytes em
 /// 0x9e7ad8) e 1 em 10 fica recorrente; 1 em 100 começa lesionado: categoria sorteada de 12, tipo pela 0x62d140
 /// (gravidade −1) e a lesão nova 0x62d250. No fim os dois totais em 0xde1f64 ("%d players with ...").
-unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) {
+unsafe extern "thiscall" fn init_records(this: usize) {
     let n = cpp9_i(0xae2364);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar((n as u32).wrapping_mul(31));
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) {
     }
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let escolher: unsafe extern "thiscall" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x62d140usize);
-    let lesionar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
+    let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
     let (mut recorrentes, mut iniciais) = (0i32, 0i32);
     let mut r = v;
     let mut pessoa = cpp9_d(0xae23bc);
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn registros_iniciais_de_lesao(this: usize) {
                 // e a 0x62d250 leem só o byte: aqui vão limpos
                 let categoria = cpp9_sorteio(0xc) as u8;
                 let tipo = escolher(this, categoria as u32, 0xffff_ffff, pessoa) as u8;
-                lesionar(this, tipo as u32, 1, pessoa, 0, 1, -1, 0, 0);
+                injure(this, tipo as u32, 1, pessoa, 0, 1, -1, 0, 0);
                 iniciais += 1;
             }
         }
@@ -187,7 +187,7 @@ unsafe fn cpp9_nacao_da_lista(clube: usize) -> usize {
 /// [this] = 14 bytes por nação de [0xae2350] (0x944e46, sem teste), com uma lista nova (0x944cf1 de 0xe e 0x68d020;
 /// sem memória, 0) por nação; cada clube de [0xae235c] entra (0x68d0d0, os 4 bytes do id) na lista da nação dele
 /// (`cpp9_nacao_da_lista`).
-unsafe extern "thiscall" fn listas_de_clubes_por_nacao(this: usize) {
+unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn listas_de_clubes_por_nacao(this: usize) {
 
 /// Comparador: lado a lado pelos registros de lesão (31 bytes × [0xae2364]), pelos clubes (as vagas) e pelo clube e
 /// cargo (+0x39..+0x3d) de quem não é jogador nas vagas.
-unsafe extern "thiscall" fn comparar_forma_inicial_dos_elencos(this: usize) {
+unsafe extern "thiscall" fn comparar_init_squad_fitness(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let base = cpp9_d(0xae23b4);
     let mut regioes = vec![(cpp9_d(this), (cpp9_i(0xae2364).max(0) as usize) * 31), (base, (cpp9_i(0xae235c).max(0) as usize) * 0x245)];
@@ -229,25 +229,25 @@ unsafe extern "thiscall" fn comparar_forma_inicial_dos_elencos(this: usize) {
             }
         }
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this), || forma_inicial_dos_elencos(this));
-    PLACAR.registrar(igual, || format!("forma_inicial_dos_elencos: memória difere ({} regiões)", regioes.len()));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this), || init_squad_fitness(this));
+    PLACAR.registrar(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regioes.len()));
 }
 
 /// Comparador: a original aloca, sorteia e lesiona (0x62d250): roda só ela e confere o que a 0x62d250 não muda: o
 /// vetor alocado e o +0x1e = 50 de todos os registros.
-unsafe extern "thiscall" fn comparar_registros_iniciais_de_lesao(this: usize) {
+unsafe extern "thiscall" fn comparar_init_records(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let v = cpp9_d(this);
     if v == 0 {
         return;
     }
     let errado = (0..cpp9_i(0xae2364).max(0) as usize).find(|&k| cpp9_b(v + 31 * k + 0x1e) != 0x32);
-    PLACAR.registrar(errado.is_none(), || format!("registros_iniciais_de_lesao: registro {:?} sem o +0x1e = 50", errado));
+    PLACAR.registrar(errado.is_none(), || format!("init_records: registro {:?} sem o +0x1e = 50", errado));
 }
 
 /// Comparador: a original aloca as listas: o plano antes (os ids dos clubes de cada nação, na ordem); a original roda;
 /// confere os itens de cada lista.
-unsafe extern "thiscall" fn comparar_listas_de_clubes_por_nacao(this: usize) {
+unsafe extern "thiscall" fn comparar_build_nation_club_lists(this: usize) {
     let n = cpp9_i(0xae2350).max(0) as usize;
     let mut plano: Vec<Vec<usize>> = vec![Vec::new(); n];
     let base = cpp9_d(0xae23b4);
@@ -264,5 +264,5 @@ unsafe extern "thiscall" fn comparar_listas_de_clubes_por_nacao(this: usize) {
         let ids: Vec<usize> = if l != 0 { cpd1_itens(l).into_iter().map(|e| cpp9_d(e)).collect() } else { Vec::new() };
         l != 0 && ids != plano[k]
     });
-    PLACAR.registrar(errada.is_none(), || format!("listas_de_clubes_por_nacao: a lista da nação {:?} difere do plano", errada));
+    PLACAR.registrar(errada.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", errada));
 }

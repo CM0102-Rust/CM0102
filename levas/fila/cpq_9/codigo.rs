@@ -24,7 +24,7 @@ unsafe fn cpq9_u(a: usize) -> u16 {
 /// atributos + 5 × (3 × (+0x5d + +0x5a) + 2 × (+0x59 + +0x58) + +0x56) + ⌊+0x5b²⌋ + ⌊+0x57²⌋. Com clube: sorteio da
 /// nota (+75 se o clube não tem +0xcf); sem clube: + (+0x22)², e a nota dobra se o +0xd do jogador passa de um
 /// sorteio(10000) (lê o jogador sem conferir, como a original). Quente (todas as pessoas a cada chamada): sem contador.
-unsafe extern "stdcall" fn nota_do_doador_de_dados(pessoa: usize) -> i32 {
+unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pessoa: usize) -> i32 {
     if cpq9_d(pessoa + 0x69) != 0 {
         return -10000;
     }
@@ -91,7 +91,7 @@ unsafe fn cpq9_data_da_entrada(e: usize) -> usize {
 /// (registros de 0x1a bytes; pela 0x7a59e0 todo dia, que para na primeira entrada futura, e pelas listas iniciais
 /// 0x7a5790/0x7a58f0 e pela 0x7a8690): pela data que vale (cpq9_data_da_entrada), o ano sem sinal e o dia com sinal;
 /// no empate pelo id (+0). Sem `a`, −1; sem `b`, 1. Quente (qsort): sem contador.
-unsafe extern "C" fn ordem_das_aposentadorias(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn player_regen_compare_retirements(a: usize, b: usize) -> i32 {
     if a == 0 {
         return -1;
     }
@@ -114,7 +114,7 @@ unsafe extern "C" fn ordem_das_aposentadorias(a: usize, b: usize) -> i32 {
 /// (registros de 0xc bytes, no fim da 0x7a59e0 todo dia; a 0x7a65d0 cria os regens das entradas vencidas): pelo ano
 /// (+6, sem sinal), depois pelo dia (+4, com sinal), depois pelo id (+0). Sem `a`, −1; sem `b`, 1. Quente (qsort):
 /// sem contador.
-unsafe extern "C" fn ordem_da_fila_de_regens(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn player_regen_compare_queue_entries(a: usize, b: usize) -> i32 {
     if a == 0 {
         return -1;
     }
@@ -136,27 +136,27 @@ unsafe extern "C" fn ordem_da_fila_de_regens(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: lado a lado pelo estado do sorteio (a cópia sem contar), e a nota.
-unsafe extern "stdcall" fn comparar_nota_do_doador_de_dados(pessoa: usize) -> i32 {
+unsafe extern "stdcall" fn comparar_player_regen_score_non_player_candidate(pessoa: usize) -> i32 {
     let o = orig::<unsafe extern "stdcall" fn(usize) -> i32>(%%I0%%);
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa),
-        || crate::aleatorio::sem_contar(|| nota_do_doador_de_dados(pessoa)));
-    PLACAR.registrar(igual && r == n, || format!("nota_do_doador_de_dados({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| player_regen_score_non_player_candidate(pessoa)));
+    PLACAR.registrar(igual && r == n, || format!("player_regen_score_non_player_candidate({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_das_aposentadorias(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_player_regen_compare_retirements(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_das_aposentadorias(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_aposentadorias({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = player_regen_compare_retirements(a, b);
+    PLACAR.registrar(r == n, || format!("player_regen_compare_retirements({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_da_fila_de_regens(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_player_regen_compare_queue_entries(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_da_fila_de_regens(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_da_fila_de_regens({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = player_regen_compare_queue_entries(a, b);
+    PLACAR.registrar(r == n, || format!("player_regen_compare_queue_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

@@ -55,7 +55,7 @@ unsafe fn cqj4_fundo(this: usize, cota: i32) {
 /// { 0x641510 } (thiscall, ret 0, ita_ser_a.cpp): `ItaSerA::create_table()`: 18 clubes ([0x9cf570]); cheia, o fundo
 /// pela cota de 250.000 e a TV de 5.000.000 a cada clube (League::pay_tv_rights 0x683010: thiscall(liga, valor, 0),
 /// ret 8); devolve 1 (0 sem encher). Fonte 0x9ea2a8, linha 0x253.
-unsafe extern "thiscall" fn tabela_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u32 {
     match cqj4_encher(this, 0x12, 0x9ea2a8, 0x253, 0x9cf570) {
         Some(true) => {}
         _ => return 0,
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn tabela_da_serie_a(this: usize) -> u32 {
 
 /// { 0x646780 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::create_table()`: 20 clubes ([0x9cf574]); cheia, o fundo
 /// pela cota de 70.000 (sem TV) e 1. Fonte 0x9ea384, linha 0x19d.
-unsafe extern "thiscall" fn tabela_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_create_table_646780(this: usize) -> u32 {
     match cqj4_encher(this, 0x14, 0x9ea384, 0x19d, 0x9cf574) {
         Some(true) => {}
         _ => return 0,
@@ -80,13 +80,13 @@ unsafe extern "thiscall" fn tabela_da_serie_b(this: usize) -> u32 {
 
 /// { 0x64b670 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::create_table()`: 18 clubes ([0x9cf578]), sem fundo
 /// nem TV; devolve se encheu. Fonte 0x9ea474, linha 0x1bd.
-unsafe extern "thiscall" fn tabela_da_c1a(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_c1a_create_table(this: usize) -> u32 {
     cqj4_encher(this, 0x12, 0x9ea474, 0x1bd, 0x9cf578).unwrap_or(false) as u32
 }
 
 /// { 0x64f820 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_table()`: 18 clubes ([0x9cf57c]); como a
 /// C1/A. Fonte 0x9ea558, linha 0x1be.
-unsafe extern "thiscall" fn tabela_da_c1b(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_create_table_64f820(this: usize) -> u32 {
     cqj4_encher(this, 0x12, 0x9ea558, 0x1be, 0x9cf57c).unwrap_or(false) as u32
 }
 
@@ -120,22 +120,22 @@ unsafe fn cqj4_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<
     r
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj4_comparar("tabela_da_serie_a", this, 0x12, 0x9cf570, Some(0x3d090), || o(this))
+    cqj4_comparar("ita_ser_a_create_table", this, 0x12, 0x9cf570, Some(0x3d090), || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_create_table_646780(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj4_comparar("tabela_da_serie_b", this, 0x14, 0x9cf574, Some(0x11170), || o(this))
+    cqj4_comparar("ita_ser_a_create_table_646780", this, 0x14, 0x9cf574, Some(0x11170), || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_c1a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj4_comparar("tabela_da_c1a", this, 0x12, 0x9cf578, None, || o(this))
+    cqj4_comparar("ita_ser_c1a_create_table", this, 0x12, 0x9cf578, None, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_c1b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_create_table_64f820(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqj4_comparar("tabela_da_c1b", this, 0x12, 0x9cf57c, None, || o(this))
+    cqj4_comparar("ita_ser_a_create_table_64f820", this, 0x12, 0x9cf57c, None, || o(this))
 }

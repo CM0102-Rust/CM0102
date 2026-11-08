@@ -36,7 +36,7 @@ unsafe fn dbo2_reputacao(clube: usize) -> i32 {
 /// jogadores (qualquer posição) passam do limite reputação/65 + 40 (de 40 a 140) com o atributo +0x44 (byte com
 /// sinal; o mesmo que a 0x549850 usa) acima de 14. Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20,
 /// relatório de um clube).
-unsafe extern "C" fn clube_tem_esforcados(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_enough_hard_workers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -45,17 +45,17 @@ unsafe extern "C" fn clube_tem_esforcados(clube: usize) -> u8 {
     (n > 4) as u8 // esforcados (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_esforcados(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
-    let n = clube_tem_esforcados(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_esforcados({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_enough_hard_workers(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x549470 } (cdecl, Database.cpp): `club_has_fit_goalkeeper(clube)`: 1 assim que um dos 50 do elenco (+0xd7) é
 /// pessoa com jogador (+0x61) goleiro (+0xf = 20), sem lesão grave (0x62c400 ≠ 2) e id < [0xae2364]; nenhum ou clube
 /// nulo: 0. Sem limite de habilidade. Só `al`. Só pelo olheiro.
-unsafe extern "C" fn clube_tem_goleiro(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_fit_goalkeeper(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -77,10 +77,10 @@ unsafe extern "C" fn clube_tem_goleiro(clube: usize) -> u8 {
     0
 }
 
-unsafe extern "C" fn comparar_clube_tem_goleiro(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
-    let n = clube_tem_goleiro(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_goleiro({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_fit_goalkeeper(clube);
+    PLACAR.registrar(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -88,7 +88,7 @@ unsafe extern "C" fn comparar_clube_tem_goleiro(clube: usize) -> u8 {
 /// de 1 meia (posição +0x14, +0x12 ou +0x13 = 20) sem lesão grave passa do limite reputação/75 + 25 (de 40 a 135)
 /// com os atributos +0x44 e +0x3e (bytes com sinal) acima de reputação/500 + 5 (no máximo 14). Só `al`. Só pelo
 /// olheiro.
-unsafe extern "C" fn clube_tem_meias_que_roubam(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_ball_winning_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -100,9 +100,9 @@ unsafe extern "C" fn clube_tem_meias_que_roubam(clube: usize) -> u8 {
     (n > 1) as u8 // meias que roubam (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_meias_que_roubam(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
-    let n = clube_tem_meias_que_roubam(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_meias_que_roubam({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_ball_winning_midfielders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }

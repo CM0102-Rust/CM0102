@@ -64,7 +64,7 @@ fn cqf8_lugar(buf: usize, n: i32, k: i32) -> usize {
 /// transferência −1 e os 32 bytes da categoria (0x7c3920) quando há. (2) O histórico do arquivo (FILE_LLIST::get_nodes
 /// 0x58f120 do [this] pelas posições +0x18/+0x1c do registro de 0x27 bytes da ficha em [this+0x30]), do fim para o
 /// começo (0x68d1d0): cada nó de outra temporada, clube ou tipo abre um grupo: a conta anda 6; anos vazios entre os dois
-/// (até a conta passar de 500) viram grupos vazios (clube −1, transferência −1); o grupo do nó leva o ano, o clube, a
+/// (até a conta pass_ball de 500) viram grupos vazios (clube −1, transferência −1); o grupo do nó leva o ano, o clube, a
 /// transferência e o tipo do nó; o nó vai para a entrada da sua categoria (+0x2a / 8) no grupo. A lista é destruída
 /// (0x68d040 e 0x944c94). (3) A conta anda 6; cada entrada leva a transferência e o tipo da entrada seis adiante (as
 /// do último grupo, −1 e 0). (4) Um grupo com um seguinte do mesmo ano e clube, sem transferência nos dois, tipo do
@@ -73,7 +73,7 @@ fn cqf8_lugar(buf: usize, n: i32, k: i32) -> usize {
 /// e de tipo 0 some quando sem clube ou quando outro grupo tem o ano dele e o grupo seguinte é do mesmo clube; o de
 /// jogos com a última entrada sem clube (+0xd9) também some. (6) Os grupos de ano 0 saem da tabela (os seguintes
 /// descem) e a conta cai 6 por grupo.
-unsafe extern "thiscall" fn historico_da_carreira(this: usize, p: usize, conta: *mut i32) -> usize {
+unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944e46usize);
     let realloc: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945667usize);
     let ano_do_clube: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(0x669950usize);
@@ -297,14 +297,14 @@ unsafe extern "thiscall" fn historico_da_carreira(this: usize, p: usize, conta: 
 /// Comparador: as duas montam a tabela (a original e a cópia, a partir do mesmo estado; o arquivo de histórico só é
 /// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
 /// de erro (caixa): só a original.
-unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usize, p: usize, conta: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(%%I0%%);
     if p == 0 || (cqf8_i(p) < cqf8_i(0xae2364) && cqf8_d(p + 0x61) == 0) {
         return o(this, p, conta);
     }
     let r = o(this, p, conta);
     let mut n = 0i32;
-    let t = historico_da_carreira(this, p, &mut n);
+    let t = build_career_history(this, p, &mut n);
     let igual = if r == 0 || t == 0 {
         r == t && *conta == n
     } else {
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usize, p: usize
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * CQF8_E) as *const u8, CQF8_E) != core::slice::from_raw_parts((t + i * CQF8_E) as *const u8, CQF8_E)
         });
-        format!("historico_da_carreira(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *conta, n, dif)
+        format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *conta, n, dif)
     });
     if t != 0 {
         let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -332,7 +332,7 @@ unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usize, p: usize
 /// clube) com o clube. Pessoa nula (linha 0x133f), clube nulo (0x1347) ou sem ficha (0x135f): a caixa e −1; id a partir
 /// de [0xae2364]: −1. Quem chama a põe com o ecx do PlayerStats, que ela não usa. Pela 0x5b03e0 (não roda na carreira
 /// automática: passageira).
-unsafe extern "stdcall" fn anos_desde_o_clube(p: usize, clube: usize) -> i16 {
+unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     if p == 0 {
         cqf8_erro(0x133f);
         return -1;
@@ -376,21 +376,21 @@ unsafe extern "stdcall" fn anos_desde_o_clube(p: usize, clube: usize) -> i16 {
 }
 
 /// Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
-unsafe extern "stdcall" fn comparar_anos_desde_o_clube(p: usize, clube: usize) -> i16 {
+unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> i16>(%%I1%%);
     if p == 0 || clube == 0 || (cqf8_i(p) < cqf8_i(0xae2364) && cqf8_d(p + 0x39) != clube && cqf8_d(p + 0x61) == 0) {
         return o(p, clube);
     }
     let r = o(p, clube);
-    let n = anos_desde_o_clube(p, clube);
-    PLACAR.registrar(r == n, || format!("anos_desde_o_clube(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
+    let n = player_stats_years_since_at_club(p, clube);
+    PLACAR.registrar(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
     r
 }
 
 /// { 0x7c6de0 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_staff(a, b)`, a ordem do qsort dos
 /// registros do staff_history.dat na criação das estatísticas (0x7bfd50, ponteiro em 0x7c05ad): `a` nulo 1, `b` nulo −1;
 /// pela pessoa (+4, sem sinal), depois pelo ano (+8, palavra com sinal), depois a diferença do primeiro dword.
-unsafe extern "C" fn ordem_do_historico_por_pessoa(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     if a == 0 {
         return 1;
     }
@@ -415,9 +415,9 @@ unsafe extern "C" fn ordem_do_historico_por_pessoa(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_ordem_do_historico_por_pessoa(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_do_historico_por_pessoa(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_historico_por_pessoa({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = player_stats_compare_history_by_staff(a, b);
+    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

@@ -86,7 +86,7 @@ unsafe fn cpo5_somar(p: usize, v: i16) {
 /// importante)`: inicia a data (+0xcd, 0x54a110), grava o tipo (+0), o byte importante (+4) e zera os 50 dados (+5);
 /// a data de hoje ([0xae2c90], pela atribuição 0x417c10 com retorno numa temporária), o byte [0xae2c88] em +0xd5, o id
 /// (+0xd6) e +0xda zerados. Devolve a notícia.
-unsafe extern "thiscall" fn construir_noticia(this: usize, tipo: u32, importante: u32) -> usize {
+unsafe extern "thiscall" fn construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
     let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let atribuir_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     iniciar_data(this + 0xcd);
@@ -117,7 +117,7 @@ unsafe fn cpo5_dados_da_pessoa(gravar: unsafe extern "thiscall" fn(usize, i8, u3
 /// tópico, 2 = variante, 3 = sorteio(4), 4 = id do clube, 5 = o grau (5 abaixo de −750, 4 negativa, 3 até 750, 2
 /// acima), 6..9 o técnico; com sujeito, 10..13 o sujeito e 14 = 6 favorito, 7 rejeitado, 8 nenhum; depois −1, a
 /// confiança nova e 0.
-unsafe extern "thiscall" fn ajustar_confianca_da_torcida(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
+unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
     let v = cpo5_variacao_da_torcida(clube, alvo);
     crate::comparacao::ramo("cpo_5 torcida");
     if clube != 0 {
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn ajustar_confianca_da_torcida(_this: usize, clube: us
 /// confiança nova, o sexto (com ele 1 e a palavra +0xe), e as marcas do sujeito: contrato 0x10/0x20 acima de 25 anos,
 /// média das notas acima da média da liga × 5, +0x59 e +0x5b acima de 14, mais de 1500 dias no clube, valor (0x4d0c60)
 /// acima de 4.500.000 e reputação (+5 da ficha) acima de 140.
-unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
+unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
     let v = cpo5_variacao_da_diretoria(clube, alvo);
     crate::comparacao::ramo("cpo_5 diretoria");
     if clube != 0 {
@@ -191,8 +191,8 @@ unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usize, clube: 
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let media_das_notas: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x7c1950usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let ratings_average: unsafe extern "thiscall" fn(usize, usize) -> i32 = core::mem::transmute(0x7c1950usize);
     let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     let conf = || if clube != 0 { cpo5_w(cpo5_linha(clube) + 6) } else { 0 };
@@ -254,7 +254,7 @@ unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usize, clube: 
     // as marcas do sujeito
     let mut m = 0u32;
     if sujeito != 0 && cpo5_d(sujeito + 0x61) != 0 {
-        let c = contrato_de(cpo5_d(0xae1050), sujeito);
+        let c = contract_of(cpo5_d(0xae1050), sujeito);
         if c != 0 && cpo5_c(sujeito + 0x18) > 0x19 {
             let t = *((c + 0x4f) as *const u8) & 0xf0;
             if t == 0x20 || t == 0x10 {
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usize, clube: 
     let mut m = 0u32;
     if sujeito != 0 && cpo5_d(sujeito + 0x61) != 0 {
         let base = cpo5_d(0xb74350);
-        let notas = media_das_notas(base, cpo5_d(sujeito + 0x61)) as i8 as f64;
+        let notas = ratings_average(base, cpo5_d(sujeito + 0x61)) as i8 as f64;
         let base = cpo5_d(0xb74350);
         let y = f64_em(base + 0x18);
         let c0 = f64_em(0x9689a0);
@@ -294,16 +294,16 @@ unsafe extern "thiscall" fn ajustar_confianca_da_diretoria(_this: usize, clube: 
 }
 
 /// Comparador: pela memória da notícia (0xde bytes; a original usa só uma temporária na pilha) e pela devolução.
-unsafe extern "thiscall" fn comparar_construir_noticia(this: usize, tipo: u32, importante: u32) -> usize {
+unsafe extern "thiscall" fn comparar_construct_news_item(this: usize, tipo: u32, importante: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xde)], || o(this, tipo, importante), || construir_noticia(this, tipo, importante));
-    PLACAR.registrar(igual && r == n, || format!("construir_noticia(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0xde)], || o(this, tipo, importante), || construct_news_item(this, tipo, importante));
+    PLACAR.registrar(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", tipo, importante as u8, mo.0[0].1, mr.0[0].1));
     r
 }
 
 /// Comparador: a original sorteia e entrega a notícia (não pode rodar duas vezes): roda só ela e confere o plano feito
 /// antes: a confiança da torcida nova (a variação é pura).
-unsafe extern "thiscall" fn comparar_ajustar_confianca_da_torcida(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
+unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I1%%);
     if clube == 0 {
         return o(this, clube, sujeito, topico, alvo, variante);
@@ -314,11 +314,11 @@ unsafe extern "thiscall" fn comparar_ajustar_confianca_da_torcida(this: usize, c
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante);
     let depois = cpo5_w(cpo5_linha(clube) + 8);
-    PLACAR.registrar(depois == esperado, || format!("ajustar_confianca_da_torcida(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
+    PLACAR.registrar(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
 }
 
 /// Comparador: como o da torcida, pela confiança da diretoria nova.
-unsafe extern "thiscall" fn comparar_ajustar_confianca_da_diretoria(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
+unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%);
     if clube == 0 {
         return o(this, clube, sujeito, topico, alvo, variante, sexto);
@@ -329,5 +329,5 @@ unsafe extern "thiscall" fn comparar_ajustar_confianca_da_diretoria(this: usize,
     let esperado = antes.wrapping_add(v).clamp(1, 10000);
     o(this, clube, sujeito, topico, alvo, variante, sexto);
     let depois = cpo5_w(cpo5_linha(clube) + 6);
-    PLACAR.registrar(depois == esperado, || format!("ajustar_confianca_da_diretoria(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
+    PLACAR.registrar(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
 }

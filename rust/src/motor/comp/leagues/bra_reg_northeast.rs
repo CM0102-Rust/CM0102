@@ -131,15 +131,15 @@ pub(crate) const CQT3_PERNAMBUCANO: Cqt3Estadual = Cqt3Estadual {
 /// Original: `BraRegNortheast::BraRegNortheast` (0x4363f0, bra_reg_northeast.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4363f0 } (thiscall, ret 8, bra_reg_northeast.cpp): `BraRegNortheast::BraRegNortheast(ano, registro)`: o Nordeste (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_northeast(this: usize, ano: u32, registro: usize) -> usize {
     cqt3_construir(this, ano, registro, &CQT3_NORDESTE, 7, true, "cqt_3 nordeste novo") // cqt3: a disciplina e as posições previstas do Nordeste
 }
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_nordeste(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT3_CONSTRUIR_NORDESTE);
-    cqt3_comparar("cqt3_construir_nordeste", this, ano, registro, &CQT3_NORDESTE, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_northeast(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTHEAST);
+    cqt3_comparar("construct_bra_reg_northeast", this, ano, registro, &CQT3_NORDESTE, || o(this, ano, registro))
 }
 
 
@@ -194,7 +194,7 @@ pub(crate) unsafe fn cqm7_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 ///
 /// [pt] { 0x436d90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_table()`: o Nordeste tem 16 clubes (divisão reserva +0x60 = [0x9cf9a4]).
 /// Fonte 0x98af54, linha 0x159.
-pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_nordeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_create_table(this: usize) -> u32 {
     cqm7_tabela(this, 0x10, 0x98af54, 0x159, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, 0, "cqm_7 nordeste cheio")
 }
 
@@ -226,9 +226,9 @@ pub(crate) unsafe fn cqm7_comparar(nome: &str, this: usize, n: i16, g: usize, or
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_nordeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM7_TABELA_DO_NORDESTE);
-    cqm7_comparar("cqm7_tabela_do_nordeste", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_NORTHEAST_CREATE_TABLE);
+    cqm7_comparar("bra_reg_northeast_create_table", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Northeast: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
@@ -237,13 +237,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_nordeste(this: us
 ///
 /// [pt] { 0x4370d0 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af54, linhas 0x20d (sem lista) e 0x221 (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn7_mata_mata_do_nordeste(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_create_semi_final_stage(this: usize) {
     cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_nordeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN7_MATA_MATA_DO_NORDESTE);
-    cqn7_comparar("cqn7_mata_mata_do_nordeste", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_semi_final_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_NORTHEAST_CREATE_SEMI_FINAL_STAGE);
+    cqn7_comparar("bra_reg_northeast_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// The Northeast turnover: archives the season in the statistics, clears the previous table and stages, moves to the
@@ -253,13 +253,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_nordeste(this:
 ///
 /// [pt] { 0x436e90 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::start_new_season()`, a virada da temporada do Nordeste (a tabela:
 /// 0x436d90; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
-pub(crate) unsafe extern "thiscall" fn cqp8_virada_do_nordeste(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_start_new_season(this: usize) -> u32 {
     cqp7_virada(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP8_VIRADA_DO_NORDESTE);
-    cqp7_comparar_virada("cqp8_virada_do_nordeste", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_NORTHEAST_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_reg_northeast_start_new_season", this, || o(this))
 }
 
 /// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
@@ -268,11 +268,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp8_virada_do_nordeste(this: us
 ///
 /// [pt] { 0x437040 } (thiscall, ret 0, bra_reg_northeast.cpp): `BraRegNortheast::advance_stage()`, a fase seguinte do Nordeste: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4370d0); a caixa da linha 0x1ea.
-pub(crate) unsafe extern "thiscall" fn cqp8_fase_seguinte_do_nordeste(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_advance_stage(this: usize) {
     cqp7_fase_seguinte(this, 0x98af54, 0x1ea, 0x4370d0);
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp8_fase_seguinte_do_nordeste(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP8_FASE_SEGUINTE_DO_NORDESTE);
-    cqp7_comparar_fase_seguinte("cqp8_fase_seguinte_do_nordeste", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_NORTHEAST_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_reg_northeast_advance_stage", this, || o(this))
 }

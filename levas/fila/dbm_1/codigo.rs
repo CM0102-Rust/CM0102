@@ -17,7 +17,7 @@ unsafe fn comparar_nome_em_ingles(nome: &str, x: usize, o: unsafe extern "C" fn(
 /// { 0x5454c0 } (cdecl, Database.cpp): `nation_get_english_three_letter_name(nação)`: idioma ([0x9b5984]) 0 ou
 /// 1: a própria sigla (+0x53). Senão a tabela do eng.lng ([0xae2408]): nações em linhas de 109 bytes a partir de
 /// +0x2c, pelo id (sem conferir a quantidade), a sigla em +0x4f da linha. Quadro SEH só no primeiro uso.
-unsafe extern "C" fn sigla_inglesa_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn nation_get_english_three_letter_name(nacao: usize) -> usize {
     let idioma = *(0x9b5984 as *const u32);
     if idioma == 0 || idioma == 1 {
         return nacao.wrapping_add(0x53); // sigla da nação
@@ -31,14 +31,14 @@ unsafe extern "C" fn sigla_inglesa_da_nacao(nacao: usize) -> usize {
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109)).wrapping_add(0x4f) // sigla na linha
 }
 
-unsafe extern "C" fn comparar_sigla_inglesa_da_nacao(nacao: usize) -> usize {
-    comparar_nome_em_ingles("sigla_inglesa_da_nacao", nacao, orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%), sigla_inglesa_da_nacao)
+unsafe extern "C" fn comparar_nation_get_english_three_letter_name(nacao: usize) -> usize {
+    comparar_nome_em_ingles("nation_get_english_three_letter_name", nacao, orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%), nation_get_english_three_letter_name)
 }
 
 /// { 0x5455a0 } (cdecl, Database.cpp): `comp_get_english_name(competição)`: idioma 0 ou 1: o próprio nome (+4).
 /// Senão a tabela do eng.lng, linhas de 83 bytes: id ≥ [t+0x14] (quantas de clube): a de nação `id − [t+0x14]`
 /// em [t+0x28]; senão a de clube `id` em [t+0x38] (comparação com sinal). Quadro SEH só no primeiro uso.
-unsafe extern "C" fn nome_ingles_da_competicao(comp: usize) -> usize {
+unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     let idioma = *(0x9b5984 as *const u32);
     if idioma == 0 || idioma == 1 {
         return comp.wrapping_add(4); // nome da competição
@@ -57,13 +57,13 @@ unsafe extern "C" fn nome_ingles_da_competicao(comp: usize) -> usize {
     }
 }
 
-unsafe extern "C" fn comparar_nome_ingles_da_competicao(comp: usize) -> usize {
-    comparar_nome_em_ingles("nome_ingles_da_competicao", comp, orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%), nome_ingles_da_competicao)
+unsafe extern "C" fn comparar_comp_get_english_name(comp: usize) -> usize {
+    comparar_nome_em_ingles("comp_get_english_name", comp, orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%), comp_get_english_name)
 }
 
 /// { 0x5456a0 } (cdecl, Database.cpp): `staff_comp_get_english_name(competição de pessoal)`: idioma 0 ou 1: o
 /// próprio nome (+4). Senão a tabela do eng.lng, linhas de 79 bytes em [t+0x3c], pelo id. SEH só no primeiro uso.
-unsafe extern "C" fn nome_ingles_da_competicao_de_pessoal(comp: usize) -> usize {
+unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usize {
     let idioma = *(0x9b5984 as *const u32);
     if idioma == 0 || idioma == 1 {
         return comp.wrapping_add(4); // nome da competição de pessoal
@@ -77,8 +77,8 @@ unsafe extern "C" fn nome_ingles_da_competicao_de_pessoal(comp: usize) -> usize 
     (*((t + 0x3c) as *const usize)).wrapping_add((id as usize).wrapping_mul(79)) // competição de pessoal na tabela
 }
 
-unsafe extern "C" fn comparar_nome_ingles_da_competicao_de_pessoal(comp: usize) -> usize {
-    comparar_nome_em_ingles("nome_ingles_da_competicao_de_pessoal", comp, orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%), nome_ingles_da_competicao_de_pessoal)
+unsafe extern "C" fn comparar_staff_comp_get_english_name(comp: usize) -> usize {
+    comparar_nome_em_ingles("staff_comp_get_english_name", comp, orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%), staff_comp_get_english_name)
 }
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação): nem a carreira nem o save passam pelo caminho do eng.lng
@@ -102,9 +102,9 @@ pub unsafe fn autoteste_dbm_1() {
         *(0xae2408 as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
         let r = registro.as_ptr() as usize;
-        comparar_sigla_inglesa_da_nacao(r);
-        comparar_nome_ingles_da_competicao(r);
-        comparar_nome_ingles_da_competicao_de_pessoal(r);
+        comparar_nation_get_english_three_letter_name(r);
+        comparar_comp_get_english_name(r);
+        comparar_staff_comp_get_english_name(r);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];

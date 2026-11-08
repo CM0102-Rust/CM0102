@@ -97,7 +97,7 @@ unsafe fn cps5_atrito(p: usize, clube: usize, k: usize) {
 /// preferências, contrato e o vínculo do clube com a pessoa de +0xff: três sorteios (+0x5b, +0x5d, +0x5a, cada um + 5)
 /// filtram; a soma de cinco atributos menos 3, 5, 15, 15 por sorteios zerados e 5 se a reputação do jogador (+0xb)
 /// passa de 4500 e da do clube (+0x80) dá o sorteio que, zerado, leva ao atrito com o técnico.
-unsafe extern "C" fn relacoes_do_elenco() {
+unsafe extern "C" fn game_update_squad_relationships() {
     let tirar_rejeitada: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x547c50usize);
     let briga: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x5888a0usize);
     let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547af0usize);
@@ -206,14 +206,14 @@ unsafe fn cps5_pessoa_e_tecnico(p: usize) {
 
 // ponytail: sorteia e mexe nas preferências (0x547a10, 0x547af0, 0x547c10, 0x547c50), briga e queixa: só a original;
 // a cópia leva os ramos (roda todo dia).
-unsafe extern "C" fn comparar_relacoes_do_elenco() {
+unsafe extern "C" fn comparar_game_update_squad_relationships() {
     orig::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 /// { 0x5d7190 } (cdecl, game.cpp): `game_check_club_dressing_room_unrest(clube)`: cada pessoa do elenco (+0xd7, 50
 /// vagas) com vínculo com o clube (0x4cf5f0) e preferências (+0x65) passa pelo atrito com o técnico (o primeiro colega
 /// de quem não gosta; a queixa só com dia % 14 + id = 0). Pelas relações do elenco (0x5d6d10) nos dias múltiplos de 50.
-unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
+unsafe extern "C" fn game_check_club_dressing_room_unrest(clube: usize) {
     for i in 0..0x32usize {
         let p = cps5_d(clube + 0xd7 + i * 4);
         if p == 0 {
@@ -232,7 +232,7 @@ unsafe extern "C" fn atrito_com_o_tecnico(clube: usize) {
 
 // ponytail: a queixa (0x587c60) e a marca no vínculo (0x867700) não rodam duas vezes: só a original; a cópia leva o
 // ramo do atrito.
-unsafe extern "C" fn comparar_atrito_com_o_tecnico(clube: usize) {
+unsafe extern "C" fn comparar_game_check_club_dressing_room_unrest(clube: usize) {
     orig::<unsafe extern "C" fn(usize)>(%%I1%%)(clube)
 }
 
@@ -246,15 +246,15 @@ unsafe fn cps5_do_elenco(p: usize, clube: usize) -> bool {
 /// vínculo (+0x44) do elenco (+0xd7, 50 vagas); menos de 16 jogadores contam 10 cada um que falta. Com soma não nula,
 /// cada jogador sorteia (2 × Σ liderança × moral) / (liderança dele + soma) mais sorteio(moral / 12), em byte com sinal:
 /// negativo, sorteio(s) < sorteio(−5) baixa o moral (0x544710 com −1); positivo, sorteio(s) > sorteio(5) sobe (+1).
-unsafe extern "C" fn moral_pela_lideranca() {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let moral: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(0x544710usize);
     let n = cps5_d(0xae235c);
     let mut clube = cps5_d(0xae23b4);
     let fim = clube.wrapping_add(n.wrapping_mul(0x245));
     while clube < fim {
         let vagas = clube + 0xd7;
-        if e_selecao(clube) == 0 && cps5_sortear(7) == 0 {
+        if is_national_team(clube) == 0 && cps5_sortear(7) == 0 {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
                 let p = cps5_d(vagas + i * 4);
@@ -307,6 +307,6 @@ unsafe extern "C" fn moral_pela_lideranca() {
 }
 
 // ponytail: sorteia e muda o moral (0x544710, que também sorteia): só a original; a cópia leva os ramos.
-unsafe extern "C" fn comparar_moral_pela_lideranca() {
+unsafe extern "C" fn comparar_game_spread_squad_morale_by_leadership() {
     orig::<unsafe extern "C" fn()>(%%I2%%)()
 }

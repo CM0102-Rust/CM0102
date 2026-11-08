@@ -26,8 +26,8 @@ unsafe fn cpr4_clube(id: usize) -> usize {
 /// lista)`: pelas ofertas (vetor [this], conta +4), fora das vazias e das de estado 2, 3, 4, 0x10 e 0x14 e das de estado
 /// 0xf com +0x2e ≥ 3: o contrato do jogador (+0xc; 0x4cf5a0, guardado em [0xae1080]) que não é de empréstimo (+0x35 &
 /// 0x3f ≠ 5) é do `clube`? Conta e, com `lista`, acrescenta o índice (4 bytes, 0x68d0d0). Devolve a conta.
-unsafe extern "thiscall" fn ofertas_abertas_pelos_jogadores_do_clube(this: usize, clube: usize, lista: usize) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "thiscall" fn get_open_offers_for_club_players(this: usize, clube: usize, lista: usize) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, *const i32, u32) -> u32 = core::mem::transmute(0x68d0d0usize);
     let mut n = 0u32;
     let mut i: i32 = 0;
@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn ofertas_abertas_pelos_jogadores_do_clube(this: usize
                 _ => true,
             };
             if conta {
-                let c = contrato_de(cpr4_d(0xae1050), cpr4_pessoa(cpr4_d(o + 0xc)));
+                let c = contract_of(cpr4_d(0xae1050), cpr4_pessoa(cpr4_d(o + 0xc)));
                 cpr4_por(0xae1080, c);
                 emprestado |= c != 0 && cpr4_b(c + 0x35) & 0x3f == 5 && cpr4_clube(cpr4_d(c + 4)) == clube;
                 let dono = if c != 0 && cpr4_b(c + 0x35) & 0x3f != 5 { cpr4_clube(cpr4_d(c + 4)) } else { 0 }; // o empréstimo não conta
@@ -73,13 +73,13 @@ unsafe extern "thiscall" fn ofertas_abertas_pelos_jogadores_do_clube(this: usize
 /// (0x8cbf70); todas ficam no estado 0xf com +0x2e = 3; o vendedor é o clube do contrato do jogador da oferta (0x4cf5a0,
 /// guardado em [0xae1080]); os lances do comprador (+8) pelo jogador e os do vendedor pelos da troca (lista +4) saem
 /// (0x84aeb0 de [this+0x856]) e a oferta é agendada (0x8c6220 com 10 dias).
-unsafe extern "thiscall" fn desfazer_ofertas_pelo_jogador(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, pessoa: usize) {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let ofertas: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c5cf0usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let tirar_futura: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8cbf70usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     let mut lista = [0u8; 0x10];
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn desfazer_ofertas_pelo_jogador(this: usize, pessoa: u
             *((o + 0x2c) as *mut u8) = 0xf; // desfeita
             *((o + 0x2e) as *mut u8) = 3;
             let jogador = cpr4_pessoa(cpr4_d(o + 0xc));
-            let c = contrato_de(cpr4_d(0xae1050), jogador);
+            let c = contract_of(cpr4_d(0xae1050), jogador);
             cpr4_por(0xae1080, c);
             let vendedor = if c != 0 { cpr4_clube(cpr4_d(c + 4)) } else { 0 };
             desmarcar(cpr4_d(this + 0x856), cpr4_clube(cpr4_d(o + 8)), jogador);
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn desfazer_ofertas_pelo_jogador(this: usize, pessoa: u
 /// acrescenta o percentual da próxima venda (13 bytes copiados de `registro`) ao vetor [this+0x880] (capacidade +0x884,
 /// conta +0x888); cheio, cresce de 50 em 50 (sem memória: caixa 0x2553 e nada). Reordena (qsort 0x945333 com 0x8e54d0,
 /// a ordem da busca 0x8cb0f0).
-unsafe extern "thiscall" fn guardar_percentual_da_proxima_venda(this: usize, registro: usize) {
+unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, registro: usize) {
     crate::comparacao::ramo("cpr_4 percentual da proxima venda");
     if !cpl3_crescer(this, 0x880, 4, 50, 0xd, 0x2553, 0xa8eb50) {
         return;
@@ -136,22 +136,22 @@ unsafe extern "thiscall" fn guardar_percentual_da_proxima_venda(this: usize, reg
 
 /// Comparador: sem `lista`, lado a lado por [0xae1080] e pela devolução; com `lista` (cresce a lista: não pode rodar
 /// duas vezes), a cópia conta antes sem lista e a original roda: confere a conta.
-unsafe extern "thiscall" fn comparar_ofertas_abertas_pelos_jogadores_do_clube(this: usize, clube: usize, lista: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_get_open_offers_for_club_players(this: usize, clube: usize, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     if lista != 0 {
-        let n = ofertas_abertas_pelos_jogadores_do_clube(this, clube, 0);
+        let n = get_open_offers_for_club_players(this, clube, 0);
         let r = o(this, clube, lista);
-        PLACAR.registrar(r == n, || format!("ofertas_abertas_pelos_jogadores_do_clube({:x}, lista) original={} rust={}", clube, r, n));
+        PLACAR.registrar(r == n, || format!("get_open_offers_for_club_players({:x}, lista) original={} rust={}", clube, r, n));
         return r;
     }
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, clube, 0), || ofertas_abertas_pelos_jogadores_do_clube(this, clube, 0));
-    PLACAR.registrar(igual && r == c, || format!("ofertas_abertas_pelos_jogadores_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, clube, 0), || get_open_offers_for_club_players(this, clube, 0));
+    PLACAR.registrar(igual && r == c, || format!("get_open_offers_for_club_players({:x}) original={} rust={} {:x?} x {:x?}", clube, r, c, mo, mr));
     r
 }
 
 /// Comparador: agenda (aloca) e mexe nas listas de alvos: só a original. O plano antes: as ofertas pela pessoa (0x8c5cf0
 /// numa lista própria, destruída depois); depois confere que todas ficaram no estado 0xf com +0x2e = 3.
-unsafe extern "thiscall" fn comparar_desfazer_ofertas_pelo_jogador(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_collapse_offers_for_player(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if cpr4_b(cpr4_d(this + 0x86e).wrapping_add(cpr4_d(pessoa).wrapping_mul(8)) + 1) == 0 {
         return o(this, pessoa);
@@ -174,12 +174,12 @@ unsafe extern "thiscall" fn comparar_desfazer_ofertas_pelo_jogador(this: usize, 
     soltar(l);
     o(this, pessoa);
     let ok = alvo.iter().all(|&of| cpr4_b(of + 0x2c) == 0xf && cpr4_b(of + 0x2e) == 3);
-    PLACAR.registrar(ok, || format!("desfazer_ofertas_pelo_jogador(pessoa {}): {} ofertas, estados {:x?}", cpr4_d(pessoa), alvo.len(), alvo.iter().map(|&of| (cpr4_b(of + 0x2c), cpr4_b(of + 0x2e))).collect::<Vec<_>>()));
+    PLACAR.registrar(ok, || format!("collapse_offers_for_player(pessoa {}): {} ofertas, estados {:x?}", cpr4_d(pessoa), alvo.len(), alvo.iter().map(|&of| (cpr4_b(of + 0x2c), cpr4_b(of + 0x2e))).collect::<Vec<_>>()));
 }
 
 /// Comparador: o plano antes (a conta e os 13 bytes), a original roda; confere a conta e que o registro está no vetor
 /// (reordenado).
-unsafe extern "thiscall" fn comparar_guardar_percentual_da_proxima_venda(this: usize, registro: usize) {
+unsafe extern "thiscall" fn comparar_add_next_sale_percentage(this: usize, registro: usize) {
     let n = cpr4_d(this + 0x888);
     let alvo = core::slice::from_raw_parts(registro as *const u8, 0xd).to_vec();
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, registro);
@@ -188,5 +188,5 @@ unsafe extern "thiscall" fn comparar_guardar_percentual_da_proxima_venda(this: u
     }
     let conta = cpr4_d(this + 0x888);
     let ok = conta == n.wrapping_add(1) && cpl3_tem(cpr4_d(this + 0x880), conta, 0xd, &alvo);
-    PLACAR.registrar(ok, || format!("guardar_percentual_da_proxima_venda: conta {} -> {}, registro {:x?}", n, conta, alvo));
+    PLACAR.registrar(ok, || format!("add_next_sale_percentage: conta {} -> {}, registro {:x?}", n, conta, alvo));
 }

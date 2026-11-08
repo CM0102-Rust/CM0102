@@ -70,7 +70,7 @@ fn cqi9_regioes(o: usize) -> [(usize, usize); 4] {
 
 /// { 0x437fc0 } (thiscall, bra_reg_parana.cpp): `BraRegParana::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
-unsafe extern "thiscall" fn cqi9_regras_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     cqi9_regras_parana(this);
     crate::comparacao::ramo("cqi_9 regras do paranaense");
     cqi9_calendario(this);
@@ -79,19 +79,19 @@ unsafe extern "thiscall" fn cqi9_regras_do_paranaense(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_cqi9_regras_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this: usize) -> u32 {
     let reg = cqi9_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
         cqi9_regras_parana(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_paranaense({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_parana_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x439430 } (thiscall, bra_reg_pern.cpp): `BraRegPern::set_up_rules`, nas vtables do Norte (0x968338) e do
 /// Pernambucano (0x968554); devolve 1.
-unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) -> u32 {
     cqi9_regras_pernambucano(this);
     crate::comparacao::ramo("cqi_9 regras do pernambucano");
     cqi9_calendario(this);
@@ -99,19 +99,19 @@ unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Paranaense.
-unsafe extern "thiscall" fn comparar_cqi9_regras_do_pernambucano(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_pern_set_up_rules(this: usize) -> u32 {
     let reg = cqi9_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
         cqi9_regras_pernambucano(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_pernambucano({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_pern_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x43a600 } (thiscall, bra_reg_rio.cpp): `BraRegRio::set_up_rules`, nas vtables do Mineiro (0x968284) e do
 /// Carioca (0x968608); devolve 1.
-unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     cqi9_regras_carioca(this);
     crate::comparacao::ramo("cqi_9 regras do carioca");
     cqi9_calendario(this);
@@ -119,12 +119,12 @@ unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Paranaense.
-unsafe extern "thiscall" fn comparar_cqi9_regras_do_carioca(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_rio_set_up_rules(this: usize) -> u32 {
     let reg = cqi9_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
         cqi9_regras_carioca(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_carioca({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_rio_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

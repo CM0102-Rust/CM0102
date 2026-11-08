@@ -142,13 +142,13 @@ unsafe fn cqt11_clubes(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqt11_oceania_clubes(this: usize) -> u32 {
+unsafe extern "thiscall" fn oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     cqt11_clubes(this)
 }
 
 /// Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
 /// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
-unsafe extern "thiscall" fn comparar_cqt11_oceania_clubes(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -174,14 +174,14 @@ unsafe extern "thiscall" fn comparar_cqt11_oceania_clubes(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqt11_oceania_clubes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
 /// { 0x797df0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x28): `OceaniaClubChamp::advance_stage()`: na
 /// última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x274; senão +0x30 sobe e, chegando a 1 (depois dos
 /// grupos), as semifinais (0x798050: mov ecx, this -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqt11_oceania_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
     let f = cqt11_d(this + 0x30) as i32;
     if f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0xa6a068, 0x274);
@@ -197,13 +197,13 @@ unsafe extern "thiscall" fn cqt11_oceania_fase_seguinte(this: usize) {
 
 // ponytail: as semifinais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da
 // última fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_cqt11_oceania_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn comparar_oceania_club_champ_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let f = cqt11_d(this + 0x30) as i32;
     let ultima = f >= (cqt11_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqt11_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("cqt11_oceania_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
@@ -223,7 +223,7 @@ unsafe fn cqt11_semifinalistas(this: usize) -> [usize; 4] {
 /// nos 16 bits altos, que o construtor não lê) em [+0xc][1]; a tabela e a lista liberadas (0x9452ca). Sem fase: a caixa
 /// da linha 0x2e3 e volta. Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall,
 /// ret 4).
-unsafe extern "thiscall" fn cqt11_oceania_semifinais(this: usize) {
+unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn cqt11_oceania_semifinais(this: usize) {
 
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4 times,
 // o +4 da copa e os 4 cruzados (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto: a rodada pode reordenar).
-unsafe extern "thiscall" fn comparar_cqt11_oceania_semifinais(this: usize) {
+unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqt11_d(this + 0xb1) == 0 || cqt11_d(this + 0xc) == 0 || cqt11_d(cqt11_d(this + 0xc)) == 0 {
         return o(this);
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn comparar_cqt11_oceania_semifinais(this: usize) {
     o(this);
     let fase = cqt11_d(cqt11_d(this + 0xc) + 4);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("cqt11_oceania_semifinais({:#x}) sem fase", this));
+        PLACAR.registrar(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt11_d(fase + 0xa7);
@@ -278,5 +278,5 @@ unsafe extern "thiscall" fn comparar_cqt11_oceania_semifinais(this: usize) {
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt11_w(fase + 0x3e) == 4 && cqt11_d(fase + 4) == cqt11_d(this + 4);
-    PLACAR.registrar(igual, || format!("cqt11_oceania_semifinais({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.registrar(igual, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

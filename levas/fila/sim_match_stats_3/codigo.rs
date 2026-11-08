@@ -7,7 +7,7 @@ const REGISTRO_DA_PARTIDA: u32 = 0xd7a;
 /// k × 0xd7a) do "match_stats_matches.tmp" (CM3_TEMP, "rb") para `saida`. Índice −1: devolve 0 calado;
 /// fora de 0..[this+0x1c] ou saída nula: a original (caixa de erro). Sem abrir: erro 0x128; fseek ou
 /// fread falham: erro 0x12f/0x137 e fecha. Devolve 1 se leu.
-unsafe extern "thiscall" fn ler_registro_da_partida(estat: usize, k: i32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida);
     }
@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn ler_registro_da_partida(estat: usize, k: i32, saida:
 /// registro `r` (0x729ff0, sem pular a renda) e, salvo jogo da competição [0x9cf684] com +0x4c no
 /// registro, grava (0x729820) com o jogo [m+0x4792] e os eventos [m+0x8f7a]. Partida ou registro
 /// nulos: a original (caixa de erro, devolve 0). Devolve 1.
-unsafe extern "thiscall" fn registrar_partida(estat: usize, m: usize, r: usize) -> u32 {
+unsafe extern "thiscall" fn match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
     if m == 0 || r == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r);
     }
@@ -62,13 +62,13 @@ unsafe extern "thiscall" fn registrar_partida(estat: usize, m: usize, r: usize) 
 /// começo do balde ao chegar ao fim ((b+1) × [this+0x1c] / 4). No fim, a entrada [jogo+8] do índice
 /// (12 bytes em [this]) recebe +0xc, +0x10 e as datas +0x2a/+0x28. Argumento nulo: a original (caixa
 /// de erro). Falhas do arquivo: erro 0x172/0x17f/0x18d/0x1a3 (fechando, como a original). Devolve 1.
-unsafe extern "thiscall" fn gravar_registro_da_partida(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
+unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
     if jogo == 0 || r == 0 || eventos == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos);
     }
     crate::comparacao::ramo("estatisticas gravar registro");
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    let gravar_eventos: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x6d98b0usize);
+    let record_events: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x6d98b0usize);
     let balde: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x729bd0usize);
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn gravar_registro_da_partida(estat: usize, jogo: usize
     let desc = r + 0xd69;
     core::ptr::write_bytes(desc as *mut u8, 0, 13);
     let h = (humano(*((jogo + 0x1c) as *const usize), 1, 1, 0, 0) != 0 || humano(*((jogo + 0x20) as *const usize), 1, 1, 0, 0) != 0) as u32;
-    gravar_eventos(eventos, desc, h);
+    record_events(eventos, desc, h);
     let f = abrir(caminho(0x987da0, 0xa17b88), 0x9c7848);
     if f == 0 {
         aviso_em(0xa17ba0, 0x172);
@@ -127,14 +127,14 @@ unsafe extern "thiscall" fn gravar_registro_da_partida(estat: usize, jogo: usize
 // ponytail: as três mexem no arquivo temporário (e a gravação também nos eventos e no índice): rodar
 // duas vezes gravaria o registro duas vezes, então o comparador só chama a original; as cópias se
 // provam no modo Rust (os ramos) e pela carreira com as mutações.
-unsafe extern "thiscall" fn comparar_ler_registro_da_partida(estat: usize, k: i32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida)
 }
 
-unsafe extern "thiscall" fn comparar_registrar_partida(estat: usize, m: usize, r: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r)
 }
 
-unsafe extern "thiscall" fn comparar_gravar_registro_da_partida(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos)
 }

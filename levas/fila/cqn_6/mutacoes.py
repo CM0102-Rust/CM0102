@@ -14,6 +14,6 @@ MUTACOES = [
      '    1 // cqn6: o toco devolve 1',
      '    0 // mutacao: o toco devolve 0'),
     ('cqn6_toco_de_um_devolve_zero',
-     'unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {\n    1\n}',
-     'unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {\n    0\n}'),
+     'unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {\n    1\n}',
+     'unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {\n    0\n}'),
 ]

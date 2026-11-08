@@ -3,7 +3,7 @@
 /// { 0x896570 } (thiscall, ret 8, tactics.cpp): o registro (0x18e3 bytes) da formação `f`: as
 /// [+0x5fd] primeiras em [+0x5f9], as seguintes (até [+0x5f5] mais, só sem `humano`) em [+0x5f1].
 /// Formação negativa ou fora: a original (caixa de erro).
-unsafe extern "thiscall" fn registro_da_formacao(t: usize, f: i16, humano: u32) -> usize {
+unsafe extern "thiscall" fn formation_record(t: usize, f: i16, humano: u32) -> usize {
     let primeiras = core::ptr::read_unaligned((t + 0x5fd) as *const i32);
     let limite = if humano != 0 { primeiras } else { core::ptr::read_unaligned((t + 0x5f5) as *const i32).wrapping_add(primeiras) };
     let f = f as i32;
@@ -22,7 +22,7 @@ unsafe extern "thiscall" fn registro_da_formacao(t: usize, f: i16, humano: u32) 
 /// com 0x16/0x20, [0x9cf408] com 0x1e/0x20, [0x9cf2c0] com 0x16/0x1e, [0x9cf244] com 7) e nos códigos
 /// +0x78/+0x79 da competição: 500/1000/500/300 pela primeira, 300/500/300/100 pela segunda; sem
 /// competição, 0. Devolve só `ax`.
-unsafe extern "stdcall" fn peso_da_competicao(p: usize, cod: i8) -> u16 {
+unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u16 {
     let k = |a: usize| *(a as *const i32);
     // como na original: a primeira constante igual ao id decide (sem o código certo, vai aos códigos)
     let especial = |id: i32| -> u8 {
@@ -70,7 +70,7 @@ unsafe extern "stdcall" fn peso_da_competicao(p: usize, cod: i8) -> u16 {
 
 /// { 0x785790 } (thiscall, ret 8, news.cpp): grava `valor` no dado `k` 0..49 da notícia (+5, 4 bytes
 /// cada). Devolve 1. `k` fora: a original (caixa de erro).
-unsafe extern "thiscall" fn gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
+unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, valor: u32) -> u32 {
     if !(0..0x32).contains(&k) {
         return orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%)(t, k, valor);
     }
@@ -78,19 +78,19 @@ unsafe extern "thiscall" fn gravar_dado_da_noticia(t: usize, k: i8, valor: u32) 
     1
 }
 
-comparar_valor!(comparar_registro_da_formacao, registro_da_formacao, %%I0%%, (f: i16, humano: u32) -> usize);
+comparar_valor!(comparar_formation_record, formation_record, %%I0%%, (f: i16, humano: u32) -> usize);
 
-unsafe extern "stdcall" fn comparar_peso_da_competicao(p: usize, cod: i8) -> u16 {
+unsafe extern "stdcall" fn comparar_competition_weight(p: usize, cod: i8) -> u16 {
     let r = orig::<unsafe extern "stdcall" fn(usize, i8) -> u16>(%%I1%%)(p, cod);
-    let n = peso_da_competicao(p, cod);
-    PLACAR.registrar(r == n, || format!("peso_da_competicao({:#x}, {}) original={} rust={}", p, cod, r, n));
+    let n = competition_weight(p, cod);
+    PLACAR.registrar(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_gravar_dado_da_noticia(t: usize, k: i8, valor: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_news_field(t: usize, k: i8, valor: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(%%I2%%);
     let reg = if (0..0x32).contains(&k) { vec![(t + 5 + 4 * k as usize, 4)] } else { vec![] };
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, k, valor), || gravar_dado_da_noticia(t, k, valor));
-    PLACAR.registrar(igual && r == v, || format!("gravar_dado_da_noticia({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, k, valor), || set_news_field(t, k, valor));
+    PLACAR.registrar(igual && r == v, || format!("set_news_field({:#x}, {}, {:#x}) original={} {:x?} rust={} {:x?}", t, k, valor, r, mo, v, mr));
     r
 }

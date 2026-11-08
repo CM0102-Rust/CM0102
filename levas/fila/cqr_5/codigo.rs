@@ -85,35 +85,35 @@ unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32)
 /// { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
 /// virada (`cqr5_virada`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
 /// 0x189, 0x190 e 0x197.
-unsafe extern "thiscall" fn cqr5_virada_copa_do_brasil(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> u32 {
     cqr5_virada(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
 }
 
-unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_brasil(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_cup_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqr5_comparar("cqr5_virada_copa_do_brasil", this, || o(this))
+    cqr5_comparar("bra_cup_start_new_season", this, || o(this))
 }
 
 /// { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
 /// a virada (`cqr5_virada`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
 /// linhas 0x217, 0x21e e 0x225.
-unsafe extern "thiscall" fn cqr5_virada_copa_do_imperador(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_cup_start_new_season_662950(this: usize) -> u32 {
     cqr5_virada(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
 }
 
-unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_imperador(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_cup_start_new_season_662950(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqr5_comparar("cqr5_virada_copa_do_imperador", this, || o(this))
+    cqr5_comparar("bra_cup_start_new_season_662950", this, || o(this))
 }
 
 /// { 0x665bc0 } (thiscall, ret 0, jap_j_cup.cpp; a virtual +0x08 da Copa da Liga japonesa): `JapJCup::start_new_season()`,
 /// a virada (`cqr5_virada`) com os inscritos de 0x665a00 (thiscall, ret 0) e as caixas do jap_j_cup.cpp nas linhas 0x1a3,
 /// 0x1aa e 0x1b1.
-unsafe extern "thiscall" fn cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
+unsafe extern "thiscall" fn jap_j_cup_start_new_season(this: usize) -> u32 {
     cqr5_virada(this, 0x665a00, 0x9eaf14, [0x1a3, 0x1aa, 0x1b1], 1, "cqr_5 virada da copa da liga japonesa") // cqr5: a Copa da Liga japonesa
 }
 
-unsafe extern "thiscall" fn comparar_cqr5_virada_copa_da_liga_japonesa(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_jap_j_cup_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqr5_comparar("cqr5_virada_copa_da_liga_japonesa", this, || o(this))
+    cqr5_comparar("jap_j_cup_start_new_season", this, || o(this))
 }

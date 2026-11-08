@@ -1,4 +1,4 @@
-# Mutacoes (cpz_6), na 0x7757d0, que a escalacao do computador (0x6dbc50 escalar_automatico, 0x6dbb80 titulares)
+# Mutacoes (cpz_6), na 0x7757d0, que a escalacao do computador (0x6dbc50 select_automatically, 0x6dbb80 starters)
 # chama para cada jogador antes de cada partida: o jogador a servico da selecao fica fora do time. Nas datas FIFA da
 # carreira automatica ate 2002-06-01 (setembro, outubro e novembro de 2001, fevereiro, marco e maio de 2002) os
 # convocados das selecoes do computador tem jogo da selecao na janela ou convocacao ja comecada. Devolver 0 num dos

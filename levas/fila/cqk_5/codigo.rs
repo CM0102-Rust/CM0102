@@ -20,7 +20,7 @@ unsafe fn cqk5_registro(g: usize) -> usize {
 /// thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher (sem encher: 0). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70 pela cota de 250.000), +0xe1 = 1, a TV de 5.000.000 a cada clube (0x683010:
 /// thiscall(liga, valor, 0), ret 8) e 1.
-unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
+unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = alocar(0x49c);
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
 /// plano, feito antes: os clubes da divisão de baixo espanhola (que passam à genérica) e os da Primera na ordem do
 /// banco (até 20). Depois: os primeiros com +0x57 = o registro de [0x9cf764]; +0x3e = 20, a devolução, as linhas com
 /// os clubes da Primera na ordem e, cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
-unsafe extern "thiscall" fn comparar_tabela_da_primera(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_first_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(cqk5_d(0xae235c) as i32).max(0) as usize {
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn comparar_tabela_da_primera(this: usize) -> u32 {
             igual = igual && *((this + 0xe1) as *const u8) == 1 && core::ptr::read_unaligned((this + 0x28) as *const i32) == premio(this, 0x3d090);
         }
     }
-    PLACAR.registrar(igual, || format!("tabela_da_primera({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, achou));
+    PLACAR.registrar(igual, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, achou));
     r
 }
 
@@ -120,7 +120,7 @@ unsafe fn cqk5_registros() -> usize {
 /// comp, fase do jogo +0x32, rodada +0x30, peso), ret 0x14; o peso = comp_util_scale_by_round 0x4bf850: cdecl(0x1e,
 /// 0x32, rodada do jogo +0x34, 2)) e +0x37 = 0xfe. No play-out (fase 1): 1 (salvou-se), +0x37 = 0xfe; 2 ou 0xff,
 /// o rebaixamento e +0x37 = 3.
-unsafe extern "thiscall" fn registros_pela_situacao_na_c2a(this: usize, clube: usize, situacao: u32, fase: u32, _a4: u32, jogo: usize, _a6: u32) -> u32 {
+unsafe extern "thiscall" fn spa_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, _a4: u32, jogo: usize, _a6: u32) -> u32 {
     let s = situacao as u8;
     let comp = cqk5_d(this + 4);
     let f = fase as u8;
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn registros_pela_situacao_na_c2a(this: usize, clube: u
 /// vezes): só a original. O plano, feito antes, nas fases 0 e 1: a primeira linha do clube com situação 1, 2 ou 0xff
 /// decide o +0x37 que a rotina grava (fase 0: 0 com 1, 0xfe com 2/0xff; fase 1: 0xfe com 1, 3 com 2/0xff); depois a
 /// linha tem de estar assim. Na liga ela só registra: a devolução 0.
-unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_c2a(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_spa_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
     let (s, f) = (situacao as u8, fase as u8);
     let mut plano: Option<(usize, u8)> = None;
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_c2a(this: usize,
     }
     let r = o(this, clube, situacao, fase, a4, jogo, a6);
     let igual = r == 0 && plano.map_or(true, |(l, v)| *((l + 0x37) as *const u8) == v);
-    PLACAR.registrar(igual, || format!("registros_pela_situacao_na_c2a({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, f, r, plano));
+    PLACAR.registrar(igual, || format!("spa_first_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this, clube, s, f, r, plano));
     r
 }
 
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_c2a(this: usize,
 /// find_club_entry 0x4a4850: thiscall(+8, clube), ret 4) grava a posição atual (+0x73), a melhor possível (+0x74;
 /// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria
 /// [inferência: as posições de 17 a 18 juntam-se à vizinha de cima na melhor e à de baixo na pior].
-unsafe extern "thiscall" fn situacao_na_primera(this: usize, clube: usize, _fase: u32, atual: u32, melhor: u32, pior: u32) {
+unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, clube: usize, _fase: u32, atual: u32, melhor: u32, pior: u32) {
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = achar(cqk5_d(this + 8), clube);
     let m = match melhor as u8 {
@@ -249,13 +249,13 @@ unsafe extern "thiscall" fn situacao_na_primera(this: usize, clube: usize, _fase
 
 /// Comparador da 0x850880: a entrada é achada antes (a original e a cópia acham a mesma) e as duas rodam lado a lado
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
-unsafe extern "thiscall" fn comparar_situacao_na_primera(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+unsafe extern "thiscall" fn comparar_spa_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I2%%);
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = achar(cqk5_d(this + 8), clube);
     if e == 0 {
         return o(this, clube, fase, atual, melhor, pior);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x73, 3)], || o(this, clube, fase, atual, melhor, pior), || situacao_na_primera(this, clube, fase, atual, melhor, pior));
-    PLACAR.registrar(igual, || format!("situacao_na_primera({:#x}, {:#x}) original={:x?} rust={:x?}", this, clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x73, 3)], || o(this, clube, fase, atual, melhor, pior), || spa_first_set_club_progress(this, clube, fase, atual, melhor, pior));
+    PLACAR.registrar(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, clube, mo, mr));
 }

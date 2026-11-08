@@ -140,7 +140,7 @@ unsafe fn cpz8_primeiro(l: usize, f1: &mut [u8; 0x4f], f2: &mut [u8; 0x4f]) {
 /// antes (0x5acbe0, lado 1), não amistoso e com +0x43 = 0xff, vai para um dia antes dele; o primeiro jogo dois dias
 /// depois, não amistoso, vai para um dia depois. Só se a data nova não tiver outro jogo (0x5ad780): tira (0x5abc30),
 /// junta (0x5aa680, 0) e dá a notícia do jogo remarcado (0x5aac70, com o jogo como causa).
-unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) {
     let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let mut d = [0u8; 8];
     iniciar_data(d.as_mut_ptr() as usize);
@@ -215,7 +215,7 @@ unsafe extern "thiscall" fn mover_jogos_vizinhos_do_clube(this: usize, jogo: usi
 }
 
 // ponytail: move jogos no calendário (tira, junta, aloca e libera listas, notícia): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_mover_jogos_vizinhos_do_clube(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn comparar_move_nearby_club_fixtures(this: usize, jogo: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, jogo)
 }
 
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_mover_jogos_vizinhos_do_clube(this: usize, 
 /// convocados). Os jogos do clube (o id em `*clube`) de um dia antes a um dia depois da data (0x5acbe0, lado 1); cada
 /// um que sai do calendário (0x5abc30) ganha data nova (0x5ab510), volta (0x5aa680, 1) e dá a notícia com a data velha
 /// (0x5aac70, sem causa).
-unsafe extern "thiscall" fn remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
+unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: usize, clube: usize, data: usize) {
     let gravar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5ab510usize);
     let mut l = [0u8; 0xe];
     let lp = l.as_mut_ptr() as usize;
@@ -253,7 +253,7 @@ unsafe extern "thiscall" fn remarcar_jogos_perto_da_data(this: usize, clube: usi
 }
 
 // ponytail: move jogos no calendário e dá a notícia (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_remarcar_jogos_perto_da_data(this: usize, clube: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_reschedule_club_fixtures_near_date(this: usize, clube: usize, data: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, clube, data)
 }
 
@@ -291,7 +291,7 @@ unsafe fn cpz8_na_fila(l: usize, f: usize) -> usize {
 /// primeira vez: 0x944cf1 e 0x68d020): se já há a notícia do mesmo jogo, só troca a data nova (dados 5 e 6); senão a
 /// notícia 1: o jogo (+0xc, +0x10, +0, +0x32, +0x30, a data nova +0x2a/+0x28, +0x40, +0x41) e a causa (os mesmos
 /// campos dela nos dados 7 a 0xd) ou, sem causa, −1 e a data velha (dados 0xc e 0xd); entra na fila (0x68d0d0, 0xdf).
-unsafe extern "thiscall" fn noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
+unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     if cpz8_d(this + 0x1128) == 0 && !CPZ8_ENSAIO {
@@ -348,14 +348,14 @@ unsafe extern "thiscall" fn noticia_do_jogo_remarcado(this: usize, f: usize, cau
 /// Nova: a cópia monta a notícia sem pô-la na fila e a original roda; a fila tem de crescer um e o último item (a cauda,
 /// +6, nó +0) ser a notícia da cópia nos 0xde bytes que o construtor (0x77bbe0) grava; o último dos 0xdf copiados é
 /// sobra de pilha na original (a cópia leva zero).
-unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: usize, causa: usize, velha: usize) {
+unsafe extern "thiscall" fn comparar_queue_fixture_moved_news(this: usize, f: usize, causa: usize, velha: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     let l = cpz8_d(this + 0x1128);
     let alvo = if l != 0 { cpz8_na_fila(l, f) } else { 0 };
     if alvo != 0 {
         let regioes = [(this + 0x1128, 4), (l, 0xe), (alvo, 0xdf)];
-        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, f, causa, velha), || noticia_do_jogo_remarcado(this, f, causa, velha));
-        PLACAR.registrar(igual, || format!("noticia_do_jogo_remarcado(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
+        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, f, causa, velha), || queue_fixture_moved_news(this, f, causa, velha));
+        PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
         return;
     }
     let mut regioes = vec![(this + 0x1128, 4)];
@@ -366,7 +366,7 @@ unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: u
     let conta = if l != 0 { cpz8_sw(l) } else { 0 };
     CPZ8_ENSAIO = true;
     CPZ8_MONTADA = false;
-    crate::aleatorio::pausar_rastro(|| noticia_do_jogo_remarcado(this, f, causa, velha));
+    crate::aleatorio::pausar_rastro(|| queue_fixture_moved_news(this, f, causa, velha));
     CPZ8_ENSAIO = false;
     antes.escrever();
     o(this, f, causa, velha);
@@ -378,5 +378,5 @@ unsafe extern "thiscall" fn comparar_noticia_do_jogo_remarcado(this: usize, f: u
         && cpz8_d(cpz8_d(l2 + 6)) != 0
         && core::slice::from_raw_parts(cpz8_d(cpz8_d(l2 + 6)) as *const u8, 0xde)
             == core::slice::from_raw_parts(core::ptr::addr_of!(CPZ8_NOTICIA) as *const u8, 0xde);
-    PLACAR.registrar(igual, || format!("noticia_do_jogo_remarcado(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
+    PLACAR.registrar(igual, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, conta, if l2 != 0 { cpz8_sw(l2) } else { -1 }));
 }

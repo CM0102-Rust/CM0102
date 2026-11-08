@@ -12,9 +12,9 @@ use super::*;
 /// 21 as médias por jogo; 18 a média de +0xe com menos de 20 jogos completada por `peso` (vezes
 /// 0.05f); 20 a nota (2×+9 − +0xa + jogos, completada por 1.5 com menos de 20 jogos; 1.5f sem
 /// jogos); 22 o inteiro. Sem divisor: 0.0. `r` nulo, 19 ou fora de 1..22: a original (caixa de erro).
-pub(crate) unsafe extern "stdcall" fn estatistica_do_jogador(r: *const u8, qual: i8, peso: f32) -> f64 {
+pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, qual: i8, peso: f32) -> f64 {
     if r.is_null() || !(1..=22).contains(&qual) || qual == 19 {
-        return orig::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_ESTATISTICA_DO_JOGADOR)(r, qual, peso);
+        return orig::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, qual, peso);
     }
     let b = |o: usize| *r.add(o) as f64;
     let w = |o: usize| core::ptr::read_unaligned(r.add(o) as *const i16) as f64;
@@ -66,9 +66,9 @@ pub(crate) unsafe extern "stdcall" fn estatistica_do_jogador(r: *const u8, qual:
 /// `*indice` (0x27 bytes cada, a partir de [this+0x30]): os dois meios de +0x24 e de +0x25 e o meio
 /// baixo de +0x26, cada um ×4 (zero conta 27), somados em 16 bits e divididos por 4 (truncando).
 /// `indice` nulo: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn media_das_notas(this: usize, indice: *const i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn ratings_average(this: usize, indice: *const i32) -> i32 {
     if indice.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, *const i32) -> i32>(IDX_MEDIA_DAS_NOTAS)(this, indice);
+        return orig::<unsafe extern "thiscall" fn(usize, *const i32) -> i32>(IDX_RATINGS_AVERAGE)(this, indice);
     }
     let reg = (*indice).wrapping_mul(0x27).wrapping_add(*((this + 0x30) as *const i32)) as usize;
     let nota = |n: u8| if n == 0 { 0x1b } else { n as u16 * 4 };
@@ -82,15 +82,15 @@ pub(crate) unsafe extern "thiscall" fn media_das_notas(this: usize, indice: *con
 }
 
 
-pub(crate) unsafe extern "stdcall" fn comparar_estatistica_do_jogador(r: *const u8, qual: i8, peso: f32) -> f64 {
-    let o = orig::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_ESTATISTICA_DO_JOGADOR)(r, qual, peso);
-    let n = estatistica_do_jogador(r, qual, peso);
-    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("estatistica_do_jogador({:p}, {}, {}) original={} rust={}", r, qual, peso, o, n));
+pub(crate) unsafe extern "stdcall" fn comparar_player_statistic(r: *const u8, qual: i8, peso: f32) -> f64 {
+    let o = orig::<unsafe extern "stdcall" fn(*const u8, i8, f32) -> f64>(IDX_PLAYER_STATISTIC)(r, qual, peso);
+    let n = player_statistic(r, qual, peso);
+    PLACAR.registrar(o.to_bits() == n.to_bits(), || format!("player_statistic({:p}, {}, {}) original={} rust={}", r, qual, peso, o, n));
     o
 }
 
-comparar_valor!(comparar_media_das_notas, media_das_notas, IDX_MEDIA_DAS_NOTAS, (indice: *const i32) -> i32);
-comparar_valor!(comparar_zagueiros_sem_conflito, zagueiros_sem_conflito, IDX_ZAGUEIROS_SEM_CONFLITO, () -> u8);
+comparar_valor!(comparar_ratings_average, ratings_average, IDX_RATINGS_AVERAGE, (indice: *const i32) -> i32);
+comparar_valor!(comparar_centre_backs_without_conflict, centre_backs_without_conflict, IDX_CENTRE_BACKS_WITHOUT_CONFLICT, () -> u8);
 
 // ---------- 271a leva: as estatísticas do jogador arquivadas no histórico (a troca de clube, o empréstimo, a aposentadoria) e os jogos e gols pelo clube recontados (player_stats.cpp) ----------
 
@@ -146,7 +146,7 @@ pub(crate) unsafe fn cqh8_gravar(this: usize, reg: usize, no: &[u8; 0x2b]) {
 /// `clube` ≥ 0 e: fora da temporada da nação do clube (a tabela 0xb63d8a); ou, sem a nação ou na temporada dela, menos de
 /// 365 dias desde a entrada no clube (+0x3e/+0x42, 0x54cdb0). Com `clube` ≥ 0 ou `valor` ≥ 0: recontam-se os jogos (+0x20) e os gols (+0x22) pelo
 /// `clube` nos nós da categoria 2 do histórico (0x58f120). Devolve 1.
-pub(crate) unsafe extern "thiscall" fn arquivar_estatisticas(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
     let tipo: u8 = if emprestimo as u8 != 0 {
         2
     } else if fim as u8 != 0 {
@@ -254,8 +254,8 @@ pub(crate) unsafe extern "thiscall" fn arquivar_estatisticas(this: usize, p: usi
 /// soma dos jogos e gols), depois a original a partir do mesmo estado; compara a devolução, os seis registros de 32 bytes
 /// das categorias e os jogos e gols pelo clube (+0x20/+0x22 do registro da ficha). As posições do histórico (+0x18,
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_arquivar_estatisticas(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARQUIVAR_ESTATISTICAS);
+pub(crate) unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARCHIVE_PLAYER_STATS);
     if p == 0 || read_u32_as_usize(p + 0x61) == 0 {
         return o(this, p, valor, emprestimo, fim, clube_id, outro);
     }
@@ -271,13 +271,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_arquivar_estatisticas(this: usiz
     CQH8_ENSAIO = true;
     CQH8_PENDENTES = (0, 0);
     CQH8_CLUBE = clube_id as i32;
-    let n = crate::aleatorio::pausar_rastro(|| arquivar_estatisticas(this, p, valor, emprestimo, fim, clube_id, outro));
+    let n = crate::aleatorio::pausar_rastro(|| archive_player_stats(this, p, valor, emprestimo, fim, clube_id, outro));
     CQH8_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = o(this, p, valor, emprestimo, fim, clube_id, outro);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(r == n && mo == mr, || format!("arquivar_estatisticas(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.registrar(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
         p, valor as i32, clube_id as i32, r, n, mo.0, mr.0));
     r
 }
@@ -335,7 +335,7 @@ pub(crate) fn cqf8_lugar(buf: usize, n: i32, k: i32) -> usize {
 /// transferência −1 e os 32 bytes da categoria (0x7c3920) quando há. (2) O histórico do arquivo (FILE_LLIST::get_nodes
 /// 0x58f120 do [this] pelas posições +0x18/+0x1c do registro de 0x27 bytes da ficha em [this+0x30]), do fim para o
 /// começo (0x68d1d0): cada nó de outra temporada, clube ou tipo abre um grupo: a conta anda 6; anos vazios entre os dois
-/// (até a conta passar de 500) viram grupos vazios (clube −1, transferência −1); o grupo do nó leva o ano, o clube, a
+/// (até a conta pass_ball de 500) viram grupos vazios (clube −1, transferência −1); o grupo do nó leva o ano, o clube, a
 /// transferência e o tipo do nó; o nó vai para a entrada da sua categoria (+0x2a / 8) no grupo. A lista é destruída
 /// (0x68d040 e 0x944c94). (3) A conta anda 6; cada entrada leva a transferência e o tipo da entrada seis adiante (as
 /// do último grupo, −1 e 0). (4) Um grupo com um seguinte do mesmo ano e clube, sem transferência nos dois, tipo do
@@ -344,7 +344,7 @@ pub(crate) fn cqf8_lugar(buf: usize, n: i32, k: i32) -> usize {
 /// e de tipo 0 some quando sem clube ou quando outro grupo tem o ano dele e o grupo seguinte é do mesmo clube; o de
 /// jogos com a última entrada sem clube (+0xd9) também some. (6) Os grupos de ano 0 saem da tabela (os seguintes
 /// descem) e a conta cai 6 por grupo.
-pub(crate) unsafe extern "thiscall" fn historico_da_carreira(this: usize, p: usize, conta: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let realloc: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let ano_do_clube: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
@@ -568,14 +568,14 @@ pub(crate) unsafe extern "thiscall" fn historico_da_carreira(this: usize, p: usi
 /// Comparador: as duas montam a tabela (a original e a cópia, a partir do mesmo estado; o arquivo de histórico só é
 /// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
 /// de erro (caixa): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usize, p: usize, conta: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_HISTORICO_DA_CARREIRA);
+pub(crate) unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize, conta: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
     if p == 0 || (read_i32(p) < read_i32(0xae2364) && read_u32_as_usize(p + 0x61) == 0) {
         return o(this, p, conta);
     }
     let r = o(this, p, conta);
     let mut n = 0i32;
-    let t = historico_da_carreira(this, p, &mut n);
+    let t = build_career_history(this, p, &mut n);
     let igual = if r == 0 || t == 0 {
         r == t && *conta == n
     } else {
@@ -588,7 +588,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usiz
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * CQF8_E) as *const u8, CQF8_E) != core::slice::from_raw_parts((t + i * CQF8_E) as *const u8, CQF8_E)
         });
-        format!("historico_da_carreira(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *conta, n, dif)
+        format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *conta, n, dif)
     });
     if t != 0 {
         let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -606,7 +606,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_historico_da_carreira(this: usiz
 /// clube) com o clube. Pessoa nula (linha 0x133f), clube nulo (0x1347) ou sem ficha (0x135f): a caixa e −1; id a partir
 /// de [0xae2364]: −1. Quem chama a põe com o ecx do PlayerStats, que ela não usa. Pela 0x5b03e0 (não roda na carreira
 /// automática: passageira).
-pub(crate) unsafe extern "stdcall" fn anos_desde_o_clube(p: usize, clube: usize) -> i16 {
+pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
     if p == 0 {
         cqf8_erro(0x133f);
         return -1;
@@ -650,14 +650,14 @@ pub(crate) unsafe extern "stdcall" fn anos_desde_o_clube(p: usize, clube: usize)
 }
 
 /// Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
-pub(crate) unsafe extern "stdcall" fn comparar_anos_desde_o_clube(p: usize, clube: usize) -> i16 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_ANOS_DESDE_O_CLUBE);
+pub(crate) unsafe extern "stdcall" fn comparar_player_stats_years_since_at_club(p: usize, clube: usize) -> i16 {
+    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
     if p == 0 || clube == 0 || (read_i32(p) < read_i32(0xae2364) && read_u32_as_usize(p + 0x39) != clube && read_u32_as_usize(p + 0x61) == 0) {
         return o(p, clube);
     }
     let r = o(p, clube);
-    let n = anos_desde_o_clube(p, clube);
-    PLACAR.registrar(r == n, || format!("anos_desde_o_clube(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
+    let n = player_stats_years_since_at_club(p, clube);
+    PLACAR.registrar(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p, clube, r, n));
     r
 }
 
@@ -667,7 +667,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_anos_desde_o_clube(p: usize, club
 /// [pt] { 0x7c6de0 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_staff(a, b)`, a ordem do qsort dos
 /// registros do staff_history.dat na criação das estatísticas (0x7bfd50, ponteiro em 0x7c05ad): `a` nulo 1, `b` nulo −1;
 /// pela pessoa (+4, sem sinal), depois pelo ano (+8, palavra com sinal), depois a diferença do primeiro dword.
-pub(crate) unsafe extern "C" fn ordem_do_historico_por_pessoa(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     if a == 0 {
         return 1;
     }
@@ -692,10 +692,10 @@ pub(crate) unsafe extern "C" fn ordem_do_historico_por_pessoa(a: usize, b: usize
 }
 
 /// Comparador: a devolução (só lê).
-pub(crate) unsafe extern "C" fn comparar_ordem_do_historico_por_pessoa(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DO_HISTORICO_POR_PESSOA)(a, b);
-    let n = ordem_do_historico_por_pessoa(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_historico_por_pessoa({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_HISTORY_BY_STAFF)(a, b);
+    let n = player_stats_compare_history_by_staff(a, b);
+    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_staff({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -717,7 +717,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_do_historico_por_pessoa(a: usize,
 /// o registro 4 ou 5 a original lê locais sem valor (a cópia usa zero; o comparador deixa esses casos com a original).
 /// Pela escolha da escalação 0x6e2f20, pelo MATCH_PLAYER::setup 0x6eaea0, pela reputação do clube 0x545e90, pela força
 /// do jogador 0x546ab0, pelo dia da comissão 0x5ce2d0 e por outras. Quente: sem contador.
-pub(crate) unsafe extern "thiscall" fn estatistica_da_categoria(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
+pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
     if jogador == 0 {
         aviso_em(0xa78310, 0x659);
         return 0.0;
@@ -777,8 +777,8 @@ pub(crate) unsafe extern "thiscall" fn estatistica_da_categoria(this: usize, jog
     }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(IDX_ESTATISTICA_DA_CATEGORIA);
+pub(crate) unsafe extern "thiscall" fn comparar_get_stat(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(IDX_GET_STAT);
     if jogador == 0 || (read_usize(jogador) as i32) >= read_usize(G_PLAYER_DATA_COUNT) as i32 {
         return o(this, jogador, categoria, qual, padrao);
     }
@@ -792,9 +792,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: u
         return o(this, jogador, categoria, qual, padrao);
     }
     let r = o(this, jogador, categoria, qual, padrao);
-    let n = estatistica_da_categoria(this, jogador, categoria, qual, padrao);
+    let n = get_stat(this, jogador, categoria, qual, padrao);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || {
-        format!("estatistica_da_categoria(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", read_usize(jogador) as i32, c, qual as u8, padrao, r, n)
+        format!("get_stat(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", read_usize(jogador) as i32, c, qual as u8, padrao, r, n)
     });
     r
 }
@@ -806,7 +806,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: u
 /// idiomas, registros de 6 bytes {id, idioma, fluência}): a nulo, −1; b nulo, 1; ids (+0) diferentes, a diferença;
 /// idioma 0xff em qualquer um, 0; senão a diferença dos idiomas (+4, com sinal). Pela fluência no idioma 0x7c6830 e pelos
 /// idiomas acrescentados, tirados e melhorados.
-pub(crate) unsafe extern "C" fn ordem_dos_idiomas(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
     if a == 0 {
         return -1;
     }
@@ -824,10 +824,10 @@ pub(crate) unsafe extern "C" fn ordem_dos_idiomas(a: usize, b: usize) -> i32 {
     la as i8 as i32 - lb as i8 as i32
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_idiomas(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_IDIOMAS)(a, b);
-    let n = ordem_dos_idiomas(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_idiomas({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_LANGUAGE_ENTRIES)(a, b);
+    let n = player_stats_compare_language_entries(a, b);
+    PLACAR.registrar(r == n, || format!("player_stats_compare_language_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -837,7 +837,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_idiomas(a: usize, b: usize) -
 /// [pt] { 0x7c6d90 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_club(a, b)` (o qsort da história na carga
 /// das estatísticas 0x7bfd50): a nula, 1; b nula, −1; pelo dword +0xa e depois pelo +4, sem sinal: maior 1, menor −1,
 /// iguais 0.
-pub(crate) unsafe extern "C" fn ordem_da_historia_por_clube(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
     if a == 0 {
         return 1;
     }
@@ -858,10 +858,10 @@ pub(crate) unsafe extern "C" fn ordem_da_historia_por_clube(a: usize, b: usize) 
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_da_historia_por_clube(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DA_HISTORIA_POR_CLUBE)(a, b);
-    let n = ordem_da_historia_por_clube(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_da_historia_por_clube({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_HISTORY_BY_CLUB)(a, b);
+    let n = player_stats_compare_history_by_club(a, b);
+    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -878,7 +878,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_da_historia_por_clube(a: usize, b
 /// (+0x61), a caixa (linha 0xb5d) e 0. Senão a tabela da carreira (0x7c3e40 do [0xb74350]: entradas de 0x2b bytes,
 /// seis por temporada e clube) e a soma, em 16 bits, do byte +8 da sexta entrada de cada grupo (+0xdf); a tabela é
 /// liberada (0x9452ca, também quando nula). Quente (cada jogador de cada partida): sem contador.
-pub(crate) unsafe extern "stdcall" fn gols_na_carreira(pessoa: usize) -> u16 {
+pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(pessoa: usize) -> u16 {
     if pessoa == 0 {
         aviso_em(0xa78310, 0xb4b);
         return 0;
@@ -907,14 +907,14 @@ pub(crate) unsafe extern "stdcall" fn gols_na_carreira(pessoa: usize) -> u16 {
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-pub(crate) unsafe extern "stdcall" fn comparar_gols_na_carreira(pessoa: usize) -> u16 {
-    let o = orig::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_GOLS_NA_CARREIRA);
+pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_career_goals(pessoa: usize) -> u16 {
+    let o = orig::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_PLAYER_STATS_GET_CAREER_GOALS);
     if pessoa == 0 || (read_i32(pessoa) < read_i32(0xae2364) && read_u32_as_usize(pessoa + staff::PLAYER) == 0) {
         return o(pessoa);
     }
     let r = o(pessoa);
-    let n = gols_na_carreira(pessoa);
-    PLACAR.registrar(r == n, || format!("gols_na_carreira(pessoa {:x}) original={} rust={}", pessoa, r, n));
+    let n = player_stats_get_career_goals(pessoa);
+    PLACAR.registrar(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
@@ -964,10 +964,10 @@ pub(crate) unsafe fn cpq10_sem_memoria(linha: u32, texto: usize) {
 /// registro de 0x20 bytes ([this+4] + 32 × índice) da categoria do jogador (cpq10_vaga), ou 0 quando o índice é −1
 /// ou menor. Sem jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10e6 e
 /// pela PlayerStats::get_stat 0x7c1e30 (as médias do motor de partida). Quente: sem contador.
-pub(crate) unsafe extern "thiscall" fn registro_da_categoria(this: usize, jogador: usize, categoria: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
     let vaga = match cpq10_vaga(this, jogador, categoria) {
         Some(v) => v,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_REGISTRO_DA_CATEGORIA)(this, jogador, categoria),
+        _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CATEGORY_RECORD)(this, jogador, categoria),
     };
     let i = read_usize(vaga) as i32; // o índice da categoria
     if i <= -1 {
@@ -985,10 +985,10 @@ pub(crate) unsafe extern "thiscall" fn registro_da_categoria(this: usize, jogado
 /// [this+4] (conta +0xc) com +0xe = 0xffff vira o dele (zerado; os soltos descem); senão um no fim (zerado; a conta
 /// sobe): cheio (capacidade +8), cresce de 100 em 100 (realloc 0x945667; sem memória, a caixa 0xef4 e 0). Sem
 /// jogador ou fora de 1..6, a caixa "Error" e 0: a original. Pela PlayerStats::record_match 0x7c10f9.
-pub(crate) unsafe extern "thiscall" fn criar_estatisticas(this: usize, jogador: usize, categoria: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
     let vaga = match cpq10_vaga(this, jogador, categoria) {
         Some(v) => v,
-        _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_CRIAR_ESTATISTICAS)(this, jogador, categoria),
+        _ => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_CREATE_STATS)(this, jogador, categoria),
     };
     if read_usize(vaga) as i32 != -1 {
         return read_usize(this + 4).wrapping_add(read_usize(vaga) << 5);
@@ -1030,21 +1030,21 @@ pub(crate) unsafe extern "thiscall" fn criar_estatisticas(this: usize, jogador: 
 
 
 /// Comparador: pelo valor (só lê); os casos de erro só na original.
-pub(crate) unsafe extern "thiscall" fn comparar_registro_da_categoria(this: usize, jogador: usize, categoria: u32) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_REGISTRO_DA_CATEGORIA)(this, jogador, categoria);
+pub(crate) unsafe extern "thiscall" fn comparar_get_category_record(this: usize, jogador: usize, categoria: u32) -> usize {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CATEGORY_RECORD)(this, jogador, categoria);
     if cpq10_vaga(this, jogador, categoria).is_none() {
         return r;
     }
-    let n = registro_da_categoria(this, jogador, categoria);
-    PLACAR.registrar(r == n, || format!("registro_da_categoria({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
+    let n = get_category_record(this, jogador, categoria);
+    PLACAR.registrar(r == n, || format!("get_category_record({:x}, {:x}, {}) original={:x} rust={:x}", this, jogador, categoria as u8 as i8, r, n));
     r
 }
 
 /// Comparador: a original realoca o vetor, então só ela roda; antes, o plano (o índice que o jogador vai ter, a
 /// conta e os soltos depois); depois, o registro devolvido, o índice na vaga, a conta, os soltos e o registro
 /// zerado quando é novo. ponytail: os casos de erro e a falta de memória só na original, sem conferir.
-pub(crate) unsafe extern "thiscall" fn comparar_criar_estatisticas(this: usize, jogador: usize, categoria: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_CRIAR_ESTATISTICAS);
+pub(crate) unsafe extern "thiscall" fn comparar_create_stats(this: usize, jogador: usize, categoria: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_CREATE_STATS);
     let vaga = match cpq10_vaga(this, jogador, categoria) {
         Some(v) => v,
         _ => return o(this, jogador, categoria),
@@ -1068,12 +1068,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_criar_estatisticas(this: usize, 
     let esperado = read_usize(this + 4).wrapping_add((indice as usize) << 5);
     let zerado = atual != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
     let igual = r == esperado && read_usize(vaga) as i32 == indice && read_usize(this + 0xc) == n2 && read_usize(this + 0x38) == soltos2 && zerado;
-    PLACAR.registrar(igual, || format!("criar_estatisticas({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
+    PLACAR.registrar(igual, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
         this, jogador, categoria as u8 as i8, r, esperado, read_usize(vaga) as i32, indice, read_usize(this + 0xc), n2, read_usize(this + 0x38), soltos2, zerado));
     r
 }
 
-comparar_valor!(comparar_aposentadoria_marcada, aposentadoria_marcada, IDX_APOSENTADORIA_MARCADA, (pessoa: usize) -> u8);
+comparar_valor!(comparar_is_retirement_pending, is_retirement_pending, IDX_IS_RETIREMENT_PENDING, (pessoa: usize) -> u8);
 
 // ---------- 251a leva: os idiomas do jogador (acrescentar e melhorar) e zerar as estatísticas do jogador regenerado (player_stats.cpp) ----------
 
@@ -1097,7 +1097,7 @@ pub(crate) unsafe fn cpo12_idioma(this: usize, pessoa: usize, idioma: u8) -> usi
 /// ordenar)`: a tabela dos idiomas (6 bytes por registro em [this+0x3c], capacidade +0x40, conta +0x44) nasce com 100
 /// (malloc 0x258) e cresce 100 (realloc) quando cheia; o registro novo no fim: o id da pessoa, o idioma e a fluência
 /// (no máximo 10, com sinal); com `ordenar`, qsort pela comparação 0x7c6d40. Sem memória: caixa fatal.
-pub(crate) unsafe extern "thiscall" fn acrescentar_idioma(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
+pub(crate) unsafe extern "thiscall" fn add_language(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
     if read_u32_as_usize(this + 0x3c) == 0 {
         let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
         let p = malloc(0x258);
@@ -1141,7 +1141,7 @@ pub(crate) unsafe extern "thiscall" fn acrescentar_idioma(this: usize, pessoa: u
 /// [pt] { 0x7c6ca0 } (thiscall, ret 0x10, player_stats.cpp): `PlayerStats::improve_language(pessoa, idioma, aumento,
 /// ordenar)`: sem tabela, ou sem o registro da pessoa no idioma (`cpo12_idioma`), acrescenta-o com a fluência
 /// `aumento` (0x7c6a30); com ele, soma o aumento à fluência (byte), no máximo 10 (com sinal).
-pub(crate) unsafe extern "thiscall" fn melhorar_idioma(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
+pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_PLAYERSTATS_ADD_LANGUAGE);
     if read_u32_as_usize(this + 0x3c) == 0 {
         acrescentar(this, pessoa, idioma, aumento, ordenar);
@@ -1172,9 +1172,9 @@ pub(crate) unsafe extern "thiscall" fn melhorar_idioma(this: usize, pessoa: usiz
 /// registro de 32 bytes de [this+4]; +1 nos livres [this+0x38]) e fica −1; zera +0x20, +0x22 (palavras) e +0x24..+0x26
 /// (as notas recentes) e esvazia o histórico (0x58f110 sobre [this] com +0x18/+0x1c). Pessoa nula ou não jogadora
 /// (+0x61): a original (caixa fatal). Devolve o que a 0x58f110 devolve. Do regen (0x7a59e0).
-pub(crate) unsafe extern "thiscall" fn zerar_estatisticas_do_jogador(this: usize, pessoa: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 || read_u32_as_usize(pessoa + staff::PLAYER) == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ZERAR_ESTATISTICAS_DO_JOGADOR)(this, pessoa); // caixa fatal: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER)(this, pessoa); // caixa fatal: só a original
     }
     let r = read_u32_as_usize(this + 0x30).wrapping_add(read_u32_as_usize(read_u32_as_usize(pessoa + staff::PLAYER)).wrapping_mul(39)); // o id da ficha de jogador (+0x61), não o da pessoa
     for k in 0..6usize {
@@ -1198,12 +1198,12 @@ pub(crate) unsafe extern "thiscall" fn zerar_estatisticas_do_jogador(this: usize
 /// Comparador: a 0x7c6a30 aloca e realoca a tabela (não pode rodar duas vezes): o plano antes (a conta e a
 /// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
 /// com `ordenar`, em algum lugar da tabela).
-pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_idioma(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
+pub(crate) unsafe extern "thiscall" fn comparar_add_language(this: usize, pessoa: usize, idioma: u32, fluencia: u32, ordenar: u32) {
     let (n, cap) = if read_u32_as_usize(this + 0x3c) == 0 { (read_u32_as_usize(this + 0x44), 100) } else { (read_u32_as_usize(this + 0x44), read_u32_as_usize(this + 0x40)) };
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
     let f = fluencia as u8;
     let novo = (read_u32_as_usize(pessoa) as u32, idioma as u8, if (f as i8) > 10 { 10 } else { f });
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_ACRESCENTAR_IDIOMA)(this, pessoa, idioma, fluencia, ordenar);
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_ADD_LANGUAGE)(this, pessoa, idioma, fluencia, ordenar);
     let base = read_u32_as_usize(this + 0x3c);
     let e = |i: usize| {
         let r = base.wrapping_add(i * 6);
@@ -1214,27 +1214,27 @@ pub(crate) unsafe extern "thiscall" fn comparar_acrescentar_idioma(this: usize, 
     if ok {
         ok = if ordenar == 0 { e(n) == novo } else { (0..conta).any(|i| e(i) == novo) };
     }
-    PLACAR.registrar(ok, || format!("acrescentar_idioma({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
+    PLACAR.registrar(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
         novo, ordenar, conta, n.wrapping_add(1), read_u32_as_usize(this + 0x40), cap));
 }
 
 /// Comparador: sem tabela ou sem o registro, só a original (o acréscimo 0x7c6a30 tem o comparador dele); com o
 /// registro, lado a lado nos 6 bytes dele.
-pub(crate) unsafe extern "thiscall" fn comparar_melhorar_idioma(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_MELHORAR_IDIOMA);
+pub(crate) unsafe extern "thiscall" fn comparar_improve_language(this: usize, pessoa: usize, idioma: u32, aumento: u32, ordenar: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_IMPROVE_LANGUAGE);
     let r = if read_u32_as_usize(this + 0x3c) == 0 { 0 } else { cpo12_idioma(this, pessoa, idioma as u8) };
     if r == 0 {
         return o(this, pessoa, idioma, aumento, ordenar);
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 6)],
-        || o(this, pessoa, idioma, aumento, ordenar), || melhorar_idioma(this, pessoa, idioma, aumento, ordenar));
-    PLACAR.registrar(igual, || format!("melhorar_idioma({}, idioma {}, +{}) {:x?} x {:x?}", read_u32_as_usize(pessoa), idioma as u8, aumento as u8, mo, mr));
+        || o(this, pessoa, idioma, aumento, ordenar), || improve_language(this, pessoa, idioma, aumento, ordenar));
+    PLACAR.registrar(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_u32_as_usize(pessoa), idioma as u8, aumento as u8, mo, mr));
 }
 
 /// Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
 /// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(this: usize, pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ZERAR_ESTATISTICAS_DO_JOGADOR);
+pub(crate) unsafe extern "thiscall" fn comparar_player_stats_reset_player(this: usize, pessoa: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER);
     if pessoa == 0 || read_u32_as_usize(pessoa + staff::PLAYER) == 0 {
         return o(this, pessoa);
     }
@@ -1246,8 +1246,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(th
             reg.push((read_u32_as_usize(this + 4).wrapping_add(i << 5) + 0xe, 2));
         }
     }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || zerar_estatisticas_do_jogador(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("zerar_estatisticas_do_jogador({}) {:x?} x {:x?}", read_u32_as_usize(pessoa), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || player_stats_reset_player(this, pessoa));
+    PLACAR.registrar(igual && a == b, || format!("player_stats_reset_player({}) {:x?} x {:x?}", read_u32_as_usize(pessoa), mo, mr));
     a
 }
 
@@ -1267,7 +1267,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(th
 /// segunda (+0x1e) fala o idioma da nação do `clube` ou o `idioma`. Senão o idioma aprendido: a busca binária (bsearch
 /// 0x946464, comparação 0x7c6d40, registros de 6 bytes em [+0x3c], [+0x44] deles) pela chave {id, idioma}, o byte +5;
 /// sem a tabela ou sem o registro, 0. Os chamadores só leem o al.
-pub(crate) unsafe extern "thiscall" fn fluencia_no_idioma(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let idioma = idioma as u8;
     if pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return if read_u8(read_usize(pessoa + staff::NATION) + 0x77) == idioma { 10 } else { 0 }; // o técnico humano
@@ -1316,10 +1316,10 @@ pub(crate) unsafe extern "thiscall" fn fluencia_no_idioma(this: usize, pessoa: u
 
 
 /// Comparador: pelo valor (a 0x4cf5f0 e a busca só leem).
-pub(crate) unsafe extern "thiscall" fn comparar_fluencia_no_idioma(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(IDX_FLUENCIA_NO_IDIOMA)(this, pessoa, clube, idioma, pelo_contrato);
-    let n = fluencia_no_idioma(this, pessoa, clube, idioma, pelo_contrato);
-    PLACAR.registrar(r == n, || format!("fluencia_no_idioma({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(IDX_GET_LANGUAGE_FLUENCY)(this, pessoa, clube, idioma, pelo_contrato);
+    let n = get_language_fluency(this, pessoa, clube, idioma, pelo_contrato);
+    PLACAR.registrar(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
     r
 }
 
@@ -1338,9 +1338,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_fluencia_no_idioma(this: usize, 
 /// reserva desconta a entrada +0x32). Na categoria 2 ou com a competição contando (0x4b0700): +1 jogo e os gols no
 /// registro do jogador ([this+0x30], 0x27 bytes) e, sem ficha (0x4cf6d0), +1 no +0x3b do contrato (0x4cf5a0). Por
 /// fim a forma (+0x24..+0x26) anda meio byte e recebe a nota. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn registrar_partida_nas_estatisticas(this: usize, p: usize, jogo: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
     if p == 0 || jogo == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_REGISTRAR_PARTIDA_NAS_ESTATISTICAS)(this, p, jogo); // as caixas
+        return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH)(this, p, jogo); // as caixas
     }
     let criar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_CREATE_STATS);
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
@@ -1447,8 +1447,8 @@ pub(crate) unsafe extern "thiscall" fn registrar_partida_nas_estatisticas(this: 
 /// trecho +0x20..+0x27 do registro do jogador e o +0x3b do contrato; no jogo simulado (competição −2), também o estado
 /// do sorteio (e as duas categorias possíveis), com o sorteio da cópia fora da contagem. Partida ou jogo nulos, a caixa
 /// de uma competição sem tipo conhecido ou registro de categoria a criar (0x7c5d80 cresce o vetor): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_registrar_partida_nas_estatisticas(this: usize, p: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_REGISTRAR_PARTIDA_NAS_ESTATISTICAS);
+pub(crate) unsafe extern "thiscall" fn comparar_player_stats_record_match(this: usize, p: usize, jogo: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH);
     if p == 0 || jogo == 0 {
         return o(this, p, jogo); // ponytail: as caixas, só a original
     }
@@ -1485,9 +1485,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_registrar_partida_nas_estatistic
         regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     }
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, p, jogo), || {
-        crate::aleatorio::sem_contar(|| registrar_partida_nas_estatisticas(this, p, jogo))
+        crate::aleatorio::sem_contar(|| player_stats_record_match(this, p, jogo))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("registrar_partida_nas_estatisticas({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
+    PLACAR.registrar(igual && ro == rr, || format!("player_stats_record_match({:x}, {:x}, {:x}) original={} {:x?} rust={} {:x?}", this, p, jogo, ro, mo, rr, mr));
     ro
 }
 
@@ -1500,7 +1500,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_registrar_partida_nas_estatistic
 /// clube da nação (0x669360, registro de 72 bytes em 0xb63d60): cada jogador (+0x61, id abaixo de [0xae2364]) das 50
 /// vagas (+0xd7) sem empréstimo (0x4cf6d0 sobre [0xae1050]) ou emprestado ao próprio clube (+0x39) tem as estatísticas
 /// arquivadas (0x7c5fe0 com −1, 0, 0, −1, 0). Devolve 1.
-pub(crate) unsafe extern "thiscall" fn arquivar_estatisticas_da_nacao(this: usize, nacao: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     if nacao == 0 {
         aviso_em(0xa78310, 0x396);
         return 0;
@@ -1534,9 +1534,9 @@ pub(crate) unsafe extern "thiscall" fn arquivar_estatisticas_da_nacao(this: usiz
 
 /// Comparador: a 0x7c5fe0 move as estatísticas para o histórico (aloca): roda só a original e confere a devolução
 /// (1, ou 0 sem nação).
-pub(crate) unsafe extern "thiscall" fn comparar_arquivar_estatisticas_da_nacao(this: usize, nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_ARQUIVAR_ESTATISTICAS_DA_NACAO)(this, nacao);
-    PLACAR.registrar(r == (nacao != 0) as u32, || format!("arquivar_estatisticas_da_nacao({:x}) devolveu {}", nacao, r));
+pub(crate) unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_END_SEASON_FOR_KEY_NATION)(this, nacao);
+    PLACAR.registrar(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
     r
 }
 
@@ -1547,7 +1547,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_arquivar_estatisticas_da_nacao(t
 /// tabela de idiomas ([this+0x3c], [this+0x44] entradas de 6 bytes: id, idioma, fluência), achado por
 /// busca binária (0x946464 com 0x7c6d40): as seguintes descem uma casa, a última vira id −1 e
 /// idioma 0 e a contagem cai. Sem tabela ou sem a entrada: nada.
-pub(crate) unsafe extern "thiscall" fn tirar_idioma_do_jogador(estat: usize, ficha: usize, idioma: i8) {
+pub(crate) unsafe extern "thiscall" fn remove_language(estat: usize, ficha: usize, idioma: i8) {
     let tabela = *((estat + 0x3c) as *const usize);
     if tabela == 0 {
         return;
@@ -1575,16 +1575,16 @@ pub(crate) unsafe extern "thiscall" fn tirar_idioma_do_jogador(estat: usize, fic
     *contagem -= 1;
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tirar_idioma_do_jogador(estat: usize, ficha: usize, idioma: i8) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_TIRAR_IDIOMA_DO_JOGADOR);
+pub(crate) unsafe extern "thiscall" fn comparar_remove_language(estat: usize, ficha: usize, idioma: i8) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_REMOVE_LANGUAGE);
     let tabela = *((estat + 0x3c) as *const usize);
     let contagem = *((estat + 0x44) as *const i32);
     if tabela == 0 || contagem <= 0 {
         return o(estat, ficha, idioma);
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(estat + 0x44, 4), (tabela, contagem as usize * 6)],
-        || o(estat, ficha, idioma), || tirar_idioma_do_jogador(estat, ficha, idioma));
-    PLACAR.registrar(igual, || format!("tirar_idioma_do_jogador({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
+        || o(estat, ficha, idioma), || remove_language(estat, ficha, idioma));
+    PLACAR.registrar(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
 }
 
 /// the player's league appearances (field 1) or league goals (field 2) at the club, as a float
@@ -1593,22 +1593,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_tirar_idioma_do_jogador(estat: u
 /// [pt] { 0x7c47b0 } (thiscall, ret 8, player_stats.cpp): a estatística de liga do jogador no clube, como
 /// float (fild): campo 1 as partidas (palavra +0x20) e campo 2 os gols (palavra +0x22) do registro de
 /// 39 bytes em [this+0x30] + id × 39. Jogador nulo ou outro campo: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn estatistica_da_liga_do_jogador(estat: usize, jogador: usize, campo: i8) -> f32 {
+pub(crate) unsafe extern "thiscall" fn get_club_league_stat(estat: usize, jogador: usize, campo: i8) -> f32 {
     if jogador == 0 || !(1..=2).contains(&campo) {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(IDX_ESTATISTICA_DA_LIGA_DO_JOGADOR)(estat, jogador, campo);
+        return orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(IDX_GET_CLUB_LEAGUE_STAT)(estat, jogador, campo);
     }
     let registro = (*((estat + 0x30) as *const usize) as isize + *(jogador as *const i32) as isize * 39) as usize;
     let deslocamento = if campo == 1 { 0x20 } else { 0x22 };
     core::ptr::read_unaligned((registro + deslocamento) as *const i16) as f32
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_liga_do_jogador(estat: usize, jogador: usize, campo: i8) -> f32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(IDX_ESTATISTICA_DA_LIGA_DO_JOGADOR)(estat, jogador, campo);
+pub(crate) unsafe extern "thiscall" fn comparar_get_club_league_stat(estat: usize, jogador: usize, campo: i8) -> f32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(IDX_GET_CLUB_LEAGUE_STAT)(estat, jogador, campo);
     if jogador == 0 || !(1..=2).contains(&campo) {
         return r;
     }
-    let n = estatistica_da_liga_do_jogador(estat, jogador, campo);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("estatistica_da_liga_do_jogador({}) original={} rust={}", campo, r, n));
+    let n = get_club_league_stat(estat, jogador, campo);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_club_league_stat({}) original={} rust={}", campo, r, n));
     r
 }
 
@@ -1618,22 +1618,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_liga_do_jogador(e
 /// [pt] { 0x7c1a60 } (thiscall, ret 4, player_stats.cpp): a nota da última partida do jogador `*id` (os 4
 /// bits baixos do byte +0x26 do registro de 39 bytes em [estatisticas+0x30]); sem nota, 6,5
 /// ([0x96e2b8]). Jogador nulo: a original (caixa de erro). Devolve em st0.
-pub(crate) unsafe extern "thiscall" fn ultima_nota_do_jogador(estatisticas: usize, id: *const i32) -> f32 {
+pub(crate) unsafe extern "thiscall" fn get_last_match_rating(estatisticas: usize, id: *const i32) -> f32 {
     if id.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, *const i32) -> f32>(IDX_ULTIMA_NOTA_DO_JOGADOR)(estatisticas, id);
+        return orig::<unsafe extern "thiscall" fn(usize, *const i32) -> f32>(IDX_GET_LAST_MATCH_RATING)(estatisticas, id);
     }
     let registro = (*((estatisticas + 0x30) as *const usize) as isize + *id as isize * 39) as usize;
     let nota = *((registro + 0x26) as *const u8) & 0xf;
     if nota != 0 { nota as f32 } else { *(0x96e2b8 as *const f32) }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_ultima_nota_do_jogador(estatisticas: usize, id: *const i32) -> f32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> f32>(IDX_ULTIMA_NOTA_DO_JOGADOR)(estatisticas, id);
+pub(crate) unsafe extern "thiscall" fn comparar_get_last_match_rating(estatisticas: usize, id: *const i32) -> f32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> f32>(IDX_GET_LAST_MATCH_RATING)(estatisticas, id);
     if id.is_null() {
         return r;
     }
-    let n = ultima_nota_do_jogador(estatisticas, id);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("ultima_nota_do_jogador({}) original={} rust={}", *id, r, n));
+    let n = get_last_match_rating(estatisticas, id);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_last_match_rating({}) original={} rust={}", *id, r, n));
     r
 }
 
@@ -1647,7 +1647,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ultima_nota_do_jogador(estatisti
 /// [0xb74350]: entradas de 0x2b bytes, seis por temporada e clube) e a soma, em 16 bits, do byte +0xdf dos grupos cujo
 /// clube (+0xd9, com sinal, não negativo) é o id do `clube`; a tabela é liberada (0x9452ca, também quando nula).
 /// Quente (cada jogador de cada partida): sem contador.
-pub(crate) unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
+pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
     if pessoa == 0 {
         aviso_em(0xa78310, 0xb04);
         return 0;
@@ -1684,14 +1684,14 @@ pub(crate) unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usiz
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-pub(crate) unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
-    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_GOLS_PELO_CLUBE);
+pub(crate) unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
+    let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_PLAYER_STATS_GET_GOALS_FOR_CLUB);
     if pessoa == 0 || clube == 0 || (read_i32(pessoa) < read_i32(0xae2364) && read_u32_as_usize(pessoa + staff::PLAYER) == 0) {
         return o(pessoa, clube);
     }
     let r = o(pessoa, clube);
-    let n = gols_pelo_clube(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("gols_pelo_clube(pessoa {:x}, clube {:x}) original={} rust={}", pessoa, clube, r, n));
+    let n = player_stats_get_goals_for_club(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
@@ -1703,7 +1703,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, cl
 /// com 0x16/0x20, [0x9cf408] com 0x1e/0x20, [0x9cf2c0] com 0x16/0x1e, [0x9cf244] com 7) e nos códigos
 /// +0x78/+0x79 da competição: 500/1000/500/300 pela primeira, 300/500/300/100 pela segunda; sem
 /// competição, 0. Devolve só `ax`.
-pub(crate) unsafe extern "stdcall" fn peso_da_competicao(p: usize, cod: i8) -> u16 {
+pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, cod: i8) -> u16 {
     let k = |a: usize| *(a as *const i32);
     // como na original: a primeira constante igual ao id decide (sem o código certo, vai aos códigos)
     let especial = |id: i32| -> u8 {
@@ -1749,9 +1749,9 @@ pub(crate) unsafe extern "stdcall" fn peso_da_competicao(p: usize, cod: i8) -> u
     if *((c2 + 0x79) as *const i8) == cod { 100 } else { 0 }
 }
 
-pub(crate) unsafe extern "stdcall" fn comparar_peso_da_competicao(p: usize, cod: i8) -> u16 {
-    let r = orig::<unsafe extern "stdcall" fn(usize, i8) -> u16>(IDX_PESO_DA_COMPETICAO)(p, cod);
-    let n = peso_da_competicao(p, cod);
-    PLACAR.registrar(r == n, || format!("peso_da_competicao({:#x}, {}) original={} rust={}", p, cod, r, n));
+pub(crate) unsafe extern "stdcall" fn comparar_competition_weight(p: usize, cod: i8) -> u16 {
+    let r = orig::<unsafe extern "stdcall" fn(usize, i8) -> u16>(IDX_COMPETITION_WEIGHT)(p, cod);
+    let n = competition_weight(p, cod);
+    PLACAR.registrar(r == n, || format!("competition_weight({:#x}, {}) original={} rust={}", p, cod, r, n));
     r
 }

@@ -28,7 +28,7 @@ static CQD12_LONGE: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU3
 /// compensação (0x8d0780 com 0) e 1 se ela é menor que o valor (+0x52) da pessoa. Senão: sem lei Bosman no clube do
 /// jogador (0x8d0a70), 0; a taxa (0x8d0780 com 1) acima do valor, 0; pela faixa do vencimento (0x867d30): 0 → 0; 1-2,
 /// 3-4, 5-6, 7-8 → 1 se o +3 da vaga × 0,5 / 0,65 / 0,8 / 0,9 passa do preço (+0xb); 9-14 → 1; acima, 0.
-unsafe extern "thiscall" fn troca_com_compensacao(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
+unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
     let _ = this;
     *taxa = 0;
     if contrato == 0 || vaga == 0 || *((contrato + 0x49) as *const u8) != 0 {
@@ -78,12 +78,12 @@ unsafe extern "thiscall" fn troca_com_compensacao(this: usize, vaga: usize, cont
 }
 
 /// Comparador: lado a lado (rotina pura: só a taxa e a devolução), pelas cópias leves.
-unsafe extern "thiscall" fn comparar_troca_com_compensacao(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
+unsafe extern "thiscall" fn comparar_shortlist_manager_is_compensation_deal(this: usize, vaga: usize, contrato: usize, clube: usize, taxa: *mut i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32) -> u32>(%%I0%%);
     let reg = [(taxa as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, vaga, contrato, clube, taxa),
-        || troca_com_compensacao(this, vaga, contrato, clube, taxa));
-    PLACAR.registrar(igual && r == n, || format!("troca_com_compensacao(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
+        || shortlist_manager_is_compensation_deal(this, vaga, contrato, clube, taxa));
+    PLACAR.registrar(igual && r == n, || format!("shortlist_manager_is_compensation_deal(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
         vaga, contrato, clube, r, n, mo, mr));
     r
 }
@@ -91,17 +91,17 @@ unsafe extern "thiscall" fn comparar_troca_com_compensacao(this: usize, vaga: us
 /// { 0x83b6c0 } (cdecl, shortlist_manager.cpp): `shortlist_compare_slots_by_index(a, b)`, o critério do qsort das 40
 /// vagas (0x25 bytes) da lista de compras na avaliação do elenco (0x83cb40): a diferença dos índices (+0x23, byte com
 /// sinal); iguais, 1 (nunca empata).
-unsafe extern "C" fn ordem_das_vagas(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn shortlist_compare_slots_by_index(a: usize, b: usize) -> i32 {
     let d = (*((a + 0x23) as *const i8) as i32) - (*((b + 0x23) as *const i8) as i32);
     if d != 0 { d } else { 1 }
 }
 
 /// Comparador: a devolução (pura).
-unsafe extern "C" fn comparar_ordem_das_vagas(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_shortlist_compare_slots_by_index(a: usize, b: usize) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
-    let n = ordem_das_vagas(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_vagas({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    let n = shortlist_compare_slots_by_index(a, b);
+    PLACAR.registrar(r == n, || format!("shortlist_compare_slots_by_index({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -132,7 +132,7 @@ unsafe fn cqd12_interessados(this: usize, jogador: usize) -> Vec<usize> {
 /// (0x8c61e0 pelo id do item; o clube +8 da oferta) fica de fora; senão a vaga do jogador (0x849ce0, só de tipo 11 se o
 /// byte +0x11 da última oferta achada é 11) ganha o bit 0x20 (+0x24); sem a lista, fora o comprador, a vaga de tipo 11
 /// ou, sem ela, a de outro tipo. Clube sem vaga encerra.
-unsafe extern "thiscall" fn marcar_sob_oferta(this: usize, jogador: usize, comprador: usize, troca: usize) {
+unsafe extern "thiscall" fn mark_player_under_offer(this: usize, jogador: usize, comprador: usize, troca: usize) {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let juntar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x842180usize);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn marcar_sob_oferta(this: usize, jogador: usize, compr
 
 /// Comparador: lado a lado pelas listas de 40 vagas dos clubes interessados (a cópia e a original montam e soltam a
 /// mesma lista local) e pelo cursor da lista `troca`.
-unsafe extern "thiscall" fn comparar_marcar_sob_oferta(this: usize, jogador: usize, comprador: usize, troca: usize) {
+unsafe extern "thiscall" fn comparar_mark_player_under_offer(this: usize, jogador: usize, comprador: usize, troca: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I2%%);
     let mut reg: Vec<(usize, usize)> = cqd12_interessados(this, jogador).into_iter()
         .map(|k| cqd12_d(cqd12_d(this + 0xdc).wrapping_add(k.wrapping_mul(9))))
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn comparar_marcar_sob_oferta(this: usize, jogador: usi
         reg.push((troca + 0xa, 4));
     }
     let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogador, comprador, troca),
-        || marcar_sob_oferta(this, jogador, comprador, troca));
-    PLACAR.registrar(igual, || format!("marcar_sob_oferta(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
+        || mark_player_under_offer(this, jogador, comprador, troca));
+    PLACAR.registrar(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
         jogador, comprador, troca, mo, mr));
 }

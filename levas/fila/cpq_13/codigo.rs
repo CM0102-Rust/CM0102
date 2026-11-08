@@ -19,7 +19,7 @@ unsafe fn cpq13_celula(this: usize, k: i32, c: usize) -> usize {
 /// da escalação do clube na tabela tática (linha da 0x8982b0, dword em +2 + 4 × vaga) fica −1 e, com espaços guardados
 /// (+0x5f0), os do mesmo clube e time (16 espaços de 0x5c bytes a partir de +0x30: clube +0x30, time +0x34, ocupado
 /// +0x38) são soltos (+0x38 = 0, +0x5f0 − 1). Devolve 1; sem linha, 0. Clube nulo ou vaga fora: a original (caixa).
-unsafe extern "thiscall" fn limpar_vaga_da_escalacao(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
+unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
     let v = vaga as u8 as i8;
     if clube == 0 || !(0..=0x13).contains(&v) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%)(this, clube, vaga, time);
@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn limpar_vaga_da_escalacao(this: usize, clube: usize, 
 
 /// Comparador: só grava a vaga e os espaços guardados: lado a lado pela linha da escalação (20 dwords), pelos 16
 /// espaços e pela conta (+0x5f0). Clube nulo ou vaga fora: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_limpar_vaga_da_escalacao(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_clear_selection_slot(this: usize, clube: usize, vaga: u32, time: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     let v = vaga as u8 as i8;
     if clube == 0 || !(0..=0x13).contains(&v) {
@@ -55,8 +55,8 @@ unsafe extern "thiscall" fn comparar_limpar_vaga_da_escalacao(this: usize, clube
     if k != -1 {
         reg.push((cpq13_celula(this, k, 2), 20 * 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, vaga, time), || limpar_vaga_da_escalacao(this, clube, vaga, time));
-    PLACAR.registrar(igual && r == n, || format!("limpar_vaga_da_escalacao(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, vaga, time), || clear_selection_slot(this, clube, vaga, time));
+    PLACAR.registrar(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, time, r, n, mo, mr));
     r
 }
 
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn comparar_limpar_vaga_da_escalacao(this: usize, clube
 /// 4 × (escolha + 2 × papel)). Com `pessoa` (ponteiro para o id), grava o id. Sem ela, a célula fica −1 e, sendo a
 /// primeira escolha, a seguinte com batedor (> −1) sobe para ela e fica −1. Devolve 1; sem linha, 0. Clube nulo,
 /// papel ou escolha fora: a original (caixa).
-unsafe extern "thiscall" fn marcar_batedor_de_bola_parada(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
     let (p, e) = (papel as u8 as i8, escolha as u8 as i8);
     if clube == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I1%%)(this, clube, papel, escolha, pessoa, time);
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn marcar_batedor_de_bola_parada(this: usize, clube: us
 
 /// Comparador: só grava a linha dos batedores: lado a lado pelos 10 dwords (+0x5e) da linha do clube. Clube nulo,
 /// papel ou escolha fora: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_marcar_batedor_de_bola_parada(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_set_piece_taker(this: usize, clube: usize, papel: u32, escolha: u32, pessoa: usize, time: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I1%%);
     let (p, e) = (papel as u8 as i8, escolha as u8 as i8);
     if clube == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn comparar_marcar_batedor_de_bola_parada(this: usize, 
     let k = cpq13_linha(clube, time);
     let reg = if k != -1 { vec![(cpq13_celula(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, papel, escolha, pessoa, time),
-        || marcar_batedor_de_bola_parada(this, clube, papel, escolha, pessoa, time));
-    PLACAR.registrar(igual && r == n, || format!("marcar_batedor_de_bola_parada(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
+        || set_set_piece_taker(this, clube, papel, escolha, pessoa, time));
+    PLACAR.registrar(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, pessoa, r, n, mo, mr));
     r
 }

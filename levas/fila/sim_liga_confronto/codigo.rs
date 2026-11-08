@@ -4,7 +4,7 @@
 /// linha vazia empata; senão pontos (+0x19), e depois os critérios da liga ([0xb679fc]+0xc5, até 4;
 /// 0 encerra): 1 saldo (+0x15 − +0x17), 2 gols pró (+0x15), 3 o byte +0x12, 5 a palavra +0x31; 4 e os
 /// outros não decidem. Devolve b − a no primeiro critério que difere.
-unsafe extern "C" fn ordem_do_confronto(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn league_compare_h2h_rows(a: usize, b: usize) -> i32 {
     if *(a as *const u32) == 0 || *(b as *const u32) == 0 {
         return 0;
     }
@@ -39,7 +39,7 @@ unsafe fn registro_do_confronto(tabela: usize, linha: i32, adversario: i32) -> u
 /// { 0x6869a0 } (thiscall, ret 0x14, league.cpp): soma um jogo ao confronto direto: jogos (+4), vitórias
 /// (+5, com os pontos por vitória da liga +0xc2), empates (+6, pontos por empate +0xc3) ou derrotas (+7),
 /// gols pró (+8) e contra (+0xa); os pontos em +0xc. Linha ou adversário negativo: nada.
-unsafe extern "thiscall" fn atualizar_confronto_direto(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
+unsafe extern "thiscall" fn update_head_to_head(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
     if linha < 0 || adversario < 0 {
         return;
     }
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn atualizar_confronto_direto(liga: usize, tabela: usiz
 /// { 0x8c1f80 } (thiscall, ret 4, transfer_manager.cpp): marca que a oferta `k` (fora de empréstimo,
 /// +0x1f ≠ 1) teve os termos oferecidos ao jogador: o estado +0x2c vira 8 se era 6, senão 7. Índice
 /// fora da lista ([+4] ofertas): a original (caixa de erro).
-unsafe extern "thiscall" fn marcar_termos_oferecidos(gerente: usize, k: i32) {
+unsafe extern "thiscall" fn note_terms_offered_to_main_player(gerente: usize, k: i32) {
     if k < 0 || k >= *((gerente + 4) as *const i32) {
         return orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%)(gerente, k);
     }
@@ -75,25 +75,25 @@ unsafe extern "thiscall" fn marcar_termos_oferecidos(gerente: usize, k: i32) {
     }
 }
 
-unsafe extern "C" fn comparar_ordem_do_confronto(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_league_compare_h2h_rows(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_do_confronto(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_confronto original={} rust={}", r, n));
+    let n = league_compare_h2h_rows(a, b);
+    PLACAR.registrar(r == n, || format!("league_compare_h2h_rows original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_atualizar_confronto_direto(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
+unsafe extern "thiscall" fn comparar_update_head_to_head(liga: usize, tabela: usize, linha: i32, adversario: i32, pro: i8, contra: i8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32, i32, i8, i8)>(%%I1%%);
     if linha < 0 || adversario < 0 {
         return o(liga, tabela, linha, adversario, pro, contra);
     }
     let e = registro_do_confronto(tabela, linha, adversario);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e, 14)], || o(liga, tabela, linha, adversario, pro, contra),
-        || atualizar_confronto_direto(liga, tabela, linha, adversario, pro, contra));
-    PLACAR.registrar(igual, || format!("atualizar_confronto_direto({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
+        || update_head_to_head(liga, tabela, linha, adversario, pro, contra));
+    PLACAR.registrar(igual, || format!("update_head_to_head({}, {}, {}x{}) {:x?} x {:x?}", linha, adversario, pro, contra, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_marcar_termos_oferecidos(gerente: usize, k: i32) {
+unsafe extern "thiscall" fn comparar_note_terms_offered_to_main_player(gerente: usize, k: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
     if k < 0 || k >= *((gerente + 4) as *const i32) {
         return o(gerente, k);
@@ -102,6 +102,6 @@ unsafe extern "thiscall" fn comparar_marcar_termos_oferecidos(gerente: usize, k:
     if oferta == 0 {
         return o(gerente, k);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(oferta + 0x2c, 1)], || o(gerente, k), || marcar_termos_oferecidos(gerente, k));
-    PLACAR.registrar(igual, || format!("marcar_termos_oferecidos({}) {:x?} x {:x?}", k, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(oferta + 0x2c, 1)], || o(gerente, k), || note_terms_offered_to_main_player(gerente, k));
+    PLACAR.registrar(igual, || format!("note_terms_offered_to_main_player({}) {:x?} x {:x?}", k, mo, mr));
 }

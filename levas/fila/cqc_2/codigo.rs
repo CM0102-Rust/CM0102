@@ -125,7 +125,7 @@ unsafe fn cqc2_teto_do_humano(pessoa: usize, np: usize, cargo: i8) -> i32 {
 /// pessoa: o fator da nação (+0x85 / 20 × o tipo +0x7e, pelas nações do tipo 1), a liga (+0x57 e +0x5b, o tamanho
 /// +0x69 ao cubo), a tabela por (fator / 10) menos (+0xc − (fator³ × nação / divisor + saldo × 1,3) / 52), com o piso
 /// 0x9c83e8 ou 0x9c8338, a faixa e a nação. Depois o clube de +0x64 1 e 2, o mínimo da liga + 100 e o menor dos dois.
-unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: u32) -> i32 {
+unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u32) -> i32 {
     let mut cargo = cargo_arg as u8;
     let clube = cqc2_d(0xae23b4).wrapping_add((cqc2_i(fin + 8) as u32).wrapping_mul(0x245) as usize);
     let verba = ftol(cqc2_q(fin) as f64 * f64_em(0x968de8));
@@ -547,10 +547,10 @@ unsafe extern "thiscall" fn teto_salarial(fin: usize, pessoa: usize, cargo_arg: 
 }
 
 /// O comparador do teto salarial: pela devolução (a rotina só lê; as chamadas de dentro também).
-unsafe extern "thiscall" fn comparar_teto_salarial(fin: usize, pessoa: usize, cargo: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_get_max_wage(fin: usize, pessoa: usize, cargo: u32) -> i32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(fin, pessoa, cargo);
-    let n = teto_salarial(fin, pessoa, cargo);
-    PLACAR.registrar(r == n, || format!("teto_salarial(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
+    let n = get_max_wage(fin, pessoa, cargo);
+    PLACAR.registrar(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, pessoa, cargo as u8 as i8, r, n));
     r
 }
 
@@ -560,7 +560,7 @@ unsafe extern "thiscall" fn comparar_teto_salarial(fin: usize, pessoa: usize, ca
 /// lea ecx, local; push 0; push 0x177d -> thiscall, ret 8) com o id do clube, o valor e o tipo (byte com sinal; 0x785790:
 /// lea ecx, local; 2 pushes -> thiscall, ret 8) entregue ao técnico do clube (0x7861e0: ecx = [0xb7431c]; push clube;
 /// push &local -> thiscall, ret 8).
-unsafe extern "thiscall" fn noticia_das_obras(_this: usize, clube: usize, valor: u32, tipo: u32) {
+unsafe extern "thiscall" fn news_ground_works(_this: usize, clube: usize, valor: u32, tipo: u32) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -575,7 +575,7 @@ unsafe extern "thiscall" fn noticia_das_obras(_this: usize, clube: usize, valor:
 
 /// O comparador da notícia das obras: só a original (ponytail: a notícia vai para a caixa do técnico humano e não pode
 /// ser entregue duas vezes; com técnico da máquina não deixa nada).
-unsafe extern "thiscall" fn comparar_noticia_das_obras(this: usize, clube: usize, valor: u32, tipo: u32) {
+unsafe extern "thiscall" fn comparar_news_ground_works(this: usize, clube: usize, valor: u32, tipo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, clube, valor, tipo)
 }
 
@@ -584,7 +584,7 @@ unsafe extern "thiscall" fn comparar_noticia_das_obras(this: usize, clube: usize
 /// estádio ou de centro de treino recusado). Sem clube, nada. A notícia 0x1788 (0x77bbe0) com o assunto (palavra com
 /// sinal) no dado 1 e no dado 2 o motivo 2 ou o sorteio(2) (0x90cfc0: push 2; add esp, 4 -> cdecl; a palavra com
 /// sinal), entregue ao técnico do clube (0x7861e0).
-unsafe extern "thiscall" fn noticia_da_obra_recusada(_this: usize, clube: usize, assunto: u32, motivo: u32) {
+unsafe extern "thiscall" fn news_request_refused(_this: usize, clube: usize, assunto: u32, motivo: u32) {
     if clube == 0 {
         return;
     }
@@ -603,6 +603,6 @@ unsafe extern "thiscall" fn noticia_da_obra_recusada(_this: usize, clube: usize,
 
 /// O comparador da notícia da obra recusada: só a original (ponytail: entrega ao técnico humano e sorteia; não pode
 /// rodar duas vezes).
-unsafe extern "thiscall" fn comparar_noticia_da_obra_recusada(this: usize, clube: usize, assunto: u32, motivo: u32) {
+unsafe extern "thiscall" fn comparar_news_request_refused(this: usize, clube: usize, assunto: u32, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I2%%)(this, clube, assunto, motivo)
 }

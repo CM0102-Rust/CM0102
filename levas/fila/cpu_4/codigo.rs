@@ -12,17 +12,17 @@ unsafe fn cpu4_b(a: usize) -> u8 {
 /// = 2, a +0x1d = 1 ou a +0x1f = 2; senão 0. Pelo dia dos contratos 0x4c7ac0, pelo valor do jogador 0x4d0c60, pelo preço
 /// pedido 0x4d2070, pela resposta prevista do vendedor 0x84af00, pelo vendedor que tem de aceitar 0x8cd240 e pelo lance
 /// 0x8e5d60. Chamada a cada contrato: sem contador.
-unsafe extern "thiscall" fn clausula_de_rescisao_ativa(c: usize) -> u32 {
+unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
     if cpu4_b(c + 0x1c) == 2 || cpu4_b(c + 0x1d) == 1 || cpu4_b(c + 0x1f) == 2 {
         return 1; // cpu4: com a clausula ativa
     }
     0
 }
 
-unsafe extern "thiscall" fn comparar_clausula_de_rescisao_ativa(c: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_has_active_release_clause(c: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(c);
-    let n = clausula_de_rescisao_ativa(c);
-    PLACAR.registrar(r == n, || format!("clausula_de_rescisao_ativa({:x}) original={} rust={}", c, r, n));
+    let n = has_active_release_clause(c);
+    PLACAR.registrar(r == n, || format!("has_active_release_clause({:x}) original={} rust={}", c, r, n));
     r
 }
 
@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn comparar_clausula_de_rescisao_ativa(c: usize) -> u32
 /// (0x53ab90) abaixo de 28, senão 2, em `anos` (se não nulo); a duração de hoje até a data (0x54cc30, duas vezes, como a
 /// original) com menos anos que o período, 1; com os anos exatos e 0 dias, `no_limite` = 1; 0. Pelo dia dos contratos
 /// 0x4c7ac0, pelo lance 0x8e5d60, pela troca com compensação 0x84b6f0 e por telas. Sem contador.
-unsafe extern "thiscall" fn periodo_protegido(c: usize, _x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
+unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
     if !no_limite.is_null() {
         *no_limite = 0;
     }
@@ -69,26 +69,26 @@ unsafe extern "thiscall" fn periodo_protegido(c: usize, _x: usize, no_limite: *m
     0
 }
 
-unsafe extern "thiscall" fn comparar_periodo_protegido(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
+unsafe extern "thiscall" fn comparar_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, anos: *mut u8) -> u32 {
     // as saídas como estavam antes: a cópia parte delas (a original só grava `anos` no período)
     let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(%%I1%%)(c, x, no_limite, anos);
     let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if anos.is_null() { 0 } else { *anos });
-    let n = periodo_protegido(
+    let n = check_fifa_protected_period(
         c,
         x,
         if no_limite.is_null() { core::ptr::null_mut() } else { &mut nl },
         if anos.is_null() { core::ptr::null_mut() } else { &mut na },
     );
     let ok = r == n && (no_limite.is_null() || ol == nl) && (anos.is_null() || oa == na);
-    PLACAR.registrar(ok, || format!("periodo_protegido({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
+    PLACAR.registrar(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
     r
 }
 
 /// { 0x867aa0 } (cdecl, staff_contracts.cpp): `staff_contract_is_bonus_type_allowed(pessoa, tipo)`: sem a ficha de
 /// jogador (+0x61), 0; goleiro (+0xf da ficha = 0x14), 1 só para o tipo 2; senão 1 para os tipos que não são 2. Pela
 /// tela do contrato.
-unsafe extern "C" fn tipo_de_bonus_permitido(pessoa: usize, tipo: u32) -> u32 {
+unsafe extern "C" fn staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
     let f = cpu4_d(pessoa + 0x61);
     if f == 0 {
         return 0;
@@ -99,9 +99,9 @@ unsafe extern "C" fn tipo_de_bonus_permitido(pessoa: usize, tipo: u32) -> u32 {
     (tipo as u8 != 2) as u32
 }
 
-unsafe extern "C" fn comparar_tipo_de_bonus_permitido(pessoa: usize, tipo: u32) -> u32 {
+unsafe extern "C" fn comparar_staff_contract_is_bonus_type_allowed(pessoa: usize, tipo: u32) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I2%%)(pessoa, tipo);
-    let n = tipo_de_bonus_permitido(pessoa, tipo);
-    PLACAR.registrar(r == n, || format!("tipo_de_bonus_permitido({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
+    let n = staff_contract_is_bonus_type_allowed(pessoa, tipo);
+    PLACAR.registrar(r == n, || format!("staff_contract_is_bonus_type_allowed({:x}, {}) original={} rust={}", pessoa, tipo as u8, r, n));
     r
 }

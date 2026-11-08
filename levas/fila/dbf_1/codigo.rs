@@ -5,7 +5,7 @@
 /// (continent.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-unsafe extern "C" fn ler_continentes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
+unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 1 {
@@ -24,7 +24,7 @@ unsafe extern "C" fn ler_continentes(stream: usize, use_zip: i32, registros: usi
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_ler_continentes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
+unsafe extern "C" fn comparar_db_files_read_continents(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada)
 }
 
@@ -33,7 +33,7 @@ unsafe extern "C" fn comparar_ler_continentes(stream: usize, use_zip: i32, regis
 /// (nation.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-unsafe extern "C" fn ler_nacoes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
+unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao != 2 {
@@ -52,7 +52,7 @@ unsafe extern "C" fn ler_nacoes(stream: usize, use_zip: i32, registros: usize, e
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_ler_nacoes(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
+unsafe extern "C" fn comparar_db_files_read_nations(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada)
 }
 
@@ -61,7 +61,7 @@ unsafe extern "C" fn comparar_ler_nacoes(stream: usize, use_zip: i32, registros:
 /// (city.dat) por `zread` 0x932c30 (use_zip ≠ 0: o save) ou `fread` 0x945bfe (a pasta Data); 1 se veio
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
-unsafe extern "C" fn ler_cidades(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
+unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
     let n = core::ptr::read_unaligned((entrada + 0x37) as *const u32);
     let versao = core::ptr::read_unaligned((entrada + 0x3f) as *const i32);
     if versao <= 0 || versao > 2 {
@@ -80,6 +80,6 @@ unsafe extern "C" fn ler_cidades(stream: usize, use_zip: i32, registros: usize, 
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
 // ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-unsafe extern "C" fn comparar_ler_cidades(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
+unsafe extern "C" fn comparar_db_files_read_cities(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
     orig::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada)
 }

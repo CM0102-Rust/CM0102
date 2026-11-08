@@ -33,7 +33,7 @@ pub(crate) unsafe fn cql5_passar_de_fase(this: usize, arquivo: usize, linha: u32
 ///
 /// [pt] { 0x64b9e0 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::advance_stage()`; cria o play-off e o play-out pela
 /// 0x64ba70. Fonte 0x9ea474, linha 0x250.
-pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_c1a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage(this: usize) {
     cql5_passar_de_fase(this, 0x9ea474, 0x250, 0x64ba70)
 }
 
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_c1a(this: usize) {
 ///
 /// [pt] { 0x64fba0 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::advance_stage()`; pela 0x64fc30. Fonte 0x9ea558, linha
 /// 0x255.
-pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_c1b(this: usize) {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage_64fba0(this: usize) {
     cql5_passar_de_fase(this, 0x9ea558, 0x255, 0x64fc30)
 }
 
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_c1b(this: usize) {
 ///
 /// [pt] { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela
 /// 0x5783c0 (já em Rust). Fonte 0x9c4424, linha 0x29c.
-pub(crate) unsafe extern "thiscall" fn fase_seguinte_da_third(this: usize) {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage_578330(this: usize) {
     cql5_passar_de_fase(this, 0x9c4424, 0x29c, 0x5783c0)
 }
 
@@ -67,19 +67,19 @@ pub(crate) unsafe fn cql5_comparar_passagem(nome: &str, this: usize, original: i
     PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_c1a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_C1A);
-    cql5_comparar_passagem("fase_seguinte_da_c1a", this, || o(this), || fase_seguinte_da_c1a(this))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE);
+    cql5_comparar_passagem("ita_ser_c1a_advance_stage", this, || o(this), || ita_ser_c1a_advance_stage(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_c1b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_C1B);
-    cql5_comparar_passagem("fase_seguinte_da_c1b", this, || o(this), || fase_seguinte_da_c1b(this))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_64fba0(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE_64FBA0);
+    cql5_comparar_passagem("ita_ser_c1a_advance_stage_64fba0", this, || o(this), || ita_ser_c1a_advance_stage_64fba0(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_fase_seguinte_da_third(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASE_SEGUINTE_DA_THIRD);
-    cql5_comparar_passagem("fase_seguinte_da_third", this, || o(this), || fase_seguinte_da_third(this))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_578330(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE_578330);
+    cql5_comparar_passagem("ita_ser_c1a_advance_stage_578330", this, || o(this), || ita_ser_c1a_advance_stage_578330(this))
 }
 
 /// As linhas dos 4 clubes do play-off de acesso (2º contra 5º, 3º contra 4º: a lista é 5º, 2º, 4º, 3º) e do play-out
@@ -184,7 +184,7 @@ pub(crate) unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32;
 /// A regra da C1/A: o campeão sobe direto (e vai à Supercopa da C1); do 2º ao 5º, um play-off de acesso (2º × 5º,
 /// 3º × 4º) dá a segunda vaga; do 14º ao 17º, um play-out (14º × 17º, 15º × 16º) decide quem cai junto com o 18º
 /// [inferência pelas faixas da cqk_6 e pelos nomes do mapa]. Fonte 0x9ea474, linhas 0x27c, 0x290, 0x2b3.
-pub(crate) unsafe extern "thiscall" fn fases_do_fim_da_c1a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn create_playoff_stages(this: usize) {
     cql5_criar_fases(this, 0x9ea474, [0x27c, 0x290, 0x2b3], true)
 }
 
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn fases_do_fim_da_c1a(this: usize) {
 ///
 /// [pt] { 0x64fc30 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_play_off_stages()`, a mesma regra na C1/B.
 /// Fonte 0x9ea558, linhas 0x281, 0x295, 0x2b8; no fim solta o gabarito antes da lista.
-pub(crate) unsafe extern "thiscall" fn fases_do_fim_da_c1b(this: usize) {
+pub(crate) unsafe extern "thiscall" fn create_play_off_stages(this: usize) {
     cql5_criar_fases(this, 0x9ea558, [0x281, 0x295, 0x2b8], false)
 }
 
@@ -210,14 +210,14 @@ pub(crate) unsafe fn cql5_comparar_fases(nome: &str, this: usize, original: impl
     PLACAR.registrar(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", nome, this, read_u32_as_usize(vaga), campeao, fases, read_u32_as_usize(this + 0x30) as i32));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASES_DO_FIM_DA_C1A);
-    cql5_comparar_fases("fases_do_fim_da_c1a", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_create_playoff_stages(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_PLAYOFF_STAGES);
+    cql5_comparar_fases("create_playoff_stages", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_FASES_DO_FIM_DA_C1B);
-    cql5_comparar_fases("fases_do_fim_da_c1b", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_create_play_off_stages(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_PLAY_OFF_STAGES);
+    cql5_comparar_fases("create_play_off_stages", this, || o(this))
 }
 
 /// the Serie C1 schedule (each group of 18): 34 rounds from 5 September to 7 May, nearly all on the same weekday (6)
@@ -228,13 +228,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1b(this: usize)
 ///
 /// [pt] { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a chave A da Série C1. Fonte 0x9ea474, linhas 0xab, 0x155, 0x18f.
-pub(crate) unsafe extern "thiscall" fn calendario_da_c1_a(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo5_c1(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_c1_a(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_C1_A);
-    cqo5_comparar_fases("calendario_da_c1_a", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_c1_a(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_C1A_CREATE_SCHEDULE);
+    cqo5_comparar_fases("ita_ser_c1a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_c1a_create_schedule(this, fase, r, e, l))
 }
 
 /// the club's place forecast in C1/A: in the league, best and worst place become bands (2 to 5 = the promotion
@@ -244,13 +244,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_c1_a(this: usize, 
 ///
 /// [pt] { 0x64bd80 } (thiscall, ret 0x14, ita_ser_c1a.cpp): `ItaSerC1a::set_club_progress(clube, fase, atual, melhor,
 /// pior)`, a virtual +0x68 da 0x684cd0 a cada linha da tabela.
-pub(crate) unsafe extern "thiscall" fn situacao_na_c1a(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cqk6_situacao_na_c1(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_c1a(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SITUACAO_NA_C1A);
-    cqk6_comparar_situacao("situacao_na_c1a", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_c1a(this, clube, fase, atual, melhor, pior))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ITA_SER_C1A_SET_CLUB_PROGRESS);
+    cqk6_comparar_situacao("ita_ser_c1a_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || ita_ser_c1a_set_club_progress(this, clube, fase, atual, melhor, pior))
 }
 
 /// the 2001/02 C1/A: the 306 matches (34 rounds of 9) fixed by club name; with a name missing from the database, the
@@ -259,13 +259,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_situacao_na_c1a(this: usize, clu
 ///
 /// [pt] { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
-pub(crate) unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
     cqn6_fixos(this, &CQN6_C1A, 0x9ea474, 0x3fd)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CALENDARIO_FIXO_DA_C1A);
-    cqn6_comparar("calendario_fixo_da_c1a", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_SET_UP_FIXED_FIXTURES);
+    cqn6_comparar("ita_ser_c1a_set_up_fixed_fixtures", this, || o(this))
 }
 
 /// C1/A: discipline 0x11, the league and 2 stages (the promotion play-off and the play-out), the real 2001/02 fixture
@@ -274,13 +274,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1a(this: usi
 ///
 /// [pt] { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
 /// (o play-off de acesso e o play-out).
-pub(crate) unsafe extern "thiscall" fn construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_C1A)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_C1A);
-    cqm4_comparar("construir_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1A);
+    cqm4_comparar("construct_ita_ser_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
 }
 
 /// Serie C1/A (18): the champion goes up to B, 2nd to 5th go to the promotion play-off, 14th to 17th to the relegation
@@ -291,14 +291,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_c1a(this: usize, ano: 
 /// pontos, os desempates 3º = 0 (+0xc7), o campeão sobe direto (+0xbe = 1), do 2º ao 5º vão ao play-off de acesso
 /// (+0xbf = 4), do 14º ao 17º ao play-out de permanência (+0xc0 = 4), o último cai (+0xc1 = 1), a Série B acima
 /// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
-pub(crate) unsafe extern "thiscall" fn regras_da_c1a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da c1a");
     cqi6_regras(this, &cqi6_c1a(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_c1a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_C1A);
-    cqi6_comparar("regras_da_c1a", this, cqi6_c1a(this), || o(this), || regras_da_c1a(this))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_C1A_SET_UP_RULES);
+    cqi6_comparar("ita_ser_c1a_set_up_rules", this, cqi6_c1a(this), || o(this), || ita_ser_c1a_set_up_rules(this))
 }
 
 /// Serie C1/A has 18 clubs; no prize fund and no TV money
@@ -306,11 +306,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_c1a(this: usize) -> u3
 ///
 /// [pt] { 0x64b670 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::create_table()`: 18 clubes ([0x9cf578]), sem fundo
 /// nem TV; devolve se encheu. Fonte 0x9ea474, linha 0x1bd.
-pub(crate) unsafe extern "thiscall" fn tabela_da_c1a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_table(this: usize) -> u32 {
     cqj4_encher(this, 0x12, 0x9ea474, 0x1bd, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A).unwrap_or(false) as u32
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_c1a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_C1A);
-    cqj4_comparar("tabela_da_c1a", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_C1A_CREATE_TABLE);
+    cqj4_comparar("ita_ser_c1a_create_table", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
 }

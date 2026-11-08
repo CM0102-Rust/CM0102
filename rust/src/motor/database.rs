@@ -1,13 +1,13 @@
 use super::*;
 
-// ---------- centesima trigesima nona leva: o fechamento da partida (0x6d1cc0, 0x547790, 0x5477d0) ----------
+// ---------- centesima trigesima nona leva: o match_wrap_up da partida (0x6d1cc0, 0x547790, 0x5477d0) ----------
 
 /// does `b` have `a` among its three favourites (+0x9b, +0x9f, +0xa3)? Compared by the result
 /// Original: `favourite_of` (0x547790, cdecl).
 ///
-/// [pt] { 0x547790 } (cdecl): `b` tem `a` entre os tres favoritos (+0x9b, +0x9f, +0xa3)? No fechamento,
+/// [pt] { 0x547790 } (cdecl): `b` tem `a` entre os tres favoritos (+0x9b, +0x9f, +0xa3)? No match_wrap_up,
 /// a pessoa e o clube adversario.
-pub(crate) unsafe extern "C" fn favorito_de(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn favourite_of(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return 0;
     }
@@ -18,14 +18,14 @@ pub(crate) unsafe extern "C" fn favorito_de(a: usize, b: usize) -> u32 {
 /// Original: `rejected_by` (0x5477d0, cdecl).
 ///
 /// [pt] { 0x5477d0 } (cdecl): `b` tem `a` entre os tres rejeitados (+0xa7, +0xab, +0xaf)?
-pub(crate) unsafe extern "C" fn rejeitado_por(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn rejected_by(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return 0;
     }
     [0xa7, 0xab, 0xaf].iter().any(|&o| *((b + o) as *const usize) == a) as u32
 }
 
-/// Liga as unidades da fita do fechamento (0x6d26b0, 0x6d3610, 0x6d3de0 e o conteudo da 0x68d0d0).
+/// Liga as units_digit da fita do match_wrap_up (0x6d26b0, 0x6d3610, 0x6d3de0 e o conteudo da 0x68d0d0).
 pub(crate) static GRAVAR_FECHAMENTO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 pub(crate) fn gravando_fechamento() -> bool {
@@ -34,7 +34,7 @@ pub(crate) fn gravando_fechamento() -> bool {
 
 /// { 0x6d1cc0 } (cdecl, match_eng.cpp, chamada pelo passo do motor 0x6b98c0) com as chamadas que
 /// mexem fora do motor injetadas (0x6d26b0 a ficha de cada jogador, 0x6d3610 e 0x6d3de0 as
-/// reputacoes, 0x68d0d0 a copia de um evento na lista [0xb67dc8]): o fechamento da partida. Com a
+/// reputacoes, 0x68d0d0 a copia de um evento na lista [0xb67dc8]): o match_wrap_up da partida. Com a
 /// lista de eventos do dia (+0x478e) e a partida (+0x4792, +0x40 ligado), percorre os eventos (0x68d1b0):
 /// 0x82 vai para a lista; 0x1e (proposta?) pelo placar (+0x43/+0x44, empate pela forca +0x80 dos
 /// clubes x 1,2/0,8) e pelo tecnico do outro lado (+0xd3, 0x544410 sorteado contra 20 ou 5, +0x14 > 5)
@@ -82,7 +82,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
                 break;
             }
             let tipo = w(e, 0x13);
-            crate::comparacao::ramo("fechamento evento do dia");
+            crate::comparacao::ramo("match_wrap_up evento do dia");
             let marcar = |valor: u8, quem: u32| {
                 *((e + 0xe) as *mut u8) = valor;
                 core::ptr::write_unaligned((e + 0xf) as *mut u32, quem);
@@ -102,7 +102,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
                         let x = d(t, 0x69);
                         let r1 = sortear(conhecer(x, byte(x, 0x17) as u8 as u32) as i32);
                         if r1 > sortear(0x14) && byte(x, 0x14) > 5 {
-                            crate::comparacao::ramo("fechamento proposta aceita");
+                            crate::comparacao::ramo("match_wrap_up proposta aceita");
                             marcar(1, *(t as *const u32));
                             evento(chamar, e);
                         } else {
@@ -122,7 +122,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
                     if ok && t != 0 && d(t, 0x69) != 0 {
                         let x = d(t, 0x69);
                         if sortear(conhecer(x, byte(x, 0x17) as u8 as u32) as i32) > 5 && byte(x, 0x14) > 5 {
-                            crate::comparacao::ramo("fechamento proposta aceita");
+                            crate::comparacao::ramo("match_wrap_up proposta aceita");
                             marcar(1, *(t as *const u32));
                             evento(chamar, e);
                         } else {
@@ -145,13 +145,13 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
                     if let Some((k, lado)) = achado {
                         let p = m + 0x4796 + (k + lado * 20) * 0x1be;
                         let vale = if tipo == 6 {
-                            crate::comparacao::ramo("fechamento evento tipo 6");
+                            crate::comparacao::ramo("match_wrap_up evento tipo 6");
                             byte(p, 0x24) == 2 || byte(p, 0x23) != 0
                         } else {
                             byte(p, 0x1b) < 7 && sortear(byte(p, 0x17) as i32) == 0
                         };
                         if vale {
-                            crate::comparacao::ramo("fechamento evento do jogador");
+                            crate::comparacao::ramo("match_wrap_up evento do jogador");
                             marcar(0, u32::MAX);
                             evento(chamar, e);
                         }
@@ -198,7 +198,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
                                     if b5b < 6 && byte(pessoa, 0x57) > 10 {
                                         let r6 = sortear(byte(pessoa, 0x57) as i32);
                                         if sortear(b5b as i32) < r6 {
-                                            crate::comparacao::ramo("fechamento pede para sair");
+                                            crate::comparacao::ramo("match_wrap_up pede para sair");
                                             let mut ev = [0u8; 0x19];
                                             ev[..4].copy_from_slice(&(*(pessoa as *const u32)).to_le_bytes());
                                             ev[4..8].copy_from_slice(&(*(meu as *const u32)).to_le_bytes());
@@ -232,7 +232,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
                     if b < 6 && c < 10 {
                         let r1 = sortear((a * b as i32 * c as i32 + 0x14) * 100);
                         if r1 < sortear(x + 0x32) {
-                            crate::comparacao::ramo("fechamento insatisfeito");
+                            crate::comparacao::ramo("match_wrap_up insatisfeito");
                             let mut ev = [0u8; 0x19];
                             ev[..4].copy_from_slice(&(*(pessoa as *const u32)).to_le_bytes());
                             ev[4..8].copy_from_slice(&(*(meu as *const u32)).to_le_bytes());
@@ -272,7 +272,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
             let q = somap as f64 / soma as f64;
             media = if d(pt, 0x18) == d(meu, 0x69) { q - f64_em(0x967880) } else { q + f64_em(0x968918) };
         }
-        crate::comparacao::ramo(if soma != 0 { "fechamento media do lado" } else { "fechamento lado sem minutos" });
+        crate::comparacao::ramo(if soma != 0 { "match_wrap_up media do lado" } else { "match_wrap_up lado sem minutos" });
         let valor = (media as f32).to_bits();
         let alt = *(m as *const u8) as u32;
         chamar(0x6d3610, m + 0x9032 + lado * 0xd0, [meu as u32, outro as u32, pt as u32, valor, alt | 1 << 8]);
@@ -282,7 +282,7 @@ pub(crate) unsafe fn fechamento_com(m: usize, chamar: &mut dyn FnMut(usize, usiz
     }
 }
 
-/// Despacho real das chamadas injetadas do fechamento.
+/// Despacho real das chamadas injetadas do match_wrap_up.
 pub(crate) unsafe fn despachar_fechamento(rotina: usize, this: usize, a: [u32; 5]) -> u32 {
     let m = |p: usize| *((p + 0x19e) as *const usize);
     match rotina {
@@ -316,21 +316,21 @@ pub(crate) fn zerar_pilha() {
     std::hint::black_box(&mut a);
 }
 
-pub(crate) unsafe extern "C" fn comparar_favorito_de(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FAVORITO_DE)(a, b);
-    let n = favorito_de(a, b);
-    PLACAR.registrar(r == n, || format!("favorito_de original={} rust={}", r, n));
+pub(crate) unsafe extern "C" fn comparar_favourite_of(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FAVOURITE_OF)(a, b);
+    let n = favourite_of(a, b);
+    PLACAR.registrar(r == n, || format!("favourite_of original={} rust={}", r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_rejeitado_por(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REJEITADO_POR)(a, b);
-    let n = rejeitado_por(a, b);
-    PLACAR.registrar(r == n, || format!("rejeitado_por original={} rust={}", r, n));
+pub(crate) unsafe extern "C" fn comparar_rejected_by(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REJECTED_BY)(a, b);
+    let n = rejected_by(a, b);
+    PLACAR.registrar(r == n, || format!("rejected_by original={} rust={}", r, n));
     r
 }
 
-/// As regioes do fechamento: o sorteio, o motor, a lista de eventos do dia (cabecalho e cursor) e os
+/// As regioes do match_wrap_up: o sorteio, o motor, a lista de eventos do dia (cabecalho e cursor) e os
 /// eventos dela (+0xe e +0xf mudam).
 pub(crate) unsafe fn regioes_do_fechamento(m: usize) -> Vec<(usize, usize)> {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -358,18 +358,18 @@ pub(crate) unsafe fn regioes_do_fechamento(m: usize) -> Vec<(usize, usize)> {
 // ---------- octogesima segunda leva: tipos de pessoa, selecao B, marcas por pessoa, registro livre ----------
 
 /// { 0x53b610 } (Database.cpp): o tipo nao e 11?
-pub(crate) unsafe extern "C" fn tipo_nao_11(tipo: i8) -> u32 {
+pub(crate) unsafe extern "C" fn type_not_11(tipo: i8) -> u32 {
     (tipo != 11) as u32
 }
 
 /// { 0x53b620 } (Database.cpp): o tipo e 11, 12, 13 ou 15?
-pub(crate) unsafe extern "C" fn tipo_11_a_15(tipo: i8) -> u32 {
+pub(crate) unsafe extern "C" fn type_11_to_15(tipo: i8) -> u32 {
     matches!(tipo, 11 | 12 | 13 | 15) as u32
 }
 
 /// { 0x76d780 } (stdcall, national_teams.cpp): com `flag`, 1; sem ela, 2 para a segunda selecao
 /// (0x5409b0) e 0 para as outras.
-pub(crate) unsafe extern "stdcall" fn classe_da_selecao(clube: usize, flag: u32) -> u8 {
+pub(crate) unsafe extern "stdcall" fn national_side_class(clube: usize, flag: u32) -> u8 {
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let e_segunda = segunda(clube) != 0;
     if flag != 0 {
@@ -390,12 +390,12 @@ pub(crate) unsafe fn marca_da_pessoa(this: usize, pessoa: usize, k: i8) -> *mut 
 }
 
 /// { 0x76d7b0 } (ret 8, national_teams.cpp): a marca `k` da pessoa.
-pub(crate) unsafe extern "thiscall" fn ler_marca_da_pessoa(this: usize, pessoa: usize, k: i8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn read_person_mark(this: usize, pessoa: usize, k: i8) -> u8 {
     *marca_da_pessoa(this, pessoa, k)
 }
 
 /// { 0x76d7e0 } (ret 8, national_teams.cpp): zera a marca `k` da pessoa.
-pub(crate) unsafe extern "thiscall" fn zerar_marca_da_pessoa(this: usize, pessoa: usize, k: i8) {
+pub(crate) unsafe extern "thiscall" fn clear_person_mark(this: usize, pessoa: usize, k: i8) {
     *marca_da_pessoa(this, pessoa, k) = 0;
 }
 
@@ -405,7 +405,7 @@ pub(crate) unsafe extern "thiscall" fn zerar_marca_da_pessoa(this: usize, pessoa
 ///
 /// [pt] { 0x53a5b0 } (Database.cpp): o registro livre (+0 zero) da tabela 0xae23f8 (60 bytes,
 /// 0xae23a0 registros), guardado em 0x9b59b4 na primeira vez; sem nenhum, um sorteado.
-pub(crate) unsafe extern "C" fn registro_livre() -> usize {
+pub(crate) unsafe extern "C" fn free_record() -> usize {
     let base = || *(G_COMMON_NAME_TABLE as *const usize);
     let mut i = *(G_EMPTY_COMMON_NAME_INDEX as *const i32);
     if i == -1 {
@@ -463,9 +463,9 @@ pub(crate) const PARES_B_A: [(usize, usize); 82] = [
 /// o parceiro e o B do primeiro par que casa (aceito se o id dele for diferente de -1); clube B:
 /// `eh_a` = 0 e o parceiro e o A (aceito se o id for >= 0). Parceiro recusado: zera +0x244 e 0.
 /// Devolve o registro do parceiro (vetor 0xae23b4, 581 bytes cada). Clube nulo: a original.
-pub(crate) unsafe extern "C" fn clube_parceiro(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
+pub(crate) unsafe extern "C" fn partner_club(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(IDX_CLUBE_PARCEIRO)(clube, eh_a, ativo);
+        return orig::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(IDX_PARTNER_CLUB)(clube, eh_a, ativo);
     }
     let nacao = *((clube + club::NATION) as *const usize);
     if nacao == 0 || (ativo != 0 && byte(clube, 0x244) == 0) {
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "C" fn clube_parceiro(clube: usize, eh_a: *mut u32, ati
 
 /// { 0x6cfc60 } (match_eng.cpp): a decisao da falta (0x6e9820) com o arbitro do motor (+0xf5b2).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn falta_no_motor(
+pub(crate) unsafe extern "thiscall" fn foul_in_engine(
     m: usize, j: usize, outro: usize, tipo: i8, quem: i8, cartao: *mut u8, grav: *mut i8, vantagem: *mut u8,
 ) -> u8 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8 = core::mem::transmute(FN_MATCH_OFFICIAL_JUDGE_TACKLE);
@@ -514,20 +514,20 @@ pub(crate) unsafe extern "thiscall" fn falta_no_motor(
 
 /// { 0x5fea50 } (human_manager.cpp): byte +0x9b23 + `i` do registro do tecnico humano da pessoa (ou
 /// do atual). Sem pessoa ou fora da faixa: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn tecnico_9b23(this: usize, i: i8, pessoa: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn manager_9b23(this: usize, i: i8, pessoa: usize) -> u8 {
     match pessoa_e_registro(this, pessoa) {
         Some((_, r)) => *((r as isize + 0x9b23 + i as isize) as *const u8),
-        None => orig::<unsafe extern "thiscall" fn(usize, i8, usize) -> u8>(IDX_TECNICO_9B23)(this, i, pessoa),
+        None => orig::<unsafe extern "thiscall" fn(usize, i8, usize) -> u8>(IDX_MANAGER_9B23)(this, i, pessoa),
     }
 }
 
 /// { 0x547d60 }: `pessoa` gosta do clube (preferencias +0x04, +0x08, +0x0c)?
-pub(crate) unsafe extern "C" fn gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn likes_club(pessoa: usize, clube: usize) -> u32 {
     nas_preferencias(clube, pessoa, 4)
 }
 
 /// { 0x547d30 }: `pessoa` nao gosta do clube (preferencias +0x10, +0x14, +0x18)?
-pub(crate) unsafe extern "C" fn nao_gosta_do_clube(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn dislikes_club(pessoa: usize, clube: usize) -> u32 {
     nas_preferencias(clube, pessoa, 0x10)
 }
 
@@ -549,17 +549,17 @@ pub(crate) unsafe fn clube_da_selecao(nacao: usize, nacoes_antes: i32, idx: usiz
 }
 
 /// { 0x53b3d0 } (Database.cpp): o clube da selecao principal da nacao.
-pub(crate) unsafe extern "C" fn selecao_principal(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn main_national_team(nacao: usize) -> usize {
     clube_da_selecao(nacao, 2, 175)
 }
 
 /// { 0x53b4f0 } (Database.cpp): o clube da selecao B da nacao.
-pub(crate) unsafe extern "C" fn selecao_b(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn b_national_team(nacao: usize) -> usize {
     clube_da_selecao(nacao, 1, 176)
 }
 
 /// { 0x6cd490 } (match_eng.cpp): bola fora do campo (ver `bola_fora_com`).
-pub(crate) unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn ball_out(this: usize, lado_b: u8) -> u8 {
     bola_fora_com(this, lado_b, &mut |t, a| comentar(t, a))
 }
 
@@ -568,11 +568,11 @@ pub(crate) unsafe extern "thiscall" fn bola_fora(this: usize, lado_b: u8) -> u8 
 /// { 0x5409b0 } (Database.cpp): o clube e do segundo conjunto de selecoes (id a partir de total de
 /// clubes 0xae235c menos nacoes 0xae2350)? Clube nulo: o original mostra uma caixa de erro e zera
 /// 0xb67a34 (aqui, sem a caixa).
-pub(crate) unsafe extern "C" fn e_segunda_selecao(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn is_second_national_team(clube: usize) -> u32 {
     if clube == 0 {
         // o caminho de erro do original (mensagem e caixa) tem efeitos que mudam a carreira: o jogo
         // real chama com clube nulo. Usa a propria original nesse caso.
-        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_E_SEGUNDA_SELECAO)(0);
+        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_SECOND_NATIONAL_TEAM)(0);
     }
     let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
     (*(clube as *const i32) >= limite) as u32
@@ -581,11 +581,11 @@ pub(crate) unsafe extern "C" fn e_segunda_selecao(clube: usize) -> u32 {
 /// { 0x6ce310 } (match_eng.cpp): placar agregado de um mata-mata. `casa`/`fora` recebem os gols
 /// desta partida (0xf5bd do lado 0, 0xf5f3 do lado 1; trocados com `lado` = 1), somados aos do jogo
 /// de ida guardados no objeto da partida (+0x4b, +0x4c; 0xff = sem ida, e `ida` fica 1 com ida).
-/// `fase3`: o algarismo das unidades de +0x30 e 3. Com o agregado empatado (mais 1 de bonus para o
+/// `fase3`: o algarismo das units_digit de +0x30 e 3. Com o agregado empatado (mais 1 de bonus para o
 /// lado de `bonus`), sem o bit 4 de +0x38 e (com o bit 0x4000) so depois do tempo 0x3de: decide pelos
 /// gols fora (`classificado`). Devolve 1 classificado, senao casa - fora (byte).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn placar_agregado(this: usize, lado_b: i8, casa: *mut i8, fora: *mut i8, classificado: *mut u8, ida: *mut u8, fase3: *mut u8, bonus: u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, lado_b: i8, casa: *mut i8, fora: *mut i8, classificado: *mut u8, ida: *mut u8, fase3: *mut u8, bonus: u8) -> u8 {
     *casa = 0;
     *fora = 0;
     *classificado = 0;
@@ -647,18 +647,18 @@ pub(crate) unsafe fn nas_preferencias(alvo: usize, pessoa: usize, base: usize) -
 }
 
 /// { 0x547810 }: `pessoa` gosta de `alvo` (preferencias +0x1c, +0x20, +0x24)?
-pub(crate) unsafe extern "C" fn gosta_de(alvo: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "C" fn likes(alvo: usize, pessoa: usize) -> u32 {
     nas_preferencias(alvo, pessoa, 0x1c)
 }
 
 /// { 0x547840 }: `pessoa` nao gosta de `alvo` (preferencias +0x28, +0x2c, +0x30)?
-pub(crate) unsafe extern "C" fn nao_gosta_de(alvo: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "C" fn dislikes(alvo: usize, pessoa: usize) -> u32 {
     nas_preferencias(alvo, pessoa, 0x28)
 }
 
 /// { 0x5b5910 }: grava na tabela por posicao (+0x5bf + 4 x posicao) o valor apontado por `ficha`
 /// (-1 sem ficha) e zera +0x187f. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn marcar_posicao(this: usize, posicao: i8, ficha: *const u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn mark_position(this: usize, posicao: i8, ficha: *const u32) -> u32 {
     let destino = (this as isize + 0x5bf + 4 * posicao as isize) as *mut u32;
     *destino = if ficha.is_null() { u32::MAX } else { *ficha };
     *((this + 0x187f) as *mut u32) = 0;
@@ -735,9 +735,9 @@ pub(crate) fn faixa_dbv1(x: i16, a: i16, b: i16) -> bool {
 /// 0x539490). Os vetores da pilha (0x54, 0x290) só são limpos na entrada: o que uma pessoa deixa passa à seguinte, como
 /// na original; o melhor escore ([esp+0x40], −31073 na entrada) também. Sem pessoas: a caixa e o fim, pela original.
 /// A local de [esp+0x114] (1, zerada com clube de reputação 0) nunca é lida.
-pub(crate) unsafe extern "C" fn inicializar_jogadores(data: usize) {
+pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     if *(G_STAFF_COUNT as *const i32) == 0 || *(G_STAFF_TABLE as *const usize) == 0 {
-        return orig::<unsafe extern "C" fn(usize)>(IDX_INICIALIZAR_JOGADORES)(data);
+        return orig::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION)(data);
     }
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -1844,8 +1844,8 @@ pub(crate) unsafe extern "C" fn inicializar_jogadores(data: usize) {
 /// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
 /// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
 /// contar sorteios). Sem pessoas (caixa e fim): só a original.
-pub(crate) unsafe extern "C" fn comparar_inicializar_jogadores(data: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(IDX_INICIALIZAR_JOGADORES);
+pub(crate) unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION);
     let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
     let rd = |a: usize| *(a as *const usize);
     if gi(0xae2364) == 0 || rd(0xae23bc) == 0 {
@@ -1863,11 +1863,11 @@ pub(crate) unsafe extern "C" fn comparar_inicializar_jogadores(data: usize) {
         regioes.push((rd(0xae23c0), gi(0xae2368) * 68));
     }
     let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(data),
-        || crate::aleatorio::sem_contar(|| inicializar_jogadores(data)));
+        || crate::aleatorio::sem_contar(|| database_player_initialisation(data)));
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])));
     PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("inicializar_jogadores: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
-        None => "inicializar_jogadores: estado do sorteador diferente".to_string(),
+        Some((a, x, y)) => format!("database_player_initialisation: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
+        None => "database_player_initialisation: estado do sorteador diferente".to_string(),
     });
     // ponytail: dezenas de MB por foto; não voltam às sobras
     mo.0.clear();
@@ -1902,10 +1902,10 @@ pub(crate) unsafe fn dbu1_copiar(destino: usize, origem: usize) {
 /// o comum, o sobrenome ou o nome. Sem nada: o texto vazio. Devolve 1. Texto nulo, tamanho (palavra) < 0x69 ou forma
 /// fora de 1..7: a original (caixa; as locais de 0x200 bytes só servem a ela). Chamada pela 0x53e140 (já em Rust, pelo
 /// endereço do jogo: o desvio vale também lá), pelas telas do clube (0x45ccf0) e pelo manager_manager.
-pub(crate) unsafe extern "C" fn nome_pelos_textos(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let f = forma as u8;
     if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&f) {
-        return orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_NOME_PELOS_TEXTOS)(nome, sobrenome, comum, texto, tamanho, forma);
+        return orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_STRINGS)(nome, sobrenome, comum, texto, tamanho, forma);
     }
     let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let (a, b, c) = (nome, sobrenome, comum);
@@ -1956,16 +1956,16 @@ pub(crate) unsafe extern "C" fn nome_pelos_textos(nome: usize, sobrenome: usize,
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_pelos_textos(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_NOME_PELOS_TEXTOS);
+pub(crate) unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_STRINGS);
     if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&(forma as u8)) {
         return o(nome, sobrenome, comum, texto, tamanho, forma); // caixa: só a original
     }
     // o texto produzido (até o tamanho dado, no máximo 128 bytes)
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
-        || nome_pelos_textos(nome, sobrenome, comum, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("nome_pelos_textos(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
+        || database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
     r
 }
 
@@ -2002,7 +2002,7 @@ pub(crate) const DBU1_CARGOS: [(usize, usize, usize, usize, u8); 18] = [
 /// diretor executivo, técnico, auxiliar, técnico dos reservas e olheiro; 1 para os outros; nada para o aposentado.
 /// Cargo fora da faixa: 0, sem escrever. Nas telas do clube, de contratos, da pessoa e de busca, na mídia
 /// (0x744f80, 0x74bbd0), nos regens (0x7a9650, 0x7aa4c0) e nas transferências (0x8d3520, 0x8dc370).
-pub(crate) unsafe extern "C" fn nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_get_job_name(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
     let j = cargo as u8 as i8;
     if !(0..=0x11).contains(&j) || j == 14 {
         return 0;
@@ -2023,14 +2023,14 @@ pub(crate) unsafe extern "C" fn nome_do_cargo(cargo: u32, curto: u32, maiuscula:
     0xae19b4
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(IDX_NOME_DO_CARGO);
+pub(crate) unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(IDX_DATABASE_GET_JOB_NAME);
     // o texto [0xae19b4] e o byte do gênero, se houver
     let regioes = [(0xae19b4usize, 100usize), (genero, 1)];
     let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(cargo, curto, maiuscula, genero),
-        || nome_do_cargo(cargo, curto, maiuscula, genero));
-    PLACAR.registrar(igual && r == x, || format!("nome_do_cargo({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
+        || database_get_job_name(cargo, curto, maiuscula, genero));
+    PLACAR.registrar(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
     r
 }
 
@@ -2053,7 +2053,7 @@ pub(crate) const DBU1_IDIOMAS: [usize; 64] = [
 /// [pt] { 0x53cee0 } (cdecl, Database.cpp): `database_get_language_name(idioma)`: o nome traduzido (0x66f4e0) do idioma
 /// (byte com sinal, 1..64; fora disso "Unknown") no texto [0xae21d4] (100 bytes), que é o que devolve. Na busca
 /// (0x813210) e na tela da pessoa (0x87dd80).
-pub(crate) unsafe extern "C" fn nome_do_idioma(idioma: u32) -> usize {
+pub(crate) unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let x = idioma as u8 as i8;
     let s = if (1..=64).contains(&x) { DBU1_IDIOMAS[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)
@@ -2061,10 +2061,10 @@ pub(crate) unsafe extern "C" fn nome_do_idioma(idioma: u32) -> usize {
     0xae21d4
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_do_idioma(idioma: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32) -> usize>(IDX_NOME_DO_IDIOMA);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || nome_do_idioma(idioma));
-    PLACAR.registrar(igual && r == x, || format!("nome_do_idioma({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
+pub(crate) unsafe extern "C" fn comparar_database_get_language_name(idioma: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(u32) -> usize>(IDX_DATABASE_GET_LANGUAGE_NAME);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
+    PLACAR.registrar(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
     r
 }
 
@@ -2106,10 +2106,10 @@ pub(crate) unsafe fn dbu2_juntar(destino: usize, origem: usize) {
 /// (3), "Under 21 Squad"/"Under 23 Squad" (4). Os formatos vão ao 0x66f4e0 com (gênero, gênero, nome). Devolve 1.
 /// Tamanho < 0x47 ou clube nulo (com forma 1..4): a original (caixa). Nas telas do clube, da seleção, do técnico, na
 /// escalação da partida (0x725f70, em Rust), no hall da fama, nas impressões e no Setup.
-pub(crate) unsafe extern "C" fn nome_da_selecao(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+pub(crate) unsafe extern "C" fn club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
-        return orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(IDX_NOME_DA_SELECAO)(clube, variante, texto, tamanho, forma, aspas);
+        return orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(IDX_CLUB_GET_NATIONAL_TEAM_NAME)(clube, variante, texto, tamanho, forma, aspas);
     }
     if !(1..=4).contains(&f) {
         return 1;
@@ -2160,16 +2160,16 @@ pub(crate) unsafe extern "C" fn nome_da_selecao(clube: usize, variante: u32, tex
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_da_selecao(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(IDX_NOME_DA_SELECAO);
+pub(crate) unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(IDX_CLUB_GET_NATIONAL_TEAM_NAME);
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
         return o(clube, variante, texto, tamanho, forma, aspas); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(clube, variante, texto, tamanho, forma, aspas),
-        || nome_da_selecao(clube, variante, texto, tamanho, forma, aspas));
-    PLACAR.registrar(igual && r == x, || format!("nome_da_selecao({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
+        || club_get_national_team_name(clube, variante, texto, tamanho, forma, aspas));
+    PLACAR.registrar(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
     r
 }
 
@@ -2217,10 +2217,10 @@ pub(crate) const DBU2_ATRIBUTOS: [(usize, bool, usize, bool); 31] = [
 /// nome traduzido (0x66f4e0) do atributo de jogador (1..0x1f, byte com sinal), abreviado (`abreviado` não nulo) ou
 /// inteiro; devolve 1. Atributo fora da faixa, texto nulo ou tamanho (curto com sinal) < 100: a original (caixa e 0).
 /// Nas telas do clube, de busca, da pessoa e de treino.
-pub(crate) unsafe extern "C" fn nome_do_atributo_do_jogador(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DO_ATRIBUTO_DO_JOGADOR)(atributo, texto, tamanho, abreviado);
+        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_PLAYER_ATTRIBUTE_NAME)(atributo, texto, tamanho, abreviado);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     *(texto as *mut u8) = 0;
@@ -2234,16 +2234,16 @@ pub(crate) unsafe extern "C" fn nome_do_atributo_do_jogador(atributo: u32, texto
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_do_atributo_do_jogador(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DO_ATRIBUTO_DO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_PLAYER_ATTRIBUTE_NAME);
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
         return o(atributo, texto, tamanho, abreviado); // caixa: só a original
     }
     // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(atributo, texto, tamanho, abreviado),
-        || nome_do_atributo_do_jogador(atributo, texto, tamanho, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("nome_do_atributo_do_jogador({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
+        || database_get_player_attribute_name(atributo, texto, tamanho, abreviado));
+    PLACAR.registrar(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
     r
 }
 
@@ -2303,9 +2303,9 @@ pub(crate) const DBU2_AVANTE: (usize, usize, bool, usize) = (0x9b74b4, 0x9b7484,
 /// Devolve 1. Os textos traduzidos passam pelo global [0xde1f64] (o mesmo uso da original). Texto ou jogador nulos ou
 /// tamanho (curto com sinal) < 30: a original (caixa). As locais (linha e lados, 2 KB cada) são gravadas antes de lidas.
 /// Nas telas do clube, de busca, da pessoa, de tática e de treino e nas impressões.
-pub(crate) unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_TEXTO_DAS_POSICOES)(jogador, texto, tamanho, forma);
+        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_PLAYER_POSITIONS)(jogador, texto, tamanho, forma);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let sprintf: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -2410,8 +2410,8 @@ pub(crate) unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize,
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_texto_das_posicoes(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_TEXTO_DAS_POSICOES);
+pub(crate) unsafe extern "C" fn comparar_database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_PLAYER_POSITIONS);
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
         return o(jogador, texto, tamanho, forma); // caixa: só a original
     }
@@ -2419,8 +2419,8 @@ pub(crate) unsafe extern "C" fn comparar_texto_das_posicoes(jogador: usize, text
     let n = (tamanho as u16 as usize).min(128);
     let reg = [(texto, n), (jogador + 0xf, 12), (0xde1f64, 64)];
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(jogador, texto, tamanho, forma),
-        || texto_das_posicoes(jogador, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("texto_das_posicoes({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
+        || database_format_player_positions(jogador, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
     r
 }
 
@@ -2442,9 +2442,9 @@ pub(crate) unsafe fn dbs1_cheio(t: usize) -> bool {
 /// humano deu apelido à pessoa ([0xae23bc] + 110 × pessoa; 0x600740) e ela confere com os nomes (0x53e990), o apelido
 /// (0x6005e0) no lugar do nome comum. Texto nulo ou tamanho (palavra) < 0x69: a original (caixa). As locais de 0x200
 /// bytes só servem à mensagem da caixa. As chamadas pelo endereço do jogo. ~126 chamadores (notícias, telas, contratos).
-pub(crate) unsafe extern "C" fn nome_por_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
+pub(crate) unsafe extern "C" fn database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
     if texto == 0 || (tamanho as i16) < 0x69 {
-        return orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_NOME_POR_IDS)(nome, sobrenome, comum, texto, tamanho, forma, pessoa);
+        return orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_IDS)(nome, sobrenome, comum, texto, tamanho, forma, pessoa);
     }
     let deu_apelido: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_HAS_NICKNAME);
     let confere: unsafe extern "C" fn(usize, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
@@ -2464,16 +2464,16 @@ pub(crate) unsafe extern "C" fn nome_por_ids(nome: i32, sobrenome: i32, comum: i
     formatar(n, s, c, texto, tamanho, forma, -1)
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_por_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_NOME_POR_IDS);
+pub(crate) unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_IDS);
     if texto == 0 || (tamanho as i16) < 0x69 {
         return o(nome, sobrenome, comum, texto, tamanho, forma, pessoa); // caixa: só a original
     }
     // o texto produzido (até o tamanho dado, no máximo 128 bytes)
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma, pessoa),
-        || nome_por_ids(nome, sobrenome, comum, texto, tamanho, forma, pessoa));
-    PLACAR.registrar(igual && r == x, || format!("nome_por_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
+        || database_format_name_from_ids(nome, sobrenome, comum, texto, tamanho, forma, pessoa));
+    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
     r
 }
 
@@ -2487,8 +2487,8 @@ pub(crate) unsafe extern "C" fn comparar_nome_por_ids(nome: i32, sobrenome: i32,
 /// na forma 6, a inicial que houver. Oficial da nação +0x16 com id igual a [0x9cf488]: só o sobrenome, em qualquer
 /// forma. Devolve 1. Oficial ou texto nulos, tamanho (palavra) < 0x69 ou forma fora de 1..6: a original (caixa). Nos
 /// eventos e no painel da partida (0x6d8d10, 0x6d7b00, 0x71c270).
-pub(crate) unsafe extern "C" fn nome_oficial(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NOME_OFICIAL);
+pub(crate) unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_OFFICIAL_NAME);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma);
     }
@@ -2544,30 +2544,30 @@ pub(crate) unsafe extern "C" fn nome_oficial(oficial: usize, texto: usize, taman
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_oficial(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NOME_OFICIAL);
+pub(crate) unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_OFFICIAL_NAME);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma); // caixa: só a original
     }
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(oficial, texto, tamanho, forma),
-        || nome_oficial(oficial, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("nome_oficial({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
+        || database_format_official_name(oficial, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
     r
 }
 
 /// the translated position name of the mask (goalkeeper, support, striker, wing back, wingers, midfielders, centre
-/// back, full backs, sweeper, substitute, defender) and the gender by language
+/// back, full backs, sweeper, substitute, save_shot) and the gender by language
 /// Original: `position_mask_get_text` (0x5482f0, Database.cpp, cdecl).
 ///
 /// [pt] { 0x5482f0 } (cdecl, Database.cpp): `position_mask_get_text(mascara, texto, maiuscula)`: o nome da posição da
 /// máscara (0x66f4e0 com o texto 0xad9c64; a forma com maiúscula se o byte `maiuscula` não é 0), na ordem: goleiro
 /// (1), jogador de apoio (0x260/0x160/0x460), atacante (0x40 com 0x700), ala (0x88/0x808), ponta esquerda (0x90/0xa0),
 /// ponta direita (0x810/0x820), meia central e meia-atacante (0x100/0x200/0x400 com 0x18 ou 0x20), zagueiro central
-/// (0x204/0x104/0x404), lateral esquerdo (0x84), lateral direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
+/// (0x204/0x104/0x404), throw_in esquerdo (0x84), throw_in direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
 /// byte do gênero pelo idioma (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4, os outros 0 (reserva: sempre 0). Texto
 /// nulo: 0. Na mídia (0x72d270) e na tela da pessoa (0x87dd80).
-pub(crate) unsafe extern "C" fn texto_da_mascara_da_posicao(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
+pub(crate) unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
     if texto == 0 {
         return 0;
     }
@@ -2605,7 +2605,7 @@ pub(crate) unsafe extern "C" fn texto_da_mascara_da_posicao(mascara: u32, texto:
     } else if m == 0 {
         ((0x9b81f4, 0x9b81c8), 0, 0) // substitute (o gênero fica 0)
     } else {
-        ((0x9b819c, 0x9b8170), 2, 1) // defender
+        ((0x9b819c, 0x9b8170), 2, 1) // save_shot
     };
     formatar(texto, if maiuscula as u8 != 0 { t.1 } else { t.0 }, 0xad9c64);
     if m == 0 {
@@ -2619,15 +2619,15 @@ pub(crate) unsafe extern "C" fn texto_da_mascara_da_posicao(mascara: u32, texto:
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_texto_da_mascara_da_posicao(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32) -> u8>(IDX_TEXTO_DA_MASCARA_DA_POSICAO);
+pub(crate) unsafe extern "C" fn comparar_position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32) -> u8>(IDX_POSITION_MASK_GET_TEXT);
     if texto == 0 {
         return o(mascara, texto, maiuscula);
     }
     // sem tamanho: os nomes traduzidos cabem em 128
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 128)], || o(mascara, texto, maiuscula),
-        || texto_da_mascara_da_posicao(mascara, texto, maiuscula));
-    PLACAR.registrar(igual && r == x, || format!("texto_da_mascara_da_posicao({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
+        || position_mask_get_text(mascara, texto, maiuscula));
+    PLACAR.registrar(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
     r
 }
 
@@ -2642,14 +2642,14 @@ pub(crate) unsafe extern "C" fn comparar_texto_da_mascara_da_posicao(mascara: u3
 ///
 /// [pt] { 0x5461b0 } (cdecl, Database.cpp): `write_position_name(mascara, texto, tamanho)`: o nome da posição (0x66f4e0;
 /// cada um escreve por cima do anterior) contando as posições: 1 goleiro, 2 líbero, 4 zagueiro central (com 0x200 sem
-/// 0x80/0x800), defensor (com 0x200) ou lateral, 8 lateral ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
+/// 0x80/0x800), defensor (com 0x200) ou throw_in, 8 throw_in ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
 /// 0x20 sem nenhuma antes (conta 1) meia-atacante (0x200), ponta (0x80 e 0x800), ponta esquerda (0x80) ou direita, 0x40
 /// com 0x200 atacante; mais de 3: "utility player"; nenhuma: "player". Devolve o byte do gênero do último pelo idioma
 /// (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4; os outros não mudam (começa em 0). Tamanho < 30: a original (caixa).
 /// Na mídia, nos contratos, na busca de jogadores, nos olheiros e nas transferências (0x8dc370).
-pub(crate) unsafe extern "C" fn nome_da_posicao(mascara: u32, texto: usize, tamanho: i32) -> u8 {
+pub(crate) unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
     if tamanho < 0x1e {
-        return orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_NOME_DA_POSICAO)(mascara, texto, tamanho);
+        return orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_WRITE_POSITION_NAME)(mascara, texto, tamanho);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -2679,9 +2679,9 @@ pub(crate) unsafe extern "C" fn nome_da_posicao(mascara: u32, texto: usize, tama
         n += 1;
         if m & 0x200 != 0 {
             if m & 0x80 == 0 && m & 0x800 == 0 {
-                escrever(0x9b7d40, 2, 1); // central defender
+                escrever(0x9b7d40, 2, 1); // central save_shot
             } else {
-                escrever(0x9b7d28, 2, 1); // defender
+                escrever(0x9b7d28, 2, 1); // save_shot
             }
         } else {
             escrever(0x9b7d34, 5, 1); // full back
@@ -2722,19 +2722,19 @@ pub(crate) unsafe extern "C" fn nome_da_posicao(mascara: u32, texto: usize, tama
     g
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_da_posicao(mascara: u32, texto: usize, tamanho: i32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_NOME_DA_POSICAO);
+pub(crate) unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_WRITE_POSITION_NAME);
     if tamanho < 0x1e {
         return o(mascara, texto, tamanho); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(mascara, texto, tamanho),
-        || nome_da_posicao(mascara, texto, tamanho));
-    PLACAR.registrar(igual && r == x, || format!("nome_da_posicao({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
+        || write_position_name(mascara, texto, tamanho));
+    PLACAR.registrar(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
     r
 }
 
-/// the player description by strengths (0x546ab0) and position: forward, midfielder, full back, defender, veteran or
+/// the player description by strengths (0x546ab0) and position: forward, midfielder, full back, save_shot, veteran or
 /// rookie by age; the gender by language
 /// Original: `write_player_description` (0x5465a0, Database.cpp, cdecl).
 ///
@@ -2743,14 +2743,14 @@ pub(crate) unsafe extern "C" fn comparar_nome_da_posicao(mascara: u32, texto: us
 /// (qualidades 0x40): matador letal, matador ou goleador veloz (pela soma índice + qualidades % 3), oportunista,
 /// matador ou artilheiro (% 4), atacante dinâmico, de força, forte, criativo, empolgante, habilidoso. Meia (posição
 /// 0x10): com 0x40000 "inspirational" e por cima "free-scoring" (devolve 0); armador, ladrão de bola, dinâmico,
-/// esforçado, confiável, veloz. Qualidades 2 (sem 4): lateral veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
+/// esforçado, confiável, veloz. Qualidades 2 (sem 4): throw_in veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
 /// pela idade (+0x18 da pessoa [0xae23bc] + 110 × índice): veterano acima de índice % 3 + 33 (sem a qualidade 1),
 /// revelação abaixo de índice % 3 + 18 com +0x22 nulo e a soma % 3 = 0. Devolve o gênero: com o idioma 4, 1, 3 ou 4
 /// conforme o texto; senão o byte `genero` (1 com o idioma 5, que a original grava também no próprio argumento; a
 /// cópia não grava). Tamanho < 30: a original (caixa).
-pub(crate) unsafe extern "C" fn descricao_do_jogador(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
+pub(crate) unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
     if tamanho < 0x1e {
-        return orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_DESCRICAO_DO_JOGADOR)(pessoa, posicao, qualidades, texto, tamanho, genero);
+        return orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_WRITE_PLAYER_DESCRIPTION)(pessoa, posicao, qualidades, texto, tamanho, genero);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -2819,10 +2819,10 @@ pub(crate) unsafe extern "C" fn descricao_do_jogador(pessoa: i32, posicao: u32, 
     }
     if q & 4 != 0 {
         if tem(0x200000) {
-            return escrever(0x9b7d8c, 1); // pacey defender
+            return escrever(0x9b7d8c, 1); // pacey save_shot
         }
         if tem(0x1200) {
-            return escrever(0x9b7d78, 1); // cultured defender
+            return escrever(0x9b7d78, 1); // cultured save_shot
         }
         return g;
     }
@@ -2843,15 +2843,15 @@ pub(crate) unsafe extern "C" fn descricao_do_jogador(pessoa: i32, posicao: u32, 
     g
 }
 
-pub(crate) unsafe extern "C" fn comparar_descricao_do_jogador(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_DESCRICAO_DO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_WRITE_PLAYER_DESCRIPTION);
     if tamanho < 0x1e {
         return o(pessoa, posicao, qualidades, texto, tamanho, genero); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(pessoa, posicao, qualidades, texto, tamanho, genero),
-        || descricao_do_jogador(pessoa, posicao, qualidades, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("descricao_do_jogador({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
+        || write_player_description(pessoa, posicao, qualidades, texto, tamanho, genero));
+    PLACAR.registrar(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
     r
 }
 
@@ -2859,7 +2859,7 @@ pub(crate) unsafe extern "C" fn comparar_descricao_do_jogador(pessoa: i32, posic
 /// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
 pub(crate) unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
     let idade: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     if read_usize(o + 0x61) == 0 {
@@ -2874,7 +2874,7 @@ pub(crate) unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<
     if pref != 0 && (0..3).any(|j| read_usize(pref + 0x28 + 4 * j) == o) {
         return None; // rejeitado pela pessoa
     }
-    let contrato = contrato_de(read_usize(0xae1050), o, clube);
+    let contrato = contract_of(read_usize(0xae1050), o, clube);
     if contrato == 0 {
         return None;
     }
@@ -2946,7 +2946,7 @@ pub(crate) unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<
 /// elenco do clube (+0xd7) tem nota estritamente maior; 0 se não. Antes, os da pessoa: [0xb74350], id % 6 = r: +0x59 ≥
 /// r + 6, +0x57 ≤ 15 − r, idade (0x54cdb0) ≥ id % 28 + 14. A original guarda a nota do candidato no próprio argumento
 /// `pessoa` e um float no `candidato` (gravados antes de lidos); a cópia não. Só `al`. Na mídia (0x758200).
-pub(crate) unsafe extern "C" fn melhor_candidato_a_favorito(pessoa: usize, clube: usize, candidato: usize) -> u8 {
+pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
     if pessoa == 0 || clube == 0 || candidato == 0 || read_usize(0xb74350) == 0 {
         return 0;
     }
@@ -2977,13 +2977,13 @@ pub(crate) unsafe extern "C" fn melhor_candidato_a_favorito(pessoa: usize, clube
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_melhor_candidato_a_favorito(pessoa: usize, clube: usize, candidato: usize) -> u8 {
+pub(crate) unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u8>(IDX_MELHOR_CANDIDATO_A_FAVORITO);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u8>(IDX_STAFF_IS_BEST_FAVOURED_CANDIDATE);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube, candidato),
-        || crate::aleatorio::sem_contar(|| melhor_candidato_a_favorito(pessoa, clube, candidato)));
-    PLACAR.registrar(igual && r == x, || format!("melhor_candidato_a_favorito({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_is_best_favoured_candidate(pessoa, clube, candidato)));
+    PLACAR.registrar(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
     r
 }
 
@@ -3003,7 +3003,7 @@ pub(crate) unsafe fn dbs3_atributo(pessoa: usize, atributo: u32) -> i32 {
     f(pessoa, read_usize(pessoa + staff::PLAYER), atributo) as i8 as i32
 }
 
-/// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), lateral (+0x11, com +0x19
+/// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), throw_in (+0x11, com +0x19
 /// ou com +0x17/+0x18), zagueiros (+0x12/+0x13 sem +0x17/+0x18 a 15), meias (+0x14, +0x15). `bits` = os valores
 /// de cada caso na ordem; mais o da soma das dez posições (+0x10..+0x19) acima de 110.
 pub(crate) unsafe fn dbs3_posicoes(j: usize, bits: [u32; 7], soma: u32) -> u32 {
@@ -3052,7 +3052,7 @@ pub(crate) unsafe fn dbs3_posicoes(j: usize, bits: [u32; 7], soma: u32) -> u32 {
 /// 0x200000, 0x400000 (atributos 4, 0xd, 0x14, 0x15, 1), 0x8000 (+0x21), 0x10000 (atributo 0xb e a média 0xf), 0x40000
 /// (reputação e as médias 6/2 e 6/1), 0x80000 (médias 0x15, 0x10, 2 e 1). A original guarda floats nos próprios
 /// argumentos (gravados antes de lidos); a cópia não. Nulos: 0.
-pub(crate) unsafe extern "C" fn forcas_do_jogador(pessoa: usize, outro: usize) -> u32 {
+pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
     if outro == 0 || pessoa == 0 {
         return 0;
     }
@@ -3156,7 +3156,7 @@ pub(crate) unsafe extern "C" fn forcas_do_jogador(pessoa: usize, outro: usize) -
 /// 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000. A original guarda bytes e floats nos próprios argumentos
 /// (gravados antes de lidos; a vaga passada à 0x5b2ae0 é o argumento `clube` com o byte da vaga por cima, e a cópia a
 /// monta igual); a cópia não grava neles. Nulos: 0. Na mídia (0x72c1f0, 0x487c70).
-pub(crate) unsafe extern "C" fn fraquezas_do_jogador(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
     if clube == 0 || pessoa == 0 {
         return 0;
     }
@@ -3294,17 +3294,17 @@ pub(crate) unsafe fn dbs3_comparar(o: impl Fn() -> u32, n: impl Fn() -> u32) -> 
     (r, x, igual2 && r2 == x2, format!("1a {:x} x {:x}; 2a {:x} x {:x} {:x?} x {:x?}", r, x, r2, x2, mo, mr))
 }
 
-pub(crate) unsafe extern "C" fn comparar_forcas_do_jogador(pessoa: usize, outro: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FORCAS_DO_JOGADOR);
-    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, outro), || forcas_do_jogador(pessoa, outro));
-    PLACAR.registrar(igual, || format!("forcas_do_jogador({:x}, {:x}) {}", pessoa, outro, d));
+pub(crate) unsafe extern "C" fn comparar_staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_STRENGTH_FLAGS);
+    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, outro), || staff_get_player_strength_flags(pessoa, outro));
+    PLACAR.registrar(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", pessoa, outro, d));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_fraquezas_do_jogador(pessoa: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FRAQUEZAS_DO_JOGADOR);
-    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, clube), || fraquezas_do_jogador(pessoa, clube));
-    PLACAR.registrar(igual, || format!("fraquezas_do_jogador({:x}, {:x}) {}", pessoa, clube, d));
+pub(crate) unsafe extern "C" fn comparar_staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_WEAKNESS_FLAGS);
+    let (r, _, igual, d) = dbs3_comparar(|| o(pessoa, clube), || staff_get_player_weakness_flags(pessoa, clube));
+    PLACAR.registrar(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", pessoa, clube, d));
     r
 }
 
@@ -3324,9 +3324,9 @@ pub(crate) unsafe fn dbt1_parceiro(clube: usize, eh_a: *mut u32) -> usize {
 /// [pt] { 0x53c9b0 } (cdecl, Database.cpp): `database_count_club_physios(clube)`: quantos dos 3 fisioterapeutas
 /// (+0x1cf) do clube e do time B ligado (0x540a50) são pessoas válidas (não nulas, id +0 < [0xae2364] com sinal).
 /// Só `al`. Clube nulo: a original (caixa e 0). Nas telas da pessoa (staff_screens, 0x8740c8 e 0x87412b).
-pub(crate) unsafe extern "C" fn contar_fisioterapeutas(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn database_count_club_physios(clube: usize) -> u8 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CONTAR_FISIOTERAPEUTAS)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_PHYSIOS)(clube);
     }
     let validos = |c: usize| {
         (0..3).filter(|k| {
@@ -3338,13 +3338,13 @@ pub(crate) unsafe extern "C" fn contar_fisioterapeutas(clube: usize) -> u8 {
     validos(clube) + if b != 0 { validos(b) } else { 0 } // os do clube e os do time B (dbt)
 }
 
-pub(crate) unsafe extern "C" fn comparar_contar_fisioterapeutas(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CONTAR_FISIOTERAPEUTAS)(clube);
+pub(crate) unsafe extern "C" fn comparar_database_count_club_physios(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_PHYSIOS)(clube);
     if clube == 0 {
         return r; // caixa: só a original
     }
-    let n = contar_fisioterapeutas(clube);
-    PLACAR.registrar(r == n, || format!("contar_fisioterapeutas({:x}) original={} rust={}", clube, r, n));
+    let n = database_count_club_physios(clube);
+    PLACAR.registrar(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -3354,21 +3354,21 @@ pub(crate) unsafe extern "C" fn comparar_contar_fisioterapeutas(clube: usize) ->
 /// [pt] { 0x5448c0 } (cdecl, Database.cpp): `club_is_b_team(clube)`: 1 se o clube tem parceiro (0x540a50 com `ativo`) e
 /// é o B dele (`eh_a` = 0), senão 0 (o eax inteiro). A local `eh_a` só é lida com parceiro, e então a 0x540a50 a
 /// escreveu. Clube nulo: a original (caixa e 0). Na tela da pessoa (staff_screens, 0x87272d).
-pub(crate) unsafe extern "C" fn clube_e_time_b(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn club_is_b_team(clube: usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_E_TIME_B)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_B_TEAM)(clube);
     }
     let mut eh_a = 0u32;
     (dbt1_parceiro(clube, &mut eh_a) != 0 && eh_a == 0) as u32 // é o B (dbt)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_e_time_b(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_E_TIME_B)(clube);
+pub(crate) unsafe extern "C" fn comparar_club_is_b_team(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_B_TEAM)(clube);
     if clube == 0 {
         return r;
     }
-    let n = clube_e_time_b(clube);
-    PLACAR.registrar(r == n, || format!("clube_e_time_b({:x}) original={} rust={}", clube, r, n));
+    let n = club_is_b_team(clube);
+    PLACAR.registrar(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -3381,9 +3381,9 @@ pub(crate) unsafe extern "C" fn comparar_clube_e_time_b(clube: usize) -> u32 {
 /// de +0xbf (técnico, auxiliar, ...) e os 15 de +0x19f (treinadores, olheiros, fisioterapeutas), as não nulas, até
 /// `max` (byte com sinal); devolve quantas em `al`. Clube nulo: a original (caixa e 0). Na aba de informações da
 /// tela do clube (club_screen_draw_info_tab 0x460590, 0x4616fa).
-pub(crate) unsafe extern "C" fn pessoas_fora_do_elenco(clube: usize, saida: *mut usize, max: u32) -> u8 {
+pub(crate) unsafe extern "C" fn club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_PESSOAS_FORA_DO_ELENCO)(clube, saida, max);
+        return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_CLUB_COLLECT_NON_PLAYING_STAFF)(clube, saida, max);
     }
     let max = max as i8;
     let mut n = 0i8;
@@ -3403,14 +3403,14 @@ pub(crate) unsafe extern "C" fn pessoas_fora_do_elenco(clube: usize, saida: *mut
     n as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoas_fora_do_elenco(clube: usize, saida: *mut usize, max: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_PESSOAS_FORA_DO_ELENCO);
+pub(crate) unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_CLUB_COLLECT_NON_PLAYING_STAFF);
     if clube == 0 {
         return o(clube, saida, max);
     }
     let reg = [(saida as usize, 4 * (max as i8).max(0) as usize)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, saida, max), || pessoas_fora_do_elenco(clube, saida, max));
-    PLACAR.registrar(igual && r == n, || format!("pessoas_fora_do_elenco({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, saida, max), || club_collect_non_playing_staff(clube, saida, max));
+    PLACAR.registrar(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
     r
 }
 
@@ -3428,7 +3428,7 @@ pub(crate) unsafe extern "C" fn comparar_pessoas_fora_do_elenco(clube: usize, sa
 /// divisível por 4 (conhecimento 1) ou por 2 (conhecimento 2), ou o seguinte (m = 0) / o mesmo (m ≠ 0) divisível
 /// por 3. Outro conhecimento: 0. Só `al`. A 0x5b02f0 guarda o último clube achado em [0xae1080] (o mesmo valor
 /// nas duas). Nas telas de busca e filtros (search_screens, SearchFilters 0x807450), da pessoa e do clube.
-pub(crate) unsafe extern "C" fn atributo_visivel(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+pub(crate) unsafe extern "C" fn staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let tabela = *(G_FOG_OF_WAR as *const usize);
     if quem_ve == 0 || pessoa == 0 || tabela == 0 || *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) == 0 {
         return 1;
@@ -3461,10 +3461,10 @@ pub(crate) unsafe extern "C" fn atributo_visivel(quem_ve: usize, pessoa: usize, 
     (a % divisor == 0 || b % 3 == 0) as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_atributo_visivel(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_VISIVEL)(quem_ve, pessoa, atributo);
-    let n = atributo_visivel(quem_ve, pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_visivel({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
+pub(crate) unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_IS_PLAYER_ATTRIBUTE_VISIBLE)(quem_ve, pessoa, atributo);
+    let n = staff_is_player_attribute_visible(quem_ve, pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
     r
 }
 
@@ -3477,10 +3477,10 @@ pub(crate) unsafe extern "C" fn comparar_atributo_visivel(quem_ve: usize, pessoa
 /// "desconhecido"); senão o valor de staff_compute_player_attribute (0x543540). Só `al`. Pessoa nula ou atributo fora
 /// da faixa: a original (caixa e 0xff). Na comparação de jogadores e no perfil da pessoa (staff_screens 0x877470,
 /// 0x879ac0, 0x87a754).
-pub(crate) unsafe extern "C" fn atributo_para_quem_ve(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+pub(crate) unsafe extern "C" fn staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
-        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_PARA_QUEM_VE)(quem_ve, pessoa, atributo);
+        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE_FOR_VIEWER)(quem_ve, pessoa, atributo);
     }
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
     let jogador = core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize);
@@ -3494,14 +3494,14 @@ pub(crate) unsafe extern "C" fn atributo_para_quem_ve(quem_ve: usize, pessoa: us
     calcular(pessoa, jogador, atributo) as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_atributo_para_quem_ve(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_PARA_QUEM_VE)(quem_ve, pessoa, atributo);
+pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE_FOR_VIEWER)(quem_ve, pessoa, atributo);
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
         return r; // caixa: só a original
     }
-    let n = atributo_para_quem_ve(quem_ve, pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_para_quem_ve({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
+    let n = staff_get_player_attribute_for_viewer(quem_ve, pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
     r
 }
 
@@ -3530,10 +3530,10 @@ pub(crate) const DBT2_NOMES: [(usize, usize); 12] = [
 /// traduzido do Langlib (0x66f4e0, pelo endereço do jogo); devolve 1. Atributo fora da faixa, texto nulo ou tamanho
 /// (curto com sinal) abaixo de 100: a original (caixa e 0). Nas telas de busca (search_screens) e no perfil da
 /// pessoa (staff_screens 0x87ad97).
-pub(crate) unsafe extern "C" fn nome_do_atributo_de_tecnico(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DO_ATRIBUTO_DE_TECNICO)(atributo, texto, tamanho, abreviado);
+        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_NON_PLAYER_ATTRIBUTE_NAME)(atributo, texto, tamanho, abreviado);
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     *(texto as *mut u8) = 0;
@@ -3548,8 +3548,8 @@ pub(crate) unsafe extern "C" fn nome_do_atributo_de_tecnico(atributo: u32, texto
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_do_atributo_de_tecnico(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DO_ATRIBUTO_DE_TECNICO);
+pub(crate) unsafe extern "C" fn comparar_database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_NON_PLAYER_ATTRIBUTE_NAME);
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
         return o(atributo, texto, tamanho, abreviado);
@@ -3557,8 +3557,8 @@ pub(crate) unsafe extern "C" fn comparar_nome_do_atributo_de_tecnico(atributo: u
     // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
     let reg = [(texto, 100)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(atributo, texto, tamanho, abreviado),
-        || nome_do_atributo_de_tecnico(atributo, texto, tamanho, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("nome_do_atributo_de_tecnico({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
+        || database_get_non_player_attribute_name(atributo, texto, tamanho, abreviado));
+    PLACAR.registrar(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
     r
 }
 
@@ -3571,7 +3571,7 @@ pub(crate) unsafe extern "C" fn comparar_nome_do_atributo_de_tecnico(atributo: u
 /// de pessoa pelo nome no estilo 4 ("sobrenome, nome", 0x53dba0 em 0x7d0 bytes) na comparação de textos 0x90c1d0
 /// (sem maiúsculas, `dbr_comparar_textos`); pessoa nula vale o texto vazio (a original zera o primeiro byte das duas
 /// locais antes). Na tela de oferta de contrato (contract_screens 0x4de5d0).
-pub(crate) unsafe extern "C" fn ordem_das_pessoas_pelo_sobrenome(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
     let formatar: unsafe extern "C" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let mut na = [0u8; 0x7d0];
     let mut nb = [0u8; 0x7d0];
@@ -3585,10 +3585,10 @@ pub(crate) unsafe extern "C" fn ordem_das_pessoas_pelo_sobrenome(a: usize, b: us
     dbr_comparar_textos(na.as_ptr(), nb.as_ptr())
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_das_pessoas_pelo_sobrenome(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_PESSOAS_PELO_SOBRENOME)(a, b);
-    let n = ordem_das_pessoas_pelo_sobrenome(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_pessoas_pelo_sobrenome({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_SURNAME)(a, b);
+    let n = database_compare_staff_by_surname(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -3599,7 +3599,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_das_pessoas_pelo_sobrenome(a: usi
 /// ponteiros de clube pela reputação (+0x80, curto com sinal; clube nulo = 0), a maior primeiro: a de `a` menor: 1;
 /// maior: -1; iguais: 0. (A 0x540020, já em Rust, é a mesma ordem sobre ids.) No menu dos times do clube
 /// (0x482070) e nas abas de Escolher Amistosos (find_screens 0x5a1480, 0x5a1e10, 0x5a2250).
-pub(crate) unsafe extern "C" fn ordem_dos_ponteiros_de_clube_pela_reputacao(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
     let reputacao = |p: usize| {
         let c = *(p as *const usize);
         if c == 0 { 0 } else { core::ptr::read_unaligned((c + 0x80) as *const i16) }
@@ -3614,10 +3614,10 @@ pub(crate) unsafe extern "C" fn ordem_dos_ponteiros_de_clube_pela_reputacao(a: u
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_ponteiros_de_clube_pela_reputacao(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_PONTEIROS_DE_CLUBE_PELA_REPUTACAO)(a, b);
-    let n = ordem_dos_ponteiros_de_clube_pela_reputacao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_ponteiros_de_clube_pela_reputacao({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_REPUTATION)(a, b);
+    let n = database_compare_clubs_by_reputation(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -3627,15 +3627,15 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_ponteiros_de_clube_pela_reput
 /// [pt] { 0x53d7d0 } (cdecl, Database.cpp): `database_club_nation_is_eec(clube)`: 1 se a nação do clube (+0x53) não é
 /// nula e está na CEE (+0x7f = 2), senão 0 (o eax inteiro). O clube não é conferido (a original lê o +0x53 dele).
 /// Na aba de informações da tela do clube (club_screens 0x462070, os estrangeiros).
-pub(crate) unsafe extern "C" fn nacao_do_clube_na_cee(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_club_nation_is_eec(clube: usize) -> u32 {
     let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
     (nacao != 0 && *((nacao + nation::GROUP_MEMBERSHIP) as *const u8) == 2) as u32 // na CEE (dbt)
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_do_clube_na_cee(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NACAO_DO_CLUBE_NA_CEE)(clube);
-    let n = nacao_do_clube_na_cee(clube);
-    PLACAR.registrar(r == n, || format!("nacao_do_clube_na_cee({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_club_nation_is_eec(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_NATION_IS_EEC)(clube);
+    let n = database_club_nation_is_eec(clube);
+    PLACAR.registrar(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -3648,7 +3648,7 @@ pub(crate) unsafe extern "C" fn comparar_nacao_do_clube_na_cee(clube: usize) -> 
 /// (0xae2104) com 1..14, guarda o `idioma` (byte) em [0xae232b] e o ordena pelo qsort da CRT (0x945333) com a
 /// comparação 0x545e00 (pelo endereço do jogo); devolve o vetor. Nas telas de busca (search_screens 0x80970c,
 /// 0x814b7e, 0x815d5e: o filtro de região).
-pub(crate) unsafe extern "C" fn regioes_pelo_nome(idioma: u32) -> usize {
+pub(crate) unsafe extern "C" fn get_regions_sorted_by_name(idioma: u32) -> usize {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     for k in 0..14u8 {
         *((0xae2104 + k as usize) as *mut u8) = k + 1;
@@ -3658,11 +3658,11 @@ pub(crate) unsafe extern "C" fn regioes_pelo_nome(idioma: u32) -> usize {
     0xae2104
 }
 
-pub(crate) unsafe extern "C" fn comparar_regioes_pelo_nome(idioma: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32) -> usize>(IDX_REGIOES_PELO_NOME);
+pub(crate) unsafe extern "C" fn comparar_get_regions_sorted_by_name(idioma: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(u32) -> usize>(IDX_GET_REGIONS_SORTED_BY_NAME);
     let reg = [(0xae2104, 14), (0xae232b, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(idioma), || regioes_pelo_nome(idioma));
-    PLACAR.registrar(igual && r == n, || format!("regioes_pelo_nome({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(idioma), || get_regions_sorted_by_name(idioma));
+    PLACAR.registrar(igual && r == n, || format!("get_regions_sorted_by_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8, r, n, mo, mr));
     r
 }
 
@@ -3673,7 +3673,7 @@ pub(crate) unsafe extern "C" fn comparar_regioes_pelo_nome(idioma: u32) -> usize
 /// nome (0x616f20, do index.cpp, em 0xc8 bytes, no idioma de [0xae232b]) na comparação de textos 0x90c1d0 (sem
 /// maiúsculas); `a` nulo: 1; `b` nulo: -1. A 0x616f20 zera o primeiro byte do texto antes de tudo (as locais nunca
 /// são lidas sem valor). Pela 0x545dc0.
-pub(crate) unsafe extern "C" fn ordem_das_regioes_pelo_nome(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 {
     if a == 0 {
         return 1;
     }
@@ -3689,10 +3689,10 @@ pub(crate) unsafe extern "C" fn ordem_das_regioes_pelo_nome(a: usize, b: usize) 
     dbr_comparar_textos(na.as_ptr(), nb.as_ptr()) // (dbt)
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_das_regioes_pelo_nome(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_REGIOES_PELO_NOME)(a, b);
-    let n = ordem_das_regioes_pelo_nome(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_regioes_pelo_nome({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_REGION_NAMES)(a, b);
+    let n = compare_region_names(a, b);
+    PLACAR.registrar(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -3703,7 +3703,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_das_regioes_pelo_nome(a: usize, b
 /// da pessoa: no registro da pessoa ([0xae2d0c] + id × 79; pessoa nula ou id >= [0xae2364]: 0), com laço (+0x27 ≠
 /// -1), se o alvo é o +0x37: a pessoa de índice +0x27 ([0xae23bc] + 110 × índice); senão, se o alvo é o +0x4b: a de
 /// índice +0x3b; senão 0. Na aba de transferências do perfil da pessoa (staff_screens 0x87dd80).
-pub(crate) unsafe extern "C" fn pessoa_da_opiniao(pessoa: usize, alvo: u32) -> usize {
+pub(crate) unsafe extern "C" fn staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> usize {
     if pessoa == 0 {
         return 0;
     }
@@ -3727,10 +3727,10 @@ pub(crate) unsafe extern "C" fn pessoa_da_opiniao(pessoa: usize, alvo: u32) -> u
     pessoas.wrapping_add((indice as usize).wrapping_mul(110))
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_da_opiniao(pessoa: usize, alvo: u32) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_PESSOA_DA_OPINIAO)(pessoa, alvo);
-    let n = pessoa_da_opiniao(pessoa, alvo);
-    PLACAR.registrar(r == n, || format!("pessoa_da_opiniao({:x}, {:x}) original={:x} rust={:x}", pessoa, alvo, r, n));
+pub(crate) unsafe extern "C" fn comparar_staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> usize {
+    let r = orig::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_GET_OPINION_LINK_STAFF)(pessoa, alvo);
+    let n = staff_get_opinion_link_staff(pessoa, alvo);
+    PLACAR.registrar(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", pessoa, alvo, r, n));
     r
 }
 
@@ -3785,19 +3785,19 @@ pub(crate) unsafe fn dbq1_regioes(base: usize) -> Vec<(usize, usize)> {
 /// favoritas do clube (+0x9b/+0x9f/+0xa3): já favorita, nada; rejeitada (+0xa7..+0xaf), deixa de ser e para; senão a
 /// primeira vaga; sem vaga, com `forcar`, a vaga sorteada (3). Clube ou pessoa nulos: nada. Nos registros de clubes
 /// (0x445f45) e de pessoas (0x86dc30).
-pub(crate) unsafe extern "C" fn clube_acrescentar_pessoa_favorita(clube: usize, pessoa: usize, forcar: u32) {
+pub(crate) unsafe extern "C" fn club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
     if clube == 0 || pessoa == 0 {
         return;
     }
     dbq1_acrescentar(clube + club::FAV_STAFF1, clube + club::DIS_STAFF1, pessoa, dbq1_tem(clube + club::FAV_STAFF1, pessoa), forcar) // as favoritas do clube
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_acrescentar_pessoa_favorita(clube: usize, pessoa: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUBE_ACRESCENTAR_PESSOA_FAVORITA);
+pub(crate) unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_FAVOURED_STAFF);
     let reg = dbq1_regioes(if clube != 0 { clube + club::FAV_STAFF1 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
-        || crate::aleatorio::sem_contar(|| clube_acrescentar_pessoa_favorita(clube, pessoa, forcar)));
-    PLACAR.registrar(igual, || format!("clube_acrescentar_pessoa_favorita({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
+        || crate::aleatorio::sem_contar(|| club_add_favoured_staff(clube, pessoa, forcar)));
+    PLACAR.registrar(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
 }
 
 /// puts the person among the three disliked staff of the club (+0xa7..+0xaf): already disliked, nothing; favoured
@@ -3809,19 +3809,19 @@ pub(crate) unsafe extern "C" fn comparar_clube_acrescentar_pessoa_favorita(clube
 /// rejeitadas do clube (+0xa7/+0xab/+0xaf): já rejeitada, nada; favorita (+0x9b..+0xa3), deixa de ser e para; senão a
 /// primeira vaga; sem vaga, com `forcar`, a vaga sorteada (3). Nas audiências das disputas (0x569ed0), na mídia
 /// (0x755340) e em 0x7daf50 (do motor de partidas).
-pub(crate) unsafe extern "C" fn clube_acrescentar_pessoa_rejeitada(clube: usize, pessoa: usize, forcar: u32) {
+pub(crate) unsafe extern "C" fn club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
     if clube == 0 || pessoa == 0 {
         return;
     }
     dbq1_acrescentar(clube + club::DIS_STAFF1, clube + club::FAV_STAFF1, pessoa, dbq1_tem(clube + club::DIS_STAFF1, pessoa), forcar) // as rejeitadas do clube
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_acrescentar_pessoa_rejeitada(clube: usize, pessoa: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUBE_ACRESCENTAR_PESSOA_REJEITADA);
+pub(crate) unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_DISLIKED_STAFF);
     let reg = dbq1_regioes(if clube != 0 { clube + club::FAV_STAFF1 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
-        || crate::aleatorio::sem_contar(|| clube_acrescentar_pessoa_rejeitada(clube, pessoa, forcar)));
-    PLACAR.registrar(igual, || format!("clube_acrescentar_pessoa_rejeitada({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
+        || crate::aleatorio::sem_contar(|| club_add_disliked_staff(clube, pessoa, forcar)));
+    PLACAR.registrar(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
 }
 
 /// puts the other person among the three favoured staff of the person (preferences +0x1c..+0x24): already favoured,
@@ -3834,7 +3834,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_acrescentar_pessoa_rejeitada(club
 /// deixa de ser e para; senão a primeira vaga; sem vaga, com `forcar`, a vaga sorteada (3). Pessoa, preferências ou
 /// outra nulas: nada. Nas relações do elenco (0x5d6d10, diária), registros de clubes (0x445f45), volta da lesão
 /// (0x630ee0), mídia e outras.
-pub(crate) unsafe extern "C" fn acrescentar_pessoa_favorita(pessoa: usize, outra: usize, forcar: u32) {
+pub(crate) unsafe extern "C" fn staff_add_favoured_staff(pessoa: usize, outra: usize, forcar: u32) {
     if pessoa == 0 {
         return;
     }
@@ -3845,13 +3845,13 @@ pub(crate) unsafe extern "C" fn acrescentar_pessoa_favorita(pessoa: usize, outra
     dbq1_acrescentar(pref + 0x1c, pref + 0x28, outra, dbq1_tem(pref + 0x1c, outra), forcar) // as favoritas da pessoa
 }
 
-pub(crate) unsafe extern "C" fn comparar_acrescentar_pessoa_favorita(pessoa: usize, outra: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_ACRESCENTAR_PESSOA_FAVORITA);
+pub(crate) unsafe extern "C" fn comparar_staff_add_favoured_staff(pessoa: usize, outra: usize, forcar: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_FAVOURED_STAFF);
     let pref = if pessoa != 0 { read_usize(pessoa + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = dbq1_regioes(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, outra, forcar),
-        || crate::aleatorio::sem_contar(|| acrescentar_pessoa_favorita(pessoa, outra, forcar)));
-    PLACAR.registrar(igual, || format!("acrescentar_pessoa_favorita({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_add_favoured_staff(pessoa, outra, forcar)));
+    PLACAR.registrar(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
 }
 
 // ---------- 235a leva: o clube rejeitado da pessoa, o esfriar das relações pessoais e a lista das pessoas rejeitadas (Database.cpp) ----------
@@ -3869,7 +3869,7 @@ pub(crate) unsafe extern "C" fn comparar_acrescentar_pessoa_favorita(pessoa: usi
 /// rejeitados, como a original); sem vaga, com `forcar`, a vaga sorteada (0x90cfc0, 3). Pessoa, preferências ou clube
 /// nulos: nada. No diário das pessoas (game_daily_staff_update 0x5ce2d0, duas chamadas), 0x5a5980, MANAGER_MANAGER
 /// (0x69c030) e outras.
-pub(crate) unsafe extern "C" fn acrescentar_clube_rejeitado(pessoa: usize, clube: usize, forcar: u32) {
+pub(crate) unsafe extern "C" fn staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
     if pessoa == 0 {
         return;
     }
@@ -3898,13 +3898,13 @@ pub(crate) unsafe extern "C" fn acrescentar_clube_rejeitado(pessoa: usize, clube
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_acrescentar_clube_rejeitado(pessoa: usize, clube: usize, forcar: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_ACRESCENTAR_CLUBE_REJEITADO);
+pub(crate) unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_DISLIKED_CLUB);
     let pref = if pessoa != 0 { read_usize(pessoa + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = dbq1_regioes(if pref != 0 { pref + 4 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, clube, forcar),
-        || crate::aleatorio::sem_contar(|| acrescentar_clube_rejeitado(pessoa, clube, forcar)));
-    PLACAR.registrar(igual, || format!("acrescentar_clube_rejeitado({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_add_disliked_club(pessoa, clube, forcar)));
+    PLACAR.registrar(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
 }
 
 /// each favoured person (preferences +0x1c..+0x24) leaves when a random draw of (+0x59) + 15 gives 0; each disliked one
@@ -3915,7 +3915,7 @@ pub(crate) unsafe extern "C" fn comparar_acrescentar_clube_rejeitado(pessoa: usi
 /// (preferências +0x1c..+0x24) presente sai com o sorteio (0x90cfc0) de (+0x59 da pessoa, com sinal) + 15 dando 0;
 /// cada uma das três rejeitadas (+0x28..+0x30), com o de 35 − (+0x5d). Um sorteio por vaga ocupada, na ordem.
 /// Pessoa ou preferências nulas: nada. No diário das pessoas (game_daily_staff_update 0x5ce2d0).
-pub(crate) unsafe extern "C" fn esmaecer_relacoes(pessoa: usize) {
+pub(crate) unsafe extern "C" fn staff_fade_staff_relationships(pessoa: usize) {
     if pessoa == 0 || read_usize(pessoa + staff::STAFF_PREFERENCES) == 0 {
         return;
     }
@@ -3934,13 +3934,13 @@ pub(crate) unsafe extern "C" fn esmaecer_relacoes(pessoa: usize) {
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_esmaecer_relacoes(pessoa: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(IDX_ESMAECER_RELACOES);
+pub(crate) unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_STAFF_FADE_STAFF_RELATIONSHIPS);
     let pref = if pessoa != 0 { read_usize(pessoa + staff::STAFF_PREFERENCES) } else { 0 };
     let reg = dbq1_regioes(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa),
-        || crate::aleatorio::sem_contar(|| esmaecer_relacoes(pessoa)));
-    PLACAR.registrar(igual, || format!("esmaecer_relacoes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_fade_staff_relationships(pessoa)));
+    PLACAR.registrar(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// copies the present disliked staff (preferences +0x28..+0x30) to the output, counting in the byte of the third
@@ -3952,7 +3952,7 @@ pub(crate) unsafe extern "C" fn comparar_esmaecer_relacoes(pessoa: usize) {
 /// ordem, contando em `*n`. Pessoa, preferências ou saída nulas: só o zero. Devolve `n` (o eax da original); os
 /// chamadores leem só o byte. No diário das pessoas (0x5ce2d0, duas chamadas), MANAGER_MANAGER (0x693850), mídia e
 /// telas de pessoas.
-pub(crate) unsafe extern "C" fn pessoas_rejeitadas(pessoa: usize, saida: usize, n: usize) -> usize {
+pub(crate) unsafe extern "C" fn staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
     let cont = n as *mut i8;
     *cont = 0;
     if pessoa == 0 || read_usize(pessoa + staff::STAFF_PREFERENCES) == 0 || saida == 0 {
@@ -3969,14 +3969,14 @@ pub(crate) unsafe extern "C" fn pessoas_rejeitadas(pessoa: usize, saida: usize, 
     n
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoas_rejeitadas(pessoa: usize, saida: usize, n: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> usize>(IDX_PESSOAS_REJEITADAS);
+pub(crate) unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> usize>(IDX_STAFF_GET_DISLIKED_STAFF);
     let mut reg = vec![(n, 1)];
     if saida != 0 {
         reg.push((saida, 12));
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida, n), || pessoas_rejeitadas(pessoa, saida, n));
-    PLACAR.registrar(igual && r == m, || format!("pessoas_rejeitadas({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida, n), || staff_get_disliked_staff(pessoa, saida, n));
+    PLACAR.registrar(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
     r
 }
 
@@ -3998,7 +3998,7 @@ pub(crate) unsafe extern "C" fn comparar_pessoas_rejeitadas(pessoa: usize, saida
 /// local (gravados antes de lidos) e um no próprio argumento; a cópia não. Chamada em 37 pontos: escolha do companheiro
 /// favorito (0x548da0, no diário das pessoas), motor de partidas (0x6b7f20), mídia (0x758010/0x758200, 0x72c1f0),
 /// prêmios (0x768cf0) e telas de pessoas.
-pub(crate) unsafe extern "C" fn mascara_da_posicao_natural(pessoa: usize) -> u32 {
+pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -4022,7 +4022,7 @@ pub(crate) unsafe extern "C" fn mascara_da_posicao_natural(pessoa: usize) -> u32
     }
     for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x18), (0x13, 0x38), (0x14, 0x30)] {
         if b(k) == 20 {
-            m |= bit; // o lateral, o zagueiro...
+            m |= bit; // o throw_in, o zagueiro...
         }
     }
     let algum_20 = (0x10..=0x14).any(|k| b(k) == 20);
@@ -4046,10 +4046,10 @@ pub(crate) unsafe extern "C" fn mascara_da_posicao_natural(pessoa: usize) -> u32
     0x10
 }
 
-pub(crate) unsafe extern "C" fn comparar_mascara_da_posicao_natural(pessoa: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_MASCARA_DA_POSICAO_NATURAL)(pessoa);
-    let n = mascara_da_posicao_natural(pessoa);
-    PLACAR.registrar(r == n, || format!("mascara_da_posicao_natural({:x}) original={:x} rust={:x}", pessoa, r, n));
+pub(crate) unsafe extern "C" fn comparar_staff_get_natural_position_mask(pessoa: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_STAFF_GET_NATURAL_POSITION_MASK)(pessoa);
+    let n = staff_get_natural_position_mask(pessoa);
+    PLACAR.registrar(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
     r
 }
 
@@ -4059,7 +4059,7 @@ pub(crate) unsafe extern "C" fn comparar_mascara_da_posicao_natural(pessoa: usiz
 /// [pt] { 0x548150 } (cdecl, Database.cpp): `club_count_squad_with_position_mask(clube, mascara)`: quantos dos 50 do elenco
 /// (+0xd7) com jogador (+0x61) têm a máscara da posição natural (0x5481a0, pelo endereço do jogo) igual a `mascara`.
 /// Só `al` (os três chamadores, 0x758010 e 0x758200, leem o byte). Na mídia.
-pub(crate) unsafe extern "C" fn contar_elenco_com_mascara(clube: usize, mascara: u32) -> u8 {
+pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
     let mascara_de: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
     let mut n = 0u8;
     for k in 0..50 {
@@ -4071,10 +4071,10 @@ pub(crate) unsafe extern "C" fn contar_elenco_com_mascara(clube: usize, mascara:
     n
 }
 
-pub(crate) unsafe extern "C" fn comparar_contar_elenco_com_mascara(clube: usize, mascara: u32) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_CONTAR_ELENCO_COM_MASCARA)(clube, mascara);
-    let n = contar_elenco_com_mascara(clube, mascara);
-    PLACAR.registrar(r == n, || format!("contar_elenco_com_mascara({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_CLUB_COUNT_SQUAD_WITH_POSITION_MASK)(clube, mascara);
+    let n = club_count_squad_with_position_mask(clube, mascara);
+    PLACAR.registrar(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
     r
 }
 
@@ -4097,13 +4097,13 @@ pub(crate) unsafe extern "C" fn comparar_contar_elenco_com_mascara(clube: usize,
 /// de nota mais alta (estritamente acima de −10000 e do anterior). As chamadas pelo endereço do jogo. Locais todas
 /// gravadas antes de lidas (a original usa o próprio argumento como cursor). No diário das pessoas
 /// (game_daily_staff_update 0x5ce2d0) e na tela da pessoa (0x87dd80).
-pub(crate) unsafe extern "C" fn escolher_companheiro_favorito(pessoa: usize, clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
     if pessoa == 0 || clube == 0 || read_usize(0xb74350) == 0 {
         return 0;
     }
     let idade: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let mascara_de: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let id = read_usize(pessoa) as i32;
@@ -4131,7 +4131,7 @@ pub(crate) unsafe extern "C" fn escolher_companheiro_favorito(pessoa: usize, clu
         if read_i8(o + 0x5a) < 11 && mascara_de(o) == mascara_de(pessoa) {
             continue;
         }
-        let contrato = contrato_de(read_usize(0xae1050), o, clube);
+        let contrato = contract_of(read_usize(0xae1050), o, clube);
         if contrato == 0 {
             continue;
         }
@@ -4199,13 +4199,13 @@ pub(crate) unsafe extern "C" fn escolher_companheiro_favorito(pessoa: usize, clu
     melhor
 }
 
-pub(crate) unsafe extern "C" fn comparar_escolher_companheiro_favorito(pessoa: usize, clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_ESCOLHER_COMPANHEIRO_FAVORITO);
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_PICK_FAVOURED_TEAM_MATE);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube),
-        || crate::aleatorio::sem_contar(|| escolher_companheiro_favorito(pessoa, clube)));
-    PLACAR.registrar(igual && r == n, || format!("escolher_companheiro_favorito({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_pick_favoured_team_mate(pessoa, clube)));
+    PLACAR.registrar(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -4231,17 +4231,17 @@ pub(crate) unsafe fn dbr_id_da_nacao_do_clube(clube: usize) -> Option<u32> {
 /// da chave Argentina 0x9cf218; clube ou nação nulos: 0. A resposta vai em `al` e o resto do eax é o do id (`setne
 /// al` depois do `mov eax, [eax]`), como na original. Na carreira: a disciplina (0x55e300), o diário dos técnicos
 /// (manager_manager 0x6ab800) e as notícias (0x782f70).
-pub(crate) unsafe extern "C" fn clube_fora_da_argentina(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn club_nation_is_not_argentina(clube: usize) -> u32 {
     match dbr_id_da_nacao_do_clube(clube) {
         None => 0,
         Some(id) => (id & 0xffff_ff00) | (id != *(KEY_NATION_ARGENTINA as *const u32)) as u32, // a Argentina
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_fora_da_argentina(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_FORA_DA_ARGENTINA)(clube);
-    let n = clube_fora_da_argentina(clube);
-    PLACAR.registrar(r == n, || format!("clube_fora_da_argentina({:x}) original={:x} rust={:x}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_nation_is_not_argentina(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_IS_NOT_ARGENTINA)(clube);
+    let n = club_nation_is_not_argentina(clube);
+    PLACAR.registrar(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -4251,7 +4251,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_fora_da_argentina(clube: usize) -
 /// [pt] { 0x5487d0 } (cdecl, Database.cpp): `club_nation_not_argentina_france_croatia(clube)`: 1 se a nação do clube não
 /// tem o id de Argentina 0x9cf218, França 0x9cf300 nem Croácia 0x9cf2ac; clube ou nação nulos: 0. Em `al`, o resto
 /// do eax é o do id. Na carreira, pelo diário dos técnicos (manager_manager 0x6ab800).
-pub(crate) unsafe extern "C" fn clube_fora_de_argentina_franca_croacia(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
     match dbr_id_da_nacao_do_clube(clube) {
         None => 0,
         Some(id) => {
@@ -4261,10 +4261,10 @@ pub(crate) unsafe extern "C" fn clube_fora_de_argentina_franca_croacia(clube: us
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_fora_de_argentina_franca_croacia(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_FORA_DE_ARGENTINA_FRANCA_CROACIA)(clube);
-    let n = clube_fora_de_argentina_franca_croacia(clube);
-    PLACAR.registrar(r == n, || format!("clube_fora_de_argentina_franca_croacia({:x}) original={:x} rust={:x}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_NOT_ARGENTINA_FRANCE_CROATIA)(clube);
+    let n = club_nation_not_argentina_france_croatia(clube);
+    PLACAR.registrar(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }
 
@@ -4280,14 +4280,14 @@ pub(crate) unsafe fn dbr_nacao_entre(nacao: usize, chaves: &[usize]) -> u32 {
 /// [pt] { 0x53d900 } (cdecl, Database.cpp): `database_is_melanesian_nation(nacao)`: 1 se a nação tem o id de uma das
 /// chaves 0x9cf41c, 0x9cf478, 0x9cf530, 0x9cf2f8, 0x9cf500 (as melanésias), senão 0. Nas copas da Oceania
 /// (oceania_club_champ 0x798220, oceania_nations 0x799e30).
-pub(crate) unsafe extern "C" fn nacao_da_melanesia(nacao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_is_melanesian_nation(nacao: usize) -> u32 {
     dbr_nacao_entre(nacao, &[KEY_NATION_PAPUA_NEW_GUINEA, KEY_NATION_SOLOMON_ISLANDS, KEY_NATION_NEW_CALEDONIA, KEY_NATION_FIJI, KEY_NATION_VANUATU]) // melanésias
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_da_melanesia(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NACAO_DA_MELANESIA)(nacao);
-    let n = nacao_da_melanesia(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_da_melanesia({:x}) original={} rust={}", nacao, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_is_melanesian_nation(nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_MELANESIAN_NATION)(nacao);
+    let n = database_is_melanesian_nation(nacao);
+    PLACAR.registrar(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -4299,16 +4299,16 @@ pub(crate) unsafe extern "C" fn comparar_nacao_da_melanesia(nacao: usize) -> u32
 /// [pt] { 0x53d940 } (cdecl, Database.cpp): `database_is_polynesian_nation(nacao)`: 1 se a nação tem o id de uma das
 /// chaves 0x9cf4d0, 0x9cf52c, 0x9cf4b4, 0x9cf2a4, 0x9cf514 (as polinésias), senão 0 (a nação não é conferida). Nas
 /// copas da Oceania (oceania_club_champ 0x798220, oceania_nations 0x799e30).
-pub(crate) unsafe extern "C" fn nacao_da_polinesia(nacao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_is_polynesian_nation(nacao: usize) -> u32 {
     let id = *(nacao as *const u32);
     let chaves = [KEY_NATION_TONGA, KEY_NATION_AMERICAN_SAMOA, KEY_NATION_TAHITI, KEY_NATION_COOK_ISLANDS, KEY_NATION_WESTERN_SAMOA]; // polinésias
     chaves.iter().any(|&k| *(k as *const u32) == id) as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_da_polinesia(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NACAO_DA_POLINESIA)(nacao);
-    let n = nacao_da_polinesia(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_da_polinesia({:x}) original={} rust={}", nacao, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_is_polynesian_nation(nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_POLYNESIAN_NATION)(nacao);
+    let n = database_is_polynesian_nation(nacao);
+    PLACAR.registrar(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -4320,7 +4320,7 @@ pub(crate) unsafe extern "C" fn comparar_nacao_da_polinesia(nacao: usize) -> u32
 /// sinal) no texto fixo 0xae1980, pela tabela de saltos 0x53acc8: 5 e 12 "Manager", 6 e 13 "Assistant Manager",
 /// 8 e 15 "Coach" (traduzidos pela 0x66f4e0); os demais, texto vazio. Com `genero` não nulo e o idioma (0x66f4d0)
 /// 4, grava nele 4 (técnico, auxiliar) ou 1 (treinador). Devolve 0xae1980. Na regeneração (player_regen 0x7a9650).
-pub(crate) unsafe extern "C" fn nome_do_cargo_de_treino(cargo: u32, genero: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_get_coaching_job_name(cargo: u32, genero: usize) -> usize {
     let (texto, marca) = match (cargo as i8 as i32).wrapping_sub(5) {
         0 | 7 => (0x9b6440usize, 4u8), // "Manager"
         1 | 8 => (0x9b642c, 4),        // "Assistant Manager"
@@ -4339,13 +4339,13 @@ pub(crate) unsafe extern "C" fn nome_do_cargo_de_treino(cargo: u32, genero: usiz
     0xae1980
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_do_cargo_de_treino(cargo: u32, genero: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(u32, usize) -> usize>(IDX_NOME_DO_CARGO_DE_TREINO);
+pub(crate) unsafe extern "C" fn comparar_database_get_coaching_job_name(cargo: u32, genero: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(u32, usize) -> usize>(IDX_DATABASE_GET_COACHING_JOB_NAME);
     // o texto (os nomes traduzidos cabem em 64) e o byte do gênero
     let com = [(0xae1980usize, 64usize), (genero, 1)];
     let regioes = if genero != 0 { &com[..] } else { &com[..1] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(cargo, genero), || nome_do_cargo_de_treino(cargo, genero));
-    PLACAR.registrar(igual && r == n, || format!("nome_do_cargo_de_treino({}) original={:x} rust={:x} {:x?} x {:x?}", cargo as i8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(cargo, genero), || database_get_coaching_job_name(cargo, genero));
+    PLACAR.registrar(igual && r == n, || format!("database_get_coaching_job_name({}) original={:x} rust={:x} {:x?} x {:x?}", cargo as i8, r, n, mo, mr));
     r
 }
 
@@ -4358,9 +4358,9 @@ pub(crate) unsafe extern "C" fn comparar_nome_do_cargo_de_treino(cargo: u32, gen
 /// maior (com sinal); escrito em `texto` com "%d" (0x98806c) como palavra sem sinal (negativo vira 65535). Devolve 1.
 /// Texto nulo, tamanho < 5 ou uma das datas nula: a original (caixa e 0). Nas telas de recordes do clube e das
 /// competições (0x44aa20, 0x4a5690, 0x4a7f50).
-pub(crate) unsafe extern "C" fn anos_entre_datas_em_texto(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
+pub(crate) unsafe extern "C" fn database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
     if texto == 0 || tamanho < 5 || fim == 0 || inicio == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_ANOS_ENTRE_DATAS_EM_TEXTO)(fim, inicio, texto, tamanho);
+        return orig::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_DATABASE_FORMAT_YEARS_BETWEEN_DATES)(fim, inicio, texto, tamanho);
     }
     let w = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const i16);
     let mut anos = w(fim, 2).wrapping_sub(w(inicio, 2));
@@ -4372,15 +4372,15 @@ pub(crate) unsafe extern "C" fn anos_entre_datas_em_texto(fim: usize, inicio: us
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_anos_entre_datas_em_texto(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_ANOS_ENTRE_DATAS_EM_TEXTO);
+pub(crate) unsafe extern "C" fn comparar_database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_DATABASE_FORMAT_YEARS_BETWEEN_DATES);
     if texto == 0 || tamanho < 5 || fim == 0 || inicio == 0 {
         return o(fim, inicio, texto, tamanho); // caixa: só a original
     }
     // "%d" de uma palavra: até 6 bytes com o zero
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 6)], || o(fim, inicio, texto, tamanho),
-        || anos_entre_datas_em_texto(fim, inicio, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("anos_entre_datas_em_texto({:x}, {:x}) original={} rust={} {:x?} x {:x?}", fim, inicio, r, n, mo, mr));
+        || database_format_years_between_dates(fim, inicio, texto, tamanho));
+    PLACAR.registrar(igual && r == n, || format!("database_format_years_between_dates({:x}, {:x}) original={} rust={} {:x?} x {:x?}", fim, inicio, r, n, mo, mr));
     r
 }
 
@@ -4399,7 +4399,7 @@ pub(crate) unsafe fn dbr_comparar_textos(a: *const u8, b: *const u8) -> i32 {
 /// ponteiros de clube pelo nome curto (+0x38) na comparação de textos 0x90c1d0 (sem maiúsculas); clube nulo vale o
 /// texto vazio. A original copia os dois nomes para a pilha antes de comparar; a cópia compara no lugar (a 0x90c1d0
 /// só lê). Nas telas de clubes e de busca, no Setup (0x822260) e na semeadura da UEFA (0x906410).
-pub(crate) unsafe extern "C" fn ordem_dos_clubes_pelo_nome_curto(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
     let nome = |p: usize| {
         let c = *(p as *const usize);
         if c == 0 { b"\0".as_ptr() } else { (c + 0x38) as *const u8 } // o nome curto
@@ -4407,10 +4407,10 @@ pub(crate) unsafe extern "C" fn ordem_dos_clubes_pelo_nome_curto(a: usize, b: us
     dbr_comparar_textos(nome(a), nome(b))
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pelo_nome_curto(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CLUBES_PELO_NOME_CURTO)(a, b);
-    let n = ordem_dos_clubes_pelo_nome_curto(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_clubes_pelo_nome_curto({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_SHORT_NAME)(a, b);
+    let n = database_compare_clubs_by_short_name(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -4420,7 +4420,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pelo_nome_curto(a: usi
 /// [pt] { 0x540270 } (cdecl, Database.cpp): `database_compare_staff_by_full_name(a, b)`: comparação do qsort de
 /// ponteiros de pessoa pelo nome no estilo 1 ("nome sobrenome", 0x53dba0 em 0x7d0 bytes) na comparação de textos
 /// 0x90c1d0; pessoa nula vale o texto vazio. No menu (0x7612c0) e no gerente de transferências (0x8e55f0).
-pub(crate) unsafe extern "C" fn ordem_das_pessoas_pelo_nome_completo(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
     let formatar: unsafe extern "C" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let mut na = [0u8; 0x7d0];
     let mut nb = [0u8; 0x7d0];
@@ -4434,10 +4434,10 @@ pub(crate) unsafe extern "C" fn ordem_das_pessoas_pelo_nome_completo(a: usize, b
     dbr_comparar_textos(na.as_ptr(), nb.as_ptr())
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_das_pessoas_pelo_nome_completo(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_PESSOAS_PELO_NOME_COMPLETO)(a, b);
-    let n = ordem_das_pessoas_pelo_nome_completo(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_pessoas_pelo_nome_completo({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_FULL_NAME)(a, b);
+    let n = database_compare_staff_by_full_name(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -4449,9 +4449,9 @@ pub(crate) unsafe extern "C" fn comparar_ordem_das_pessoas_pelo_nome_completo(a:
 /// pessoa, que tem de ter registro de jogador (+0x61) ou de não jogador (+0x69), confere: cada nome não nulo (+4, +8,
 /// +0xc) tem o id (+0x33) pedido e, com `data`, a data de nascimento (+0x10 dia, +0x12 ano) é a mesma (0x4a7f20);
 /// senão 0. Pessoa nula: a original (caixa e 0). Telas, regeneração e transferências (~137 chamadores).
-pub(crate) unsafe extern "C" fn pessoa_confere_com_os_nomes(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
     if pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_PESSOA_CONFERE_COM_OS_NOMES)(pessoa, nome, sobrenome, comum, data);
+        return orig::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_DATABASE_STAFF_MATCHES_NAMES)(pessoa, nome, sobrenome, comum, data);
     }
     let ler = |d: usize| core::ptr::read_unaligned((pessoa + d) as *const usize);
     if ler(0x61) == 0 && ler(0x69) == 0 {
@@ -4472,14 +4472,14 @@ pub(crate) unsafe extern "C" fn pessoa_confere_com_os_nomes(pessoa: usize, nome:
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_confere_com_os_nomes(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_PESSOA_CONFERE_COM_OS_NOMES);
+pub(crate) unsafe extern "C" fn comparar_database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_DATABASE_STAFF_MATCHES_NAMES);
     if pessoa == 0 {
         return o(pessoa, nome, sobrenome, comum, data); // caixa: só a original
     }
     let r = o(pessoa, nome, sobrenome, comum, data);
-    let n = pessoa_confere_com_os_nomes(pessoa, nome, sobrenome, comum, data);
-    PLACAR.registrar(r == n, || format!("pessoa_confere_com_os_nomes({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", pessoa, nome, sobrenome, comum, data, r, n));
+    let n = database_staff_matches_names(pessoa, nome, sobrenome, comum, data);
+    PLACAR.registrar(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", pessoa, nome, sobrenome, comum, data, r, n));
     r
 }
 
@@ -4513,22 +4513,22 @@ pub(crate) unsafe fn dbr_ordem_pela_coordenada(ca: usize, cb: usize, d: usize) -
 /// de clube pela latitude (+0x23, f64) da cidade do estádio, a menor primeiro. Clube nulo: a original (caixa e 0).
 /// Nas copas sorteadas por região (eng_auto_cup 0x56b730, cro_a1, fin_prm, ita_ser_a, nor_prm, por_prm, spa_first,
 /// swe_cup).
-pub(crate) unsafe extern "C" fn ordem_dos_clubes_pela_latitude(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
     let (ca, cb) = (*(a as *const usize), *(b as *const usize));
     if ca == 0 || cb == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CLUBES_PELA_LATITUDE)(a, b);
+        return orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LATITUDE)(a, b);
     }
     dbr_ordem_pela_coordenada(ca, cb, 0x23) // a latitude
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pela_latitude(a: usize, b: usize) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CLUBES_PELA_LATITUDE);
+pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LATITUDE);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
         return o(a, b); // caixa: só a original
     }
     let r = o(a, b);
-    let n = ordem_dos_clubes_pela_latitude(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_clubes_pela_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = database_compare_clubs_by_latitude(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -4538,22 +4538,22 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pela_latitude(a: usize
 /// [pt] { 0x53fe50 } (cdecl, Database.cpp): `database_compare_clubs_by_longitude(a, b)`: a mesma comparação pela
 /// longitude (+0x2b, f64). Clube nulo: a original (caixa e 0). Nas copas sorteadas por região (bel_first, hol_cup,
 /// ita_c_cup, spa_first, tur_first).
-pub(crate) unsafe extern "C" fn ordem_dos_clubes_pela_longitude(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
     let (ca, cb) = (*(a as *const usize), *(b as *const usize));
     if ca == 0 || cb == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CLUBES_PELA_LONGITUDE)(a, b);
+        return orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LONGITUDE)(a, b);
     }
     dbr_ordem_pela_coordenada(ca, cb, 0x2b) // a longitude
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pela_longitude(a: usize, b: usize) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CLUBES_PELA_LONGITUDE);
+pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LONGITUDE);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
         return o(a, b); // caixa: só a original
     }
     let r = o(a, b);
-    let n = ordem_dos_clubes_pela_longitude(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_clubes_pela_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = database_compare_clubs_by_longitude(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -4625,7 +4625,7 @@ pub(crate) unsafe fn dbo1_gols_por_jogo(clube: usize, campo: usize) -> Option<i3
 /// 1,35 gol por jogo ([0x969588]; gols sofridos +0x6a da estatística / jogos): 0. Senão, 1 se mais de 2 zagueiros
 /// (posição +0x11 = 20) passam do limite /65 (teto 145). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day
 /// 0x7b3e20, relatório de um clube).
-pub(crate) unsafe extern "C" fn clube_tem_defensores(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_enough_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4638,10 +4638,10 @@ pub(crate) unsafe extern "C" fn clube_tem_defensores(clube: usize) -> u8 {
     (dbo1_contar(clube, limite, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_defensores(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_DEFENSORES)(clube);
-    let n = clube_tem_defensores(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_defensores({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_DEFENDERS)(clube);
+    let n = club_has_enough_defenders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4651,7 +4651,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tem_defensores(clube: usize) -> u
 ///
 /// [pt] { 0x549200 } (cdecl, Database.cpp): `club_has_enough_midfielders(clube)`: clube nulo: 0; senão 1 se mais de 2
 /// meias (posição +0x14, +0x12 ou +0x13 = 20, nessa ordem) passam do limite /65 (teto 145). Só `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn clube_tem_meias(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_enough_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4660,10 +4660,10 @@ pub(crate) unsafe extern "C" fn clube_tem_meias(clube: usize) -> u8 {
     (dbo1_contar(clube, limite, meia) > 2) as u8 // meias (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_meias(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_MEIAS)(clube);
-    let n = clube_tem_meias(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_meias({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_MIDFIELDERS)(clube);
+    let n = club_has_enough_midfielders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4674,7 +4674,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tem_meias(clube: usize) -> u8 {
 /// [pt] { 0x5492c0 } (cdecl, Database.cpp): `club_has_enough_strikers(clube)`: clube nulo: 0. Se o clube faz menos de
 /// 1,5 gol por jogo ([0x968940]; gols marcados +0x69 da estatística / jogos): 0. Senão, 1 se mais de 1 atacante
 /// (posição +0x15 = 20) passa do limite /65 (teto 150). Só `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn clube_tem_atacantes(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_enough_strikers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4687,10 +4687,10 @@ pub(crate) unsafe extern "C" fn clube_tem_atacantes(clube: usize) -> u8 {
     (dbo1_contar(clube, limite, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_atacantes(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_ATACANTES)(clube);
-    let n = clube_tem_atacantes(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_atacantes({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_STRIKERS)(clube);
+    let n = club_has_enough_strikers(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4736,7 +4736,7 @@ pub(crate) unsafe fn dbo2_reputacao(clube: usize) -> i32 {
 /// jogadores (qualquer posição) passam do limite reputação/65 + 40 (de 40 a 140) com o atributo +0x44 (byte com
 /// sinal; o mesmo que a 0x549850 usa) acima de 14. Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20,
 /// relatório de um clube).
-pub(crate) unsafe extern "C" fn clube_tem_esforcados(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_enough_hard_workers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4745,10 +4745,10 @@ pub(crate) unsafe extern "C" fn clube_tem_esforcados(clube: usize) -> u8 {
     (n > 4) as u8 // esforcados (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_esforcados(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_ESFORCADOS)(clube);
-    let n = clube_tem_esforcados(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_esforcados({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_HARD_WORKERS)(clube);
+    let n = club_has_enough_hard_workers(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4758,7 +4758,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tem_esforcados(clube: usize) -> u
 /// [pt] { 0x549470 } (cdecl, Database.cpp): `club_has_fit_goalkeeper(clube)`: 1 assim que um dos 50 do elenco (+0xd7) é
 /// pessoa com jogador (+0x61) goleiro (+0xf = 20), sem lesão grave (0x62c400 ≠ 2) e id < [0xae2364]; nenhum ou clube
 /// nulo: 0. Sem limite de habilidade. Só `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn clube_tem_goleiro(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_fit_goalkeeper(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4780,10 +4780,10 @@ pub(crate) unsafe extern "C" fn clube_tem_goleiro(clube: usize) -> u8 {
     0
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_goleiro(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_GOLEIRO)(clube);
-    let n = clube_tem_goleiro(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_goleiro({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FIT_GOALKEEPER)(clube);
+    let n = club_has_fit_goalkeeper(clube);
+    PLACAR.registrar(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4795,7 +4795,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tem_goleiro(clube: usize) -> u8 {
 /// de 1 meia (posição +0x14, +0x12 ou +0x13 = 20) sem lesão grave passa do limite reputação/75 + 25 (de 40 a 135)
 /// com os atributos +0x44 e +0x3e (bytes com sinal) acima de reputação/500 + 5 (no máximo 14). Só `al`. Só pelo
 /// olheiro.
-pub(crate) unsafe extern "C" fn clube_tem_meias_que_roubam(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_ball_winning_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4807,10 +4807,10 @@ pub(crate) unsafe extern "C" fn clube_tem_meias_que_roubam(clube: usize) -> u8 {
     (n > 1) as u8 // meias que roubam (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_meias_que_roubam(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_MEIAS_QUE_ROUBAM)(clube);
-    let n = clube_tem_meias_que_roubam(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_meias_que_roubam({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_BALL_WINNING_MIDFIELDERS)(clube);
+    let n = club_has_ball_winning_midfielders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4853,17 +4853,17 @@ pub(crate) unsafe fn dbo3_contar(clube: usize, posicao: usize, atributo: usize, 
 /// [pt] { 0x5494d0 } (cdecl, Database.cpp): `club_lacks_aerial_strikers(clube)`: clube nulo: 0; senão 1 se no máximo 1
 /// atacante (posição +0x15) passa dos limites com o atributo +0x2e (o jogo pelo alto) acima de reputação/500 + 5 (no
 /// máximo 13). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20, relatório de um clube).
-pub(crate) unsafe extern "C" fn faltam_atacantes_pelo_alto(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_lacks_aerial_strikers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
     (dbo3_contar(clube, 0x15, 0x2e, 13) <= 1) as u8 // atacantes pelo alto (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_faltam_atacantes_pelo_alto(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_FALTAM_ATACANTES_PELO_ALTO)(clube);
-    let n = faltam_atacantes_pelo_alto(clube);
-    PLACAR.registrar(r == n, || format!("faltam_atacantes_pelo_alto({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_STRIKERS)(clube);
+    let n = club_lacks_aerial_strikers(clube);
+    PLACAR.registrar(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4873,17 +4873,17 @@ pub(crate) unsafe extern "C" fn comparar_faltam_atacantes_pelo_alto(clube: usize
 /// [pt] { 0x5495b0 } (cdecl, Database.cpp): `club_lacks_aerial_defenders(clube)`: clube nulo: 0; senão 1 se no máximo 1
 /// zagueiro (posição +0x11) passa dos limites com o atributo +0x2e acima de reputação/500 + 5 (no máximo 13). Só
 /// `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn faltam_zagueiros_pelo_alto(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_lacks_aerial_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
     (dbo3_contar(clube, 0x11, 0x2e, 13) <= 1) as u8 // zagueiros pelo alto (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_faltam_zagueiros_pelo_alto(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_FALTAM_ZAGUEIROS_PELO_ALTO)(clube);
-    let n = faltam_zagueiros_pelo_alto(clube);
-    PLACAR.registrar(r == n, || format!("faltam_zagueiros_pelo_alto({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_DEFENDERS)(clube);
+    let n = club_lacks_aerial_defenders(clube);
+    PLACAR.registrar(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4893,17 +4893,17 @@ pub(crate) unsafe extern "C" fn comparar_faltam_zagueiros_pelo_alto(clube: usize
 /// [pt] { 0x549690 } (cdecl, Database.cpp): `club_lacks_fast_defenders(clube)`: clube nulo: 0; senão 1 se no máximo 1
 /// zagueiro (posição +0x11) passa dos limites com o atributo +0x36 (a velocidade) acima de reputação/500 + 5 (no
 /// máximo 10). Só `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn faltam_zagueiros_rapidos(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_lacks_fast_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
     (dbo3_contar(clube, 0x11, 0x36, 10) <= 1) as u8 // zagueiros rapidos (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_faltam_zagueiros_rapidos(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_FALTAM_ZAGUEIROS_RAPIDOS)(clube);
-    let n = faltam_zagueiros_rapidos(clube);
-    PLACAR.registrar(r == n, || format!("faltam_zagueiros_rapidos({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_FAST_DEFENDERS)(clube);
+    let n = club_lacks_fast_defenders(clube);
+    PLACAR.registrar(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4947,7 +4947,7 @@ pub(crate) unsafe fn dbo4_contar(clube: usize, teto: i32, posicao: impl Fn(usize
 /// (posição +0x15 = 20) passa dos limites com o atributo +0x36 (a velocidade, byte com sinal) acima de
 /// reputação/500 + 5 (no máximo 17). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20, relatório de
 /// um clube).
-pub(crate) unsafe extern "C" fn clube_tem_atacante_rapido(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_fast_striker(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4955,10 +4955,10 @@ pub(crate) unsafe extern "C" fn clube_tem_atacante_rapido(clube: usize) -> u8 {
     (n > 0) as u8 // atacante rapido (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_atacante_rapido(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_ATACANTE_RAPIDO)(clube);
-    let n = clube_tem_atacante_rapido(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_atacante_rapido({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FAST_STRIKER)(clube);
+    let n = club_has_fast_striker(clube);
+    PLACAR.registrar(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -4969,7 +4969,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tem_atacante_rapido(clube: usize)
 /// [pt] { 0x549940 } (cdecl, Database.cpp): `club_has_two_creative_midfielders(clube)`: clube nulo: 0; senão 1 se mais de
 /// 1 meia (posição +0x14, +0x12 ou +0x13 = 20) passa dos limites com os atributos +0x43 e +0x37 (bytes com sinal)
 /// acima de reputação/500 + 5 (no máximo 14). Só `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn clube_tem_meias_criativos(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_has_two_creative_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -4978,10 +4978,10 @@ pub(crate) unsafe extern "C" fn clube_tem_meias_criativos(clube: usize) -> u8 {
     (n > 1) as u8 // meias criativos (dbo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_meias_criativos(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_TEM_MEIAS_CRIATIVOS)(clube);
-    let n = clube_tem_meias_criativos(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_meias_criativos({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_TWO_CREATIVE_MIDFIELDERS)(clube);
+    let n = club_has_two_creative_midfielders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -5000,7 +5000,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tem_meias_criativos(clube: usize)
 /// competição (+0x57 igual), a diferença de reputação (16 bits) > 1250 tira 1 (faixa > 0, byte +4 da tabela
 /// [0xae2d14] de 6 bytes por id: do outro ≥ 0 e do clube ≤ 0); < 1250 soma 1 (faixa < 5, do clube ≥ 0 e do outro
 /// ≤ 0). No fim, entre 0 e 6. Só `al`. Só pelo olheiro.
-pub(crate) unsafe extern "C" fn faixa_de_forca_do_elenco(clube: usize, outro: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_squad_strength_band(clube: usize, outro: usize) -> u8 {
     if clube == 0 {
         return 3;
     }
@@ -5069,10 +5069,10 @@ pub(crate) unsafe extern "C" fn faixa_de_forca_do_elenco(clube: usize, outro: us
     f.clamp(0, 6) as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_faixa_de_forca_do_elenco(clube: usize, outro: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_FAIXA_DE_FORCA_DO_ELENCO)(clube, outro);
-    let n = faixa_de_forca_do_elenco(clube, outro);
-    PLACAR.registrar(r == n, || format!("faixa_de_forca_do_elenco({:x}, {:x}) original={} rust={}", clube, outro, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CLUB_SQUAD_STRENGTH_BAND)(clube, outro);
+    let n = club_squad_strength_band(clube, outro);
+    PLACAR.registrar(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));
     r
 }
 
@@ -5123,7 +5123,7 @@ pub(crate) unsafe fn dbp_preferencia_do_clube(clube: usize, pessoa: usize) -> i3
 /// reputação ±500 (pessoa que joga, com contrato no clube). Os chamadores leem só `ax`; o resto do eax segue a
 /// original (o registro que sobrou em cada caminho). Grava [0xae1080] (o contrato achado). No diário das pessoas
 /// (game_daily_staff_update 0x5ce2d0, duas chamadas).
-pub(crate) unsafe extern "C" fn reputacao_do_clube_para_pessoa(clube: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
     let rep = read_i16(clube + club::REPUTATION);
     let comp = read_usize(clube + club::DIVISION);
     if comp == 0 {
@@ -5195,12 +5195,12 @@ pub(crate) unsafe extern "C" fn reputacao_do_clube_para_pessoa(clube: usize, pes
     ((eax as u32 & 0xffff_0000) | rep as u16 as u32).wrapping_add(bonus as u32)
 }
 
-pub(crate) unsafe extern "C" fn comparar_reputacao_do_clube_para_pessoa(clube: usize, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REPUTACAO_DO_CLUBE_PARA_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_CLUB_REPUTATION_FOR_STAFF);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(clube, pessoa),
-        || reputacao_do_clube_para_pessoa(clube, pessoa));
+        || club_reputation_for_staff(clube, pessoa));
     // os chamadores leem só o ax (movsx)
-    PLACAR.registrar(igual && r as u16 == n as u16, || format!("reputacao_do_clube_para_pessoa({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
+    PLACAR.registrar(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
     r
 }
 
@@ -5229,14 +5229,14 @@ pub(crate) unsafe fn dbp_contar_no_clube(pessoa: usize, clube: usize, base: usiz
 ///
 /// [pt] { 0x547c90 } (cdecl, Database.cpp): `staff_count_disliked_staff_at_club(pessoa, clube)`: quantas das três pessoas
 /// que a pessoa rejeita (preferências +0x28/+0x2c/+0x30) estão no clube. No diário das pessoas (0x5ce2d0).
-pub(crate) unsafe extern "C" fn contar_rejeitados_no_clube(pessoa: usize, clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     dbp_contar_no_clube(pessoa, clube, 0x28) // os rejeitados
 }
 
-pub(crate) unsafe extern "C" fn comparar_contar_rejeitados_no_clube(pessoa: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CONTAR_REJEITADOS_NO_CLUBE)(pessoa, clube);
-    let n = contar_rejeitados_no_clube(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("contar_rejeitados_no_clube({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_DISLIKED_STAFF_AT_CLUB)(pessoa, clube);
+    let n = staff_count_disliked_staff_at_club(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
@@ -5245,14 +5245,14 @@ pub(crate) unsafe extern "C" fn comparar_contar_rejeitados_no_clube(pessoa: usiz
 ///
 /// [pt] { 0x547ce0 } (cdecl, Database.cpp): `staff_count_favoured_staff_at_club(pessoa, clube)`: quantas das três pessoas
 /// favoritas da pessoa (preferências +0x1c/+0x20/+0x24) estão no clube. No diário das pessoas (0x5ce2d0).
-pub(crate) unsafe extern "C" fn contar_favoritos_no_clube(pessoa: usize, clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
     dbp_contar_no_clube(pessoa, clube, 0x1c) // os favoritos
 }
 
-pub(crate) unsafe extern "C" fn comparar_contar_favoritos_no_clube(pessoa: usize, clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CONTAR_FAVORITOS_NO_CLUBE)(pessoa, clube);
-    let n = contar_favoritos_no_clube(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("contar_favoritos_no_clube({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_FAVOURED_STAFF_AT_CLUB)(pessoa, clube);
+    let n = staff_count_favoured_staff_at_club(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
@@ -5285,7 +5285,7 @@ pub(crate) unsafe fn dbp_preferencias(pessoa: usize) -> usize {
 /// favoritos da pessoa (preferências +4/+8/+0xc, o primeiro que bate). Pessoa, preferências ou clube nulos: nada.
 /// Devolve o eax da original (as preferências; pessoa nula: 0). No diário das pessoas (0x5ce2d0), quando o
 /// apego ao clube acaba.
-pub(crate) unsafe extern "C" fn tirar_clube_favorito(pessoa: usize, clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
     let pref = dbp_preferencias(pessoa);
     if pref != 0 && clube != 0 {
         dbp_tirar_de_tres(pref + 4, clube); // os clubes favoritos
@@ -5293,14 +5293,14 @@ pub(crate) unsafe extern "C" fn tirar_clube_favorito(pessoa: usize, clube: usize
     pref
 }
 
-pub(crate) unsafe extern "C" fn comparar_tirar_clube_favorito(pessoa: usize, clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_TIRAR_CLUBE_FAVORITO);
+pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_CLUB);
     let pref = dbp_preferencias(pessoa);
     if pref == 0 {
         return o(pessoa, clube); // não escreve nada
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 4, 12)], || o(pessoa, clube), || tirar_clube_favorito(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("tirar_clube_favorito({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 4, 12)], || o(pessoa, clube), || staff_remove_favoured_club(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -5310,20 +5310,20 @@ pub(crate) unsafe extern "C" fn comparar_tirar_clube_favorito(pessoa: usize, clu
 /// [pt] { 0x547bd0 } (cdecl, Database.cpp): `club_remove_favoured_staff(clube, pessoa)`: tira a pessoa das três pessoas
 /// favoritas do clube (+0x9b/+0x9f/+0xa3, o primeiro que bate). Clube ou pessoa nulos: nada. Devolve o clube (o eax
 /// da original). Nas audiências das disputas (DISPUTE::process_hearings 0x569ed0).
-pub(crate) unsafe extern "C" fn clube_tirar_pessoa_favorita(clube: usize, pessoa: usize) -> usize {
+pub(crate) unsafe extern "C" fn club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
     if clube != 0 && pessoa != 0 {
         dbp_tirar_de_tres(clube + club::FAV_STAFF1, pessoa); // os favoritos do clube
     }
     clube
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tirar_pessoa_favorita(clube: usize, pessoa: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_CLUBE_TIRAR_PESSOA_FAVORITA);
+pub(crate) unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_CLUB_REMOVE_FAVOURED_STAFF);
     if clube == 0 {
         return o(clube, pessoa);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::FAV_STAFF1, 12)], || o(clube, pessoa), || clube_tirar_pessoa_favorita(clube, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("clube_tirar_pessoa_favorita({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::FAV_STAFF1, 12)], || o(clube, pessoa), || club_remove_favoured_staff(clube, pessoa));
+    PLACAR.registrar(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
     r
 }
 
@@ -5335,7 +5335,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_tirar_pessoa_favorita(clube: usiz
 /// nada. Devolve o eax da original (as preferências; pessoa nula: 0). Nas disputas (0x569ed0), nas relações do
 /// elenco (game_update_squad_relationships 0x5d6d10, diária), na volta da lesão (0x630ee0), no MANAGER_MANAGER
 /// (0x697a7a) e na mídia (0x75a340).
-pub(crate) unsafe extern "C" fn tirar_pessoa_favorita(pessoa: usize, alvo: usize) -> usize {
+pub(crate) unsafe extern "C" fn staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
     let pref = dbp_preferencias(pessoa);
     if pref != 0 && alvo != 0 {
         dbp_tirar_de_tres(pref + 0x1c, alvo); // as pessoas favoritas
@@ -5343,14 +5343,14 @@ pub(crate) unsafe extern "C" fn tirar_pessoa_favorita(pessoa: usize, alvo: usize
     pref
 }
 
-pub(crate) unsafe extern "C" fn comparar_tirar_pessoa_favorita(pessoa: usize, alvo: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_TIRAR_PESSOA_FAVORITA);
+pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_STAFF);
     let pref = dbp_preferencias(pessoa);
     if pref == 0 {
         return o(pessoa, alvo);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x1c, 12)], || o(pessoa, alvo), || tirar_pessoa_favorita(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("tirar_pessoa_favorita({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x1c, 12)], || o(pessoa, alvo), || staff_remove_favoured_staff(pessoa, alvo));
+    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
     r
 }
 
@@ -5363,7 +5363,7 @@ pub(crate) unsafe extern "C" fn comparar_tirar_pessoa_favorita(pessoa: usize, al
 /// rejeitadas da pessoa (preferências +0x28/+0x2c/+0x30) que é o alvo. Pessoa, preferências ou alvo nulos: nada.
 /// Devolve o eax da original (as preferências; pessoa nula: 0). Nas relações do elenco (game_update_squad_relationships
 /// 0x5d6d10, diária), na volta da lesão (0x630ee0) e na mídia (0x7414ac, 0x75a340).
-pub(crate) unsafe extern "C" fn tirar_pessoa_rejeitada(pessoa: usize, alvo: usize) -> usize {
+pub(crate) unsafe extern "C" fn staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
     if pessoa == 0 {
         return 0;
     }
@@ -5381,14 +5381,14 @@ pub(crate) unsafe extern "C" fn tirar_pessoa_rejeitada(pessoa: usize, alvo: usiz
     pref
 }
 
-pub(crate) unsafe extern "C" fn comparar_tirar_pessoa_rejeitada(pessoa: usize, alvo: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_TIRAR_PESSOA_REJEITADA);
+pub(crate) unsafe extern "C" fn comparar_staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_DISLIKED_STAFF);
     let pref = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + staff::STAFF_PREFERENCES) as *const usize) };
     if pref == 0 {
         return o(pessoa, alvo); // não escreve nada
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(pessoa, alvo), || tirar_pessoa_rejeitada(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("tirar_pessoa_rejeitada({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(pessoa, alvo), || staff_remove_disliked_staff(pessoa, alvo));
+    PLACAR.registrar(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
     r
 }
 
@@ -5400,7 +5400,7 @@ pub(crate) unsafe extern "C" fn comparar_tirar_pessoa_rejeitada(pessoa: usize, a
 /// ordem) para `vetor[n]`, somando 1 a `n` a cada uma (a primeira vai direto em `vetor[0]`). Devolve `n` (o eax da
 /// original). No MANAGER_MANAGER: a opinião da diretoria sobre o elenco (0x693850) e a reação dela à partida
 /// (0x6aaee0).
-pub(crate) unsafe extern "C" fn pessoas_favoritas(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
+pub(crate) unsafe extern "C" fn staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
     *n = 0;
     if pessoa == 0 {
         return n;
@@ -5420,12 +5420,12 @@ pub(crate) unsafe extern "C" fn pessoas_favoritas(pessoa: usize, vetor: usize, n
     n
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoas_favoritas(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(IDX_PESSOAS_FAVORITAS);
+pub(crate) unsafe extern "C" fn comparar_staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(IDX_STAFF_GET_FAVOURED_STAFF);
     let com_vetor = [(vetor, 12), (n as usize, 1)];
     let regioes: &[(usize, usize)] = if vetor == 0 { &com_vetor[1..] } else { &com_vetor };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || pessoas_favoritas(pessoa, vetor, n));
-    PLACAR.registrar(igual && r == x, || format!("pessoas_favoritas({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || staff_get_favoured_staff(pessoa, vetor, n));
+    PLACAR.registrar(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
     r
 }
 
@@ -5440,7 +5440,7 @@ pub(crate) unsafe extern "C" fn comparar_pessoas_favoritas(pessoa: usize, vetor:
 /// o eax inteiro (o contrato padrão 0x864550 testa o eax). Na criação: o contrato padrão das pessoas
 /// (CONTRACT_MANAGER::initialise_all_staff_contracts → 0x85e960 → 0x864550) e o salário padrão das listas iniciais
 /// (0x83a1b0 → 0x862720).
-pub(crate) unsafe extern "C" fn clube_em_temporada(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn club_is_in_season(clube: usize) -> u32 {
     if clube == 0 {
         return 0;
     }
@@ -5448,10 +5448,10 @@ pub(crate) unsafe extern "C" fn clube_em_temporada(clube: usize) -> u32 {
     temporada(clube, 0, 0) // a temporada da nação do clube
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_em_temporada(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_EM_TEMPORADA)(clube);
-    let n = clube_em_temporada(clube);
-    PLACAR.registrar(r == n, || format!("clube_em_temporada({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_is_in_season(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_IN_SEASON)(clube);
+    let n = club_is_in_season(clube);
+    PLACAR.registrar(r == n, || format!("club_is_in_season({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -5463,7 +5463,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_em_temporada(clube: usize) -> u32
 /// (+0) de uma das chaves Inglaterra 0x9cf2e4, França 0x9cf300, Alemanha 0x9cf314, Itália 0x9cf360, Espanha 0x9cf488 ou
 /// Holanda 0x9cf338; clube ou nação nulos: 0. Só `al` (o resto do eax é o id da nação). Na criação, pelo contrato
 /// padrão (0x864550) e pelo salário padrão (0x862720).
-pub(crate) unsafe extern "C" fn clube_em_nacao_grande(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_is_in_major_nation(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -5476,10 +5476,10 @@ pub(crate) unsafe extern "C" fn clube_em_nacao_grande(clube: usize) -> u8 {
     chaves.iter().any(|&k| *(k as *const i32) == id) as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_em_nacao_grande(clube: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_EM_NACAO_GRANDE)(clube);
-    let n = clube_em_nacao_grande(clube);
-    PLACAR.registrar(r == n, || format!("clube_em_nacao_grande({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_club_is_in_major_nation(clube: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_IS_IN_MAJOR_NATION)(clube);
+    let n = club_is_in_major_nation(clube);
+    PLACAR.registrar(r == n, || format!("club_is_in_major_nation({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -5489,7 +5489,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_em_nacao_grande(clube: usize) -> 
 /// [pt] { 0x549ea0 } (cdecl, Database.cpp): `nation_is_major_nation(nacao)`: o mesmo teste das seis chaves de 0x549e50
 /// sobre o id (+0) da própria nação; nula: 0. Só `al`. Na carreira, pela regeneração dos jovens
 /// (PLAYER_REGEN::regenerate_as_youth_player 0x7abac0).
-pub(crate) unsafe extern "C" fn nacao_grande(nacao: usize) -> u8 {
+pub(crate) unsafe extern "C" fn nation_is_major_nation(nacao: usize) -> u8 {
     if nacao == 0 {
         return 0;
     }
@@ -5498,10 +5498,10 @@ pub(crate) unsafe extern "C" fn nacao_grande(nacao: usize) -> u8 {
     chaves.iter().any(|&k| *(k as *const i32) == id) as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_grande(nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_NACAO_GRANDE)(nacao);
-    let n = nacao_grande(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_grande({:x}) original={} rust={}", nacao, r, n));
+pub(crate) unsafe extern "C" fn comparar_nation_is_major_nation(nacao: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_NATION_IS_MAJOR_NATION)(nacao);
+    let n = nation_is_major_nation(nacao);
+    PLACAR.registrar(r == n, || format!("nation_is_major_nation({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -5535,7 +5535,7 @@ pub(crate) unsafe fn opiniao_gravar(c: usize, d: usize, v: i32) {
 /// [pt] { 0x549c90 } (cdecl, Database.cpp): `staff_clear_opinion_links(pessoa)`: −1 nos dois vínculos do contrato da
 /// pessoa (+0x27, +0x37, +0x3b, +0x4b). Na criação, a cada contrato gerado (0x85e960, por
 /// CONTRACT_MANAGER::initialise_all_staff_contracts); na carreira, nas propostas e nas queixas.
-pub(crate) unsafe extern "C" fn limpar_vinculos_de_opiniao(pessoa: usize) {
+pub(crate) unsafe extern "C" fn staff_clear_opinion_links(pessoa: usize) {
     if let Some(c) = registro_de_opinioes(pessoa) {
         for k in [0usize, 0x14] {
             opiniao_gravar(c, k + 0x27, -1);
@@ -5544,11 +5544,11 @@ pub(crate) unsafe extern "C" fn limpar_vinculos_de_opiniao(pessoa: usize) {
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_limpar_vinculos_de_opiniao(pessoa: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(IDX_LIMPAR_VINCULOS_DE_OPINIAO);
+pub(crate) unsafe extern "C" fn comparar_staff_clear_opinion_links(pessoa: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_STAFF_CLEAR_OPINION_LINKS);
     let Some(c) = registro_de_opinioes(pessoa) else { return o(pessoa) }; // não escreve nada
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa), || limpar_vinculos_de_opiniao(pessoa));
-    PLACAR.registrar(igual, || format!("limpar_vinculos_de_opiniao({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa), || staff_clear_opinion_links(pessoa));
+    PLACAR.registrar(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// writes the other person id and the value into the first empty link (+0x27 = −1) or else into the second,
@@ -5558,7 +5558,7 @@ pub(crate) unsafe extern "C" fn comparar_limpar_vinculos_de_opiniao(pessoa: usiz
 /// [pt] { 0x549cf0 } (cdecl, Database.cpp): `staff_add_opinion_link(pessoa, outra, valor)`: com as duas pessoas válidas
 /// (não nulas, id < [0xae2364]), grava o id da `outra` e o `valor` no primeiro vínculo se ele está vazio (+0x27 = −1),
 /// senão no segundo (+0x3b/+0x4b, por cima do que houver). Na carreira, pelos eventos do contrato (0x867700).
-pub(crate) unsafe extern "C" fn juntar_vinculo_de_opiniao(pessoa: usize, outra: usize, valor: i32) {
+pub(crate) unsafe extern "C" fn staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
     let Some(c) = registro_de_opinioes(pessoa) else { return };
     if outra == 0 {
         return;
@@ -5576,12 +5576,12 @@ pub(crate) unsafe extern "C" fn juntar_vinculo_de_opiniao(pessoa: usize, outra: 
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_juntar_vinculo_de_opiniao(pessoa: usize, outra: usize, valor: i32) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, i32)>(IDX_JUNTAR_VINCULO_DE_OPINIAO);
+pub(crate) unsafe extern "C" fn comparar_staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
+    let o = orig::<unsafe extern "C" fn(usize, usize, i32)>(IDX_STAFF_ADD_OPINION_LINK);
     let Some(c) = registro_de_opinioes(pessoa) else { return o(pessoa, outra, valor) };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, outra, valor),
-        || juntar_vinculo_de_opiniao(pessoa, outra, valor));
-    PLACAR.registrar(igual, || format!("juntar_vinculo_de_opiniao({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
+        || staff_add_opinion_link(pessoa, outra, valor));
+    PLACAR.registrar(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
 }
 
 /// empties the first link with the given value or, if not, the second
@@ -5590,7 +5590,7 @@ pub(crate) unsafe extern "C" fn comparar_juntar_vinculo_de_opiniao(pessoa: usize
 /// [pt] { 0x549d60 } (cdecl, Database.cpp): `staff_remove_opinion_link(pessoa, valor)`: esvazia (−1 no id e no valor) o
 /// primeiro vínculo com esse `valor` (+0x37) ou, se não, o segundo (+0x4b); nenhum com o valor: nada. Na carreira,
 /// quando a queixa passa (0x867240, 0x8674e0).
-pub(crate) unsafe extern "C" fn tirar_vinculo_de_opiniao(pessoa: usize, valor: i32) {
+pub(crate) unsafe extern "C" fn staff_remove_opinion_link(pessoa: usize, valor: i32) {
     let Some(c) = registro_de_opinioes(pessoa) else { return };
     if opiniao_ler(c, 0x37) == valor {
         opiniao_gravar(c, 0x27, -1);
@@ -5601,11 +5601,11 @@ pub(crate) unsafe extern "C" fn tirar_vinculo_de_opiniao(pessoa: usize, valor: i
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_tirar_vinculo_de_opiniao(pessoa: usize, valor: i32) {
-    let o = orig::<unsafe extern "C" fn(usize, i32)>(IDX_TIRAR_VINCULO_DE_OPINIAO);
+pub(crate) unsafe extern "C" fn comparar_staff_remove_opinion_link(pessoa: usize, valor: i32) {
+    let o = orig::<unsafe extern "C" fn(usize, i32)>(IDX_STAFF_REMOVE_OPINION_LINK);
     let Some(c) = registro_de_opinioes(pessoa) else { return o(pessoa, valor) };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, valor), || tirar_vinculo_de_opiniao(pessoa, valor));
-    PLACAR.registrar(igual, || format!("tirar_vinculo_de_opiniao({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, valor), || staff_remove_opinion_link(pessoa, valor));
+    PLACAR.registrar(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
 }
 
 // ---------- 233a leva: a comissão do clube com a do time parceiro: o auxiliar, os treinadores e a contagem dos treinadores (Database.cpp) ----------
@@ -5617,9 +5617,9 @@ pub(crate) unsafe extern "C" fn comparar_tirar_vinculo_de_opiniao(pessoa: usize,
 /// do time parceiro A/B (0x540a50 com nulo e 1, que zera a marca +0x244 do clube quando recusa o parceiro); nenhum: 0.
 /// Clube nulo: a original (caixa "Error" e 0). Na carreira, pela distribuição dos treinadores (0x8b2880, nas
 /// contratações e transferências), pela regeneração (0x7a65d0) e pelas telas.
-pub(crate) unsafe extern "C" fn auxiliar_do_clube(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_get_club_assistant(clube: usize) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_AUXILIAR_DO_CLUBE)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_ASSISTANT)(clube);
     }
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let a = rd(clube + club::ASSISTANT_MANAGER);
@@ -5634,14 +5634,14 @@ pub(crate) unsafe extern "C" fn auxiliar_do_clube(clube: usize) -> usize {
     rd(p + 0xd3) // o auxiliar do parceiro
 }
 
-pub(crate) unsafe extern "C" fn comparar_auxiliar_do_clube(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_AUXILIAR_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_ASSISTANT);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
     // a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || auxiliar_do_clube(clube));
-    PLACAR.registrar(igual && r == n, || format!("auxiliar_do_clube({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_get_club_assistant(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -5653,9 +5653,9 @@ pub(crate) unsafe extern "C" fn comparar_auxiliar_do_clube(clube: usize) -> usiz
 /// depois os do parceiro até 5; o resto zerado só quando os dois juntos não enchem as 5. Contador de 8 bits na
 /// original (no máximo 5). Devolve 1. Clube nulo: a original (caixa "Error" e 0). Na carreira, pela distribuição dos
 /// treinadores (0x8b2880).
-pub(crate) unsafe extern "C" fn treinadores_do_clube(clube: usize, vetor: *mut usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_TREINADORES_DO_CLUBE)(clube, vetor);
+        return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_COACHES)(clube, vetor);
     }
     let parceiro: unsafe extern "C" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -5690,15 +5690,15 @@ pub(crate) unsafe extern "C" fn treinadores_do_clube(clube: usize, vetor: *mut u
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_treinadores_do_clube(clube: usize, vetor: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_TREINADORES_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_COACHES);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
     }
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 20), (clube + club::HAS_LINKED_CLUB, 1)],
-        || o(clube, vetor), || treinadores_do_clube(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("treinadores_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || o(clube, vetor), || database_get_club_coaches(clube, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -5709,9 +5709,9 @@ pub(crate) unsafe extern "C" fn comparar_treinadores_do_clube(clube: usize, veto
 /// clube são pessoas válidas (não nulas, id (+0) < [0xae2364], com sinal) mais os do time parceiro A/B (0x540a50 com
 /// nulo e 1, sempre chamada). Só `al` (o resto do eax é o do parceiro). Clube nulo: a original (caixa "Error" e 0).
 /// Na carreira, pela fila da regeneração (PLAYER_REGEN::process_regen_queue 0x7a65d0).
-pub(crate) unsafe extern "C" fn contar_treinadores_do_clube(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn database_count_club_coaches(clube: usize) -> u8 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CONTAR_TREINADORES_DO_CLUBE)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES)(clube);
     }
     let contar = |c: usize| {
         let total = *(G_STAFF_COUNT as *const i32);
@@ -5729,13 +5729,13 @@ pub(crate) unsafe extern "C" fn contar_treinadores_do_clube(clube: usize) -> u8 
     n
 }
 
-pub(crate) unsafe extern "C" fn comparar_contar_treinadores_do_clube(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CONTAR_TREINADORES_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || contar_treinadores_do_clube(clube));
-    PLACAR.registrar(igual && r == n, || format!("contar_treinadores_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_count_club_coaches(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -5762,7 +5762,7 @@ pub(crate) unsafe fn comparar_nome_em_ingles(nome: &str, x: usize, o: unsafe ext
 /// [pt] { 0x5454c0 } (cdecl, Database.cpp): `nation_get_english_three_letter_name(nação)`: idioma ([0x9b5984]) 0 ou
 /// 1: a própria sigla (+0x53). Senão a tabela do eng.lng ([0xae2408]): nações em linhas de 109 bytes a partir de
 /// +0x2c, pelo id (sem conferir a quantidade), a sigla em +0x4f da linha. Quadro SEH só no primeiro uso.
-pub(crate) unsafe extern "C" fn sigla_inglesa_da_nacao(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn nation_get_english_three_letter_name(nacao: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return nacao.wrapping_add(0x53); // sigla da nação
@@ -5770,14 +5770,14 @@ pub(crate) unsafe extern "C" fn sigla_inglesa_da_nacao(nacao: usize) -> usize {
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_SIGLA_INGLESA_DA_NACAO)(nacao);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME)(nacao);
     }
     let id = *(nacao as *const i32);
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109)).wrapping_add(0x4f) // sigla na linha
 }
 
-pub(crate) unsafe extern "C" fn comparar_sigla_inglesa_da_nacao(nacao: usize) -> usize {
-    comparar_nome_em_ingles("sigla_inglesa_da_nacao", nacao, orig::<unsafe extern "C" fn(usize) -> usize>(IDX_SIGLA_INGLESA_DA_NACAO), sigla_inglesa_da_nacao)
+pub(crate) unsafe extern "C" fn comparar_nation_get_english_three_letter_name(nacao: usize) -> usize {
+    comparar_nome_em_ingles("nation_get_english_three_letter_name", nacao, orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME), nation_get_english_three_letter_name)
 }
 
 /// the competition's name, or its English one from eng.lng (83-byte rows: club ones by id, nation ones by id minus the
@@ -5787,7 +5787,7 @@ pub(crate) unsafe extern "C" fn comparar_sigla_inglesa_da_nacao(nacao: usize) ->
 /// [pt] { 0x5455a0 } (cdecl, Database.cpp): `comp_get_english_name(competição)`: idioma 0 ou 1: o próprio nome (+4).
 /// Senão a tabela do eng.lng, linhas de 83 bytes: id ≥ [t+0x14] (quantas de clube): a de nação `id − [t+0x14]`
 /// em [t+0x28]; senão a de clube `id` em [t+0x38] (comparação com sinal). Quadro SEH só no primeiro uso.
-pub(crate) unsafe extern "C" fn nome_ingles_da_competicao(comp: usize) -> usize {
+pub(crate) unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return comp.wrapping_add(4); // nome da competição
@@ -5795,7 +5795,7 @@ pub(crate) unsafe extern "C" fn nome_ingles_da_competicao(comp: usize) -> usize 
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DA_COMPETICAO)(comp);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME)(comp);
     }
     let id = *(comp as *const i32);
     let de_clube = *((t + 0x14) as *const i32);
@@ -5806,8 +5806,8 @@ pub(crate) unsafe extern "C" fn nome_ingles_da_competicao(comp: usize) -> usize 
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_ingles_da_competicao(comp: usize) -> usize {
-    comparar_nome_em_ingles("nome_ingles_da_competicao", comp, orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DA_COMPETICAO), nome_ingles_da_competicao)
+pub(crate) unsafe extern "C" fn comparar_comp_get_english_name(comp: usize) -> usize {
+    comparar_nome_em_ingles("comp_get_english_name", comp, orig::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME), comp_get_english_name)
 }
 
 /// the staff competition's name, or its English one from eng.lng (79-byte rows, by id) when another language is loaded
@@ -5815,7 +5815,7 @@ pub(crate) unsafe extern "C" fn comparar_nome_ingles_da_competicao(comp: usize) 
 ///
 /// [pt] { 0x5456a0 } (cdecl, Database.cpp): `staff_comp_get_english_name(competição de pessoal)`: idioma 0 ou 1: o
 /// próprio nome (+4). Senão a tabela do eng.lng, linhas de 79 bytes em [t+0x3c], pelo id. SEH só no primeiro uso.
-pub(crate) unsafe extern "C" fn nome_ingles_da_competicao_de_pessoal(comp: usize) -> usize {
+pub(crate) unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return comp.wrapping_add(4); // nome da competição de pessoal
@@ -5823,14 +5823,14 @@ pub(crate) unsafe extern "C" fn nome_ingles_da_competicao_de_pessoal(comp: usize
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DA_COMPETICAO_DE_PESSOAL)(comp);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME)(comp);
     }
     let id = *(comp as *const i32);
     (*((t + 0x3c) as *const usize)).wrapping_add((id as usize).wrapping_mul(79)) // competição de pessoal na tabela
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_ingles_da_competicao_de_pessoal(comp: usize) -> usize {
-    comparar_nome_em_ingles("nome_ingles_da_competicao_de_pessoal", comp, orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DA_COMPETICAO_DE_PESSOAL), nome_ingles_da_competicao_de_pessoal)
+pub(crate) unsafe extern "C" fn comparar_staff_comp_get_english_name(comp: usize) -> usize {
+    comparar_nome_em_ingles("staff_comp_get_english_name", comp, orig::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME), staff_comp_get_english_name)
 }
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação): nem a carreira nem o save passam pelo caminho do eng.lng
@@ -5854,9 +5854,9 @@ pub unsafe fn autoteste_dbm_1() {
         *(G_ENGLISH_NAME_TABLES as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
         let r = registro.as_ptr() as usize;
-        comparar_sigla_inglesa_da_nacao(r);
-        comparar_nome_ingles_da_competicao(r);
-        comparar_nome_ingles_da_competicao_de_pessoal(r);
+        comparar_nation_get_english_three_letter_name(r);
+        comparar_comp_get_english_name(r);
+        comparar_staff_comp_get_english_name(r);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
@@ -5873,7 +5873,7 @@ pub unsafe fn autoteste_dbm_1() {
 /// [pt] { 0x545990 } (cdecl, Database.cpp): `stadium_get_english_name(estádio)`: idioma ([0x9b5984]) 0 ou 1: o próprio
 /// nome (+4). Senão a tabela do eng.lng ([0xae2408]), linhas de 52 bytes em [t+0x34], pelo id. Quadro SEH só no
 /// primeiro uso (new 0x40 e a carga 0x544fc0), que fica com a original.
-pub(crate) unsafe extern "C" fn nome_ingles_do_estadio(estadio: usize) -> usize {
+pub(crate) unsafe extern "C" fn stadium_get_english_name(estadio: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return estadio.wrapping_add(4); // nome do estádio
@@ -5881,21 +5881,21 @@ pub(crate) unsafe extern "C" fn nome_ingles_do_estadio(estadio: usize) -> usize 
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DO_ESTADIO)(estadio);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME)(estadio);
     }
     let id = *(estadio as *const i32);
     (*((t + 0x34) as *const usize)).wrapping_add((id as usize).wrapping_mul(52)) // estádio na tabela
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_ingles_do_estadio(estadio: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DO_ESTADIO);
+pub(crate) unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME);
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(estadio); // primeiro uso (aloca e carrega): só a original
     }
     let r = o(estadio);
-    let n = nome_ingles_do_estadio(estadio);
-    PLACAR.registrar(r == n, || format!("nome_ingles_do_estadio({:x}) idioma {} original={:x} rust={:x}", estadio, idioma, r, n));
+    let n = stadium_get_english_name(estadio);
+    PLACAR.registrar(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", estadio, idioma, r, n));
     r
 }
 
@@ -5911,7 +5911,7 @@ pub(crate) const ARQUIVOS_DOS_IDIOMAS: [usize; 13] = [0x9b632c, 0x9b632c, 0x9b63
 /// [pt] { 0x535930 } (cdecl, Database.cpp): `database_language_file_exists(idioma)`: o caminho `CM3_TEMP\<.lng>`
 /// (0x90bde0, no buffer 0xde279c) e se existe (0x90c120: `_access(.., 0) == 0`, 1 ou 0); idioma sem `.lng`, 0
 /// sem montar o caminho. Chamada pelo `load_database` (0x5286e4, o idioma das preferências) e na criação.
-pub(crate) unsafe extern "C" fn arquivo_do_idioma_existe(idioma: i32) -> i32 {
+pub(crate) unsafe extern "C" fn database_language_file_exists(idioma: i32) -> i32 {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
     match ARQUIVOS_DOS_IDIOMAS.get(idioma as u32 as usize) {
@@ -5922,10 +5922,10 @@ pub(crate) unsafe extern "C" fn arquivo_do_idioma_existe(idioma: i32) -> i32 {
 
 /// Comparador: as duas a partir do mesmo buffer do caminho (0xde279c, 0x104 bytes); compara a resposta e o caminho
 /// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
-pub(crate) unsafe extern "C" fn comparar_arquivo_do_idioma_existe(idioma: i32) -> i32 {
-    let o = orig::<unsafe extern "C" fn(i32) -> i32>(IDX_ARQUIVO_DO_IDIOMA_EXISTE);
-    let (r, x, igual, _, _) = crate::comparacao::lado_a_lado(&[(0xde279c, 0x104)], || o(idioma), || arquivo_do_idioma_existe(idioma));
-    PLACAR.registrar(igual && r == x, || format!("arquivo_do_idioma_existe({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
+pub(crate) unsafe extern "C" fn comparar_database_language_file_exists(idioma: i32) -> i32 {
+    let o = orig::<unsafe extern "C" fn(i32) -> i32>(IDX_DATABASE_LANGUAGE_FILE_EXISTS);
+    let (r, x, igual, _, _) = crate::comparacao::lado_a_lado(&[(0xde279c, 0x104)], || o(idioma), || database_language_file_exists(idioma));
+    PLACAR.registrar(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
     r
 }
 
@@ -5945,15 +5945,15 @@ pub(crate) unsafe fn soltar_tabelas_em_ingles(t: usize, mut soltar: impl FnMut(u
 /// [pt] { 0x544f30 } (thiscall, Database.cpp): `eng_lng_free_tables(tabela)`: `free` 0x9452ca de cada uma das 8 linhas
 /// não nulas, de +0x20 a +0x3c (os ponteiros ficam; quem chama, `load_database` 0x528503 e a troca de idioma
 /// 0x533aa6, apaga a tabela com `delete` 0x944c94 e zera [0xae2408]).
-pub(crate) unsafe extern "thiscall" fn liberar_tabelas_em_ingles(t: usize) {
+pub(crate) unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     soltar_tabelas_em_ingles(t, |p| free(p));
 }
 
 /// Comparador: soltar duas vezes soltaria os mesmos blocos duas vezes.
 // ponytail: só a original (como as da 232a); a cópia é provada pelo autoteste_dbm_2 (a ordem dos blocos soltos).
-pub(crate) unsafe extern "thiscall" fn comparar_liberar_tabelas_em_ingles(t: usize) {
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_LIBERAR_TABELAS_EM_INGLES)(t)
+pub(crate) unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_LNG_FREE_TABLES)(t)
 }
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação). (1) O estádio: 256 casos com o idioma de 0 a 13 e uma
@@ -5974,13 +5974,13 @@ pub unsafe fn autoteste_dbm_2() {
         tabela[13] = 0x3000_0000 + ((z >> 8) as usize & 0xffff0);
         *(G_ENGLISH_NAME_TABLES as *mut usize) = tabela.as_mut_ptr() as usize;
         *(registro.as_mut_ptr() as *mut i32) = ((z >> 32) % 16) as i32 - 2;
-        comparar_nome_ingles_do_estadio(registro.as_ptr() as usize);
+        comparar_stadium_get_english_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
     }
     for idioma in -3..=16 {
-        comparar_arquivo_do_idioma_existe(idioma);
+        comparar_database_language_file_exists(idioma);
     }
     for _ in 0..64 {
         let z = s.proximo();
@@ -5990,7 +5990,7 @@ pub unsafe fn autoteste_dbm_2() {
         let esperado: Vec<usize> = tabela[8..].iter().copied().filter(|&p| p != 0).collect();
         let mut soltos = Vec::new();
         soltar_tabelas_em_ingles(tabela.as_ptr() as usize, |p| soltos.push(p));
-        PLACAR.registrar(soltos == esperado, || format!("liberar_tabelas_em_ingles: soltos {:x?} esperados {:x?}", soltos, esperado));
+        PLACAR.registrar(soltos == esperado, || format!("eng_lng_free_tables: soltos {:x?} esperados {:x?}", soltos, esperado));
     }
     let (t1, d1) = PLACAR.contagem();
     linha(&format!("banco idioma (estádio, .lng, soltar): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
@@ -6099,7 +6099,7 @@ pub(crate) unsafe fn nascimento_extra_dbn1(s: usize) {
 /// escolhida e reputação ≠ 0) ou reputação > 7500, fora os fracos da 0x9cf2e4, ganha um treinador (cargo 5, +0x28 = 5)
 /// sem clube e sem seleção (não vai para a casa). Mais de 23.000: caixa (0x65f, 0x6aa, 0x6f5, 0x734) e 0. Grava "generated
 /// %ld extra non playing staff" em 0xde1f64 e devolve 1. A local do par só é lida quando 0x540a50 devolve parceiro.
-pub(crate) unsafe extern "C" fn gerar_comissao_extra() -> u32 {
+pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let gi = |a: usize| read_i32(a);
@@ -6192,9 +6192,9 @@ pub(crate) unsafe extern "C" fn gerar_comissao_extra() -> u32 {
 /// novos (nulo o que sai), monta [0xae23fc] (linha nova → id antigo, malloc), compacta a tabela (id = linha nova),
 /// realloc no lugar (outro endereço: caixa 0x4ca e fim) e grava "Club table has %d entries" em 0xde1f64. Sem [0xae23a8]
 /// (caixa) ou sem memória no new: a original; sem memória nos calloc: caixa e fim, como a original.
-pub(crate) unsafe extern "C" fn cortar_tabela_de_clubes(tamanho: u32) {
+pub(crate) unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     if *(G_NATION_TABLE as *const usize) == 0 {
-        return orig::<unsafe extern "C" fn(u32)>(IDX_CORTAR_TABELA_DE_CLUBES)(tamanho);
+        return orig::<unsafe extern "C" fn(u32)>(IDX_DATABASE_TRIM_CLUB_TABLE)(tamanho);
     }
     crate::comparacao::ramo("criação cortar a tabela de clubes");
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
@@ -6395,7 +6395,7 @@ pub(crate) unsafe extern "C" fn cortar_tabela_de_clubes(tamanho: u32) {
 /// (+0x5d) é nula ou escolhida (+0x11c), copiada para a frente na própria tabela. realloc (0x945667) ao tamanho novo,
 /// que vira [0xae23d4] (sem conferir o endereço); [0xae237c] = linhas; [0xae23dc] (a parte das seleções) = tabela +
 /// (linhas − [0xae2384]) × 26; qsort (0x945333) com 0x540780.
-pub(crate) unsafe extern "C" fn podar_historico_de_competicoes() {
+pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparacao::ramo("criação podar o histórico de competições");
@@ -6429,8 +6429,8 @@ pub(crate) fn diferenca_dbn1(mo: &crate::comparacao::Memoria, mr: &crate::compar
 /// Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
 /// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
 /// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
-pub(crate) unsafe extern "C" fn comparar_gerar_comissao_extra() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_GERAR_COMISSAO_EXTRA);
+pub(crate) unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32 {
+    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GENERATE_EXTRA_NON_PLAYING_STAFF);
     if cargo_8_fora_do_clube_dbn1() {
         return o();
     }
@@ -6440,11 +6440,11 @@ pub(crate) unsafe extern "C" fn comparar_gerar_comissao_extra() -> u32 {
     regioes.push((read_usize(0xae23b4), read_i32(0xae235c).max(0) as usize * 581));
     regioes.push((read_usize(0xae23bc), read_i32(0xae2364).max(0) as usize * 110));
     let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(),
-        || crate::aleatorio::sem_contar(|| gerar_comissao_extra()));
+        || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
     let onde = diferenca_dbn1(&mo, &mr);
     PLACAR.registrar(igual && r == m, || match onde {
-        Some((a, x, y)) => format!("gerar_comissao_extra: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
-        None => format!("gerar_comissao_extra: original={} rust={}", r, m),
+        Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
+        None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
     });
     // ponytail: 29 MB por foto; não voltam às sobras
     mo.0.clear();
@@ -6454,14 +6454,14 @@ pub(crate) unsafe extern "C" fn comparar_gerar_comissao_extra() -> u32 {
 
 // ponytail: compacta e realoca a tabela de clubes, aloca [0xae23fc] e troca as chaves de clube; não roda duas
 // vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst tem a tabela cortada).
-pub(crate) unsafe extern "C" fn comparar_cortar_tabela_de_clubes(tamanho: u32) {
-    orig::<unsafe extern "C" fn(u32)>(IDX_CORTAR_TABELA_DE_CLUBES)(tamanho)
+pub(crate) unsafe extern "C" fn comparar_database_trim_club_table(tamanho: u32) {
+    orig::<unsafe extern "C" fn(u32)>(IDX_DATABASE_TRIM_CLUB_TABLE)(tamanho)
 }
 
 // ponytail: compacta e realoca o histórico de competições; não roda duas vezes. Só a original; a cópia é provada
 // pela prova do save (o histórico podado vai para o .qst).
-pub(crate) unsafe extern "C" fn comparar_podar_historico_de_competicoes() {
-    orig::<unsafe extern "C" fn()>(IDX_PODAR_HISTORICO_DE_COMPETICOES)()
+pub(crate) unsafe extern "C" fn comparar_database_prune_comp_history_table() {
+    orig::<unsafe extern "C" fn()>(IDX_DATABASE_PRUNE_COMP_HISTORY_TABLE)()
 }
 
 // ---------- 233a leva: a carga do banco: trocar os índices por ponteiros e o vetor de clubes pela reputação (Database.cpp) ----------
@@ -6498,7 +6498,7 @@ pub(crate) const PESSOA_COM_CAIXA_DBN2: [(usize, usize, usize, usize, usize, u32
 /// competições de clube. Erros do original, copiados: a última divisão alta do clube (+0x5b) zera +0x60 (que depois vira
 /// a competição 0) e fica crua; o estádio vizinho alto (+0x48) zera a cidade (+0x38) e fica cru. Não lê os registros
 /// alvo nem aloca.
-pub(crate) unsafe extern "C" fn resolver_indices_do_banco(leniente: u32) {
+pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -6682,11 +6682,11 @@ pub(crate) unsafe extern "C" fn resolver_indices_do_banco(leniente: u32) {
 /// with rebuild, fills the vector [0xae2d1c] with the club ids; then sorts it by reputation (qsort with 0x540020)
 /// Original: `database_sort_clubs_by_reputation` (0x53db40, Database.cpp, cdecl).
 ///
-/// [pt] { 0x53db40 } (cdecl, Database.cpp): `database_sort_clubs_by_reputation(refazer)`, na criação, no carregar_jogo
+/// [pt] { 0x53db40 } (cdecl, Database.cpp): `database_sort_clubs_by_reputation(refazer)`, na criação, no load_game_data
 /// 0x82a9c0 (vetor ausente do save) e no laço diário 0x5cccd0. Com `refazer` (byte) ≠ 0, o vetor [0xae2d1c] recebe os
 /// ids (+0) dos [0xae235c] clubes na ordem da tabela; depois qsort (0x945333) dos [0xae235c] ids com 0x540020 (pela
 /// reputação).
-pub(crate) unsafe extern "C" fn ordenar_clubes_pela_reputacao(refazer: u32) {
+pub(crate) unsafe extern "C" fn database_sort_clubs_by_reputation(refazer: u32) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
@@ -6703,8 +6703,8 @@ pub(crate) unsafe extern "C" fn ordenar_clubes_pela_reputacao(refazer: u32) {
 
 /// Comparador de 0x5315a0: original e cópia lado a lado sobre as 12 tabelas inteiras (~50 MB na carga) e o texto de
 /// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
-pub(crate) unsafe extern "C" fn comparar_resolver_indices_do_banco(leniente: u32) {
-    let o = orig::<unsafe extern "C" fn(u32)>(IDX_RESOLVER_INDICES_DO_BANCO);
+pub(crate) unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
+    let o = orig::<unsafe extern "C" fn(u32)>(IDX_RESOLVE_DATABASE_INDEXES);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
     let (pessoas, n) = (rd(0xae23bc), gi(0xae2364));
@@ -6718,11 +6718,11 @@ pub(crate) unsafe extern "C" fn comparar_resolver_indices_do_banco(leniente: u32
             regioes.push((rd(p), gi(cont) as usize * tam));
         }
     }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(leniente), || resolver_indices_do_banco(leniente));
+    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(leniente), || resolve_database_indexes(leniente));
     let onde = diferenca_dbn1(&mo, &mr);
     PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("resolver_indices_do_banco({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
-        None => format!("resolver_indices_do_banco({}): diverge", leniente),
+        Some((a, x, y)) => format!("resolve_database_indexes({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
+        None => format!("resolve_database_indexes({}): diverge", leniente),
     });
     // ponytail: ~50 MB por foto; não voltam às sobras
     mo.0.clear();
@@ -6730,16 +6730,16 @@ pub(crate) unsafe extern "C" fn comparar_resolver_indices_do_banco(leniente: u32
 }
 
 /// Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
-pub(crate) unsafe extern "C" fn comparar_ordenar_clubes_pela_reputacao(refazer: u32) {
-    let o = orig::<unsafe extern "C" fn(u32)>(IDX_ORDENAR_CLUBES_PELA_REPUTACAO);
+pub(crate) unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(refazer: u32) {
+    let o = orig::<unsafe extern "C" fn(u32)>(IDX_DATABASE_SORT_CLUBS_BY_REPUTATION);
     let v = *(G_CLUB_REPUTATION_ORDER as *const usize);
     let n = core::ptr::read_unaligned(G_CLUB_COUNT as *const i32);
     if v == 0 || n <= 0 {
         return o(refazer);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(refazer), || ordenar_clubes_pela_reputacao(refazer));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(refazer), || database_sort_clubs_by_reputation(refazer));
     let onde = diferenca_dbn1(&mo, &mr);
-    PLACAR.registrar(igual, || format!("ordenar_clubes_pela_reputacao({}): diverge em {:x?}", refazer as u8, onde));
+    PLACAR.registrar(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
 }
 
 // ---------- 232a leva: liberar os históricos de pessoas e de prêmios e crescer o histórico de competições (Database.cpp) ----------
@@ -6764,7 +6764,7 @@ pub(crate) unsafe fn soltar_tabela_do_banco(tabela: usize) {
 /// pessoas ([0xae23cc], 17 bytes) presente, solta (0x9670f4 ou 0x9452ca, pelo modo do banco) e zera o ponteiro
 /// e a contagem [0xae2374]. Chamada por PlayerStats::PlayerStats (0x7c0ccd): o histórico passa a viver no
 /// `player stats history.tmp`. Sem quadro de pilha.
-pub(crate) unsafe extern "C" fn liberar_historico_de_pessoas() {
+pub(crate) unsafe extern "C" fn database_free_staff_history_table() {
     let tabela = *(G_STAFF_HISTORY_TABLE as *const usize);
     if tabela == 0 {
         return;
@@ -6777,8 +6777,8 @@ pub(crate) unsafe extern "C" fn liberar_historico_de_pessoas() {
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-pub(crate) unsafe extern "C" fn comparar_liberar_historico_de_pessoas() {
-    orig::<unsafe extern "C" fn()>(IDX_LIBERAR_HISTORICO_DE_PESSOAS)()
+pub(crate) unsafe extern "C" fn comparar_database_free_staff_history_table() {
+    orig::<unsafe extern "C" fn()>(IDX_DATABASE_FREE_STAFF_HISTORY_TABLE)()
 }
 
 /// the same for the award (staff competition) history
@@ -6786,7 +6786,7 @@ pub(crate) unsafe extern "C" fn comparar_liberar_historico_de_pessoas() {
 ///
 /// [pt] { 0x527f20 } (cdecl, Database.cpp): `database_free_staff_comp_history_table()`: o mesmo para o histórico
 /// de prêmios ([0xae23e4], 58 bytes; contagem [0xae238c]). Chamada por AWARD_MANAGER::AWARD_MANAGER (0x413360).
-pub(crate) unsafe extern "C" fn liberar_historico_de_premios() {
+pub(crate) unsafe extern "C" fn database_free_staff_comp_history_table() {
     let tabela = *(G_STAFF_COMP_HISTORY_TABLE as *const usize);
     if tabela == 0 {
         return;
@@ -6799,8 +6799,8 @@ pub(crate) unsafe extern "C" fn liberar_historico_de_premios() {
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
 // ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-pub(crate) unsafe extern "C" fn comparar_liberar_historico_de_premios() {
-    orig::<unsafe extern "C" fn()>(IDX_LIBERAR_HISTORICO_DE_PREMIOS)()
+pub(crate) unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
+    orig::<unsafe extern "C" fn()>(IDX_DATABASE_FREE_STAFF_COMP_HISTORY_TABLE)()
 }
 
 /// reallocs the competition history to n more rows (out of memory: 0); count, national part pointer and the new rows
@@ -6812,7 +6812,7 @@ pub(crate) unsafe extern "C" fn comparar_liberar_historico_de_premios() {
 /// `n` à contagem, guarda o bloco, refaz o ponteiro da parte das seleções [0xae23dc] (a partir da linha [0xae2384])
 /// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. Chamada por
 /// comp_util_add_history_record (0x4afd2c), no fim de competição. Sem quadro de pilha.
-pub(crate) unsafe extern "C" fn crescer_historico_de_competicoes(n: i32) -> u32 {
+pub(crate) unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
     crate::comparacao::ramo("banco crescer histórico de competições");
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let total = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).wrapping_add(n);
@@ -6835,8 +6835,8 @@ pub(crate) unsafe extern "C" fn crescer_historico_de_competicoes(n: i32) -> u32 
 
 /// Comparador: o `realloc` não se desfaz (crescer duas vezes deixaria a tabela com 2n linhas a mais).
 // ponytail: só a original; a prova é o .qst (a tabela vai para o save) e o ramo da cópia no modo Rust.
-pub(crate) unsafe extern "C" fn comparar_crescer_historico_de_competicoes(n: i32) -> u32 {
-    orig::<unsafe extern "C" fn(i32) -> u32>(IDX_CRESCER_HISTORICO_DE_COMPETICOES)(n)
+pub(crate) unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32) -> u32 {
+    orig::<unsafe extern "C" fn(i32) -> u32>(IDX_DATABASE_GROW_COMP_HISTORY_TABLE)(n)
 }
 
 
@@ -6848,7 +6848,7 @@ pub(crate) unsafe extern "C" fn comparar_crescer_historico_de_competicoes(n: i32
 /// [pt] { 0x540020 } (cdecl, Database.cpp): comparação do qsort do vetor de ids de clube (0x53db40): pela reputação
 /// (+0x80, palavra com sinal) do clube ([0xae23b4] + id × 581; id −1 ou menor = reputação 0), a maior primeiro:
 /// a de `a` menor que a de `b`: 1; maior: −1; iguais: 0.
-pub(crate) unsafe extern "C" fn ordem_dos_clubes_pela_reputacao(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let clubes = *(G_CLUB_TABLE as *const usize);
     let reputacao = |p: usize| {
         let id = *(p as *const i32);
@@ -6864,10 +6864,10 @@ pub(crate) unsafe extern "C" fn ordem_dos_clubes_pela_reputacao(a: usize, b: usi
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pela_reputacao(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CLUBES_PELA_REPUTACAO)(a, b);
-    let n = ordem_dos_clubes_pela_reputacao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_clubes_pela_reputacao({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_CLUB_IDS_BY_REPUTATION)(a, b);
+    let n = qsort_comparator_club_ids_by_reputation(a, b);
+    PLACAR.registrar(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -6877,7 +6877,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_dos_clubes_pela_reputacao(a: usiz
 /// [pt] { 0x5402f0 } (cdecl, Database.cpp): comparação do qsort dos elencos (corte do conjunto A+B em 0x541e60 e as
 /// seleções da MLS em 0x90a980): ponteiros de pessoa; nula vai para o fim (a nula e b não: 1; a não e b nula: −1;
 /// as duas: 0); depois pela palavra +0xb do jogador (pessoa +0x61; sem jogador, 0), a maior primeiro (b − a).
-pub(crate) unsafe extern "C" fn ordem_do_elenco_pela_habilidade(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let pa = *(a as *const usize);
     let pb = *(b as *const usize);
     if pa == 0 {
@@ -6893,10 +6893,10 @@ pub(crate) unsafe extern "C" fn ordem_do_elenco_pela_habilidade(a: usize, b: usi
     habilidade(pb) as i32 - habilidade(pa) as i32 // a maior primeiro
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_do_elenco_pela_habilidade(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DO_ELENCO_PELA_HABILIDADE)(a, b);
-    let n = ordem_do_elenco_pela_habilidade(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_elenco_pela_habilidade({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_SQUAD_BY_PLAYER_0XB)(a, b);
+    let n = qsort_comparator_squad_by_player_0xb(a, b);
+    PLACAR.registrar(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -6907,7 +6907,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_do_elenco_pela_habilidade(a: usiz
 /// 0x549a30): ponteiros de pessoa; sem pessoa ou sem jogador (+0x61) em `a`: 1 (mesmo com `b` igual); em `b`:
 /// −1; depois pela habilidade atual (jogador +5, palavra com sinal) e, empatada, pela palavra +0xb, a maior
 /// primeiro (b − a).
-pub(crate) unsafe extern "C" fn ordem_do_elenco_pela_habilidade_atual(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let jogador = |p: usize| {
         let s = *(p as *const usize);
         if s == 0 { 0 } else { core::ptr::read_unaligned((s + 0x61) as *const usize) }
@@ -6928,10 +6928,10 @@ pub(crate) unsafe extern "C" fn ordem_do_elenco_pela_habilidade_atual(a: usize, 
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_do_elenco_pela_habilidade_atual(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DO_ELENCO_PELA_HABILIDADE_ATUAL)(a, b);
-    let n = ordem_do_elenco_pela_habilidade_atual(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_elenco_pela_habilidade_atual({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STAFF_BY_PLAYER_ABILITY_DESC)(a, b);
+    let n = compare_staff_by_player_ability_desc(a, b);
+    PLACAR.registrar(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -7061,7 +7061,7 @@ pub(crate) unsafe fn vetor_do_jogador_para_reequilibrar(jogador: usize, pessoa: 
 /// habilidade, preso em −40..0; vetor (0xff81/0x81) pelo 0x53a610, `reequilibrar_vetor_do_jogador` sem as
 /// células 0x18 e 0x1e (0x11/0x12 contam em dobro), volta pelo 0x53aa10; jogador +0xf = 20: tira as médias
 /// de +0x2a/+0x3a e o terço de +0x1e, +0x24, +0x39; devolve o progresso do treino.
-pub(crate) unsafe extern "C" fn normalizar_atributos_fisicos_do_jogador(pessoa: usize) {
+pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(pessoa: usize) {
     if pessoa == 0 {
         return;
     }
@@ -7132,9 +7132,9 @@ pub(crate) unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(us
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_normalizar_atributos_fisicos_do_jogador(pessoa: usize) {
-    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(IDX_NORMALIZAR_ATRIBUTOS_FISICOS_DO_JOGADOR), normalizar_atributos_fisicos_do_jogador, pessoa,
-        "normalizar_atributos_fisicos_do_jogador");
+pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(pessoa: usize) {
+    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES), staff_normalise_player_physical_attributes, pessoa,
+        "staff_normalise_player_physical_attributes");
 }
 
 /// a second name: with the nation having more than 10, the heaviest of 3 draws in its range; otherwise a draw over the
@@ -7143,10 +7143,10 @@ pub(crate) unsafe extern "C" fn comparar_normalizar_atributos_fisicos_do_jogador
 ///
 /// [pt] { 0x53a0e0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) pelo peso. Nação com
 /// mais de 10 segundos nomes (`indice_de_nomes_da_nacao` +0x1c): 3 sorteios na faixa dela (a partir de +4),
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com até
+/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com até
 /// 10: sorteio na tabela inteira ([0xae239c], no máximo 0x7fff). Só o rand() da CRT. Chamada por
 /// OfficialsManager::add_random_officials (0x79c6b4), na criação dos árbitros do jogo novo.
-pub(crate) unsafe extern "C" fn segundo_nome_pelo_peso(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize {
     let linha = |i: i32| (*(G_SECOND_NAME_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao != 0 {
         let e = indice_de_nomes_da_nacao(nacao);
@@ -7168,12 +7168,12 @@ pub(crate) unsafe extern "C" fn segundo_nome_pelo_peso(nacao: usize) -> usize {
     linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)))
 }
 
-pub(crate) unsafe extern "C" fn comparar_segundo_nome_pelo_peso(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_SEGUNDO_NOME_PELO_PESO);
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_BY_WEIGHT);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| segundo_nome_pelo_peso(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("segundo_nome_pelo_peso({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_second_name_by_weight(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
@@ -7186,7 +7186,7 @@ pub(crate) unsafe extern "C" fn comparar_segundo_nome_pelo_peso(nacao: usize) ->
 /// usadas vêm todas dele), `reequilibrar_vetor_do_jogador` com alvo −20 em todas as células do intervalo
 /// (0x11/0x12 contam ftol(valor × [0x968f98])), volta pelo 0x53aa10; jogador +0xf ≥ 15: tira as médias de
 /// +0x2a/+0x3a; devolve o progresso do treino. Roda na criação (depois de 0x538ec0) e na carga e no treino.
-pub(crate) unsafe extern "C" fn normalizar_atributos_do_jogador(pessoa: usize) {
+pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize) {
     if pessoa == 0 {
         return;
     }
@@ -7208,9 +7208,9 @@ pub(crate) unsafe extern "C" fn normalizar_atributos_do_jogador(pessoa: usize) {
     progresso_do_treino(pessoa, 1);
 }
 
-pub(crate) unsafe extern "C" fn comparar_normalizar_atributos_do_jogador(pessoa: usize) {
-    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(IDX_NORMALIZAR_ATRIBUTOS_DO_JOGADOR), normalizar_atributos_do_jogador, pessoa,
-        "normalizar_atributos_do_jogador");
+pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_attributes(pessoa: usize) {
+    comparar_normalizacao_do_jogador(orig::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_ATTRIBUTES), staff_normalise_player_attributes, pessoa,
+        "staff_normalise_player_attributes");
 }
 
 // ---------- 232a leva: o conversor das competições da versão 1 e dois nomes em inglês (Db_files.cpp, Database.cpp) ----------
@@ -7230,7 +7230,7 @@ pub(crate) const COMPETICAO_V1: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33,
 /// [pt] { 0x5453f0 } (cdecl, Database.cpp): `nation_get_english_name(nação)`: idioma ([0x9b5984]) 0 ou 1: o próprio
 /// nome (+4). Senão a tabela do eng.lng ([0xae2408]): nações em linhas de 109 bytes a partir de +0x2c, pelo id
 /// (sem conferir a quantidade).
-pub(crate) unsafe extern "C" fn nome_ingles_da_nacao(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn nation_get_english_name(nacao: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return nacao.wrapping_add(4); // idioma 0 ou 1 (nação)
@@ -7238,21 +7238,21 @@ pub(crate) unsafe extern "C" fn nome_ingles_da_nacao(nacao: usize) -> usize {
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DA_NACAO)(nacao);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME)(nacao);
     }
     let id = *(nacao as *const i32);
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109))
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_ingles_da_nacao(nacao: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DA_NACAO);
+pub(crate) unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME);
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(nacao); // primeiro uso (aloca e carrega): só a original
     }
     let r = o(nacao);
-    let n = nome_ingles_da_nacao(nacao);
-    PLACAR.registrar(r == n, || format!("nome_ingles_da_nacao({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
+    let n = nation_get_english_name(nacao);
+    PLACAR.registrar(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
     r
 }
 
@@ -7264,7 +7264,7 @@ pub(crate) unsafe extern "C" fn comparar_nome_ingles_da_nacao(nacao: usize) -> u
 /// próprio nome curto (+0x38). Senão a tabela do eng.lng ([0xae2408], linhas de 79 bytes a partir de +0x20, o
 /// nome curto em +0x34 da linha): pelo mapa de ids [0xae23fc] se houver, senão pelo id se < quantos (+0),
 /// senão 0.
-pub(crate) unsafe extern "C" fn nome_curto_ingles_do_clube(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return clube.wrapping_add(0x38);
@@ -7272,7 +7272,7 @@ pub(crate) unsafe extern "C" fn nome_curto_ingles_do_clube(clube: usize) -> usiz
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca e carrega o eng.lng sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_CURTO_INGLES_DO_CLUBE)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME)(clube);
     }
     let linhas = *((t + 0x20) as *const usize);
     let id = *(clube as *const i32);
@@ -7287,15 +7287,15 @@ pub(crate) unsafe extern "C" fn nome_curto_ingles_do_clube(clube: usize) -> usiz
     linhas.wrapping_add((i as usize).wrapping_mul(79)).wrapping_add(0x34) // nome curto na linha
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_curto_ingles_do_clube(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_CURTO_INGLES_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME);
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(clube); // primeiro uso (aloca e carrega): só a original
     }
     let r = o(clube);
-    let n = nome_curto_ingles_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("nome_curto_ingles_do_clube({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    let n = club_get_english_short_name(clube);
+    PLACAR.registrar(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }
 
@@ -7326,7 +7326,7 @@ pub unsafe fn autoteste_dbj_2() {
             continue;
         }
         let mut buf: Vec<u8> = (0..n * 107).map(|_| s.proximo() as u8).collect();
-        comparar_ler_competicoes_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
+        comparar_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
         fclose(f);
     }
     let _ = std::fs::remove_file(ARQ);
@@ -7349,8 +7349,8 @@ pub unsafe fn autoteste_dbj_2() {
         *(G_CLUB_ENGLISH_NAME_INDEX_TABLE as *mut usize) = if com_mapa { mapa.as_ptr() as usize } else { 0 };
         let id = if com_mapa { ((z >> 52) % 8) as i32 } else { ((z >> 52) % 14) as i32 - 2 };
         *(registro.as_mut_ptr() as *mut i32) = id;
-        comparar_nome_ingles_da_nacao(registro.as_ptr() as usize);
-        comparar_nome_curto_ingles_do_clube(registro.as_ptr() as usize);
+        comparar_nation_get_english_name(registro.as_ptr() as usize);
+        comparar_club_get_english_short_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];
@@ -7372,7 +7372,7 @@ pub unsafe fn autoteste_dbj_2() {
 /// o clube +0x39, sem data, desligando a pessoa, não como jogador), pulando os goleiros (jogador +0x61 com +0xf ≥ 15,
 /// byte com sinal) enquanto restarem 3 ou menos. Contadores de 8 bits com sinal, como os da original. Sem sorteio;
 /// a local `eh_a` só é lida quando 0x540a50 devolve parceiro (e então ela foi gravada).
-pub(crate) unsafe extern "C" fn cortar_elencos_de_a_e_b() {
+pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_COLLECT_CLUB_SQUAD);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -7438,7 +7438,7 @@ pub(crate) unsafe extern "C" fn cortar_elencos_de_a_e_b() {
 /// do jogo 0xae2c90, gravando na pessoa). Treinador (+0xcf): com os dois, o do B só sai; só o do B: sai e entra no A
 /// com o cargo dele (+0x3d, lido depois da saída; a original empurra o byte com lixo em cima, e a 0x53bd10 só usa o
 /// byte), sem data. Auxiliar (+0xd3): com os dois, o do B sai. Sem sorteio.
-pub(crate) unsafe extern "C" fn juntar_o_time_b_ao_a() {
+pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let tirar: unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_DATABASE_REMOVE_STAFF_FROM_CLUB);
@@ -7503,14 +7503,14 @@ pub(crate) unsafe extern "C" fn juntar_o_time_b_ao_a() {
 /// comuns ([0xae23f8], [0xae23a0]), linhas de 60 bytes com a nação em +0x37 (0..[0xae2350]) e o peso em +0x3b
 /// (byte com sinal): linhas seguidas da mesma nação formam um grupo, gravado na entrada do id (+0) da nação quando
 /// a nação muda. Erro do original, copiado: o último grupo de cada tabela não é gravado. Sem memória: a original.
-pub(crate) unsafe extern "C" fn montar_indice_de_nomes() {
+pub(crate) unsafe extern "C" fn database_build_nation_name_index() {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let nacoes = *(G_NATION_COUNT as *const i32);
     let t = alocar((nacoes as u32).wrapping_mul(0x24));
     *(G_NATION_NAME_INDEX_TABLE as *mut usize) = t;
     if t == 0 {
         // ponytail: a original pede de novo e, sem memória, abre a caixa e encerra o jogo
-        return orig::<unsafe extern "C" fn()>(IDX_MONTAR_INDICE_DE_NOMES)();
+        return orig::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
     }
     preencher_indice_de_nomes(t);
 }
@@ -7609,21 +7609,21 @@ pub(crate) unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnO
     mr.0.clear();
 }
 
-pub(crate) unsafe extern "C" fn comparar_cortar_elencos_de_a_e_b() {
-    let o = orig::<unsafe extern "C" fn()>(IDX_CORTAR_ELENCOS_DE_A_E_B);
-    comparar_times_a_e_b("cortar_elencos_de_a_e_b", || o(), || cortar_elencos_de_a_e_b());
+pub(crate) unsafe extern "C" fn comparar_database_trim_senior_and_b_team_squads() {
+    let o = orig::<unsafe extern "C" fn()>(IDX_DATABASE_TRIM_SENIOR_AND_B_TEAM_SQUADS);
+    comparar_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
 }
 
-pub(crate) unsafe extern "C" fn comparar_juntar_o_time_b_ao_a() {
-    let o = orig::<unsafe extern "C" fn()>(IDX_JUNTAR_O_TIME_B_AO_A);
-    comparar_times_a_e_b("juntar_o_time_b_ao_a", || o(), || juntar_o_time_b_ao_a());
+pub(crate) unsafe extern "C" fn comparar_database_merge_b_team_staff() {
+    let o = orig::<unsafe extern "C" fn()>(IDX_DATABASE_MERGE_B_TEAM_STAFF);
+    comparar_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
 }
 
 /// Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
 /// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
 /// impressão dele não é critério).
-pub(crate) unsafe extern "C" fn comparar_montar_indice_de_nomes() {
-    orig::<unsafe extern "C" fn()>(IDX_MONTAR_INDICE_DE_NOMES)();
+pub(crate) unsafe extern "C" fn comparar_database_build_nation_name_index() {
+    orig::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
     let t = *(G_NATION_NAME_INDEX_TABLE as *const usize);
     let n = (*(G_NATION_COUNT as *const i32)).max(0) as usize * 0x24;
     if t == 0 || n == 0 {
@@ -7638,7 +7638,7 @@ pub(crate) unsafe extern "C" fn comparar_montar_indice_de_nomes() {
     let onde = original.iter().zip(copia).position(|(a, b)| a != b);
     PLACAR.registrar(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
-        format!("montar_indice_de_nomes: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
+        format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
             core::ptr::read_unaligned((t + k) as *const i32), core::ptr::read_unaligned((r + k) as *const i32))
     });
     *(G_NATION_NAME_INDEX_TABLE as *mut usize) = t;
@@ -7662,12 +7662,12 @@ pub(crate) unsafe extern "C" fn comparar_montar_indice_de_nomes() {
 /// que tem a pessoa (a primeira) é zerada; pessoa fora da casa: 0 (nas 12, 13 e 15 a primeira casa já zerada fica).
 /// Com `desligar`: zera o clube na pessoa (+0x24 na seleção, +0x39 no clube). Devolve 1. Clube nulo: 0. Pessoa nula: a
 /// original (caixa "Error" e 0).
-pub(crate) unsafe extern "C" fn tirar_pessoa_do_clube(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
     if clube == 0 {
         return 0;
     }
     if pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_TIRAR_PESSOA_DO_CLUBE)(clube, pessoa, data, desligar, como_jogador);
+        return orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB)(clube, pessoa, data, desligar, como_jogador);
     }
     let gi = |a: usize| *(a as *const i32);
     let selecao = || gi(clube) >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2));
@@ -7739,9 +7739,9 @@ pub(crate) unsafe extern "C" fn tirar_pessoa_do_clube(clube: usize, pessoa: usiz
 /// casas como estão. Com parceiro: os não nulos do clube e depois os do parceiro até 7; o resto zerado só quando os
 /// dois juntos não enchem as 7. Contador de 8 bits na original (no máximo 7). Devolve 1. Clube nulo: a original
 /// (caixa "Error" e 0). Na carreira, pela 0x7f7270 (as listas dos olheiros, nas transferências e contratações).
-pub(crate) unsafe extern "C" fn olheiros_do_clube(clube: usize, vetor: *mut usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_OLHEIROS_DO_CLUBE)(clube, vetor);
+        return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_SCOUTS)(clube, vetor);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -7776,8 +7776,8 @@ pub(crate) unsafe extern "C" fn olheiros_do_clube(clube: usize, vetor: *mut usiz
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_tirar_pessoa_do_clube(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_TIRAR_PESSOA_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, data, desligar, como_jogador); // 0 ou caixa: só a original
     }
@@ -7793,21 +7793,21 @@ pub(crate) unsafe extern "C" fn comparar_tirar_pessoa_do_clube(clube: usize, pes
         }
     }
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, data, desligar, como_jogador),
-        || tirar_pessoa_do_clube(clube, pessoa, data, desligar, como_jogador));
-    PLACAR.registrar(igual && r == m, || format!("tirar_pessoa_do_clube({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+        || database_remove_staff_from_club(clube, pessoa, data, desligar, como_jogador));
+    PLACAR.registrar(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, data != 0, desligar, r, m, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_olheiros_do_clube(clube: usize, vetor: *mut usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_OLHEIROS_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_SCOUTS);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
     }
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 28), (clube + club::HAS_LINKED_CLUB, 1)],
-        || o(clube, vetor), || olheiros_do_clube(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("olheiros_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || o(clube, vetor), || database_get_club_scouts(clube, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -7835,7 +7835,7 @@ pub(crate) const FORMAS_DO_ADJETIVO_9: [u8; 35] = [
 /// [pt] { 0x545a60 } (cdecl, Database.cpp): a forma (0..4) do adjetivo para o `indice` (byte com sinal,
 /// 1..35) no `idioma` (0x66f4d0; os chamadores só chamam nos idiomas que flexionam). Idioma sem tabela
 /// ou índice fora: 0xff. Sem chamadas e sem caixa.
-pub(crate) unsafe extern "C" fn forma_do_adjetivo(indice: u32, idioma: u32) -> u8 {
+pub(crate) unsafe extern "C" fn get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
     let linha = match idioma {
         3 | 6 | 7 | 8 | 10 => &FORMAS_DO_ADJETIVO_COMUM,
         4 => &FORMAS_DO_ADJETIVO_4,
@@ -7856,10 +7856,10 @@ pub(crate) unsafe extern "C" fn forma_do_adjetivo(indice: u32, idioma: u32) -> u
 /// [pt] { 0x543f30 } (cdecl, Database.cpp): o `atributo` (1..12) de treinador da `pessoa`: 0x543fd0 com o
 /// não jogador dela (+0x69) e o `atributo` inteiro como veio. Pessoa nula ou atributo (byte com sinal)
 /// fora de 1..12: a original (caixa "Error" e −1).
-pub(crate) unsafe extern "C" fn atributo_do_nao_jogador(pessoa: usize, atributo: u32) -> u8 {
+pub(crate) unsafe extern "C" fn staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) {
-        return orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_ATRIBUTO_DO_NAO_JOGADOR)(pessoa, atributo);
+        return orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_NON_PLAYER_ATTRIBUTE)(pessoa, atributo);
     }
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE);
     let nao_jogador = core::ptr::read_unaligned((pessoa + staff::NON_PLAYER) as *const usize);
@@ -7872,37 +7872,37 @@ pub(crate) unsafe extern "C" fn atributo_do_nao_jogador(pessoa: usize, atributo:
 /// [pt] { 0x5442f0 } (cdecl, Database.cpp): a nota de 1 a 20 (`nota_do_atributo`) de 2 × `valor` (byte com
 /// sinal) + habilidade atual (+5) do `jogador` × 0,1 ([0x967880]); a de 0x544380 com a habilidade
 /// reduzida (os goleiros de 0x543540). Termina no `_ftol`.
-pub(crate) unsafe extern "C" fn nota_relativa_com_habilidade_reduzida(jogador: usize, valor: u32) -> u32 {
+pub(crate) unsafe extern "C" fn player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as f64;
     let v = (valor as u8 as i8) as f64;
     nota_do_atributo(habilidade * f64_em(0x967880) + (v + v)) as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_forma_do_adjetivo(indice: u32, idioma: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(u32, u32) -> u8>(IDX_FORMA_DO_ADJETIVO);
+pub(crate) unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(u32, u32) -> u8>(IDX_GET_ADJECTIVE_FORM_INDEX);
     let r = o(indice, idioma);
-    let n = forma_do_adjetivo(indice, idioma);
-    PLACAR.registrar(r == n, || format!("forma_do_adjetivo({}, idioma {}) original={} rust={}", indice as u8 as i8, idioma, r, n));
+    let n = get_adjective_form_index(indice, idioma);
+    PLACAR.registrar(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, idioma, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_atributo_do_nao_jogador(pessoa: usize, atributo: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_ATRIBUTO_DO_NAO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_NON_PLAYER_ATTRIBUTE);
     let r = o(pessoa, atributo);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) {
         return r; // caixa: só a original
     }
-    let n = atributo_do_nao_jogador(pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_do_nao_jogador({:x}, {}) original={} rust={}", pessoa, a, r, n));
+    let n = staff_get_non_player_attribute(pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_get_non_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_nota_relativa_com_habilidade_reduzida(jogador: usize, valor: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_NOTA_RELATIVA_COM_HABILIDADE_REDUZIDA);
+pub(crate) unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING_WITH_SCALED_ABILITY);
     let r = o(jogador, valor);
-    let n = nota_relativa_com_habilidade_reduzida(jogador, valor);
-    PLACAR.registrar(r == n, || format!("nota_relativa_com_habilidade_reduzida({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+    let n = player_attribute_rating_with_scaled_ability(jogador, valor);
+    PLACAR.registrar(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
@@ -7914,9 +7914,9 @@ pub(crate) unsafe extern "C" fn comparar_nota_relativa_com_habilidade_reduzida(j
 ///
 /// [pt] { 0x539b90 } (cdecl, Database.cpp): um primeiro nome (linha de 60 bytes em [0xae23f0]) pelo peso.
 /// Nação com mais de 15 primeiros nomes (`indice_de_nomes_da_nacao` +0x18): 3 sorteios na faixa dela,
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com
+/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com
 /// até 15: sorteio na tabela inteira ([0xae2398], no máximo 0x7fff). Só o rand() da CRT.
-pub(crate) unsafe extern "C" fn primeiro_nome_pelo_peso(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_pick_first_name_by_weight(nacao: usize) -> usize {
     let linha = |i: i32| (*(G_FIRST_NAME_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao != 0 {
         let e = indice_de_nomes_da_nacao(nacao);
@@ -7945,9 +7945,9 @@ pub(crate) unsafe extern "C" fn primeiro_nome_pelo_peso(nacao: usize) -> usize {
 /// +0x38, +0x39 da cor e formato 0): `frente` e `fundo`, que começam com [0xae3184] e [0xaebe04]. As
 /// cores vêm do registro +0x5d (+0x90 e +0x94 dele) ou, sem ele, da própria competição (+0x61 e +0x65);
 /// cor nula deixa o padrão. Devolve 1. Competição nula: a original (padrões, caixa "Error" e 0).
-pub(crate) unsafe extern "C" fn cores_da_competicao(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
     if competicao == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_CORES_DA_COMPETICAO)(competicao, frente, fundo);
+        return orig::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_COMP_COLOURS)(competicao, frente, fundo);
     }
     // ponytail: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
     // a 0x5e4800 faz & 0xff nos três, então os bytes estendidos dão o mesmo pixel (como em 0x53b640)
@@ -7986,10 +7986,10 @@ pub(crate) unsafe fn vaga_no_cargo(clube: usize, d: usize, n: usize, pessoa: usi
 /// sinal, tabela de salto 0x53bcc8): 1 +0xbf; 2..4 +0xc3 (3); 5 +0xcf; 6, 7 +0xd3; 8 +0x19f (5); 9 +0x1b3
 /// (7); 10 +0x1cf (3); 11 elenco +0xd7 (50); 12 e 13: +0xcf / +0xd3 livre ou dela e vaga no elenco; 15:
 /// vaga em +0x19f e no elenco. Clube ou pessoa nulos, cargo 14 ou fora de 1..15: a original (caixa e 0).
-pub(crate) unsafe extern "C" fn clube_tem_vaga_para_cargo(clube: usize, cargo: u32, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
     let c = cargo as u8 as i8;
     if clube == 0 || pessoa == 0 || !(1..=15).contains(&c) || c == 14 {
-        return orig::<unsafe extern "C" fn(usize, u32, usize) -> u32>(IDX_CLUBE_TEM_VAGA_PARA_CARGO)(clube, cargo, pessoa);
+        return orig::<unsafe extern "C" fn(usize, u32, usize) -> u32>(IDX_DATABASE_CLUB_HAS_ROOM_FOR_JOB)(clube, cargo, pessoa);
     }
     let vaga = |d: usize, n: usize| vaga_no_cargo(clube, d, n, pessoa);
     let tem = match c {
@@ -8008,36 +8008,36 @@ pub(crate) unsafe extern "C" fn clube_tem_vaga_para_cargo(clube: usize, cargo: u
     tem as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_primeiro_nome_pelo_peso(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_PRIMEIRO_NOME_PELO_PESO);
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_BY_WEIGHT);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| primeiro_nome_pelo_peso(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("primeiro_nome_pelo_peso({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_first_name_by_weight(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_cores_da_competicao(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_CORES_DA_COMPETICAO);
+pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_COMP_COLOURS);
     if competicao == 0 {
         return o(competicao, frente, fundo); // caixa: só a original
     }
     let regioes = [(frente as usize, 2), (fundo as usize, 2)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(competicao, frente, fundo),
-        || cores_da_competicao(competicao, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("cores_da_competicao({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
+        || database_get_comp_colours(competicao, frente, fundo));
+    PLACAR.registrar(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_tem_vaga_para_cargo(clube: usize, cargo: u32, pessoa: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, usize) -> u32>(IDX_CLUBE_TEM_VAGA_PARA_CARGO);
+pub(crate) unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, usize) -> u32>(IDX_DATABASE_CLUB_HAS_ROOM_FOR_JOB);
     let r = o(clube, cargo, pessoa);
     let c = cargo as u8 as i8;
     if clube == 0 || pessoa == 0 || !(1..=15).contains(&c) || c == 14 {
         return r; // caixa: só a original
     }
-    let n = clube_tem_vaga_para_cargo(clube, cargo, pessoa);
-    PLACAR.registrar(r == n, || format!("clube_tem_vaga_para_cargo({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
+    let n = database_club_has_room_for_job(clube, cargo, pessoa);
+    PLACAR.registrar(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
     r
 }
 
@@ -8069,9 +8069,9 @@ pub(crate) unsafe fn ocupar_casa_do_clube(clube: usize, d: usize, n: usize, pess
 /// com o +0xcf já gravado); 13 +0xd3 e o elenco (sem elenco fica 6); 15 +0x19f e o elenco (sem elenco
 /// fica 8); 0 nenhuma; 14 e fora: 0. Com `gravar`: clube e cargo na pessoa (+0x24/+0x28 seleção,
 /// +0x39/+0x3d clube). Devolve 1. Clube ou pessoa nulos: a original (caixa "Error" e 0).
-pub(crate) unsafe extern "C" fn incluir_pessoa_no_clube(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
     if clube == 0 || pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_INCLUIR_PESSOA_NO_CLUBE)(clube, pessoa, cargo, data, gravar, reduzir);
+        return orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_DATABASE_ADD_STAFF_TO_CLUB)(clube, pessoa, cargo, data, gravar, reduzir);
     }
     let gi = |a: usize| *(a as *const i32);
     let selecao = || gi(clube) >= gi(0xae235c).wrapping_sub(gi(0xae2350).wrapping_mul(2));
@@ -8156,16 +8156,16 @@ pub(crate) unsafe extern "C" fn incluir_pessoa_no_clube(clube: usize, pessoa: us
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_incluir_pessoa_no_clube(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_INCLUIR_PESSOA_NO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_DATABASE_ADD_STAFF_TO_CLUB);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, cargo, data, gravar, reduzir); // caixa: só a original
     }
     // grava só no clube (581 bytes) e na pessoa (110); 0x600a50 só consulta
     let regioes = [(clube, 0x245), (pessoa, 0x6e)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, cargo, data, gravar, reduzir),
-        || incluir_pessoa_no_clube(clube, pessoa, cargo, data, gravar, reduzir));
-    PLACAR.registrar(igual && r == n, || format!("incluir_pessoa_no_clube({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+        || database_add_staff_to_club(clube, pessoa, cargo, data, gravar, reduzir));
+    PLACAR.registrar(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, cargo as u8, data, gravar, reduzir, r, n, mo, mr));
     r
 }
@@ -8191,9 +8191,9 @@ pub(crate) unsafe fn pessoa_valida_do_elenco(p: usize) -> bool {
 /// com bits `modo` nas marcas de elenco (+0x5e), se `modo` não for 0. Com `filtro`, quem tem ficha
 /// de contrato (0x4cf6d0) e clube (+0x39) diferente do `clube` só conta se o clube do contrato
 /// (0x4cf5a0, guardado em [0xae1080]; +4 = id) também for outro. Clube nulo: a original (caixa).
-pub(crate) unsafe extern "C" fn contar_elenco_do_clube(clube: usize, modo: u32, filtro: u32) -> u8 {
+pub(crate) unsafe extern "C" fn database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_CONTAR_ELENCO_DO_CLUBE)(clube, modo, filtro);
+        return orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD)(clube, modo, filtro);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let tem_reservas: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_CLUB_HAS_RESERVE_SQUAD);
@@ -8250,9 +8250,9 @@ pub(crate) unsafe extern "C" fn contar_elenco_do_clube(clube: usize, modo: u32, 
 /// `vetor`. Sem parceiro A/B (0x540a50 com nulo e 1): os 50 como estão e, com `dobro`, mais 50 zeros.
 /// Com parceiro: só as pessoas válidas do clube e depois as do parceiro até o limite (100 com
 /// `dobro`, senão 50), o resto até o limite zerado. Devolve 1. Clube nulo: a original (caixa e 0).
-pub(crate) unsafe extern "C" fn reunir_elenco_do_clube(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_REUNIR_ELENCO_DO_CLUBE)(clube, vetor, dobro);
+        return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_DATABASE_COLLECT_CLUB_SQUAD)(clube, vetor, dobro);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let limite: i8 = if dobro != 0 { 100 } else { 50 };
@@ -8300,7 +8300,7 @@ pub(crate) unsafe extern "C" fn reunir_elenco_do_clube(clube: usize, vetor: *mut
 /// (id ≥ [0xae235c] − 2 × [0xae2350], com sinal): só as principais (id < [0xae235c] − [0xae2350]) de
 /// nação com +0x88 > 150. Clubes: com competição (+0x57), que não sejam o time B de um par (0x540a50
 /// com 1), com a competição no vetor [[0xadadfc] + id × 4] e a nação com o bit 2 de +0x11c.
-pub(crate) unsafe extern "C" fn clube_pode_ser_dirigido(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn club_can_be_managed(clube: usize) -> u8 {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let u = |d: usize| core::ptr::read_unaligned((clube + d) as *const usize);
     if clube == 0 || u(0x53) == 0 {
@@ -8330,36 +8330,36 @@ pub(crate) unsafe extern "C" fn clube_pode_ser_dirigido(clube: usize) -> u8 {
     (*((u(0x53) + 0x11c) as *const u8) & 2 != 0) as u8
 }
 
-pub(crate) unsafe extern "C" fn comparar_contar_elenco_do_clube(clube: usize, modo: u32, filtro: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_CONTAR_ELENCO_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD);
     if clube == 0 {
         return o(clube, modo, filtro); // caixa: só a original
     }
     // 0x540a50 pode zerar +0x244 do clube; o filtro grava o último contrato em [0xae1080]
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1), (0xae1080, 4)],
-        || o(clube, modo, filtro), || contar_elenco_do_clube(clube, modo, filtro));
-    PLACAR.registrar(igual && r == n, || format!("contar_elenco_do_clube({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
+        || o(clube, modo, filtro), || database_count_club_squad(clube, modo, filtro));
+    PLACAR.registrar(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_reunir_elenco_do_clube(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_REUNIR_ELENCO_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_DATABASE_COLLECT_CLUB_SQUAD);
     if clube == 0 {
         return o(clube, vetor, dobro); // caixa: só a original
     }
     let regioes = [(vetor as usize, if dobro != 0 { 400 } else { 200 }), (clube + club::HAS_LINKED_CLUB, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, vetor, dobro),
-        || reunir_elenco_do_clube(clube, vetor, dobro));
-    PLACAR.registrar(igual && r == n, || format!("reunir_elenco_do_clube({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
+        || database_collect_club_squad(clube, vetor, dobro));
+    PLACAR.registrar(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_pode_ser_dirigido(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUBE_PODE_SER_DIRIGIDO);
+pub(crate) unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_CAN_BE_MANAGED);
     let marca = [(clube.wrapping_add(0x244), 1)];
     let regioes = if clube == 0 { &marca[..0] } else { &marca[..] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(clube), || clube_pode_ser_dirigido(clube));
-    PLACAR.registrar(igual && r == n, || format!("clube_pode_ser_dirigido({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(clube), || club_can_be_managed(clube));
+    PLACAR.registrar(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -8371,7 +8371,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_pode_ser_dirigido(clube: usize) -
 /// [pt] { 0x53a980 } (cdecl, Database.cpp): o inverso de 0x53a8b0: o byte de baixo de cada uma das 21
 /// células de 3 bytes do `vetor` volta ao `nao_jogador` na ordem `ORDEM_DO_NAO_JOGADOR`. A pessoa não
 /// é usada. eax na saída: o vetor com o último byte copiado no byte de baixo (os chamadores não usam).
-pub(crate) unsafe extern "C" fn vetor_para_o_nao_jogador(nao_jogador: usize, _pessoa: usize, vetor: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_vector_to_non_player(nao_jogador: usize, _pessoa: usize, vetor: usize) -> u32 {
     let mut ultimo = 0u8;
     for (k, &d) in ORDEM_DO_NAO_JOGADOR.iter().enumerate() {
         ultimo = *((vetor + 3 * k) as *const u8);
@@ -8386,7 +8386,7 @@ pub(crate) unsafe extern "C" fn vetor_para_o_nao_jogador(nao_jogador: usize, _pe
 /// [pt] { 0x53aa10 } (cdecl, Database.cpp): o inverso de 0x53a610: o byte de baixo das células 0..53 do
 /// `vetor` volta ao `jogador` nos deslocamentos de `CELULAS_DO_VETOR` e o da célula 54 à `pessoa`
 /// +0x58. eax na saída: o vetor com o último byte no byte de baixo (os chamadores não usam).
-pub(crate) unsafe extern "C" fn vetor_para_o_jogador(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     for (i, &(d, _)) in CELULAS_DO_VETOR.iter().enumerate() {
         *((jogador + d as usize) as *mut u8) = *((vetor + 3 * i) as *const u8);
     }
@@ -8407,7 +8407,7 @@ pub(crate) unsafe extern "C" fn vetor_para_o_jogador(jogador: usize, pessoa: usi
 /// cargo +0x3d ou +0x28 = 10, as células ficam ≤ −80 e a 19 ≥ 0; (3) na 1ª passada, com soma > 28,
 /// tira (soma − 28) / quantas das não marcadas (mínimo 0). No fim, 0x53a980 grava de volta. Pessoa
 /// ou não jogador nulos: nada.
-pub(crate) unsafe extern "C" fn normalizar_atributos_do_nao_jogador(pessoa: usize) {
+pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: usize) {
     if pessoa == 0 {
         return;
     }
@@ -8512,32 +8512,32 @@ pub(crate) unsafe extern "C" fn normalizar_atributos_do_nao_jogador(pessoa: usiz
     devolver(nj, pessoa, v as usize);
 }
 
-pub(crate) unsafe extern "C" fn comparar_vetor_para_o_nao_jogador(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_VETOR_PARA_O_NAO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_NON_PLAYER);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nao_jogador + 0x0e, 21)],
-        || o(nao_jogador, pessoa, vetor), || vetor_para_o_nao_jogador(nao_jogador, pessoa, vetor));
-    PLACAR.registrar(igual && r == n, || format!("vetor_para_o_nao_jogador({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
+        || o(nao_jogador, pessoa, vetor), || database_vector_to_non_player(nao_jogador, pessoa, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_vetor_para_o_jogador(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_VETOR_PARA_O_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_PLAYER);
     // os deslocamentos de CELULAS_DO_VETOR ficam em +0x0f..+0x44
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(jogador + 0x0f, 0x44 - 0x0f + 1), (pessoa + staff::DETERMINATION, 1)],
-        || o(jogador, pessoa, vetor), || vetor_para_o_jogador(jogador, pessoa, vetor));
-    PLACAR.registrar(igual && r == n, || format!("vetor_para_o_jogador({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
+        || o(jogador, pessoa, vetor), || database_vector_to_player(jogador, pessoa, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_normalizar_atributos_do_nao_jogador(pessoa: usize) {
-    let o = orig::<unsafe extern "C" fn(usize)>(IDX_NORMALIZAR_ATRIBUTOS_DO_NAO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(pessoa: usize) {
+    let o = orig::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
     let nj = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + staff::NON_PLAYER) as *const usize) };
     if nj == 0 {
         return o(pessoa); // não faz nada: só a original
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nj + 0x0e, 21)], || o(pessoa),
-        || normalizar_atributos_do_nao_jogador(pessoa));
-    PLACAR.registrar(igual, || format!("normalizar_atributos_do_nao_jogador({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+        || staff_normalise_non_player_attributes(pessoa));
+    PLACAR.registrar(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 // ---------- 225a leva: a família da cor, se duas cores se confundem e o atributo calculado do não jogador (Database.cpp) ----------
@@ -8564,10 +8564,10 @@ pub(crate) unsafe fn familia_conhecida_da_cor(cor: usize) -> Option<u8> {
 /// [pt] { 0x540520 } (cdecl, Database.cpp): a família (1..10) da `cor` pelo id (+0), comparado com as chaves
 /// de cor em `FAMILIAS_DAS_CORES` (a primeira que casa). Cor fora da lista: a original (caixa "Error",
 /// [0xb67a34] = 0 e 2).
-pub(crate) unsafe extern "C" fn familia_da_cor(cor: usize) -> u8 {
+pub(crate) unsafe extern "C" fn database_get_colour_family(cor: usize) -> u8 {
     match familia_conhecida_da_cor(cor) {
         Some(f) => f,
-        None => orig::<unsafe extern "C" fn(usize) -> u8>(IDX_FAMILIA_DA_COR)(cor),
+        None => orig::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_GET_COLOUR_FAMILY)(cor),
     }
 }
 
@@ -8578,7 +8578,7 @@ pub(crate) unsafe extern "C" fn familia_da_cor(cor: usize) -> u8 {
 /// [pt] { 0x540490 } (cdecl, Database.cpp): as cores `a` e `b` se confundem? Pelas famílias (0x540520, `a`
 /// primeiro): iguais; 8 com 9; 8 com 7; 6 com 7, salvo quando a da família 6 está contra a cor com o id
 /// da chave [0x9cf1dc] (exceção: não se confundem).
-pub(crate) unsafe extern "C" fn cores_se_confundem(a: usize, b: usize) -> u8 {
+pub(crate) unsafe extern "C" fn database_colours_clash(a: usize, b: usize) -> u8 {
     let familia: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_DATABASE_GET_COLOUR_FAMILY);
     let fa = familia(a);
     let fb = familia(b);
@@ -8603,10 +8603,10 @@ pub(crate) unsafe extern "C" fn cores_se_confundem(a: usize, b: usize) -> u8 {
 /// (2 +0x11, 3 +0x10, 5 +0x17, 6 +0x18, 8 +0x19, 9 +0x1b, 10 +0x1e, 11 +0x21) pela fórmula de 0x544410:
 /// x = (palavra +4 + 2 × byte) × 0,05 + 10; (x + 0,1 x²) / 3 + 0,5, preso em 1..20 e truncado. Pessoa
 /// ou não jogador nulos ou atributo fora de 1..12: a original (caixa e −1).
-pub(crate) unsafe extern "C" fn atributo_calculado_do_nao_jogador(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
+pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) || nao_jogador == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_CALCULADO_DO_NAO_JOGADOR)(pessoa, nao_jogador, atributo);
+        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE)(pessoa, nao_jogador, atributo);
     }
     let byte = |p: usize, d: usize| *((p + d) as *const u8);
     let formula = |d: usize| {
@@ -8631,37 +8631,37 @@ pub(crate) unsafe extern "C" fn atributo_calculado_do_nao_jogador(pessoa: usize,
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_familia_da_cor(cor: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_FAMILIA_DA_COR);
+pub(crate) unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_GET_COLOUR_FAMILY);
     let r = o(cor);
     if familia_conhecida_da_cor(cor).is_none() {
         return r; // caixa: só a original
     }
-    let n = familia_da_cor(cor);
-    PLACAR.registrar(r == n, || format!("familia_da_cor({:x}: id {}) original={} rust={}", cor, *(cor as *const u32), r, n));
+    let n = database_get_colour_family(cor);
+    PLACAR.registrar(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", cor, *(cor as *const u32), r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_cores_se_confundem(a: usize, b: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CORES_SE_CONFUNDEM);
+pub(crate) unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_COLOURS_CLASH);
     let r = o(a, b);
     if familia_conhecida_da_cor(a).is_none() || familia_conhecida_da_cor(b).is_none() {
         return r; // caixa: só a original
     }
-    let n = cores_se_confundem(a, b);
-    PLACAR.registrar(r == n, || format!("cores_se_confundem({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = database_colours_clash(a, b);
+    PLACAR.registrar(r == n, || format!("database_colours_clash({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_atributo_calculado_do_nao_jogador(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_CALCULADO_DO_NAO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE);
     let r = o(pessoa, nao_jogador, atributo);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=12).contains(&a) || nao_jogador == 0 {
         return r; // caixa: só a original
     }
-    let n = atributo_calculado_do_nao_jogador(pessoa, nao_jogador, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_calculado_do_nao_jogador({:x}, {:x}, {}) original={} rust={}", pessoa, nao_jogador, a, r, n));
+    let n = staff_compute_non_player_attribute(pessoa, nao_jogador, atributo);
+    PLACAR.registrar(r == n, || format!("staff_compute_non_player_attribute({:x}, {:x}, {}) original={} rust={}", pessoa, nao_jogador, a, r, n));
     r
 }
 
@@ -8756,7 +8756,7 @@ pub(crate) unsafe fn nome_aceito(nome: usize) -> bool {
 /// dela, fica o de maior peso (+0x3b, com sinal) entre os aceitos (`nome_aceito`). Com até 100: grupo de
 /// língua 0 sorteia na tabela inteira, mas devolve a linha da tabela dos SEGUNDOS nomes ([0xae23f4],
 /// assim na original); senão `nacao_que_empresta_nomes`. Só o rand() da CRT (não o 0x90cfc0).
-pub(crate) unsafe extern "C" fn primeiro_nome_da_nacao(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nacao: usize) -> usize {
     let linha = |t: usize, i: i32| (*(t as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao == 0 {
         return linha(0xae23f0, sorteio_escalado(total_de_nomes_limitado(0xae2398)));
@@ -8790,9 +8790,9 @@ pub(crate) unsafe extern "C" fn primeiro_nome_da_nacao(nacao: usize) -> usize {
 /// Original: `database_pick_second_name_for_nation` (0x53a1b0, Database.cpp, cdecl).
 ///
 /// [pt] { 0x53a1b0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) para a `nacao`.
-/// Como `primeiro_nome_da_nacao` com os segundos nomes (+4, +0x1c, [0xae239c]), sem filtrar os nomes
+/// Como `database_pick_first_name_for_nation` com os segundos nomes (+4, +0x1c, [0xae239c]), sem filtrar os nomes
 /// no sorteio de 20 (só o maior peso).
-pub(crate) unsafe extern "C" fn segundo_nome_da_nacao(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_pick_second_name_for_nation(nacao: usize) -> usize {
     let linha = |i: i32| (*(G_SECOND_NAME_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao == 0 {
         return linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)));
@@ -8848,10 +8848,10 @@ pub(crate) unsafe fn copiar_nome_formatado(destino: usize, origem: usize) {
 /// [0xb63c98]). 1 "nome sobrenome", 2 "N.sobrenome", 3 "sobrenome, nome", 4 "sobrenome, N", 5 só um
 /// nome, 6 iniciais, 7 como o 1 sem preferir o comum; sempre com recuos (o que houver). Devolve 1.
 /// Pessoa ou destino nulos, tamanho (i16) < 0x69 ou estilo fora de 1..7: a original (caixa e 0).
-pub(crate) unsafe extern "C" fn formatar_nome_da_pessoa(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
     let e = estilo as u8;
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&e) {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_FORMATAR_NOME_DA_PESSOA)(pessoa, destino, tamanho, estilo);
+        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME)(pessoa, destino, tamanho, estilo);
     }
     let deu_apelido: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_HAS_NICKNAME);
     let apelido: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_NICKNAME);
@@ -8919,48 +8919,48 @@ pub(crate) unsafe extern "C" fn formatar_nome_da_pessoa(pessoa: usize, destino: 
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_primeiro_nome_da_nacao(nacao: usize) -> usize {
+pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_PRIMEIRO_NOME_DA_NACAO);
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_FOR_NATION);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| primeiro_nome_da_nacao(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("primeiro_nome_da_nacao({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_first_name_for_nation(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_segundo_nome_da_nacao(nacao: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_SEGUNDO_NOME_DA_NACAO);
+pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_FOR_NATION);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| segundo_nome_da_nacao(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("segundo_nome_da_nacao({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_second_name_for_nation(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_formatar_nome_da_pessoa(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_FORMATAR_NOME_DA_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME);
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
         return o(pessoa, destino, tamanho, estilo); // caixa: só a original
     }
     // o destino tem pelo menos 0x69 bytes (a rotina exige); 0x600740 e 0x6005e0 só leem
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(destino, 0x69)], || o(pessoa, destino, tamanho, estilo),
-        || formatar_nome_da_pessoa(pessoa, destino, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("formatar_nome_da_pessoa({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
+        || database_format_staff_name(pessoa, destino, tamanho, estilo));
+    PLACAR.registrar(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
     r
 }
 
-// ---------- 224a leva: as cores do uniforme do clube, o técnico do clube e o nome do clube em inglês (Database.cpp) ----------
+// ---------- 224a leva: as cores do kit do clube, o técnico do clube e o nome do clube em inglês (Database.cpp) ----------
 
 /// the club's home, away or third kit colours as screen pixels, with defaults when missing
 /// Original: `database_get_club_kit_colours` (0x53b640, Database.cpp, cdecl).
 ///
-/// [pt] { 0x53b640 } (cdecl, Database.cpp): as cores do `uniforme` (byte: 1 casa +0x83/+0x87, 2 fora
+/// [pt] { 0x53b640 } (cdecl, Database.cpp): as cores do `kit` (byte: 1 casa +0x83/+0x87, 2 fora
 /// +0x8b/+0x8f, 3 terceiro +0x93/+0x97; 2 e 3 sem uma das duas cores: as de casa trocadas) do `clube`
 /// em pixels (0x5e4800 com os bytes +0x37, +0x38, +0x39 da cor e formato 0): `frente` e `fundo`, que
-/// começam com [0xaebdf0] e [0xae3184]. Outro uniforme: só os padrões. Devolve 1. Clube nulo: a
+/// começam com [0xaebdf0] e [0xae3184]. Outro kit: só os padrões. Devolve 1. Clube nulo: a
 /// original (padrões, caixa "Error" e 0).
-pub(crate) unsafe extern "C" fn cores_do_uniforme_do_clube(clube: usize, uniforme: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_CORES_DO_UNIFORME_DO_CLUBE)(clube, uniforme, frente, fundo);
+        return orig::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS)(clube, kit, frente, fundo);
     }
     // ponytail: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
     // a 0x5e4800 faz & 0xff nos três, então os bytes estendidos dão o mesmo pixel
@@ -8968,10 +8968,10 @@ pub(crate) unsafe extern "C" fn cores_do_uniforme_do_clube(clube: usize, uniform
     core::ptr::write_unaligned(frente, *(G_GUI_COLOUR_BLUE as *const u16));
     core::ptr::write_unaligned(fundo, *(G_GUI_COLOUR_PALE_GREY as *const u16));
     let r = |d: usize| core::ptr::read_unaligned((clube + d) as *const usize);
-    let (a, b) = match uniforme as u8 {
+    let (a, b) = match kit as u8 {
         1 => (r(0x83), r(0x87)), // casa
         2 | 3 => {
-            let d = if uniforme as u8 == 2 { 0x8b } else { 0x93 };
+            let d = if kit as u8 == 2 { 0x8b } else { 0x93 };
             let (a, b) = (r(d), r(d + 4));
             if a == 0 || b == 0 { (r(0x87), r(0x83)) } else { (a, b) }
         }
@@ -8997,14 +8997,14 @@ pub(crate) unsafe extern "C" fn cores_do_uniforme_do_clube(clube: usize, uniform
 /// (0x540a50 com 0 e 1); sem os dois, clube comum dá 0 e seleção (id ≥ [0xae235c] − [0xae2350]) repete
 /// com a seleção da nação dela (0x53b3d0 com +0x53, a sub-21 chega na principal). Clube nulo (no começo
 /// ou vindo da 0x53b3d0): a original com nulo (caixa "Error" e 0).
-pub(crate) unsafe extern "C" fn tecnico_do_clube_ou_selecao(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn database_get_club_manager(clube: usize) -> usize {
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let selecao_da_nacao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let tecnico = |c: usize| core::ptr::read_unaligned((c + 0xcf) as *const usize);
     let mut c = clube;
     loop {
         if c == 0 {
-            return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_TECNICO_DO_CLUBE_OU_SELECAO)(0);
+            return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_MANAGER)(0);
         }
         let t = tecnico(c);
         if t != 0 {
@@ -9027,7 +9027,7 @@ pub(crate) unsafe extern "C" fn tecnico_do_clube_ou_selecao(clube: usize) -> usi
 /// [pt] { 0x545880 } (cdecl, Database.cpp): o nome do `clube` em inglês. Idioma ([0x9b5984]) 0 ou 1: o próprio
 /// nome (+4). Senão a tabela do eng.lng ([0xae2408], linhas de 79 bytes a partir de +0x20): pelo mapa
 /// de ids [0xae23fc] se houver, senão pelo id se < quantos (+0), senão 0.
-pub(crate) unsafe extern "C" fn nome_ingles_do_clube(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn club_get_english_name(clube: usize) -> usize {
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma == 0 || idioma == 1 {
         return clube.wrapping_add(4); // idioma 0 ou 1
@@ -9035,7 +9035,7 @@ pub(crate) unsafe extern "C" fn nome_ingles_do_clube(clube: usize) -> usize {
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
         // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
-        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DO_CLUBE)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME)(clube);
     }
     let linhas = *((t + 0x20) as *const usize);
     let id = *(clube as *const i32);
@@ -9051,39 +9051,39 @@ pub(crate) unsafe extern "C" fn nome_ingles_do_clube(clube: usize) -> usize {
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_cores_do_uniforme_do_clube(clube: usize, uniforme: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_CORES_DO_UNIFORME_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS);
     if clube == 0 {
-        return o(clube, uniforme, frente, fundo); // caixa: só a original
+        return o(clube, kit, frente, fundo); // caixa: só a original
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(frente as usize, 2), (fundo as usize, 2)],
-        || o(clube, uniforme, frente, fundo), || cores_do_uniforme_do_clube(clube, uniforme, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("cores_do_uniforme_do_clube({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, uniforme as u8, r, n, mo, mr));
+        || o(clube, kit, frente, fundo), || database_get_club_kit_colours(clube, kit, frente, fundo));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_tecnico_do_clube_ou_selecao(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_TECNICO_DO_CLUBE_OU_SELECAO);
+pub(crate) unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_MANAGER);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
     // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro (e a recusa se repete com ela zerada):
     // a região volta entre os lados
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
-        || tecnico_do_clube_ou_selecao(clube));
-    PLACAR.registrar(igual && r == n, || format!("tecnico_do_clube_ou_selecao({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || database_get_club_manager(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_ingles_do_clube(clube: usize) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_NOME_INGLES_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME);
     let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
     if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(clube); // primeiro uso (aloca e carrega): só a original
     }
     let r = o(clube);
-    let n = nome_ingles_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("nome_ingles_do_clube({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    let n = club_get_english_name(clube);
+    PLACAR.registrar(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }
 
@@ -9098,7 +9098,7 @@ pub(crate) unsafe extern "C" fn comparar_nome_ingles_do_clube(clube: usize) -> u
 /// pessoa +0x58) / 3) > moral + delta soma aleatorio(delta − 1). Prende em 1..20 (byte com sinal); com
 /// `limitar` e delta > 0, o vínculo com o clube (0x4cf5f0, pessoa +0x39) com +0x45 não nulo impede
 /// subir. Devolve 1 se o moral mudou. Delta 0: 0, sem ler nada.
-pub(crate) unsafe extern "C" fn ajustar_moral_da_pessoa(pessoa: usize, delta: u32, limitar: u32) -> u32 {
+pub(crate) unsafe extern "C" fn staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
     let aleatorio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let d = delta as u8 as i8;
@@ -9143,7 +9143,7 @@ pub(crate) const ORDEM_DO_NAO_JOGADOR: [usize; 21] = [
 /// baixo das 21 células de 3 bytes do `vetor` (o 3º byte de cada uma fica como está) e grava 13 (o
 /// corte) em `fim` se não nulo. A pessoa não é usada. eax na saída: os 16 bits altos do ponteiro do não
 /// jogador e o último atributo estendido (os chamadores não usam).
-pub(crate) unsafe extern "C" fn vetor_de_atributos_do_nao_jogador(nao_jogador: usize, _pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
+pub(crate) unsafe extern "C" fn database_non_player_to_attribute_vector(nao_jogador: usize, _pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
     let mut ultimo = 0u16;
     for (k, &d) in ORDEM_DO_NAO_JOGADOR.iter().enumerate() {
         if k == 13 && !fim.is_null() {
@@ -9161,7 +9161,7 @@ pub(crate) unsafe extern "C" fn vetor_de_atributos_do_nao_jogador(nao_jogador: u
 /// [pt] { 0x540980 } (cdecl, Database.cpp): o `elenco` (byte) nas marcas de elenco da pessoa (+0x5e): com
 /// bits de clube (& 3) mantém os de seleção (& 0xc), senão mantém os de clube; depois acrescenta. A
 /// original grava duas vezes (a máscara e o resultado). Devolve a pessoa (eax).
-pub(crate) unsafe extern "C" fn marcar_elenco_da_pessoa(pessoa: usize, elenco: u32) -> usize {
+pub(crate) unsafe extern "C" fn staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
     let e = elenco as u8;
     let p = (pessoa + staff::PLAYING_SQUAD) as *mut u8;
     let mantem = if e & 3 != 0 { *p & 0xc } else { *p & 3 };
@@ -9170,39 +9170,39 @@ pub(crate) unsafe extern "C" fn marcar_elenco_da_pessoa(pessoa: usize, elenco: u
     pessoa
 }
 
-pub(crate) unsafe extern "C" fn comparar_ajustar_moral_da_pessoa(pessoa: usize, delta: u32, limitar: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_AJUSTAR_MORAL_DA_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_STAFF_ADJUST_MORALE);
     if delta as u8 == 0 {
         let r = o(pessoa, delta, limitar);
-        PLACAR.registrar(r == 0, || format!("ajustar_moral_da_pessoa({:x}, 0) original={}", pessoa, r));
+        PLACAR.registrar(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", pessoa, r));
         return r;
     }
     // sorteia (0x90cfc0): o estado do gerador volta entre os lados e a cópia não conta os sorteios
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize) + 0x45, 1));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, delta, limitar),
-        || crate::aleatorio::sem_contar(|| ajustar_moral_da_pessoa(pessoa, delta, limitar)));
-    PLACAR.registrar(igual && r == n, || format!("ajustar_moral_da_pessoa({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", pessoa, delta as u8 as i8, limitar, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_adjust_morale(pessoa, delta, limitar)));
+    PLACAR.registrar(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", pessoa, delta as u8 as i8, limitar, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_vetor_de_atributos_do_nao_jogador(nao_jogador: usize, pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(IDX_VETOR_DE_ATRIBUTOS_DO_NAO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogador: usize, pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(IDX_DATABASE_NON_PLAYER_TO_ATTRIBUTE_VECTOR);
     let mut regioes = vec![(vetor, 21 * 3)];
     if !fim.is_null() {
         regioes.push((fim as usize, 1));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(nao_jogador, pessoa, vetor, fim),
-        || vetor_de_atributos_do_nao_jogador(nao_jogador, pessoa, vetor, fim));
-    PLACAR.registrar(igual && r == n, || format!("vetor_de_atributos_do_nao_jogador({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
+        || database_non_player_to_attribute_vector(nao_jogador, pessoa, vetor, fim));
+    PLACAR.registrar(igual && r == n, || format!("database_non_player_to_attribute_vector({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_marcar_elenco_da_pessoa(pessoa: usize, elenco: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_MARCAR_ELENCO_DA_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_SET_SQUAD_FLAGS);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pessoa + staff::PLAYING_SQUAD, 1)], || o(pessoa, elenco),
-        || marcar_elenco_da_pessoa(pessoa, elenco));
-    PLACAR.registrar(igual && r == n, || format!("marcar_elenco_da_pessoa({:x}, {:x}) {:x?} x {:x?}", pessoa, elenco as u8, mo, mr));
+        || staff_set_squad_flags(pessoa, elenco));
+    PLACAR.registrar(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", pessoa, elenco as u8, mo, mr));
     r
 }
 
@@ -9216,7 +9216,7 @@ pub(crate) unsafe extern "C" fn comparar_marcar_elenco_da_pessoa(pessoa: usize, 
 /// Linha sem competição (+4) vai para o fim (a sem e b com: 1; a com e b sem: −1; as duas sem: 0);
 /// depois pelo id da competição (a − b); na mesma, pela temporada (+8, palavra) da mais nova para a
 /// mais velha (b − a), a não ser que uma delas seja −1 (0).
-pub(crate) unsafe extern "C" fn ordem_do_historico_de_competicao(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let ca = ler(a, 4);
     if ca == 0 {
@@ -9260,7 +9260,7 @@ pub(crate) const CELULAS_DO_VETOR: [(u8, u8); 54] = [
 /// `CELULAS_DO_VETOR` (posições 0..8, lados 9..11, depois os atributos, peso 2 nos que contam e 1 no
 /// +0x2a); a célula 54 é o byte +0x58 da `pessoa`. Os fins de grupo vão às saídas não nulas:
 /// posições 9, lados 0xc, ponderados 0x20. Devolve o vetor (eax).
-pub(crate) unsafe extern "C" fn vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+pub(crate) unsafe extern "C" fn database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
                                                    fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
     for i in 0..0x3f {
         *((vetor + 3 * i + 2) as *mut u8) = 0;
@@ -9284,22 +9284,22 @@ pub(crate) unsafe extern "C" fn vetor_de_atributos_do_jogador(jogador: usize, pe
 ///
 /// [pt] { 0x5446d0 } (cdecl, Database.cpp): 1 se a `nacao` (não nula) é Inglaterra, Escócia, Irlanda, País
 /// de Gales ou Irlanda do Norte (a regra das nações da casa).
-pub(crate) unsafe extern "C" fn nacao_britanica_ou_irlanda(nacao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn nation_is_uk_or_ireland(nacao: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     let id = g(nacao);
     (id == g(KEY_NATION_ENGLAND) || id == g(KEY_NATION_SCOTLAND) || id == g(KEY_NATION_REPUBLIC_OF_IRELAND) || id == g(KEY_NATION_WALES) || id == g(KEY_NATION_NORTHERN_IRELAND)) as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_ordem_do_historico_de_competicao(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DO_HISTORICO_DE_COMPETICAO)(a, b);
-    let n = ordem_do_historico_de_competicao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_historico_de_competicao({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_COMP_HISTORY_ROWS)(a, b);
+    let n = database_compare_comp_history_rows(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
                                                             fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(IDX_VETOR_DE_ATRIBUTOS_DO_JOGADOR);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(IDX_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
     let mut regioes = vec![(vetor, 0x3f * 3)];
     for p in [fim_dos_lados, fim_das_posicoes, fim_dos_ponderados] {
         if !p.is_null() {
@@ -9308,15 +9308,15 @@ pub(crate) unsafe extern "C" fn comparar_vetor_de_atributos_do_jogador(jogador: 
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes,
         || o(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados),
-        || vetor_de_atributos_do_jogador(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
-    PLACAR.registrar(igual && r == n, || format!("vetor_de_atributos_do_jogador({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
+        || database_player_to_attribute_vector(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
+    PLACAR.registrar(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_britanica_ou_irlanda(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NACAO_BRITANICA_OU_IRLANDA)(nacao);
-    let n = nacao_britanica_ou_irlanda(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_britanica_ou_irlanda({:x}) original={} rust={}", nacao, r, n));
+pub(crate) unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_IS_UK_OR_IRELAND)(nacao);
+    let n = nation_is_uk_or_ireland(nacao);
+    PLACAR.registrar(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -9334,7 +9334,7 @@ pub(crate) const CLUBES_BASCOS: [usize; 23] = [
 ///
 /// [pt] { 0x53d7f0 } (cdecl, Database.cpp): 1 se o `clube` é da Espanha ([0x9cf488], nação +0x53) e o id
 /// dele é um dos 23 clubes bascos (`CLUBES_BASCOS`). Clube ou nação nulos: 0.
-pub(crate) unsafe extern "C" fn clube_basco(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_is_basque_club(clube: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     if clube == 0 {
         return 0;
@@ -9351,11 +9351,11 @@ pub(crate) unsafe extern "C" fn clube_basco(clube: usize) -> u32 {
 /// (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
 /// Sem contrato ou clube: (0, 0). Comum a 0x5444a0 e 0x544590 (e 0x544520, 0x544600).
 pub(crate) unsafe fn vinculo_da_lista(pessoa: usize, clube: usize) -> (usize, usize) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut clube = clube;
     if clube == 0 {
-        let c = contrato_de(*(G_CONTRACT_MANAGER as *const usize), pessoa);
+        let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), pessoa);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
         if c == 0 {
             return (0, 0);
@@ -9376,7 +9376,7 @@ pub(crate) unsafe fn vinculo_da_lista(pessoa: usize, clube: usize) -> (usize, us
 /// [pt] { 0x5444a0 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
 /// contrato) está na lista de transferências pelo clube (vínculo +0x4e, bit 1), a não ser que o clube
 /// não seja de técnico humano (0x600a50 com 1, 1, 0, 0) e a função no clube da pessoa (+0x3d) seja 0xf.
-pub(crate) unsafe extern "C" fn pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if pessoa == 0 {
         return 0;
@@ -9396,7 +9396,7 @@ pub(crate) unsafe extern "C" fn pessoa_listada_pelo_clube(pessoa: usize, clube: 
 ///
 /// [pt] { 0x544590 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
 /// contrato) está na lista de empréstimos (vínculo +0x4e, bit 2).
-pub(crate) unsafe extern "C" fn pessoa_listada_para_emprestimo(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -9404,28 +9404,28 @@ pub(crate) unsafe extern "C" fn pessoa_listada_para_emprestimo(pessoa: usize, cl
     (v != 0 && *((v + 0x4e) as *const u8) & 2 != 0) as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_basco(clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_BASCO)(clube);
-    let n = clube_basco(clube);
-    PLACAR.registrar(r == n, || format!("clube_basco({:x}) original={} rust={}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_is_basque_club(clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_BASQUE_CLUB)(clube);
+    let n = database_is_basque_club(clube);
+    PLACAR.registrar(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0, 0x4cf5f0 e 0x600a50 (clube não
     // nulo) só leem
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_PESSOA_LISTADA_PELO_CLUBE);
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_pelo_clube(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_pelo_clube({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_transfer_listed(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_listada_para_emprestimo(pessoa: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_PESSOA_LISTADA_PARA_EMPRESTIMO);
+pub(crate) unsafe extern "C" fn comparar_staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LOAN_LISTED);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_para_emprestimo(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_para_emprestimo({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_loan_listed(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
@@ -9437,15 +9437,15 @@ pub(crate) unsafe extern "C" fn comparar_pessoa_listada_para_emprestimo(pessoa: 
 /// [pt] { 0x544600 } (cdecl, Database.cpp): 1 se o vínculo (0x4cf5f0) da `pessoa` com o `clube` está na
 /// lista de transferências a pedido (vínculo +0x4e, bit 8). Sem clube, o do contrato (0x4cf5a0,
 /// guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
-pub(crate) unsafe extern "C" fn pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+pub(crate) unsafe extern "C" fn staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     if pessoa == 0 {
         return 0;
     }
     let mut clube = clube;
     if clube == 0 {
-        let c = contrato_de(*(G_CONTRACT_MANAGER as *const usize), pessoa);
+        let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), pessoa);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
         if c == 0 {
             return 0;
@@ -9465,7 +9465,7 @@ pub(crate) unsafe extern "C" fn pessoa_listada_a_pedido(pessoa: usize, clube: us
 ///
 /// [pt] { 0x544380 } (cdecl, Database.cpp): a nota de 1 a 20 (`nota_do_atributo`) de 2 × `valor` (byte com
 /// sinal) + habilidade atual (+5) do `jogador`. Termina no `_ftol` (eax inteiro, 1..20).
-pub(crate) unsafe extern "C" fn nota_relativa_do_atributo(jogador: usize, valor: u32) -> u32 {
+pub(crate) unsafe extern "C" fn player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as i32;
     nota_do_atributo((habilidade + 2 * (valor as u8 as i8 as i32)) as f64) as u32
 }
@@ -9479,9 +9479,9 @@ pub(crate) unsafe extern "C" fn nota_relativa_do_atributo(jogador: usize, valor:
 /// seleções (id ≥ [0xae235c] − 2 × [0xae2350]), nação Espanha, Noruega, [0x9cf360], Brasil ou
 /// Argentina ou continente (+0x71) [0x9cfa18] ou [0x9cfa08]; nos demais, nação Espanha, Alemanha ou
 /// Portugal. Clube nulo: caixa "Error" e 0 (a original).
-pub(crate) unsafe extern "C" fn clube_pode_ter_reservas(clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_PODE_TER_RESERVAS)(clube);
+        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_HAS_RESERVE_SQUAD)(clube);
     }
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let g = |a: usize| *(a as *const u32);
@@ -9514,31 +9514,31 @@ pub(crate) unsafe extern "C" fn clube_pode_ter_reservas(clube: usize) -> u32 {
     1 // pode
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_PESSOA_LISTADA_A_PEDIDO);
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LISTED_BY_REQUEST);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_a_pedido(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_a_pedido({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_listed_by_request(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_nota_relativa_do_atributo(jogador: usize, valor: u32) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_NOTA_RELATIVA_DO_ATRIBUTO)(jogador, valor);
-    let n = nota_relativa_do_atributo(jogador, valor);
-    PLACAR.registrar(r == n, || format!("nota_relativa_do_atributo({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+pub(crate) unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING)(jogador, valor);
+    let n = player_attribute_rating(jogador, valor);
+    PLACAR.registrar(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_pode_ter_reservas(clube: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUBE_PODE_TER_RESERVAS);
+pub(crate) unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_HAS_RESERVE_SQUAD);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
     // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro: a região volta entre os lados
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
-        || clube_pode_ter_reservas(clube));
-    PLACAR.registrar(igual && r == n, || format!("clube_pode_ter_reservas({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || database_club_has_reserve_squad(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -9554,7 +9554,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_pode_ter_reservas(clube: usize) -
 /// da pessoa, ou reputação de jogador (+0x61, +9) + reputação do clube de quem vê (+0x80) ≥ 14000 →
 /// a média; 4 (sem quem vê, quem vê entre os 16 últimos ids = técnicos humanos, sem dados ou sem
 /// clube) → a mundial. Só o al é devolvido (quem chama usa al).
-pub(crate) unsafe extern "C" fn escopo_da_reputacao(pessoa: usize, quem_ve: usize) -> u8 {
+pub(crate) unsafe extern "C" fn database_get_reputation_scope(pessoa: usize, quem_ve: usize) -> u8 {
     let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     if quem_ve == 0 {
@@ -9609,7 +9609,7 @@ pub(crate) unsafe extern "C" fn escopo_da_reputacao(pessoa: usize, quem_ve: usiz
 /// `nao_jogador`, dos de não jogador (+0x69: +8, +0xa, +0xc). 4 → mundial, 2 → atual, 0 → nacional,
 /// 3 → metade da mundial + metade da atual, outro → metade da nacional + metade da atual (divisões
 /// truncadas). Só o ax é devolvido.
-pub(crate) unsafe extern "C" fn reputacao_vista_por(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
+pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
     let escopo: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_DATABASE_GET_REPUTATION_SCOPE);
     let e = escopo(pessoa, quem_ve);
     let (dados, atual) = if nao_jogador != 0 {
@@ -9637,9 +9637,9 @@ pub(crate) unsafe extern "C" fn reputacao_vista_por(pessoa: usize, quem_ve: usiz
 /// Inglaterra, Escócia, País de Gales, Irlanda do Norte e Irlanda; entre Austrália e [0x9cf3f4];
 /// em [0x9cf360] com a nação [0x9cf4f0]; e em Portugal quem não é da UE (0x53d740) com contrato
 /// (0x4cf5a0) que começou até 1/1/1998 (Date 0x549f70; contrato +0x25 dia, +0x27 ano).
-pub(crate) unsafe extern "C" fn pessoa_e_estrangeira(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
+pub(crate) unsafe extern "C" fn database_is_staff_foreign(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
     let comunitaria: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_EU_NATIONAL);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let g = |a: usize| *(a as *const u32);
@@ -9678,7 +9678,7 @@ pub(crate) unsafe extern "C" fn pessoa_e_estrangeira(pessoa: usize, nacao: usize
         return 0;
     }
     if id == g(KEY_NATION_PORTUGAL) && comunitaria(pessoa, 0) == 0 {
-        let contrato = contrato_de(*(G_CONTRACT_MANAGER as *const usize), pessoa);
+        let contrato = contract_of(*(G_CONTRACT_MANAGER as *const usize), pessoa);
         if contrato != 0 {
             let mut d = [0u16; 4];
             let data = construir(&mut d, 1, 0, 0x7ce, 0xffff_ffff) as *const u16; // 1/1/1998
@@ -9695,25 +9695,25 @@ pub(crate) unsafe extern "C" fn pessoa_e_estrangeira(pessoa: usize, nacao: usize
     1 // estrangeira
 }
 
-pub(crate) unsafe extern "C" fn comparar_escopo_da_reputacao(pessoa: usize, quem_ve: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_ESCOPO_DA_REPUTACAO)(pessoa, quem_ve);
-    let n = escopo_da_reputacao(pessoa, quem_ve);
-    PLACAR.registrar(r == n, || format!("escopo_da_reputacao({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_get_reputation_scope(pessoa: usize, quem_ve: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_GET_REPUTATION_SCOPE)(pessoa, quem_ve);
+    let n = database_get_reputation_scope(pessoa, quem_ve);
+    PLACAR.registrar(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_reputacao_vista_por(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u16>(IDX_REPUTACAO_VISTA_POR)(pessoa, quem_ve, nao_jogador);
-    let n = reputacao_vista_por(pessoa, quem_ve, nao_jogador);
-    PLACAR.registrar(r == n, || format!("reputacao_vista_por({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewer(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u16>(IDX_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER)(pessoa, quem_ve, nao_jogador);
+    let n = database_get_staff_reputation_for_viewer(pessoa, quem_ve, nao_jogador);
+    PLACAR.registrar(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_e_estrangeira(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_database_is_staff_foreign(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
     // a 0x4cf5a0 e o Date (num Date local) só leem: os dois lados podem rodar
-    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u32>(IDX_PESSOA_E_ESTRANGEIRA)(pessoa, nacao, grupos);
-    let n = pessoa_e_estrangeira(pessoa, nacao, grupos);
-    PLACAR.registrar(r == n, || format!("pessoa_e_estrangeira({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
+    let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u32>(IDX_DATABASE_IS_STAFF_FOREIGN)(pessoa, nacao, grupos);
+    let n = database_is_staff_foreign(pessoa, nacao, grupos);
+    PLACAR.registrar(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
     r
 }
 
@@ -9725,9 +9725,9 @@ pub(crate) unsafe extern "C" fn comparar_pessoa_e_estrangeira(pessoa: usize, nac
 /// [pt] { 0x53ab90 } (cdecl, Database.cpp): a idade da `pessoa` em anos completos na `data` (palavra +0 dia
 /// do ano, +2 ano): ano − ano de nascimento (+0x12), menos 1 se o dia de nascimento (+0x10) ainda não
 /// chegou. Pessoa nula: caixa "Error" e 0xff (a original). Só o ax é devolvido (quem chama usa al).
-pub(crate) unsafe extern "C" fn idade_da_pessoa(pessoa: usize, data: *const u16) -> u16 {
+pub(crate) unsafe extern "C" fn database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
     if pessoa == 0 {
-        return orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_IDADE_DA_PESSOA)(pessoa, data);
+        return orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_DATABASE_GET_STAFF_AGE)(pessoa, data);
     }
     let dia_nasc = core::ptr::read_unaligned((pessoa + staff::DATE_OF_BIRTH) as *const i16) as i32;
     let anos = core::ptr::read_unaligned(data.add(1)).wrapping_sub(core::ptr::read_unaligned((pessoa + 0x12) as *const u16));
@@ -9744,7 +9744,7 @@ pub(crate) unsafe extern "C" fn idade_da_pessoa(pessoa: usize, data: *const u16)
 /// [pt] { 0x544670 } (cdecl, Database.cpp): 1 se a `nacao` tem transferência livre: com as regras novas da
 /// FIFA ([0xae233c] = 1), no Brasil ou numa nação da Europa (continente +0x71, [0x9cfa10]) fora de
 /// Polônia, Turquia, Croácia e Rússia.
-pub(crate) unsafe extern "C" fn nacao_com_transferencia_livre(nacao: usize) -> u32 {
+pub(crate) unsafe extern "C" fn nation_allows_free_transfers(nacao: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     if *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8) == 1 {
         return 1;
@@ -9771,7 +9771,7 @@ pub(crate) unsafe extern "C" fn nacao_com_transferencia_livre(nacao: usize) -> u
 /// `nacao_do_clube`: nacionalidade (+0x1a) ou segunda (+0x1e) com a marca de UE (nação +0x7f = 2) ou
 /// Suíça ([0x9cf4ac]); na Alemanha, qualquer europeu (nação +0x71 = o continente [0x9cfa10] na tabela
 /// [0xae23a4], 198 bytes); em [0x9cf360], todos; na Dinamarca, [0x9cf348], Noruega e [0x9cf3a0].
-pub(crate) unsafe extern "C" fn pessoa_e_comunitaria(pessoa: usize, nacao_do_clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let g = |a: usize| *(a as *const u32);
     let n = ler(pessoa, 0x1a);
@@ -9803,28 +9803,28 @@ pub(crate) unsafe extern "C" fn pessoa_e_comunitaria(pessoa: usize, nacao_do_clu
     0
 }
 
-pub(crate) unsafe extern "C" fn comparar_idade_da_pessoa(pessoa: usize, data: *const u16) -> u16 {
-    let o = orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_IDADE_DA_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
+    let o = orig::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_DATABASE_GET_STAFF_AGE);
     if pessoa == 0 {
         return o(pessoa, data); // caixa: só a original
     }
     let r = o(pessoa, data);
-    let n = idade_da_pessoa(pessoa, data);
-    PLACAR.registrar(r == n, || format!("idade_da_pessoa({:x}) original={} rust={}", pessoa, r, n));
+    let n = database_get_staff_age(pessoa, data);
+    PLACAR.registrar(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", pessoa, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_com_transferencia_livre(nacao: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NACAO_COM_TRANSFERENCIA_LIVRE)(nacao);
-    let n = nacao_com_transferencia_livre(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_com_transferencia_livre({:x}) original={} rust={}", nacao, r, n));
+pub(crate) unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_ALLOWS_FREE_TRANSFERS)(nacao);
+    let n = nation_allows_free_transfers(nacao);
+    PLACAR.registrar(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_e_comunitaria(pessoa: usize, nacao_do_clube: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_PESSOA_E_COMUNITARIA)(pessoa, nacao_do_clube);
-    let n = pessoa_e_comunitaria(pessoa, nacao_do_clube);
-    PLACAR.registrar(r == n, || format!("pessoa_e_comunitaria({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DATABASE_IS_STAFF_EU_NATIONAL)(pessoa, nacao_do_clube);
+    let n = database_is_staff_eu_national(pessoa, nacao_do_clube);
+    PLACAR.registrar(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
     r
 }
 
@@ -9837,15 +9837,15 @@ pub(crate) unsafe extern "C" fn comparar_pessoa_e_comunitaria(pessoa: usize, nac
 /// lista de transferências, pelo clube ou a pedido (vínculo +0x4e, bits 1 e 8). Sem clube, o do
 /// contrato (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id do clube na tabela [0xae23b4], 581
 /// bytes por clube).
-pub(crate) unsafe extern "C" fn pessoa_listada_para_transferencia(pessoa: usize, clube: usize) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+pub(crate) unsafe extern "C" fn staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     if pessoa == 0 {
         return 0;
     }
     let mut clube = clube;
     if clube == 0 {
-        let c = contrato_de(*(G_CONTRACT_MANAGER as *const usize), pessoa);
+        let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), pessoa);
         *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
         if c == 0 {
             return 0;
@@ -9886,10 +9886,10 @@ pub(crate) unsafe fn nota_do_atributo(v: f64) -> u8 {
 /// (+5), ou de 2 × byte + habilidade × 0,1 conforme o goleiro (+0xf: = 20 ou < 15); o 10 é o byte
 /// +0x58 da `pessoa`; uns vão a 0x544380 (ou 0x5442f0). Sem pessoa, sem jogador ou atributo fora:
 /// caixa "Error" e 0xff (a original). Só o al é devolvido.
-pub(crate) unsafe extern "C" fn atributo_calculado_do_jogador(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
+pub(crate) unsafe extern "C" fn staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_CALCULADO_DO_JOGADOR)(pessoa, jogador, atributo);
+        return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE)(pessoa, jogador, atributo);
     }
     // ponytail: a original empurra o registrador inteiro com o byte embaixo; as duas só leem o byte
     let relativo: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
@@ -9940,46 +9940,46 @@ pub(crate) unsafe extern "C" fn atributo_calculado_do_jogador(pessoa: usize, jog
 ///
 /// [pt] { 0x5431e0 } (cdecl, Database.cpp): o `atributo` (1..31) de jogador da `pessoa`: 0x543540 com os
 /// dados de jogador (+0x61). Sem pessoa ou atributo fora: caixa "Error" e 0xff (a original).
-pub(crate) unsafe extern "C" fn atributo_da_pessoa(pessoa: usize, atributo: u32) -> u8 {
+pub(crate) unsafe extern "C" fn staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) {
-        return orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_ATRIBUTO_DA_PESSOA)(pessoa, atributo);
+        return orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE)(pessoa, atributo);
     }
     let calcular: unsafe extern "C" fn(usize, usize, u32) -> u8 = core::mem::transmute(FN_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
     // a original empurra o argumento inteiro, como veio
     calcular(pessoa, core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize), atributo)
 }
 
-pub(crate) unsafe extern "C" fn comparar_pessoa_listada_para_transferencia(pessoa: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_PESSOA_LISTADA_PARA_TRANSFERENCIA);
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_para_transferencia(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_para_transferencia({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_transfer_listed_or_requested(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_atributo_calculado_do_jogador(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_ATRIBUTO_CALCULADO_DO_JOGADOR);
+pub(crate) unsafe extern "C" fn comparar_staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
         return o(pessoa, jogador, atributo); // caixa: só a original
     }
     let r = o(pessoa, jogador, atributo);
-    let n = atributo_calculado_do_jogador(pessoa, jogador, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_calculado_do_jogador({:x}, {}) original={} rust={}", jogador, a, r, n));
+    let n = staff_compute_player_attribute(pessoa, jogador, atributo);
+    PLACAR.registrar(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", jogador, a, r, n));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_atributo_da_pessoa(pessoa: usize, atributo: u32) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_ATRIBUTO_DA_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE);
     let a = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&a) {
         return o(pessoa, atributo); // caixa: só a original
     }
     let r = o(pessoa, atributo);
-    let n = atributo_da_pessoa(pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_da_pessoa({:x}, {}) original={} rust={}", pessoa, a, r, n));
+    let n = staff_get_player_attribute(pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
     r
 }
 
@@ -9993,7 +9993,7 @@ pub(crate) unsafe extern "C" fn comparar_atributo_da_pessoa(pessoa: usize, atrib
 /// resposta dela. DESLIGADA (DESLIGADAS no motor.rs): o save_database grava no index.dat 408 bytes de
 /// locais sem valor (lixo de ponteiro, a partir de +0x5cb); chamado desta cópia ele roda na pilha
 /// particular e o lixo gravado muda (prova do save da 219a). Volta quando a cópia reproduzir o resíduo.
-pub(crate) unsafe extern "C" fn gravar_banco_no_save(save: usize, a4: u32, tipo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
     let gravar_banco: unsafe extern "C" fn(usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_SAVE_DATABASE);
     crate::comparacao::ramo("save gravar banco");
     gravar_banco(save, 1, a4, tipo)
@@ -10001,8 +10001,8 @@ pub(crate) unsafe extern "C" fn gravar_banco_no_save(save: usize, a4: u32, tipo:
 
 // ponytail: grava as tabelas do banco no contêiner; não roda duas vezes. Só a original; a cópia
 // leva o ramo e é provada pela prova do save.
-pub(crate) unsafe extern "C" fn comparar_gravar_banco_no_save(save: usize, a4: u32, tipo: u32) -> u32 {
-    orig::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_GRAVAR_BANCO_NO_SAVE)(save, a4, tipo)
+pub(crate) unsafe extern "C" fn comparar_save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
+    orig::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_SAVE_DATABASE_FOR_GAME)(save, a4, tipo)
 }
 
 /// load_game_data step 2: load_database(save, shared, 1), the database read from the container
@@ -10011,7 +10011,7 @@ pub(crate) unsafe extern "C" fn comparar_gravar_banco_no_save(save: usize, a4: u
 /// [pt] { 0x524d10 } (cdecl, Database.cpp): `load_database_from_stream(save, compartilhado)`: o passo 2
 /// do `load_game_data`: `load_database(save, compartilhado, 1)` (0x528540, do contêiner), devolvendo
 /// a resposta dela (1 = certo).
-pub(crate) unsafe extern "C" fn carregar_banco_do_save(save: usize, compartilhado: u32) -> u32 {
+pub(crate) unsafe extern "C" fn load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
     let carregar_banco: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_LOAD_DATABASE);
     crate::comparacao::ramo("save carregar banco");
     carregar_banco(save, compartilhado, 1)
@@ -10019,8 +10019,8 @@ pub(crate) unsafe extern "C" fn carregar_banco_do_save(save: usize, compartilhad
 
 // ponytail: carrega o banco inteiro do contêiner (aloca as tabelas); não roda duas vezes. Só a
 // original; a cópia leva o ramo (a etapa de carregar da prova do save a exercita).
-pub(crate) unsafe extern "C" fn comparar_carregar_banco_do_save(save: usize, compartilhado: u32) -> u32 {
-    orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CARREGAR_BANCO_DO_SAVE)(save, compartilhado)
+pub(crate) unsafe extern "C" fn comparar_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
+    orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_LOAD_DATABASE_FROM_STREAM)(save, compartilhado)
 }
 
 
@@ -10028,9 +10028,9 @@ pub(crate) unsafe extern "C" fn comparar_carregar_banco_do_save(save: usize, com
 // cópia leva o ramo e roda no modo Rust (abertura da carreira, fim do início rápido).
 
 /// reads global 0x9b5984
-/// Original: `global_9b5984` (0x535920, Database.cpp, cdecl).
+/// Original: `database_global_9b5984` (0x535920, Database.cpp, cdecl).
 ///
 /// [pt] { 0x535920 } (Database.cpp): a global 0x9b5984.
-pub(crate) unsafe extern "C" fn global_9b5984() -> u32 {
+pub(crate) unsafe extern "C" fn database_global_9b5984() -> u32 {
     *(G_DATABASE_NAMES_LANGUAGE as *const u32)
 }

@@ -7,7 +7,7 @@
 /// tamanho no byte +0xd + nível x 4): achou, o último da faixa vai para a vaga dele e o tamanho
 /// diminui. Depois, convocado (+0x24): a vaga dele entre as 50 (+0xd7) zera, +0x24 zera e o byte +0x5e
 /// fica só com os bits 0..1.
-unsafe extern "thiscall" fn tirar_jogador_da_selecao(this: usize, jogador: usize) {
+unsafe extern "thiscall" fn national_teams_remove_player(this: usize, jogador: usize) {
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let nacao = u(jogador + 0x1a);
     if nacao == 0 || u(jogador + 0x61) == 0 {
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn tirar_jogador_da_selecao(this: usize, jogador: usize
 /// competição `comp` no dia `dia` (palavra): Holanda, Irlanda, Bélgica e França (id da nação +0x5d
 /// em [0x9cf338], [0x9cf2dc], [0x9cf244], [0x9cf300]) só têm 1 no dia 6; as outras, 1 nos dias 5 e 6;
 /// senão 2. Devolve só `al`.
-unsafe extern "thiscall" fn faixa_do_horario(_this: usize, comp: usize, dia: u32) -> u8 {
+unsafe extern "thiscall" fn get_time_slice(_this: usize, comp: usize, dia: u32) -> u8 {
     let dia = dia as i16;
     if comp != 0 {
         let nacao = core::ptr::read_unaligned((comp + 0x5d) as *const usize);
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn faixa_do_horario(_this: usize, comp: usize, dia: u32
 /// = x550 em Itália, Inglaterra e Espanha ([0x9cf360], [0x9cf2e4], [0x9cf488], nação +0x53), x475 em
 /// Alemanha e França ([0x9cf314], [0x9cf300]), x330 nas outras; tipo 5 = x550; tipo 6 = x110; os
 /// outros, -1.
-unsafe extern "stdcall" fn teto_da_observacao(clube: usize, _posicoes: u32, tipo: u32) -> i32 {
+unsafe extern "stdcall" fn shortlist_manager_max_fee_for_squad_status(clube: usize, _posicoes: u32, tipo: u32) -> i32 {
     let rep = core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32;
     match tipo as i8 {
         4 => {
@@ -89,7 +89,7 @@ unsafe extern "stdcall" fn teto_da_observacao(clube: usize, _posicoes: u32, tipo
     }
 }
 
-unsafe extern "thiscall" fn comparar_tirar_jogador_da_selecao(this: usize, jogador: usize) {
+unsafe extern "thiscall" fn comparar_national_teams_remove_player(this: usize, jogador: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let nacao = u(jogador + 0x1a);
@@ -112,20 +112,20 @@ unsafe extern "thiscall" fn comparar_tirar_jogador_da_selecao(this: usize, jogad
     if u(jogador + 0x24) != 0 {
         regioes[3] = (u(jogador + 0x24) + 0xd7, 200);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogador), || tirar_jogador_da_selecao(this, jogador));
-    PLACAR.registrar(igual, || format!("tirar_jogador_da_selecao(nivel {}) {:x?} x {:x?}", n, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogador), || national_teams_remove_player(this, jogador));
+    PLACAR.registrar(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_faixa_do_horario(this: usize, comp: usize, dia: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_get_time_slice(this: usize, comp: usize, dia: u32) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, comp, dia);
-    let n = faixa_do_horario(this, comp, dia);
-    PLACAR.registrar(r == n, || format!("faixa_do_horario(dia {}) original={} rust={}", dia as i16, r, n));
+    let n = get_time_slice(this, comp, dia);
+    PLACAR.registrar(r == n, || format!("get_time_slice(dia {}) original={} rust={}", dia as i16, r, n));
     r
 }
 
-unsafe extern "stdcall" fn comparar_teto_da_observacao(clube: usize, posicoes: u32, tipo: u32) -> i32 {
+unsafe extern "stdcall" fn comparar_shortlist_manager_max_fee_for_squad_status(clube: usize, posicoes: u32, tipo: u32) -> i32 {
     let r = orig::<unsafe extern "stdcall" fn(usize, u32, u32) -> i32>(%%I2%%)(clube, posicoes, tipo);
-    let n = teto_da_observacao(clube, posicoes, tipo);
-    PLACAR.registrar(r == n, || format!("teto_da_observacao(tipo {}) original={} rust={}", tipo as i8, r, n));
+    let n = shortlist_manager_max_fee_for_squad_status(clube, posicoes, tipo);
+    PLACAR.registrar(r == n, || format!("shortlist_manager_max_fee_for_squad_status(tipo {}) original={} rust={}", tipo as i8, r, n));
     r
 }

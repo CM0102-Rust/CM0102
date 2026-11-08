@@ -1,5 +1,5 @@
 # Mutações (cqj_2), na tabela dos clubes da Conmebol (0x4c6280 roda 2 vezes até 2002-06-01, na virada do ano da
-# Conmebol, em 2001 e em 2002; a tabela decide quem completa as cotas da Libertadores de 2002, jogada antes de junho,
+# Conmebol, em 2001 e em 2002; a tabela decide quem completa as cotas da Libertadores de 2002, play antes de junho,
 # com o Brasil na carreira de 8 ligas):
 # - sem o México: os clubes mexicanos ficam fora da tabela e a cota do México fica vazia (contador "cqj_2 clube
 #   mexicano");

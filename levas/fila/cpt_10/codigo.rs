@@ -8,7 +8,7 @@ unsafe fn cpt10_d(a: usize) -> usize {
 /// laço do dia (game_main_day_loop 0x5cccd0, com o dia do ano da data do jogo 0xae2c90): no dia múltiplo de 7 (resto
 /// com sinal), a semana do treino (+0x688d, 16 bits) sobe 1; a update_player_training (0x8b1750) põe em dia as semanas
 /// que faltam de cada jogador. Devolve dia / 7 (o chamador não lê).
-unsafe extern "thiscall" fn avancar_a_semana(this: usize, dia: *const i16) -> i32 {
+unsafe extern "thiscall" fn advance_week_counter(this: usize, dia: *const i16) -> i32 {
     let v = *dia as i32;
     let resto = v % 7; // cpt10: a semana de 7 dias
     if resto == 0 { // cpt10: o sétimo dia
@@ -20,11 +20,11 @@ unsafe extern "thiscall" fn avancar_a_semana(this: usize, dia: *const i16) -> i3
 }
 
 /// Comparador: lado a lado na semana do treino, com a devolução.
-unsafe extern "thiscall" fn comparar_avancar_a_semana(this: usize, dia: *const i16) -> i32 {
+unsafe extern "thiscall" fn comparar_advance_week_counter(this: usize, dia: *const i16) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(%%I0%%);
     let regioes = [(this + 0x688d, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, dia), || avancar_a_semana(this, dia));
-    PLACAR.registrar(igual && r == n, || format!("avancar_a_semana(dia {}) original={} rust={} {:x?} x {:x?}", *dia, r, n, mo.0, mr.0));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, dia), || advance_week_counter(this, dia));
+    PLACAR.registrar(igual && r == n, || format!("advance_week_counter(dia {}) original={} rust={} {:x?} x {:x?}", *dia, r, n, mo.0, mr.0));
     r
 }
 
@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn comparar_avancar_a_semana(this: usize, dia: *const i
 /// &segunda)`, pela contract_manager (0x4ce4e0, duas chamadas): copia o primeiro item da reserva de fichas de não
 /// jogador (this +0x1c: id, nação e segunda nação) para as três saídas e tira-o da reserva
 /// (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 com o id lido da saída); devolve o eax dela.
-unsafe extern "thiscall" fn tirar_a_ficha_reservada(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
+unsafe extern "thiscall" fn take_spare_non_player_record(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
     crate::comparacao::ramo("cpt_10 ficha reservada");
     *id = cpt10_d(cpt10_d(this + 0x1c)) as u32;
     *nacao = cpt10_d(cpt10_d(this + 0x1c) + 4) as u32;
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn tirar_a_ficha_reservada(this: usize, id: *mut u32, n
 }
 
 // ponytail: a reserva perde o item (não roda duas vezes): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_tirar_a_ficha_reservada(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
+unsafe extern "thiscall" fn comparar_take_spare_non_player_record(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%)(this, id, nacao, segunda)
 }
 
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn comparar_tirar_a_ficha_reservada(this: usize, id: *m
 /// pela avaliação do fisioterapeuta (0x7a2650) e pelas telas: o tipo da lesão que volta (+0x12 da ficha de forma de 31
 /// bytes da pessoa, em [this]); pessoa nula, id a partir de [0xae2364] ou sem a ficha de jogador (+0x61): 0xff. Os
 /// chamadores leem só o al.
-unsafe extern "thiscall" fn lesao_que_volta(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn get_recurring_injury_type(this: usize, pessoa: usize) -> u8 {
     if pessoa == 0 || cpt10_d(pessoa) as i32 >= cpt10_d(0xae2364) as i32 || cpt10_d(pessoa + 0x61) == 0 {
         return 0xff;
     }
@@ -58,9 +58,9 @@ unsafe extern "thiscall" fn lesao_que_volta(this: usize, pessoa: usize) -> u8 {
 }
 
 /// Comparador: o al devolvido.
-unsafe extern "thiscall" fn comparar_lesao_que_volta(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: usize, pessoa: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%)(this, pessoa);
-    let n = lesao_que_volta(this, pessoa);
-    PLACAR.registrar(r == n, || format!("lesao_que_volta(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
+    let n = get_recurring_injury_type(this, pessoa);
+    PLACAR.registrar(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
     r
 }

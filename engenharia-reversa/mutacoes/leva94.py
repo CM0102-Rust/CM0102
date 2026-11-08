@@ -1,6 +1,6 @@
 # Mutacoes da leva94 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva94.py --jogo 2001-08-20
 MUTACOES = [
-    ('p_area', "    let na_area = (lado_b == 0 && byte(this, 0x8ea8) < 3)", "    let na_area = (lado_b == 0 && byte(this, 0x8ea8) < 4)"),
+    ('p_area', "    let in_the_box = (lado_b == 0 && byte(this, 0x8ea8) < 3)", "    let in_the_box = (lado_b == 0 && byte(this, 0x8ea8) < 4)"),
     ('p_marca', "                if x == byte(this, 0x8ea7) && y == byte(this, 0x8ea8) && !sai {", "                if x == byte(this, 0x8ea7) && y == byte(this, 0x8ea8) && sai {"),
     ('p_longe', "        let longe = if lado_b == 0 { marca > 6 } else { marca < 5 };", "        let longe = if lado_b == 0 { marca > 7 } else { marca < 5 };"),
     ('p_coluna', "        let coluna = 4i8.wrapping_sub(s1).wrapping_add(sortear(2) as i8);", "        let coluna = 5i8.wrapping_sub(s1).wrapping_add(sortear(2) as i8);"),

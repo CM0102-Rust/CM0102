@@ -72,10 +72,10 @@ fn cqc10_acrescentar(dest: &mut [usize; 30], n: &mut u8, c: usize) {
 /// dono da IA, a data do registro depois de +0x3e do jogador, o vínculo sem +0x49 e fora da lista, felicidade acima de
 /// sorteio(50) + 40 e sorteio(30) zero: a notícia de que não vende (0x587600) e os registros dele vão a 2. No fim, o
 /// vetor é ordenado (0x945333 com 0x757ea0).
-unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
+unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let chegar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8ce990usize);
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
         let r = cqc10_d(this + 0xc).wrapping_add((i as usize).wrapping_mul(25));
         let pessoa = cqc10_d(0xae23bc).wrapping_add((cqc10_i(r) as usize).wrapping_mul(0x6e));
         let clube = cqc10_clube(cqc10_i(r + 4));
-        let c = contrato_de(cqc10_d(0xae1050), pessoa);
+        let c = contract_of(cqc10_d(0xae1050), pessoa);
         core::ptr::write_unaligned(0xae1080 as *mut usize, c);
         let (mut dono, mut vinc) = (0usize, 0usize);
         if c != 0 {
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn boatos_de_transferencia(this: usize) {
 // ponytail: tira registros (o vetor), sorteia, constrói e entrega notícias e chama as reações e respostas (0x755340,
 // 0x758010, 0x741020, 0x587600): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
-unsafe extern "thiscall" fn comparar_boatos_de_transferencia(this: usize) {
+unsafe extern "thiscall" fn comparar_process_transfer_interest(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -297,7 +297,7 @@ unsafe extern "thiscall" fn comparar_boatos_de_transferencia(this: usize) {
 /// 0xfbe (0x77bbe0) com o jogador, o outro clube (ou −1), o clube e um sorteio(3); o presidente, se gosta do jogador
 /// (0x547810) ou com sorteio(+0x16 da ficha dele) acima de sorteio(20), senão −1 no 7; reputação (+0xd da ficha) acima de
 /// 8000: a todos os técnicos (0x786780), senão aos humanos interessados (0x8d1da0 com 0xd8, até 30, 0x7861e0).
-unsafe extern "C" fn noticia_nao_vende(jogador: usize, clube: usize, presidente: usize, outro: usize) {
+unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
     if jogador == 0 || cqc10_d(jogador + 0x61) == 0 || clube == 0 {
         return;
     }
@@ -337,7 +337,7 @@ unsafe extern "C" fn noticia_nao_vende(jogador: usize, clube: usize, presidente:
 }
 
 // ponytail: a notícia vai aos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "C" fn comparar_noticia_nao_vende(jogador: usize, clube: usize, presidente: usize, outro: usize) {
+unsafe extern "C" fn comparar_news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
     orig::<unsafe extern "C" fn(usize, usize, usize, usize)>(%%I1%%)(jogador, clube, presidente, outro)
 }
 
@@ -347,7 +347,7 @@ unsafe extern "C" fn comparar_noticia_nao_vende(jogador: usize, clube: usize, pr
 /// sorteio(2), o veículo (0x757f30), o comentarista (0x7dab90 com a nação ou −1), a marca, a confiança da diretoria
 /// (+6 da linha em [0xb67a44], ou 5000), a liga do clube e os dias do técnico (0x54cdb0); com 180 dias ou mais, a
 /// reputação do clube e a entrega ao técnico (0x7861e0).
-unsafe extern "thiscall" fn noticia_do_titulo(_this: usize, clube: usize, comp: usize, marca: u32) {
+unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, clube: usize, comp: usize, marca: u32) {
     if clube == 0 || cqc10_d(clube + 0xcf) == 0 || comp == 0 {
         return;
     }
@@ -395,6 +395,6 @@ unsafe extern "thiscall" fn noticia_do_titulo(_this: usize, clube: usize, comp: 
 }
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_titulo(this: usize, clube: usize, comp: usize, marca: u32) {
+unsafe extern "thiscall" fn comparar_queue_trophy_praise_story(this: usize, clube: usize, comp: usize, marca: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, clube, comp, marca)
 }

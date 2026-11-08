@@ -50,7 +50,7 @@ pub static VENENO: AtomicU32 = AtomicU32::new(0);
 static mut GUARDA_EDI: u32 = 0;
 /// A carreira com motor usa ate 33 KB da pilha particular (medido ate 2001-09-01) e entra nela ~158 milhoes de vezes ate
 /// 2002-06-01: encher 1 MB a cada entrada deixava a carreira 6 vezes mais lenta. ponytail: faixa fixa; se a linha
-/// "pilha particular usou ate" passar dela, aumentar.
+/// "pilha particular usou ate" pass_ball dela, aumentar.
 const VENENO_FAIXA: u32 = 64 << 10;
 
 // ---------- memoria executavel dos trechos ----------

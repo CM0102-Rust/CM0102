@@ -30,7 +30,7 @@ unsafe fn guardar_estado_da_partida(mut copia: usize, estado: usize) {
         copiar_campos(d, s, 0x61, 0x69, 4);
         copiar_campos(d, s, 0x69, 0x71, 2);
         for j in 0..20 {
-            atribuir_linha_do_jogador(d + 0x71 + j * 0x49, s + 0x71 + j * 0x49);
+            match_player_row_assign(d + 0x71 + j * 0x49, s + 0x71 + j * 0x49);
         }
     }
     copiar_campos(copia, estado, 0xd69, 0xd75, 4);
@@ -57,7 +57,7 @@ const FORMATO_PCT: usize = 0x98e8d4; // "%d%%"
 /// todos): os bytes dos dois times ("%d"; +0x127.. e +0x74c..), as duas diferenças +0x127 − +0x128 e
 /// +0x74c − +0x74d e seis percentuais (num × 100 / den, "%d%%", ou "-" com den 0; o último compara
 /// +0x75d mas mostra 100 − o do +0x138, como a original). No fim guarda o estado na cópia.
-unsafe extern "C" fn valores_das_estatisticas_da_partida() {
+unsafe extern "C" fn refresh_match_stats_values() {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
     let sm = GERENTE_DE_TELAS;
@@ -120,10 +120,10 @@ unsafe extern "C" fn valores_das_estatisticas_da_partida() {
 /// zero (o primeiro só na partida). Pelo lado do parâmetro 0xa (i8): a posse em três (+0xc, +0x16,
 /// +0x20, "%d%%" truncado a i8; o terceiro é 100 − os outros) no item do parâmetro 0xb; o tempo de bola
 /// em jogo (+0x2a × 60 / 11 segundos, vazio no lado 4); as cores dos dois clubes (0x53b640 com o
-/// uniforme +0x152 e +0x777); as três zonas do campo (+0x143, +0x148, +0x14d; 50 sem valor ou sem a
+/// kit +0x152 e +0x777); as três zonas do campo (+0x143, +0x148, +0x14d; 50 sem valor ou sem a
 /// marca +0x768/+0x76d/+0x772) em barras entre os parâmetros 0x16 e 0x18 na altura do 0x19; e a barra
 /// da posse (+0x13e/+0x763) de 0xd4 a 0x2a6 na altura do parâmetro 0xc. No fim guarda o estado.
-unsafe extern "C" fn valores_das_zonas_de_acao() {
+unsafe extern "C" fn refresh_action_zones_values() {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
@@ -225,7 +225,7 @@ unsafe extern "C" fn valores_das_zonas_de_acao() {
 /// <%d - minute>", com cor), a nota (+0x35) e os gols (+0x21; vazios para o reserva que não entrou) e a
 /// cor do nome (o jogador em +4 igual ao [estado + 0x3c], quem saiu, o reserva que não entrou). No fim
 /// guarda o estado.
-unsafe extern "C" fn valores_das_notas_dos_jogadores() {
+unsafe extern "C" fn refresh_player_ratings_rows() {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
@@ -366,17 +366,17 @@ unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust:
     });
 }
 
-unsafe extern "C" fn comparar_valores_das_estatisticas_da_partida() {
+unsafe extern "C" fn comparar_refresh_match_stats_values() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
-    comparar_valores_da_partida("valores_das_estatisticas_da_partida", || o(), || valores_das_estatisticas_da_partida());
+    comparar_valores_da_partida("refresh_match_stats_values", || o(), || refresh_match_stats_values());
 }
 
-unsafe extern "C" fn comparar_valores_das_zonas_de_acao() {
+unsafe extern "C" fn comparar_refresh_action_zones_values() {
     let o = orig::<unsafe extern "C" fn()>(%%I1%%);
-    comparar_valores_da_partida("valores_das_zonas_de_acao", || o(), || valores_das_zonas_de_acao());
+    comparar_valores_da_partida("refresh_action_zones_values", || o(), || refresh_action_zones_values());
 }
 
-unsafe extern "C" fn comparar_valores_das_notas_dos_jogadores() {
+unsafe extern "C" fn comparar_refresh_player_ratings_rows() {
     let o = orig::<unsafe extern "C" fn()>(%%I2%%);
-    comparar_valores_da_partida("valores_das_notas_dos_jogadores", || o(), || valores_das_notas_dos_jogadores());
+    comparar_valores_da_partida("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
 }

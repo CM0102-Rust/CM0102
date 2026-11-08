@@ -22,7 +22,7 @@ unsafe fn cpv9_vaga_livre(clube: usize) -> usize {
 /// valor); clube humano (0x600a50 com 1, 1): para os reservas (0x4cc0f0) e os bits +0x4f (0x60 em cima) e +0x35 (1 em
 /// baixo) do contrato. Com contrato: o salário padrão (0x8626e0), +0x3a = 0 e, fora do humano, o fim (+0x2f) até o ano de
 /// hoje + 5 (com o dia +0x2d = 0). No fim os números do elenco ([0xdd7ef0], 0x85add0 e 0x85a470). Devolve 1.
-unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usize) -> u8 {
     let k = cpv9_vaga_livre(clube);
     if k == 0x32 {
         return 0;
@@ -100,18 +100,18 @@ unsafe extern "stdcall" fn contratar_o_regen(pessoa: usize, clube: usize) -> u8 
 
 /// Comparador: o contrato novo aloca e o valor sorteia: só a original, conferindo o plano (a vaga, o clube da pessoa, a
 /// devolução e o +0x3a do contrato).
-unsafe extern "stdcall" fn comparar_contratar_o_regen(pessoa: usize, clube: usize) -> u8 {
+unsafe extern "stdcall" fn comparar_player_regen_sign_for_club(pessoa: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I0%%);
     let k = cpv9_vaga_livre(clube);
     let r = o(pessoa, clube);
     if k == 0x32 {
-        PLACAR.registrar(r == 0, || format!("contratar_o_regen({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
+        PLACAR.registrar(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", pessoa, clube, r));
         return r;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = contrato(cpv9_d(0xae1050) as usize, pessoa);
     let ok = r == 1 && cpv9_d(clube + 0xd7 + 4 * k) == pessoa as i32 && cpv9_d(pessoa + 0x39) == clube as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
-    PLACAR.registrar(ok, || format!("contratar_o_regen({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
+    PLACAR.registrar(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", pessoa, clube, k, r));
     r
 }
 
@@ -120,7 +120,7 @@ unsafe extern "stdcall" fn comparar_contratar_o_regen(pessoa: usize, clube: usiz
 /// aposentadoria pendente da pessoa (a primeira com o id dela na tabela de 26 bytes [this+4], conta +8; 0x7a8690) e
 /// acrescenta (0x7a8510) a nova: id, id do clube (+0x39, ou −1), a data de hoje + sorteio(dias / 2) + 1 (0x54c5b0) em
 /// +8 e de novo em +0x10, o motivo 8 (+0x18) e 0 (+0x19).
-unsafe extern "thiscall" fn aposentar_pela_lesao(this: usize, pessoa: usize, dias: i16) {
+unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, pessoa: usize, dias: i16) {
     let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7a8690usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> *mut u8 = core::mem::transmute(0x54c5b0usize);
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn aposentar_pela_lesao(this: usize, pessoa: usize, dia
 
 /// Comparador: lado a lado no estado do sorteio, na tabela (ponteiro, conta e capacidade, e as entradas até a
 /// capacidade). Com a tabela cheia (conta = capacidade − 1, a 0x7a8510 realoca): só a original.
-unsafe extern "thiscall" fn comparar_aposentar_pela_lesao(this: usize, pessoa: usize, dias: i16) {
+unsafe extern "thiscall" fn comparar_schedule_injury_retirement(this: usize, pessoa: usize, dias: i16) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i16)>(%%I1%%);
     let (n, cap) = (cpv9_d(this + 8), cpv9_d(this + 0xc));
     if pessoa == 0 || n >= cap.wrapping_sub(1) || cap <= 0 {
@@ -161,11 +161,11 @@ unsafe extern "thiscall" fn comparar_aposentar_pela_lesao(this: usize, pessoa: u
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((this + 4, 12));
     reg.push((cpv9_d(this + 4) as usize, cap as usize * 0x1a));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, dias), || crate::aleatorio::sem_contar(|| aposentar_pela_lesao(this, pessoa, dias)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, dias), || crate::aleatorio::sem_contar(|| schedule_injury_retirement(this, pessoa, dias)));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("aposentar_pela_lesao({:x}, {}) diferencas em {:x?}", pessoa, dias, dif)
+        format!("schedule_injury_retirement({:x}, {}) diferencas em {:x?}", pessoa, dias, dif)
     });
 }
 
@@ -175,14 +175,14 @@ unsafe extern "thiscall" fn comparar_aposentar_pela_lesao(this: usize, pessoa: u
 /// motivo, 5 = o id do clube do contrato (0x4cf5a0, guardado em [0xae1080]; clube do registro de 0x245 bytes em
 /// [0xae23b4] pelo +4; contrato de tipo +0x35 & 0x3f = 5 ou sem clube: −1) e 6 = a idade (+0x18); vai para os técnicos
 /// dos até 30 clubes interessados ([0xde1f54], 0x8d1da0 com 10).
-unsafe extern "stdcall" fn noticia_da_aposentadoria_anunciada(pessoa: usize, motivo: i8) {
+unsafe extern "stdcall" fn player_regen_post_retirement_announcement_news(pessoa: usize, motivo: i8) {
     if pessoa == 0 {
         return;
     }
     if cpv9_d(pessoa + 0x61) != 0 && matches!(*((pessoa + 0x3d) as *const u8), 8 | 5) {
         return;
     }
-    crate::comparacao::ramo("noticia_da_aposentadoria_anunciada");
+    crate::comparacao::ramo("player_regen_post_retirement_announcement_news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -216,6 +216,6 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria_anunciada(pessoa: usize, mot
 }
 
 /// Comparador: a notícia vai para as caixas dos técnicos: só a original (a prova é a carreira e o modo Rust).
-unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria_anunciada(pessoa: usize, motivo: i8) {
+unsafe extern "stdcall" fn comparar_player_regen_post_retirement_announcement_news(pessoa: usize, motivo: i8) {
     orig::<unsafe extern "stdcall" fn(usize, i8)>(%%I2%%)(pessoa, motivo)
 }

@@ -87,7 +87,7 @@ unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
 }
 
 /// { 0x908e00 } (thiscall, ret 0, usa_mls.cpp): a virada da MLS (acima), um ano adiante.
-unsafe extern "thiscall" fn cqs2_virada_da_mls(this: usize) -> u32 {
+unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> u32 {
     cqs2_virada(this, 1) // cqs2: o ano seguinte da MLS
 }
 
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn cqs2_virada_da_mls(this: usize) -> u32 {
 /// primeiros do vetor ganham, em cada divisão, as posições 1, 4, 7 e 10 (Comp_Stats::set_club_final_position 0x4a2540,
 /// thiscall(+8, clube, posição), ret 8; a ordem das doze chamadas é a do vetor); o vetor liberado (free 0x9452ca).
 /// [inferência] As três divisões se misturam na previsão: o favorito de cada uma é previsto em 1º, o segundo em 4º...
-unsafe extern "thiscall" fn cqs2_posicoes_previstas_da_mls(this: usize) {
+unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn cqs2_posicoes_previstas_da_mls(this: usize) {
 /// { 0x909a40 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::get_club_array(&lista, &n)`, a lista dos clubes da MLS: *n = 12
 /// (word); *lista = malloc 0x944e46 de 0x30 (sem memória: a caixa da linha 0x64c, *n = 0 e volta); os +0x3e clubes da
 /// tabela da liga, depois os da fase 0 (a partir de +0x3e) e os da fase 1 (a partir de 2 × +0x3e), linha a linha.
-unsafe extern "thiscall" fn cqs2_clubes_da_mls(this: usize, lista: *mut usize, n: *mut i16) {
+unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, lista: *mut usize, n: *mut i16) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     *n = 0xc;
     let v = alocar(0x30);
@@ -170,19 +170,19 @@ unsafe extern "thiscall" fn cqs2_clubes_da_mls(this: usize, lista: *mut usize, n
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
 /// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1 e as três divisões montadas
 /// (+0x3e = 4 e as vagas 0 e 1 das fases).
-unsafe extern "thiscall" fn comparar_cqs2_virada_da_mls(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_start_new_season(this: usize) -> u32 {
     let antes = cqs2_w(this + 0x40);
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let depois = cqs2_w(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && cqs2_w(this + 0x3e) == 4 && cqs2_d(cqs2_d(this + 0xc)) != 0 && cqs2_d(cqs2_d(this + 0xc) + 4) != 0;
-    PLACAR.registrar(igual, || format!("cqs2_virada_da_mls({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
+    PLACAR.registrar(igual, || format!("usa_mls_start_new_season({:#x}) ano antes={} depois={} +0x3e={}", this, antes, depois, cqs2_w(this + 0x3e)));
     r
 }
 
 /// O comparador das posições previstas: só a original (ponytail: a 0x4a2540 acrescenta o registro de um clube que não
 /// tem; não pode rodar duas vezes), com o plano feito antes: os doze clubes das três tabelas, cada bloco ordenado pela
 /// mesma qsort numa cópia; depois, a posição (+0x72 do registro achado por 0x4a4850) de cada um.
-unsafe extern "thiscall" fn comparar_cqs2_posicoes_previstas_da_mls(this: usize) {
+unsafe extern "thiscall" fn comparar_usa_mls_set_predicted_positions(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = cqs2_w(this + 0x3e) as usize;
     if cqs2_d(this + 8) == 0 || n != 4 {
@@ -205,12 +205,12 @@ unsafe extern "thiscall" fn comparar_cqs2_posicoes_previstas_da_mls(this: usize)
         let e = if v[k] != 0 { achar(cqs2_d(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) != LUGARES[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("cqs2_posicoes_previstas_da_mls({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
+    PLACAR.registrar(errado.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this, errado, v));
 }
 
 /// O comparador da lista: só a original (aloca a lista, que fica com quem chamou), com o plano: n = 12 e os doze clubes
 /// das três tabelas na ordem.
-unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, lista: *mut usize, n: *mut i16) {
+unsafe extern "thiscall" fn comparar_usa_mls_get_club_array(this: usize, lista: *mut usize, n: *mut i16) {
     orig::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(%%I2%%)(this, lista, n);
     let m = cqs2_w(this + 0x3e) as usize;
     let igual = *n == 0xc && *lista != 0 && (0..m).all(|i| {
@@ -218,5 +218,5 @@ unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, lista: *mut
             && cqs2_d(*lista + 4 * (m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc)), i)
             && cqs2_d(*lista + 4 * (2 * m + i)) == cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i)
     });
-    PLACAR.registrar(igual, || format!("cqs2_clubes_da_mls({:#x}) n={}", this, *n));
+    PLACAR.registrar(igual, || format!("usa_mls_get_club_array({:#x}) n={}", this, *n));
 }

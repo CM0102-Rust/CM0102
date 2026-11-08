@@ -73,7 +73,7 @@ unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
     if fl & 0x21 != 0 {
         let (p1, p2) = (cpm1_b(f + 0x49), cpm1_b(f + 0x4a));
         // o código dos pênaltis: 4, ou 5 sem o bit 1 da regra (not al; and al, 1; or al, 4)
-        let penaltis = ((!(fl as u8)) & 1 | 4) as i8;
+        let penalties = ((!(fl as u8)) & 1 | 4) as i8;
         if p1 > p2 {
             let c = cpm1_b(f + 0x3d);
             if c == 1 {
@@ -81,7 +81,7 @@ unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
             } else if fl & 0x2000 != 0 {
                 cpm1_por(f + 0x3d, c.wrapping_sub(3));
             } else {
-                cpm1_por(f + 0x3d, penaltis);
+                cpm1_por(f + 0x3d, penalties);
             }
             return Some(1);
         }
@@ -92,7 +92,7 @@ unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
             } else if fl & 0x2000 != 0 {
                 cpm1_por(f + 0x3e, c.wrapping_sub(3));
             } else {
-                cpm1_por(f + 0x3e, penaltis);
+                cpm1_por(f + 0x3e, penalties);
             }
             return Some(2);
         }
@@ -144,7 +144,7 @@ unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
 /// pênaltis (bits 0x21, +0x49/+0x4a), o W.O. (0x800/0x1000) e os pontos (0x2000: os códigos −1 e o cabeça de chave),
 /// gravando o código de cada lado (+0x3d/+0x3e: 2 venceu, 3 na prorrogação, 4/5 nos pênaltis, 8 W.O.; −3 com 0x2000).
 /// Jogo nulo ou empate nos pênaltis: a original (caixa "Error").
-unsafe extern "thiscall" fn decidir_jogo_da_copa(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn decide_fixture_winner(this: usize, jogo: usize) -> u32 {
     if jogo != 0 {
         if let Some(r) = cpm1_jogo(this, jogo) {
             return r;
@@ -305,7 +305,7 @@ unsafe fn cpm1_confronto(conf: usize, j: usize) -> Option<u32> {
 /// diferença da prorrogação, código 3), os gols fora (sem 4 nem 0x4000, código 6) e os pênaltis (0x21, +0x24/+0x25:
 /// código 4 com o bit 1, senão 5); nada decidido: 4. Pontos (0x10) e regra 0x2000 têm os ramos próprios. Empate nos
 /// pênaltis: a original (caixa "Error", 4).
-unsafe extern "thiscall" fn decidir_confronto_da_copa(this: usize, confronto: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
     match cpm1_confronto(confronto, jogo) {
         Some(r) => r,
         None => orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, confronto, jogo),
@@ -314,14 +314,14 @@ unsafe extern "thiscall" fn decidir_confronto_da_copa(this: usize, confronto: us
 
 /// { 0x51ebc0 } (cdecl, Cup.cpp): `cup_compare_draw_entries_by_seed(a, b)`: a comparação do qsort das entradas de 7
 /// bytes do sorteio (0x51d2d0 e 0x51d9f0): o cabeça de chave (byte com sinal +6) de `b` menos o de `a` (maior primeiro).
-unsafe extern "C" fn ordem_dos_cabecas_de_chave(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     crate::comparacao::ramo("cpm_1 ordem dos cabecas de chave");
     cpm1_b(b + 6) as i32 - cpm1_b(a + 6) as i32 // o maior primeiro
 }
 
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; jogo nulo ou empate nos pênaltis (a
 /// caixa): só a original.
-unsafe extern "thiscall" fn comparar_decidir_jogo_da_copa(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if jogo == 0 {
         return o(this, jogo);
@@ -330,29 +330,29 @@ unsafe extern "thiscall" fn comparar_decidir_jogo_da_copa(this: usize, jogo: usi
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, jogo)), || cpm1_jogo(this, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.registrar(igual && r == n, || format!("decidir_jogo_da_copa(regra {:x}) original={} rust={} {:x?} x {:x?}", cpm1_w(jogo + 0x38) as u16, r, n, mo, mr));
+        PLACAR.registrar(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", cpm1_w(jogo + 0x38) as u16, r, n, mo, mr));
     }
     r
 }
 
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; empate nos pênaltis (a caixa): só a
 /// original.
-unsafe extern "thiscall" fn comparar_decidir_confronto_da_copa(this: usize, confronto: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let reg = [(jogo + 0x3d, 2)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, confronto, jogo)), || cpm1_confronto(confronto, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.registrar(igual && r == n, || format!("decidir_confronto_da_copa(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
+        PLACAR.registrar(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
             cpm1_w(jogo + 0x38) as u16, cpm1_b(confronto + 0x33), r, n, mo, mr));
     }
     r
 }
 
 /// Comparador: pelo valor.
-unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_dos_cabecas_de_chave(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_cabecas_de_chave({}, {}) original={} rust={}", cpm1_b(a + 6), cpm1_b(b + 6), r, n));
+    let n = cup_compare_draw_entries_by_seed(a, b);
+    PLACAR.registrar(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", cpm1_b(a + 6), cpm1_b(b + 6), r, n));
     r
 }

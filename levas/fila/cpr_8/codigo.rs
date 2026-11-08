@@ -177,7 +177,7 @@ unsafe fn cpr8_datas(pessoa: usize, saida: usize, fora: unsafe fn(usize)) {
 /// negativo com clube. Senão: v ≥ 5000 ou +5 > 80, não; +5 < 10 ou v < 1500, sim; com clube, só estatuto negativo;
 /// sem clube, motivo 2 com sorteio(25 × +0x3c) = 0. Quem se aposenta: a saída (cpr8_preencher) e as datas
 /// (cpr8_datas; sem nação-chave válida, amanhã); devolve 1.
-unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, pessoa: usize, saida: usize) -> u8 {
     if cpr8_d(pessoa + 0x39) == 0 {
         return 0;
     }
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn aposentadoria_no_inicio(_this: usize, pessoa: usize,
 /// estatuto negativo também; senão só com v < 3500. Senão como na 0x7a79c0 (+5 > 100 não; +5 < 10 ou v < 1500 sim;
 /// com clube só estatuto negativo; sem clube motivo 2 com sorteio(25 × +0x3c) = 0). Quem se aposenta: a saída e as
 /// datas (sem nação-chave válida, cpr8_fora_por_idade); devolve 1.
-unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: usize, saida: usize) -> u8 {
     let c2 = cpr8_contratos(pessoa);
     let estatuto = cpr8_estatuto(c2);
     let idade = cpr8_b(pessoa + 0x18);
@@ -374,7 +374,7 @@ unsafe extern "thiscall" fn aposentadoria_por_idade(_this: usize, pessoa: usize,
 /// relida a cada passo) de id abaixo de [0xae2364] − 16, sem os bits 0x30 do +0xb do registro de 79 bytes
 /// ([0xae2d0c]) e sem contrato (0x4cf5a0) com +0x49 é testada (0x7a79c0); quem se aposenta entra na lista
 /// (0x7a8510). No fim o qsort da lista ([this+4], conta +8, 26 bytes, 0x7ae2a0).
-unsafe extern "thiscall" fn lista_inicial_de_aposentadorias(this: usize) {
+unsafe extern "thiscall" fn build_initial_retirement_list(this: usize) {
     crate::comparacao::ramo("cpr_8 lista inicial");
     // ponytail: a original constrói as duas datas da entrada (0x54a110) e deixa o resto como estava na pilha; a
     // 0x7a79c0 grava tudo o que a 0x7a8510 copia antes de devolver 1 (a terceira data local nunca é lida: fica de fora)
@@ -412,25 +412,25 @@ unsafe fn cpr8_regioes(saida: usize) -> Vec<(usize, usize)> {
 }
 
 /// Comparador: lado a lado pelo sorteio, [0xae1080], a saída e a data estática (a cópia sem contar), e a devolução.
-unsafe extern "thiscall" fn comparar_aposentadoria_no_inicio(this: usize, pessoa: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_player_regen_check_initial_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&cpr8_regioes(saida), || o(this, pessoa, saida),
-        || crate::aleatorio::sem_contar(|| aposentadoria_no_inicio(this, pessoa, saida)));
-    PLACAR.registrar(igual && r == n, || format!("aposentadoria_no_inicio(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| player_regen_check_initial_retirement(this, pessoa, saida)));
+    PLACAR.registrar(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
 /// Comparador: como o da 0x7a79c0.
-unsafe extern "thiscall" fn comparar_aposentadoria_por_idade(this: usize, pessoa: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_player_regen_check_retirement(this: usize, pessoa: usize, saida: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&cpr8_regioes(saida), || o(this, pessoa, saida),
-        || crate::aleatorio::sem_contar(|| aposentadoria_por_idade(this, pessoa, saida)));
-    PLACAR.registrar(igual && r == n, || format!("aposentadoria_por_idade(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| player_regen_check_retirement(this, pessoa, saida)));
+    PLACAR.registrar(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
 // ponytail: a lista inicial acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo
 // Rust e a carreira provam a cópia.
-unsafe extern "thiscall" fn comparar_lista_inicial_de_aposentadorias(this: usize) {
+unsafe extern "thiscall" fn comparar_build_initial_retirement_list(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

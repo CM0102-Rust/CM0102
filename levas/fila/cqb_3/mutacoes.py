@@ -10,7 +10,7 @@ MUTACOES = [
      '*((e + 0xb) as *mut u8) = 0 * ano; // mutacao: o ano a somar zerado',
      'cqb_3 tabela montada'),
     ('cqb3_sem_ano_para_tras',
-     'ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente',
+     'ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se pass_ball de 3 anos à frente',
      'ano = ano.wrapping_add(0); // mutacao: sem os 4 anos para tras',
      'cqb_3 ano para tras'),
     ('cqb3_ciclo_de_hoje',

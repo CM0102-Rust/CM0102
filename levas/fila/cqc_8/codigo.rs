@@ -52,7 +52,7 @@ unsafe fn cqc8_selecao(c: usize) -> u32 {
 
 /// O peso do jogo (o double em [esp+0x2c]) e o fator (o double em [esp+0x34], 0,5 de início), pela competição da
 /// partida: sem competição 0,01; fora da competição do clube (0x48f150) 0,2; amistoso (0x5c6710) 0,67 se o mandante
-/// é seleção, senão 0,05; não jogada (+0x40) 0,1; na liga do mandante 1 com o fator 0,06 × (+0x69 da liga) + 0,27;
+/// é seleção, senão 0,05; não play (+0x40) 0,1; na liga do mandante 1 com o fator 0,06 × (+0x69 da liga) + 0,27;
 /// senão 1 − |500 × (+0x69) − reputação| / 15000, × 1,25 na copa (+0x3a = 8) e pela fase (+0x30: 0x78 × 1,25, 0x82
 /// × 1,5, 0x8c × 0,75, 0x96 e 0xa0 × 2).
 unsafe fn cqc8_peso(clube: usize, partida: usize, fator: &mut f64) -> f64 {
@@ -92,7 +92,7 @@ unsafe fn cqc8_peso(clube: usize, partida: usize, fator: &mut f64) -> f64 {
 }
 
 /// A nota de uma linha da escalação (0x49 bytes; `e` aponta o byte da nota em +0x1c0/+0x1c4): o byte que entra nas
-/// médias (0 = fora). Com +0x4c do jogo, os 11 titulares valem 90; reservas (k ≥ 11) só com o byte de entrada
+/// médias (0 = fora). Com +0x4c do jogo, os 11 starters valem 90; reservas (k ≥ 11) só com o byte de entrada
 /// (e − 2 ≠ 0xff) e menos ele. `nota`, `troca` são os deslocamentos dos dois bytes tentados em ordem (o primeiro ≥ 0
 /// vale; senão o +0x4d do jogo).
 unsafe fn cqc8_nota(jogo: usize, e: usize, k: i32, nota: usize, troca: usize, entrada: usize) -> Option<i8> {
@@ -119,7 +119,7 @@ unsafe fn cqc8_nota(jogo: usize, e: usize, k: i32, nota: usize, troca: usize, en
 
 /// { 0x695240 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::update_board_confidence_after_match(
 /// clube, partida, jogo, mandante)`, pela diretoria depois da partida (0x6951e0, um lado por vez). O ajuste começa
-/// pela disputa (±20/30 contra o adversário ou pela seleção da partida +0x18), soma a diferença de reputação / 35 (sem
+/// pela contest (±20/30 contra o adversário ou pela seleção da partida +0x18), soma a diferença de reputação / 35 (sem
 /// jogo) ou, com o jogo, a nota do time (média das notas por idade +0x1c4, as notas +0x127/+0x128, a diferença com o
 /// adversário, a soma de +0x4d − nota; x87: (... + 0,1) × 67 − 470, × fator) mais a reputação média dos adversários
 /// (pela nação, 0x53d980) contra a do clube / 40, até ±100. Pelo placar (+0x47/+0x48 ou +0x43/+0x44): vitória 0x800,
@@ -133,12 +133,12 @@ unsafe fn cqc8_nota(jogo: usize, e: usize, k: i32, nota: usize, troca: usize, en
 /// clube em perigo. A confiança: +6 += 0,7 ×, +0xa += 0,5 ×, +8 += 1,15 ×, +0xc += 0,2 × (metade com a marca
 /// 0x7a7eb0 no negativo), entre 1 e 10000; pisos pela fase e pela força da competição; o protesto da torcida (0x6a5d10);
 /// na liga ou no negativo, pensar em demitir (0x69aba0, 1 na derrota); senão sai da lista dos ultimatos (0x68d1f0).
-unsafe extern "thiscall" fn confianca_depois_da_partida(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
+unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
     let outro = if mandante != 0 { cqc8_d(partida + 0x20) } else { cqc8_d(partida + 0x1c) };
     let vis = mandante == 0;
     let mut fator: f64 = 0.5;
     let mut peso = cqc8_peso(clube, partida, &mut fator);
-    // a disputa (pela seleção da partida +0x18)
+    // a contest (pela seleção da partida +0x18)
     let ev = cqc8_d(partida + 0x18);
     let cidade = |p: usize| p != 0 && cqc8_d(p + 0x38) != 0;
     let mut aj: i32 = 0;
@@ -618,7 +618,7 @@ unsafe extern "thiscall" fn confianca_depois_da_partida(this: usize, clube: usiz
 // ponytail: chama o pedido à federação (0x6a9e60), a notícia da reação (0x6a5fa0), as histórias da mídia (0x74b060), o
 // protesto, a demissão (0x69aba0) e tira item da lista dos ultimatos (0x68d1f0): alocam, liberam e sorteiam conforme o
 // caminho; não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_confianca_depois_da_partida(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
+unsafe extern "thiscall" fn comparar_update_board_confidence_after_match(this: usize, clube: usize, partida: usize, jogo: usize, mandante: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%)(this, clube, partida, jogo, mandante)
 }
 
@@ -629,7 +629,7 @@ unsafe extern "thiscall" fn comparar_confianca_depois_da_partida(this: usize, cl
 /// sorteio(4), a derrota e as 5 marcas deles; o registro da partida pelo clube (0x7e4750) gravado na notícia
 /// (0x7e4de0); entregue ao técnico do clube (0x7861e0).
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn noticia_da_reacao_da_diretoria(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
+unsafe extern "thiscall" fn post_board_match_reaction_news(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
     if clube == 0 || outro == 0 || partida == 0 || cqc8_d(partida + 0x14) == 0 {
         return;
     }
@@ -676,7 +676,7 @@ unsafe extern "thiscall" fn noticia_da_reacao_da_diretoria(this: usize, clube: u
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_noticia_da_reacao_da_diretoria(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
+unsafe extern "thiscall" fn comparar_post_board_match_reaction_news(this: usize, clube: usize, outro: usize, partida: usize, marcas: u32, a: i32, b: i32, c: i32, d: i32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, i32, i32, i32, i32)>(%%I1%%)(this, clube, outro, partida, marcas, a, b, c, d)
 }
 
@@ -684,7 +684,7 @@ unsafe extern "thiscall" fn comparar_noticia_da_reacao_da_diretoria(this: usize,
 /// `MANAGER_MANAGER::post_fa_performance_news(competição, seleção, nota)`: a partir da data do começo do jogo
 /// ([0xdd6ec8]), a notícia 0x1781 (0x77bbe0) com o id da seleção, o id da competição (*competição) e a nota da
 /// federação, pelo alcance (0x786090 com a seleção e 0, 0, 0, 0).
-unsafe extern "thiscall" fn noticia_da_avaliacao_da_federacao(_this: usize, comp: usize, selecao: usize, nota: u32) {
+unsafe extern "thiscall" fn post_fa_performance_news(_this: usize, comp: usize, selecao: usize, nota: u32) {
     let dia = cqc8_w(0xdd6ec8);
     let ano = cqc8_w(0xdd6eca) as u16;
     let hoje = cqc8_w(0xae2c92) as u16;
@@ -705,6 +705,6 @@ unsafe extern "thiscall" fn noticia_da_avaliacao_da_federacao(_this: usize, comp
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_da_avaliacao_da_federacao(this: usize, comp: usize, selecao: usize, nota: u32) {
+unsafe extern "thiscall" fn comparar_post_fa_performance_news(this: usize, comp: usize, selecao: usize, nota: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I2%%)(this, comp, selecao, nota)
 }

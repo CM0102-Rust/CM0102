@@ -25,7 +25,7 @@ pub(crate) unsafe fn cpx7_fechar(z: &mut usize) {
 /// [pt] { 0x443f50 } (thiscall, ret 4, club_history.cpp): `Club_History::save(save)`: grava no item `club history.dat` a
 /// quantidade (+0xc, u32) e os registros de 0x10 bytes de [+8], e devolve 1. Sem contêiner: a caixa "Error"
 /// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`erro_em`).
-pub(crate) unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usize) -> u32 {
     const FONTE: usize = 0x98b644;
     crate::comparacao::ramo("cpx_7 gravar historico dos clubes");
     if save == 0 {
@@ -47,9 +47,9 @@ pub(crate) unsafe extern "thiscall" fn gravar_historico_dos_clubes(this: usize, 
 }
 
 /// Comparador da 0x443f50: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_historico_dos_clubes(this: usize, save: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_club_history_save(this: usize, save: usize) -> u32 {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GRAVAR_HISTORICO_DOS_CLUBES)(this, save)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLUB_HISTORY_SAVE)(this, save)
 }
 
 /// A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
@@ -68,7 +68,7 @@ pub(crate) unsafe fn cpx7_falha_dos_arbitros(linha: u32, z: &mut usize) -> u8 {
 /// [pt] { 0x84c680 } (thiscall, ret 4, simulated_stats.cpp): `SimulatedStats::save(save)`: grava no item
 /// `simulated_stats.dat` a quantidade (+0, u32) e os registros de 0x44 bytes de [+4]. Erro ao abrir ou gravar: a caixa
 /// "Error" (simulated_stats.cpp 0x209, 0x210, 0x218), sem fechar o item. Não confere o contêiner nulo.
-pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize, save: usize) {
+pub(crate) unsafe extern "thiscall" fn club_history_save_84c680(this: usize, save: usize) {
     const FONTE: usize = 0xa8278c;
     crate::comparacao::ramo("cpx_7 gravar estatisticas simuladas");
     let mut z = cpx7_abrir(save, 0xa827c0);
@@ -88,8 +88,8 @@ pub(crate) unsafe extern "thiscall" fn gravar_estatisticas_simuladas(this: usize
 }
 
 /// Comparador da 0x84c680: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_estatisticas_simuladas(this: usize, save: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_club_history_save_84c680(this: usize, save: usize) {
     // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_GRAVAR_ESTATISTICAS_SIMULADAS)(this, save)
+    orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLUB_HISTORY_SAVE_84C680)(this, save)
 }
 

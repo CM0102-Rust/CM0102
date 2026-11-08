@@ -23,7 +23,7 @@ unsafe fn cph6_precisa(this: usize, pessoa: usize, clube: usize) -> bool {
 /// jogador da oferta (+0xc) precisa de permissão no clube da oferta (+8), ou se algum dos jogadores de troca (a lista
 /// em +4, do começo: o cursor +0xa volta ao +2 e anda pela 0x68d1b0) precisa no clube do contrato dele (0x4cf5a0 em
 /// [0xae1050], gravado em [0xae1080]; sem contrato, clube nulo); senão 0.
-unsafe extern "thiscall" fn oferta_precisa_de_permissao(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn transfer_manager_offer_needs_work_permit(this: usize, oferta: usize) -> u32 {
     if cph6_precisa(this, cph6_pessoa(cph6_d(oferta + 0xc)), cph6_clube(cph6_d(oferta + 8))) {
         return 1; // o jogador da oferta
     }
@@ -33,10 +33,10 @@ unsafe extern "thiscall" fn oferta_precisa_de_permissao(this: usize, oferta: usi
     }
     core::ptr::write_unaligned((lista + 0xa) as *mut u32, cph6_d(lista + 2)); // o cursor no começo
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let mut item = proximo(lista);
     while item != 0 {
-        let c = contrato_de(cph6_d(0xae1050) as usize, cph6_pessoa(cph6_d(item)));
+        let c = contract_of(cph6_d(0xae1050) as usize, cph6_pessoa(cph6_d(item)));
         *(0xae1080 as *mut usize) = c;
         let clube = if c != 0 { cph6_clube(cph6_d(c + 4)) } else { 0 };
         if cph6_precisa(this, cph6_pessoa(cph6_d(item)), clube) {
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn oferta_precisa_de_permissao(this: usize, oferta: usi
 /// segunda nacionalidade (+0x1e = nação +0xa, 0x122 bytes em [0xae23a8]), perde o bit 0x20 e a permissão sai (pessoa
 /// −1); quem não é jogador (+0x61) também perde. Saindo alguma: reordena (qsort 0x945333 com 0x8e55c0) e desconta as
 /// do fim com pessoa −1.
-unsafe extern "thiscall" fn atualizar_permissoes_de_trabalho(this: usize) {
+unsafe extern "thiscall" fn update_work_permits(this: usize) {
     let n = (this + 0x93e) as *mut i32;
     let mut saiu = false;
     let mut i = 0i32;
@@ -98,21 +98,21 @@ unsafe extern "thiscall" fn atualizar_permissoes_de_trabalho(this: usize) {
 }
 
 /// Comparador: lado a lado pela ficha [0xae1080] e pelo cursor (+0xa) da lista de troca.
-unsafe extern "thiscall" fn comparar_oferta_precisa_de_permissao(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_transfer_manager_offer_needs_work_permit(this: usize, oferta: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let lista = cph6_d(oferta + 4) as usize;
     let mut reg = vec![(0xae1080, 4)];
     if lista != 0 {
         reg.push((lista + 0xa, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, oferta), || oferta_precisa_de_permissao(this, oferta));
-    PLACAR.registrar(igual && r == n, || format!("oferta_precisa_de_permissao({:x}) original={} rust={} {:x?} x {:x?}", oferta, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, oferta), || transfer_manager_offer_needs_work_permit(this, oferta));
+    PLACAR.registrar(igual && r == n, || format!("transfer_manager_offer_needs_work_permit({:x}) original={} rust={} {:x?} x {:x?}", oferta, r, n, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo vetor, pela contagem e, de cada permissão, pela marca da pessoa e pela segunda
 /// nacionalidade (+0x1e). Permissões com pessoa negativa não entram nas regiões (o original leria fora do vetor).
-unsafe extern "thiscall" fn comparar_atualizar_permissoes_de_trabalho(this: usize) {
+unsafe extern "thiscall" fn comparar_update_work_permits(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let n = (*((this + 0x93e) as *const i32)).max(0) as usize;
     let vetor = cph6_d(this + 0x93a) as usize;
@@ -126,6 +126,6 @@ unsafe extern "thiscall" fn comparar_atualizar_permissoes_de_trabalho(this: usiz
         reg.push(((cph6_d(this + 0x86e) as usize).wrapping_add((cph6_d(pessoa) as usize).wrapping_mul(8)), 1));
         reg.push((pessoa + 0x1e, 4));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || atualizar_permissoes_de_trabalho(this));
-    PLACAR.registrar(igual, || format!("atualizar_permissoes_de_trabalho {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || update_work_permits(this));
+    PLACAR.registrar(igual, || format!("update_work_permits {:x?} x {:x?}", mo, mr));
 }

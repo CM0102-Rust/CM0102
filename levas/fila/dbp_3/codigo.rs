@@ -4,7 +4,7 @@
 /// rejeitadas da pessoa (preferências +0x28/+0x2c/+0x30) que é o alvo. Pessoa, preferências ou alvo nulos: nada.
 /// Devolve o eax da original (as preferências; pessoa nula: 0). Nas relações do elenco (game_update_squad_relationships
 /// 0x5d6d10, diária), na volta da lesão (0x630ee0) e na mídia (0x7414ac, 0x75a340).
-unsafe extern "C" fn tirar_pessoa_rejeitada(pessoa: usize, alvo: usize) -> usize {
+unsafe extern "C" fn staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
     if pessoa == 0 {
         return 0;
     }
@@ -22,14 +22,14 @@ unsafe extern "C" fn tirar_pessoa_rejeitada(pessoa: usize, alvo: usize) -> usize
     pref
 }
 
-unsafe extern "C" fn comparar_tirar_pessoa_rejeitada(pessoa: usize, alvo: usize) -> usize {
+unsafe extern "C" fn comparar_staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I0%%);
     let pref = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + 0x65) as *const usize) };
     if pref == 0 {
         return o(pessoa, alvo); // não escreve nada
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(pessoa, alvo), || tirar_pessoa_rejeitada(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("tirar_pessoa_rejeitada({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(pessoa, alvo), || staff_remove_disliked_staff(pessoa, alvo));
+    PLACAR.registrar(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
     r
 }
 
@@ -38,7 +38,7 @@ unsafe extern "C" fn comparar_tirar_pessoa_rejeitada(pessoa: usize, alvo: usize)
 /// ordem) para `vetor[n]`, somando 1 a `n` a cada uma (a primeira vai direto em `vetor[0]`). Devolve `n` (o eax da
 /// original). No MANAGER_MANAGER: a opinião da diretoria sobre o elenco (0x693850) e a reação dela à partida
 /// (0x6aaee0).
-unsafe extern "C" fn pessoas_favoritas(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
+unsafe extern "C" fn staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
     *n = 0;
     if pessoa == 0 {
         return n;
@@ -58,11 +58,11 @@ unsafe extern "C" fn pessoas_favoritas(pessoa: usize, vetor: usize, n: *mut i8) 
     n
 }
 
-unsafe extern "C" fn comparar_pessoas_favoritas(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
+unsafe extern "C" fn comparar_staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
     let o = orig::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(%%I1%%);
     let com_vetor = [(vetor, 12), (n as usize, 1)];
     let regioes: &[(usize, usize)] = if vetor == 0 { &com_vetor[1..] } else { &com_vetor };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || pessoas_favoritas(pessoa, vetor, n));
-    PLACAR.registrar(igual && r == x, || format!("pessoas_favoritas({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || staff_get_favoured_staff(pessoa, vetor, n));
+    PLACAR.registrar(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
     r
 }

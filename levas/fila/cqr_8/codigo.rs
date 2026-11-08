@@ -141,22 +141,22 @@ unsafe fn cqr8_comparar(nome: &str, this: usize, g: u32, original: impl FnOnce()
 
 /// { 0x63f640 } (thiscall, ret 4, ita_cup.cpp): `ItaCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
 /// (`cqr8_fase_do_grupo`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
-unsafe extern "thiscall" fn cqr8_copa_da_italia_grupo(this: usize, g: u32) -> u32 {
+unsafe extern "thiscall" fn ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
     cqr8_fase_do_grupo(this, g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
 }
 
-unsafe extern "thiscall" fn comparar_cqr8_copa_da_italia_grupo(this: usize, g: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I0%%);
-    cqr8_comparar("cqr8_copa_da_italia_grupo", this, g, || o(this, g))
+    cqr8_comparar("ita_cup_create_group_stage", this, g, || o(this, g))
 }
 
 /// { 0x63d9e0 } (thiscall, ret 4, ita_c_cup.cpp): `ItaCCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
 /// da Série C (`cqr8_fase_do_grupo`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
-unsafe extern "thiscall" fn cqr8_copa_da_serie_c_grupo(this: usize, g: u32) -> u32 {
+unsafe extern "thiscall" fn ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
     cqr8_fase_do_grupo(this, g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
 }
 
-unsafe extern "thiscall" fn comparar_cqr8_copa_da_serie_c_grupo(this: usize, g: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%);
-    cqr8_comparar("cqr8_copa_da_serie_c_grupo", this, g, || o(this, g))
+    cqr8_comparar("ita_cup_create_group_stage_63d9e0", this, g, || o(this, g))
 }

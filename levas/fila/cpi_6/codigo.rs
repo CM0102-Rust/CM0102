@@ -8,7 +8,7 @@ unsafe fn cpi6_d(a: usize) -> usize {
 /// o alcance da nação (+0xde = 2) e vai (0x785d40 com 0) para cada um dos 16 técnicos humanos (os últimos 16 de
 /// [0xae23bc], 0x6e bytes) ativos (+0x5f = 1) com clube (+0x39) da `nacao` (+0x53); a primeira entrega recusada (0)
 /// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
-unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_nacao(this: usize, noticia: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao); // caixa: só a original
     }
@@ -49,7 +49,7 @@ unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
 /// comp, base, adversario)`: com o olheiro conferido, se alguma das missões está marcada (clube +0x190, nação +0x18c,
 /// região +0x194 byte, competição +0x195 acima de −1; base +0x199, adversário +0x19d não nulos), copia as seis para
 /// as saídas e devolve 1; nenhuma: 0. Olheiro que não confere: a original (caixa "Error" e 0).
-unsafe extern "thiscall" fn missao_do_olheiro(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
+unsafe extern "thiscall" fn get_scout_assignment(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
     if cpi6_olheiro(this).is_none() {
         return orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%)(this, clube, nacao, regiao, comp, base, adversario); // caixa: só a original
     }
@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn missao_do_olheiro(this: usize, clube: *mut u32, naca
 /// { 0x521e00 } (thiscall, ret 8, Cup.cpp): `Cup::check_complete(fases, _)`: 0 se a copa não começou (+0xb1). Com
 /// `fases` = 1 e sem fase marcada (+0x44 = 0xff): cada fase de 0 até a atual (+0x30, vetor +0xc) tem de estar completa
 /// (método +0x10 com 0, 1) e a atual tem de ser a última (+0x2c − 1); senão 0. Fora isso, 1.
-unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x: u32) -> u8 {
+unsafe extern "thiscall" fn cup_check_complete(this: usize, fases: u32, _x: u32) -> u8 {
     if *((this + 0xb1) as *const u8) == 0 {
         return 0;
     }
@@ -95,28 +95,28 @@ unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x: u32) -> u
 
 /// Comparador: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_da_nacao(this: usize, noticia: usize, nacao: usize) -> u32 {
-    crate::comparacao::ramo("noticia_para_os_tecnicos_da_nacao");
+unsafe extern "thiscall" fn comparar_send_to_nation_club_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
+    crate::comparacao::ramo("send_to_nation_club_managers");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, noticia, nacao)
 }
 
 /// Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_missao_do_olheiro(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(%%I1%%);
     if cpi6_olheiro(this).is_none() {
         return o(this, clube, nacao, regiao, comp, base, adversario);
     }
     let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (adversario as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, clube, nacao, regiao, comp, base, adversario),
-        || missao_do_olheiro(this, clube, nacao, regiao, comp, base, adversario));
-    PLACAR.registrar(igual && r == n, || format!("missao_do_olheiro original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+        || get_scout_assignment(this, clube, nacao, regiao, comp, base, adversario));
+    PLACAR.registrar(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
 
 /// Comparador: pelo valor (o método das fases só lê).
-unsafe extern "thiscall" fn comparar_copa_completa(this: usize, fases: u32, x: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, fases: u32, x: u32) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(%%I2%%)(this, fases, x);
-    let n = copa_completa(this, fases, x);
-    PLACAR.registrar(r == n, || format!("copa_completa({:x}, {}) original={} rust={}", this, fases, r, n));
+    let n = cup_check_complete(this, fases, x);
+    PLACAR.registrar(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
     r
 }

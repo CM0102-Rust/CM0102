@@ -36,7 +36,7 @@ fn cqi4_comuns() -> Vec<(usize, u8, u32)> {
 /// { 0x574b70 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::set_up_rules()`. A Premier: as comuns, +0xab e +0xdb = 0
 /// (as palavras copiadas em cada partida), ninguém sobe (+0xbe = 0, +0xbf = 0, +0xc0 = 0), 3 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
-unsafe extern "thiscall" fn regras_da_premier(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da premier");
     cqi4_regras(this, &cqi4_premier())
 }
@@ -54,7 +54,7 @@ unsafe fn cqi4_premier() -> Vec<(usize, u8, u32)> {
 /// (+0xbe), 4 vão ao mata-mata de acesso (+0xbf, do 3º ao 6º), nenhum play-off de permanência (+0xc0), 3 caem
 /// (+0xc1), a Premier acima (+0x1c = [0x9cf5bc]) e a Second abaixo (+0x20 = [0x9cf5c4]), 5 reservas no banco
 /// (+0x49) e 3 substituições (+0x4a).
-unsafe extern "thiscall" fn regras_da_first(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da first");
     cqi4_regras(this, &cqi4_first())
 }
@@ -68,7 +68,7 @@ unsafe fn cqi4_first() -> Vec<(usize, u8, u32)> {
 
 /// { 0x576780 } (thiscall, ret 0, eng_second.cpp): `EngSecond::set_up_rules()`. A Second: como a First, mas 4
 /// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
-unsafe extern "thiscall" fn regras_da_second(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da second");
     cqi4_regras(this, &cqi4_second())
 }
@@ -84,7 +84,7 @@ unsafe fn cqi4_second() -> Vec<(usize, u8, u32)> {
 /// (+0xbe), 4 ao mata-mata (+0xbf, do 4º ao 7º), 1 cai (+0xc1), a Second acima ([0x9cf5c4]) e abaixo a Conference
 /// ([0x9cf69c]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da nação, [[+4]+0x5d]
 /// [inferência]), senão −1; 5 reservas e 3 substituições.
-unsafe extern "thiscall" fn regras_da_third(this: usize) -> u32 {
+unsafe extern "thiscall" fn eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da third");
     cqi4_regras(this, &cqi4_third(this))
 }
@@ -127,22 +127,22 @@ unsafe fn cqi4_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
     r
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_premier(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqi4_comparar("regras_da_premier", this, cqi4_premier(), || o(this), || regras_da_premier(this))
+    cqi4_comparar("eng_prm_set_up_rules", this, cqi4_premier(), || o(this), || eng_prm_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_first(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_first_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqi4_comparar("regras_da_first", this, cqi4_first(), || o(this), || regras_da_first(this))
+    cqi4_comparar("eng_first_set_up_rules", this, cqi4_first(), || o(this), || eng_first_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_second(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_second_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqi4_comparar("regras_da_second", this, cqi4_second(), || o(this), || regras_da_second(this))
+    cqi4_comparar("eng_second_set_up_rules", this, cqi4_second(), || o(this), || eng_second_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_third(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqi4_comparar("regras_da_third", this, cqi4_third(this), || o(this), || regras_da_third(this))
+    cqi4_comparar("eng_prm_set_up_rules_5780c0", this, cqi4_third(this), || o(this), || eng_prm_set_up_rules_5780c0(this))
 }

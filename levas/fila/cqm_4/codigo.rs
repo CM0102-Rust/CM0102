@@ -139,23 +139,23 @@ const CQM4_C1B: Cqm4Divisao = Cqm4Divisao {
 
 /// { 0x6406d0 } (thiscall, ret 8, ita_ser_a.cpp): `ItaSerA::ItaSerA(ano, registro)`: a Série A, só a liga (o jogo de
 /// desempate nasce no fim, pela 0x642880).
-unsafe extern "thiscall" fn construir_serie_a(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_SERIE_A)
 }
 
 /// { 0x645810 } (thiscall, ret 8, ita_ser_b.cpp): `ItaSerB::ItaSerB(ano, registro)`: a Série B, só a liga.
-unsafe extern "thiscall" fn construir_serie_b(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_SERIE_B)
 }
 
 /// { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
 /// (o play-off de acesso e o play-out).
-unsafe extern "thiscall" fn construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_C1A)
 }
 
 /// { 0x64ec20 } (thiscall, ret 8, ita_ser_c1b.cpp): `ItaSerC1b::ItaSerC1b(ano, registro)`: a C1/B, como a C1/A.
-unsafe extern "thiscall" fn construir_c1b(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
     cqm4_construir(this, ano, registro, &CQM4_C1B)
 }
 
@@ -176,22 +176,22 @@ unsafe fn cqm4_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &
     r
 }
 
-unsafe extern "thiscall" fn comparar_construir_serie_a(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqm4_comparar("construir_serie_a", this, ano, registro, &CQM4_SERIE_A, || o(this, ano, registro))
+    cqm4_comparar("construct_ita_ser_a", this, ano, registro, &CQM4_SERIE_A, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_serie_b(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqm4_comparar("construir_serie_b", this, ano, registro, &CQM4_SERIE_B, || o(this, ano, registro))
+    cqm4_comparar("construct_ita_ser_b", this, ano, registro, &CQM4_SERIE_B, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_c1a(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cqm4_comparar("construir_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
+    cqm4_comparar("construct_ita_ser_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_c1b(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
-    cqm4_comparar("construir_c1b", this, ano, registro, &CQM4_C1B, || o(this, ano, registro))
+    cqm4_comparar("construct_ita_ser_c1b", this, ano, registro, &CQM4_C1B, || o(this, ano, registro))
 }

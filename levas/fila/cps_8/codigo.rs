@@ -9,13 +9,13 @@ unsafe fn cps8_i(a: usize) -> i32 {
 }
 
 /// { 0x7f9720 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::fixture_has_scouted_player(partida)` (pela
-/// partida_sem_humano 0x6b66a0): competição (+0) negativa, 0. Um clube da lista vigiada (LLIST estática 0xb74438,
+/// match_without_human 0x6b66a0): competição (+0) negativa, 0. Um clube da lista vigiada (LLIST estática 0xb74438,
 /// cursor reposto; +0 do item) igual a +0xc ou +0x10 da partida, 1. Depois os pedidos de observação ([this+0x5c],
 /// 0x11 bytes, a pessoa em +4, conta [this+0x64], relidos a cada passo): a pessoa cujo clube (+0x39) ou seleção (+0x24)
 /// é um dos dois da partida (+0x1c primeiro, depois +0x20), que não está cedida (0x8c7560, fora de seleção 0x53b900),
 /// nem lesionada (0x62c400 = 2), nem suspensa (0x55d270), nem impedida (0x7757d0), e que ainda não jogou (0x8cf5e0
 /// = 0), dá 1. Senão 0.
-unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u32 {
+unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let (c1, c2) = (cps8_d(partida + 0x1c), cps8_d(partida + 0x20));
     if cps8_i(partida) < 0 {
         crate::comparacao::ramo("cps_8 competicao negativa");
@@ -76,10 +76,10 @@ unsafe extern "thiscall" fn jogo_com_observado(this: usize, partida: usize) -> u
     0
 }
 
-unsafe extern "thiscall" fn comparar_jogo_com_observado(this: usize, partida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
-    let n = jogo_com_observado(this, partida);
-    PLACAR.registrar(r == n, || format!("jogo_com_observado(partida {:x}) original={} rust={}", partida, r, n));
+    let n = fixture_has_scouted_player(this, partida);
+    PLACAR.registrar(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
     r
 }
 
@@ -94,7 +94,7 @@ unsafe fn cps8_gerente_da_vez() -> usize {
 /// (linha 0x231) e 0; sem gerente, o do humano da vez (sem ele, a caixa da linha 0x23b e 0). A vaga do humano (byte
 /// +0 do gerente − byte de [0xae2364] + 16, com sinal, 0..15): com a edição aberta ([this + vaga × 4 + 0xc]), a
 /// resposta dela (0x804540); senão a primeira das 10 buscas (0x7f6cd0) de tipo 1 (+0xa) responde (0x7af600). Sem ela, 0.
-unsafe extern "thiscall" fn na_lista_do_olheiro(this: usize, pessoa: usize, gerente: usize) -> u32 {
+unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
     if pessoa == 0 {
         aviso_em(0xa7b094, 0x231);
         return 0;
@@ -127,14 +127,14 @@ unsafe extern "thiscall" fn na_lista_do_olheiro(this: usize, pessoa: usize, gere
     0
 }
 
-unsafe extern "thiscall" fn comparar_na_lista_do_olheiro(this: usize, pessoa: usize, gerente: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if pessoa == 0 || (gerente == 0 && cps8_gerente_da_vez() == 0) {
         return o(this, pessoa, gerente);
     }
     let r = o(this, pessoa, gerente);
-    let n = na_lista_do_olheiro(this, pessoa, gerente);
-    PLACAR.registrar(r == n, || format!("na_lista_do_olheiro(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
+    let n = is_player_shortlisted(this, pessoa, gerente);
+    PLACAR.registrar(r == n, || format!("is_player_shortlisted(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
     r
 }
 
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_na_lista_do_olheiro(this: usize, pessoa: us
 /// `Staff_Records::add_first_cap_record(pessoa, adversário)` (pelo resultado internacional 0x76b600): o histórico da
 /// pessoa (tipo 6: o clube contratante +0x39 ou −1, o id do adversário na partida e a idade +0x18 com sinal), no arquivo (0x58e340).
 /// O clube é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
-unsafe extern "thiscall" fn registrar_a_primeira_convocacao(this: usize, pessoa: usize, adversario: usize) {
+unsafe extern "thiscall" fn add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
     crate::comparacao::ramo("cps_8 primeira convocacao");
     let mut e = cpq4_entrada();
     cpq4_datar(e.as_mut_ptr());
@@ -159,6 +159,6 @@ unsafe extern "thiscall" fn registrar_a_primeira_convocacao(this: usize, pessoa:
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_registrar_a_primeira_convocacao(this: usize, pessoa: usize, adversario: usize) {
+unsafe extern "thiscall" fn comparar_add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, adversario)
 }

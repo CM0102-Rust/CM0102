@@ -1,9 +1,9 @@
 # Mutacoes da leva144 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva144.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
-    ('c_canto', "x = if byte(m, 0x8ea7) == 0 { sortear(4) as i8 } else { 8 - sortear(4) as i8 };", "x = if byte(m, 0x8ea7) == 0 { sortear(4) as i8 } else { 7 - sortear(4) as i8 };", "conducao escanteio sem companheiro"),
-    ('c_lateral', "x = 7 - sortear(7) as i8;", "x = 6 - sortear(7) as i8;", "conducao lateral sorteada"),
+    ('c_canto', "x = if byte(m, 0x8ea7) == 0 { sortear(4) as i8 } else { 8 - sortear(4) as i8 };", "x = if byte(m, 0x8ea7) == 0 { sortear(4) as i8 } else { 7 - sortear(4) as i8 };", "conducao corner sem companheiro"),
+    ('c_lateral', "x = 7 - sortear(7) as i8;", "x = 6 - sortear(7) as i8;", "conducao throw_in sorteada"),
     ('c_falta', "y = if lado == 0 { byte(m, 0x8eaf).wrapping_sub(2) }", "y = if lado == 0 { byte(m, 0x8eaf).wrapping_sub(3) }", "conducao falta na area"),
-    ('c_penalti', "let a4 = if sortear(100) == 0 { 5 } else { 1 };", "let a4 = if sortear(100) == 0 { 4 } else { 1 };", "conducao penalti"),
+    ('c_penalti', "let a4 = if sortear(100) == 0 { 5 } else { 1 };", "let a4 = if sortear(100) == 0 { 4 } else { 1 };", "conducao penalty"),
     ('c_pressao', "l58 = ftol(-(k as f64 * f64_em(0x969040)));", "l58 = ftol(-(k as f64 * f64_em(0x969040) * 1.1));"),
     ('c_passe', "l30 = (l49 as i32 + l27 as i32 + soma).wrapping_mul(l28) / 5;", "l30 = (l49 as i32 + l27 as i32 + soma).wrapping_mul(l28) / 6;"),
     ('c_avancar', "l14 = 4000 - l30;", "l14 = 4100 - l30;", "conducao instrucao de avancar"),
@@ -14,7 +14,7 @@ MUTACOES = [
     ('c_linha', "l10 = l10.wrapping_add(5000 - (x0() as i32 - 4).abs() * 2000);", "l10 = l10.wrapping_add(5000 - (x0() as i32 - 4).abs() * 1000);"),
     ('c_lancamento', "l30 < 4000 - *w(m, 0x8ed0) as i32", "l30 < 3000 - *w(m, 0x8ed0) as i32", "conducao lancamento"),
     ('c_alivio', "if r1 > sortear(l30 + 2000)", "if r1 > sortear(l30 + 2500)"),
-    ('c_casa', "escolher_casa(m, p, &mut sx, &mut sy, (l68 != 0) as u32 + 2)", "escolher_casa(m, p, &mut sx, &mut sy, (l68 != 0) as u32 + 1)"),
+    ('c_casa', "choose_square(m, p, &mut sx, &mut sy, (l68 != 0) as u32 + 2)", "choose_square(m, p, &mut sx, &mut sy, (l68 != 0) as u32 + 1)"),
     ('c_fundo', "l10 = l10.wrapping_add((byte(p, 0x109) as i32 - 20) * 100);", "l10 = l10.wrapping_add((byte(p, 0x109) as i32 - 21) * 100);"),
     ('c_drible', "{ bl * 500 } else { bl * 325 } - r);", "{ bl * 500 } else { bl * 326 } - r);"),
     ('c_quatro', "let k = (20 - byte(p, 0x106) as i32) * 50;", "let k = (20 - byte(p, 0x106) as i32) * 51;"),

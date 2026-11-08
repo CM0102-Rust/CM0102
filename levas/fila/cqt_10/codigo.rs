@@ -28,7 +28,7 @@ unsafe fn cqt10_escolhido(this: usize, k: usize) -> usize {
 /// sem o dia de liga), a fase do grupo B (0x797e80, thiscall, ret 0), a lista +0xee liberada (0x9452ca: push; add esp,
 /// 4 -> cdecl) e zerada, +0xf2 = 0 e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this
 /// -> thiscall, ret 8), cuja devolução ela repassa.
-unsafe extern "thiscall" fn cqt10_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let clubes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x798220usize);
     let grupo_a: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7978c0usize);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn cqt10_oceania_dia(this: usize, hoje: usize, completo
 // ponytail: os clubes, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do grupo A e a fase do
 // grupo B criadas e a fase atual (+0x30) = 0.
-unsafe extern "thiscall" fn comparar_cqt10_oceania_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_oceania_club_champ_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let sorteia = cqt10_d(this + 0x45) == 0
         && completo == 0
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_dia(this: usize, hoje: usize,
             && fases != 0
             && cqt10_d(fases) != 0
             && cqt10_d(this + 0x30) == 0;
-        PLACAR.registrar(ok, || format!("cqt10_oceania_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqt10_d(this + 0x45), cqt10_d(this + 0x30) as i32));
+        PLACAR.registrar(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, cqt10_d(this + 0x45), cqt10_d(this + 0x30) as i32));
     }
     r
 }
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_dia(this: usize, hoje: usize,
 /// 0x182 e devolve 0), cada linha i com o escolhido i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push
 /// clube; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this ->
 /// thiscall, ret 0) e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
-unsafe extern "thiscall" fn cqt10_oceania_grupo_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn cqt10_oceania_grupo_a(this: usize) -> u32 {
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o escolhido i com a posição i (+4).
-unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_create_group_a_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqt10_d(this + 0xee);
     if lista == 0 {
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_a(this: usize) -> u32 {
         }
     }
     let igual = r == 1 && cqt10_w(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("cqt10_oceania_grupo_a({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.registrar(igual, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_a(this: usize) -> u32 {
 /// +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos, que o construtor
 /// não lê: a cópia passa os valores limpos) em [+0xc][0]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase:
 /// a caixa da linha 0x2ad e 0. Com ela: +0x30 = 0, a notícia do grupo (0x684230 na fase) e 1.
-unsafe extern "thiscall" fn cqt10_oceania_grupo_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn cqt10_oceania_grupo_b(this: usize) -> u32 {
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][0], +0x30 = 0, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // escolhidos 4 a 7 (em qualquer ordem: o construtor ordena a tabela).
-unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
     let lista = cqt10_d(this + 0xee);
     if lista == 0 {
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_cqt10_oceania_grupo_b(this: usize) -> u32 {
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && cqt10_d(this + 0x30) == 0 && cqt10_w(f + 0x3e) == 4 && cqt10_w(f + 0x40) == cqt10_w(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("cqt10_oceania_grupo_b: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
+        PLACAR.registrar(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plano, a));
     }
     r
 }

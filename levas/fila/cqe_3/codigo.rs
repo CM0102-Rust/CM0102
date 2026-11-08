@@ -74,10 +74,10 @@ unsafe fn cqe3_registro_0b(pessoa: usize) -> u8 {
 ///   humano sem o bit 2 de +0x4e do contrato pula; sem oferta (0x8cdc90) nem troca; sorteio(+0xb) acima de
 ///   sorteio(reputação / 10), ou de sorteio(2 × reputação) no segundo par: o pedido (0x842740) em +0x17; negativo, a
 ///   situação na lista; senão a conta sobe.
-unsafe extern "thiscall" fn lances_do_clube(this: usize, clube: usize) {
+unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize) {
     let mais: unsafe extern "thiscall" fn(usize, *mut [u32; 2], u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let novo_contrato: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x85e410usize);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
     let responde: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
@@ -100,21 +100,21 @@ unsafe extern "thiscall" fn lances_do_clube(this: usize, clube: usize) {
     let destruir_oferta: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
     let preencher: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, *mut usize) -> u32 = core::mem::transmute(0x8e5d60usize);
     let fazer_lance: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8be300usize);
-    let oferta_de_contrato: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32) = core::mem::transmute(0x4cc490usize);
+    let contract_offer: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32) = core::mem::transmute(0x4cc490usize);
     let tem_oferta_de_contrato: unsafe extern "thiscall" fn(usize, i32, i32) -> usize = core::mem::transmute(0x4cc9e0usize);
     let contrato_com: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
     let renovar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32, u32) = core::mem::transmute(0x4cda70usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let situacao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(0x843e10usize);
-    let pode_emprestar: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x8d0040usize);
+    let transfer_manager_can_loan_player: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x8d0040usize);
     let pedir_emprestimo: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x842740usize);
     let mut semana = [0u32; 2];
     mais(0xae2c90, &mut semana, 7);
     let pdata = semana.as_mut_ptr() as usize;
     let mut contrato0 = [0u8; 0x50];
     novo_contrato(contrato0.as_mut_ptr() as usize);
-    if e_selecao(clube) != 0 || humano(clube, 0, 1, 0, 0) != 0 {
+    if is_national_team(clube) != 0 || humano(clube, 0, 1, 0, 0) != 0 {
         return;
     }
     if humano(clube, 1, 1, 0, 0) != 0 && responde(cqe3_d(0xb63c98), tecnico(clube)) != 0
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn lances_do_clube(this: usize, clube: usize) {
                 if termos != 0 {
                     // ponytail: o cargo vai com os bytes altos do ponteiro do vetor das vagas (como na original)
                     let cargo = (cqe3_d(reg) as u32 & 0xffff_ff00) | cqe3_b(vaga(0)) as u32;
-                    oferta_de_contrato(cqe3_d(0xae1050), termos, cqe3_d(po + 0x20) as i32, cqe3_d(po + 0x24) as u32, cargo, 0, 1, 0);
+                    contract_offer(cqe3_d(0xae1050), termos, cqe3_d(po + 0x20) as i32, cqe3_d(po + 0x24) as u32, cargo, 0, 1, 0);
                     let c = cqe3_contrato(p);
                     let vendedor = if c == 0 { 0 } else { cqe3_clube(cqe3_d(c + 4)) };
                     if vendedor != 0 && humano(vendedor, 0, 1, 0, 0) == 0
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn lances_do_clube(this: usize, clube: usize) {
             if n != 0 && cqe3_d(n) == cqe3_d(0x9cf300) && cqe3_b(clube + 0x64) == 3 {
                 continue;
             }
-            if pode_emprestar(gm, clube, p, 0) == 0 {
+            if transfer_manager_can_loan_player(gm, clube, p, 0) == 0 {
                 continue;
             }
             let c = cqe3_contrato(p);
@@ -352,6 +352,6 @@ unsafe extern "thiscall" fn lances_do_clube(this: usize, clube: usize) {
 }
 
 /// Comparador da 0x84a020: só a original (sorteia, faz lances e pedidos de empréstimo, aloca ofertas e termos).
-unsafe extern "thiscall" fn comparar_lances_do_clube(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_make_club_bids(this: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, clube) // ponytail: só a original
 }

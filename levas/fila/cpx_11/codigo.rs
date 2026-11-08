@@ -42,7 +42,7 @@ unsafe fn cpx11_soma_das_posicoes(n: i16) -> i32 {
 /// 0x1df). Senão o fundo (+0x28) dividido por 1 + 2 + … + n (n = +0x3e linhas da tabela) é a parte; o clube da linha i
 /// (+0xb1, 0x3b cada) recebe (n − i) partes no registro de finanças (0x5a0590; 0x5999a0 soma no saldo, em +0xa8 e
 /// +0x148) e, acima de 1000, a notícia do prêmio (0x48e3e0 com a posição i + 1).
-unsafe extern "thiscall" fn pagar_premios_da_liga(liga: usize) {
+unsafe extern "thiscall" fn pay_prize_money(liga: usize) {
     let e1 = cpx11_b(liga + 0xe1);
     if e1 == 2 {
         return;
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn pagar_premios_da_liga(liga: usize) {
 /// Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
 /// outros casos, o ensaio: a cópia sem a notícia do prêmio (0x48e3e0 aloca) e a original a partir do mesmo estado, nos
 /// registros de finanças (0x167 bytes) de todos os clubes da tabela.
-unsafe extern "thiscall" fn comparar_pagar_premios_da_liga(liga: usize) {
+unsafe extern "thiscall" fn comparar_pay_prize_money(liga: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cpx11_w(liga + 0x3e);
     let e1 = cpx11_b(liga + 0xe1);
@@ -109,19 +109,19 @@ unsafe extern "thiscall" fn comparar_pagar_premios_da_liga(liga: usize) {
     }
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX11_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pagar_premios_da_liga(liga)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_prize_money(liga)));
     CPX11_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(liga);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("pagar_premios_da_liga({:x}) +0xe1 {} n {} original={:x?} rust={:x?}", liga, e1, n, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("pay_prize_money({:x}) +0xe1 {} n {} original={:x?} rust={:x?}", liga, e1, n, mo, mr));
 }
 
 /// { 0x686940 } (thiscall, ret 0x18, league.cpp): `League::update_staff_records_for_status(clube, situação, fase,
 /// saída, _, _)` (a virtual +0x44 da liga): situação 5, o título (Staff_Records 0x868c50 de [0xdd7f00] com o clube e
 /// a competição +4); 0, o acesso (0x869480 com peso 100); 3, o rebaixamento (0x86a1c0). Devolve 0 e não grava a saída.
-unsafe extern "thiscall" fn registros_pela_situacao_na_liga(liga: usize, clube: usize, situacao: u32, _fase: u32, _saida: usize, _a: u32, _b: u32) -> u32 {
+unsafe extern "thiscall" fn league_update_staff_records_for_status(liga: usize, clube: usize, situacao: u32, _fase: u32, _saida: usize, _a: u32, _b: u32) -> u32 {
     let registros = cpx11_d(0xdd7f00);
     let comp = cpx11_d(liga + 4);
     match situacao as u8 {
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn registros_pela_situacao_na_liga(liga: usize, clube: 
 
 // ponytail: os três registros acrescentam ao histórico das pessoas e mexem na reputação (alocam): só a original; a
 // cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_liga(liga: usize, clube: usize, situacao: u32, fase: u32, saida: usize, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_league_update_staff_records_for_status(liga: usize, clube: usize, situacao: u32, fase: u32, saida: usize, a: u32, b: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(%%I1%%)(liga, clube, situacao, fase, saida, a, b)
 }
 
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn comparar_registros_pela_situacao_na_liga(liga: usize
 /// situação: 5, à nação da competição (0x7863f0) sem o +0x1c, à divisão (0x7862d0) com ele; 0 e 3, à divisão e à
 /// divisão de acesso (+0x1c) ou de rebaixamento (+0x20) da competição, se houver; 1 e 2, à divisão; 6, 7 e 0xfe, ao
 /// técnico do clube (0x7861e0). Devolve 1.
-unsafe extern "thiscall" fn anunciar_situacao_na_liga(liga: usize, clube: usize, situacao: u32, fase: u32, _a: u32, _b: u32) -> u32 {
+unsafe extern "thiscall" fn announce_team_status(liga: usize, clube: usize, situacao: u32, fase: u32, _a: u32, _b: u32) -> u32 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -238,6 +238,6 @@ unsafe extern "thiscall" fn anunciar_situacao_na_liga(liga: usize, clube: usize,
 
 // ponytail: a virtual +0x44 acrescenta registros e a notícia vai às caixas dos técnicos (alocam): só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_anunciar_situacao_na_liga(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_announce_team_status(liga: usize, clube: usize, situacao: u32, fase: u32, a: u32, b: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32>(%%I2%%)(liga, clube, situacao, fase, a, b)
 }

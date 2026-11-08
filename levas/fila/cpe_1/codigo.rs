@@ -69,7 +69,7 @@ unsafe fn cpe1_sorteio(n: i32) -> i32 {
 /// mesma cidade (+0x57) e os acima da faixa do sorteio (+4 > sorteio(3) + 3). Pela reputação (+0x80) do clube: abaixo
 /// de 2000 a mesma nação (+0x53); de 2000 a 3999 o mesmo +0x75 da nação; de 4000 a 7999 o mesmo +0x71; com o +4 do
 /// clube acima de sorteio(2), a mesma nação. Fica com o candidato quando sorteio(5) = 1; nenhum: 0. Sem SEH, sem caixa.
-unsafe extern "thiscall" fn adversario_do_amistoso(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
+unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
     let mut faixa = faixa as i8;
     if faixa < 1 {
         faixa = 1;
@@ -161,12 +161,12 @@ unsafe fn cpe1_regioes(candidatos: impl Iterator<Item = usize>) -> Vec<(usize, u
     reg
 }
 
-unsafe extern "thiscall" fn comparar_adversario_do_amistoso(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I0%%);
     let reg = cpe1_regioes((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, faixa, excluir),
-        || crate::aleatorio::sem_contar(|| adversario_do_amistoso(this, clube, lista, n, faixa, excluir)));
-    PLACAR.registrar(igual && r == m, || format!("adversario_do_amistoso({:x}, {:x}, n {}, faixa {}) original={:x} rust={:x} {:x?} x {:x?}",
+        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, faixa, excluir)));
+    PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, faixa {}) original={:x} rust={:x} {:x?} x {:x?}",
         clube, lista, n, faixa as i8, r, m, mo, mr));
     r
 }
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn comparar_adversario_do_amistoso(this: usize, clube: 
 /// não é da nação encerra (0); pula os acima da faixa (+5 > faixa_max), os fora pela data, o próprio clube, os que já
 /// têm o clube na lista (+0xa), os rivais, os de nações rivais (sorteio(2) = 0), os da mesma cidade (+0x57) e os acima
 /// da faixa do sorteio (+4 > sorteio(3) + 3); fica com o candidato quando sorteio(2) = 1. Nenhum: 0. Sem SEH, sem caixa.
-unsafe extern "thiscall" fn adversario_da_excursao(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
+unsafe extern "thiscall" fn find_tour_opponent(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
     let cp = cpe1_clube(cpe1_d(clube));
     let mut chave = [0u8; 0x16];
     chave[5] = 0xff;
@@ -230,12 +230,12 @@ unsafe extern "thiscall" fn adversario_da_excursao(this: usize, clube: usize, or
     0
 }
 
-unsafe extern "thiscall" fn comparar_adversario_da_excursao(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, clube: usize, ordenados: usize, n: u32, faixa_max: u32, nacao: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I1%%);
     let reg = cpe1_regioes((0..(n as i32).max(0) as usize).map(|i| cpe1_d(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, ordenados, n, faixa_max, nacao),
-        || crate::aleatorio::sem_contar(|| adversario_da_excursao(this, clube, ordenados, n, faixa_max, nacao)));
-    PLACAR.registrar(igual && r == m, || format!("adversario_da_excursao({:x}, {:x}, n {}, faixa {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+        || crate::aleatorio::sem_contar(|| find_tour_opponent(this, clube, ordenados, n, faixa_max, nacao)));
+    PLACAR.registrar(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, faixa {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         clube, ordenados, n, faixa_max as i8, nacao, r, m, mo, mr));
     r
 }

@@ -89,7 +89,7 @@ unsafe fn cpx13_dispensar(this: usize, clube: usize) {
 /// partir de duas semanas antes do jogo (0x54cab0 sobre a data +0x2a/+0x28). Mandante: fora de seleção B, o elenco
 /// principal (cpx13_elenco tipo 0) e, sem o bit 2, a dispensa do sub-21 (0x76d880) das duas nações; os elencos
 /// menores (cpx13_elencos_menores). Visitante: o mesmo sem a dispensa. Por fim apaga os repetidos (0x76c060) das duas.
-unsafe extern "thiscall" fn convocar_selecoes_para_o_jogo(this: usize, p: usize) {
+unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p: usize) {
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
     let data_nova: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     let semanas_antes: unsafe extern "thiscall" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(0x54cab0usize);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn convocar_selecoes_para_o_jogo(this: usize, p: usize)
 /// Comparador: a original roda antes; a cópia depois, em ensaio, a partir dos mesmos registros das duas nações (+0x32
 /// a +0x6c: marcas de hoje, datas dos elencos e marcas de convocado). Se a cópia pediu algum elenco (0x76c120 aloca e
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
-unsafe extern "thiscall" fn comparar_convocar_selecoes_para_o_jogo(this: usize, p: usize) {
+unsafe extern "thiscall" fn comparar_select_squads_for_fixture(this: usize, p: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let regioes = [(cpx13_registro(this, cpx13_d(p + 0x1c)) + 0x32, 0x3a), (cpx13_registro(this, cpx13_d(p + 0x20)) + 0x32, 0x3a)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
@@ -142,12 +142,12 @@ unsafe extern "thiscall" fn comparar_convocar_selecoes_para_o_jogo(this: usize, 
     antes.escrever();
     CPX13_ENSAIO = true;
     CPX13_PEDIU = false;
-    crate::aleatorio::pausar_rastro(|| convocar_selecoes_para_o_jogo(this, p));
+    crate::aleatorio::pausar_rastro(|| select_squads_for_fixture(this, p));
     CPX13_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     mo.escrever();
     if !CPX13_PEDIU {
-        PLACAR.registrar(mo == mr, || format!("convocar_selecoes_para_o_jogo({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
+        PLACAR.registrar(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
     }
 }
 
@@ -171,7 +171,7 @@ static mut CPX13_ENSAIO_NOTICIA: bool = false;
 /// do jogador ou no clube do contrato (que precisa existir). A notícia 0x21 (local): 0 o id, 1..3 os +0x33 de +4, +8,
 /// +0xc; vaga 0: 4 a seleção principal (0x53b3d0), 5 = 0; vaga 1: a principal e 1; outra: a B (0x53b4f0) e 0.
 /// Entregue ao técnico (0x7861e0) do +0x39, se houver, e ao do clube do contrato quando é outro.
-unsafe extern "stdcall" fn noticia_do_convocado(jogador: usize, nacao: usize, vaga: u32) {
+unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
     let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -225,18 +225,18 @@ unsafe extern "stdcall" fn noticia_do_convocado(jogador: usize, nacao: usize, va
 
 /// Comparador: a cópia em ensaio (sem entregar) e a original a partir do mesmo [0xae1080] (o último contrato lido, que
 /// as duas gravam).
-unsafe extern "stdcall" fn comparar_noticia_do_convocado(jogador: usize, nacao: usize, vaga: u32) {
+unsafe extern "stdcall" fn comparar_national_teams_post_player_called_up_news(jogador: usize, nacao: usize, vaga: u32) {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I1%%);
     let regioes = [(0xae1080usize, 4usize)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX13_ENSAIO_NOTICIA = true;
-    crate::aleatorio::pausar_rastro(|| noticia_do_convocado(jogador, nacao, vaga));
+    crate::aleatorio::pausar_rastro(|| national_teams_post_player_called_up_news(jogador, nacao, vaga));
     CPX13_ENSAIO_NOTICIA = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(jogador, nacao, vaga);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("noticia_do_convocado({:x}, {:x}, {}) original={:x?} rust={:x?}", jogador, nacao, vaga, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("national_teams_post_player_called_up_news({:x}, {:x}, {}) original={:x?} rust={:x?}", jogador, nacao, vaga, mo, mr));
 }
 
 /// { 0x519690 } (thiscall, ret 0x14, Cup.cpp, quadro SEH sem destrutor): `Cup::add_team_result_news(clube, desfecho,
@@ -246,12 +246,12 @@ unsafe extern "stdcall" fn comparar_noticia_do_convocado(jogador: usize, nacao: 
 /// dado 5 (0x4afeb0, que avança o cursor) e no cursor a rodada seguinte (+7 da rodada +0x34 + 1, até +0x3c − 1; 0x8c
 /// ou fora: −1). Saída ≠ 0xff: a entrega pelo alcance (0x786090). Desfecho 1 na rodada 0x96 ou 3 na 0x8c (+0x30): à
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
-unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+unsafe extern "thiscall" fn add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let categoria: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4b0890usize);
-    let gravar_jogo: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(0x4afeb0usize);
+    let save_game_data: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(0x4afeb0usize);
     let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let a_regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x786860usize);
     let pelo_alcance: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(0x786090usize);
@@ -277,7 +277,7 @@ unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, clube: usiz
     gravar(n, 4, r as u32);
     // ponytail: o cursor é um dword da pilha com 5 no byte baixo (o resto é sobra); só o byte baixo conta
     let mut cursor = [5u8, 0, 0, 0];
-    gravar_jogo(p, n, cursor.as_mut_ptr());
+    save_game_data(p, n, cursor.as_mut_ptr());
     let k = cpx13_w(p + 0x34) as i32;
     let proxima = if k < cpx13_w(copa + 0x3c) as i32 - 1 {
         let v = cpx13_w(cpx13_d(copa + 0xa3).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
@@ -304,6 +304,6 @@ unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, clube: usiz
 
 // ponytail: a virtual +0x44 da copa acrescenta registros às pessoas e a notícia vai às caixas dos técnicos (alocam): só
 // a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(%%I2%%)(copa, clube, desfecho, a3, p, a5)
 }

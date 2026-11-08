@@ -1,4 +1,4 @@
-# Mutacoes do fechamento do motor (5). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
+# Mutacoes do match_wrap_up do motor (5). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
 MUTACOES = [
     ('n_anterior', "    let k = if w(t + 8) == 0 { 0xb } else { b(t, 8).wrapping_sub(1) };", "    let k = if w(t + 8) == 0 { 0xa } else { b(t, 8).wrapping_sub(1) };"),
     ('n_copia', "    let copiar = || core::ptr::copy((q as *const u8).add(5), (e as *mut u8).add(5), 8);", "    let copiar = || core::ptr::copy((q as *const u8).add(5), (e as *mut u8).add(5), 4);"),

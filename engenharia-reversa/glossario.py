@@ -296,7 +296,22 @@ EN = {
  'estatistica_do_jogador': 'player_statistic', 'media_das_notas': 'ratings_average', 'zagueiros_sem_conflito': 'centre_backs_without_conflict',
  'mascara_de_posicoes': 'position_mask', 'casa_no_campo': 'pitch_cell', 'vagas_sem_conflito': 'slots_without_conflict', 'erro_em': 'error_in', 'atras_no_agregado': 'behind_on_aggregate', 'companheiro_livre': 'free_teammate', 'desfecho_do_chute': 'shot_outcome',
 }
-faltam = [n for n in rust if n not in EN]
+# os nomes que faltam vêm do DOCS dos itens da fila (levas/fila/*/rotinas.py): (nome, nome original, ...)
+import glob  # noqa: E402
+import runpy  # noqa: E402
+for _f in sorted(glob.glob(os.path.join(RAIZ, 'levas', 'fila', '*', 'rotinas.py'))):
+    try:
+        for _t in runpy.run_path(_f).get('DOCS', (None, None, []))[2]:
+            EN.setdefault(_t[0], _t[1])
+    except Exception as _e:  # item quebrado não para o glossário
+        print('aviso: DOCS ilegível em', _f, _e)
+
+# desde 07/11/2026 o código usa nomes em inglês (renomear_rotinas.py): docs/NOMES.csv liga o nome no código ao
+# nome antigo em português, que é a chave do dicionário EN
+import csv  # noqa: E402
+_nomes = os.path.join(RAIZ, 'docs', 'NOMES.csv')
+PT_DE = {r['en']: r['pt'] for r in csv.DictReader(open(_nomes, encoding='utf-8'))} if os.path.exists(_nomes) else {}
+faltam = [n for n in rust if PT_DE.get(n, n) not in EN]
 if faltam:
     raise SystemExit('rotinas sem traducao no dicionario EN: %s' % faltam)
 
@@ -353,31 +368,24 @@ PALAVRAS = [
 ]
 
 
-# os nomes que faltam vêm do DOCS dos itens da fila (levas/fila/*/rotinas.py): (nome, nome original, ...)
-import glob  # noqa: E402
-import runpy  # noqa: E402
-for _f in sorted(glob.glob(os.path.join(RAIZ, 'levas', 'fila', '*', 'rotinas.py'))):
-    try:
-        for _t in runpy.run_path(_f).get('DOCS', (None, None, []))[2]:
-            EN.setdefault(_t[0], _t[1])
-    except Exception as _e:  # item quebrado não para o glossário
-        print('aviso: DOCS ilegível em', _f, _e)
 
 def gerar(en):
     L = []
     if en:
         L += ['*English version of [GLOSSARIO.md](GLOSSARIO.md). Both are kept in sync; the Portuguese file is the original.*', '',
               '# Glossary: Portuguese names in the code', '',
-              'The code (Rust and Python) is written with Portuguese names. This glossary gives the English meaning of each name, so the code can be read alongside the English documentation. The names in the code do not change; this is only a reading aid. Addresses are VAs in `cm0102.exe` 3.9.68.', '']
+              'Since 7 Nov 2026 the hooked routines have English names in the code (the original method name from the maxevans60 map); the helpers and the tools still have Portuguese names, being renamed in rounds. This glossary links each code name to the original name and to the old Portuguese name (`docs/NOMES.csv`), which the batch documentation still uses. Addresses are VAs in `cm0102.exe` 3.9.68.', '']
     else:
         L += ['*[English version](GLOSSARIO.en.md).*', '',
               '# Glossário: nomes em português no código', '',
-              'O código (Rust e Python) usa nomes em português. Este glossário dá o significado em inglês de cada nome, para ler o código junto com a documentação em inglês. Os nomes no código não mudam; é só uma ajuda de leitura. Endereços são VA no `cm0102.exe` 3.9.68.', '']
+              'Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do método original no mapa de maxevans60); os auxiliares e as ferramentas ainda têm nomes em português, trocados em rodadas. Este glossário liga cada nome do código ao nome original e ao nome antigo em português (`docs/NOMES.csv`), que a documentação das levas ainda usa. Endereços são VA no `cm0102.exe` 3.9.68.', '']
     L += ['## ' + ('Common words' if en else 'Palavras comuns'), '', '| Português | English |', '|---|---|']
     L += ['| %s | %s |' % (p, e) for p, e in PALAVRAS]
     L += ['', '## ' + ('Match engine routines (`rust/src/motor.rs`)' if en else 'Rotinas do motor de partidas (`rust/src/motor.rs`)'), '',
-          '| %s | Português | English |' % ('Address' if en else 'Endereço'), '|---|---|---|']
-    L += ['| %s | `%s` | %s |' % (a, n, EN[n]) for a, n in sorted(zip(pro, rust), key=lambda x: x[1])]
+          '| %s | %s | %s | %s |' % ('Address' if en else 'Endereço', 'Name in the code' if en else 'Nome no código',
+                                   'Original / meaning' if en else 'Original / significado', 'Old Portuguese name' if en else 'Nome antigo em português'),
+          '|---|---|---|---|']
+    L += ['| %s | `%s` | %s | `%s` |' % (a, n, EN[PT_DE.get(n, n)], PT_DE.get(n, n)) for a, n in sorted(zip(pro, rust), key=lambda x: x[1])]
     L += ['', '## ' + ('Random generator and dates' if en else 'Sorteio e datas'), '',
           '| %s | Português | English |' % ('Address' if en else 'Endereço'), '|---|---|---|']
     L += ['| %s | `%s` | %s |' % (a, p, e) for p, e, a in OUTROS]

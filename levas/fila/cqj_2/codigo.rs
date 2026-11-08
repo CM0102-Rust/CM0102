@@ -11,7 +11,7 @@ unsafe fn cqj2_d(a: usize) -> u32 {
 /// id da nação, +8 a reputação +0x80 / 500, +9 o +0x69 da divisão +0x5b, +0xb o +0x5f; sem divisão −1 e 0x7f; com a
 /// divisão de uma competição sem o +0x11c, a divisão e o +0x5f do clube zeram). Ordena pela nação (qsort 0x945333 com
 /// 0x905ce0). Devolve o número de clubes (só os 16 bits baixos contam).
-unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) -> u32 {
+unsafe extern "stdcall" fn collect_conmebol_clubs(saida: *mut usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -83,19 +83,19 @@ unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
 /// devolução e os registros das duas tabelas.
-unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) -> u32 {
+unsafe extern "stdcall" fn comparar_collect_conmebol_clubs(saida: *mut usize) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(*mut usize) -> u32>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut t2 = 0usize;
     let reg = cqj2_regioes_dos_clubes();
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(saida), || conmebol_juntar_clubes(&mut t2));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(saida), || collect_conmebol_clubs(&mut t2));
     let (n, m) = (a as u16 as i16, b as u16 as i16);
     let t1 = *saida;
     let tabela = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
     if t2 != 0 {
         soltar(t2);
     }
-    PLACAR.registrar(igual && tabela, || format!("conmebol_juntar_clubes: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqj2_dif(&mo, &mr)));
+    PLACAR.registrar(igual && tabela, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, cqj2_dif(&mo, &mr)));
     a
 }
 
@@ -103,7 +103,7 @@ unsafe extern "stdcall" fn comparar_conmebol_juntar_clubes(saida: *mut usize) ->
 /// Libertadores e pela Mercosul; sem `pular` e com o ano do jogo ([0xae2c92]) outro que o +0x6f: grava o ano, monta a
 /// tabela dos clubes (0x4c6280; vazia, a caixa da linha 0x9b e volta sem soltar), dá as vagas da Libertadores (0x4c6430)
 /// e solta a tabela.
-unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular: u32) {
+unsafe extern "thiscall" fn update_for_new_season(this: usize, pular: u32) {
     if pular != 0 {
         return;
     }
@@ -127,24 +127,24 @@ unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular: u32) {
 }
 
 /// Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
-unsafe extern "thiscall" fn comparar_conmebol_virada_do_ano(this: usize, pular: u32) {
+unsafe extern "thiscall" fn comparar_update_for_new_season(this: usize, pular: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let mut reg = cqj2_regioes_dos_clubes();
     reg.push((this + 0x6f, 2));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pular), || conmebol_virada_do_ano(this, pular));
-    PLACAR.registrar(igual, || format!("conmebol_virada_do_ano({}): diferenças em {:x?}", pular, cqj2_dif(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pular), || update_for_new_season(this, pular));
+    PLACAR.registrar(igual, || format!("update_for_new_season({}): diferenças em {:x?}", pular, cqj2_dif(&mo, &mr)));
 }
 
 /// { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
 /// campeão da Copa dos Campeões em +0x71 (a vaga dele na Libertadores, de 2003 em diante).
-unsafe extern "thiscall" fn conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
+unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, clube: usize) {
     core::ptr::write_unaligned((this + 0x71) as *mut u32, cqj2_d(clube));
 }
 
 /// Lado a lado: o +0x71.
-unsafe extern "thiscall" fn comparar_conmebol_campeao_dos_campeoes(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_set_bra_champ_cup_winner(this: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let reg = [(this + 0x71, 4)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || conmebol_campeao_dos_campeoes(this, clube));
-    PLACAR.registrar(igual, || format!("conmebol_campeao_dos_campeoes({:x})", clube));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || set_bra_champ_cup_winner(this, clube));
+    PLACAR.registrar(igual, || format!("set_bra_champ_cup_winner({:x})", clube));
 }

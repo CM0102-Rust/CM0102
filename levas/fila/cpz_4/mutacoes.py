@@ -14,7 +14,7 @@ MUTACOES = [
      'let _ = clube; // mutacao: o eliminado na fase 1 continua na competicao',
      'cpz_4 caiu na fase 1'),
     ('cpz4_fase_2_pesa_metade',
-     'cpz4_classificado(clube, comp, 0, 0x78, 0x32); // cpz4: passar da fase 2 pesa 0x32',
-     'cpz4_classificado(clube, comp, 0, 0x78, 0x19); // mutacao: passar da fase 2 pesa a metade',
+     'cpz4_classificado(clube, comp, 0, 0x78, 0x32); // cpz4: pass_ball da fase 2 pesa 0x32',
+     'cpz4_classificado(clube, comp, 0, 0x78, 0x19); // mutacao: pass_ball da fase 2 pesa a metade',
      'cpz_4 passou da fase 2'),
 ]

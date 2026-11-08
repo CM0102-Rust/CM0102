@@ -15,7 +15,7 @@ unsafe fn cqh6_b(a: usize) -> u8 {
 /// { 0x48ce10 } (thiscall, ret 0, comp.cpp, método +0xc das competições): `Comp::all_stages_complete()`: só na
 /// competição do topo (+0x1c ≤ −1), completa (método +0x10 com 1, 1: push 1; push 1; mov ecx -> thiscall, ret 8) ela e
 /// cada uma da cadeia de baixo (+0x20, o índice em [0xadadfc]); devolve 1 ou 0 (no al).
-unsafe extern "thiscall" fn competicao_todas_completas(this: usize) -> u8 {
+unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
     if (cqh6_d(this + 0x1c) as i32) > -1 {
         return 0;
     }
@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn competicao_todas_completas(this: usize) -> u8 {
 
 /// Só a original (o método +0x10 marca a liga completa, grava recordes e paga prêmios: não roda duas vezes): a cópia
 /// leva os ramos.
-unsafe extern "thiscall" fn comparar_competicao_todas_completas(this: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_all_stages_complete(this: usize) -> u8 {
     orig::<unsafe extern "thiscall" fn(usize) -> u8>(%%I0%%)(this)
 }
 
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn comparar_competicao_todas_completas(this: usize) -> 
 /// distintos de todas as fases (−1 a própria até +0x30; as outras em [+0xc]): numa liga (+0x43 = 2) os da tabela +0xb1
 /// (linhas de 0x3b bytes), noutra os de +0xa7 (6 bytes), sem os nulos e os repetidos, até 200; grava o vetor em
 /// `lista` e devolve a conta (word, no ax).
-unsafe extern "thiscall" fn competicao_lista_de_clubes(this: usize, lista: *mut usize, _x: u32) -> u16 {
+unsafe extern "thiscall" fn comp_collect_club_list(this: usize, lista: *mut usize, _x: u32) -> u16 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let v = alocar(0x320);
     if v == 0 {
@@ -80,17 +80,17 @@ unsafe extern "thiscall" fn competicao_lista_de_clubes(this: usize, lista: *mut 
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com saída própria, a partir do mesmo [0xb67a34]; a conta
 /// e os clubes das duas listas iguais (a da cópia é liberada).
-unsafe extern "thiscall" fn comparar_competicao_lista_de_clubes(this: usize, lista: *mut usize, x: u32) -> u16 {
+unsafe extern "thiscall" fn comparar_comp_collect_club_list(this: usize, lista: *mut usize, x: u32) -> u16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I1%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut l2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, x), || competicao_lista_de_clubes(this, &mut l2, x));
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, x), || comp_collect_club_list(this, &mut l2, x));
     let mesmas = a == b && (*lista == 0) == (l2 == 0) && (*lista == 0 || core::slice::from_raw_parts(*lista as *const u32, a as usize) == core::slice::from_raw_parts(l2 as *const u32, b as usize));
     if l2 != 0 {
         soltar(l2);
     }
-    PLACAR.registrar(igual && mesmas, || format!("competicao_lista_de_clubes: conta original={} rust={}", a, b));
+    PLACAR.registrar(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
     a
 }
 /// { 0x48cc70 } (thiscall, ret 0x10, comp.cpp): `Comp::find_club_progress(clube, &fase, &rodada, &situação)`: das
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn comparar_competicao_lista_de_clubes(this: usize, lis
 /// situação = +0x37 da linha, e volta; numa copa, o último time da tabela +0xa7 (6 bytes) que é o clube dá fase = o id
 /// e situação = +5, e a rodada é a da primeira rodada (de +0xab − 1 para trás, +0xa3 com 0x68 bytes, os confrontos de
 /// +0xad com 0x35 bytes) com um confronto em que o time joga (+0 ou +2): rodada = +7 da rodada, e volta.
-unsafe extern "thiscall" fn competicao_progresso_do_clube(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
+unsafe extern "thiscall" fn find_club_progress(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let mut f = cqh6_d(this + 0x30) as i32;
     while f >= -1 {
@@ -152,10 +152,10 @@ unsafe extern "thiscall" fn competicao_progresso_do_clube(this: usize, clube: us
 }
 
 /// Lado a lado nas três saídas (a original e a cópia com saídas próprias, começando dos valores de quem chama).
-unsafe extern "thiscall" fn comparar_competicao_progresso_do_clube(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
+unsafe extern "thiscall" fn comparar_find_club_progress(this: usize, clube: usize, fase_id: *mut i16, rodada: *mut i16, situacao: *mut u8) {
     let (mut f2, mut r2, mut s2) = (*fase_id, *rodada, *situacao);
     orig::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(%%I2%%)(this, clube, fase_id, rodada, situacao);
-    competicao_progresso_do_clube(this, clube, &mut f2, &mut r2, &mut s2);
+    find_club_progress(this, clube, &mut f2, &mut r2, &mut s2);
     let ok = f2 == *fase_id && r2 == *rodada && s2 == *situacao;
-    PLACAR.registrar(ok, || format!("competicao_progresso_do_clube: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
+    PLACAR.registrar(ok, || format!("find_club_progress: original ({}, {}, {}) rust ({}, {}, {})", *fase_id, *rodada, *situacao, f2, r2, s2));
 }

@@ -48,7 +48,7 @@ unsafe fn cqd7_rodada(copa: usize, r: i32) -> usize {
 /// o primeiro pelo par ou sorteado (0x400: o primeiro todo livre), o lado pela moeda, e numa vaga ocupada o time da
 /// nação +0x24 vira mandante (sem vaga, a caixa da linha 0x1c2 ou 0x222 e -1). Sem confrontos na primeira rodada, +0xb1
 /// = 1. Por fim o número do primeiro confronto de cada rodada (+0x5b), de trás para a frente. Devolve 1.
-unsafe extern "thiscall" fn copa_arvore_dos_confrontos(this: usize) -> i32 {
+unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -348,7 +348,7 @@ unsafe extern "thiscall" fn copa_arvore_dos_confrontos(this: usize) -> i32 {
 /// roda duas vezes). Confere o que ela garante quando devolve 1 com clubes: cada confronto das rodadas mapeadas aponta
 /// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
 /// +0xc/+0x10 visitante).
-unsafe extern "thiscall" fn comparar_copa_arvore_dos_confrontos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let r = o(this);
     if r != 1 || cqd7_d(this + 0x45) == 0 {
@@ -372,7 +372,7 @@ unsafe extern "thiscall" fn comparar_copa_arvore_dos_confrontos(this: usize) -> 
             }
         }
     }
-    PLACAR.registrar(erro.is_none(), || format!("copa_arvore_dos_confrontos: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
+    PLACAR.registrar(erro.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
     r
 }
 
@@ -389,7 +389,7 @@ unsafe fn cqd7_fase(comp: usize, k: i32) -> usize {
 /// { 0x48d2b0 } (thiscall, ret 4, comp.cpp): `Comp::get_first_stage_of_group(k)`, das telas das competições
 /// (0x4947a0): da fase `k` para trás, enquanto as fases têm o mesmo grupo (0x4b01d0 do id +0x3a: push id; add esp, 4 ->
 /// cdecl) e o índice é maior que −1, o índice da primeira delas (o próprio k sem grupo).
-unsafe extern "thiscall" fn competicao_primeira_fase_do_grupo(this: usize, k: i32) -> i32 {
+unsafe extern "thiscall" fn get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let grupo: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x4b01d0usize);
     let mut e = k;
     let g = grupo(cqd7_w(cqd7_fase(this, e) + 0x3a) as i32);
@@ -410,14 +410,14 @@ unsafe extern "thiscall" fn competicao_primeira_fase_do_grupo(this: usize, k: i3
 
 /// O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
 /// dele só a original (a caixa).
-unsafe extern "thiscall" fn comparar_competicao_primeira_fase_do_grupo(this: usize, k: i32) -> i32 {
+unsafe extern "thiscall" fn comparar_get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> i32>(%%I1%%);
     if k < -1 || k > cqd7_d(this + 0x30) as i32 {
         return o(this, k);
     }
     let r = o(this, k);
-    let n = competicao_primeira_fase_do_grupo(this, k);
-    PLACAR.registrar(r == n, || format!("competicao_primeira_fase_do_grupo({}): original={} rust={}", k, r, n));
+    let n = get_first_stage_of_group(this, k);
+    PLACAR.registrar(r == n, || format!("get_first_stage_of_group({}): original={} rust={}", k, r, n));
     r
 }
 
@@ -426,7 +426,7 @@ unsafe extern "thiscall" fn comparar_competicao_primeira_fase_do_grupo(this: usi
 /// não começou (+0xab = 0), volta ao começo do grupo dela pela fase anterior (0x4b01d0 e 0x48d200: push k; mov ecx,
 /// this -> thiscall, ret 4). Todas acabadas: o começo do grupo da última. Fase inválida no fim: a caixa da linha 0x36e
 /// e a própria competição; fase nula: a própria.
-unsafe extern "thiscall" fn competicao_fase_atual(this: usize) -> usize {
+unsafe extern "thiscall" fn get_current_stage(this: usize) -> usize {
     let grupo: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x4b01d0usize);
     let fase: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x48d200usize);
     let voltar = |s0: i32| -> i32 {
@@ -479,6 +479,6 @@ unsafe extern "thiscall" fn competicao_fase_atual(this: usize) -> usize {
 
 /// O comparador da fase atual: só a original (ponytail: o método 0x10 das fases pode refazer a tabela; não roda duas
 /// vezes); a cópia se prova no modo Rust pelas telas.
-unsafe extern "thiscall" fn comparar_competicao_fase_atual(this: usize) -> usize {
+unsafe extern "thiscall" fn comparar_get_current_stage(this: usize) -> usize {
     orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this)
 }

@@ -37,7 +37,7 @@ unsafe fn cqt13_do_grupo(this: usize, g: i32, p: i32) -> usize {
 /// id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos, que o
 /// construtor não lê) em [+0xc][3]; a lista e a tabela liberadas (0x9452ca). Sem fase: a caixa da linha 0x32c e volta.
 /// Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall, ret 4) e +0x30 = 3.
-unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
+unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn cqt13_africana_quartas(this: usize) {
 // ponytail: aloca a fase e monta a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][3] com 8 times,
 // o +4 da copa e os 8 cruzados (lidos antes pelas tabelas, +0xb1 de cada grupo) na lista dela (+0xa7, 6 bytes; como
 // conjunto) e +0x30 = 3.
-unsafe extern "thiscall" fn comparar_cqt13_africana_quartas(this: usize) {
+unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let fases = cqt13_d(this + 0xc);
     if fases == 0 || (0..3).any(|g| cqt13_d(fases + g * 4) == 0) || cqt13_d(this + 0xb1) == 0 {
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn comparar_cqt13_africana_quartas(this: usize) {
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 0xc);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("cqt13_africana_quartas({:#x}) sem fase", this));
+        PLACAR.registrar(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt13_d(fase + 0xa7);
@@ -96,13 +96,13 @@ unsafe extern "thiscall" fn comparar_cqt13_africana_quartas(this: usize) {
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt13_w(fase + 0x3e) == 8 && cqt13_d(fase + 4) == cqt13_d(this + 4) && cqt13_d(this + 0x30) == 3;
-    PLACAR.registrar(igual, || format!("cqt13_africana_quartas({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.registrar(igual, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
 /// { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x328; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), as finais (0x40e030: mov ecx, this -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqt13_recopa_asiatica_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
     let f = cqt13_d(this + 0x30) as i32;
     if f >= (cqt13_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x987b60, 0x328);
@@ -118,13 +118,13 @@ unsafe extern "thiscall" fn cqt13_recopa_asiatica_fase_seguinte(this: usize) {
 
 // ponytail: as finais alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um (fora da última
 // fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn comparar_asia_cup_winner_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let f = cqt13_d(this + 0x30) as i32;
     let ultima = f >= (cqt13_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqt13_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("cqt13_recopa_asiatica_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// Os 4 finalistas da Recopa asiática: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da
@@ -159,7 +159,7 @@ unsafe fn cqt13_finalistas(this: usize) -> [usize; 4] {
 /// construtor não lê) em [+0xc][1]; a tabela liberada (0x9452ca). Sem fase: a caixa da linha 0x375 e volta (a lista não
 /// é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
 /// thiscall, ret 4) e a lista liberada.
-unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
+unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn cqt13_recopa_asiatica_finais(this: usize) {
 
 // ponytail: aloca a fase e sorteia a rodada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][1] com 4
 // times, o +4 da copa e os 4 finalistas (lidos antes) na lista dela (+0xa7, 6 bytes; como conjunto).
-unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_finais(this: usize) {
+unsafe extern "thiscall" fn comparar_create_finals_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqt13_d(this + 0xa7) == 0 || cqt13_d(this + 0xc) == 0 || cqt13_d(cqt13_d(this + 0xc)) == 0 {
         return o(this);
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_finais(this: usize) {
     o(this);
     let fase = cqt13_d(cqt13_d(this + 0xc) + 4);
     if fase == 0 {
-        PLACAR.registrar(false, || format!("cqt13_recopa_asiatica_finais({:#x}) sem fase", this));
+        PLACAR.registrar(false, || format!("create_finals_stage({:#x}) sem fase", this));
         return;
     }
     let lista = cqt13_d(fase + 0xa7);
@@ -215,5 +215,5 @@ unsafe extern "thiscall" fn comparar_cqt13_recopa_asiatica_finais(this: usize) {
     plano.sort_unstable();
     achou.sort_unstable();
     let igual = plano == achou && cqt13_w(fase + 0x3e) == 4 && cqt13_d(fase + 4) == cqt13_d(this + 4);
-    PLACAR.registrar(igual, || format!("cqt13_recopa_asiatica_finais({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    PLACAR.registrar(igual, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }

@@ -23,8 +23,8 @@ unsafe fn cps4_vezes(o: usize, f: f64) -> usize {
 
 /// O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]), ou 0.
 unsafe fn cps4_clube_atual(pessoa: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cps4_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cps4_d(0xae1050), pessoa);
     cps4_por(0xae1080, c);
     if c == 0 {
         0
@@ -43,7 +43,7 @@ unsafe fn cps4_clube_atual(pessoa: usize) -> usize {
 /// (+0x3a, valor × 0,3, por 10 jogos +0x3e), o valor × 0,8 e apelo 70. Senão, reputação da ficha mais de 3 abaixo da do
 /// clube: o prêmio por jogo no time (+0x35, valor × 0,3, por 20 jogos +0x39), o valor × 0,8 e apelo 60. Nenhum: a
 /// oferta é destruída (0x8e5710, 0x944c94; `*saida` fica com o ponteiro, como na original) e 0.
-unsafe extern "thiscall" fn oferta_com_clausula(_this: usize, clube: usize, jogador: usize, saida: *mut usize, apelo: *mut u8, valor: u32) -> u32 {
+unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize, jogador: usize, saida: *mut usize, apelo: *mut u8, valor: u32) -> u32 {
     let atual = cps4_clube_atual(jogador);
     if (cps4_w(clube + 0x80) as i16 as i32) - (cps4_w(atual + 0x80) as i16 as i32) <= 3 {
         return 0;
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn oferta_com_clausula(_this: usize, clube: usize, joga
 /// 0x1000 com o clube atual (0x4cf5a0) e o do lance em divisões diferentes (+0x57); 0x800 (rival) com os dois clubes,
 /// sem os dois humanos (0x600a50), sem confronto na liga (0x4b02e0) e sem um ser parceiro (+0xb3/+0xb7/+0xbb) do outro.
 /// Senão 1.
-unsafe extern "stdcall" fn motivo_da_recusa_vale(motivo: u32, oferta: usize) -> u32 {
+unsafe extern "stdcall" fn transfer_manager_is_rejection_reason_valid(motivo: u32, oferta: usize) -> u32 {
     let pessoa = cps4_d(0xae23bc).wrapping_add(cps4_d(oferta + 0xc).wrapping_mul(0x6e));
     let atual = cps4_clube_atual(pessoa);
     let lance = cps4_d(0xae23b4).wrapping_add(cps4_d(oferta + 8).wrapping_mul(0x245));
@@ -135,7 +135,7 @@ unsafe extern "stdcall" fn motivo_da_recusa_vale(motivo: u32, oferta: usize) -> 
 /// { 0x8c54c0 } (stdcall, ret 4, transfer_manager.cpp): `transfer_manager_get_squad_status_reason(oferta)`: o motivo de
 /// recusa pelo status no elenco (+0x4f >> 4) do contrato da pessoa (+0xc) com o clube atual (0x4cf5f0): 1 → 0x200, 2 e
 /// 3 → 0x400, 5 → 0x2000; senão 0.
-unsafe extern "stdcall" fn motivo_pelo_status_no_elenco(oferta: usize) -> u16 {
+unsafe extern "stdcall" fn transfer_manager_get_squad_status_reason(oferta: usize) -> u16 {
     let pessoa = cps4_d(0xae23bc).wrapping_add(cps4_d(oferta + 0xc).wrapping_mul(0x6e));
     let atual = cps4_clube_atual(pessoa);
     let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
@@ -152,22 +152,22 @@ unsafe extern "stdcall" fn motivo_pelo_status_no_elenco(oferta: usize) -> u16 {
 }
 
 // ponytail: aloca e solta a oferta (0x944cf1, 0x944c94): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_oferta_com_clausula(this: usize, clube: usize, jogador: usize, saida: *mut usize, apelo: *mut u8, valor: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_build_clause_offer_option(this: usize, clube: usize, jogador: usize, saida: *mut usize, apelo: *mut u8, valor: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut usize, *mut u8, u32) -> u32>(%%I0%%)(this, clube, jogador, saida, apelo, valor)
 }
 
 /// Comparador: lado a lado pelo contrato da vez ([0xae1080]), e pela devolução.
-unsafe extern "stdcall" fn comparar_motivo_da_recusa_vale(motivo: u32, oferta: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_transfer_manager_is_rejection_reason_valid(motivo: u32, oferta: usize) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(u32, usize) -> u32>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(motivo, oferta), || motivo_da_recusa_vale(motivo, oferta));
-    PLACAR.registrar(igual && r == n, || format!("motivo_da_recusa_vale({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(motivo, oferta), || transfer_manager_is_rejection_reason_valid(motivo, oferta));
+    PLACAR.registrar(igual && r == n, || format!("transfer_manager_is_rejection_reason_valid({:x}, pessoa {}) original={} rust={} {:x?} x {:x?}", motivo as u16, cps4_d(oferta + 0xc), r, n, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo contrato da vez ([0xae1080]), e pela devolução.
-unsafe extern "stdcall" fn comparar_motivo_pelo_status_no_elenco(oferta: usize) -> u16 {
+unsafe extern "stdcall" fn comparar_transfer_manager_get_squad_status_reason(oferta: usize) -> u16 {
     let o = orig::<unsafe extern "stdcall" fn(usize) -> u16>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(oferta), || motivo_pelo_status_no_elenco(oferta));
-    PLACAR.registrar(igual && r == n, || format!("motivo_pelo_status_no_elenco(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(0xae1080, 4)], || o(oferta), || transfer_manager_get_squad_status_reason(oferta));
+    PLACAR.registrar(igual && r == n, || format!("transfer_manager_get_squad_status_reason(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps4_d(oferta + 0xc), r, n, mo, mr));
     r
 }

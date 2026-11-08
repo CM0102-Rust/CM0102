@@ -5,7 +5,7 @@
 /// trunc((v × −0.0035 − 2.5) × `ritmo`); senão, abaixo de 1200 − (ficha +0x44 + ficha +0x3c +
 /// pessoa +0x5b, 16 bits), sobe `ritmo`; senão, abaixo de 1250, sobe sorteio(`ritmo`) + 1.
 /// Pessoa nula ou id fora de [0xae2364]: nada.
-unsafe extern "thiscall" fn recuperar_lesao(t: usize, p: *const i32, marca: i16, ritmo: i16) {
+unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, marca: i16, ritmo: i16) {
     if p.is_null() || *p >= *(0xae2364 as *const i32) {
         return;
     }
@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn recuperar_lesao(t: usize, p: *const i32, marca: i16,
 
 /// { 0x8c1870 } (thiscall, ret 4, transfer_manager.cpp): a pessoa `*p` está na lista +0x92c (recomeça
 /// o iterador +0xa de +2 e anda pela 0x68d1b0, comparando o primeiro dword de cada item)?
-unsafe extern "thiscall" fn pessoa_na_lista_de_transferencias(t: usize, p: *const i32) -> u32 {
+unsafe extern "thiscall" fn person_in_transfer_list(t: usize, p: *const i32) -> u32 {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let lista = t + 0x92c;
     core::ptr::write_unaligned((lista + 0xa) as *mut u32, core::ptr::read_unaligned((t + 0x92e) as *const u32));
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn pessoa_na_lista_de_transferencias(t: usize, p: *cons
 
 /// { 0x55cae0 } (thiscall, ret 0xc, discipline.cpp): a punição da linha `linha` (29 bytes) e da coluna
 /// `coluna` (5 bytes) da tabela [this+0x14]: o dword +1 se o byte +0 for `tipo`, senão −1.
-unsafe extern "thiscall" fn punicao_da_tabela(t: usize, linha: i32, coluna: i8, tipo: i8) -> i32 {
+unsafe extern "thiscall" fn table_penalty(t: usize, linha: i32, coluna: i8, tipo: i8) -> i32 {
     let e = (*((t + 0x14) as *const usize))
         .wrapping_add((linha as usize).wrapping_mul(29))
         .wrapping_add((coluna as isize * 5) as usize);
@@ -60,22 +60,22 @@ unsafe extern "thiscall" fn punicao_da_tabela(t: usize, linha: i32, coluna: i8, 
     }
 }
 
-unsafe extern "thiscall" fn comparar_recuperar_lesao(t: usize, p: *const i32, marca: i16, ritmo: i16) {
+unsafe extern "thiscall" fn comparar_recover_injury(t: usize, p: *const i32, marca: i16, ritmo: i16) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const i32, i16, i16)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     if !p.is_null() && *p < *(0xae2364 as *const i32) {
         reg.push(((*(t as *const usize)).wrapping_add((*p as usize).wrapping_mul(31)).wrapping_add(0xa), 4));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, p, marca, ritmo), || crate::aleatorio::sem_contar(|| recuperar_lesao(t, p, marca, ritmo)));
-    PLACAR.registrar(igual, || format!("recuperar_lesao({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, marca, ritmo, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, p, marca, ritmo), || crate::aleatorio::sem_contar(|| recover_injury(t, p, marca, ritmo)));
+    PLACAR.registrar(igual, || format!("recover_injury({:#x}, {:p}, {}, {}) {:x?} x {:x?}", t, p, marca, ritmo, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_pessoa_na_lista_de_transferencias(t: usize, p: *const i32) -> u32 {
+unsafe extern "thiscall" fn comparar_person_in_transfer_list(t: usize, p: *const i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(%%I1%%);
     let reg = [(t + 0x92c + 0xa, 4)];
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, p), || pessoa_na_lista_de_transferencias(t, p));
-    PLACAR.registrar(igual && r == v, || format!("pessoa_na_lista_de_transferencias({:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, p, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(t, p), || person_in_transfer_list(t, p));
+    PLACAR.registrar(igual && r == v, || format!("person_in_transfer_list({:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, p, r, mo, v, mr));
     r
 }
 
-comparar_valor!(comparar_punicao_da_tabela, punicao_da_tabela, %%I2%%, (linha: i32, coluna: i8, tipo: i8) -> i32);
+comparar_valor!(comparar_table_penalty, table_penalty, %%I2%%, (linha: i32, coluna: i8, tipo: i8) -> i32);

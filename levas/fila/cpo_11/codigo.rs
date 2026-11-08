@@ -76,7 +76,7 @@ unsafe fn cpo11_limpar_vaga(this: usize, id: u32, k: usize, e: usize) {
 /// no fim (conta +0xa, capacidade +8; cresce 100, até 0x7d00, malloc/realloc, as vagas novas livres), liga cada regra
 /// ao índice (0x7e8510) e, com a quarta regra, põe {id, nação} no índice das nações (+0xc, capacidade +0x10, conta
 /// +0x12; cresce 20; qsort 0x55e5f0). Caixas "Error" (capacidade no máximo, sem memória) pela aviso_em.
-unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usize) {
+unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
         if regra == 0xff {
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn acrescentar_suspensao(this: usize, id: u32, ban: usi
 /// vaga ocupada das 4 do registro da pessoa cujo órgão não vale para o clube novo (`cpo11_cobre`) é liberada: a
 /// suspensão solta (0x556d00), a vaga livre e a entrada do órgão livre. Com suspensões guardadas (+0x1c ≠ 0), a caixa
 /// "Error" antes (e segue). Da troca de clube (0x8c9720).
-unsafe extern "thiscall" fn tirar_suspensoes_de_fora_do_clube(this: usize, pessoa: usize, _nada: u32, clube: usize) {
+unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, pessoa: usize, _nada: u32, clube: usize) {
     let id = cpo11_d(pessoa) as u32;
     let r = cpo11_registro(this, id);
     for k in 0..4usize {
@@ -225,8 +225,8 @@ struct Cpo11Devolver {
 unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
     let id = cpo11_d(pessoa) as u32;
     let r = cpo11_registro(this, id);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let contrato = contrato_de(cpo11_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato = contract_of(cpo11_d(0xae1050), pessoa);
     let clube = if contrato == 0 { 0 } else { cpo11_d(0xae23b4).wrapping_add(cpo11_d(contrato + 4).wrapping_mul(0x245)) };
     let mut p = Cpo11Devolver { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
     let lista = this + 0x1c;
@@ -269,11 +269,11 @@ unsafe fn cpo11_plano_devolver(this: usize, pessoa: usize) -> Cpo11Devolver {
 /// liberada antes (a suspensão solta, 0x556d00), a guardada volta para a vaga, sai da lista (0x68d1f0, que a libera) e a
 /// conta cai. Depois, as vagas 0..2 não devolvidas (a quarta nunca: `k != 3` da original) cujo órgão não vale para o
 /// clube são liberadas.
-unsafe extern "thiscall" fn restaurar_suspensoes_guardadas(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
     let id = cpo11_d(pessoa) as u32;
     let r = cpo11_registro(this, id);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let contrato = contrato_de(cpo11_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato = contract_of(cpo11_d(0xae1050), pessoa);
     cpo11_por(0xae1080, contrato as u32);
     let clube = if contrato == 0 { 0 } else { cpo11_d(0xae23b4).wrapping_add(cpo11_d(contrato + 4).wrapping_mul(0x245)) };
     let lista = this + 0x1c;
@@ -362,7 +362,7 @@ unsafe fn cpo11_plano_suspensao(this: usize, id: u32, ban: usize) -> Cpo11Plano 
 /// Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
 /// roda; confere a velha estendida (jogos, dias, bit 0 das duas), ou a nova na vaga (jogos, dias, as 4 regras), a
 /// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
-unsafe extern "thiscall" fn comparar_acrescentar_suspensao(this: usize, id: u32, ban: usize) {
+unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
     let plano = cpo11_plano_suspensao(this, id, ban);
     let indice = cpo11_w(this + 0x12);
     let mut regras = [0u8; 4];
@@ -391,13 +391,13 @@ unsafe extern "thiscall" fn comparar_acrescentar_suspensao(this: usize, id: u32,
             (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, cpo11_w(this + 0xa), conta, cpo11_w(this + 0x12), indice))
         }
     };
-    PLACAR.registrar(ok, || format!("acrescentar_suspensao({}) {}", id, detalhe));
+    PLACAR.registrar(ok, || format!("add_ban({}) {}", id, detalhe));
 }
 
 /// Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
 /// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
 /// entrada repetida em duas vagas não entra na conferência da segunda.
-unsafe extern "thiscall" fn comparar_tirar_suspensoes_de_fora_do_clube(this: usize, pessoa: usize, nada: u32, clube: usize) {
+unsafe extern "thiscall" fn comparar_clear_bans_invalid_for_club(this: usize, pessoa: usize, nada: u32, clube: usize) {
     let id = cpo11_d(pessoa) as u32;
     let r = cpo11_registro(this, id);
     let mut antes = [0u8; 29];
@@ -432,13 +432,13 @@ unsafe extern "thiscall" fn comparar_tirar_suspensoes_de_fora_do_clube(this: usi
             None => *v == antes[k * 5..k * 5 + 5],
         };
     }
-    PLACAR.registrar(ok, || format!("tirar_suspensoes_de_fora_do_clube({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plano, antes, depois));
+    PLACAR.registrar(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plano, antes, depois));
 }
 
 /// Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
 /// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as
 /// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
-unsafe extern "thiscall" fn comparar_restaurar_suspensoes_guardadas(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_restore_held_bans(this: usize, pessoa: usize) {
     let id = cpo11_d(pessoa) as u32;
     let r = cpo11_registro(this, id);
     let p = cpo11_plano_devolver(this, pessoa);
@@ -458,5 +458,5 @@ unsafe extern "thiscall" fn comparar_restaurar_suspensoes_guardadas(this: usize,
     }
     esperado[0x1c] = p.resto;
     ok &= depois == esperado;
-    PLACAR.registrar(ok, || format!("restaurar_suspensoes_guardadas({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, esperado, depois));
+    PLACAR.registrar(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, esperado, depois));
 }

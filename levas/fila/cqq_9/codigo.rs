@@ -16,7 +16,7 @@ unsafe fn cqq9_campeao_do_turno(this: usize, k: usize) -> usize {
 /// { 0x6639c0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::advance_stage()`, a fase seguinte da J1 (dois turnos, as fases 0
 /// e 1, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x223 e nada mais. Senão
 /// +0x30 sobe um e, ao chegar a 2, monta a final (0x663a50, call direto com o ecx da liga).
-unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
+unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
     let fase = cqq9_d(this + 0x30) as i32;
     if fase >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9eabc8, 0x223);
@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn cqq9_fase_seguinte_da_j1(this: usize) {
 /// (free 0x9452ca, nessa ordem); Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4) chamada com a fase da terceira
 /// vaga mesmo nula (como na original); sem fase, a caixa da linha 0x25c; com ela, +0x30 = 2. O quadro SEH da original
 /// só cobre o construtor (sem destrutor).
-unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
+unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let lista = alocar(8);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn cqq9_final_da_j1(this: usize) {
 /// thiscall(this, 0), 0x1d2); depois a virada da J2 (a virtual +8 da competição de id [0x9cf768]), as posições previstas
 /// (virtual +0x5c), as expectativas das diretorias (League::set_club_season_expectations 0x68aa80) e a renovação dos
 /// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
-unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
+unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
     let virtual_ = |c: usize, desl: usize| -> u32 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqq9_d(cqq9_d(c) + desl));
         f(c)
@@ -163,18 +163,18 @@ unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia), com o
 /// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
-unsafe extern "thiscall" fn comparar_cqq9_fase_seguinte_da_j1(this: usize) {
+unsafe extern "thiscall" fn comparar_jap_j1_advance_stage(this: usize) {
     let antes = cqq9_d(this + 0x30) as i32;
     let ultima = antes >= (cqq9_d(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqq9_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqq9_fase_seguinte_da_j1({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
 /// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
 /// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
-unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
+unsafe extern "thiscall" fn comparar_create_championship_final_stage(this: usize) {
     let (a, b) = (cqq9_campeao_do_turno(this, 0), cqq9_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let fase = cqq9_d(cqq9_d(this + 0xc) + 8);
@@ -183,15 +183,15 @@ unsafe extern "thiscall" fn comparar_cqq9_final_da_j1(this: usize) {
         let (x, y) = (cqq9_d(l), cqq9_d(l + 6));
         cqq9_w(fase + 0x3e) == 2 && cqq9_d(fase + 4) == cqq9_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqq9_d(this + 0x30) == 2
     };
-    PLACAR.registrar(igual, || format!("cqq9_final_da_j1({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
+    PLACAR.registrar(igual, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this, a, b, fase, cqq9_d(this + 0x30)));
 }
 
 /// O comparador da virada: só a original (ponytail: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
 /// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
-unsafe extern "thiscall" fn comparar_cqq9_virada_da_j1(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_jap_j1_start_new_season(this: usize) -> u32 {
     let antes = cqq9_w(this + 0x40);
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
     let depois = cqq9_w(this + 0x40);
-    PLACAR.registrar(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("cqq9_virada_da_j1({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
+    PLACAR.registrar(depois == antes.wrapping_add(1) && cqq9_d(this + 0x2c) == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this, antes, depois, cqq9_d(this + 0x2c)));
     r
 }

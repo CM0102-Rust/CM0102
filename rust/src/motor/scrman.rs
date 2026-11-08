@@ -7,11 +7,11 @@ use super::*;
 ///
 /// [pt] { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
 /// parâmetros da tela atual sem a tela seguinte em +0x1f8). Sem bloco: a original (caixa de erro e saída).
-pub(crate) unsafe extern "thiscall" fn sem_tela_seguinte(gerente: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn is_forward_unavailable(gerente: usize) -> u32 {
     let vaga = *((gerente + 0x382a) as *const i16) as isize;
     let bloco = core::ptr::read_unaligned((gerente as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEM_TELA_SEGUINTE)(gerente);
+        return orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_IS_FORWARD_UNAVAILABLE)(gerente);
     }
     (*((bloco + 0x1f8) as *const usize) == 0) as u32
 }
@@ -47,10 +47,10 @@ pub(crate) unsafe fn nome_da_competicao_no_painel(c: usize, rodadas: usize) {
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_sem_tela_seguinte(gerente: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEM_TELA_SEGUINTE)(gerente);
-    let n = sem_tela_seguinte(gerente);
-    PLACAR.registrar(r == n, || format!("sem_tela_seguinte original={} rust={}", r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_is_forward_unavailable(gerente: usize) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_IS_FORWARD_UNAVAILABLE)(gerente);
+    let n = is_forward_unavailable(gerente);
+    PLACAR.registrar(r == n, || format!("is_forward_unavailable original={} rust={}", r, n));
     r
 }
 

@@ -50,7 +50,7 @@ const JOGADOR_V1: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1, 1), (5, 2, 2), (
 /// versão 1 campo a campo (`CLUBE_V1`); a reputação lida num byte, 0 vira 1, × 500 (u16, como o `imul ax`).
 /// Chamado por `db_files_read_clubs` 0x54db50 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
-unsafe extern "C" fn ler_clubes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler clubes v1");
     converter_v1(stream, use_zip, registros, n, 581, &CLUBE_V1, |b| (b.max(1) as u16).wrapping_mul(500))
 }
@@ -58,7 +58,7 @@ unsafe extern "C" fn ler_clubes_v1(stream: usize, use_zip: i32, registros: usize
 /// { 0x54e9a0 } (cdecl, Db_files.cpp): `db_files_read_players_v1(stream, use_zip, registros, n)` (o mapa da
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 68 bytes): campo a campo
 /// (`NAO_JOGADOR_V1`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
-unsafe extern "C" fn ler_nao_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler não jogadores v1");
     converter_v1(stream, use_zip, registros, n, 68, &NAO_JOGADOR_V1, |b| b as u16)
 }
@@ -66,7 +66,7 @@ unsafe extern "C" fn ler_nao_jogadores_v1(stream: usize, use_zip: i32, registros
 /// { 0x54f150 } (cdecl, Db_files.cpp): `db_files_read_non_players_v1(stream, use_zip, registros, n)` (o mapa
 /// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`JOGADOR_V1`); as reputações
 /// lidas em bytes, sem conta. Chamado por 0x54f030 com a versão 1.
-unsafe extern "C" fn ler_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler jogadores v1");
     converter_v1(stream, use_zip, registros, n, 70, &JOGADOR_V1, |b| b as u16)
 }
@@ -105,16 +105,16 @@ unsafe fn comparar_conversor_v1(nome: &str, o: ConversorV1, rust: ConversorV1, s
     r
 }
 
-unsafe extern "C" fn comparar_ler_clubes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("ler_clubes_v1", orig::<ConversorV1>(%%I0%%), ler_clubes_v1, stream, use_zip, registros, n, 581)
+unsafe extern "C" fn comparar_db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    comparar_conversor_v1("db_files_read_clubs_v1", orig::<ConversorV1>(%%I0%%), db_files_read_clubs_v1, stream, use_zip, registros, n, 581)
 }
 
-unsafe extern "C" fn comparar_ler_nao_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("ler_nao_jogadores_v1", orig::<ConversorV1>(%%I1%%), ler_nao_jogadores_v1, stream, use_zip, registros, n, 68)
+unsafe extern "C" fn comparar_db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    comparar_conversor_v1("db_files_read_players_v1", orig::<ConversorV1>(%%I1%%), db_files_read_players_v1, stream, use_zip, registros, n, 68)
 }
 
-unsafe extern "C" fn comparar_ler_jogadores_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("ler_jogadores_v1", orig::<ConversorV1>(%%I2%%), ler_jogadores_v1, stream, use_zip, registros, n, 70)
+unsafe extern "C" fn comparar_db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+    comparar_conversor_v1("db_files_read_non_players_v1", orig::<ConversorV1>(%%I2%%), db_files_read_non_players_v1, stream, use_zip, registros, n, 70)
 }
 
 /// Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
@@ -129,8 +129,8 @@ pub unsafe fn autoteste_dbj_1() {
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let (t0, d0) = PLACAR.contagem();
     let mut s = Sorteio(0x5631_4442_4a31);
-    let casos: [(ConversorV1, &[(usize, u32, usize)], usize); 3] = [(comparar_ler_clubes_v1, &CLUBE_V1, 581),
-        (comparar_ler_nao_jogadores_v1, &NAO_JOGADOR_V1, 68), (comparar_ler_jogadores_v1, &JOGADOR_V1, 70)];
+    let casos: [(ConversorV1, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUBE_V1, 581),
+        (comparar_db_files_read_players_v1, &NAO_JOGADOR_V1, 68), (comparar_db_files_read_non_players_v1, &JOGADOR_V1, 70)];
     for (comparar, campos, tamanho) in casos {
         for caso in 0..64u64 {
             let n = 1 + (s.proximo() % 6) as usize;

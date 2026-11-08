@@ -64,7 +64,7 @@ unsafe fn cpy9_gerar(r: usize, nacao: usize) {
 /// continente (+0x71): nada. Realoca a tabela ([0xae23e8], 0x945667) para [0xae2390] + conta fichas (sem memória: erro
 /// e o jogo para), gera `conta` fichas novas no fim (cpy9_gerar), soma a conta em [0xae2390] e ordena a tabela inteira
 /// (qsort 0x945333 com 0x79d480: nação, +0x28 × 50 + +0x22, id).
-unsafe extern "thiscall" fn arbitros_sorteados(_this: usize, conta: i32, nacao: usize) {
+unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize, conta: i32, nacao: usize) {
     if nacao != 0 && cpy9_d(nacao + 0x71) == 0 {
         return;
     }
@@ -99,7 +99,7 @@ unsafe fn cpy9_mesma_ficha(g: &[u8; 0x2b], f: usize) -> bool {
 /// que é reposto; depois roda a original. Confere o estado final do sorteio, a conta nova ([0xae2390] + conta) e que
 /// cada ficha do ensaio esteja na tabela ordenada (campos que a original grava). Conta não positiva ou nação sem
 /// continente: só a original.
-unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32, nacao: usize) {
+unsafe extern "thiscall" fn comparar_officials_manager_add_random_officials(this: usize, conta: i32, nacao: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize)>(%%I0%%);
     if conta <= 0 || (nacao != 0 && cpy9_d(nacao + 0x71) == 0) {
         return o(this, conta, nacao);
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn comparar_arbitros_sorteados(this: usize, conta: i32,
         }
     }
     let igual = estado_orig == estado_rust && total == antes.wrapping_add(conta) && faltam.is_empty();
-    PLACAR.registrar(igual, || format!("arbitros_sorteados(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
+    PLACAR.registrar(igual, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
         conta, nacao, total, antes, estado_orig == estado_rust, faltam));
 }
 
@@ -146,7 +146,7 @@ unsafe fn cpy9_atributo(e: usize, o: usize, f: impl FnOnce() -> u8) {
 /// +0x20 refeita fica no mínimo na +0x1e); os bytes +0x24..+0x2a fora de 1..20 sorteados pelas faixas de +0x1e (acima de
 /// 120, de 80); nascido antes da data 0x549f70(1, 1, 1910, −1) (ano sem sinal, depois o dia com sinal), ano 1960 +
 /// sorteio(10) e dia sorteio(300) + 1.
-unsafe extern "C" fn validar_arbitros() {
+unsafe extern "C" fn officials_manager_validate_officials() {
     let base = cpy9_d(0xae23e8);
     let mut i = 0i32;
     while i < cpy9_i(0xae2390) {
@@ -218,7 +218,7 @@ unsafe extern "C" fn validar_arbitros() {
 }
 
 /// Comparador: lado a lado pelas fichas de todos os árbitros e pelo estado do sorteio.
-unsafe extern "C" fn comparar_validar_arbitros() {
+unsafe extern "C" fn comparar_officials_manager_validate_officials() {
     let o = orig::<unsafe extern "C" fn()>(%%I1%%);
     let total = cpy9_i(0xae2390).max(0) as usize;
     if cpy9_d(0xae23e8) == 0 {
@@ -226,18 +226,18 @@ unsafe extern "C" fn comparar_validar_arbitros() {
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((cpy9_d(0xae23e8), total * 0x2b));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| validar_arbitros()));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| officials_manager_validate_officials()));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("validar_arbitros ({} fichas) diferencas em {:x?}", total, dif)
+        format!("officials_manager_validate_officials ({} fichas) diferencas em {:x?}", total, dif)
     });
 }
 
 /// { 0x79c530 } (thiscall, ret 4, officials_manager.cpp): `Official::operator=(src)`, pela montagem dos árbitros do
 /// jogo novo (0x79bf60, as fichas que ficam). Copia a ficha de 0x2b bytes campo a campo (+0, +4, +8; a data de +0xc
 /// pela 0x417c10; +0x14, +0x16, +0x1a, +0x1e, +0x20, +0x22, os bytes +0x24..+0x2a). Devolve `this`.
-unsafe extern "thiscall" fn copiar_ficha_de_arbitro(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) -> usize {
     for o in [0usize, 4, 8] {
         cpy9_pd(this + o, cpy9_d(src + o));
     }
@@ -257,9 +257,9 @@ unsafe extern "thiscall" fn copiar_ficha_de_arbitro(this: usize, src: usize) -> 
 }
 
 /// Comparador: lado a lado pela ficha de destino e pela devolução.
-unsafe extern "thiscall" fn comparar_copiar_ficha_de_arbitro(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn comparar_officials_manager_operator(this: usize, src: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x2b)], || o(this, src), || copiar_ficha_de_arbitro(this, src));
-    PLACAR.registrar(igual && r == n, || format!("copiar_ficha_de_arbitro(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x2b)], || o(this, src), || officials_manager_operator(this, src));
+    PLACAR.registrar(igual && r == n, || format!("officials_manager_operator(src {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", src, r, mo, n, mr));
     r
 }

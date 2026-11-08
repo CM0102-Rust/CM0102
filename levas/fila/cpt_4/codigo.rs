@@ -10,7 +10,7 @@ unsafe fn cpt4_d(a: usize) -> usize {
 /// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
 /// conferir a competição nula (o caso de erro nunca chega à caixa). Chamada a cada partida: sem contador.
-unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
+unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let nacao = cpt4_d(comp + 0x5d);
     if nacao != 0 {
         let linha = (0..0x23usize).find(|&k| cpt4_d(0xb63d60 + 72 * k) == nacao); // cpt4: a busca da nacao
@@ -40,10 +40,10 @@ unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
     3
 }
 
-unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
+unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(comp);
-    let n = indice_da_nacao_chave(comp);
-    PLACAR.registrar(r == n, || format!("indice_da_nacao_chave(competição {}) original={} rust={}", cpt4_d(comp) as i32, r, n));
+    let n = key_nation_index_of_comp(comp);
+    PLACAR.registrar(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", cpt4_d(comp) as i32, r, n));
     r
 }
 
@@ -51,7 +51,7 @@ unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
 /// dia 18 0x58d460 e pela tela do ranking): um vetor (0x944e46) de [0xae2350] ponteiros; sem ele, a caixa "Error"
 /// (linha 0x1e3) e 0, sem gravar a conta. As entradas da tabela (0x2c bytes) das nações com seleção (+0x71 da nação,
 /// registros de 0x122 bytes em [0xae23a8]), ordenadas pela pontuação (qsort 0x945333 com 0x58e240); a conta em `conta`.
-unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
+unsafe extern "thiscall" fn collect_ranked_order(this: usize, conta: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let v = alocar((cpt4_d(0xae2350) as u32).wrapping_mul(4));
@@ -76,23 +76,23 @@ unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> us
 
 // ponytail: as duas alocam o vetor; a original roda primeiro (o vetor dela volta ao chamador), a cópia depois, e o
 // vetor da cópia é liberado (0x9452ca) depois da conferência da conta e dos ponteiros.
-unsafe extern "thiscall" fn comparar_ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_collect_ranked_order(this: usize, conta: *mut i32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, *mut i32) -> usize>(%%I1%%)(this, conta);
     if r == 0 {
         return r;
     }
     let mut c = 0i32;
-    let v = ordem_do_ranking(this, &mut c);
+    let v = collect_ranked_order(this, &mut c);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let igual = v != 0 && c == *conta && (0..c as usize).all(|k| cpt4_d(r + k * 4) == cpt4_d(v + k * 4));
-    PLACAR.registrar(igual, || format!("ordem_do_ranking conta original={} rust={}", *conta, c));
+    PLACAR.registrar(igual, || format!("collect_ranked_order conta original={} rust={}", *conta, c));
     liberar(v);
     r
 }
 
 /// { 0x58e240 } (cdecl, fifa_rankings.cpp): `compare_ranking_score_desc(a, b)`, a ordem do qsort da 0x58d610: as
 /// pontuações (f32 +0xc das entradas apontadas): a menor que b (ou sem ordem), 1; iguais, 0; maior, −1.
-unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let fa = *((cpt4_d(a) + 0xc) as *const f32);
     let fb = *((cpt4_d(b) + 0xc) as *const f32);
     if !(fa >= fb) {
@@ -104,9 +104,9 @@ unsafe extern "C" fn ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
     }
 }
 
-unsafe extern "C" fn comparar_ordem_das_pontuacoes(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_ranking_score_desc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_das_pontuacoes(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_pontuacoes original={} rust={}", r, n));
+    let n = compare_ranking_score_desc(a, b);
+    PLACAR.registrar(r == n, || format!("compare_ranking_score_desc original={} rust={}", r, n));
     r
 }

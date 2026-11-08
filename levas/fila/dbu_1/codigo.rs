@@ -26,7 +26,7 @@ unsafe fn dbu1_copiar(destino: usize, origem: usize) {
 /// o comum, o sobrenome ou o nome. Sem nada: o texto vazio. Devolve 1. Texto nulo, tamanho (palavra) < 0x69 ou forma
 /// fora de 1..7: a original (caixa; as locais de 0x200 bytes só servem a ela). Chamada pela 0x53e140 (já em Rust, pelo
 /// endereço do jogo: o desvio vale também lá), pelas telas do clube (0x45ccf0) e pelo manager_manager.
-unsafe extern "C" fn nome_pelos_textos(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let f = forma as u8;
     if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&f) {
         return orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(%%I0%%)(nome, sobrenome, comum, texto, tamanho, forma);
@@ -80,7 +80,7 @@ unsafe extern "C" fn nome_pelos_textos(nome: usize, sobrenome: usize, comum: usi
     1
 }
 
-unsafe extern "C" fn comparar_nome_pelos_textos(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&(forma as u8)) {
         return o(nome, sobrenome, comum, texto, tamanho, forma); // caixa: só a original
@@ -88,8 +88,8 @@ unsafe extern "C" fn comparar_nome_pelos_textos(nome: usize, sobrenome: usize, c
     // o texto produzido (até o tamanho dado, no máximo 128 bytes)
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
-        || nome_pelos_textos(nome, sobrenome, comum, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("nome_pelos_textos(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
+        || database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
     r
 }
 
@@ -123,7 +123,7 @@ const DBU1_CARGOS: [(usize, usize, usize, usize, u8); 18] = [
 /// diretor executivo, técnico, auxiliar, técnico dos reservas e olheiro; 1 para os outros; nada para o aposentado.
 /// Cargo fora da faixa: 0, sem escrever. Nas telas do clube, de contratos, da pessoa e de busca, na mídia
 /// (0x744f80, 0x74bbd0), nos regens (0x7a9650, 0x7aa4c0) e nas transferências (0x8d3520, 0x8dc370).
-unsafe extern "C" fn nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
+unsafe extern "C" fn database_get_job_name(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
     let j = cargo as u8 as i8;
     if !(0..=0x11).contains(&j) || j == 14 {
         return 0;
@@ -144,14 +144,14 @@ unsafe extern "C" fn nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, gener
     0xae19b4
 }
 
-unsafe extern "C" fn comparar_nome_do_cargo(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
+unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(%%I1%%);
     // o texto [0xae19b4] e o byte do gênero, se houver
     let regioes = [(0xae19b4usize, 100usize), (genero, 1)];
     let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(cargo, curto, maiuscula, genero),
-        || nome_do_cargo(cargo, curto, maiuscula, genero));
-    PLACAR.registrar(igual && r == x, || format!("nome_do_cargo({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
+        || database_get_job_name(cargo, curto, maiuscula, genero));
+    PLACAR.registrar(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
     r
 }
 
@@ -171,7 +171,7 @@ const DBU1_IDIOMAS: [usize; 64] = [
 /// { 0x53cee0 } (cdecl, Database.cpp): `database_get_language_name(idioma)`: o nome traduzido (0x66f4e0) do idioma
 /// (byte com sinal, 1..64; fora disso "Unknown") no texto [0xae21d4] (100 bytes), que é o que devolve. Na busca
 /// (0x813210) e na tela da pessoa (0x87dd80).
-unsafe extern "C" fn nome_do_idioma(idioma: u32) -> usize {
+unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let x = idioma as u8 as i8;
     let s = if (1..=64).contains(&x) { DBU1_IDIOMAS[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)
@@ -179,9 +179,9 @@ unsafe extern "C" fn nome_do_idioma(idioma: u32) -> usize {
     0xae21d4
 }
 
-unsafe extern "C" fn comparar_nome_do_idioma(idioma: u32) -> usize {
+unsafe extern "C" fn comparar_database_get_language_name(idioma: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(u32) -> usize>(%%I2%%);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || nome_do_idioma(idioma));
-    PLACAR.registrar(igual && r == x, || format!("nome_do_idioma({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
+    PLACAR.registrar(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
     r
 }

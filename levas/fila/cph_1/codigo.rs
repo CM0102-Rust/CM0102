@@ -16,7 +16,7 @@ unsafe fn cph1_pessoa(contrato: usize) -> usize {
 /// { 0x85fa00 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::days_to_end_date`: os dias da data do jogo
 /// (0xae2c90) até a data do fim do contrato (+0x2d), pela 0x54cdb0 (`dias_ate`, a data do jogo por valor). O jogo lê
 /// só a palavra; devolve o eax inteiro da 0x54cdb0.
-unsafe extern "thiscall" fn dias_ate_o_fim_do_contrato(this: usize) -> u32 {
+unsafe extern "thiscall" fn days_to_end_date(this: usize) -> u32 {
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x54cdb0usize);
     dias(this + 0x2d, cph1_d(0xae2c90), cph1_d(0xae2c94)) // a data do fim do contrato
 }
@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn dias_ate_o_fim_do_contrato(this: usize) -> u32 {
 /// { 0x867520 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::clear_all_grievances(conferir)`: zera as
 /// queixas (+0x45), tira os vínculos de opinião da pessoa (0x549c90) e, com `conferir`, confere a retirada do pedido de
 /// transferência (0x867240 com 0).
-unsafe extern "thiscall" fn limpar_todas_as_queixas(this: usize, conferir: u32) {
+unsafe extern "thiscall" fn clear_all_grievances(this: usize, conferir: u32) {
     core::ptr::write_unaligned((this + 0x45) as *mut u32, 0); // as queixas
     let vinculos: unsafe extern "C" fn(usize) = core::mem::transmute(0x549c90usize);
     vinculos(cph1_pessoa(this));
@@ -40,8 +40,8 @@ unsafe extern "thiscall" fn limpar_todas_as_queixas(this: usize, conferir: u32) 
 /// contrato acertado com outro clube (0x8c5450 em [0xde1f54]). Devolve a pessoa quando retira.
 unsafe fn cph1_retira(this: usize) -> Option<usize> {
     let pessoa = cph1_pessoa(this);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cph1_d(0xae1050) as usize, pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cph1_d(0xae1050) as usize, pessoa);
     *(0xae1080 as *mut usize) = c; // a ficha do contrato
     let clube = if c != 0 && cph1_b(c + 0x35) & 0x3f != 5 {
         let i = cph1_d(c + 4) as usize;
@@ -71,7 +71,7 @@ unsafe fn cph1_retira(this: usize) -> Option<usize> {
 /// bit 3 de +0x4e, a moral (+0x44) vira +0x5b + +0x59 + 5 da pessoa, zera +0x3e e sobe +0x3d a 15; e cada queixa
 /// acesa (bits 0x10, 1, 4, 8, 0x100, 0x80, 0x10000 de +0x45, nessa ordem) é apagada, confere de novo (0x867240 com o
 /// +0x45 de antes) e tira o vínculo de opinião (0x549d60 com o bit). Sem SEH, sem caixa, sem sorteio.
-unsafe extern "thiscall" fn conferir_retirada_do_pedido(this: usize, ctx: u32) {
+unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let Some(pessoa) = cph1_retira(this) else { return };
     let retirar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4d9460usize);
     retirar(cph1_d(0xae1050) as usize, this, ctx);
@@ -96,12 +96,12 @@ unsafe extern "thiscall" fn conferir_retirada_do_pedido(this: usize, ctx: u32) {
 }
 
 // a 0x54cdb0 só lê: compara o valor
-comparar_valor!(comparar_dias_ate_o_fim_do_contrato, dias_ate_o_fim_do_contrato, %%I0%%, () -> u32);
+comparar_valor!(comparar_days_to_end_date, days_to_end_date, %%I0%%, () -> u32);
 
 /// Comparador: sem `conferir`, lado a lado pelas queixas e pelo registro de opiniões da pessoa (79 bytes, o que a
 /// 0x549c90 escreve); com `conferir`, a retirada (0x4d9460) mexe na transferência: só a original (a 0x867240 passa
 /// pelo comparador dela).
-unsafe extern "thiscall" fn comparar_limpar_todas_as_queixas(this: usize, conferir: u32) {
+unsafe extern "thiscall" fn comparar_clear_all_grievances(this: usize, conferir: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     if conferir != 0 {
         return o(this, conferir);
@@ -110,13 +110,13 @@ unsafe extern "thiscall" fn comparar_limpar_todas_as_queixas(this: usize, confer
     if let Some(c) = registro_de_opinioes(cph1_pessoa(this)) {
         reg.push((c, 79));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, conferir), || limpar_todas_as_queixas(this, conferir));
-    PLACAR.registrar(igual, || format!("limpar_todas_as_queixas({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, conferir), || clear_all_grievances(this, conferir));
+    PLACAR.registrar(igual, || format!("clear_all_grievances({:x}) {:x?} x {:x?}", this, mo, mr));
 }
 
 /// Comparador: quando a decisão da cópia é não retirar, lado a lado pela ficha [0xae1080] e pelo contrato (0x50
 /// bytes); quando retira, só a original (a 0x4d9460 mexe na transferência e a 0x867240 se chama de novo).
-unsafe extern "thiscall" fn comparar_conferir_retirada_do_pedido(this: usize, ctx: u32) {
+unsafe extern "thiscall" fn comparar_check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%);
     let ficha = cph1_d(0xae1080);
     let retira = cph1_retira(this).is_some();
@@ -124,6 +124,6 @@ unsafe extern "thiscall" fn comparar_conferir_retirada_do_pedido(this: usize, ct
     if retira {
         return o(this, ctx);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4), (this, 0x50)], || o(this, ctx), || conferir_retirada_do_pedido(this, ctx));
-    PLACAR.registrar(igual, || format!("conferir_retirada_do_pedido({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4), (this, 0x50)], || o(this, ctx), || check_transfer_request_withdrawal(this, ctx));
+    PLACAR.registrar(igual, || format!("check_transfer_request_withdrawal({:x}, {}) {:x?} x {:x?}", this, ctx, mo, mr));
 }

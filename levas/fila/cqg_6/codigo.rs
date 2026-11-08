@@ -59,7 +59,7 @@ unsafe fn cqg6_copiar(para: usize, de: usize) {
 ///    caixa da linha 0x729): nas últimas 8 vagas da tabela +0xa7 dela, de trás para a frente, na tabela +0x14 com a
 ///    situação 5 e com a competição europeia do clube = a UEFA; os quartos (push 3) ficam sem competição europeia (−1);
 ///    depois as posições previstas da UEFA (método +0x5c).
-unsafe extern "thiscall" fn campeoes_sortear_segunda_fase(this: usize, tentativa: u32) {
+unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn campeoes_sortear_segunda_fase(this: usize, tentativa
     let pontos: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x9058b0usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let premio: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x5999a0usize);
-    let noticia_do_premio: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(0x48e3e0usize);
+    let send_prize_money_news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(0x48e3e0usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let noticia_do_grupo: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
     #[allow(clippy::type_complexity)]
@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn campeoes_sortear_segunda_fase(this: usize, tentativa
             let valor = 1_200_000i32; // cqg6: o prêmio da segunda fase
             crate::comparacao::ramo("cqg_6 prêmio da segunda fase");
             premio(financas(cqg6_d(0xae2a38), c), valor);
-            noticia_do_premio(this, c, valor, 0, -1, 0x44a, 0, -2);
+            send_prize_money_news(this, c, valor, 0, -1, 0x44a, 0, -2);
         }
         let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqg6_d(cqg6_d(this) + 0x3c));
         let (mut rodadas, mut id) = (0i16, 0i16);
@@ -301,7 +301,7 @@ unsafe fn cqg6_plano(this: usize) -> Vec<usize> {
 /// Só a original (sorteia, paga prêmios, aloca as fases e manda notícias; e se chama de novo), conferindo o plano: na
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
 /// 0x3b bytes) são os 16 classificados.
-unsafe extern "thiscall" fn comparar_campeoes_sortear_segunda_fase(this: usize, tentativa: u32) {
+unsafe extern "thiscall" fn comparar_draw_phase2_groups(this: usize, tentativa: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     if tentativa as u8 != 0 || cqg6_d(cqg6_d(0xadadfc) + cqg6_d(0x9cf6f0) * 4) == 0 {
         return o(this, tentativa);
@@ -322,13 +322,13 @@ unsafe extern "thiscall" fn comparar_campeoes_sortear_segunda_fase(this: usize, 
     }
     vistos.sort_unstable();
     ok = ok && vistos == plano;
-    PLACAR.registrar(ok, || format!("campeoes_sortear_segunda_fase: as fases não têm os 16 classificados (+0x30 = {})", cqg6_d(this + 0x30) as i32));
+    PLACAR.registrar(ok, || format!("draw_phase2_groups: as fases não têm os 16 classificados (+0x30 = {})", cqg6_d(this + 0x30) as i32));
 }
 
 /// { 0x5871e0 } (cdecl, european_cup.cpp): `european_cup_compare_phase2_draw_entries(a, b)`, a comparação da qsort dos
 /// classificados (0x585ab0): os da mesma nação (+4) de b menos os de a; empate: o word +0x8e da nação (+0x53 do clube) de
 /// b menos o de a; empate: +6 (o segundo) de a menos o de b.
-unsafe extern "C" fn campeoes_ordem_da_segunda_fase(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = cqg6_b(b + 4) as i8 as i32 - cqg6_b(a + 4) as i8 as i32;
     if r != 0 {
         return r;
@@ -341,10 +341,10 @@ unsafe extern "C" fn campeoes_ordem_da_segunda_fase(a: usize, b: usize) -> i32 {
 }
 
 /// Pura: a devolução.
-unsafe extern "C" fn comparar_campeoes_ordem_da_segunda_fase(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = campeoes_ordem_da_segunda_fase(a, b);
-    PLACAR.registrar(r == n, || format!("campeoes_ordem_da_segunda_fase: original={} rust={}", r, n));
+    let n = european_cup_compare_phase2_draw_entries(a, b);
+    PLACAR.registrar(r == n, || format!("european_cup_compare_phase2_draw_entries: original={} rust={}", r, n));
     r
 }
 
@@ -352,7 +352,7 @@ unsafe extern "C" fn comparar_campeoes_ordem_da_segunda_fase(a: usize, b: usize)
 /// 0x41f..0x42e, 0x413, 0x414, 0x47b e 0x3fc -> 0x41c; 0x473..0x474 -> 0x410; 0x475..0x479 -> 0x47a; 0x3fd..0x406 ->
 /// 0xa; 0x407..0x40b e 0x472 -> 0x14; 0x47e..0x47f -> 0x1e; 0x40c..0x40e -> 0x82; 0x43d..0x444 -> 0x449; 0x445..0x448
 /// -> 0x44a; 0x44d..0x450 -> 0x451; o resto −1 (na ordem dos testes da original).
-unsafe extern "C" fn grupo_da_fase(id: i32) -> i32 {
+unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
     let em = |a: i32, b: i32| id >= a && id <= b;
     if em(0x3e8, 0x3fb) {
         return 0x41c;
@@ -395,9 +395,9 @@ unsafe extern "C" fn grupo_da_fase(id: i32) -> i32 {
 }
 
 /// Pura: a devolução.
-unsafe extern "C" fn comparar_grupo_da_fase(id: i32) -> i32 {
+unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) -> i32 {
     let r = orig::<unsafe extern "C" fn(i32) -> i32>(%%I2%%)(id);
-    let n = grupo_da_fase(id);
-    PLACAR.registrar(r == n, || format!("grupo_da_fase({:#x}): original={:#x} rust={:#x}", id, r, n));
+    let n = comp_util_get_parent_stage_id(id);
+    PLACAR.registrar(r == n, || format!("comp_util_get_parent_stage_id({:#x}): original={:#x} rust={:#x}", id, r, n));
     r
 }

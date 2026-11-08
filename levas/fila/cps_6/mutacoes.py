@@ -1,4 +1,4 @@
-# Mutacoes (cps_6), todas nas faltas ao treino (0x5d6aa0, todo dia pelo laco do dia do jogo; a competicoes_do_dia so
+# Mutacoes (cps_6), todas nas faltas ao treino (0x5d6aa0, todo dia pelo laco do dia do jogo; a game_update_comps_for_date so
 # repassa o dia as virtuais e a confianca da diretoria so roda num ramo raro do laco do dia). A primeira pessoa sem
 # sorteio (um sorteio a menos por dia e outras pessoas conferidas: tudo o que sorteia depois muda). A falta pela soma
 # sem o sorteio (um sorteio a menos por jogador que passa os filtros da soma). Sem a falta (a 0x41a360 sorteia, multa e

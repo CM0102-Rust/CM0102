@@ -17,7 +17,7 @@ unsafe fn cqo8_campeao_do_turno(this: usize, k: usize) -> usize {
 /// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
-unsafe extern "thiscall" fn cqo8_fase_seguinte_do_paranaense(this: usize) {
+unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
     let fase = cqo8_d(this + 0x30) as i32;
     if fase >= (cqo8_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x98af98, 0x202);
@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn cqo8_fase_seguinte_do_paranaense(this: usize) {
 ///   para a terceira vaga das fases ([+0xc]+8; sem fase: a caixa da linha 0x250 e volta, sem liberar). Com ela:
 ///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
-unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
+unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     let sementes: [u8; 4] = [0, 1, 0, 0];
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let lista = alocar(8);
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
 ///   cada um no saldo (0x5a0590 em [0xae2a38] -> as finanças do clube, thiscall, ret 4; 0x5999a0 Finance::add_prize_money,
 ///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
-unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x42bba0usize);
     if cqo8_d(this + 0x30) == 2 {
         let f = cqo8_d(cqo8_d(this + 0xc) + 8);
@@ -136,20 +136,20 @@ unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this: usize) -> 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
-unsafe extern "thiscall" fn comparar_cqo8_fase_seguinte_do_paranaense(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(this: usize) {
     let antes = cqo8_d(this + 0x30) as i32;
     let ultima = antes >= (cqo8_d(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqo8_d(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
-    PLACAR.registrar(igual, || format!("cqo8_fase_seguinte_do_paranaense({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.registrar(igual, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
-unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stage(this: usize) {
     let (a, b) = (cqo8_campeao_do_turno(this, 0), cqo8_campeao_do_turno(this, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let igual = if a == b {
@@ -169,12 +169,12 @@ unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: usize) {
             cqo8_w(fase + 0x3e) == 2 && cqo8_d(fase + 4) == cqo8_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && cqo8_d(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(igual, || format!("cqo8_final_do_paranaense({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo8_d(this + 0x30), cqo8_d(this + 0x2c)));
+    PLACAR.registrar(igual, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, cqo8_d(this + 0x30), cqo8_d(this + 0x2c)));
 }
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_8 historico da final" e "cqo_8 premios") e é provada pelas mutações e pelas duas carreiras Rust.
-unsafe extern "thiscall" fn comparar_cqo8_fim_da_temporada_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_parana_record_season_honours(this: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

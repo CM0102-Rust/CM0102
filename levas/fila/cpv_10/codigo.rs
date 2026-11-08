@@ -15,7 +15,7 @@ unsafe fn cpv10_registro(lesoes: usize, id: i32) -> usize {
 /// 0x51), o histórico ([this+0xc], 0x58e340 com +0x14 e +0x18 do registro); com `noticia` e o clube da pessoa (+0x39)
 /// humano (0x600a50), a notícia da volta (0x630ee0 com 1 e o tipo). O tipo vira 0xff e o +0xe −1. Sem pessoa: a caixa
 /// de erro (linha 0xc87).
-unsafe extern "thiscall" fn fim_da_lesao(this: usize, pessoa: usize, noticia: u32) {
+unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, noticia: u32) {
     if pessoa == 0 {
         aviso_em(0x9e7f28, 0xc87);
         return;
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn fim_da_lesao(this: usize, pessoa: usize, noticia: u3
 /// Comparador: lado a lado na entrada (tipo) e no +0xe do registro quando nada sai da rotina (férias e sem notícia);
 /// com o histórico (arquivo) ou a notícia: só a original, conferindo o plano (tipo 0xff e +0xe −1). Sem pessoa: a
 /// original (caixa).
-unsafe extern "thiscall" fn comparar_fim_da_lesao(this: usize, pessoa: usize, noticia: u32) {
+unsafe extern "thiscall" fn comparar_end_player_injury(this: usize, pessoa: usize, noticia: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if pessoa == 0 || cpv10_d(pessoa) >= cpv10_d(0xae2364) {
         return o(this, pessoa, noticia);
@@ -74,12 +74,12 @@ unsafe extern "thiscall" fn comparar_fim_da_lesao(this: usize, pessoa: usize, no
     if fora {
         o(this, pessoa, noticia);
         let ok = *(e as *const u8) == 0xff && cpv10_d(cpv10_registro(this, cpv10_d(pessoa)) + 0xe) == -1;
-        PLACAR.registrar(ok, || format!("fim_da_lesao({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(cpv10_registro(this, cpv10_d(pessoa)) + 0xe)));
+        PLACAR.registrar(ok, || format!("end_player_injury({:x}, {}) plano: tipo {:x} e +0xe {}", pessoa, noticia, *(e as *const u8), cpv10_d(cpv10_registro(this, cpv10_d(pessoa)) + 0xe)));
         return;
     }
     let reg = [(e, 1), (r + 0xe, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, noticia), || fim_da_lesao(this, pessoa, noticia));
-    PLACAR.registrar(igual, || format!("fim_da_lesao({:x}, {}) {:x?} x {:x?}", pessoa, noticia, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, noticia), || end_player_injury(this, pessoa, noticia));
+    PLACAR.registrar(igual, || format!("end_player_injury({:x}, {}) {:x?} x {:x?}", pessoa, noticia, mo, mr));
 }
 
 /// { 0x72bbf0 } (stdcall, ret 0xc, media.cpp, quadro SEH sem destrutor): `media_queue_player_apology_news(jogador,
@@ -88,11 +88,11 @@ unsafe extern "thiscall" fn comparar_fim_da_lesao(this: usize, pessoa: usize, no
 /// nomes (+0x33 de +4, +8 e +0xc; sem o terceiro, −1), 4 = id do clube, 5 = a história, 6 = 0 e 7 = a variante:
 /// sorteio(4) nas histórias 0, 2 a 5, 13, 14, 17 e 35 (tabela 0x72bd2c), senão 0; vai para o técnico do clube
 /// (0x7861e0).
-unsafe extern "stdcall" fn noticia_do_pedido_de_desculpas(jogador: usize, clube: usize, historia: i16) {
+unsafe extern "stdcall" fn media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
     if jogador == 0 || cpv10_d(jogador + 0x61) == 0 || clube == 0 {
         return;
     }
-    crate::comparacao::ramo("noticia_do_pedido_de_desculpas");
+    crate::comparacao::ramo("media_queue_player_apology_news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
@@ -115,7 +115,7 @@ unsafe extern "stdcall" fn noticia_do_pedido_de_desculpas(jogador: usize, clube:
 }
 
 /// Comparador: a notícia sorteia e vai para a caixa do técnico: só a original (a prova é a carreira e o modo Rust).
-unsafe extern "stdcall" fn comparar_noticia_do_pedido_de_desculpas(jogador: usize, clube: usize, historia: i16) {
+unsafe extern "stdcall" fn comparar_media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
     orig::<unsafe extern "stdcall" fn(usize, usize, i16)>(%%I1%%)(jogador, clube, historia)
 }
 
@@ -124,7 +124,7 @@ unsafe extern "stdcall" fn comparar_noticia_do_pedido_de_desculpas(jogador: usiz
 /// caixa do humano (registro de 12 bytes em [this+8], pelo id − [0xae2364] + 16): +4 = +0 e +8 = 0; com a primeira
 /// notícia (+0, −1 nenhuma), as 100 notícias de 0xdf bytes a partir dela ([this]) com +0xd6 = 0 e +0xda = 1. Sem técnico
 /// ou com índice negativo: a caixa de erro (linhas 0x24c1 e 0x24cc).
-unsafe extern "thiscall" fn esvaziar_caixa_de_entrada(this: usize, tecnico: usize) {
+unsafe extern "thiscall" fn clear_inbox(this: usize, tecnico: usize) {
     if tecnico == 0 {
         aviso_em(0xa693ec, 0x24c1);
         return;
@@ -135,18 +135,18 @@ unsafe extern "thiscall" fn esvaziar_caixa_de_entrada(this: usize, tecnico: usiz
         return;
     }
     let caixa = (cpv10_d(this + 8) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
-    let responder: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7874b0usize);
+    let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7874b0usize);
     for o in [0x39usize, 0x24] {
         let c = cpv10_d(tecnico + o) as usize;
         if c != 0 {
-            responder(this, tecnico, c);
+            respond(this, tecnico, c);
         }
     }
     let primeira = cpv10_d(caixa);
     core::ptr::write_unaligned((caixa + 8) as *mut i32, 0);
     core::ptr::write_unaligned((caixa + 4) as *mut i32, primeira);
     if primeira != -1 {
-        crate::comparacao::ramo("esvaziar_caixa_de_entrada");
+        crate::comparacao::ramo("clear_inbox");
         for k in 0..0x64u32 {
             let n = (cpv10_d(this) as u32).wrapping_add(k.wrapping_add(cpv10_d(caixa) as u32).wrapping_mul(0xdf)) as usize;
             core::ptr::write_unaligned((n + 0xd6) as *mut i32, 0);
@@ -169,7 +169,7 @@ unsafe fn cpv10_regioes_da_caixa(this: usize, caixa: usize) -> Vec<(usize, usize
 
 /// Comparador: lado a lado na caixa e nas 100 notícias; com resposta padrão a dar (clube ou seleção), só a original,
 /// conferindo o plano depois dela (+4 = +0, +8 = 0 e os dois campos das 100 notícias). Erros: a original.
-unsafe extern "thiscall" fn comparar_esvaziar_caixa_de_entrada(this: usize, tecnico: usize) {
+unsafe extern "thiscall" fn comparar_clear_inbox(this: usize, tecnico: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     if tecnico == 0 {
         return o(this, tecnico);
@@ -185,10 +185,10 @@ unsafe extern "thiscall" fn comparar_esvaziar_caixa_de_entrada(this: usize, tecn
         let noticias = cpv10_regioes_da_caixa(this, caixa);
         let ok = cpv10_d(caixa + 4) == primeira && cpv10_d(caixa + 8) == 0
             && noticias[1..].iter().all(|&(n, _)| cpv10_d(n) == 0 && cpv10_d(n + 4) == 1);
-        PLACAR.registrar(ok, || format!("esvaziar_caixa_de_entrada({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
+        PLACAR.registrar(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", tecnico, (primeira, cpv10_d(caixa + 4), cpv10_d(caixa + 8))));
         return;
     }
     let reg = cpv10_regioes_da_caixa(this, caixa);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico), || esvaziar_caixa_de_entrada(this, tecnico));
-    PLACAR.registrar(igual, || format!("esvaziar_caixa_de_entrada({:x}) {:x?} x {:x?}", tecnico, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tecnico), || clear_inbox(this, tecnico));
+    PLACAR.registrar(igual, || format!("clear_inbox({:x}) {:x?} x {:x?}", tecnico, mo, mr));
 }

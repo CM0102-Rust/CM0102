@@ -100,7 +100,7 @@ unsafe fn cqj7_regras_j2(o: usize) {
 
 /// { 0x433640 } (thiscall, bra_reg_goias.cpp): `BraRegGoias::set_up_rules` (slot 36), as regras do Goiano e o
 /// calendário; devolve 1.
-unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -> u32 {
     cqj7_regras_goiano(this);
     crate::comparacao::ramo("cqj_7 regras do goiano");
     cqj7_calendario(this);
@@ -109,18 +109,18 @@ unsafe extern "thiscall" fn cqj7_regras_do_goiano(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_cqj7_regras_do_goiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules(this: usize) -> u32 {
     let reg = cqj7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
         cqj7_regras_goiano(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_do_goiano({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_goias_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
-unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
+unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
     cqj7_regras_j1(this);
     crate::comparacao::ramo("cqj_7 regras da j1");
     cqj7_calendario(this);
@@ -128,18 +128,18 @@ unsafe extern "thiscall" fn cqj7_regras_da_j1(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Goiano.
-unsafe extern "thiscall" fn comparar_cqj7_regras_da_j1(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_jap_j1_set_up_rules(this: usize) -> u32 {
     let reg = cqj7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
         cqj7_regras_j1(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_da_j1({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("jap_j1_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x665140 } (thiscall, jap_j2.cpp): `JapJ2::set_up_rules`, as regras da J2 e o calendário; devolve 1.
-unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_goias_set_up_rules_665140(this: usize) -> u32 {
     cqj7_regras_j2(this);
     crate::comparacao::ramo("cqj_7 regras da j2");
     cqj7_calendario(this);
@@ -147,12 +147,12 @@ unsafe extern "thiscall" fn cqj7_regras_da_j2(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Goiano.
-unsafe extern "thiscall" fn comparar_cqj7_regras_da_j2(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules_665140(this: usize) -> u32 {
     let reg = cqj7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
         cqj7_regras_j2(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqj7_regras_da_j2({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_goias_set_up_rules_665140({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

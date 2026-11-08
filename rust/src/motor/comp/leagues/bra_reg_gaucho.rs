@@ -64,7 +64,7 @@ pub(crate) unsafe fn cqn9_mata_mata(this: usize, linhas: &[usize], sementes: &[u
 ///
 /// [pt] { 0x4325b0 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98ae50, linhas 0x217 (sem lista) e 0x22b (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn9_mata_mata_do_gaucho(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this: usize) {
     cqn9_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98ae50, 0x217, 0x22b, "cqn_9 gaucho"); // cqn9: 1º × 4º, 2º × 3º Gaúcho
 }
 
@@ -91,9 +91,9 @@ pub(crate) unsafe fn cqn9_comparar(nome: &str, this: usize, linhas: &[usize], or
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_gaucho(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN9_MATA_MATA_DO_GAUCHO);
-    cqn9_comparar("cqn9_mata_mata_do_gaucho", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_CREATE_KNOCKOUT_STAGE);
+    cqn9_comparar("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// end of a state league (nine of them): records the honours of the first stage (the table) and calls 0x42bba0, which,
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_gaucho(this: u
 /// Centro-Oeste, Gaúcho, Goiano, Norte, Nordeste, Pernambucano, Catarinense e Paulista): o histórico do primeiro estágio
 /// e, em salto final, a 0x42bba0 (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
-pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
     cqj8_historico_do_estagio(this); // cqj8: o histórico do estadual
     crate::comparacao::ramo("cqj_8 historico do estadual");
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
@@ -114,8 +114,8 @@ pub(crate) unsafe extern "thiscall" fn cqj8_historico_do_estadual(this: usize) -
 /// Comparador: só a original (ponytail: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
 /// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 historico do estadual") e é provada pelas
 /// mutações e pelas duas carreiras Rust.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ8_HISTORICO_DO_ESTADUAL)(this)
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_RECORD_SEASON_HONOURS)(this)
 }
 
 /// The Rio Grande do Sul state league at career creation: the year and the database competition, disciplinary rule 7
@@ -124,13 +124,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj8_historico_do_estadual(this:
 /// Original: `BraRegGaucho::BraRegGaucho` (0x4317c0, bra_reg_gaucho.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4317c0 } (thiscall, ret 8, bra_reg_gaucho.cpp): `BraRegGaucho::BraRegGaucho(ano, registro)`: o Gaúcho (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
     cqt1_construir(this, ano, registro, &CQT1_GAUCHO, 7, true, "cqt_1 gaucho novo") // cqt1: a disciplina e as posições previstas do Gaúcho
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_gaucho(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT1_CONSTRUIR_GAUCHO);
-    cqt1_comparar("cqt1_construir_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_gaucho(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GAUCHO);
+    cqt1_comparar("construct_bra_reg_gaucho", this, ano, registro, &CQT1_GAUCHO, || o(this, ano, registro))
 }
 
 /// The Rio Grande do Sul turnover: archives the season in the statistics, clears the previous table and stages, moves
@@ -140,13 +140,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_gaucho(this: usiz
 ///
 /// [pt] { 0x432370 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::start_new_season()`, a virada da temporada do Gaúcho (a tabela:
 /// 0x4321d0; caixas nas linhas 0x1c6, 0x1cd, 0x1d3 e 0x1da).
-pub(crate) unsafe extern "thiscall" fn cqp7_virada_do_gaucho(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_start_new_season(this: usize) -> u32 {
     cqp7_virada(this, 0x4321d0, 0x98ae50, [0x1c6, 0x1cd, 0x1d3, 0x1da], 1, "cqp_7 virada do gaucho") // cqp7: o ano seguinte do Gaúcho
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_gaucho(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP7_VIRADA_DO_GAUCHO);
-    cqp7_comparar_virada("cqp7_virada_do_gaucho", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_reg_gaucho_start_new_season", this, || o(this))
 }
 
 /// The Rio Grande do Sul next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to
@@ -155,13 +155,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_gaucho(this: usiz
 ///
 /// [pt] { 0x432520 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::advance_stage()`, a fase seguinte do Gaúcho: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x4325b0); a caixa da linha 0x1f4.
-pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_gaucho(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_advance_stage(this: usize) {
     cqp7_fase_seguinte(this, 0x98ae50, 0x1f4, 0x4325b0);
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_gaucho(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP7_FASE_SEGUINTE_DO_GAUCHO);
-    cqp7_comparar_fase_seguinte("cqp7_fase_seguinte_do_gaucho", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GAUCHO_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_reg_gaucho_advance_stage", this, || o(this))
 }
 
 /// the Rio Grande do Sul league has 17 clubs: those with it as their reserve division in the database (the field that
@@ -170,13 +170,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_gaucho(thi
 ///
 /// [pt] { 0x4321d0 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::load_region_clubs()`: o Gaúcho tem 17 clubes (divisão reserva +0x60 = [0x9cf9c8]).
 /// Fonte 0x98ae50, linha 0x163.
-pub(crate) unsafe extern "thiscall" fn cql8_tabela_do_gaucho(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     cql8_tabela(this, 0x11, 0x98ae50, 0x163, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, 0, "cql_8 gaucho cheio")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_gaucho(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL8_TABELA_DO_GAUCHO);
-    cql8_comparar("cql8_tabela_do_gaucho", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_LOAD_REGION_CLUBS);
+    cql8_comparar("bra_reg_gaucho_load_region_clubs", this, 0x11, KEY_CLUB_COMP_BRAZILIAN_GAUCHO_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// Gaucho, Northeast Cup and Paulista (the same routine in the three vtables): single round robin; 4 top places (the
@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_gaucho(this: usiz
 ///
 /// [pt] { 0x4322d0 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::set_up_rules`, nas vtables do Gaúcho (0x96811c), do
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     cqi8_regras_gaucho(this);
     crate::comparacao::ramo("cqi_8 regras do gaucho");
     cqi7_calendario(this);
@@ -196,12 +196,12 @@ pub(crate) unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32
 }
 
 /// Comparador: como o do Centro-Oeste.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI8_REGRAS_DO_GAUCHO)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_SET_UP_RULES)(this), || {
         cqi8_regras_gaucho(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi8_regras_do_gaucho({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_gaucho_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

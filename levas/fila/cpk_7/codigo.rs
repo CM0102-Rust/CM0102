@@ -19,7 +19,7 @@ unsafe fn cpk7_w(a: usize) -> i16 {
 /// segunda (+0x1e) fala o idioma da nação do `clube` ou o `idioma`. Senão o idioma aprendido: a busca binária (bsearch
 /// 0x946464, comparação 0x7c6d40, registros de 6 bytes em [+0x3c], [+0x44] deles) pela chave {id, idioma}, o byte +5;
 /// sem a tabela ou sem o registro, 0. Os chamadores só leem o al.
-unsafe extern "thiscall" fn fluencia_no_idioma(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
+unsafe extern "thiscall" fn get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let idioma = idioma as u8;
     if pessoa != 0 && cpk7_d(pessoa) as i32 >= cpk7_d(0xae2364) as i32 {
         return if cpk7_b(cpk7_d(pessoa + 0x1a) + 0x77) == idioma { 10 } else { 0 }; // o técnico humano
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn fluencia_no_idioma(this: usize, pessoa: usize, clube
 /// { 0x86fb80 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::rewind_staff_history(pessoa)`: a lista do
 /// histórico da pessoa (o par de 8 bytes em [+0xc] + 8 × id) fica sem o último (0x58f110 sobre [this]: o segundo
 /// deslocamento = −1). Pessoa nula: a original (caixa fatal: o jogo termina).
-unsafe extern "thiscall" fn recomecar_historico_da_pessoa(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn rewind_staff_history(this: usize, pessoa: usize) {
     if pessoa == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa); // caixa fatal: só a original
     }
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn recomecar_historico_da_pessoa(this: usize, pessoa: u
 /// bola (+0x164 e +0x194 + 4 × (altura + 4 × faixa + 24 × casa)): com geral = extra, as duas da geral; senão, pelos
 /// setores (0x5b73a0): extra de setor abaixo do da geral, sem a bola a extra e com a bola a geral; senão o contrário.
 /// Por fim +0x187f = 0. Devolve 1. Casa fora de 0..10: a original (caixa "Error" e 0).
-unsafe extern "thiscall" fn posicao_na_formacao(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
+unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
     let k = casa as u8 as i8;
     if !(0..=10).contains(&k) {
         return orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%)(this, casa, posicao, extra); // caixa: só a original
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn posicao_na_formacao(this: usize, casa: u32, posicao:
     }
     core::ptr::write_unaligned(extra_da_casa as *mut i16, p);
     // a 0x5b7e60 e a 0x5b73a0 só leem a palavra baixa da máscara (a original empurra o eax com o alto que estiver)
-    let casa_no_campo: unsafe extern "C" fn(u32, u32, u32, *mut u32) -> u32 = core::mem::transmute(0x5b7e60usize);
+    let pitch_cell: unsafe extern "C" fn(u32, u32, u32, *mut u32) -> u32 = core::mem::transmute(0x5b7e60usize);
     let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
     // as saídas valem de uma volta para a outra, como as locais da original (sem valor só se a 0x5b73a0 falhar
     // logo na primeira: zero aqui)
@@ -134,9 +134,9 @@ unsafe extern "thiscall" fn posicao_na_formacao(this: usize, casa: u32, posicao:
                     (g, e)
                 }
             };
-            casa_no_campo(a, 0, arg, &mut saida);
+            pitch_cell(a, 0, arg, &mut saida);
             core::ptr::write_unaligned(sem_bola as *mut u32, saida);
-            casa_no_campo(b, 1, arg, &mut saida);
+            pitch_cell(b, 1, arg, &mut saida);
             core::ptr::write_unaligned(com_bola as *mut u32, saida);
         }
     }
@@ -145,33 +145,33 @@ unsafe extern "thiscall" fn posicao_na_formacao(this: usize, casa: u32, posicao:
 }
 
 /// Comparador: pelo valor (a 0x4cf5f0 e a busca só leem).
-unsafe extern "thiscall" fn comparar_fluencia_no_idioma(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_get_language_fluency(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(%%I0%%)(this, pessoa, clube, idioma, pelo_contrato);
-    let n = fluencia_no_idioma(this, pessoa, clube, idioma, pelo_contrato);
-    PLACAR.registrar(r == n, || format!("fluencia_no_idioma({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
+    let n = get_language_fluency(this, pessoa, clube, idioma, pelo_contrato);
+    PLACAR.registrar(r == n, || format!("get_language_fluency({:x}, {:x}, {}, {}) original={} rust={}", pessoa, clube, idioma as u8, pelo_contrato, r, n));
     r
 }
 
 /// Comparador: lado a lado pelo par da pessoa (8 bytes; a 0x58f110 só grava o segundo).
-unsafe extern "thiscall" fn comparar_recomecar_historico_da_pessoa(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
     let par = cpk7_d(this + 0xc).wrapping_add(cpk7_d(pessoa).wrapping_mul(8));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(par, 8)], || o(this, pessoa), || recomecar_historico_da_pessoa(this, pessoa));
-    PLACAR.registrar(igual, || format!("recomecar_historico_da_pessoa({}) {:x?} x {:x?}", cpk7_d(pessoa), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(par, 8)], || o(this, pessoa), || rewind_staff_history(this, pessoa));
+    PLACAR.registrar(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", cpk7_d(pessoa), mo, mr));
 }
 
 /// Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
 /// +0x187f) e [0xb67a34] (a 0x5b73a0 zera quando falha).
-unsafe extern "thiscall" fn comparar_posicao_na_formacao(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, casa: u32, posicao: u32, extra: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I2%%);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, posicao, extra);
     }
     let reg = [(this + 0x12d, 0x584 - 0x12d), (this + 0x187b, 8), (0xb67a34, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, posicao, extra), || posicao_na_formacao(this, casa, posicao, extra));
-    PLACAR.registrar(igual && r == n, || format!("posicao_na_formacao({}, {:#x}, {}) {:x?} x {:x?}", casa as u8 as i8, posicao as u16, extra, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, posicao, extra), || set_slot_position(this, casa, posicao, extra));
+    PLACAR.registrar(igual && r == n, || format!("set_slot_position({}, {:#x}, {}) {:x?} x {:x?}", casa as u8 as i8, posicao as u16, extra, mo, mr));
     r
 }

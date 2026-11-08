@@ -90,7 +90,7 @@ unsafe fn cqm11_copa_da_franca(this: usize) -> (i32, i32) {
     ((n == cqm11_w(this + 0x3e) as i32) as i32, n)
 }
 
-unsafe extern "thiscall" fn cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> i32 {
     cqm11_copa_da_franca(this).0
 }
 
@@ -127,9 +127,9 @@ unsafe fn cqm11_comparar(nome: &str, this: usize, reg: &[(usize, usize)], o: imp
     a
 }
 
-unsafe extern "thiscall" fn comparar_cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqm11_comparar("cqm11_copa_da_franca_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_franca(this),
+    cqm11_comparar("fra_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_franca(this),
         |_, n| n.clamp(0, 0xde) as usize * 6)
 }
 
@@ -171,13 +171,13 @@ unsafe fn cqm11_copa_da_liga(this: usize) -> (i32, i32) {
     ((n == cqm11_w(this + 0x3e) as i32) as i32, n)
 }
 
-unsafe extern "thiscall" fn cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
     cqm11_copa_da_liga(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqm11_comparar("cqm11_copa_da_liga_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_liga(this),
+    cqm11_comparar("fra_cup_collect_entrants_5bd160", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_liga(this),
         |_, n| n.clamp(0, 0x36) as usize * 6)
 }
 
@@ -230,12 +230,12 @@ unsafe fn cqm11_supercopa(this: usize) -> (i32, i32) {
     (1, 2)
 }
 
-unsafe extern "thiscall" fn cqm11_supercopa_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn fra_super_select_teams(this: usize) -> i32 {
     cqm11_supercopa(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqm11_supercopa_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_fra_super_select_teams(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqm11_comparar("cqm11_supercopa_clubes", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_supercopa(this),
+    cqm11_comparar("fra_super_select_teams", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_supercopa(this),
         |r, _| if r == 1 { 12 } else { 0 })
 }

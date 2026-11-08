@@ -16,7 +16,7 @@ unsafe fn pessoa_valida_do_elenco(p: usize) -> bool {
 /// com bits `modo` nas marcas de elenco (+0x5e), se `modo` não for 0. Com `filtro`, quem tem ficha
 /// de contrato (0x4cf6d0) e clube (+0x39) diferente do `clube` só conta se o clube do contrato
 /// (0x4cf5a0, guardado em [0xae1080]; +4 = id) também for outro. Clube nulo: a original (caixa).
-unsafe extern "C" fn contar_elenco_do_clube(clube: usize, modo: u32, filtro: u32) -> u8 {
+unsafe extern "C" fn database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%)(clube, modo, filtro);
     }
@@ -72,7 +72,7 @@ unsafe extern "C" fn contar_elenco_do_clube(clube: usize, modo: u32, filtro: u32
 /// `vetor`. Sem parceiro A/B (0x540a50 com nulo e 1): os 50 como estão e, com `dobro`, mais 50 zeros.
 /// Com parceiro: só as pessoas válidas do clube e depois as do parceiro até o limite (100 com
 /// `dobro`, senão 50), o resto até o limite zerado. Devolve 1. Clube nulo: a original (caixa e 0).
-unsafe extern "C" fn reunir_elenco_do_clube(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
+unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%)(clube, vetor, dobro);
     }
@@ -118,7 +118,7 @@ unsafe extern "C" fn reunir_elenco_do_clube(clube: usize, vetor: *mut usize, dob
 /// (id ≥ [0xae235c] − 2 × [0xae2350], com sinal): só as principais (id < [0xae235c] − [0xae2350]) de
 /// nação com +0x88 > 150. Clubes: com competição (+0x57), que não sejam o time B de um par (0x540a50
 /// com 1), com a competição no vetor [[0xadadfc] + id × 4] e a nação com o bit 2 de +0x11c.
-unsafe extern "C" fn clube_pode_ser_dirigido(clube: usize) -> u8 {
+unsafe extern "C" fn club_can_be_managed(clube: usize) -> u8 {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let u = |d: usize| core::ptr::read_unaligned((clube + d) as *const usize);
     if clube == 0 || u(0x53) == 0 {
@@ -148,35 +148,35 @@ unsafe extern "C" fn clube_pode_ser_dirigido(clube: usize) -> u8 {
     (*((u(0x53) + 0x11c) as *const u8) & 2 != 0) as u8
 }
 
-unsafe extern "C" fn comparar_contar_elenco_do_clube(clube: usize, modo: u32, filtro: u32) -> u8 {
+unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize, u32, u32) -> u8>(%%I0%%);
     if clube == 0 {
         return o(clube, modo, filtro); // caixa: só a original
     }
     // 0x540a50 pode zerar +0x244 do clube; o filtro grava o último contrato em [0xae1080]
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1), (0xae1080, 4)],
-        || o(clube, modo, filtro), || contar_elenco_do_clube(clube, modo, filtro));
-    PLACAR.registrar(igual && r == n, || format!("contar_elenco_do_clube({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
+        || o(clube, modo, filtro), || database_count_club_squad(clube, modo, filtro));
+    PLACAR.registrar(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_reunir_elenco_do_clube(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
+unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor, dobro); // caixa: só a original
     }
     let regioes = [(vetor as usize, if dobro != 0 { 400 } else { 200 }), (clube + 0x244, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, vetor, dobro),
-        || reunir_elenco_do_clube(clube, vetor, dobro));
-    PLACAR.registrar(igual && r == n, || format!("reunir_elenco_do_clube({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
+        || database_collect_club_squad(clube, vetor, dobro));
+    PLACAR.registrar(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_clube_pode_ser_dirigido(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     let marca = [(clube.wrapping_add(0x244), 1)];
     let regioes = if clube == 0 { &marca[..0] } else { &marca[..] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(clube), || clube_pode_ser_dirigido(clube));
-    PLACAR.registrar(igual && r == n, || format!("clube_pode_ser_dirigido({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(clube), || club_can_be_managed(clube));
+    PLACAR.registrar(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

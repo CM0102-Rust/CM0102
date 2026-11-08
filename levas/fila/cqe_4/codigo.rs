@@ -198,7 +198,7 @@ unsafe fn cqe4_fluencia(p1: usize, clube: usize, s: i16) -> (f64, f64) {
 /// novo e a do atual, pela divisão, pela competição, pelo técnico e pelas finanças), a fluência no idioma, os jogos
 /// de seleção e o tempo sem clube; e, pedido o salário (salário ≠ 0, sem empréstimo e nota de 1,75), o salário padrão
 /// (0x864550 num STAFF_CONTRACT local) contra o teto do clube (0x5968d0). O resto das contas está nos comentários.
-unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
+unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
     use crate::comparacao::ramo;
     let k = |a: usize| cqe4_k(a);
     let zero = k(0x9689a0);
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
     // 0x8cca10: push 0; push pessoa; mov ecx, [0xde1f54] -> thiscall, ret 8
     let futura: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x8cca10usize);
     // 0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     // 0x4cf5f0: push clube; push pessoa; mov ecx, [0xae1050] -> thiscall, ret 8
     let contrato_com: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     // 0x54cdb0: push [0xae2c94]; push [0xae2c90]; lea ecx, data -> thiscall, ret 8
@@ -218,13 +218,13 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
     // 0x544590 / 0x544520 / 0x5444a0: push clube; push pessoa; add esp, 8 -> cdecl
     let na_lista_emp: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544590usize);
     let na_lista_transf: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
-    let na_lista: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
+    let in_list: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
     // 0x547d30 / 0x547d60: push clube; push pessoa; add esp, 8 -> cdecl
-    let nao_gosta_do_clube: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
-    let gosta_do_clube: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d60usize);
+    let dislikes_club: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d30usize);
+    let likes_club: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547d60usize);
     // 0x547810 / 0x547840: push pessoa; push técnico; add esp, 8 -> cdecl
-    let gosta_de: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
-    let nao_gosta_de: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
+    let likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
+    let dislikes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     // 0x4b02e0: push atual; push clube; add esp, 8 -> cdecl
     let rival: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4b02e0usize);
     // 0x4ca470: push contrato; push pessoa; mov ecx, [0xae1050] -> thiscall, ret 8
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
     let aa8: f32 = ((k(0x968dc0) - a57 * k(0x967878)) - cqe4_c(p1 + 0x5b) as i32 as f64 * k(0x967878)) as f32;
     let mut a88: f32 = (a57 * k(0x968a98) + k(0x9689b0)) as f32;
     let mut b4: f32 = (a57 * k(0x967888) + k(0x968968)) as f32;
-    let c0 = contrato_de(cqe4_d(0xae1050), p1);
+    let c0 = contract_of(cqe4_d(0xae1050), p1);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c0);
     let mut d4 = 0usize;
     if c0 != 0 {
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
             if cqe4_d(d4 + 0x53) == 0 {
                 return k(0x968e38);
             }
-            if cqe4_b(contrato_de(cqe4_d(0xae1050), p1) + 0x35) & 0x3f == 5 {
+            if cqe4_b(contract_of(cqe4_d(0xae1050), p1) + 0x35) & 0x3f == 5 {
                 d4 = 0;
             }
         }
@@ -370,11 +370,11 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
             }
         }
     }
-    if nao_gosta_do_clube(p1, p2) != 0 {
+    if dislikes_club(p1, p2) != 0 {
         f8 *= k(0x968f78);
         fl(2);
     }
-    if nao_gosta_do_clube(p1, d4) != 0 {
+    if dislikes_club(p1, d4) != 0 {
         let s = cqe4_b(p1 + 0x5a).wrapping_add(cqe4_b(p1 + 0x59)).wrapping_add(cqe4_b(p1 + 0x5b)) as i8;
         if s > 0x2d {
             f8 *= k(0x968928);
@@ -385,11 +385,11 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
         }
         fl(4);
     }
-    if gosta_do_clube(p1, d4) != 0 && na_lista_transf(p1, d4) == 0 && cqe4_b(c + 0x49) == 0 {
+    if likes_club(p1, d4) != 0 && na_lista_transf(p1, d4) == 0 && cqe4_b(c + 0x49) == 0 {
         f8 *= k(0x968968);
         fl(8);
     }
-    if gosta_do_clube(p1, p2) != 0 {
+    if likes_club(p1, p2) != 0 {
         fl(0x10);
         f8 *= k(0x968930);
     }
@@ -440,21 +440,21 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
         }
     }
     let t2 = cqe4_d(p2 + 0xcf);
-    if gosta_de(t2, p1) != 0 {
+    if likes(t2, p1) != 0 {
         f8 = f8 + f8;
         fl(0x40);
     }
-    if nao_gosta_de(t2, p1) != 0 {
+    if dislikes(t2, p1) != 0 {
         f8 *= k(0x968f78);
         fl(0x80);
     }
     if d4 != 0 {
         let t4 = cqe4_d(d4 + 0xcf);
-        if nao_gosta_de(t4, p1) != 0 {
+        if dislikes(t4, p1) != 0 {
             f8 = f8 + f8;
             fl(0x100);
         }
-        if gosta_de(t4, p1) != 0 {
+        if likes(t4, p1) != 0 {
             f8 *= k(0x968968);
             if !p6.is_null() && cqe4_b(c + 0x4e) & 8 == 0 {
                 *p6 |= 0x200;
@@ -823,7 +823,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
             Segue::Padrao
         };
         if segue == Segue::Padrao {
-            if (c != 0 && cqe4_b(c + 0x49) != 0) || na_lista(p1, 0) != 0 {
+            if (c != 0 && cqe4_b(c + 0x49) != 0) || in_list(p1, 0) != 0 {
                 f8 *= k(0x968e18);
                 if f8 < k(0x968950) && (cqe4_h(p2 + 0x80) > 0x1a5e || cqe4_h(p2 + 0x80) > cqe4_h(d4 + 0x80)) {
                     let t = f8 + k(0x967890);
@@ -975,7 +975,7 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
         // pilha); o resultado não é usado depois (o caminho vai direto ao fim), e a cópia divide por 1.
         let s = (((bx as i16 as f64 * b4 as f64 + h6c4 as i16 as f64 * a88 as f64) + h44 as i16 as f64 * aa8 as f64) + axv as f64) + si as f64;
         let mut di = ftol(s / den as f64) as i16;
-        if !p4b && na_lista(p1, 0) != 0 {
+        if !p4b && in_list(p1, 0) != 0 {
             di = ftol(di as f64 * k(0x9689d8)) as i16;
         }
         let cl = cqe4_b(d4 + 0x64);
@@ -1251,20 +1251,20 @@ unsafe extern "thiscall" fn cqe4_interesse(this: usize, p1: usize, p2: usize, p3
 
 /// Comparador: lado a lado na nota (os bits do f64), nos motivos e em [0xae1080] (que a original e o salário padrão
 /// 0x864550 gravam); o resto das chamadas só lê, e o STAFF_CONTRACT do salário é local.
-unsafe extern "thiscall" fn comparar_cqe4_interesse(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
+unsafe extern "thiscall" fn comparar_staff_interest_in_joining_club(this: usize, p1: usize, p2: usize, p3: u32, p4: u32, p5: u32, p6: *mut u32) -> f64 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, *mut u32) -> f64>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     if !p6.is_null() {
         regioes.push((p6 as usize, 4));
     }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, p1, p2, p3, p4, p5, p6), || cqe4_interesse(this, p1, p2, p3, p4, p5, p6));
-    PLACAR.registrar(igual && ro.to_bits() == rr.to_bits(), || format!("cqe4_interesse(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, p1, p2, p3, p4, p5, p6), || staff_interest_in_joining_club(this, p1, p2, p3, p4, p5, p6));
+    PLACAR.registrar(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
     ro
 }
 
 /// { 0x85e410 } (thiscall, ret 0, staff_contracts.cpp): `STAFF_CONTRACT::STAFF_CONTRACT()`: as duas datas (+0x25,
 /// +0x2d) padrão (0x54a110), +4 e +0x4a = −1, +0x49, +0x3b, +0x4e, +0x40, +0x45 e +8 = 0. Devolve o próprio contrato.
-unsafe extern "thiscall" fn cqe4_construir_contrato(this: usize) -> usize {
+unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     data_padrao(this + 0x25);
     data_padrao(this + 0x2d);
@@ -1280,9 +1280,9 @@ unsafe extern "thiscall" fn cqe4_construir_contrato(this: usize) -> usize {
 }
 
 /// Comparador: lado a lado nos 0x4f bytes do contrato e na devolução.
-unsafe extern "thiscall" fn comparar_cqe4_construir_contrato(this: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_staff_contract(this: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I1%%);
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || cqe4_construir_contrato(this));
-    PLACAR.registrar(igual && ro == rr, || format!("cqe4_construir_contrato({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
+    PLACAR.registrar(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro
 }

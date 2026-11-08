@@ -30,7 +30,7 @@ unsafe fn mensagem_do_painel(topo: *mut i32, base: *mut i32, texto_id: usize) {
 /// três zonas (botão do parâmetro 0xb na primeira), em cada zona o painel com as barras das cores dos
 /// dois clubes (0x53b640) e a linha do meio, o painel de baixo igual, o retângulo nos parâmetros 0x16 a
 /// 0x19, `*base` no 0xc e os valores (0x720320).
-unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn draw_action_zones_panel(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das zonas de acao");
     let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
     let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
@@ -149,7 +149,7 @@ unsafe extern "C" fn painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
 /// [dados + 0x4f] 0x1ef, 0x3de (minuto ≥ 45), 0x483 (≥ 90) e 0x528 (≥ 105) ficam de fora. Sem dados
 /// ([parâmetro 0x20 + 0x4c]) ou sem linhas: "There is no match report available.". Relatório nulo ou
 /// sem memória: a original (caixa de erro).
-unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
     let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
     let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
@@ -303,7 +303,7 @@ unsafe extern "C" fn painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i
 /// "Competition", a tabela de 9 colunas com o cabeçalho de cada rodada nova e uma linha por partida
 /// (0x49db00), os botões de voltar e avançar, a rolagem até a partida do humano (parâmetro 4) ou à do
 /// parâmetro 2 e a marca de vista do humano da vez no grupo (+0x14 + 4h).
-unsafe extern "C" fn montar_jogos_do_dia() {
+unsafe extern "C" fn build_day_fixtures_screen() {
     crate::comparacao::ramo("telas montar os jogos do dia");
     let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
     let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
@@ -537,7 +537,7 @@ unsafe fn comparar_pela_lista_com(nome: &str, extra: &[(usize, usize)], original
 /// As zonas de ação são comparadas de verdade, com o `*topo` (+0x19), a cor fixa 0xb6b7a4 e a guarda
 /// 0xb6b7b4 e a foto da partida que os valores (0x720320) comparam e regravam (parâmetro 0x1d, 0xd7a
 /// bytes). Sem a foto ainda (o primeiro desenho), os valores a alocam: só a original roda.
-unsafe extern "C" fn comparar_painel_das_zonas_de_acao(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn comparar_draw_action_zones_panel(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I0%%);
     let foto = parametro_da_tela(0x1d);
     if foto == 0 {
@@ -545,23 +545,23 @@ unsafe extern "C" fn comparar_painel_das_zonas_de_acao(topo: *mut i32, base: *mu
         return o(topo, base);
     }
     let extra = [(topo as usize, 4), (0xb6b7a4, 2), (0xb6b7b4, 1), (foto, 0xd7a)];
-    comparar_pela_lista_com("painel_das_zonas_de_acao", &extra, || o(topo, base), || painel_das_zonas_de_acao(topo, base));
+    comparar_pela_lista_com("draw_action_zones_panel", &extra, || o(topo, base), || draw_action_zones_panel(topo, base));
 }
 
 /// O relatório é comparado de verdade quando já existe (na partida ou no parâmetro 0x2d); quando nasce
 /// aqui (alocação e construção) só a original roda.
-unsafe extern "C" fn comparar_painel_do_relatorio_da_partida(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn comparar_draw_match_report_panel(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
     if parametro_da_tela(0) == 0 && *((parametro_da_tela(0x20) + 0x4c) as *const u8) == 0 && parametro_da_tela(0x2d) == 0 {
         // ponytail: a alocação do relatório não roda duas vezes; esse caminho se prova no modo Rust
         return o(topo, base);
     }
-    comparar_painel_pela_lista("painel_do_relatorio_da_partida", || o(topo, base), || painel_do_relatorio_da_partida(topo, base));
+    comparar_painel_pela_lista("draw_match_report_panel", || o(topo, base), || draw_match_report_panel(topo, base));
 }
 
 /// A montagem é comparada de verdade, com a marca de vista do humano no grupo (+0x14 + 4h).
-unsafe extern "C" fn comparar_montar_jogos_do_dia() {
+unsafe extern "C" fn comparar_build_day_fixtures_screen() {
     let o = orig::<unsafe extern "C" fn()>(%%I2%%);
     let marca = (parametro_da_tela(1) as isize + 0x14 + *(0xb77c7a as *const i16) as isize * 4) as usize;
-    comparar_pela_lista_com("montar_jogos_do_dia", &[(marca, 4)], || o(), || montar_jogos_do_dia());
+    comparar_pela_lista_com("build_day_fixtures_screen", &[(marca, 4)], || o(), || build_day_fixtures_screen());
 }

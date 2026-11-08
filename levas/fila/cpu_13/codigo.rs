@@ -17,7 +17,7 @@ unsafe fn cpu13_w(a: usize) -> i16 {
 /// (< 16) metade; < 20 metade ou 2/3 nos pobres; senão encolhe pela falta de jogadores frente à nação (+0x69 × 1,35 +
 /// 20) e a riqueza puxa (−2..2: × 0,909 ou − 1000, × 0,952 ou − 500, nada, × 1,0125 ou + 125, × 1,025 ou + 250).
 /// No mínimo 500. A base vai em `*base` (se não nulo). As contas de ponto flutuante em f64 (o x87 do jogo em 53 bits).
-unsafe extern "C" fn nota_alvo_do_clube(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
+unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
     let contar: unsafe extern "C" fn(usize, u32, u32) -> i8 = core::mem::transmute(0x53c590usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let riqueza: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
@@ -130,7 +130,7 @@ unsafe extern "C" fn nota_alvo_do_clube(clube: usize, base: *mut i32, forcada: *
 
 /// { 0x7bd830 } (thiscall, ret 4, player_search.cpp): `player_search_slot_get_match_entry(i)`: o jogo `i` (0x29
 /// bytes, a partir de +6) do anel de 10 que começa em +0x1a0 (byte com sinal), ou 0 se `i` ≥ a conta (+0x1a1).
-unsafe extern "thiscall" fn jogo_do_historico(this: usize, i: u32) -> usize {
+unsafe extern "thiscall" fn player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let i = i as u8 as i8;
     if i >= *((this + 0x1a1) as *const i8) {
         return 0;
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn jogo_do_historico(this: usize, i: u32) -> usize {
 
 /// { 0x7bd870 } (thiscall, ret 0, player_search.cpp): `player_search_slot_sum_goals()`: a soma (16 bits) do byte com
 /// sinal +0x16 dos jogos do anel (+0x1a1 deles, a partir de +0x1a0, dando a volta em 10).
-unsafe extern "thiscall" fn gols_do_historico(this: usize) -> u16 {
+unsafe extern "thiscall" fn player_search_slot_sum_goals(this: usize) -> u16 {
     let n = *((this + 0x1a1) as *const i8);
     let mut k = *((this + 0x1a0) as *const u8);
     let mut s: u16 = 0;
@@ -160,12 +160,12 @@ unsafe extern "thiscall" fn gols_do_historico(this: usize) -> u16 {
 }
 
 /// Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
-unsafe extern "C" fn comparar_nota_alvo_do_clube(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
+unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(%%I0%%);
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
     let r = o(clube, &mut bo, forcada);
-    let n = nota_alvo_do_clube(clube, &mut br, forcada);
-    PLACAR.registrar(r == n && bo == br, || format!("nota_alvo_do_clube({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
+    let n = player_search_get_club_target_rating(clube, &mut br, forcada);
+    PLACAR.registrar(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
     if !base.is_null() {
         *base = bo;
     }
@@ -173,17 +173,17 @@ unsafe extern "C" fn comparar_nota_alvo_do_clube(clube: usize, base: *mut i32, f
 }
 
 /// Comparador: pura: compara a devolução.
-unsafe extern "thiscall" fn comparar_jogo_do_historico(this: usize, i: u32) -> usize {
+unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%)(this, i);
-    let n = jogo_do_historico(this, i);
-    PLACAR.registrar(r == n, || format!("jogo_do_historico({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
+    let n = player_search_slot_get_match_entry(this, i);
+    PLACAR.registrar(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
     r
 }
 
 /// Comparador: pura: compara a devolução.
-unsafe extern "thiscall" fn comparar_gols_do_historico(this: usize) -> u16 {
+unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u16>(%%I2%%)(this);
-    let n = gols_do_historico(this);
-    PLACAR.registrar(r == n, || format!("gols_do_historico({:x}) {}/{}", this, r, n));
+    let n = player_search_slot_sum_goals(this);
+    PLACAR.registrar(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
     r
 }

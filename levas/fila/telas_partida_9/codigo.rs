@@ -17,7 +17,7 @@ unsafe fn copiar_campos(d: usize, s: usize, ini: usize, fim: usize, tam: usize) 
 /// campo: bytes 0..0x11, palavras 0x11..0x1f, os quatro vetores de 5 bytes e os bytes 0x33/0x34, as duas
 /// listas de 11 palavras (0x35, 0x4b), as duplas 0x61/0x65, as palavras 0x69..0x71 e as 20 linhas de
 /// jogador de 0x49 bytes (0x71df00). Devolve `this`.
-unsafe extern "thiscall" fn atribuir_bloco_do_time(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn match_team_block_assign(this: usize, src: usize) -> usize {
     copiar_campos(this, src, 0, 0x11, 1);
     copiar_campos(this, src, 0x11, 0x1f, 2);
     copiar_campos(this, src, 0x1f, 0x35, 1);
@@ -31,17 +31,17 @@ unsafe extern "thiscall" fn atribuir_bloco_do_time(this: usize, src: usize) -> u
     this
 }
 
-unsafe extern "thiscall" fn comparar_atribuir_bloco_do_time(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || atribuir_bloco_do_time(this, src));
-    PLACAR.registrar(igual && r == n, || format!("atribuir_bloco_do_time({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
+    PLACAR.registrar(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
 /// { 0x71df00 } (thiscall, match_screens.cpp): copia a linha de jogador do bloco do time (0x49 bytes):
 /// duplas 0..0x14, a data em +0x14 pela Date::operator= (0x417c10, com o retorno numa local), bytes
 /// 0x1c..0x36, palavras 0x36..0x3e e bytes 0x3e..0x49. Devolve `this`.
-unsafe extern "thiscall" fn atribuir_linha_do_jogador(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn match_player_row_assign(this: usize, src: usize) -> usize {
     copiar_campos(this, src, 0, 0x14, 4);
     let atribuir_data: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut volta = [0u8; 8];
@@ -52,10 +52,10 @@ unsafe extern "thiscall" fn atribuir_linha_do_jogador(this: usize, src: usize) -
     this
 }
 
-unsafe extern "thiscall" fn comparar_atribuir_linha_do_jogador(this: usize, src: usize) -> usize {
+unsafe extern "thiscall" fn comparar_match_player_row_assign(this: usize, src: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || atribuir_linha_do_jogador(this, src));
-    PLACAR.registrar(igual && r == n, || format!("atribuir_linha_do_jogador({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
+    PLACAR.registrar(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn comparar_atribuir_linha_do_jogador(this: usize, src:
 /// senão +0x44); 2: gol contra (invertido); 7: gol nos pênaltis (+0x49/+0x4a, que começam em 0xff e vão
 /// a 1 no primeiro); 8 e os outros: nada. Zera antes +0x43..+0x46 e +0x4b/+0x4c. Resultado ou partida
 /// nulos: nada.
-unsafe extern "C" fn contar_placar_ao_vivo(partida: usize, indice: u32, res: usize) {
+unsafe extern "C" fn match_screens_tally_live_score(partida: usize, indice: u32, res: usize) {
     if res == 0 || partida == 0 {
         return;
     }
@@ -111,11 +111,11 @@ unsafe extern "C" fn contar_placar_ao_vivo(partida: usize, indice: u32, res: usi
     }
 }
 
-unsafe extern "C" fn comparar_contar_placar_ao_vivo(partida: usize, indice: u32, res: usize) {
+unsafe extern "C" fn comparar_match_screens_tally_live_score(partida: usize, indice: u32, res: usize) {
     let o = orig::<unsafe extern "C" fn(usize, u32, usize)>(%%I2%%);
     if res == 0 {
         return o(partida, indice, res);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(res + 0x43, 0xa)], || o(partida, indice, res), || contar_placar_ao_vivo(partida, indice, res));
-    PLACAR.registrar(igual, || format!("contar_placar_ao_vivo(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(res + 0x43, 0xa)], || o(partida, indice, res), || match_screens_tally_live_score(partida, indice, res));
+    PLACAR.registrar(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
 }

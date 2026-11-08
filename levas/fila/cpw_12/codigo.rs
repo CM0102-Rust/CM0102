@@ -71,9 +71,9 @@ unsafe fn cpw12_lados(this: usize, p: usize, m: usize, mut f: impl FnMut(usize, 
 /// por lado: o tipo (1 se +0x40 = 0; senão 2 na segunda seleção 0x5409b0, senão 0); na data do tipo (+0x3a + 20 ×
 /// tipo, 0x4a7f20 com a de hoje) zera +0x44 + 20 × tipo; a notícia aos clubes (0x7706c0) com o destaque (vaga +0x153) e
 /// a lista de quem jogou. Sem SEH, sem caixa, sem sorteio.
-unsafe extern "thiscall" fn resultado_entre_selecoes(this: usize, p: usize, m: usize) {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    if e_selecao(cpw12_d(p + 0x1c)) == 0 || e_selecao(cpw12_d(p + 0x20)) == 0 {
+unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m: usize) {
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    if is_national_team(cpw12_d(p + 0x1c)) == 0 || is_national_team(cpw12_d(p + 0x20)) == 0 {
         return;
     }
     let comp = cpw12_d(cpw12_d(p + 0x14));
@@ -184,28 +184,28 @@ unsafe fn cpw12_regioes(this: usize, p: usize, m: usize) -> Vec<(usize, usize)> 
 /// Comparador: o ensaio (a cópia sem o ranking, a primeira convocação, o registro de transferências e a notícia, que
 /// alocam, vão para o arquivo ou gravam fora) e a original a partir do mesmo estado, conferidos nas regiões que a
 /// rotina grava por conta própria (cpw12_regioes). Fora de jogo entre seleções: só a original.
-unsafe extern "thiscall" fn comparar_resultado_entre_selecoes(this: usize, p: usize, m: usize) {
+unsafe extern "thiscall" fn comparar_record_international_result(this: usize, p: usize, m: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    if e_selecao(cpw12_d(p + 0x1c)) == 0 || e_selecao(cpw12_d(p + 0x20)) == 0 {
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    if is_national_team(cpw12_d(p + 0x1c)) == 0 || is_national_team(cpw12_d(p + 0x20)) == 0 {
         return o(this, p, m); // ponytail: não grava nada, só a original
     }
     let regioes = cpw12_regioes(this, p, m);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW12_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| resultado_entre_selecoes(this, p, m)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| record_international_result(this, p, m)));
     CPW12_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this, p, m);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("resultado_entre_selecoes(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
 }
 
 /// { 0x775610 } (thiscall, ret 0x14, national_teams.cpp; `this` não é lido): `NationalTeams::format_squad_label(tipo,
 /// sub23, saida, tamanho, minusculo)`: tamanho abaixo de 20: a caixa (linha 0x1c98). Escreve (0x66f4e0) o nome do
 /// elenco: tipo 0 "Main", 1 "'B'", outros "Under 23" (com sub23) ou "Under 21"; com minúsculo = 1, em minúsculas.
-unsafe extern "thiscall" fn nome_do_elenco_da_selecao(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
+unsafe extern "thiscall" fn format_squad_label(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
     if tamanho < 0x14 {
         return orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, i32, u32) -> u32>(%%I1%%)(this, tipo, sub23, saida, tamanho, minusculo);
     }
@@ -224,15 +224,15 @@ unsafe extern "thiscall" fn nome_do_elenco_da_selecao(this: usize, tipo: u32, su
 }
 
 /// Comparador: lado a lado no começo da saída (até 64 bytes) e na devolução. A caixa: só a original.
-unsafe extern "thiscall" fn comparar_nome_do_elenco_da_selecao(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_format_squad_label(this: usize, tipo: u32, sub23: u32, saida: usize, tamanho: i32, minusculo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, i32, u32) -> u32>(%%I1%%);
     if tamanho < 0x14 || saida == 0 {
         return o(this, tipo, sub23, saida, tamanho, minusculo); // ponytail: a caixa, só a original
     }
     let reg = [(saida, (tamanho as usize).min(0x40))];
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tipo, sub23, saida, tamanho, minusculo),
-        || nome_do_elenco_da_selecao(this, tipo, sub23, saida, tamanho, minusculo));
-    PLACAR.registrar(igual && ro == rr, || format!("nome_do_elenco_da_selecao({}, {}, {}) original={:x} {:x?} rust={:x} {:x?}", tipo as u8, sub23, minusculo as u8, ro, mo, rr, mr));
+        || format_squad_label(this, tipo, sub23, saida, tamanho, minusculo));
+    PLACAR.registrar(igual && ro == rr, || format!("format_squad_label({}, {}, {}) original={:x} {:x?} rust={:x} {:x?}", tipo as u8, sub23, minusculo as u8, ro, mo, rr, mr));
     ro
 }
 
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn comparar_nome_do_elenco_da_selecao(this: usize, tipo
 /// competição; acima de +0x30: 0; abaixo de −1: a caixa da linha 0x36e, pela original) é liga (+0x43 = 2): 1. Senão 1
 /// se a rodada é antes da atual (+0xab, byte) ou é a atual, a última (+0x3c − 1) e com o código 0x8c (+7 do registro
 /// de 0x68 bytes dela em +0xa3); senão 0.
-unsafe extern "thiscall" fn rodada_com_jogos_conhecidos(this: usize, fase: i32, rodada: i32) -> u32 {
+unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, fase: i32, rodada: i32) -> u32 {
     if fase > cpw12_d(this + 0x30) as i32 {
         return 0;
     }
@@ -267,13 +267,13 @@ unsafe extern "thiscall" fn rodada_com_jogos_conhecidos(this: usize, fase: i32, 
 }
 
 /// Comparador: pelo valor (só lê). A caixa: só a original.
-unsafe extern "thiscall" fn comparar_rodada_com_jogos_conhecidos(this: usize, fase: i32, rodada: i32) -> u32 {
+unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: usize, fase: i32, rodada: i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(%%I2%%);
     if fase < -1 && fase <= cpw12_d(this + 0x30) as i32 {
         return o(this, fase, rodada); // ponytail: a caixa, só a original
     }
     let r = o(this, fase, rodada);
-    let n = rodada_com_jogos_conhecidos(this, fase, rodada);
-    PLACAR.registrar(r == n, || format!("rodada_com_jogos_conhecidos({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
+    let n = are_round_fixtures_known(this, fase, rodada);
+    PLACAR.registrar(r == n, || format!("are_round_fixtures_known({:x}, {}, {}) original={} rust={}", this, fase, rodada, r, n));
     r
 }

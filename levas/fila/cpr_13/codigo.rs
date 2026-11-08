@@ -11,7 +11,7 @@ unsafe fn cpr13_d(a: usize) -> u32 {
 /// que cai na temporada da nação (início em 0xb63d8a, fim em 0xb63d99, registro de 72 bytes da 0x669340) não serve.
 /// Senão, livre se a 0x5acbe0 não acha jogo do clube (+0 id) na janela (com uma lista provisória, destruída no fim).
 /// Clube ou data nulos: 0.
-unsafe extern "stdcall" fn clube_livre_na_data(data: usize, clube: usize, tipo: u32) -> u32 {
+unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize, clube: usize, tipo: u32) -> u32 {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let criar_lista: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir_lista: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -80,7 +80,7 @@ unsafe extern "stdcall" fn clube_livre_na_data(data: usize, clube: usize, tipo: 
 /// { 0x522910 } (thiscall, ret 4, Cup.cpp; virtual +0x80 das copas, chamada pela 0x4ae300 da projeção da diretoria):
 /// `Cup::has_club(clube)`: 1 se o clube está na tabela de times da copa (+0xa7, 6 bytes por time, +0 o clube; conta
 /// +0x3e); senão 0.
-unsafe extern "thiscall" fn copa_tem_o_clube(this: usize, clube: u32) -> u32 {
+unsafe extern "thiscall" fn has_club(this: usize, clube: u32) -> u32 {
     let n = *((this + 0x3e) as *const i16);
     let times = cpr13_d(this + 0xa7) as usize;
     for i in 0..n.max(0) as usize {
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn copa_tem_o_clube(this: usize, clube: u32) -> u32 {
 /// { 0x5af5b0 } (cdecl, fix_man.cpp; das buscas de jogos 0x5acbe0, 0x5acee0 e 0x5ad780): `fix_man_get_partner_key_nation_index(clube)`:
 /// para clube da Inglaterra ([0x9cf2e4]) ou do País de Gales ([0x9cf510]) (nação +0x53, id +0), o índice da nação-chave
 /// ativa da outra (os 35 registros de 72 bytes em 0xb63d60: +0 a nação, ativa em +0x11c, +0x14 o índice); senão 0xff.
-unsafe extern "C" fn nacao_parceira_do_clube(clube: usize) -> u8 {
+unsafe extern "C" fn fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
     let nacao = cpr13_d(clube + 0x53) as usize;
     if nacao == 0 {
         return 0xff;
@@ -119,25 +119,25 @@ unsafe extern "C" fn nacao_parceira_do_clube(clube: usize) -> u8 {
 }
 
 /// Comparador: a cópia roda com a lista provisória dela, como a original: pela devolução.
-unsafe extern "stdcall" fn comparar_clube_livre_na_data(data: usize, clube: usize, tipo: u32) -> u32 {
+unsafe extern "stdcall" fn comparar_friendly_is_club_free_on_date(data: usize, clube: usize, tipo: u32) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(%%I0%%)(data, clube, tipo);
-    let n = clube_livre_na_data(data, clube, tipo);
-    PLACAR.registrar(r == n, || format!("clube_livre_na_data(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, tipo as u8 as i8, r, n));
+    let n = friendly_is_club_free_on_date(data, clube, tipo);
+    PLACAR.registrar(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, clube, tipo as u8 as i8, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_copa_tem_o_clube(this: usize, clube: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, clube);
-    let n = copa_tem_o_clube(this, clube);
-    PLACAR.registrar(r == n, || format!("copa_tem_o_clube(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
+    let n = has_club(this, clube);
+    PLACAR.registrar(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_nacao_parceira_do_clube(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_fix_man_get_partner_key_nation_index(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
-    let n = nacao_parceira_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("nacao_parceira_do_clube({:x}) original={:x} rust={:x}", clube, r, n));
+    let n = fix_man_get_partner_key_nation_index(clube);
+    PLACAR.registrar(r == n, || format!("fix_man_get_partner_key_nation_index({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }

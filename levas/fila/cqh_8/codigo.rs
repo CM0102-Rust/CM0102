@@ -53,7 +53,7 @@ unsafe fn cqh8_gravar(this: usize, reg: usize, no: &[u8; 0x2b]) {
 /// `clube` ≥ 0 e: fora da temporada da nação do clube (a tabela 0xb63d8a); ou, sem a nação ou na temporada dela, menos de
 /// 365 dias desde a entrada no clube (+0x3e/+0x42, 0x54cdb0). Com `clube` ≥ 0 ou `valor` ≥ 0: recontam-se os jogos (+0x20) e os gols (+0x22) pelo
 /// `clube` nos nós da categoria 2 do histórico (0x58f120). Devolve 1.
-unsafe extern "thiscall" fn arquivar_estatisticas(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
+unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
     let tipo: u8 = if emprestimo as u8 != 0 {
         2
     } else if fim as u8 != 0 {
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn arquivar_estatisticas(this: usize, p: usize, valor: 
 /// soma dos jogos e gols), depois a original a partir do mesmo estado; compara a devolução, os seis registros de 32 bytes
 /// das categorias e os jogos e gols pelo clube (+0x20/+0x22 do registro da ficha). As posições do histórico (+0x18,
 /// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
-unsafe extern "thiscall" fn comparar_arquivar_estatisticas(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_archive_player_stats(this: usize, p: usize, valor: u32, emprestimo: u32, fim: u32, clube_id: u32, outro: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(%%I0%%);
     if p == 0 || cqh8_d(p + 0x61) == 0 {
         return o(this, p, valor, emprestimo, fim, clube_id, outro);
@@ -178,13 +178,13 @@ unsafe extern "thiscall" fn comparar_arquivar_estatisticas(this: usize, p: usize
     CQH8_ENSAIO = true;
     CQH8_PENDENTES = (0, 0);
     CQH8_CLUBE = clube_id as i32;
-    let n = crate::aleatorio::pausar_rastro(|| arquivar_estatisticas(this, p, valor, emprestimo, fim, clube_id, outro));
+    let n = crate::aleatorio::pausar_rastro(|| archive_player_stats(this, p, valor, emprestimo, fim, clube_id, outro));
     CQH8_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let r = o(this, p, valor, emprestimo, fim, clube_id, outro);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(r == n && mo == mr, || format!("arquivar_estatisticas(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
+    PLACAR.registrar(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
         p, valor as i32, clube_id as i32, r, n, mo.0, mr.0));
     r
 }

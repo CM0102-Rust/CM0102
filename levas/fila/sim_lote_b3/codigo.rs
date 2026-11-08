@@ -5,7 +5,7 @@
 /// (coluna, palavra) e +0x166 (linha), as 3 × 3 células do bloco ganham a coluna × 9 / 27 no nibble
 /// baixo e a linha × 12 / 36 no alto da tabela +0x5eb (12 por fila, 9 filas por k); o espelho em +0xf9e
 /// (fila e coluna invertidas) recebe (0xb0 − linha × 16) com (0xf8 − coluna) & 0xf. Devolve 1.
-unsafe extern "thiscall" fn mapa_de_casas_da_formacao(this: usize) -> u32 {
+unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32 {
     for k in 0..22i32 {
         for a18 in 0..3i32 {
             for a14 in 0..4i32 {
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn mapa_de_casas_da_formacao(this: usize) -> u32 {
 /// clube humano (0xae2d14) e a reputação contra o elenco (`elenco`); o treinador de juniores (+0xcf
 /// → +0x69) do clube do computador (0x600a50) ou o bônus do humano; a mesma nação (+0x1a/+0x53) e os
 /// clubes galeses (Swansea, Cardiff, Wrexham) e a Escócia. Só os 16 bits baixos da nota contam.
-unsafe extern "stdcall" fn nota_do_clube_para_o_jovem(jogador: usize, clube: usize, elenco: i8) -> i32 {
+unsafe extern "stdcall" fn player_regen_score_club_for_player(jogador: usize, clube: usize, elenco: i8) -> i32 {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
@@ -152,7 +152,7 @@ unsafe fn registro_da_partida_assistida(this: usize, humano: usize) -> Result<us
 /// assistir: o registro dele (+0x9ad4..) com a mesma competição (+0x3f), datas (+0x2a, +0x28), clube
 /// (+0), +0x34 e os dois lados (+0xc, +0x10). Partida nula ou humano fora da faixa: a original (caixa
 /// de erro e 0).
-unsafe extern "thiscall" fn partida_assistida_pelo_humano(this: usize, partida: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     let r = match registro_da_partida_assistida(this, humano) {
         Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano),
         Ok(_) if partida == 0 => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano),
@@ -172,29 +172,29 @@ unsafe extern "thiscall" fn partida_assistida_pelo_humano(this: usize, partida: 
     if mesma { 1 } else { 0 } // outra partida
 }
 
-unsafe extern "thiscall" fn comparar_mapa_de_casas_da_formacao(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_build_position_lookup(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || mapa_de_casas_da_formacao(this));
-    PLACAR.registrar(igual && r == n, || format!("mapa_de_casas_da_formacao {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this + 0x5eb, 0x187b - 0x5eb)], || o(this), || build_position_lookup(this));
+    PLACAR.registrar(igual && r == n, || format!("build_position_lookup {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "stdcall" fn comparar_nota_do_clube_para_o_jovem(jogador: usize, clube: usize, elenco: i8) -> i32 {
+unsafe extern "stdcall" fn comparar_player_regen_score_club_for_player(jogador: usize, clube: usize, elenco: i8) -> i32 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(%%I1%%);
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO,
-        || o(jogador, clube, elenco), || crate::aleatorio::sem_contar(|| nota_do_clube_para_o_jovem(jogador, clube, elenco)));
-    PLACAR.registrar(igual && r == n, || format!("nota_do_clube_para_o_jovem(elenco {}) original={} rust={} sorteio igual={}", elenco, r, n, igual));
+        || o(jogador, clube, elenco), || crate::aleatorio::sem_contar(|| player_regen_score_club_for_player(jogador, clube, elenco)));
+    PLACAR.registrar(igual && r == n, || format!("player_regen_score_club_for_player(elenco {}) original={} rust={} sorteio igual={}", elenco, r, n, igual));
     r
 }
 
-unsafe extern "thiscall" fn comparar_partida_assistida_pelo_humano(this: usize, partida: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
     let r = o(this, partida, humano);
     // ponytail: os casos de erro (caixa) só na original
     if partida == 0 || registro_da_partida_assistida(this, humano).is_err() {
         return r;
     }
-    let n = partida_assistida_pelo_humano(this, partida, humano);
-    PLACAR.registrar(r == n, || format!("partida_assistida_pelo_humano original={} rust={}", r, n));
+    let n = is_watching_fixture(this, partida, humano);
+    PLACAR.registrar(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
     r
 }

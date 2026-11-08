@@ -30,7 +30,7 @@ unsafe fn cpa3_nota(e: usize, b73: f64) -> f64 {
 /// do +0x74 do outro); 3 = briga na zona (+0x98 ≠ 0, as duas até 0,2 × clubes + +0xbe, ou com +0xbf até 0,2 × clubes
 /// + +0xbe + +0xbf, e o mesmo cruzamento do +0x74); senão 0. Devolve só `al`. Sem SEH, sem sorteio; a virtual +0x98
 /// é chamada até três vezes, como na original.
-unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
+unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let comp = cpa3_d(a + 0x57);
     if comp == 0 || comp != cpa3_d(b + 0x57) {
         return 0;
@@ -92,10 +92,10 @@ unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
 
 // ponytail: ~4 milhões de chamadas na carreira: comparação só do valor, sem regiões (a rotina só lê; a 0x4a4850 pode
 // reordenar a estatística, e a original já deixa ordenada para a cópia).
-unsafe extern "C" fn comparar_tipo_de_confronto_na_liga(a: usize, b: usize) -> u8 {
+unsafe extern "C" fn comparar_comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(a, b);
-    let n = tipo_de_confronto_na_liga(a, b);
-    PLACAR.registrar(r == n, || format!("tipo_de_confronto_na_liga({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = comp_util_get_league_clash_type(a, b);
+    PLACAR.registrar(r == n, || format!("comp_util_get_league_clash_type({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -105,7 +105,7 @@ unsafe extern "C" fn comparar_tipo_de_confronto_na_liga(a: usize, b: usize) -> u
 /// 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 × 0x40) entre os jogadores (+0x61) do elenco (0x541f90). Clube nulo:
 /// −10.000.000. Sem SEH, sem sorteio próprio. A original empurra o número de jogadores como dword com só o byte de
 /// baixo gravado (o resto é sobra de pilha); a 0x6e2000 só lê o byte, e a cópia passa o byte estendido.
-unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
+unsafe extern "C" fn comp_util_get_club_strength_score(clube: usize) -> i32 {
     if clube == 0 {
         return -10_000_000;
     }
@@ -114,8 +114,8 @@ unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
     if financas == 0 {
         forca = core::ptr::read_unaligned((clube + 0x65) as *const i32) / 400;
     } else {
-        let financas_do_clube: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-        let f = financas_do_clube(financas, clube);
+        let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
+        let f = get_club_finance(financas, clube);
         if f != 0 {
             forca = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
         }
@@ -134,8 +134,8 @@ unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
             k = k.wrapping_add(1);
         }
     }
-    let escalar: Escalar = core::mem::transmute(0x6e2000usize);
-    escalar(jogadores.as_ptr() as usize, k as u8 as u32, codigos.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, clube, 0, 0, 0, 0, 0, 0, 0);
+    let pick: Escalar = core::mem::transmute(0x6e2000usize);
+    pick(jogadores.as_ptr() as usize, k as u8 as u32, codigos.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, clube, 0, 0, 0, 0, 0, 0, 0);
     let nota: unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32 = core::mem::transmute(0x6e6340usize);
     for (j, &p) in escalados.iter().enumerate() {
         if p != 0 {
@@ -147,10 +147,10 @@ unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
 
 // ponytail: 1.117 chamadas; só o valor. A escalação e as notas têm comparadores próprios, e o físico que a nota
 // atualiza uma vez (0x62ed70, com sorteio) a original já deixa pronto para a cópia.
-unsafe extern "C" fn comparar_forca_do_clube(clube: usize) -> i32 {
+unsafe extern "C" fn comparar_comp_util_get_club_strength_score(clube: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize) -> i32>(%%I1%%)(clube);
-    let n = forca_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("forca_do_clube({:x}) original={} rust={}", clube, r, n));
+    let n = comp_util_get_club_strength_score(clube);
+    PLACAR.registrar(r == n, || format!("comp_util_get_club_strength_score({:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -159,7 +159,7 @@ unsafe extern "C" fn comparar_forca_do_clube(clube: usize) -> i32 {
 /// primeira linha dela e devolve o clube do `lugar` (0 campeão +0xa, 1 vice +0xe, 2 terceiro +0x12); não achou: 0.
 /// Outro lugar: a original (a caixa do comp_util.cpp). A chave na pilha da original só tem +4 e +8 gravados, e a
 /// 0x540780 só lê esses dois; a cópia zera o resto.
-unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {
+unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
     let lugar = lugar as u8;
     if lugar > 2 {
         return orig::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%)(comp, lugar as u32); // caixa: só a original
@@ -186,14 +186,14 @@ unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: u32) -> usi
     cpa3_d(p + [0xa, 0xe, 0x12][lugar as usize]) // campeão, vice, terceiro
 }
 
-unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize, lugar: u32) -> usize {
+unsafe extern "C" fn comparar_comp_util_get_latest_placed_club(comp: usize, lugar: u32) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, u32) -> usize>(%%I2%%);
     if lugar as u8 > 2 {
         return o(comp, lugar);
     }
     let n = (*(0xae237c as *const i32)).max(0) as usize;
     let reg = [(*(0xae23d4 as *const usize), 0x1a * n)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(comp, lugar), || clube_colocado_mais_recente(comp, lugar));
-    PLACAR.registrar(igual && r == x, || format!("clube_colocado_mais_recente({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(comp, lugar), || comp_util_get_latest_placed_club(comp, lugar));
+    PLACAR.registrar(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
     r
 }

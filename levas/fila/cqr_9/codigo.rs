@@ -84,7 +84,7 @@ unsafe fn cqr9_mata_mata(this: usize, n: u32, times: usize, fase: u32, sementes:
 /// cada grupo, `cqr9_tabela`) e, nas vagas 8 a 23, os 16 cabeças de chave que entram direto (`cqr9_cabecas`); a fase 7
 /// (`cqr9_mata_mata`) com as sementes {3 × 8, 2 × 8, 1 × 8} (os campeões dos grupos, depois os cabeças de chave
 /// [inferência: o pote de cada vaga no sorteio]) e a caixa da linha 0x2c0.
-unsafe extern "thiscall" fn cqr9_copa_da_italia_mata_mata(this: usize) {
+unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize) {
     let mut sementes = [0u8; 24];
     for (k, s) in sementes.iter_mut().enumerate() {
         *s = 3 - (k / 8) as u8;
@@ -119,10 +119,10 @@ unsafe fn cqr9_comparar(nome: &str, this: usize, fase: usize, cabem: usize, orig
     PLACAR.registrar(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", nome, this, f, vagas));
 }
 
-unsafe extern "thiscall" fn comparar_cqr9_copa_da_italia_mata_mata(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     // ponytail: aloca a fase e sorteia a primeira rodada; não pode rodar duas vezes: só a original, com o plano
-    cqr9_comparar("cqr9_copa_da_italia_mata_mata", this, 7, 16, || o(this))
+    cqr9_comparar("ita_cup_create_knockout_stage", this, 7, 16, || o(this))
 }
 
 /// { 0x63dc10 } (thiscall, ret 0, ita_c_cup.cpp; da fase seguinte, depois da fase 14; quadro SEH só para os dois new, sem
@@ -136,7 +136,7 @@ unsafe extern "thiscall" fn comparar_cqr9_copa_da_italia_mata_mata(this: usize) 
 /// classificação): cada um, achado na tabela do seu grupo (o primeiro grupo em que aparece), marca o grupo (+0xbe = 2) e a
 /// linha dele (+0x37 = 6). 3) A liga provisória destruída (a virtual 0 com 1). 4) Nas vagas 22 a 31, os 10 cabeças de chave
 /// que entram direto (`cqr9_cabecas`). 5) A fase 15 (`cqr9_mata_mata`), sem sementes, e a caixa da linha 0x304.
-unsafe extern "thiscall" fn cqr9_copa_da_serie_c_mata_mata(this: usize) {
+unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let desempate: [u8; 4] = [1, 2, 3, 0];
     let p = novo(0xee);
@@ -197,8 +197,8 @@ unsafe extern "thiscall" fn cqr9_copa_da_serie_c_mata_mata(this: usize) {
     cqr9_mata_mata(this, 0x20, times, 0xf, core::ptr::null(), 0x9ea204, 0x304);
 }
 
-unsafe extern "thiscall" fn comparar_cqr9_copa_da_serie_c_mata_mata(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage_63dc10(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     // ponytail: monta e destrói a liga provisória, aloca a fase e sorteia; não pode rodar duas vezes: só a original
-    cqr9_comparar("cqr9_copa_da_serie_c_mata_mata", this, 0xf, 10, || o(this))
+    cqr9_comparar("ita_cup_create_knockout_stage_63dc10", this, 0xf, 10, || o(this))
 }

@@ -25,7 +25,7 @@ unsafe fn cqs1_da_divisao(this: usize, c: usize, codigo: i16) -> bool {
 /// clube da competição com o código 0x413 vai à linha seguinte (League::init_table_row 0x687430: push 0; push 0; push
 /// clube; push eax com a linha no byte baixo e o lixo do código em cima, que ela não lê; mov ecx -> thiscall, ret
 /// 0x10). Devolve 1 se encheu as 4 linhas.
-unsafe extern "thiscall" fn cqs1_tabela_da_mls(this: usize) -> u32 {
+unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
@@ -110,19 +110,19 @@ unsafe fn cqs1_divisao(this: usize, codigo: i16, k: u32, atual: u32, pv: usize, 
 
 /// { 0x908fc0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_second_division_stage()`, a
 /// segunda divisão da MLS (código 0x47b) na fase 0; caixas nas linhas 0x4e6 e 0x506.
-unsafe extern "thiscall" fn cqs1_segunda_divisao_da_mls(this: usize) {
+unsafe extern "thiscall" fn create_second_division_stage(this: usize) {
     cqs1_divisao(this, 0x47b, 0, 0, 0xc2, [0x4e6, 0x506], "cqs_1 segunda divisao") // cqs1: os pontos por vitória na segunda
 }
 
 /// { 0x9091e0 } (thiscall, ret 0, usa_mls.cpp; quadro SEH só para o new): `UsaMls::create_third_division_stage()`, a
 /// terceira divisão da MLS (código 0x414) na fase 1; caixas nas linhas 0x524 e 0x544.
-unsafe extern "thiscall" fn cqs1_terceira_divisao_da_mls(this: usize) {
+unsafe extern "thiscall" fn create_third_division_stage(this: usize) {
     cqs1_divisao(this, 0x414, 1, 1, 0xc2, [0x524, 0x544], "cqs_1 terceira divisao") // cqs1: a fase atual depois da terceira
 }
 
 /// O comparador da tabela: só a original (ponytail: aloca a tabela e as listas das linhas), com o plano feito antes:
 /// os clubes da competição com o código 0x413, na ordem do banco, até 4. Depois, a devolução, +0x3e = 4 e as linhas.
-unsafe extern "thiscall" fn comparar_cqs1_tabela_da_mls(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_create_table(this: usize) -> u32 {
     let mut plano = [0usize; 4];
     let mut n = 0usize;
     let base = cqs1_d(0xae23b4);
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn comparar_cqs1_tabela_da_mls(this: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
     let t = cqs1_d(this + 0xb1);
     let igual = r == (n == 4) as u32 && cqs1_w(this + 0x3e) == 4 && t != 0 && (0..n).all(|k| cqs1_d(t + k * 0x3b) == plano[k]);
-    PLACAR.registrar(igual, || format!("cqs1_tabela_da_mls({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
+    PLACAR.registrar(igual, || format!("usa_mls_create_table({:#x}) r={} n={} plano={:x?}", this, r, n, plano));
     r
 }
 
@@ -173,12 +173,12 @@ unsafe fn cqs1_comparar(nome: &str, this: usize, codigo: i16, k: usize, original
     PLACAR.registrar(igual, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", nome, this, fase, n, plano));
 }
 
-unsafe extern "thiscall" fn comparar_cqs1_segunda_divisao_da_mls(this: usize) {
+unsafe extern "thiscall" fn comparar_create_second_division_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqs1_comparar("cqs1_segunda_divisao_da_mls", this, 0x47b, 0, || o(this))
+    cqs1_comparar("create_second_division_stage", this, 0x47b, 0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqs1_terceira_divisao_da_mls(this: usize) {
+unsafe extern "thiscall" fn comparar_create_third_division_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqs1_comparar("cqs1_terceira_divisao_da_mls", this, 0x414, 1, || o(this))
+    cqs1_comparar("create_third_division_stage", this, 0x414, 1, || o(this))
 }

@@ -2,7 +2,7 @@
 
 # Glossário: nomes em português no código
 
-O código (Rust e Python) usa nomes em português. Este glossário dá o significado em inglês de cada nome, para ler o código junto com a documentação em inglês. Os nomes no código não mudam; é só uma ajuda de leitura. Endereços são VA no `cm0102.exe` 3.9.68.
+Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do método original no mapa de maxevans60); os auxiliares e as ferramentas ainda têm nomes em português, trocados em rodadas. Este glossário liga cada nome do código ao nome original e ao nome antigo em português (`docs/NOMES.csv`), que a documentação das levas ainda usa. Endereços são VA no `cm0102.exe` 3.9.68.
 
 ## Palavras comuns
 
@@ -52,2073 +52,2100 @@ O código (Rust e Python) usa nomes em português. Este glossário dá o signifi
 
 ## Rotinas do motor de partidas (`rust/src/motor.rs`)
 
-| Endereço | Português | English |
-|---|---|---|
-| 0x54d580 | `abrir_arquivo_do_banco` | db_files_open_for_read |
-| 0x71b4a0 | `abrir_detalhes_da_partida` | open_match_details |
-| 0x725f70 | `abrir_escalacao_da_partida` | match_screens_open_team_selection |
-| 0x717cc0 | `abrir_jogos_do_dia` | open_day_fixtures_screen |
-| 0x9326e0 | `abrir_no_conteiner` | open_in_container |
-| 0x718aa0 | `abrir_tela_da_partida` | open_match_screen |
-| 0x727f00 | `abrir_tela_de_espera` | open_waiting_screen |
-| 0x71b1b0 | `abrir_ultimos_placares` | open_latest_scores |
-| 0x69d060 | `abrir_vagas_que_faltam` | MANAGER_MANAGER::fix_missing_jobs |
-| 0x8c0660 | `aceitar_emprestimo` | TRANSFER_MANAGER::accept_loan_offer |
-| 0x8c0080 | `aceitar_lance` | TRANSFER_MANAGER::accept_transfer_bid |
-| 0x8c91e0 | `acertar_clausulas_anteriores` | settle_previous_transfer_clauses |
-| 0x5acbe0 | `achar_jogos_do_calendario` | FIXTURE_MANAGER::find_fixtures |
-| 0x786b70 | `achar_noticia_pelo_id` | News::find_item_by_id |
-| 0x8b4b20 | `achar_o_treino_de_posicao` | TRAINING_MANAGER::find_position_training |
-| 0x4cd030 | `acionar_clausulas_de_rebaixamento` | CONTRACT_MANAGER::trigger_relegation_clauses |
-| 0x5c6f00 | `acrescentar_amistoso` | Friendly::add_friendly_match |
-| 0x5c4b60 | `acrescentar_amistoso_planejado` | Friendly::add_planned_friendly |
-| 0x4afce0 | `acrescentar_ao_historico` | comp_util_add_history_record |
-| 0x7a8510 | `acrescentar_aposentadoria` | PLAYER_REGEN::add_retirement |
-| 0x547e70 | `acrescentar_clube_rejeitado` | staff_add_disliked_club |
-| 0x4c7950 | `acrescentar_contrato_da_pessoa` | CONTRACT_MANAGER::add_staff_contract |
-| 0x4cd6d0 | `acrescentar_data_de_decisao` | CONTRACT_MANAGER::add_decision_date |
-| 0x7c6a30 | `acrescentar_idioma` | PlayerStats::add_language |
-| 0x754740 | `acrescentar_interesse_de_transferencia` | Media::add_transfer_interest |
-| 0x8423f0 | `acrescentar_na_lista_de_observacao` | Shortlist_Manager::add_shortlist_entry |
-| 0x7779b0 | `acrescentar_nacao_classificada` | NationalTeams::add_qualified_nation |
-| 0x4cc490 | `acrescentar_oferta_de_contrato` | add_contract_offer |
-| 0x547a10 | `acrescentar_pessoa_favorita` | staff_add_favoured_staff |
-| 0x7a81a0 | `acrescentar_reserva_de_tecnico` | PLAYER_REGEN::add_spare_non_player_record |
-| 0x62e820 | `acrescentar_surto_de_doenca` | Injury::add_illness_outbreak |
-| 0x556940 | `acrescentar_suspensao` | Discipline::add_ban |
-| 0x5c6e00 | `acrescentar_torneio` | Friendly::add_tournament |
-| 0x8cb9a0 | `acrescentar_transferencia_futura` | TRANSFER_MANAGER::add_future_transfer |
-| 0x923630 | `adiar_pelo_clima` | Weather::check_postponement |
-| 0x6181d0 | `adjetivo_da_nacao` | nation_get_nationality_adjective |
-| 0x6177f0 | `adjetivo_do_continente` | get_continent_adjective |
-| 0x5c5040 | `adversario_da_excursao` | Friendly::find_tour_opponent |
-| 0x5c4cb0 | `adversario_do_amistoso` | Friendly::find_friendly_opponent |
-| 0x4ccca0 | `agendar_fim_do_emprestimo` | CONTRACT_MANAGER::schedule_loan_end |
-| 0x8c6220 | `agendar_oferta` | TRANSFER_MANAGER::schedule_offer |
-| 0x7172d0 | `ajustar_17` | adjust_17 |
-| 0x7386f0 | `ajustar_confianca_da_diretoria` | Media::adjust_board_confidence |
-| 0x738340 | `ajustar_confianca_da_torcida` | Media::adjust_supporter_confidence |
-| 0x544710 | `ajustar_moral_da_pessoa` | staff_adjust_morale |
-| 0x598340 | `ajustar_o_teto_salarial` | Finance::adjust_max_wage |
-| 0x6cb9b0 | `alcanca` | reaches |
-| 0x713d90 | `alcanca_o_ponto` | reaches_the_point |
-| 0x6cb700 | `alem_da_linha` | beyond_the_line |
-| 0x7f9690 | `alvos_dos_olheiros_do_clube` | SCOUT_MANAGER::collect_club_scout_targets |
-| 0x5c88f0 | `amistoso_do_clube` | find_friendly_match |
-| 0x5c5570 | `amistoso_enviar_pedido` | Friendly::send_friendly_request |
-| 0x5ca3e0 | `amistoso_lista_das_nacoes` | Friendly::build_nation_list |
-| 0x5c45a0 | `amistoso_perto_da_data` | Friendly::candidate_has_nearby_date |
-| 0x5c5f40 | `amistoso_responder_pedido` | Friendly::process_friendly_reply |
-| 0x5c4770 | `amistosos_dos_clubes` | Friendly::plan_club_friendlies |
-| 0x5cbdf0 | `amistosos_entre_selecoes` | Friendly::arrange_international_friendlies |
-| 0x5cbb00 | `amistosos_internacionais_do_dia` | Friendly::update_international_friendlies |
-| 0x6b5ce0 | `andar_partida_do_dia` | step_day_match |
-| 0x669950 | `ano_da_temporada_do_clube` | key_nation_get_club_season_year |
-| 0x5aa2d0 | `ano_do_calendario` | FIXTURE_MANAGER::set_year |
-| 0x7c6e30 | `anos_desde_o_clube` | player_stats_years_since_at_club |
-| 0x540340 | `anos_entre_datas_em_texto` | database_format_years_between_dates |
-| 0x686670 | `anunciar_situacao_na_liga` | League::announce_team_status |
-| 0x55e1d0 | `apagar_historico_de_suspensoes` | Discipline::clear_ban_history |
-| 0x76c060 | `apagar_repetidos_das_convocacoes` | national_teams_remove_duplicate_squad_entries |
-| 0x6abef0 | `apelacoes_de_suspensao` | MANAGER_MANAGER::process_ban_appeals |
-| 0x6bb950 | `aplicar_ao_lado` | apply_to_side |
-| 0x6bb8d0 | `aplicar_ao_time` | apply_to_team |
-| 0x6bac40 | `aplicar_falta` | apply_foul |
-| 0x716450 | `aplicar_fator` | apply_factor |
-| 0x8b2be0 | `aplicar_o_progresso` | TRAINING_MANAGER::apply_training_progress |
-| 0x685f60 | `aplicar_resultado_na_tabela` | League::apply_result_to_table |
-| 0x6d0b60 | `aplicar_trocas` | apply_substitutions |
-| 0x6f4920 | `apontar` | aim (set facing direction) |
-| 0x7a8050 | `aposentadoria_do_desempregado` | player_regen_check_unemployed_retirement |
-| 0x7ae350 | `aposentadoria_marcada` | PLAYER_REGEN::is_retirement_pending |
-| 0x7a79c0 | `aposentadoria_no_inicio` | player_regen_check_initial_retirement |
-| 0x7a7310 | `aposentadoria_por_idade` | player_regen_check_retirement |
-| 0x7a59e0 | `aposentadorias_do_dia` | PLAYER_REGEN::process_retirements |
-| 0x7aace0 | `aposentar_do_elenco` | PLAYER_REGEN::retire_from_playing_staff |
-| 0x7a7f20 | `aposentar_pela_lesao` | PLAYER_REGEN::schedule_injury_retirement |
-| 0x8b4db0 | `aprende_depressa` | TRAINING_MANAGER::has_fast_position_training |
-| 0x8b4770 | `aptidao_para_a_posicao` | TRAINING_MANAGER::get_position_aptitude |
-| 0x79c5c0 | `arbitros_sorteados` | officials_manager_add_random_officials |
-| 0x7c5fe0 | `arquivar_estatisticas` | PlayerStats::archive_player_stats |
-| 0x7c1350 | `arquivar_estatisticas_da_nacao` | PlayerStats::end_season_for_key_nation |
-| 0x535930 | `arquivo_do_idioma_existe` | database_language_file_exists |
-| 0x4b0870 | `arredondar_abaixo_de_1000` | round_below_1000 |
-| 0x6c4820 | `arrumar_bola_parada` | line_up_set_piece |
-| 0x6c4ec0 | `arrumar_saida` | line_up_kickoff |
-| 0x4cf720 | `assinar_contrato` | CONTRACT_MANAGER::sign_contract |
-| 0x4d01e0 | `assinar_contrato_de_emprestimo` | CONTRACT_MANAGER::sign_loan_contract |
-| 0x6cd5f0 | `atras_do_extremo` | behind_the_extreme |
-| 0x6d5950 | `atras_no_agregado` | behind_on_aggregate |
-| 0x71dd70 | `atribuir_bloco_do_time` | match_team_block_assign |
-| 0x71df00 | `atribuir_linha_do_jogador` | match_player_row_assign |
-| 0x543540 | `atributo_calculado_do_jogador` | staff_compute_player_attribute |
-| 0x543fd0 | `atributo_calculado_do_nao_jogador` | staff_compute_non_player_attribute |
-| 0x5431e0 | `atributo_da_pessoa` | staff_get_player_attribute |
-| 0x543f30 | `atributo_do_nao_jogador` | staff_get_non_player_attribute |
-| 0x543440 | `atributo_para_quem_ve` | staff_get_player_attribute_for_viewer |
-| 0x543280 | `atributo_visivel` | staff_is_player_attribute_visible |
-| 0x5d7190 | `atrito_com_o_tecnico` | game_check_club_dressing_room_unrest |
-| 0x5c2460 | `atualizar_amistosos_do_dia` | Friendly::update_for_date |
-| 0x6ec010 | `atualizar_atributos` | update_attributes |
-| 0x71d9e0 | `atualizar_barra_da_posse` | refresh_possession_bar |
-| 0x6869a0 | `atualizar_confronto_direto` | League::update_head_to_head |
-| 0x51f890 | `atualizar_copa_no_dia` | Cup::update_for_date |
-| 0x6f4aa0 | `atualizar_jogador` | update_player |
-| 0x8b1750 | `atualizar_o_treino_do_jogador` | TRAINING_MANAGER::update_player_training |
-| 0x8c7330 | `atualizar_permissoes_de_trabalho` | TRANSFER_MANAGER::update_work_permits |
-| 0x58d460 | `atualizar_ranking_da_fifa` | FIFA_RANKINGS::update_rankings |
-| 0x724520 | `atualizar_ultimos_placares` | refresh_latest_scores_rows |
-| 0x418f60 | `ausente_sem_licenca` | AWOL::is_player_awol |
-| 0x53cb80 | `auxiliar_do_clube` | database_get_club_assistant |
-| 0x6a5610 | `avaliar_a_selecao_na_competicao` | MANAGER_MANAGER::review_national_team_performance |
-| 0x6e1cf0 | `avaliar_jogador` | rate_player |
-| 0x696570 | `avaliar_o_negocio_da_transferencia` | MANAGER_MANAGER::assess_transfer_deal |
-| 0x8b1730 | `avancar_a_semana` | TRAINING_MANAGER::advance_week_counter |
-| 0x6f5b80 | `avancar_linha` | advance_row |
-| 0x758010 | `aviso_ao_rival_de_posicao` | Media::warn_squad_of_position_rival |
-| 0x4cb250 | `baixar_moral_pela_partida` | contract_manager_lower_match_morale |
-| 0x729bd0 | `balde_do_registro` | match_stats_get_record_bucket |
-| 0x8676f0 | `bandeiras_do_contrato` | contract_flags |
-| 0x897990 | `batedor_guardado` | stored_taker |
-| 0x62bf60 | `batida_do_jogador` | Injury::find_match_injury |
-| 0x5b5a60 | `bit_da_casa` | square_bit |
-| 0x7a7eb0 | `bits_do_registro` | record_bits |
-| 0x754a30 | `boatos_de_transferencia` | Media::process_transfer_interest |
-| 0x6cd490 | `bola_fora` | ball_out |
-| 0x6d58f0 | `bola_na_area` | ball_goal_end |
-| 0x714d00 | `bola_no_ataque` | ball_in_attack |
-| 0x7f8420 | `busca_atual_sem_clube` | SCOUT_MANAGER::current_search_has_no_club |
-| 0x7b7490 | `busca_cobre_a_nacao` | PLAYER_SEARCH::scout_covers_nation |
-| 0x933080 | `buscar_no_conteiner` | seek_in_container |
-| 0x7754c0 | `byte_42_da_selecao` | national_side_byte_42 |
-| 0x775520 | `byte_43_da_selecao` | national_side_byte_43 |
-| 0x76e010 | `byte_44_da_pessoa` | person_byte_44 |
-| 0x5b57c0 | `byte_da_posicao` | position_byte |
-| 0x6d5cd0 | `byte_do_codigo` | code_byte |
-| 0x6cfda0 | `byte_do_lado` | side_byte |
-| 0x898040 | `byte_tatico` | tactics_byte |
-| 0x689c20 | `cadeia_de_acessos` | League::process_promotion_relegation_chain |
-| 0x6ce9c0 | `calcular_percentuais` | compute_percentages |
-| 0x5ac3b0 | `calendario_carregar_ano` | FIXTURE_MANAGER::load_fixtures |
-| 0x64ad80 | `calendario_da_c1_a` | ItaSerC1a::create_schedule |
-| 0x64ef30 | `calendario_da_c1_b` | ItaSerC1b::create_schedule |
-| 0x5b9510 | `calendario_da_cfa` | FraCfa::create_schedule |
-| 0x851260 | `calendario_da_divisao_de_baixo_espanhola` | SpaLower::create_schedule |
-| 0x5bd920 | `calendario_da_divisao_de_baixo_francesa` | FraLower::create_schedule |
-| 0x573660 | `calendario_da_premiership` | EngPrm::create_schedule |
-| 0x5bb690 | `calendario_da_primeira_francesa` | FraFirst::create_schedule |
-| 0x571980 | `calendario_da_primeira_inglesa` | EngFirst::create_schedule |
-| 0x84e450 | `calendario_da_primera` | SpaFirst::create_schedule |
-| 0x853c90 | `calendario_da_segunda_espanhola` | SpaSecond::create_schedule |
-| 0x5be620 | `calendario_da_segunda_francesa` | FraSecond::create_schedule |
-| 0x5757a0 | `calendario_da_segunda_inglesa` | EngSecond::create_schedule |
-| 0x6409b0 | `calendario_da_serie_a` | ItaSerA::create_schedule |
-| 0x645af0 | `calendario_da_serie_b` | ItaSerB::create_schedule |
-| 0x5bfe30 | `calendario_da_terceira_francesa` | FraThird::create_schedule |
-| 0x5770e0 | `calendario_da_terceira_inglesa` | EngThird::create_schedule |
-| 0x5fa850 | `calendario_das_sedes` | HostCountry::daily_update |
-| 0x5aaf00 | `calendario_dia` | FIXTURE_MANAGER::daily_update |
-| 0x64be90 | `calendario_fixo_da_c1a` | ItaSerC1a::set_up_fixed_fixtures |
-| 0x650100 | `calendario_fixo_da_c1b` | ItaSerC1b::set_up_fixed_fixtures |
-| 0x642a70 | `calendario_fixo_da_serie_a` | ItaSerA::create_fixed_fixtures |
-| 0x647230 | `calendario_fixo_da_serie_b` | ItaSerB::set_up_fixed_fixtures |
-| 0x5abf10 | `calendario_lista` | FIXTURE_MANAGER::get_fixture_list |
-| 0x6bd5b0 | `caminho_livre` | clear_path |
-| 0x6c41b0 | `caminho_livre_ate` | clear_path_to |
-| 0x86a800 | `campeao_da_copa_nos_registros` | Staff_Records::add_cup_winners_record |
-| 0x868c50 | `campeao_da_liga_nos_registros` | Staff_Records::add_league_champions_record |
-| 0x5871e0 | `campeoes_ordem_da_segunda_fase` | european_cup_compare_phase2_draw_entries |
-| 0x586f60 | `campeoes_ordem_dos_potes` | european_cup_compare_clubs_by_seed |
-| 0x586900 | `campeoes_posicoes_previstas` | EuropeanCup::rank_teams |
-| 0x583c50 | `campeoes_rodadas_da_fase` | EuropeanCup::create_round_table |
-| 0x585290 | `campeoes_sortear_grupos` | EuropeanCup::draw_phase1_groups |
-| 0x585ab0 | `campeoes_sortear_segunda_fase` | EuropeanCup::draw_phase2_groups |
-| 0x76e040 | `campo_3a_da_pessoa` | person_field_3a |
-| 0x6f4600 | `campo_pela_posicao` | field_by_position |
-| 0x86fab0 | `candidatos_a_tecnico_do_ano` | Staff_Records::get_manager_of_year_candidates |
-| 0x8976a0 | `capitao_guardado` | Tactics::get_captain |
-| 0x8b4f60 | `carga_do_programa` | TRAINING_SCHEDULE::get_training_load |
-| 0x4cbb20 | `cargo_com_contrato` | is_contract_staff_job |
-| 0x524d10 | `carregar_banco_do_save` | load_database_from_stream |
-| 0x5af390 | `carregar_conferencia_das_pernas` | fix_man_load_fixture_leg_checks |
-| 0x5aee90 | `carregar_datas_dos_clubes` | fix_man_load_club_dates |
-| 0x72aa80 | `carregar_estatisticas_da_partida` | Match_Stats::load |
-| 0x59b2a0 | `carregar_financas` | FinanceTable::load_from_save |
-| 0x82a9c0 | `carregar_jogo` | load_game_data |
-| 0x839760 | `carregar_regras_fifa` | load_fifa_transfer_rules |
-| 0x5fb160 | `carregar_sedes` | HostCountry::load_temp_file |
-| 0x6eab60 | `cartao_pela_gravidade` | card_by_severity |
-| 0x6c2a40 | `casa_da_formacao` | formation_square |
-| 0x5b2ae0 | `casa_da_vaga` | slot_code |
-| 0x5b2e80 | `casa_do_setor_ocupada` | sector_slot_taken |
-| 0x5b3c70 | `casa_guardada` | stored_cell |
-| 0x5b7e60 | `casa_no_campo` | pitch_cell |
-| 0x6146b0 | `casar_chave_de_clube` | match_club_key_id |
-| 0x60efd0 | `casar_chave_de_competicao_de_clube` | match_club_comp_key_id |
-| 0x6115e0 | `casar_chave_de_competicao_de_pessoa` | match_staff_comp_key_id |
-| 0x60d810 | `casar_chave_de_nacao` | match_nation_key_id |
-| 0x933a00 | `casar_nome_com_padrao` | zipdir_match_filename_pattern |
-| 0x785670 | `categoria_da_noticia` | NewsItem::get_category |
-| 0x4ca470 | `categoria_do_contrato` | contract_category |
-| 0x544410 | `chance_de_conhecer` | chance_to_know |
-| 0x519c90 | `chave_do_jogo_na_copa` | Cup::find_tree_slot_for_fixture |
-| 0x702050 | `chutar` | shoot |
-| 0x6f6c00 | `chute` | shot |
-| 0x70a910 | `chute_a_gol` | shot_on_goal |
-| 0x76d780 | `classe_da_selecao` | national_side_class |
-| 0x76e070 | `classe_pela_selecao` | class_by_national_side |
-| 0x713e90 | `classificar_lance` | classify_move |
-| 0x867b50 | `clausula_de_rescisao_ativa` | STAFF_CONTRACT::has_active_release_clause |
-| 0x923010 | `clima_da_partida` | Weather::get_match_weather |
-| 0x547870 | `clube_acrescentar_pessoa_favorita` | club_add_favoured_staff |
-| 0x547940 | `clube_acrescentar_pessoa_rejeitada` | club_add_disliked_staff |
-| 0x53d7f0 | `clube_basco` | database_is_basque_club |
-| 0x4afd80 | `clube_colocado_mais_recente` | comp_util_get_latest_placed_club |
-| 0x522360 | `clube_da_divisao_mais_alta` | Cup::club_in_higher_division |
-| 0x7ad590 | `clube_da_nacao_para_o_jovem` | PLAYER_REGEN::pick_club_from_nation_list |
-| 0x7875e0 | `clube_de_tecnico_humano` | news_club_has_human_manager |
-| 0x8c5450 | `clube_do_contrato_acertado` | TRANSFER_MANAGER::get_agreed_contract_club |
-| 0x8d0a70 | `clube_do_jogador_com_lei_bosman` | player_club_uses_bosman |
-| 0x6b79a0 | `clube_do_pos_jogo` | post_match_club |
-| 0x5448c0 | `clube_e_time_b` | club_is_b_team |
-| 0x69eb50 | `clube_em_apuro_financeiro` | MANAGER_MANAGER::is_club_in_financial_trouble |
-| 0x549e50 | `clube_em_nacao_grande` | club_is_in_major_nation |
-| 0x547770 | `clube_em_temporada` | club_is_in_season |
-| 0x76d940 | `clube_especial` | special_club |
-| 0x5487b0 | `clube_fora_da_argentina` | club_nation_is_not_argentina |
-| 0x5487d0 | `clube_fora_de_argentina_franca_croacia` | club_nation_not_argentina_france_croatia |
-| 0x600a50 | `clube_humano` | human_club |
-| 0x5c6b70 | `clube_livre_na_data` | friendly_is_club_free_on_date |
-| 0x48db80 | `clube_na_competicao` | club_in_competition |
-| 0x669bd0 | `clube_na_temporada` | key_nation_club_in_season |
-| 0x7f8500 | `clube_nas_buscas_da_sessao` | SCOUT_MANAGER::is_club_in_session_searches |
-| 0x540a50 | `clube_parceiro` | partner_club |
-| 0x8ce990 | `clube_pode_chegar_ao_jogador` | TRANSFER_MANAGER::can_club_bid_for_player |
-| 0x544820 | `clube_pode_ser_dirigido` | club_can_be_managed |
-| 0x542740 | `clube_pode_ter_reservas` | database_club_has_reserve_squad |
-| 0x8c36b0 | `clube_recusa_a_oferta` | TRANSFER_MANAGER::club_rejects_offer |
-| 0x549770 | `clube_tem_atacante_rapido` | club_has_fast_striker |
-| 0x5492c0 | `clube_tem_atacantes` | club_has_enough_strikers |
-| 0x549100 | `clube_tem_defensores` | club_has_enough_defenders |
-| 0x5493c0 | `clube_tem_esforcados` | club_has_enough_hard_workers |
-| 0x549470 | `clube_tem_goleiro` | club_has_fit_goalkeeper |
-| 0x549200 | `clube_tem_meias` | club_has_enough_midfielders |
-| 0x549940 | `clube_tem_meias_criativos` | club_has_two_creative_midfielders |
-| 0x549850 | `clube_tem_meias_que_roubam` | club_has_ball_winning_midfielders |
-| 0x8cdc90 | `clube_tem_oferta_pelo_jogador` | TRANSFER_MANAGER::club_has_offer_for_player |
-| 0x53b9a0 | `clube_tem_vaga_para_cargo` | database_club_has_room_for_job |
-| 0x547bd0 | `clube_tirar_pessoa_favorita` | club_remove_favoured_staff |
-| 0x85add0 | `clube_usa_numeros` | SQUAD_MANAGER::club_uses_squad_numbers |
-| 0x8cd240 | `clube_vendedor_deve_aceitar` | transfer_manager_selling_club_must_accept |
-| 0x586660 | `clubes_da_liga_dos_campeoes` | EuropeanCup::collect_club_list |
-| 0x521790 | `clubes_do_lado_do_jogo` | Cup::get_fixture_side_teams |
-| 0x842180 | `clubes_interessados_no_jogador` | Shortlist_Manager::collect_interested_clubs |
-| 0x5219b0 | `clubes_possiveis_do_jogo` | Cup::collect_possible_teams |
-| 0x83bd00 | `codigo_da_posicao` | position_code |
-| 0x70a8c0 | `codigo_de_bola_parada` | set_piece_code |
-| 0x8cf5e0 | `codigo_de_inelegibilidade` | TRANSFER_MANAGER::get_ineligibility_code |
-| 0x7e56d0 | `codigo_do_resultado` | match_record_result_code |
-| 0x6cb650 | `codigo_especial` | special_code |
-| 0x5d5f20 | `coeficientes_das_nacoes` | game_update_nation_coefficients |
-| 0x6e0d00 | `colocar_na_vaga` | put_in_place |
-| 0x6d60b0 | `combinar_com_o_anterior` | combine_with_previous |
-| 0x7002f0 | `comentario_a` | commentary_a |
-| 0x70a860 | `comentario_b` | commentary_b |
-| 0x6d4b70 | `comentario_de_contexto` | context_commentary |
-| 0x8b4cd0 | `comissao_do_humano` | TRAINING_MANAGER::get_coach_assignments |
-| 0x7e9050 | `compactar_disciplina_do_orgao` | RulingBody::compact_entries |
-| 0x6d5a70 | `companheiro_livre` | free_teammate |
-| 0x4dc910 | `comparar_datas_de_decisao` | compare_decision_dates |
-| 0x8d0780 | `compensacao_pela_pessoa` | transfer_manager_calc_compensation_fee |
-| 0x4b0700 | `competicao_conta` | competition_counts |
-| 0x7751e0 | `competicao_da_pessoa` | person_competition |
-| 0x48cec0 | `competicao_fase_atual` | Comp::get_current_stage |
-| 0x48e1c0 | `competicao_lista_de_clubes` | Comp::collect_club_list |
-| 0x684790 | `competicao_marcada` | competition_flagged |
-| 0x5c29b0 | `competicao_na_data_do_amistoso` | Friendly::is_comp_current_on_date |
-| 0x48d2b0 | `competicao_primeira_fase_do_grupo` | Comp::get_first_stage_of_group |
-| 0x48cc70 | `competicao_progresso_do_clube` | Comp::find_club_progress |
-| 0x5ae6d0 | `competicao_tem_jogo_na_data` | fix_man_comp_has_fixture_on_date |
-| 0x48ce10 | `competicao_todas_completas` | Comp::all_stages_complete |
-| 0x5ce060 | `competicoes_do_dia` | game_update_comps_for_date |
-| 0x8c38b0 | `concluir_oferta_de_contrato_aceita` | TRANSFER_MANAGER::complete_accepted_contract_offer |
-| 0x8cbbe0 | `concluir_transferencias_futuras` | TRANSFER_MANAGER::process_due_future_transfers |
-| 0x62c510 | `condicao_de_jogo_do_jogador` | Injury::get_match_condition |
-| 0x62c590 | `condicao_do_jogador` | Injury::get_condition |
-| 0x70dfa0 | `condicao_jogador` | player_condition |
-| 0x7109f0 | `conduzir` | dribble |
-| 0x6bba80 | `conferir_lance` | check_move |
-| 0x867240 | `conferir_retirada_do_pedido` | STAFF_CONTRACT::check_transfer_request_withdrawal |
-| 0x6978f0 | `confianca_da_diretoria_na_transferencia` | MANAGER_MANAGER::apply_transfer_confidence_changes |
-| 0x695240 | `confianca_depois_da_partida` | MANAGER_MANAGER::update_board_confidence_after_match |
-| 0x8c3310 | `confirmar_oferta_pelo_clube` | confirm_offer_by_club |
-| 0x6b5260 | `confirmar_partida_em_rede` | confirm_network_match |
-| 0x5ae380 | `conflito_de_jogos_no_mesmo_dia` | FIXTURE_MANAGER::resolve_same_day_clash |
-| 0x5adba0 | `conflitos_do_dia` | FIXTURE_MANAGER::collect_day_clashes |
-| 0x5ad780 | `conflitos_do_jogo` | FIXTURE_MANAGER::find_fixture_clashes |
-| 0x5b09d0 | `conhecer_pessoa` | know_person |
-| 0x4c6960 | `conmebol_campeao_dos_campeoes` | ConmebolSeeding::set_bra_champ_cup_winner |
-| 0x4c6890 | `conmebol_convidado_da_mercosul` | ConmebolSeeding::is_mercosur_invited_club |
-| 0x4c6730 | `conmebol_enesimo_clube_da_nacao` | ConmebolSeeding::find_nth_unqualified_club_of_nation |
-| 0x4c6280 | `conmebol_juntar_clubes` | collect_conmebol_clubs |
-| 0x4c6430 | `conmebol_vagas_libertadores` | ConmebolSeeding::assign_libertadores_places |
-| 0x4c61b0 | `conmebol_virada_do_ano` | ConmebolSeeding::update_for_new_season |
-| 0x6f9f90 | `consegue_jogar` | can_play |
-| 0x6e9460 | `construir_arbitro` | construct_referee |
-| 0x64aa70 | `construir_c1a` | ItaSerC1a::ItaSerC1a |
-| 0x64ec20 | `construir_c1b` | ItaSerC1b::ItaSerC1b |
-| 0x5b91c0 | `construir_cfa` | FraCfa::FraCfa |
-| 0x851020 | `construir_divisao_de_baixo_espanhola` | SpaLower::SpaLower |
-| 0x5bd600 | `construir_divisao_de_baixo_francesa` | FraLower::FraLower |
-| 0x6d5bf0 | `construir_fila_da_narracao` | construct_commentary_queue |
-| 0x571680 | `construir_first` | EngFirst::EngFirst |
-| 0x5be330 | `construir_franca_2` | FraSecond::FraSecond |
-| 0x5bfb40 | `construir_franca_3` | FraThird::FraThird |
-| 0x6eada0 | `construir_jogador_da_partida` | construct_match_player |
-| 0x6b7e50 | `construir_motor` | build_engine |
-| 0x77bbe0 | `construir_noticia` | NewsItem::NewsItem |
-| 0x573380 | `construir_premier` | EngPrm::EngPrm |
-| 0x5bb160 | `construir_primeira_francesa` | FraFirst::FraFirst |
-| 0x84e130 | `construir_primera` | SpaFirst::SpaFirst |
-| 0x450d30 | `construir_recorde_de_contagem` | count_record_construct |
-| 0x450b20 | `construir_recorde_de_derrotas_seguidas` | lost_run_record_construct |
-| 0x450c10 | `construir_recorde_de_gols_na_partida` | goals_in_match_record_construct |
-| 0x450b70 | `construir_recorde_de_invencibilidade` | unbeaten_run_record_construct |
-| 0x450c60 | `construir_recorde_de_ocorrencias` | tally_record_construct |
-| 0x448670 | `construir_recorde_de_sequencia` | run_record_construct |
-| 0x4485d0 | `construir_recorde_de_valor_pago` | transfer_fee_record_construct |
-| 0x448620 | `construir_recorde_de_valor_recebido` | transfer_fee_record_construct_2 |
-| 0x450ad0 | `construir_recorde_de_vitorias_seguidas` | won_run_record_construct |
-| 0x450c70 | `construir_recorde_do_mais_novo` | youngest_player_record_construct |
-| 0x450cd0 | `construir_recorde_do_mais_velho` | oldest_player_record_construct |
-| 0x450bc0 | `construir_recorde_sem_vencer` | winless_run_record_construct |
-| 0x450d40 | `construir_recordista` | record_holder_construct |
-| 0x5754a0 | `construir_second` | EngSecond::EngSecond |
-| 0x8539a0 | `construir_segunda` | SpaSecond::SpaSecond |
-| 0x6406d0 | `construir_serie_a` | ItaSerA::ItaSerA |
-| 0x645810 | `construir_serie_b` | ItaSerB::ItaSerB |
-| 0x576dd0 | `construir_third` | EngThird::EngThird |
-| 0x48e360 | `conta_para_conflito_de_datas` | Comp::counts_for_fixture_clash |
-| 0x8c3e50 | `contagem_da_clausula` | TRANSFER_MANAGER::get_clause_count |
-| 0x6cbbb0 | `contar_ativos` | count_active |
-| 0x548150 | `contar_elenco_com_mascara` | club_count_squad_with_position_mask |
-| 0x53c590 | `contar_elenco_do_clube` | database_count_club_squad |
-| 0x547ce0 | `contar_favoritos_no_clube` | staff_count_favoured_staff_at_club |
-| 0x53c9b0 | `contar_fisioterapeutas` | database_count_club_physios |
-| 0x556e90 | `contar_jogo_da_suspensao` | Discipline::update_ban_progress |
-| 0x728e90 | `contar_placar_ao_vivo` | match_screens_tally_live_score |
-| 0x547c90 | `contar_rejeitados_no_clube` | staff_count_disliked_staff_at_club |
-| 0x53c8d0 | `contar_treinadores_do_clube` | database_count_club_coaches |
-| 0x844540 | `contar_vagas_com_lance` | Shortlist_Manager::count_slots_with_bids |
-| 0x6695c0 | `continente_principal` | key_nation_get_main_continent |
-| 0x7a6f10 | `contratar_o_regen` | player_regen_sign_for_club |
-| 0x4cf5f0 | `contrato_com_clube` | contract_with_club |
-| 0x4cf5a0 | `contrato_de` | contract_of |
-| 0x4cda70 | `contrato_oferecido` | contract_manager_offer_contract |
-| 0x85e590 | `contrato_pelo_atual` | STAFF_CONTRACT::init_from_current_contract |
-| 0x4ca6d0 | `contratos_depois_do_jogo` | CONTRACT_MANAGER::update_after_match |
-| 0x5c68b0 | `convite_aberto_do_clube_humano` | Friendly::find_human_club_open_invitation |
-| 0x5ca090 | `convite_de_amistoso_valido` | friendly_check_match_invitation |
-| 0x5ca290 | `convite_de_torneio_valido` | friendly_check_tournament_invitation |
-| 0x76bab0 | `convocar_selecoes_para_o_jogo` | NationalTeams::select_squads_for_fixture |
-| 0x775f90 | `convocar_substituto` | call_up_replacement |
-| 0x5b3560 | `coordenada_da_casa` | Formation::set_slot_coordinate |
-| 0x518790 | `copa_arvore_dos_confrontos` | Cup::map_fixture_tree |
-| 0x518780 | `copa_comeco_da_temporada` | Cup::start_new_season |
-| 0x521e00 | `copa_completa` | Cup::check_complete |
-| 0x51cb90 | `copa_criar_jogos_do_confronto` | Cup::create_tie_fixtures |
-| 0x519a90 | `copa_honras_da_temporada` | Cup::record_season_honours |
-| 0x51ebe0 | `copa_levar_jogos_as_datas` | Cup::move_round_fixtures_to_set_dates |
-| 0x51e870 | `copa_mandantes_da_rodada` | Cup::set_home_teams_for_round |
-| 0x522950 | `copa_noticia_do_confronto_pendente` | Cup::post_draw_news |
-| 0x522240 | `copa_premio_da_rodada` | Cup::pay_round_prize_money |
-| 0x521b30 | `copa_progresso_do_time` | Cup::record_team_progress |
-| 0x519890 | `copa_registros_pelo_desfecho` | Cup::update_staff_records_for_status |
-| 0x519fc0 | `copa_semifinalistas_para_a_uefa` | Cup::register_semi_final_losers_for_uefa |
-| 0x522610 | `copa_separar_estadio_compartilhado` | Cup::separate_shared_stadium_ties |
-| 0x51d2d0 | `copa_sortear_pela_semente` | Cup::sort_round_teams |
-| 0x51c410 | `copa_sortear_rodada` | Cup::draw_round |
-| 0x51d9f0 | `copa_sortear_separando_nacoes` | Cup::check_round_teams_for_nation |
-| 0x51e220 | `copa_sortear_times_da_rodada` | Cup::randomize_round_teams |
-| 0x522910 | `copa_tem_o_clube` | Cup::has_club |
-| 0x7a8780 | `copiar_aposentadoria_pendente` | retire_record_assign |
-| 0x4cc810 | `copiar_contrato_de_pessoal` | STAFF_CONTRACT::operator= |
-| 0x777590 | `copiar_data_e_marca` | copy_date_and_mark |
-| 0x7a8b70 | `copiar_entrada_da_fila_de_regens` | regen_queue_entry_assign |
-| 0x79c530 | `copiar_ficha_de_arbitro` | Official::operator= |
-| 0x786010 | `copiar_noticia` | NewsItem::operator= |
-| 0x448530 | `copiar_recorde_de_contagem` | count_record_assign |
-| 0x448500 | `copiar_recorde_de_disciplina` | discipline_record_assign |
-| 0x451570 | `copiar_recorde_de_gols_na_partida` | goals_in_match_record_assign |
-| 0x4484d0 | `copiar_recorde_de_melhor_em_campo` | man_of_match_record_assign |
-| 0x448230 | `copiar_recorde_de_nota` | rating_record_assign |
-| 0x448550 | `copiar_recorde_de_valor` | transfer_fee_record_assign |
-| 0x4485b0 | `copiar_recorde_do_torcedor` | fans_player_record_assign |
-| 0x448490 | `copiar_recordista` | record_holder_assign |
-| 0x448110 | `copiar_registro_de_partida` | match_record_assign |
-| 0x448170 | `copiar_registro_de_sequencia` | run_record_assign |
-| 0x556c70 | `copiar_registro_de_suspensao` | BanRecord::operator= |
-| 0x687710 | `copiar_tabela_da_liga` | League::copy_table |
-| 0x8cbf40 | `copiar_transferencia_futura` | future_transfer_assign |
-| 0x8cb940 | `copiar_transferencia_passada` | past_transfer_copy_construct |
-| 0x839590 | `cor_do_titulo` | get_heading_colour |
-| 0x53b7c0 | `cores_da_competicao` | database_get_comp_colours |
-| 0x53b640 | `cores_do_uniforme_do_clube` | database_get_club_kit_colours |
-| 0x540490 | `cores_se_confundem` | database_colours_clash |
-| 0x541e60 | `cortar_elencos_de_a_e_b` | database_trim_senior_and_b_team_squads |
-| 0x5267c0 | `cortar_tabela_de_clubes` | database_trim_club_table |
-| 0x85e410 | `cqe4_construir_contrato` | STAFF_CONTRACT::STAFF_CONTRACT |
-| 0x846920 | `cqe4_interesse` | Shortlist_Manager::staff_interest_in_joining_club |
-| 0x57a020 | `cqe5_dia_das_regras` | ENGLAND_RULES::daily_update |
-| 0x579d60 | `cqe5_pode_emprestar` | ENGLAND_RULES::can_loan_player |
-| 0x579fd0 | `cqe5_registrar_emprestimo` | ENGLAND_RULES::record_loan |
-| 0x7f6530 | `cqe6_periodo_escocia` | SCOTLAND_RULES::get_loan_period |
-| 0x579c70 | `cqe6_periodo_inglaterra` | ENGLAND_RULES::get_loan_period |
-| 0x7f6650 | `cqe6_pode_emprestar_escocia` | SCOTLAND_RULES::can_loan_player |
-| 0x859630 | `cqe6_pode_emprestar_espanha` | SPAIN_RULES::can_loan_player |
-| 0x63c3d0 | `cqe6_pode_emprestar_irlanda` | IRELAND_RULES::can_loan_player |
-| 0x661770 | `cqe6_pode_emprestar_italia` | ITALY_RULES::can_loan_player |
-| 0x7bd310 | `cqf10_historico_do_clube_observado` | player_search_record_scouted_club_match |
-| 0x7b5be0 | `cqf10_olheiro_no_jogo` | PLAYER_SEARCH::scout_match |
-| 0x76d560 | `cqf11_adversarios_da_selecao` | national_teams_collect_fixture_opponents |
-| 0x76e0b0 | `cqf11_noticia_da_convocacao` | national_teams_post_call_up_news |
-| 0x7706c0 | `cqf11_relatorio_da_selecao` | NationalTeams::send_club_international_report_news |
-| 0x7f9a60 | `cqf12_noticia_do_relatorio` | SCOUT_MANAGER::send_scout_report_news |
-| 0x7f8750 | `cqf12_olheiros_do_dia` | SCOUT_MANAGER::daily_update |
-| 0x7f9890 | `cqf12_relatorios_dos_olheiros` | SCOUT_MANAGER::send_scout_reports |
-| 0x5c6570 | `cqg10_amistoso_cancelado` | Friendly::on_friendly_fixture_cancelled |
-| 0x5cb9e0 | `cqg10_jogo_da_selecao_cancelado` | friendly_cancel_national_fixture |
-| 0x5c8260 | `cqg10_torneio_cancelado` | Friendly::cancel_tournament |
-| 0x633d40 | `cqi10_intertoto_dia` | IntertotoCup::update_for_date |
-| 0x633c10 | `cqi10_intertoto_registros` | IntertotoCup::update_staff_records_for_status |
-| 0x9030e0 | `cqi10_uefa_registros` | UefaCup::update_staff_records_for_status |
-| 0x4c11a0 | `cqi11_concacaf_classificados` | ConChamp::select_qualified_clubs |
-| 0x4c1620 | `cqi11_concacaf_dia` | ConChamp::update_for_date |
-| 0x4c15f0 | `cqi11_concacaf_rodadas` | ConChamp::set_up_rounds |
-| 0x63d6e0 | `cqi12_copa_c_regras` | ItaCCup::set_up_rules |
-| 0x426230 | `cqi12_copa_dos_campeoes_regras` | BraChampCup::set_up_rules |
-| 0x63f350 | `cqi12_copa_italia_regras` | ItaCup::set_up_rules |
-| 0x42a5a0 | `cqi7_regras_da_serie_a` | BraNatFirst::set_up_rules |
-| 0x42cb70 | `cqi7_regras_da_serie_b` | BraNatSecond::set_up_rules |
-| 0x42de50 | `cqi7_regras_da_serie_c` | BraNatThird::set_up_rules |
-| 0x43bc70 | `cqi8_regras_do_catarinense` | BraRegSanta::set_up_rules |
-| 0x430ff0 | `cqi8_regras_do_centro_oeste` | BraRegCentral::set_up_rules |
-| 0x4322d0 | `cqi8_regras_do_gaucho` | BraRegGaucho::set_up_rules |
-| 0x43a600 | `cqi9_regras_do_carioca` | BraRegRio::set_up_rules |
-| 0x437fc0 | `cqi9_regras_do_paranaense` | BraRegParana::set_up_rules |
-| 0x439430 | `cqi9_regras_do_pernambucano` | BraRegPern::set_up_rules |
-| 0x401ba0 | `cqj10_copa_africana_registros` | AfricanNations::update_staff_records_for_status |
-| 0x5e13b0 | `cqj10_copa_america_registros` | GoldCup::update_staff_records_for_status |
-| 0x91e840 | `cqj10_eliminatoria_oceania_registros` | WcOceaniaLeague::update_staff_records_for_status |
-| 0x4c3890 | `cqj11_libertadores_regras` | ConmebolLiber::set_up_rules |
-| 0x4c1ed0 | `cqj11_merconorte_regras` | ConMercCup::set_up_rules |
-| 0x7979b0 | `cqj11_oceania_clubes_regras` | OceaniaClubChamp::set_up_rules |
-| 0x912eb0 | `cqj12_eliminatoria_asia_regras` | WcAsiaLeague::set_up_rules |
-| 0x9191e0 | `cqj12_eliminatoria_europa_regras` | WcEuropeLeague::set_up_rules |
-| 0x921040 | `cqj12_eliminatoria_sul_americana_regras` | WcSouthAmericanLeague::set_up_rules |
-| 0x663620 | `cqj7_regras_da_j1` | JapJ1::set_up_rules |
-| 0x665140 | `cqj7_regras_da_j2` | JapJ2::set_up_rules |
-| 0x433640 | `cqj7_regras_do_goiano` | BraRegGoias::set_up_rules |
-| 0x432970 | `cqj8_historico_do_estadual` | BraRegGaucho::record_season_honours |
-| 0x408eb0 | `cqj8_historico_do_primeiro_estagio` | ArgSecond::record_season_honours |
-| 0x908660 | `cqj8_regras_da_mls` | UsaMls::set_up_rules |
-| 0x411ce0 | `cqj8_regras_da_nsl` | AusNsl::set_up_rules |
-| 0x42abc0 | `cqj9_destino_na_serie_a` | BraNatFirst::update_staff_records_for_status |
-| 0x42eb00 | `cqj9_destino_na_serie_c` | BraNatThird::update_staff_records_for_status |
-| 0x430210 | `cqj9_destino_no_baiano` | BraRegBahia::update_staff_records_for_status |
-| 0x401ab0 | `cqk10_copa_africana_regras` | AfricanNations::set_up_rules |
-| 0x5e12d0 | `cqk10_copa_america_regras` | GoldCup::set_up_rules |
-| 0x91ecf0 | `cqk10_eliminatoria_oceania_regras` | WcOceaniaLeague::set_up_rules |
-| 0x4c3f40 | `cqk11_libertadores_classificados` | ConmebolLiber::select_qualified_clubs |
-| 0x4c3a80 | `cqk11_libertadores_fase_seguinte` | ConmebolLiber::advance_stage |
-| 0x4c4080 | `cqk11_libertadores_registros` | ConmebolLiber::update_staff_records_for_status |
-| 0x401e10 | `cqk12_africana_fase_seguinte` | AfricanNations::advance_stage |
-| 0x4019c0 | `cqk12_africana_grupo_a` | AfricanNations::init_group_a_table |
-| 0x401b90 | `cqk12_africana_historico` | AfricanNations::record_season_honours |
-| 0x411980 | `cqk7_destino_na_nsl` | AusNsl::update_staff_records_for_status |
-| 0x4314e0 | `cqk7_destino_no_centro_oeste` | BraRegCentral::update_staff_records_for_status |
-| 0x434d90 | `cqk7_destino_no_mineiro` | BraRegMinasGerais::update_staff_records_for_status |
-| 0x909dd0 | `cqk8_progresso_na_mls` | UsaMls::set_club_progress |
-| 0x42e100 | `cqk8_progresso_na_serie_c` | BraNatThird::set_club_progress |
-| 0x4350d0 | `cqk8_progresso_no_mineiro` | BraRegMinasGerais::set_club_progress |
-| 0x90a000 | `cqk9_conferencia_das_estrelas` | usa_mls_get_club_all_star_conference |
-| 0x908200 | `cqk9_destino_na_mls` | UsaMls::update_staff_records_for_status |
-| 0x9099d0 | `cqk9_resultado_na_mls` | UsaMls::add_result |
-| 0x56f320 | `cql10_copa_da_inglaterra_tabela` | EngFaCup::create_round_table |
-| 0x56c570 | `cql10_copa_da_liga_tabela` | EngCcCup::create_round_table |
-| 0x56d640 | `cql10_supercopa_tabela` | EngCharity::create_round_table |
-| 0x5ba3f0 | `cql11_copa_da_franca_tabela` | FraCup::create_round_table |
-| 0x5bcc40 | `cql11_copa_da_liga_francesa_tabela` | FraLgeCup::create_round_table |
-| 0x84d220 | `cql11_copa_do_rei_tabela` | SpaCup::create_round_table |
-| 0x858960 | `cql12_supercopa_da_espanha_tabela` | SpaSuper::create_round_table |
-| 0x5bf5d0 | `cql12_supercopa_da_franca_tabela` | FraSuper::create_round_table |
-| 0x666020 | `cql12_supercopa_do_japao_tabela` | JapSuper::create_round_table |
-| 0x42a480 | `cql7_tabela_da_serie_a` | BraNatFirst::create_table |
-| 0x42ca70 | `cql7_tabela_da_serie_b` | BraNatSecond::create_table |
-| 0x42dc90 | `cql7_tabela_da_serie_c` | BraNatThird::create_table |
-| 0x42fd10 | `cql8_tabela_do_baiano` | BraRegBahia::create_table |
-| 0x430ef0 | `cql8_tabela_do_centro_oeste` | BraRegCentral::load_region_clubs |
-| 0x4321d0 | `cql8_tabela_do_gaucho` | BraRegGaucho::load_region_clubs |
-| 0x433540 | `cql9_tabela_do_goiano` | BraRegGoias::create_table |
-| 0x434810 | `cql9_tabela_do_mineiro` | BraRegMinasGerais::create_table |
-| 0x435d80 | `cql9_tabela_do_norte` | BraRegNorth::create_table |
-| 0x56ccc0 | `cqm10_copa_da_liga_inscritos` | EngCcCup::collect_entrants |
-| 0x56d780 | `cqm10_supercopa_clubes` | EngCharity::select_teams |
-| 0x56b3c0 | `cqm10_trofeu_inscritos` | EngAutoCup::collect_entrants |
-| 0x5baa50 | `cqm11_copa_da_franca_inscritos` | FraCup::collect_entrants |
-| 0x5bd160 | `cqm11_copa_da_liga_inscritos` | FraLgeCup::collect_entrants |
-| 0x5bf770 | `cqm11_supercopa_clubes` | FraSuper::select_teams |
-| 0x90a400 | `cqm12_jogo_das_estrelas_tabela` | UsaMlsAllStars::create_round_table |
-| 0x858aa0 | `cqm12_supercopa_da_espanha_clubes` | SpaSuper::select_teams |
-| 0x666160 | `cqm12_supercopa_do_japao_clubes` | JapSuper::select_teams |
-| 0x436d90 | `cqm7_tabela_do_nordeste` | BraRegNortheast::create_table |
-| 0x437ec0 | `cqm7_tabela_do_paranaense` | BraRegParana::create_table |
-| 0x439330 | `cqm7_tabela_do_pernambucano` | BraRegPern::create_table |
-| 0x43a500 | `cqm8_tabela_do_carioca` | BraRegRio::create_table |
-| 0x43bb70 | `cqm8_tabela_do_catarinense` | BraRegSanta::create_table |
-| 0x43cc40 | `cqm8_tabela_do_paulista` | BraRegSp::create_table |
-| 0x6634e0 | `cqm9_tabela_da_j1` | JapJ1::create_table |
-| 0x665030 | `cqm9_tabela_da_j2` | JapJ2::create_table |
-| 0x411b70 | `cqm9_tabela_da_nsl` | AusNsl::create_table |
-| 0x570550 | `cqn10_copa_da_inglaterra_dia` | EngFaCup::update_for_date |
-| 0x56caf0 | `cqn10_copa_da_liga_dia` | EngCcCup::update_for_date |
-| 0x90a900 | `cqn10_jogo_das_estrelas_dia` | UsaMlsAllStars::update_for_date |
-| 0x665640 | `cqn11_copa_da_liga_japonesa_tabela` | JapJCup::create_round_table |
-| 0x661ff0 | `cqn11_copa_do_imperador_tabela` | JapEmpCup::create_round_table |
-| 0x90b170 | `cqn11_copa_dos_eua_tabela` | UsaOpenCup::create_round_table |
-| 0x665a00 | `cqn12_copa_da_liga_inscritos` | JapJCup::collect_entrants |
-| 0x6624f0 | `cqn12_copa_do_imperador_inscritos` | JapEmpCup::collect_entrants |
-| 0x90b530 | `cqn12_copa_dos_eua_inscritos` | UsaOpenCup::collect_entrants |
-| 0x430050 | `cqn7_mata_mata_do_baiano` | BraRegBahia::create_semi_final_stage |
-| 0x4370d0 | `cqn7_mata_mata_do_nordeste` | BraRegNortheast::create_semi_final_stage |
-| 0x4360c0 | `cqn7_mata_mata_do_norte` | BraRegNorth::create_semi_final_stage |
-| 0x43bf50 | `cqn8_mata_mata_do_catarinense` | BraRegSanta::create_semi_final_stage |
-| 0x43cf80 | `cqn8_mata_mata_do_paulista` | BraRegSp::create_semi_final_stage |
-| 0x439710 | `cqn8_mata_mata_do_pernambucano` | BraRegPern::create_semi_final_stage |
-| 0x4312d0 | `cqn9_mata_mata_do_centro_oeste` | BraRegCentral::create_knockout_stage |
-| 0x4325b0 | `cqn9_mata_mata_do_gaucho` | BraRegGaucho::create_knockout_stage |
-| 0x433930 | `cqn9_mata_mata_do_goiano` | BraRegGoias::create_knockout_stage |
-| 0x63cf90 | `cqo10_copa_c_tabela` | ItaCCup::create_schedule |
-| 0x63ec50 | `cqo10_copa_da_italia_tabela` | ItaCup::create_schedule |
-| 0x63c890 | `cqo10_supercopa_c1_tabela` | ItaC1Super::create_round_table |
-| 0x65f920 | `cqo10_supercopa_tabela` | ItaSuper::create_round_table |
-| 0x63dfe0 | `cqo11_copa_c_inscritos` | ItaCCup::select_entrants |
-| 0x63faf0 | `cqo11_copa_da_italia_inscritos` | ItaCup::select_entrants |
-| 0x65fa60 | `cqo11_supercopa_clubes` | ItaSuper::init_team_list |
-| 0x427700 | `cqo12_copa_do_brasil_tabela` | BraCup::create_round_table |
-| 0x427ec0 | `cqo12_regras_da_copa` | BraCup::set_up_rounds |
-| 0x427c20 | `cqo12_times_da_copa` | BraCup::build_team_table |
-| 0x4c31c0 | `cqo13_libertadores_tabela` | ConmebolLiber::create_schedule |
-| 0x4c5850 | `cqo13_mercosul_convidados` | ConmebolMerc::select_invited_clubs |
-| 0x4c4930 | `cqo13_mercosul_tabela` | ConmebolMerc::create_schedule |
-| 0x434ae0 | `cqo7_fase_seguinte_do_mineiro` | BraRegMinasGerais::advance_stage |
-| 0x434ed0 | `cqo7_fim_da_temporada_do_mineiro` | BraRegMinasGerais::record_season_honours |
-| 0x434b70 | `cqo7_final_do_mineiro` | BraRegMinasGerais::create_final_stage |
-| 0x438230 | `cqo8_fase_seguinte_do_paranaense` | BraRegParana::advance_stage |
-| 0x4384e0 | `cqo8_fim_da_temporada_do_paranaense` | BraRegParana::record_season_honours |
-| 0x4382c0 | `cqo8_final_do_paranaense` | BraRegParana::create_final_stage |
-| 0x43a870 | `cqo9_fase_seguinte_do_carioca` | BraRegRio::advance_stage |
-| 0x43ad20 | `cqo9_fim_da_temporada_do_carioca` | BraRegRio::record_season_honours |
-| 0x43a900 | `cqo9_final_do_carioca` | BraRegRio::create_final_stage |
-| 0x425c10 | `cqp10_copa_dos_campeoes_tabela` | BraChampCup::create_schedule |
-| 0x4c1960 | `cqp10_merconorte_tabela` | ConMercCup::create_schedule |
-| 0x410910 | `cqp10_supercopa_asiatica_tabela` | AsiaSuperCup::create_round_table |
-| 0x57a3c0 | `cqp10_supercopa_europeia_tabela` | EurSuperCup::create_round_table |
-| 0x40ae90 | `cqp11_asia_clubes_tabela` | AsiaClubChamp::create_round_table |
-| 0x40cf90 | `cqp11_asia_recopa_tabela` | AsiaCupWinner::create_round_table |
-| 0x56ade0 | `cqp11_trofeu_tabela` | EngAutoCup::create_round_table |
-| 0x4012e0 | `cqp12_africana_tabela` | AfricanNations::create_schedule |
-| 0x58b560 | `cqp12_confed_tabela` | FifaConfed::create_schedule |
-| 0x5e0900 | `cqp12_copa_america_tabela` | GoldCup::create_schedule |
-| 0x4c0f00 | `cqp13_concacaf_tabela` | ConChamp::create_round_table |
-| 0x632340 | `cqp13_interamericana_tabela` | InterAmerCup::create_round_table |
-| 0x92b770 | `cqp13_intercontinental_tabela` | WorldClubCup::create_round_table |
-| 0x633300 | `cqp13_intertoto_tabela` | IntertotoCup::create_round_table |
-| 0x42ffc0 | `cqp7_fase_seguinte_do_baiano` | BraRegBahia::advance_stage |
-| 0x431240 | `cqp7_fase_seguinte_do_centro_oeste` | BraRegCentral::advance_stage |
-| 0x432520 | `cqp7_fase_seguinte_do_gaucho` | BraRegGaucho::advance_stage |
-| 0x42fe10 | `cqp7_virada_do_baiano` | BraRegBahia::start_new_season |
-| 0x431090 | `cqp7_virada_do_centro_oeste` | BraRegCentral::start_new_season |
-| 0x432370 | `cqp7_virada_do_gaucho` | BraRegGaucho::start_new_season |
-| 0x4338a0 | `cqp8_fase_seguinte_do_goiano` | BraRegGoias::advance_stage |
-| 0x437040 | `cqp8_fase_seguinte_do_nordeste` | BraRegNortheast::advance_stage |
-| 0x436030 | `cqp8_fase_seguinte_do_norte` | BraRegNorth::advance_stage |
-| 0x4336f0 | `cqp8_virada_do_goiano` | BraRegGoias::start_new_season |
-| 0x436e90 | `cqp8_virada_do_nordeste` | BraRegNortheast::start_new_season |
-| 0x435e80 | `cqp8_virada_do_norte` | BraRegNorth::start_new_season |
-| 0x43bec0 | `cqp9_fase_seguinte_do_catarinense` | BraRegSanta::advance_stage |
-| 0x43cef0 | `cqp9_fase_seguinte_do_paulista` | BraRegSp::advance_stage |
-| 0x439680 | `cqp9_fase_seguinte_do_pernambucano` | BraRegPern::advance_stage |
-| 0x43bd10 | `cqp9_virada_do_catarinense` | BraRegSanta::start_new_season |
-| 0x43cd40 | `cqp9_virada_do_paulista` | BraRegSp::start_new_season |
-| 0x4394d0 | `cqp9_virada_do_pernambucano` | BraRegPern::start_new_season |
-| 0x6336c0 | `cqq10_intertoto_inscritos` | IntertotoCup::collect_entrants |
-| 0x633f70 | `cqq10_intertoto_lista` | IntertotoCup::collect_club_list |
-| 0x9025c0 | `cqq10_uefa_tabela` | UefaCup::create_round_table |
-| 0x410a50 | `cqq11_asiatica_clubes` | AsiaSuperCup::select_teams |
-| 0x63c9d0 | `cqq11_c1_vagas` | ItaC1Super::init_team_list |
-| 0x57a500 | `cqq11_europeia_clubes` | EurSuperCup::select_teams |
-| 0x40b620 | `cqq12_asia_clubes_times` | AsiaClubChamp::build_team_table |
-| 0x40d4d0 | `cqq12_asia_recopa_times` | AsiaCupWinner::create_team_entries |
-| 0x797230 | `cqq12_oceania_tabela` | OceaniaClubChamp::create_schedule |
-| 0x42a950 | `cqq7_fase_seguinte_da_serie_a` | BraNatFirst::advance_stage |
-| 0x42cdd0 | `cqq7_fase_seguinte_da_serie_b` | BraNatSecond::advance_stage |
-| 0x42a9e0 | `cqq7_play_off_da_serie_a` | BraNatFirst::create_play_off_stage |
-| 0x42ce60 | `cqq7_play_off_da_serie_b` | BraNatSecond::create_play_off_stage |
-| 0x42ae90 | `cqq8_acesso_e_rebaixamento` | BraNatFirst::process_promotion_relegation_chain |
-| 0x42a640 | `cqq8_virada_da_serie_a` | BraNatFirst::start_new_season |
-| 0x42cc10 | `cqq8_virada_da_serie_b` | BraNatSecond::start_new_season |
-| 0x6639c0 | `cqq9_fase_seguinte_da_j1` | JapJ1::advance_stage |
-| 0x663a50 | `cqq9_final_da_j1` | JapJ1::create_championship_final_stage |
-| 0x6636d0 | `cqq9_virada_da_j1` | JapJ1::start_new_season |
-| 0x4c4410 | `cqr10_libertadores_dia` | ConmebolLiber::update_for_date |
-| 0x4c3b10 | `cqr10_libertadores_grupo` | ConmebolLiber::create_group_stage |
-| 0x4c37a0 | `cqr10_libertadores_primeiro_grupo` | ConmebolLiber::build_first_group_table |
-| 0x4c5c90 | `cqr11_mercosul_dia` | ConmebolMerc::update_for_date |
-| 0x4c51d0 | `cqr11_mercosul_grupo` | ConmebolMerc::create_group_stage |
-| 0x4c4e60 | `cqr11_mercosul_primeiro_grupo` | ConmebolMerc::create_first_group_table |
-| 0x4c2c90 | `cqr12_merconorte_dia` | ConMercCup::update_for_date |
-| 0x4c2140 | `cqr12_merconorte_grupo` | ConMercCup::create_group_stage |
-| 0x4c1de0 | `cqr12_merconorte_primeiro_grupo` | ConMercCup::create_first_group_table |
-| 0x5e2120 | `cqr13_copa_america_dia` | GoldCup::update_for_date |
-| 0x5e16b0 | `cqr13_copa_america_grupo` | GoldCup::create_group_stage |
-| 0x5e11e0 | `cqr13_copa_america_primeiro_grupo` | GoldCup::create_group_table |
-| 0x663c20 | `cqr1_turno_da_j1` | JapJ1::create_half_season_stage |
-| 0x43afa0 | `cqr1_turno_do_carioca` | BraRegRio::create_half_season_stage |
-| 0x4351b0 | `cqr1_turno_do_mineiro` | BraRegMinasGerais::create_half_season_stage |
-| 0x438760 | `cqr1_turno_do_paranaense` | BraRegParana::create_half_stage |
-| 0x43a6a0 | `cqr2_virada_do_carioca` | BraRegRio::start_new_season |
-| 0x434910 | `cqr2_virada_do_mineiro` | BraRegMinasGerais::start_new_season |
-| 0x438060 | `cqr2_virada_do_paranaense` | BraRegParana::start_new_season |
-| 0x411f70 | `cqr3_fase_seguinte_da_nsl` | AusNsl::advance_stage |
-| 0x4121c0 | `cqr3_grande_final_da_nsl` | AusNsl::create_grand_final_stage |
-| 0x412010 | `cqr3_serie_final_da_nsl` | AusNsl::create_finals_series_stage |
-| 0x909400 | `cqr4_fase_seguinte_da_mls` | UsaMls::advance_stage |
-| 0x9097d0 | `cqr4_final_da_mls` | UsaMls::create_final_stage |
-| 0x9094c0 | `cqr4_play_off_da_mls` | UsaMls::create_playoff_stage |
-| 0x665bc0 | `cqr5_virada_copa_da_liga_japonesa` | JapJCup::start_new_season |
-| 0x427d10 | `cqr5_virada_copa_do_brasil` | BraCup::start_new_season |
-| 0x662950 | `cqr5_virada_copa_do_imperador` | JapEmpCup::start_new_season |
-| 0x90a540 | `cqr6_times_do_jogo_das_estrelas` | UsaMlsAllStars::set_up_teams |
-| 0x90b790 | `cqr6_virada_copa_dos_eua` | UsaOpenCup::start_new_season |
-| 0x90a760 | `cqr6_virada_jogo_das_estrelas` | UsaMlsAllStars::start_new_season |
-| 0x6664e0 | `cqr6_virada_supercopa_japonesa` | JapSuper::start_new_season |
-| 0x4c3d10 | `cqs10_libertadores_mata_mata` | ConmebolLiber::create_knockout_stage |
-| 0x4c20b0 | `cqs10_merconorte_fase_seguinte` | ConMercCup::advance_stage |
-| 0x4c2330 | `cqs10_merconorte_semifinais` | ConMercCup::create_semi_final_stage |
-| 0x5e1620 | `cqs11_copa_america_fase_seguinte` | GoldCup::advance_stage |
-| 0x4c2560 | `cqs11_merconorte_convidados` | ConMercCup::select_invited_clubs |
-| 0x4c5140 | `cqs11_mercosul_fase_seguinte` | ConmebolMerc::advance_stage |
-| 0x5e2340 | `cqs12_copa_america_previstas` | GoldCup::set_predicted_positions |
-| 0x5e1cd0 | `cqs12_copa_america_selecoes` | GoldCup::set_up_team_list |
-| 0x5e1530 | `cqs12_copa_america_temporada_nova` | GoldCup::start_new_season |
-| 0x908fc0 | `cqs1_segunda_divisao_da_mls` | UsaMls::create_second_division_stage |
-| 0x908560 | `cqs1_tabela_da_mls` | UsaMls::create_table |
-| 0x9091e0 | `cqs1_terceira_divisao_da_mls` | UsaMls::create_third_division_stage |
-| 0x909a40 | `cqs2_clubes_da_mls` | UsaMls::get_club_array |
-| 0x909bb0 | `cqs2_posicoes_previstas_da_mls` | UsaMls::set_predicted_positions |
-| 0x908e00 | `cqs2_virada_da_mls` | UsaMls::start_new_season |
-| 0x42ee80 | `cqs3_grupo_da_serie_c` | BraNatThird::create_group_stage |
-| 0x42e430 | `cqs3_segunda_fase_da_serie_c` | BraNatThird::create_second_round_stage |
-| 0x42e700 | `cqs3_terceira_fase_da_serie_c` | BraNatThird::create_third_round_groups |
-| 0x42e980 | `cqs4_final_da_serie_c` | BraNatThird::create_final_stage |
-| 0x42f0a0 | `cqs4_posicoes_previstas_da_serie_c` | BraNatThird::set_predicted_positions |
-| 0x42def0 | `cqs4_virada_da_serie_c` | BraNatThird::start_new_season |
-| 0x56b730 | `cqs5_trofeu_clubes` | EngAutoCup::select_section_clubs |
-| 0x56bab0 | `cqs5_trofeu_fase_das_chaves` | EngAutoCup::create_section_stage |
-| 0x56bc50 | `cqs5_trofeu_fase_seguinte` | EngAutoCup::advance_stage |
-| 0x56c010 | `cqs6_trofeu_classificacao` | EngAutoCup::rank_teams |
-| 0x56bce0 | `cqs6_trofeu_final` | EngAutoCup::create_final_stage |
-| 0x522e00 | `cqs7_fase_de_copa` | Cup_Stage::Cup_Stage |
-| 0x523300 | `cqs7_fim_da_fase_de_copa` | Cup_Stage::~Cup_Stage |
-| 0x797b40 | `cqt10_oceania_dia` | OceaniaClubChamp::update_for_date |
-| 0x7978c0 | `cqt10_oceania_grupo_a` | OceaniaClubChamp::create_group_a_table |
-| 0x797e80 | `cqt10_oceania_grupo_b` | OceaniaClubChamp::create_group_b_stage |
-| 0x798220 | `cqt11_oceania_clubes` | OceaniaClubChamp::select_qualified_clubs |
-| 0x797df0 | `cqt11_oceania_fase_seguinte` | OceaniaClubChamp::advance_stage |
-| 0x798050 | `cqt11_oceania_semifinais` | OceaniaClubChamp::create_knockout_stage |
-| 0x42f2d0 | `cqt1_construir_baiano` | BraRegBahia::BraRegBahia |
-| 0x4304b0 | `cqt1_construir_centro_oeste` | BraRegCentral::BraRegCentral |
-| 0x4317c0 | `cqt1_construir_gaucho` | BraRegGaucho::BraRegGaucho |
-| 0x432b50 | `cqt2_construir_goiano` | BraRegGoias::BraRegGoias |
-| 0x433d50 | `cqt2_construir_mineiro` | BraRegMinasGerais::BraRegMinasGerais |
-| 0x435340 | `cqt2_construir_norte` | BraRegNorth::BraRegNorth |
-| 0x4363f0 | `cqt3_construir_nordeste` | BraRegNortheast::BraRegNortheast |
-| 0x437400 | `cqt3_construir_paranaense` | BraRegParana::BraRegParana |
-| 0x4388f0 | `cqt3_construir_pernambucano` | BraRegPern::BraRegPern |
-| 0x5d6280 | `cqt4_atualizar_media_de_publico` | atualizar_media_de_publico (sem nome no mapa) |
-| 0x439a40 | `cqt4_construir_carioca` | BraRegRio::BraRegRio |
-| 0x43b130 | `cqt4_construir_catarinense` | BraRegSanta::BraRegSanta |
-| 0x43c280 | `cqt4_construir_paulista` | BraRegSp::BraRegSp |
-| 0x527f60 | `crescer_historico_de_competicoes` | database_grow_comp_history_table |
-| 0x5c2ae0 | `criar_amistosos_planejados` | Friendly::create_due_planned_friendlies |
-| 0x54d5b0 | `criar_arquivo_do_banco` | db_files_open_for_write |
-| 0x7c5d80 | `criar_estatisticas` | PlayerStats::create_stats |
-| 0x827110 | `criar_jogo_pela_configuracao` | create_game_from_setup_file |
-| 0x866f60 | `criterio_da_comissao` | staff_criterion |
-| 0x4bff70 | `criterio_da_competicao` | competition_criterion |
-| 0x6e8910 | `cumprir_regra_do_elenco` | apply_squad_rule |
-| 0x557120 | `cumprir_suspensoes_internacionais` | Discipline::serve_international_bans |
-| 0x85a470 | `dar_numero_de_camisa` | SQUAD_MANAGER::allocate_squad_number |
-| 0x6ac560 | `dar_o_ultimato_da_diretoria` | MANAGER_MANAGER::issue_board_ultimatum |
-| 0x8c7070 | `dar_permissao_de_trabalho` | TRANSFER_MANAGER::add_work_permit |
-| 0x68a160 | `data_da_rodada_da_liga` | league_round_set_date |
-| 0x8cee70 | `data_de_conclusao_da_oferta` | transfer_manager_get_offer_completion_date |
-| 0x5cbdd0 | `data_do_amistoso_internacional` | friendly_international_date_resolve |
-| 0x521eb0 | `data_do_jogo_da_rodada` | cup_set_round_match_date |
-| 0x521e60 | `data_do_sorteio_da_rodada` | cup_set_round_draw_date |
-| 0x4cd9c0 | `decidir_as_datas_vencidas` | CONTRACT_MANAGER::process_due_decision_dates |
-| 0x51f2f0 | `decidir_confronto_da_copa` | Cup::decide_tie_winner |
-| 0x6e9540 | `decidir_falta` | decide_foul |
-| 0x7103e0 | `decidir_jogador` | decide_player |
-| 0x51c020 | `decidir_jogo_da_copa` | Cup::decide_fixture_winner |
-| 0x713fc0 | `decidir_sem_bola` | decide_off_ball |
-| 0x6e9820 | `decisao_da_falta` | foul_decision |
-| 0x70d430 | `defender` | save_shot |
-| 0x700420 | `defesa_do_goleiro` | goalkeeper_save |
-| 0x601a40 | `definir_chaves_fixas` | set_key_ids |
-| 0x603834 | `definir_chaves_fixas_1080` | set_key_ids_1080 |
-| 0x775220 | `definir_competicao_da_selecao` | NationalTeams::set_current_competition |
-| 0x7e4b00 | `derrota_maior` | match_record_is_bigger_defeat |
-| 0x6c87e0 | `desafio_adversario` | opposition_challenge |
-| 0x8c1290 | `desassossegar_pelo_lance` | unsettle_player_after_bid |
-| 0x4cc0f0 | `descer_para_os_reservas` | CONTRACT_MANAGER::move_to_reserves |
-| 0x5465a0 | `descricao_do_jogador` | write_player_description |
-| 0x933320 | `desempacotar_do_conteiner` | zextract_matching_files |
-| 0x642880 | `desempate_da_serie_a` | ItaSerA::update_for_date |
-| 0x647050 | `desempate_da_serie_b` | ItaSerB::update_for_date |
-| 0x6eecb0 | `desempenho_na_partida` | match_performance |
-| 0x402e70 | `desenhar_area` | Area::draw |
-| 0x7260f0 | `desenhar_conferencia_da_escalacao` | match_screens_draw_team_selection |
-| 0x8c44e0 | `desfazer_oferta` | TRANSFER_MANAGER::collapse_offer |
-| 0x8c47d0 | `desfazer_ofertas_pelo_jogador` | TRANSFER_MANAGER::collapse_offers_for_player |
-| 0x70c040 | `desfecho_do_chute` | shot_outcome |
-| 0x6f56c0 | `desgastar` | tire (fatigue) |
-| 0x62c2f0 | `desgaste_diario` | daily_wear |
-| 0x5b58e0 | `designado_da_posicao` | designated_for_position |
-| 0x8c5430 | `desmarcar_contrato_acertado` | clear_agreed_contract_flag |
-| 0x84aeb0 | `desmarcar_lances_pelo_jogador` | Shortlist_Manager::clear_bid_markers_for_player |
-| 0x7293c0 | `desmontar_estatisticas_da_partida` | Match_Stats::~Match_Stats |
-| 0x717470 | `destaque_do_jogador` | player_highlight |
-| 0x5b9460 | `destruir_cfa` | FraCfa::~FraCfa |
-| 0x5bd870 | `destruir_divisao_de_baixo_francesa` | FraLower::~FraLower |
-| 0x6ebd60 | `destruir_jogador_da_partida` | destroy_match_player |
-| 0x6b97a0 | `destruir_motor` | destroy_engine |
-| 0x6cd770 | `desviar_bola` | deflect_ball |
-| 0x521f10 | `dia_da_rodada_da_copa` | cup_set_round_match_day |
-| 0x5d6250 | `dia_das_aposentadorias` | is_player_regen_day |
-| 0x62b7b0 | `dia_das_lesoes` | Injury::daily_update |
-| 0x76b100 | `dia_das_selecoes` | NationalTeams::daily_update |
-| 0x8c5880 | `dia_das_transferencias` | TRANSFER_MANAGER::daily_update |
-| 0x59b4c0 | `dias_ate_a_temporada` | finance_get_days_to_season_start |
-| 0x85fa00 | `dias_ate_o_fim_do_contrato` | STAFF_CONTRACT::days_to_end_date |
-| 0x4cc3a0 | `diferenca_de_moral_em_texto` | contract_manager_write_morale_comparison_text |
-| 0x715f30 | `diferenca_do_jogador` | difference_of_player |
-| 0x6c4130 | `diferenca_jogador` | player_difference |
-| 0x6c4180 | `diferenca_lado` | side_difference |
-| 0x6f4a30 | `direcao` | direction |
-| 0x6951e0 | `diretoria_depois_da_partida` | MANAGER_MANAGER::update_board_after_fixture |
-| 0x694c80 | `diretoria_do_tecnico_novo` | MANAGER_MANAGER::reset_board_for_new_manager |
-| 0x59dd40 | `diretoria_paga_a_divida` | FinanceTable::try_board_debt_payment |
-| 0x55ca00 | `disciplina_da_partida` | Discipline::process_match |
-| 0x556240 | `disciplina_do_dia` | discipline_daily_update |
-| 0x55cb20 | `disciplina_gravar_vaga` | discipline_set_slot |
-| 0x556210 | `disciplina_temporada_nova` | discipline_new_season |
-| 0x76d880 | `dispensar_acima_da_idade_do_sub21` | release_overage_u21_players |
-| 0x6c9cd0 | `disputa` | contest |
-| 0x6fa1e0 | `distancia_ao_gol` | distance_to_goal |
-| 0x6f09b0 | `distancia_ao_ponto` | distance_to_point |
-| 0x6cc4e0 | `distancia_entre` | distance_between |
-| 0x8b2880 | `distribuir_os_treinadores` | TRAINING_MANAGER::update_coach_assignments |
-| 0x83b6e0 | `distribuir_verba_de_transferencias` | Shortlist_Manager::allocate_transfer_budget |
-| 0x70ec80 | `dividida` | tackle |
-| 0x70d690 | `dominio_do_lance` | control_of_move |
-| 0x5c6710 | `e_amistoso` | is_friendly |
-| 0x5c2990 | `e_competicao_do_amistoso` | Friendly::is_own_comp_record |
-| 0x669a10 | `e_copa_do_mundo` | key_nation_is_world_cup_comp |
-| 0x7103c0 | `e_o_guardado` | is_the_stored |
-| 0x5409b0 | `e_segunda_selecao` | is_second_national_team |
-| 0x53b900 | `e_selecao` | is_national_team |
-| 0x669ae0 | `e_torneio_internacional` | key_nation_is_international_comp |
-| 0x62c080 | `efeitos_fisicos_da_partida` | Injury::apply_match_effects |
-| 0x8c9390 | `efetivar_transferencia` | finalise_transfer |
-| 0x70d630 | `em_perigo` | in_danger |
-| 0x4afb40 | `embaralhar_ponteiros` | comp_util_shuffle_pointer_array |
-| 0x933610 | `empacotar_no_conteiner` | zadd_matching_files |
-| 0x8bf400 | `emprestimo_da_configuracao` | add_config_loan |
-| 0x8c72d0 | `emprestimo_negociado` | TRANSFER_MANAGER::find_negotiated_loan_contract |
-| 0x774f30 | `encerrar_convocacoes_da_competicao` | end_duty_for_competition |
-| 0x774f90 | `encerrar_convocacoes_da_nacao` | end_duty_for_nation_in_competition |
-| 0x6b4190 | `encerrar_dia` | end_day |
-| 0x4d07e0 | `encerrar_o_emprestimo` | CONTRACT_MANAGER::end_loan |
-| 0x8c16b0 | `enfileirar_transferencia_livre` | TRANSFER_MANAGER::queue_free_transfer |
-| 0x7a7ed0 | `entrada_da_aposentadoria` | PLAYER_REGEN::find_retirement_entry |
-| 0x849ce0 | `entrada_da_lista` | shortlist_entry |
-| 0x48dcd0 | `entrada_da_nacao_chave_ativa` | comp_key_nation_entry_from_active_index |
-| 0x7f8610 | `entrada_do_jogador_na_busca_do_clube` | SCOUT_MANAGER::find_club_search_entry |
-| 0x729500 | `entrada_do_jogo_bate` | Match_Stats::fixture_entry_matches |
-| 0x5d5ac0 | `entrada_do_treino` | training_manager_get_player_entry |
-| 0x8420e0 | `entradas_do_clube_na_shortlist` | Shortlist_Manager::collect_club_shortlist_entries |
-| 0x6cdd00 | `entrar_em_campo` | take_the_field |
-| 0x785d40 | `entregar_noticia_ao_tecnico` | News::deliver_to_manager |
-| 0x4bf850 | `escala_pela_rodada` | comp_util_scale_by_round |
-| 0x5fed50 | `escalacao_guardada` | HUMAN_MANAGER::get_saved_lineup |
-| 0x6e2000 | `escalar` | pick |
-| 0x6dbc50 | `escalar_automatico` | select_automatically |
-| 0x6db500 | `escalar_lado` | select_side |
-| 0x6c4470 | `escanteio` | corner |
-| 0x79c7b0 | `escolher_arbitro_da_partida` | OfficialsManager::choose_match_official |
-| 0x897880 | `escolher_capitao` | Tactics::set_captain |
-| 0x6bce80 | `escolher_casa` | choose_square |
-| 0x6ceb90 | `escolher_cobrador` | choose_taker |
-| 0x72b810 | `escolher_comentarista` | Media::pick_former_international_pundit |
-| 0x6c6a30 | `escolher_companheiro` | choose_teammate |
-| 0x548da0 | `escolher_companheiro_favorito` | staff_pick_favoured_team_mate |
-| 0x6d0f80 | `escolher_destaque` | choose_standout |
-| 0x7a6e60 | `escolher_doador_de_dados` | player_regen_pick_staff_for_non_player_data |
-| 0x76c120 | `escolher_elenco_da_selecao` | NationalTeams::select_squad |
-| 0x6e0230 | `escolher_formacao` | choose_formation |
-| 0x7f6f20 | `escolher_lista_do_tecnico` | SCOUT_MANAGER::set_selected_list |
-| 0x6b42a0 | `escolher_partida_do_dia` | pick_day_match |
-| 0x6c2310 | `escolher_pela_condicao` | choose_by_condition |
-| 0x6c2750 | `escolher_por_papel` | choose_by_role |
-| 0x6c2880 | `escolher_por_papel_b` | choose_by_role_b |
-| 0x6c2050 | `escolher_por_papel_c` | choose_by_role_c |
-| 0x6c23f0 | `escolher_por_papel_e` | choose_by_role_e |
-| 0x7f6af0 | `escolher_sessao_de_edicao` | SCOUT_MANAGER::set_edit_session |
-| 0x62d140 | `escolher_tipo_de_lesao` | Injury::choose_injury_type |
-| 0x5fbe20 | `escolher_vaga_de_tatica` | HUMAN_MANAGER::select_tactic_slot |
-| 0x5408c0 | `escopo_da_reputacao` | database_get_reputation_scope |
-| 0x8d2fa0 | `escopo_das_regras_da_partida` | TRANSFER_MANAGER::get_fixture_rules_scope |
-| 0x547f90 | `esmaecer_relacoes` | staff_fade_staff_relationships |
-| 0x6cbad0 | `espaco_a_frente` | space_ahead |
-| 0x62e9e0 | `espalhar_surtos_de_doenca` | Injury::spread_illness_outbreaks |
-| 0x727fb0 | `esperar_os_outros_jogadores` | match_screens_handle_waiting_screen |
-| 0x5afd00 | `esquecer_pessoa` | forget_person |
-| 0x76da80 | `esta_na_convocacao` | national_teams_player_in_squad |
-| 0x842080 | `esta_na_lista_de_observados` | Shortlist_Manager::is_on_shortlist |
-| 0x55d270 | `esta_suspenso` | Discipline::is_player_suspended |
-| 0x85c260 | `estadio_da_partida` | Stadium::set_fixture_venue |
-| 0x5ae870 | `estadio_em_uso` | FIXTURE_MANAGER::is_stadium_in_use |
-| 0x85ddb0 | `estadio_livre_na_data` | Stadium::is_stadium_free_on_date |
-| 0x85c800 | `estadio_neutro` | Stadium::find_available_venue |
-| 0x85b820 | `estadios_do_dia` | Stadium::daily_update |
-| 0x62c400 | `estado_da_lesao` | Injury::get_player_injury_status |
-| 0x6f4a70 | `estado_do_adversario` | opponent_state |
-| 0x6f4a40 | `estado_do_lado` | side_state |
-| 0x7c1e30 | `estatistica_da_categoria` | PlayerStats::get_stat |
-| 0x7c47b0 | `estatistica_da_liga_do_jogador` | PlayerStats::get_club_league_stat |
-| 0x6cf750 | `estatistica_de_posse` | possession_statistic |
-| 0x7c2150 | `estatistica_do_jogador` | player_statistic |
-| 0x849f00 | `estatuto_no_elenco_pelo_clube` | Shortlist_Manager::get_squad_status_for_club |
-| 0x8c5800 | `estatuto_pelo_motivo` | transfer_manager_get_squad_status_for_reason |
-| 0x84b4d0 | `estatuto_permitido` | shortlist_manager_squad_status_allowed |
-| 0x849d60 | `estimar_estatuto_no_elenco` | shortlist_manager_estimate_squad_status |
-| 0x787630 | `esvaziar_caixa_de_entrada` | News::clear_inbox |
-| 0x68d080 | `esvaziar_lista` | LLIST::clear |
-| 0x6d5d00 | `evento_na_frente` | event_at_front |
-| 0x6b74a0 | `eventos_do_pos_jogo` | post_match_events |
-| 0x59ed70 | `eventos_financeiros_da_semana` | FinanceTable::process_club_finance_events |
-| 0x6d26b0 | `evoluir_jogador` | develop_player |
-| 0x6f55c0 | `evoluir_momento` | evolve_moment |
-| 0x6fad40 | `executar_passe` | execute_pass |
-| 0x6a3770 | `expectativas_da_temporada` | MANAGER_MANAGER::set_season_expectations |
-| 0x757c70 | `expirar_historias_da_midia` | Media::expire_story_log |
-| 0x6cb960 | `faixa` | band |
-| 0x690b70 | `faixa_da_confianca_da_diretoria` | MANAGER_MANAGER::get_board_confidence_band |
-| 0x690bd0 | `faixa_da_confianca_na_liga` | MANAGER_MANAGER::get_league_confidence_band |
-| 0x58e190 | `faixa_da_selecao` | FIFA_RANKINGS::get_nation_strength_tier |
-| 0x549a30 | `faixa_de_forca_do_elenco` | club_squad_strength_band |
-| 0x5c52d0 | `faixa_de_reputacao_do_amistoso` | friendly_club_reputation_tier |
-| 0x5986b0 | `faixa_de_riqueza` | Finance::get_wealth_band |
-| 0x5af2f0 | `faixa_do_horario` | FIXTURE_MANAGER::get_time_slice |
-| 0x867d30 | `faixa_do_vencimento` | STAFF_CONTRACT::get_expiry_band |
-| 0x6f5b20 | `faixa_jogador` | player_band |
-| 0x6cfc60 | `falta_no_motor` | foul_in_engine |
-| 0x5494d0 | `faltam_atacantes_pelo_alto` | club_lacks_aerial_strikers |
-| 0x5495b0 | `faltam_zagueiros_pelo_alto` | club_lacks_aerial_defenders |
-| 0x549690 | `faltam_zagueiros_rapidos` | club_lacks_fast_defenders |
-| 0x5d6aa0 | `faltas_ao_treino` | game_check_players_missing_training |
-| 0x4190d0 | `faltas_do_dia` | AWOL::daily_update |
-| 0x540520 | `familia_da_cor` | database_get_colour_family |
-| 0x48d200 | `fase_da_competicao` | Comp::get_stage |
-| 0x64b9e0 | `fase_seguinte_da_c1a` | ItaSerC1a::advance_stage |
-| 0x64fba0 | `fase_seguinte_da_c1b` | ItaSerC1b::advance_stage |
-| 0x572ff0 | `fase_seguinte_da_first` | EngFirst::advance_stage |
-| 0x5769e0 | `fase_seguinte_da_second` | EngSecond::advance_stage |
-| 0x578330 | `fase_seguinte_da_third` | EngThird::advance_stage |
-| 0x64ba70 | `fases_do_fim_da_c1a` | ItaSerC1a::create_playoff_stages |
-| 0x64fc30 | `fases_do_fim_da_c1b` | ItaSerC1b::create_play_off_stages |
-| 0x85d8a0 | `fator_da_distancia` | Stadium::get_travel_distance_factor |
-| 0x8b41d0 | `fator_do_treinador` | TRAINING_MANAGER::get_coaching_factor |
-| 0x547790 | `favorito_de` | favourite_of |
-| 0x8bed60 | `fazer_oferta_de_emprestimo` | TRANSFER_MANAGER::make_loan_offer |
-| 0x6d1cc0 | `fechamento` | match_wrap_up |
-| 0x932b00 | `fechar_conteiner` | zclose |
-| 0x71c170 | `fechar_detalhes_da_partida` | close_match_details |
-| 0x6b5f00 | `fechar_partida_do_dia` | close_day_match |
-| 0x8c6db0 | `fechar_propostas_da_oferta` | transfer_manager_close_offer_contract_offers |
-| 0x71b120 | `fechar_tela_da_partida` | close_match_screen |
-| 0x5fd2f0 | `ferias_do_humano` | set_on_holiday |
-| 0x4cf6d0 | `ficha_de_contrato` | contract_record |
-| 0x729e30 | `ficha_do_registro` | Match_Stats::find_record_fixture |
-| 0x8b3c50 | `fichas_de_treino_iniciais` | TRAINING_MANAGER::init_player_entries |
-| 0x8c18c0 | `fila_da_transferencia_livre` | TRANSFER_MANAGER::process_free_transfer_queue |
-| 0x7a65d0 | `fila_de_regens` | PLAYER_REGEN::process_regen_queue |
-| 0x8c1780 | `fila_livre_do_clube` | TRANSFER_MANAGER::count_club_free_transfer_queue |
-| 0x839290 | `filtro_do_inicio_rapido` | check_quick_start_file |
-| 0x838e10 | `filtro_do_jogo_salvo` | check_saved_game_file |
-| 0x419710 | `fim_da_ausencia` | AWOL::end_absence |
-| 0x62e700 | `fim_da_lesao` | Injury::end_player_injury |
-| 0x59cdd0 | `fim_de_temporada_da_nacao` | FinanceTable::end_season_for_nation |
-| 0x59cfa0 | `fim_de_temporada_do_clube` | FinanceTable::season_end_club_update |
-| 0x5a0590 | `financas_do_clube` | FinanceTable::get_club_finance |
-| 0x62c680 | `fisico_do_dia` | Injury::update_player_fitness |
-| 0x7c6830 | `fluencia_no_idioma` | PlayerStats::get_language_fluency |
-| 0x5c74d0 | `folga_do_amistoso` | friendly_get_rest_days_for_kind |
-| 0x598370 | `folha_salarial_do_clube` | Finance::update_wage_bill |
-| 0x4cb960 | `fora_da_diretoria` | staff_is_not_board_member |
-| 0x6cb910 | `fora_do_meio` | off_centre |
-| 0x4c0720 | `forca_do_clube` | comp_util_get_club_strength_score |
-| 0x6bbb60 | `forca_do_lado` | side_strength |
-| 0x6c0c60 | `forca_do_time` | team_strength |
-| 0x546ab0 | `forcas_do_jogador` | staff_get_player_strength_flags |
-| 0x545a60 | `forma_do_adjetivo` | get_adjective_form_index |
-| 0x62a920 | `forma_inicial_dos_elencos` | Injury::init_squad_fitness |
-| 0x53dba0 | `formatar_nome_da_pessoa` | database_format_staff_name |
-| 0x5470d0 | `fraquezas_do_jogador` | staff_get_player_weakness_flags |
-| 0x527240 | `gerar_comissao_extra` | database_generate_extra_non_playing_staff |
-| 0x68a030 | `girar_rodada` | rotate_round |
-| 0x535920 | `global_9b5984` | global_9b5984 |
-| 0x7bd870 | `gols_do_historico` | player_search_slot_sum_goals |
-| 0x7c3d20 | `gols_na_carreira` | player_stats_get_career_goals |
-| 0x7c3bb0 | `gols_pelo_clube` | player_stats_get_goals_for_club |
-| 0x547810 | `gosta_de` | likes |
-| 0x547d60 | `gosta_do_clube` | likes_club |
-| 0x923970 | `gramado_do_jogo` | Weather::get_pitch_condition |
-| 0x62ece0 | `grau_da_lesao` | injury_grade |
-| 0x70a890 | `gravar_19c` | write_19c |
-| 0x7160e0 | `gravar_2b` | write_2b |
-| 0x700360 | `gravar_8ea7` | write_8ea7 |
-| 0x700370 | `gravar_8ea8` | write_8ea8 |
-| 0x700350 | `gravar_8ea9` | write_8ea9 |
-| 0x700390 | `gravar_8eaa` | write_8eaa |
-| 0x7003a0 | `gravar_8ed8` | write_8ed8 |
-| 0x5506b0 | `gravar_arbitros` | db_files_write_officials |
-| 0x524d30 | `gravar_banco_no_save` | save_database_for_game |
-| 0x62c660 | `gravar_carga_de_treino` | Injury::set_training_load |
-| 0x5b5290 | `gravar_casa` | set_square |
-| 0x54d9a0 | `gravar_cidades` | db_files_write_cities |
-| 0x54e5d0 | `gravar_clubes` | db_files_write_clubs |
-| 0x5501d0 | `gravar_competicoes` | db_files_write_comps |
-| 0x550470 | `gravar_competicoes_de_pessoal` | db_files_write_staff_comps |
-| 0x5af4a0 | `gravar_conferencia_das_pernas` | fix_man_save_fixture_leg_checks |
-| 0x54d6e0 | `gravar_continentes` | db_files_write_continents |
-| 0x785790 | `gravar_dado_da_noticia` | set_news_field |
-| 0x5fdd30 | `gravar_dado_do_humano` | set_human_field |
-| 0x5af040 | `gravar_datas_dos_clubes` | fix_man_save_club_dates |
-| 0x54daf0 | `gravar_estadios` | db_files_write_stadiums |
-| 0x79bb80 | `gravar_estatisticas_dos_arbitros` | OfficialsManager::save_official_stats |
-| 0x84c680 | `gravar_estatisticas_simuladas` | SimulatedStats::save |
-| 0x6d98b0 | `gravar_eventos` | record_events |
-| 0x59b3b0 | `gravar_financas` | FinanceTable::save_finance_dat |
-| 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation |
-| 0x859cc0 | `gravar_gerente_de_elencos` | SQUAD_MANAGER::save |
-| 0x54fe50 | `gravar_historico_de_pessoas` | db_files_write_staff_history |
-| 0x443f50 | `gravar_historico_dos_clubes` | Club_History::save |
-| 0x550320 | `gravar_historicos_de_competicao` | db_files_write_comp_history |
-| 0x54fbb0 | `gravar_jogadores` | db_files_write_non_players |
-| 0x82e430 | `gravar_jogo` | save_game_data |
-| 0x4afeb0 | `gravar_jogo_na_noticia` | comp_util_write_fixture_to_news_slots |
-| 0x8984d0 | `gravar_linha_tatica` | write_tactics_row |
-| 0x786d30 | `gravar_marca_da_noticia` | News::set_item_slot |
-| 0x54d840 | `gravar_nacoes` | db_files_write_nations |
-| 0x54efd0 | `gravar_nao_jogadores` | db_files_write_players |
-| 0x932e10 | `gravar_no_conteiner` | zwrite |
-| 0x550950 | `gravar_nomes` | db_files_write_or_read_records_0x3c |
-| 0x69f7c0 | `gravar_notas_da_diretoria` | MANAGER_MANAGER::set_board_ratings |
-| 0x85a850 | `gravar_numero_de_camisa` | SQUAD_MANAGER::set_squad_number |
-| 0x5fb320 | `gravar_paises_anfitrioes` | HostCountry::save_temp_file |
-| 0x54e720 | `gravar_pessoas_110` | db_files_write_staff |
-| 0x4a2540 | `gravar_posicao_do_clube` | Comp_Stats::set_club_final_position |
-| 0x68aa30 | `gravar_posicoes_finais_da_liga` | League::record_final_positions |
-| 0x54fd00 | `gravar_preferencias` | db_files_write_staff_extra |
-| 0x729820 | `gravar_registro_da_partida` | Match_Stats::write_match_record |
-| 0x550800 | `gravar_registros_58` | db_files_write_records_0x3a |
-| 0x8395b0 | `gravar_regras_fifa` | save_fifa_transfer_rules |
-| 0x4c6b70 | `gravar_sementes_da_conmebol` | ConmebolSeeding::save_to_temp_file |
-| 0x905510 | `gravar_sementes_da_uefa` | UefaSeeding::save_to_temp_file |
-| 0x7858c0 | `gravar_texto_na_noticia` | NewsItem::set_slot_string |
-| 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot |
-| 0x7671c0 | `gravar_vencedor_do_mes` | MONTH_AWARD::set_winner |
-| 0x62ec00 | `gravidade_da_lesao` | injury_severity |
-| 0x4b01d0 | `grupo_da_fase` | comp_util_get_parent_stage_id |
-| 0x6854a0 | `grupo_decidido` | group_decided |
-| 0x8be9d0 | `guardar_a_negociacao` | add_transfer_negotiation |
-| 0x6cd660 | `guardar_extremos` | store_extremes |
-| 0x896fe0 | `guardar_instrucoes` | store_instructions |
-| 0x7a8350 | `guardar_jogador_no_banco` | PLAYER_REGEN::add_player_data_to_pool |
-| 0x5ab230 | `guardar_jogo_no_calendario` | FIXTURE_MANAGER::insert_fixture |
-| 0x767ee0 | `guardar_notas_da_partida` | MONTH_RATINGS::record_match_ratings |
-| 0x452cb0 | `guardar_noticia_de_recorde` | Club_Records::queue_record_news |
-| 0x8caaf0 | `guardar_percentual_da_proxima_venda` | TRANSFER_MANAGER::add_next_sale_percentage |
-| 0x8cac40 | `guardar_premio_por_jogo_no_time` | TRANSFER_MANAGER::add_first_team_appearance_money |
-| 0x8cad90 | `guardar_premio_por_jogos_na_selecao` | add_international_team_appearance_money |
-| 0x5563f0 | `guardar_suspensoes_do_emprestado` | Discipline::hold_bans_for_loan |
-| 0x6dbb10 | `guardar_tatica` | store_tactic |
-| 0x8cb810 | `guardar_transferencia_passada` | TRANSFER_MANAGER::add_past_transfer |
-| 0x7a87d0 | `guardar_vaga_para_regen` | PLAYER_REGEN::queue_staff_for_regen |
-| 0x6e86d0 | `habilidade_vista` | perceived_ability |
-| 0x757da0 | `historia_ja_registrada` | Media::has_logged_story |
-| 0x7357c0 | `historia_punivel_do_jogador` | Media::get_finable_story_kind |
-| 0x7c3e40 | `historico_da_carreira` | PlayerStats::build_career_history |
-| 0x5fdc30 | `hora_das_ferias` | HUMAN_MANAGER::get_holiday_stamp |
-| 0x5fe420 | `humano_assiste_a_partida` | HUMAN_MANAGER::is_fixture_watched |
-| 0x600740 | `humano_deu_apelido` | HUMAN_MANAGER::has_nickname |
-| 0x600c90 | `humano_manda_no_clube` | human_runs_club |
-| 0x9331c0 | `id_do_conteiner` | zget_archive_id |
-| 0x53ab90 | `idade_da_pessoa` | database_get_staff_age |
-| 0x76d430 | `idades_da_selecao` | national_team_ages |
-| 0x5221f0 | `importancia_da_partida` | cup_match_importance |
-| 0x68a3e0 | `importancia_do_jogo_da_liga` | League::get_match_importance |
-| 0x48e190 | `importancia_do_jogo_na_competicao` | Comp::get_fixture_match_importance |
-| 0x59e050 | `impulso_das_financas` | FinanceTable::try_finance_boost_event |
-| 0x41add0 | `incidente_de_forma` | AWOL::report_poor_fitness |
-| 0x53bd10 | `incluir_pessoa_no_clube` | database_add_staff_to_club |
-| 0x669470 | `indice_da_nacao_chave` | key_nation_index_of_comp |
-| 0x599a20 | `ingressos_da_temporada` | Finance::sell_season_tickets |
-| 0x535a80 | `inicializar_jogadores` | database_player_initialisation |
-| 0x402ac0 | `iniciar_area` | Area::init |
-| 0x68f130 | `iniciar_diretorias_dos_clubes` | MANAGER_MANAGER::init_club_board_records |
-| 0x687430 | `iniciar_linha_da_tabela` | League::init_table_row |
-| 0x5cc2d0 | `iniciar_pares_proibidos_de_amistoso` | Friendly::init_banned_nation_pairs |
-| 0x8c6e60 | `iniciar_permissoes_de_trabalho` | TRANSFER_MANAGER::init_work_permits |
-| 0x6b5a70 | `iniciar_proxima_partida` | start_next_match |
-| 0x6e9470 | `iniciar_rigor` | init_strictness |
-| 0x59e5a0 | `injecao_de_dinheiro` | FinanceTable::try_cash_injection |
-| 0x85aae0 | `inscrever_na_europa` | SQUAD_MANAGER::select_euro_registered_players |
-| 0x85a9b0 | `inscricao_europeia` | SQUAD_MANAGER::process_euro_registration |
-| 0x584fa0 | `inscritos_da_liga_dos_campeoes` | EuropeanCup::collect_entrants |
-| 0x6ddab0 | `instrucoes` | instructions |
-| 0x6cc540 | `interceptar` | intercept |
-| 0x6b5040 | `interesse_do_dia` | match_day_interest |
-| 0x68d2e0 | `item_do_cursor` | LLIST::get_current |
-| 0x8d0bb0 | `janela_fixa_de_transferencias` | transfer_manager_get_next_window_dates |
-| 0x5dffe0 | `janelas_alemanha` | GERMANY_RULES::init_transfer_windows |
-| 0x40a620 | `janelas_argentina` | ARGENTINA_RULES::init_transfer_windows |
-| 0x8c6bc0 | `janelas_avisos_do_dia` | TRANSFER_MANAGER::update_transfer_window_news |
-| 0x424c00 | `janelas_belgica` | BELGIUM_RULES::init_transfer_windows |
-| 0x5c2d40 | `janelas_da_pre_temporada` | Friendly::set_preseason_windows |
-| 0x859470 | `janelas_espanha` | SPAIN_RULES::init_transfer_windows |
-| 0x5c15e0 | `janelas_franca` | FRANCE_RULES::init_transfer_windows |
-| 0x5ecf20 | `janelas_grecia` | GREECE_RULES::init_transfer_windows |
-| 0x6613f0 | `janelas_italia` | ITALY_RULES::init_transfer_windows |
-| 0x7d3df0 | `janelas_portugal` | PORTUGAL_RULES::init_transfer_windows |
-| 0x7ec7e0 | `janelas_russia` | RUSSIA_RULES::init_transfer_windows |
-| 0x70dfd0 | `jogada` | play |
-| 0x8cd150 | `jogador_com_oferta_pendente` | TRANSFER_MANAGER::player_has_pending_offer |
-| 0x631550 | `jogador_de_ferias` | Injury::is_player_on_holiday |
-| 0x452da0 | `jogador_do_ano_da_torcida` | Club_Records::pick_fans_player_of_year |
-| 0x86dc30 | `jogador_do_ano_da_torcida_no_registro` | Staff_Records::add_supporters_player_of_year_record |
-| 0x62ce30 | `jogador_fora_da_temporada` | injury_player_in_close_season |
-| 0x7af600 | `jogador_na_busca` | PLAYER_SEARCH::contains_player |
-| 0x6c2fe0 | `jogador_no_bloco` | player_in_block |
-| 0x6e1cd0 | `jogador_pela_ficha` | player_by_record |
-| 0x6cda20 | `jogador_saiu` | player_left |
-| 0x76d9b0 | `jogador_serve_a_selecao` | national_teams_player_is_eligible |
-| 0x8cde70 | `jogador_sob_oferta` | TRANSFER_MANAGER::is_player_under_offer |
-| 0x6b6cc0 | `jogadores_do_pos_jogo` | post_match_players |
-| 0x6cbc00 | `jogadores_na_linha` | players_in_line |
-| 0x6cc070 | `jogadores_no_trajeto` | players_on_path |
-| 0x6aaee0 | `jogadores_que_a_diretoria_cita` | board_named_players_after_match |
-| 0x6b4360 | `jogar_o_dia` | play_the_day |
-| 0x7f9720 | `jogo_com_observado` | SCOUT_MANAGER::fixture_has_scouted_player |
-| 0x7bd830 | `jogo_do_historico` | player_search_slot_get_match_entry |
-| 0x5ac7a0 | `jogo_guardado_igual` | FIXTURE_MANAGER::find_stored_fixture |
-| 0x5aa680 | `jogo_no_calendario` | FIXTURE_MANAGER::add_fixture |
-| 0x5abd90 | `jogos_da_competicao_no_dia` | FIXTURE_MANAGER::collect_comp_fixtures_on_day |
-| 0x58d710 | `jogos_da_selecao_no_periodo` | FIFA_RANKINGS::count_results_in_period |
-| 0x8c39f0 | `jogos_das_permissoes_e_clausulas` | update_appearance_clauses_after_match |
-| 0x775580 | `juntar_competicoes_das_convocacoes` | NationalTeams::collect_duty_competitions |
-| 0x544970 | `juntar_o_time_b_ao_a` | database_merge_b_team_staff |
-| 0x549cf0 | `juntar_vinculo_de_opiniao` | staff_add_opinion_link |
-| 0x6b98c0 | `laco_do_motor` | engine_loop |
-| 0x714d30 | `lado_do_jogador` | player_side |
-| 0x4afa80 | `lado_do_jogo_para_o_clube` | comp_util_get_fixture_venue_side |
-| 0x6bba50 | `lado_do_lance` | side_of_move |
-| 0x6d42a0 | `lado_sob_controle` | side_under_control |
-| 0x6fa490 | `lancar` | long_ball |
-| 0x6bab90 | `lance_valendo` | move_counts |
-| 0x84a020 | `lances_do_clube` | Shortlist_Manager::make_club_bids |
-| 0x6b6970 | `largar_partida_assistida` | match_day_drop_viewer_and_finish_match |
-| 0x6c4290 | `lateral` | throw_in |
-| 0x717400 | `ler_1bc` | read_1bc |
-| 0x700320 | `ler_8ea7` | read_8ea7 |
-| 0x700330 | `ler_8ea8` | read_8ea8 |
-| 0x700340 | `ler_8ea9` | read_8ea9 |
-| 0x700380 | `ler_8eaa` | read_8eaa |
-| 0x700400 | `ler_8eb2` | read_8eb2 |
-| 0x700410 | `ler_8f7a` | read_8f7a |
-| 0x5505c0 | `ler_arbitros` | db_files_read_officials |
-| 0x54d8a0 | `ler_cidades` | db_files_read_cities |
-| 0x54db50 | `ler_clubes` | db_files_read_clubs |
-| 0x54dc90 | `ler_clubes_v1` | db_files_read_clubs_v1 |
-| 0x54feb0 | `ler_competicoes` | db_files_read_comps |
-| 0x550380 | `ler_competicoes_de_pessoal` | db_files_read_staff_comps |
-| 0x54ffd0 | `ler_competicoes_v1` | db_files_read_comps_v1 |
-| 0x54d5e0 | `ler_continentes` | db_files_read_continents |
-| 0x550710 | `ler_cores` | db_files_read_colours |
-| 0x932c30 | `ler_do_conteiner` | zread |
-| 0x54da00 | `ler_estadios` | db_files_read_stadiums |
-| 0x6d9c40 | `ler_eventos` | read_events |
-| 0x6d9e50 | `ler_eventos_cfg` | read_events_cfg |
-| 0x5b5d10 | `ler_formacao_do_disco` | Formation::load_from_disk |
-| 0x5504d0 | `ler_historico_de_competicoes_de_pessoal` | db_files_read_staff_comp_history |
-| 0x54fd60 | `ler_historico_de_pessoas` | db_files_read_staff_history |
-| 0x550230 | `ler_historicos_de_competicao` | db_files_read_comp_history |
-| 0x54f030 | `ler_jogadores` | db_files_read_non_players |
-| 0x54f150 | `ler_jogadores_v1` | db_files_read_non_players_v1 |
-| 0x8983f0 | `ler_linha_tatica` | read_tactics_row |
-| 0x76d7b0 | `ler_marca_da_pessoa` | read_person_mark |
-| 0x54d740 | `ler_nacoes` | db_files_read_nations |
-| 0x54e880 | `ler_nao_jogadores` | db_files_read_players |
-| 0x54e9a0 | `ler_nao_jogadores_v1` | db_files_read_players_v1 |
-| 0x550860 | `ler_nomes` | db_files_read_names |
-| 0x922810 | `ler_o_clima` | Weather::load_config |
-| 0x922d20 | `ler_periodo_do_clima` | Weather::read_region_period |
-| 0x54e630 | `ler_pessoas_110` | db_files_read_staff |
-| 0x54e780 | `ler_pessoas_157` | db_files_read_staff_v1 |
-| 0x54fc10 | `ler_preferencias` | db_files_read_staff_extra |
-| 0x922c40 | `ler_regiao_do_clima` | Weather::read_region |
-| 0x729600 | `ler_registro_da_partida` | Match_Stats::read_match_record |
-| 0x6cfe10 | `lesao_na_dividida` | tackle_injury |
-| 0x62d250 | `lesao_nova` | Injury::add_injury |
-| 0x7a32e0 | `lesao_pelo_nome` | player_setup_injury_from_name |
-| 0x62ed30 | `lesao_que_volta` | Injury::get_recurring_injury_type |
-| 0x6d0980 | `lesionar` | injure |
-| 0x844660 | `liberar_alvos_da_lista_do_clube` | shortlist_manager_release_club_slot_targets |
-| 0x775070 | `liberar_competicoes_do_continente` | release_competitions_of_continent |
-| 0x82ff40 | `liberar_dados_do_jogo` | free_game_data |
-| 0x527ee0 | `liberar_historico_de_pessoas` | database_free_staff_history_table |
-| 0x527f20 | `liberar_historico_de_premios` | database_free_staff_comp_history_table |
-| 0x8c1af0 | `liberar_sem_custo` | free_transfer_staff |
-| 0x687970 | `liberar_tabela_da_liga` | League::free_table |
-| 0x6d5b50 | `liberar_tabelas_de_eventos` | free_event_tables |
-| 0x544f30 | `liberar_tabelas_em_ingles` | eng_lng_free_tables |
-| 0x689ad0 | `liga_completa` | League::check_complete |
-| 0x6835c0 | `liga_criar_tabela` | League::create_fixtures |
-| 0x6847c0 | `liga_dia` | League::update_for_date |
-| 0x68aa80 | `liga_expectativas_da_temporada` | League::set_club_season_expectations |
-| 0x685640 | `liga_jogos_para_a_tv` | League::move_fixtures_for_tv |
-| 0x683ee0 | `liga_noticia_da_tabela` | League::send_fixture_list_news |
-| 0x684230 | `liga_noticia_dos_grupos` | League::send_group_draw_news |
-| 0x689c80 | `liga_promover_e_rebaixar` | league_promote_and_relegate |
-| 0x6831a0 | `liga_rebaixar_clube` | League::relegate_club_to_division |
-| 0x68abd0 | `liga_tem_o_clube` | League::contains_club |
-| 0x6847b0 | `liga_tem_rebaixamento` | League::has_relegation |
-| 0x76c0f0 | `ligar_44_da_pessoa` | set_person_44 |
-| 0x5b50d0 | `ligar_marca_da_formacao` | set_formation_flag |
-| 0x6cb930 | `limite` | limit |
-| 0x8cf7e0 | `limite_de_escalacao` | get_selection_limit |
-| 0x8cf880 | `limite_do_banco_do_dia` | transfer_manager_check_matchday_squad_limit |
-| 0x70df40 | `limite_jogador` | player_limit |
-| 0x79bf40 | `limpar_arbitros_ocupados` | OfficialsManager::clear_busy_flags |
-| 0x4196a0 | `limpar_ausencia` | AWOL::clear_awol |
-| 0x775000 | `limpar_competicao_atual` | clear_current_competition |
-| 0x5b5960 | `limpar_designados` | clear_assigned |
-| 0x4197c0 | `limpar_falta_ao_treino` | AWOL::clear_missed_training |
-| 0x6bba10 | `limpar_lance` | clear_move |
-| 0x5fe8d0 | `limpar_partidas_assistidas` | HUMAN_MANAGER::clear_invalid_watched_fixtures |
-| 0x90cd50 | `limpar_pasta_temporaria` | utils_clear_temp_folder |
-| 0x86fc20 | `limpar_registro_de_tecnico` | Staff_Records::clear_manager_record |
-| 0x86fc70 | `limpar_registro_do_humano` | Staff_Records::clear_human_manager_record |
-| 0x867520 | `limpar_todas_as_queixas` | STAFF_CONTRACT::clear_all_grievances |
-| 0x896e90 | `limpar_vaga_da_escalacao` | Tactics::clear_selection_slot |
-| 0x549c90 | `limpar_vinculos_de_opiniao` | staff_clear_opinion_links |
-| 0x669340 | `linha_da_nacao` | key_nation_index_of_nation |
-| 0x669360 | `linha_da_nacao_do_clube` | key_nation_index_of_club |
-| 0x68ab70 | `linha_do_clube` | League::find_club_row |
-| 0x8982b0 | `linha_tatica` | tactics_row |
-| 0x6c3aa0 | `linhas_defensivas` | defensive_lines |
-| 0x5ae6a0 | `lista_da_data` | FIXTURE_MANAGER::get_fixture_list_for_date |
-| 0x85dfc0 | `lista_de_estadios_neutros` | Stadium::build_venue_list |
-| 0x5d5ab0 | `lista_de_observados` | transfer_manager_get_shortlist_manager |
-| 0x7f6e30 | `lista_escolhida_do_tecnico` | SCOUT_MANAGER::get_selected_list |
-| 0x7a58f0 | `lista_inicial_de_aposentadorias` | PLAYER_REGEN::build_initial_retirement_list |
-| 0x7acfc0 | `listas_de_clubes_por_nacao` | PLAYER_REGEN::build_nation_club_lists |
-| 0x4cbb60 | `lugar_no_elenco` | CONTRACT_MANAGER::get_squad_placement |
-| 0x8cc930 | `maior_oferta_pelo_jogador` | TRANSFER_MANAGER::find_highest_offer_for_player |
-| 0x6cb780 | `mais_perto_do_gol` | closest_to_goal |
-| 0x6c30e0 | `mais_perto_no_lado` | closest_on_side |
-| 0x6c3010 | `mais_proximo_do_ponto` | nearest_to_point |
-| 0x6ce110 | `manter_posicao_um` | hold_position_one |
-| 0x5b7160 | `mapa_de_casas_da_formacao` | Formation::build_position_lookup |
-| 0x7163f0 | `marca_800000` | mark_800000 |
-| 0x6bbf60 | `marcacao_individual` | individual_marking |
-| 0x7160f0 | `marcado_designado` | designated_marked |
-| 0x6d4330 | `marcador_direto` | direct_marker |
-| 0x5c57d0 | `marcar_adversario_do_amistoso` | Friendly::schedule_assign_opponent |
-| 0x5af180 | `marcar_ano_no_calendario` | mark_calendar_year |
-| 0x897bb0 | `marcar_batedor_de_bola_parada` | Tactics::set_set_piece_taker |
-| 0x7775c0 | `marcar_clubes_com_jogo` | NationalTeams::mark_clubs_with_fixtures |
-| 0x8c5410 | `marcar_contrato_acertado` | set_agreed_contract_flag |
-| 0x6d10a0 | `marcar_craques` | mark_stars |
-| 0x4cd230 | `marcar_decisao_da_oferta` | CONTRACT_MANAGER::schedule_offer_decision |
-| 0x4cc930 | `marcar_decisao_da_transferencia` | CONTRACT_MANAGER::schedule_decision_for_transfer |
-| 0x540980 | `marcar_elenco_da_pessoa` | staff_set_squad_flags |
-| 0x41a360 | `marcar_falta_ao_treino` | AWOL::miss_training |
-| 0x5c4040 | `marcar_jogos_da_excursao` | Friendly::schedule_tour_matches |
-| 0x787140 | `marcar_noticia_lida` | News::mark_item_read |
-| 0x5b5910 | `marcar_posicao` | mark_position |
-| 0x84b580 | `marcar_sob_oferta` | Shortlist_Manager::mark_player_under_offer |
-| 0x8c1f80 | `marcar_termos_oferecidos` | TRANSFER_MANAGER::note_terms_offered_to_main_player |
-| 0x897760 | `marcar_vaga` | mark_slot |
-| 0x5b5270 | `marcas_da_posicao` | position_marks |
-| 0x4cc130 | `marcas_de_elenco_para_a_tela` | CONTRACT_MANAGER::get_squad_flags_for_club |
-| 0x867560 | `marcas_do_contrato` | STAFF_CONTRACT::set_flags |
-| 0x7163c0 | `marcas_do_jogador_rot` | player_marks_rot |
-| 0x68a4d0 | `margem_do_ultimo_dia` | League::final_day_margin_needed |
-| 0x5b59a0 | `mascara_da_formacao` | formation_mask |
-| 0x5481a0 | `mascara_da_posicao_natural` | staff_get_natural_position_mask |
-| 0x5b7d20 | `mascara_de_posicoes` | position_mask |
-| 0x573080 | `mata_mata_da_first` | EngFirst::create_playoff_stage |
-| 0x576a70 | `mata_mata_da_second` | EngSecond::create_play_off_stage |
-| 0x5783c0 | `mata_mata_da_third` | EngThird::create_play_off_stage |
-| 0x7c1950 | `media_das_notas` | ratings_average |
-| 0x5d5a60 | `media_do_jogo` | game_average |
-| 0x6e1a40 | `melhor_avaliado` | best_rated |
-| 0x548810 | `melhor_candidato_a_favorito` | staff_is_best_favoured_candidate |
-| 0x7ad0e0 | `melhor_clube_para_o_jovem` | PLAYER_REGEN::pick_best_club_for_player |
-| 0x6e1940 | `melhor_da_lista` | best_in_list |
-| 0x768130 | `melhor_do_mes` | MONTH_RATINGS::find_best_player |
-| 0x69c540 | `melhor_nota_de_candidato_a_tecnico` | MANAGER_MANAGER::best_manager_candidate_score |
-| 0x7c6ca0 | `melhorar_idioma` | PlayerStats::improve_language |
-| 0x59b630 | `melhorar_o_centro_de_treino` | FinanceTable::upgrade_training_facilities |
-| 0x6c3950 | `menor_distancia` | smallest_distance |
-| 0x4ce450 | `menor_salario_pedido` | contract_manager_lowest_wage_demand |
-| 0x4d45f0 | `mes_do_fim_da_temporada_do_clube` | contract_manager_season_end_month |
-| 0x682b30 | `mini_tabela_do_confronto` | League::build_h2h_table |
-| 0x7aefd0 | `missao_do_olheiro` | PLAYER_SEARCH::get_scout_assignment |
-| 0x6d4250 | `momento_marcado` | marked_moment |
-| 0x71b630 | `montar_detalhes_da_partida` | build_match_details_screen |
-| 0x729000 | `montar_estatisticas_da_partida` | Match_Stats::Match_Stats |
-| 0x6844b0 | `montar_grade_de_turnos` | league_build_round_robin_grid |
-| 0x539750 | `montar_indice_de_nomes` | database_build_nation_name_index |
-| 0x717db0 | `montar_jogos_do_dia` | build_day_fixtures_screen |
-| 0x839e60 | `montar_listas_de_posicao` | Shortlist_Manager::build_position_lists |
-| 0x6b3c10 | `montar_o_dia` | set_up_the_day |
-| 0x8c8740 | `montar_oferta_em_dinheiro` | TRANSFER_MANAGER::build_cash_offer_option |
-| 0x79bf60 | `montar_os_arbitros` | OfficialsManager::set_up_officials |
-| 0x76abf0 | `montar_reservas_das_selecoes` | build_selection_pools |
-| 0x591f80 | `montar_resumo_do_save` | build_save_game_summary |
-| 0x51c800 | `montar_rodada_da_copa` | Cup::set_up_round |
-| 0x718e90 | `montar_tela_da_partida` | build_match_screen |
-| 0x71b300 | `montar_ultimos_placares` | build_latest_scores |
-| 0x83c090 | `montar_vagas_da_formacao` | shortlist_set_up_formation_slots |
-| 0x4cc2d0 | `moral_da_ficha` | contract_manager_get_player_morale |
-| 0x5ce0b0 | `moral_pela_lideranca` | game_spread_squad_morale_by_leadership |
-| 0x8c5560 | `motivo_da_recusa_vale` | transfer_manager_is_rejection_reason_valid |
-| 0x69b350 | `motivo_da_saida_do_tecnico` | MANAGER_MANAGER::get_departure_reason |
-| 0x8c54c0 | `motivo_pelo_status_no_elenco` | transfer_manager_get_squad_status_reason |
-| 0x6cfd40 | `motor_cartao_pela_gravidade` | engine_card_by_severity |
-| 0x6cfca0 | `motor_decidir_falta` | engine_decide_foul |
-| 0x6cfd70 | `motor_procurar_impedimento` | engine_look_for_offside |
-| 0x6cfd10 | `motor_punir_falta` | engine_punish_foul |
-| 0x6cfcd0 | `motor_punir_lance` | engine_punish_move |
-| 0x6f09f0 | `mover_jogador` | player_move |
-| 0x5ae9d0 | `mover_jogos_vizinhos_do_clube` | FIXTURE_MANAGER::move_nearby_club_fixtures |
-| 0x6f46b0 | `mover_para` | move_to |
-| 0x714d40 | `mover_sem_bola` | move_off_ball |
-| 0x8b37c0 | `mudanca_do_atributo_pelo_treino` | TRAINING_MANAGER::get_training_attribute_change |
-| 0x6830b0 | `mudar_clube_de_divisao` | League::move_club_to_division |
-| 0x5cdde0 | `mudar_confianca_da_diretoria` | manager_manager_adjust_board_confidence |
-| 0x92f230 | `mundial_cabecas_de_chave` | WorldCup::seed_teams |
-| 0x92f1a0 | `mundial_dia` | WorldCup::update_for_date |
-| 0x92d540 | `mundial_fase_do_grupo` | WorldCup::create_group_stage |
-| 0x92e740 | `mundial_nacao_classificada` | WorldCup::add_qualified_team |
-| 0x92f680 | `mundial_posicoes_previstas` | WorldCup::set_predicted_positions |
-| 0x92c290 | `mundial_rodadas_da_fase` | WorldCup::create_schedule |
-| 0x92e940 | `mundial_sortear_grupos` | WorldCup::draw_groups |
-| 0x92e7f0 | `mundial_sorteio_dos_grupos` | WorldCup::run_group_draw |
-| 0x92d0f0 | `mundial_tabela_do_grupo_um` | WorldCup::create_group_table |
-| 0x6f4650 | `na_area` | in_the_box |
-| 0x714c60 | `na_lista` | in_list |
-| 0x7f7490 | `na_lista_do_olheiro` | SCOUT_MANAGER::is_player_shortlisted |
-| 0x5446d0 | `nacao_britanica_ou_irlanda` | nation_is_uk_or_ireland |
-| 0x48dee0 | `nacao_chave_do_clube` | comp_active_key_nation_of_club |
-| 0x48df40 | `nacao_chave_do_estadio` | comp_active_key_nation_of_stadium |
-| 0x48dd70 | `nacao_chave_do_jogo` | comp_active_key_nation_of_fixture |
-| 0x544670 | `nacao_com_transferencia_livre` | nation_allows_free_transfers |
-| 0x53d900 | `nacao_da_melanesia` | database_is_melanesian_nation |
-| 0x53d940 | `nacao_da_polinesia` | database_is_polynesian_nation |
-| 0x53d7d0 | `nacao_do_clube_na_cee` | database_club_nation_is_eec |
-| 0x7e6f20 | `nacao_do_grupo` | group_nation |
-| 0x549ea0 | `nacao_grande` | nation_is_major_nation |
-| 0x5af5b0 | `nacao_parceira_do_clube` | fix_man_get_partner_key_nation_index |
-| 0x669600 | `nacao_principal` | key_nation_get_main_nation |
-| 0x776380 | `nao_gosta_da_selecao` | dislikes_national_side |
-| 0x547840 | `nao_gosta_de` | dislikes |
-| 0x547d30 | `nao_gosta_do_clube` | dislikes_club |
-| 0x6be120 | `narrar_classificacao` | narrate_qualification |
-| 0x6d7b00 | `narrar_no_painel` | commentate_on_panel |
-| 0x8bee50 | `negociacao_de_emprestimo` | TRANSFER_MANAGER::add_loan_negotiation |
-| 0x8c5fc0 | `negociacoes_de_troca_do_jogador` | TRANSFER_MANAGER::get_exchange_negotiations_for_player |
-| 0x5afe00 | `nevoa_apos_partida` | fog_after_match |
-| 0x8b4f50 | `nivel_da_categoria_do_programa` | TRAINING_SCHEDULE::get_category_level |
-| 0x53ce90 | `nivel_do_contrato` | contract_level |
-| 0x76d810 | `nivel_para_a_selecao` | national_team_level |
-| 0x545770 | `nome_curto_ingles_do_clube` | club_get_english_short_name |
-| 0x630c50 | `nome_da_categoria_da_lesao` | injury_get_category_name |
-| 0x4bffc0 | `nome_da_fase_e_rodada` | comp_util_format_stage_round_name |
-| 0x7fc150 | `nome_da_lista_do_olheiro` | scout_manager_write_list_name |
-| 0x5461b0 | `nome_da_posicao` | write_position_name |
-| 0x616f20 | `nome_da_regiao` | get_region_name |
-| 0x542100 | `nome_da_selecao` | club_get_national_team_name |
-| 0x543b10 | `nome_do_atributo_de_tecnico` | database_get_non_player_attribute_name |
-| 0x5428a0 | `nome_do_atributo_do_jogador` | database_get_player_attribute_name |
-| 0x53ad00 | `nome_do_cargo` | database_get_job_name |
-| 0x53ac40 | `nome_do_cargo_de_treino` | database_get_coaching_job_name |
-| 0x775610 | `nome_do_elenco_da_selecao` | NationalTeams::format_squad_label |
-| 0x53cee0 | `nome_do_idioma` | database_get_language_name |
-| 0x6db2d0 | `nome_do_jogador_na_narracao` | commentary_player_name |
-| 0x7dad20 | `nome_do_veiculo` | PunditList::get_pundit_name |
-| 0x5455a0 | `nome_ingles_da_competicao` | comp_get_english_name |
-| 0x5456a0 | `nome_ingles_da_competicao_de_pessoal` | staff_comp_get_english_name |
-| 0x5453f0 | `nome_ingles_da_nacao` | nation_get_english_name |
-| 0x545880 | `nome_ingles_do_clube` | club_get_english_name |
-| 0x545990 | `nome_ingles_do_estadio` | stadium_get_english_name |
-| 0x53eab0 | `nome_oficial` | database_format_official_name |
-| 0x53e2e0 | `nome_pelos_textos` | database_format_name_from_strings |
-| 0x53e140 | `nome_por_ids` | database_format_name_from_ids |
-| 0x8b2230 | `nomes_padrao_dos_programas` | (training_manager.cpp, 0x8b2230) |
-| 0x538bc0 | `normalizar_atributos_do_jogador` | staff_normalise_player_attributes |
-| 0x539490 | `normalizar_atributos_do_nao_jogador` | staff_normalise_non_player_attributes |
-| 0x538ec0 | `normalizar_atributos_fisicos_do_jogador` | staff_normalise_player_physical_attributes |
-| 0x715f50 | `nota_ajustada` | adjusted_rating |
-| 0x7bca90 | `nota_alvo_do_clube` | player_search_get_club_target_rating |
-| 0x6d4a20 | `nota_do_arbitro` | referee_grade |
-| 0x7ad220 | `nota_do_clube_para_o_jovem` | player_regen_score_club_for_player |
-| 0x7a7150 | `nota_do_doador_de_dados` | player_regen_score_non_player_candidate |
-| 0x85da00 | `nota_do_estadio_neutro` | Stadium::score_venue_for_fixture |
-| 0x6ebd70 | `nota_do_jogador` | player_rating |
-| 0x767fa0 | `nota_do_jogador_no_mes` | MONTH_RATINGS::add_player_rating |
-| 0x736720 | `nota_do_jogador_para_a_historia` | Media::rate_player_form_for_story |
-| 0x6e6340 | `nota_fora_da_partida` | off_match_score |
-| 0x6e2f20 | `nota_para_a_vaga` | lineup_slot_score |
-| 0x5442f0 | `nota_relativa_com_habilidade_reduzida` | player_attribute_rating_with_scaled_ability |
-| 0x544380 | `nota_relativa_do_atributo` | player_attribute_rating |
-| 0x7861e0 | `noticia_ao_tecnico_do_clube` | News::send_to_club_manager |
-| 0x735780 | `noticia_com_resposta_2` | story_with_response_two |
-| 0x4d6790 | `noticia_contrato_acabando` | post_contract_expiry_news |
-| 0x8d7cd0 | `noticia_conversa_de_contrato` | post_contract_talks_news |
-| 0x7a92e0 | `noticia_da_aposentadoria` | player_regen_post_retirement_news |
-| 0x7aa340 | `noticia_da_aposentadoria_anunciada` | player_regen_post_retirement_announcement_news |
-| 0x6a5a60 | `noticia_da_avaliacao_da_federacao` | MANAGER_MANAGER::post_fa_performance_news |
-| 0x75b6e0 | `noticia_da_comemoracao_da_contratacao` | Media::queue_signing_celebration_story |
-| 0x6a4c40 | `noticia_da_confianca_da_diretoria` | post_board_confidence_update_news |
-| 0x41a630 | `noticia_da_falta_ao_treino` | awol_post_missed_training_news |
-| 0x62dca0 | `noticia_da_lesao` | injury_post_injury_news |
-| 0x59fae0 | `noticia_da_obra_recusada` | FinanceTable::news_request_refused |
-| 0x8d76d0 | `noticia_da_oferta_aceita` | post_offer_accepted_news |
-| 0x6a0540 | `noticia_da_oferta_de_emprego` | MANAGER_MANAGER::post_job_offer_news |
-| 0x8d3090 | `noticia_da_oferta_feita` | TRANSFER_MANAGER::post_offer_made_news |
-| 0x6a0e70 | `noticia_da_pressao` | MANAGER_MANAGER::post_manager_under_pressure_news |
-| 0x6a5fa0 | `noticia_da_reacao_da_diretoria` | MANAGER_MANAGER::post_board_match_reaction_news |
-| 0x8d8310 | `noticia_da_recusa_em_se_mudar` | post_player_rejects_move_news |
-| 0x76f7d0 | `noticia_da_saida_do_convocado` | national_teams_post_player_withdrawn_news |
-| 0x6a1b00 | `noticia_da_saida_do_tecnico` | MANAGER_MANAGER::post_manager_departure_news |
-| 0x48ea40 | `noticia_da_tv` | Comp::send_tv_rights_news |
-| 0x630ee0 | `noticia_da_volta_aos_treinos` | Injury::post_recovery_news |
-| 0x6a4a20 | `noticia_das_expectativas_da_diretoria` | post_board_expectations_news |
-| 0x6a44a0 | `noticia_das_expectativas_da_federacao` | post_fa_expectations_news |
-| 0x59ffb0 | `noticia_das_obras` | FinanceTable::news_ground_works |
-| 0x5faec0 | `noticia_das_sedes` | HostCountry::post_host_news |
-| 0x74ae60 | `noticia_de_apuro_financeiro` | Media::post_financial_trouble_news |
-| 0x732c80 | `noticia_de_gratidao_do_jogador` | Media::queue_player_gratitude_news |
-| 0x4d71b0 | `noticia_de_jogador_listado` | CONTRACT_MANAGER::post_transfer_listed_news |
-| 0x743370 | `noticia_de_pedido_de_apoio` | Media::post_player_backing_request_news |
-| 0x743a50 | `noticia_de_reacao_a_critica` | Media::post_player_criticism_reaction_news |
-| 0x69fd50 | `noticia_do_boato_do_tecnico` | post_job_rumour_news |
-| 0x75cfc0 | `noticia_do_companheiro_desassossegado` | Media::queue_sale_unrest_story |
-| 0x76fd10 | `noticia_do_convocado` | national_teams_post_player_called_up_news |
-| 0x519690 | `noticia_do_desfecho_na_copa` | Cup::add_team_result_news |
-| 0x59fe10 | `noticia_do_dividendo` | FinanceTable::news_dividend |
-| 0x8e1780 | `noticia_do_emprestimo_oferecido` | post_loan_offer_news |
-| 0x5aac70 | `noticia_do_jogo_remarcado` | FIXTURE_MANAGER::queue_fixture_moved_news |
-| 0x7a8ba0 | `noticia_do_jovem_promovido` | player_regen_post_youth_promotion_news |
-| 0x72bbf0 | `noticia_do_pedido_de_desculpas` | media_queue_player_apology_news |
-| 0x7701f0 | `noticia_do_pedido_de_substituto` | national_teams_post_replacement_needed_news |
-| 0x8db3a0 | `noticia_do_percentual_da_venda` | TRANSFER_MANAGER::post_sale_percentage_news |
-| 0x48e3e0 | `noticia_do_premio` | Comp::send_prize_money_news |
-| 0x6a5d10 | `noticia_do_protesto_da_torcida` | post_supporter_protest_news |
-| 0x6a2e00 | `noticia_do_tecnico_novo` | MANAGER_MANAGER::post_manager_appointment_news |
-| 0x75c390 | `noticia_do_titulo` | Media::queue_trophy_praise_story |
-| 0x6ac700 | `noticia_do_ultimato` | post_board_ultimatum_news |
-| 0x4da590 | `noticia_fim_do_contrato` | post_contract_end_news |
-| 0x784eb0 | `noticia_importante_para_a_pessoa` | NewsItem::is_important_for |
-| 0x587600 | `noticia_nao_vende` | news_create_not_for_sale_story |
-| 0x8de790 | `noticia_oferta_desfeita` | post_offer_collapsed_news |
-| 0x8d5170 | `noticia_oferta_recusada` | post_offer_rejected_news |
-| 0x786860 | `noticia_para_a_regiao_da_competicao` | News::send_to_comp_region |
-| 0x7862d0 | `noticia_para_os_tecnicos_da_divisao` | News::send_to_division_managers |
-| 0x786520 | `noticia_para_os_tecnicos_da_nacao` | News::send_to_nation_club_managers |
-| 0x786640 | `noticia_para_os_tecnicos_do_continente` | News::send_to_continent_managers |
-| 0x7863f0 | `noticia_para_os_tecnicos_do_pais` | News::send_to_nation_managers |
-| 0x786780 | `noticia_para_todos_os_tecnicos` | News::send_to_all_managers |
-| 0x8dda90 | `noticia_pedido_de_adiamento` | post_transfer_delay_request_news |
-| 0x4d9460 | `noticia_pedido_de_transferencia_retirado` | post_transfer_request_withdrawn_news |
-| 0x786090 | `noticia_pelo_alcance` | News::send_by_scope |
-| 0x8db8a0 | `noticia_premio_por_jogos` | post_appearance_money_news |
-| 0x758de0 | `noticia_queixa_a_federacao` | Media::queue_manager_fa_complaint_story |
-| 0x4d9f80 | `noticia_quer_contrato_novo` | post_wants_new_contract_news |
-| 0x5a74b0 | `noticia_reacao_a_multa` | post_fine_reaction_news |
-| 0x5a7f20 | `noticia_retorno_do_treinador` | post_coach_fine_feedback_news |
-| 0x4d6d70 | `noticia_saida_pela_lei_bosman` | post_bosman_departure_news |
-| 0x8e05d0 | `noticia_transferencia_acertada` | post_transfer_agreed_news |
-| 0x8dbef0 | `noticia_transferencia_concluida` | post_transfer_completed_news |
-| 0x8da5e0 | `noticia_transferencia_finalizada` | post_transfer_finalised_news |
-| 0x786960 | `noticias_da_caixa` | News::get_inbox_items |
-| 0x448e30 | `noticias_de_recordes` | Club_Records::send_record_news |
-| 0x62e010 | `noticias_de_volta_aos_treinos` | Injury::post_due_recovery_news |
-| 0x786fe0 | `noticias_nao_lidas` | News::count_unread |
-| 0x5ab510 | `nova_data_do_jogo` | FIXTURE_MANAGER::find_new_fixture_date |
-| 0x6d3de0 | `nova_reputacao` | new_reputation |
-| 0x7e7ed0 | `nova_temporada_do_orgao` | RulingBody::start_new_season |
-| 0x7a5790 | `novas_aposentadorias` | PLAYER_REGEN::find_new_retirements |
-| 0x859fe0 | `numerar_elenco` | SQUAD_MANAGER::assign_club_squad_numbers |
-| 0x859e20 | `numerar_liga` | SQUAD_MANAGER::assign_league_squad_numbers |
-| 0x859dc0 | `numerar_no_comeco` | SQUAD_MANAGER::init_new_game |
-| 0x6b6570 | `numero_da_competicao` | competition_number |
-| 0x85a760 | `numero_de_camisa` | SQUAD_MANAGER::get_squad_number |
-| 0x8c1e40 | `oferecer_contrato_ao_jogador_da_oferta` | TRANSFER_MANAGER::offer_contract_to_offer_player |
-| 0x4cca30 | `oferta_acertada` | agreed_contract_offer |
-| 0x4486c0 | `oferta_bate_o_recorde` | Club_Records::offer_breaks_fee_record |
-| 0x8c8fd0 | `oferta_com_clausula` | TRANSFER_MANAGER::build_clause_offer_option |
-| 0x4cc9e0 | `oferta_de_contrato` | contract_offer |
-| 0x8cdd80 | `oferta_do_clube_pelo_jogador` | TRANSFER_MANAGER::find_club_offer_for_player |
-| 0x8d0d90 | `oferta_fechada` | transfer_offer_closed |
-| 0x8c7470 | `oferta_precisa_de_permissao` | transfer_manager_offer_needs_work_permit |
-| 0x8c6100 | `ofertas_abertas_pelos_jogadores_do_clube` | TRANSFER_MANAGER::get_open_offers_for_club_players |
-| 0x4ca300 | `ofertas_de_contrato_do_clube` | CONTRACT_MANAGER::get_current_contract_offers |
-| 0x8c4e10 | `ofertas_em_espera_na_janela` | hold_offers_at_window_close |
-| 0x8c5cf0 | `ofertas_pelo_jogador` | TRANSFER_MANAGER::get_offers_for_player |
-| 0x7ae950 | `olheiro_da_busca` | PLAYER_SEARCH::get_scout |
-| 0x7f9190 | `olheiros_cobrem_a_nacao` | SCOUT_MANAGER::can_club_scout_nation |
-| 0x53cd60 | `olheiros_do_clube` | database_get_club_scouts |
-| 0x7f8c00 | `olheiros_na_partida` | SCOUT_MANAGER::scout_match |
-| 0x8c8860 | `opcao_de_troca` | TRANSFER_MANAGER::make_exchange_option |
-| 0x7ae240 | `ordem_da_fila_de_regens` | player_regen_compare_queue_entries |
-| 0x7c6d90 | `ordem_da_historia_por_clube` | player_stats_compare_history_by_club |
-| 0x68afb0 | `ordem_da_projecao_pela_reputacao` | compare_projection_by_reputation_desc |
-| 0x68afd0 | `ordem_da_projecao_pelos_pontos` | compare_projection_by_points_desc |
-| 0x632040 | `ordem_da_volta_aos_treinos` | injury_compare_entry_dates |
-| 0x7ae2a0 | `ordem_das_aposentadorias` | player_regen_compare_retirements |
-| 0x757ea0 | `ordem_das_chaves_de_ids` | compare_id_pair_keys |
-| 0x778e90 | `ordem_das_convocacoes_pela_data` | compare_call_up_records_by_date |
-| 0x685cf0 | `ordem_das_datas_da_liga` | league_compare_dates |
-| 0x757ee0 | `ordem_das_historias` | compare_story_log_records |
-| 0x683210 | `ordem_das_linhas_da_tabela` | league_compare_table_rows |
-| 0x5cc5f0 | `ordem_das_nacoes_pela_reputacao` | compare_nations_by_reputation_desc |
-| 0x6b6510 | `ordem_das_partidas_do_dia` | day_match_order |
-| 0x540270 | `ordem_das_pessoas_pelo_nome_completo` | database_compare_staff_by_full_name |
-| 0x53ff60 | `ordem_das_pessoas_pelo_sobrenome` | database_compare_staff_by_surname |
-| 0x58e240 | `ordem_das_pontuacoes` | compare_ranking_score_desc |
-| 0x545e00 | `ordem_das_regioes_pelo_nome` | compare_region_names |
-| 0x778ed0 | `ordem_das_reservas` | compare_by_rating |
-| 0x85e380 | `ordem_das_reservas_do_estadio` | stadium_compare_bookings |
-| 0x83b6c0 | `ordem_das_vagas` | shortlist_compare_slots_by_index |
-| 0x79d410 | `ordem_das_vagas_de_competicao` | officials_manager_compare_comp_level |
-| 0x6bd840 | `ordem_de_acao` | action_order |
-| 0x6834f0 | `ordem_do_confronto` | league_compare_h2h_rows |
-| 0x5402f0 | `ordem_do_elenco_pela_habilidade` | qsort comparator (squad by player +0xb) |
-| 0x549c30 | `ordem_do_elenco_pela_habilidade_atual` | compare_staff_by_player_ability_desc |
-| 0x540780 | `ordem_do_historico_de_competicao` | database_compare_comp_history_rows |
-| 0x7c6de0 | `ordem_do_historico_por_pessoa` | player_stats_compare_history_by_staff |
-| 0x58d610 | `ordem_do_ranking` | FIFA_RANKINGS::collect_ranked_order |
-| 0x5cc610 | `ordem_dos_amistosos_pela_data` | compare_fixture_records_by_date |
-| 0x79d480 | `ordem_dos_arbitros_crescente` | officials_manager_compare_nation_then_quality_asc |
-| 0x79d4e0 | `ordem_dos_arbitros_decrescente` | officials_manager_compare_nation_then_quality_desc |
-| 0x51ebc0 | `ordem_dos_cabecas_de_chave` | cup_compare_draw_entries_by_seed |
-| 0x5221c0 | `ordem_dos_cabecas_de_chave_crescente` | cup_compare_entries_by_level_asc |
-| 0x522190 | `ordem_dos_cabecas_de_chave_decrescente` | cup_compare_entries_by_level_desc |
-| 0x53fd40 | `ordem_dos_clubes_pela_latitude` | database_compare_clubs_by_latitude |
-| 0x53fe50 | `ordem_dos_clubes_pela_longitude` | database_compare_clubs_by_longitude |
-| 0x540020 | `ordem_dos_clubes_pela_reputacao` | qsort comparator (club ids by reputation) |
-| 0x540080 | `ordem_dos_clubes_pelo_nome_curto` | database_compare_clubs_by_short_name |
-| 0x4afba0 | `ordem_dos_coeficientes_das_nacoes` | compare_nation_coefficients_desc |
-| 0x6471a0 | `ordem_dos_empatados_na_italia` | ita_league_sort_clubs_level_on_points |
-| 0x72b160 | `ordem_dos_eventos` | match_stats_compare_events |
-| 0x7c6d40 | `ordem_dos_idiomas` | player_stats_compare_language_entries |
-| 0x6bd760 | `ordem_dos_jogadores` | player_order |
-| 0x6be520 | `ordem_dos_penaltis` | penalty_order |
-| 0x53ffe0 | `ordem_dos_ponteiros_de_clube_pela_reputacao` | database_compare_clubs_by_reputation |
-| 0x58e220 | `ordem_dos_resultados_por_pontos` | compare_result_points_desc |
-| 0x85e350 | `ordem_pela_capacidade` | stadium_compare_venues_by_capacity |
-| 0x5c5270 | `ordem_pela_faixa` | compare_friendly_candidates_by_band |
-| 0x5c5290 | `ordem_pela_nacao_e_faixa` | compare_friendly_candidate_ptrs_by_nation |
-| 0x683410 | `ordem_pela_posicao_do_confronto` | league_compare_table_rows_h2h |
-| 0x778ef0 | `ordem_pelo_clube` | compare_by_club |
-| 0x870220 | `ordem_pelos_pontos_do_tecnico` | staff_records_compare_clubs_by_manager_points |
-| 0x4b0780 | `ordem_por_5f` | order_by_5f |
-| 0x4b07b0 | `ordem_por_80` | order_by_80 |
-| 0x4b0810 | `ordem_por_80_cresc` | order_by_80_asc |
-| 0x4b07d0 | `ordem_por_80_desc` | order_by_80_desc |
-| 0x6e0fe0 | `ordem_por_condicao` | order_by_condition |
-| 0x5d6220 | `ordem_por_habilidade` | compare_players_by_ability |
-| 0x6e0df0 | `ordem_por_tabela` | order_by_table |
-| 0x4c08f0 | `ordenar_clubes_pela_forca` | comp_util_sort_clubs_by_strength |
-| 0x53db40 | `ordenar_clubes_pela_reputacao` | database_sort_clubs_by_reputation |
-| 0x4afbd0 | `ordenar_e_embaralhar_os_melhores` | comp_util_sort_and_shuffle_top_clubs |
-| 0x83a780 | `ordenar_listas_de_posicao` | Shortlist_Manager::sort_position_lists |
-| 0x6827d0 | `ordenar_tabela_da_liga` | League::sort_table |
-| 0x403350 | `organizar_area` | Area::layout |
-| 0x599890 | `pagar_compra_de_jogador` | Finance::pay_players_bought |
-| 0x683010 | `pagar_direitos_de_tv` | League::pay_tv_rights |
-| 0x5998e0 | `pagar_luvas` | Finance::pay_sign_on_fee |
-| 0x599850 | `pagar_multa_da_liga` | Finance::pay_league_fine |
-| 0x599960 | `pagar_os_bonus` | Finance::pay_bonuses |
-| 0x5999e0 | `pagar_outros_custos` | Finance::pay_other_costs |
-| 0x8cb340 | `pagar_premio_por_jogos` | TRANSFER_MANAGER::pay_appearance_money |
-| 0x682e10 | `pagar_premios_da_liga` | League::pay_prize_money |
-| 0x8caee0 | `pagar_prestacoes_das_transferencias` | TRANSFER_MANAGER::pay_transfer_instalments |
-| 0x599920 | `pagar_salarios` | Finance::pay_wages |
-| 0x8ca8a0 | `pagar_transferencia_e_clausulas` | TRANSFER_MANAGER::pay_fee_and_record_clauses |
-| 0x71c270 | `painel_da_visao_geral_da_partida` | draw_match_overview_panel |
-| 0x71e040 | `painel_das_estatisticas_da_partida` | draw_match_stats_panel |
-| 0x7217a0 | `painel_das_estatisticas_do_time` | draw_team_stats_panel |
-| 0x722ed0 | `painel_das_notas_dos_jogadores` | draw_player_ratings_panel |
-| 0x71f500 | `painel_das_zonas_de_acao` | draw_action_zones_panel |
-| 0x721000 | `painel_do_relatorio_da_partida` | draw_match_report_panel |
-| 0x723d20 | `painel_dos_ultimos_placares` | draw_latest_scores_panel |
-| 0x5c4680 | `pais_da_excursao` | Friendly::pick_tour_nation |
-| 0x62c3d0 | `palavra_0c` | word_0c |
-| 0x717c70 | `papel_880` | role_880 |
-| 0x716310 | `papel_na_defesa` | defending_role |
-| 0x716270 | `papel_no_ataque` | attacking_role |
-| 0x5cc3e0 | `par_de_nacoes_sem_amistoso` | Friendly::is_banned_nation_pair |
-| 0x8e4f20 | `parte_dos_clubes_anteriores` | TRANSFER_MANAGER::pay_former_club_fee_cuts |
-| 0x6d5930 | `partida_abandonada` | match_abandoned |
-| 0x5fe290 | `partida_assistida_pelo_humano` | HUMAN_MANAGER::is_watching_fixture |
-| 0x4b0010 | `partida_das_vagas_da_noticia` | comp_util_read_fixture_from_news_slots |
-| 0x6b61e0 | `partida_de_interesse` | match_of_interest |
-| 0x6b66a0 | `partida_sem_humano` | match_without_human |
-| 0x84b180 | `passa_na_permissao` | passes_work_permit_check |
-| 0x6fa250 | `passar` | pass_ball |
-| 0x8c2f50 | `passar_a_oferta_aos_clubes` | advance_offer_to_club_approval |
-| 0x6b55c0 | `passo_em_rede` | network_step |
-| 0x7f8d70 | `pedido_de_observacao` | SCOUT_MANAGER::has_scout_request |
-| 0x4d8610 | `pedido_de_transferencia` | CONTRACT_MANAGER::handle_transfer_request |
-| 0x6f0630 | `pegar_bola` | take_ball |
-| 0x6c50d0 | `penalti` | penalty |
-| 0x6be710 | `penaltis` | penalties |
-| 0x69aba0 | `pensar_em_demitir_o_tecnico` | MANAGER_MANAGER::consider_sacking_manager |
-| 0x8d0dd0 | `percentual_da_proxima_venda_achado` | TRANSFER_MANAGER::find_next_sale_percentage |
-| 0x8cb0f0 | `percentual_da_proxima_venda_pago` | TRANSFER_MANAGER::pay_next_sale_percentage |
-| 0x8d0590 | `periodo_do_emprestimo` | TRANSFER_MANAGER::get_loan_period |
-| 0x6bd930 | `periodo_encerrado` | period_completed |
-| 0x868210 | `periodo_protegido` | STAFF_CONTRACT::check_fifa_protected_period |
-| 0x8c7950 | `permissao_concedida` | TRANSFER_MANAGER::is_work_permit_granted |
-| 0x8c7260 | `permissao_de_trabalho_de` | TRANSFER_MANAGER::find_work_permit |
-| 0x8c7e20 | `permissao_de_trabalho_na_mudanca` | TRANSFER_MANAGER::update_work_permit_on_move |
-| 0x8c7690 | `permissoes_da_oferta` | TRANSFER_MANAGER::check_offer_work_permits |
-| 0x70df70 | `perto_do_gol` | near_goal |
-| 0x70def0 | `perto_do_proprio_gol` | near_own_goal |
-| 0x7c6930 | `peso_da_competicao` | competition_weight |
-| 0x53e990 | `pessoa_confere_com_os_nomes` | database_staff_matches_names |
-| 0x897dc0 | `pessoa_da_linha` | row_person |
-| 0x549dd0 | `pessoa_da_opiniao` | staff_get_opinion_link_staff |
-| 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person |
-| 0x53d740 | `pessoa_e_comunitaria` | database_is_staff_eu_national |
-| 0x53d980 | `pessoa_e_estrangeira` | database_is_staff_foreign |
-| 0x544600 | `pessoa_listada_a_pedido` | staff_is_listed_by_request |
-| 0x544590 | `pessoa_listada_para_emprestimo` | staff_is_loan_listed |
-| 0x544520 | `pessoa_listada_para_transferencia` | staff_is_transfer_listed_or_requested |
-| 0x5444a0 | `pessoa_listada_pelo_clube` | staff_is_transfer_listed |
-| 0x69fc60 | `pessoa_na_lista` | person_in_list |
-| 0x8c1870 | `pessoa_na_lista_de_transferencias` | person_in_transfer_list |
-| 0x7a50f0 | `pessoa_pelo_nome` | player_setup_find_staff |
-| 0x548090 | `pessoas_favoritas` | staff_get_favoured_staff |
-| 0x544c70 | `pessoas_fora_do_elenco` | club_collect_non_playing_staff |
-| 0x5480f0 | `pessoas_rejeitadas` | staff_get_disliked_staff |
-| 0x6ce310 | `placar_agregado` | aggregate_score |
-| 0x5c4380 | `planejar_amistoso_em_data_livre` | Friendly::plan_friendly_on_free_date |
-| 0x5c27a0 | `planejar_pre_temporada_da_ia` | Friendly::plan_ai_preseason_friendlies |
-| 0x539ae0 | `podar_historico_de_competicoes` | database_prune_comp_history_table |
-| 0x7774b0 | `podar_registros_de_convocacao` | prune_club_call_up_records |
-| 0x4cb990 | `pode_assumir_o_cargo` | staff_can_take_job |
-| 0x8ced40 | `pode_contratar_jogador` | TRANSFER_MANAGER::can_sign_player |
-| 0x8d0040 | `pode_emprestar` | TRANSFER_MANAGER::can_loan_player |
-| 0x8d0530 | `pode_encerrar_emprestimo` | TRANSFER_MANAGER::can_end_loan |
-| 0x6bce20 | `pode_escolher` | can_choose |
-| 0x776fc0 | `pode_marcar_jogo_do_clube` | NationalTeams::can_schedule_club_fixture |
-| 0x76db00 | `pode_mudar_a_convocacao` | national_teams_can_change_squad |
-| 0x5fe700 | `pode_ver_a_partida` | HUMAN_MANAGER::can_watch_fixture |
-| 0x6c51e0 | `pontape_inicial` | kick_off |
-| 0x68aad0 | `pontos_do_resultado` | League::points_for_result |
-| 0x86dda0 | `pontos_dos_tecnicos_no_dia` | Staff_Records::daily_update |
-| 0x86d6e0 | `pontos_dos_tecnicos_no_fim_da_competicao` | Staff_Records::end_season_for_nation |
-| 0x58dfc0 | `pontuacoes_do_ranking` | FIFA_RANKINGS::recalculate_scores |
-| 0x6cb6c0 | `por_diferenca` | by_difference |
-| 0x842320 | `por_jogador_a_venda` | Shortlist_Manager::transfer_list_player |
-| 0x842c00 | `por_jogador_nas_listas_dos_clubes` | Shortlist_Manager::add_player_to_club_shortlists |
-| 0x8442b0 | `por_na_lista_de_emprestimos` | shortlist_manager_add_to_loan_list |
-| 0x776250 | `por_no_elenco_da_selecao` | add_player_to_squad |
-| 0x8be300 | `por_oferta_de_transferencia` | TRANSFER_MANAGER::add_transfer_offer |
-| 0x5b2ba0 | `posicao_na_formacao` | Formation::set_slot_position |
-| 0x933170 | `posicao_no_conteiner` | position_in_container |
-| 0x5b3460 | `posicao_repetida_na_formacao` | Formation::check_duplicate_position |
-| 0x6c2be0 | `posicionar` | position (place players) |
-| 0x684cd0 | `posicoes_e_situacao_na_liga` | League::update_positions_and_status |
-| 0x6d1770 | `posicoes_finas` | fine_positions |
-| 0x86a070 | `posicoes_no_fim_da_liga` | Staff_Records::add_league_finish_records |
-| 0x5223a0 | `posicoes_previstas_da_copa` | Cup::rank_teams |
-| 0x68a850 | `posicoes_previstas_da_liga` | League::set_predicted_positions |
-| 0x6df460 | `postura` | stance |
-| 0x5d5a20 | `pow_do_game` | pow_double |
-| 0x8cc5b0 | `prazo_da_resposta_a_oferta` | TRANSFER_MANAGER::get_offer_response_delay |
-| 0x8c7560 | `precisa_de_permissao_de_trabalho` | TRANSFER_MANAGER::player_needs_work_permit |
-| 0x5cb9b0 | `preencher_data_internacional` | friendly_international_date_set |
-| 0x721cd0 | `preencher_estatisticas_do_time` | fill_team_stats_rows |
-| 0x729ff0 | `preencher_registro_da_partida` | Match_Stats::fill_match_record |
-| 0x8cb6d0 | `preencher_vaga_da_comissao` | fill_vacated_staff_job |
-| 0x767150 | `premiar_o_melhor_do_mes` | MONTH_AWARD::award_best_rated_player |
-| 0x682f70 | `premio_da_liga` | League::calc_prize_fund |
-| 0x8d0f00 | `premio_de_jogos_na_selecao_achado` | TRANSFER_MANAGER::find_international_appearance_money |
-| 0x8d0ea0 | `premio_por_jogo_do_jogador` | TRANSFER_MANAGER::find_first_team_appearance_money |
-| 0x6b7f20 | `preparar_partida` | prepare_match |
-| 0x6bcbd0 | `pressao` | pressure |
-| 0x6bd6b0 | `pressao_na_area` | pressure_in_box |
-| 0x6c3a00 | `pressao_no_ponto` | pressure_at_point |
-| 0x84af00 | `prever_resposta_do_vendedor` | shortlist_manager_predict_selling_club_response |
-| 0x5aee40 | `primeiro_ano_com_jogos` | FIXTURE_MANAGER::get_club_first_fixture_year |
-| 0x8cf0e0 | `primeiro_dia_permitido_da_oferta` | TRANSFER_MANAGER::find_next_allowed_transfer_date |
-| 0x539c60 | `primeiro_nome_da_nacao` | database_pick_first_name_for_nation |
-| 0x539b90 | `primeiro_nome_pelo_peso` | database_pick_first_name_by_weight |
-| 0x583b10 | `processar_jogo_da_liga_dos_campeoes` | EuropeanCup::process_fixture |
-| 0x8c63a0 | `processar_oferta_vencida` | TRANSFER_MANAGER::process_due_offer |
-| 0x6ea760 | `procurar_impedimento` | look_for_offside |
-| 0x6cd3d0 | `procurar_jogada` | look_for_play |
-| 0x6cd330 | `procurar_no_lado` | search_on_side |
-| 0x8b39f0 | `programa_de_treino_do_jogador` | TRAINING_MANAGER::get_player_schedule |
-| 0x8b3930 | `programa_do_humano` | TRAINING_MANAGER::get_manager_schedule |
-| 0x8b3d40 | `programas_padrao` | TRAINING_MANAGER::set_default_schedules |
-| 0x586c00 | `progresso_do_clube_na_liga_dos_campeoes` | EuropeanCup::set_club_progress |
-| 0x68ac40 | `projetar_posicoes_da_liga` | League::update_projected_positions |
-| 0x5851d0 | `proxima_fase_da_liga_dos_campeoes` | EuropeanCup::advance_stage |
-| 0x8cf470 | `proxima_janela_aberta` | TRANSFER_MANAGER::find_next_window_open_date |
-| 0x5ac920 | `proxima_partida` | FIXTURE_MANAGER::find_next_fixture |
-| 0x5fa7d0 | `proxima_sede` | HostCountry::find_next_hosts |
-| 0x68d1b0 | `proximo_da_lista` | next_list_item |
-| 0x6d78b0 | `proximo_evento` | next_event |
-| 0x85cba0 | `publico_do_jogo` | Stadium::calculate_match_attendance |
-| 0x55cae0 | `punicao_da_tabela` | table_penalty |
-| 0x55cb60 | `punicao_guardada` | Discipline::find_held_ban |
-| 0x6d1210 | `punicoes` | punishments |
-| 0x6e9630 | `punir_falta` | punish_foul |
-| 0x6ea4e0 | `punir_lance` | punish_move |
-| 0x5afde0 | `quadro_do_tecnico` | manager_table |
-| 0x6d59b0 | `quantos_marcam` | how_many_mark |
-| 0x6d5a10 | `quem_marca` | who_marks |
-| 0x6bc030 | `quem_marcar` | who_to_mark |
-| 0x58dd50 | `ranking_fifa_inicial` | FIFA_RANKINGS::create_default_table |
-| 0x755340 | `reacao_do_elenco_a_historia` | Media::apply_squad_reaction_to_player_story |
-| 0x758200 | `reacoes_dos_elencos_a_transferencia` | Media::process_transfer_squad_reactions |
-| 0x5987c0 | `receber_direitos_de_tv` | Finance::add_tv_revenue |
-| 0x5999a0 | `receber_premio_em_dinheiro` | Finance::add_prize_money |
-| 0x599800 | `receber_venda_de_jogador` | Finance::add_players_sold |
-| 0x59b7e0 | `receita_do_merchandising` | FinanceTable::add_weekly_merchandising_income |
-| 0x86fb80 | `recomecar_historico_da_pessoa` | Staff_Records::rewind_staff_history |
-| 0x631f90 | `recomecar_historico_de_lesoes` | Injury::reset_player_history |
-| 0x452a90 | `recorde_de_nota_da_temporada` | Club_Records::update_season_rating_record |
-| 0x4528d0 | `recordes_da_temporada` | Club_Records::get_season_record |
-| 0x448cb0 | `recordes_de_carreira_no_clube` | club_records_update_career_records |
-| 0x447430 | `recordes_de_posicao_na_liga` | Club_Records::update_league_position_records |
-| 0x452710 | `recordes_de_sempre` | Club_Records::get_all_time_record |
-| 0x448760 | `recordes_de_valor_de_transferencia` | Club_Records::update_transfer_fee_records |
-| 0x6f5810 | `recuperar_folego` | recover_stamina |
-| 0x62bd10 | `recuperar_lesao` | recover_injury |
-| 0x557000 | `recurso_da_suspensao` | Discipline::apply_appeal_result |
-| 0x8c28c0 | `recusa_dos_termos` | handle_player_rejected_terms |
-| 0x8bfa30 | `recusar_oferta_de_emprestimo` | TRANSFER_MANAGER::reject_loan_offer |
-| 0x8bf680 | `recusar_oferta_de_transferencia` | reject_transfer_offer |
-| 0x4cf4a0 | `reenviar_ofertas_guardadas` | CONTRACT_MANAGER::resubmit_held_offers |
-| 0x7abac0 | `refazer_como_jovem` | PLAYER_REGEN::regenerate_as_youth_player |
-| 0x83a730 | `refazer_lista_do_clube` | Shortlist_Manager::update_club_shortlist |
-| 0x6e1aa0 | `refazer_time` | redo_team |
-| 0x59cf50 | `refazer_todas_as_folhas` | FinanceTable::refresh_all_wage_bills |
-| 0x7e4920 | `referencia_ao_nome` | fill_staff_name_ref |
-| 0x545dc0 | `regioes_pelo_nome` | get_regions_sorted_by_name |
-| 0x86bdd0 | `registrar_a_classificacao_na_fase` | Staff_Records::add_qualified_for_round_record |
-| 0x86c000 | `registrar_a_eliminacao` | Staff_Records::add_knocked_out_record |
-| 0x86d800 | `registrar_a_liberacao` | Staff_Records::add_free_release_records |
-| 0x86c1d0 | `registrar_a_nao_classificacao` | Staff_Records::add_failed_to_qualify_record |
-| 0x86cc50 | `registrar_a_primeira_convocacao` | Staff_Records::add_first_cap_record |
-| 0x86c730 | `registrar_a_selecao_do_ano` | Staff_Records::add_team_of_year_record |
-| 0x86cd70 | `registrar_a_transferencia` | Staff_Records::add_transfer_records |
-| 0x5ca030 | `registrar_competicoes_do_amistoso` | Friendly::register_comp_objects |
-| 0x7771c0 | `registrar_convocados_por_clube` | NationalTeams::record_club_call_ups |
-| 0x757a50 | `registrar_historia_da_midia` | Media::log_story |
-| 0x684640 | `registrar_honras_da_temporada` | League::record_season_honours |
-| 0x68a1c0 | `registrar_jogo_da_rodada` | store_round_match |
-| 0x8ce920 | `registrar_jogo_pela_selecao` | TRANSFER_MANAGER::record_international_appearance |
-| 0x6bb9a0 | `registrar_lance` | record_move |
-| 0x62be00 | `registrar_lesao` | register_injury |
-| 0x79ce10 | `registrar_nota_do_arbitro` | record_referee_grade |
-| 0x869480 | `registrar_o_acesso` | Staff_Records::add_promotion_record |
-| 0x86da20 | `registrar_o_emprestimo` | Staff_Records::add_loan_records |
-| 0x86a1c0 | `registrar_o_rebaixamento` | Staff_Records::add_relegation_record |
-| 0x7293f0 | `registrar_partida` | Match_Stats::record_match |
-| 0x7c0d70 | `registrar_partida_nas_estatisticas` | PlayerStats::record_match |
-| 0x7003b0 | `registrar_posse` | record_possession |
-| 0x86c390 | `registrar_premio_do_ano` | Staff_Records::add_year_award_record |
-| 0x86c8c0 | `registrar_premio_do_mes` | Staff_Records::add_month_award_record |
-| 0x896290 | `registrar_resultado_da_tatica` | Tactics::record_tactic_result |
-| 0x7c3920 | `registro_da_categoria` | PlayerStats::get_category_record |
-| 0x896570 | `registro_da_formacao` | formation_record |
-| 0x6826d0 | `registro_da_liga` | league_record |
-| 0x7e4750 | `registro_da_partida_pelo_clube` | fill_match_record_from_fixture |
-| 0x7f6cd0 | `registro_do_observador` | scout_record |
-| 0x86f5b0 | `registro_do_tecnico` | Staff_Records::get_manager_record |
-| 0x53a5b0 | `registro_livre` | free_record |
-| 0x584ae0 | `registros_da_liga_dos_campeoes` | EuropeanCup::update_staff_records_for_status |
-| 0x62cf70 | `registros_iniciais_de_lesao` | Injury::init_records |
-| 0x576c50 | `registros_pela_situacao_inglesa` | EngSecond::update_staff_records_for_status |
-| 0x654180 | `registros_pela_situacao_na_c2a` | ItaSerC2a::update_staff_records_for_status |
-| 0x686940 | `registros_pela_situacao_na_liga` | League::update_staff_records_for_status |
-| 0x412c80 | `regras_australia` | AUSTRALIA_RULES::Australia_rules |
-| 0x43f0e0 | `regras_brasil` | BRAZIL_RULES::BRAZIL_RULES |
-| 0x66e630 | `regras_coreia` | KOREA_RULES::KOREA_RULES |
-| 0x518500 | `regras_croacia` | CROATIA_RULES::CROATIA_RULES |
-| 0x64b770 | `regras_da_c1a` | ItaSerC1a::set_up_rules |
-| 0x64f920 | `regras_da_c1b` | ItaSerC1b::set_up_rules |
-| 0x5ba0a0 | `regras_da_cfa` | FraCfa::set_up_rules |
-| 0x853790 | `regras_da_divisao_de_baixo` | SpaLower::set_up_rules |
-| 0x572d90 | `regras_da_first` | EngFirst::set_up_rules |
-| 0x5bc410 | `regras_da_franca_1` | FraFirst::set_up_rules |
-| 0x5bf0a0 | `regras_da_franca_2` | FraSecond::set_up_rules |
-| 0x5c0700 | `regras_da_franca_3` | FraThird::set_up_rules |
-| 0x574b70 | `regras_da_premier` | EngPrm::set_up_rules |
-| 0x84fdf0 | `regras_da_primera` | SpaFirst::set_up_rules |
-| 0x521d60 | `regras_da_rodada_no_jogo` | Cup::apply_round_rules_to_match |
-| 0x576780 | `regras_da_second` | EngSecond::set_up_rules |
-| 0x855cc0 | `regras_da_segunda` | SpaSecond::set_up_rules |
-| 0x641640 | `regras_da_serie_a` | ItaSerA::set_up_rules |
-| 0x6468a0 | `regras_da_serie_b` | ItaSerB::set_up_rules |
-| 0x5780c0 | `regras_da_third` | EngThird::set_up_rules |
-| 0x7f6390 | `regras_escocia` | SCOTLAND_RULES::SCOTLAND_RULES |
-| 0x90b940 | `regras_eua` | USA_RULES::USA_RULES |
-| 0x5a9950 | `regras_finlandia` | FINLAND_RULES::FINLAND_RULES |
-| 0x5f9690 | `regras_holanda` | HOLLAND_RULES::HOLLAND_RULES |
-| 0x579b30 | `regras_inglaterra` | ENGLAND_RULES::ENGLAND_RULES |
-| 0x63c210 | `regras_irlanda` | IRELAND_RULES::IRELAND_RULES |
-| 0x7936d0 | `regras_irlanda_do_norte` | NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES |
-| 0x7944f0 | `regras_noruega` | NORWAY_RULES::NORWAY_RULES |
-| 0x90f080 | `regras_pais_de_gales` | WALES_RULES::WALES_RULES |
-| 0x7cd830 | `regras_polonia` | POLAND_RULES::POLAND_RULES |
-| 0x9020a0 | `regras_turquia` | TURKEY_RULES::TURKEY_RULES |
-| 0x62bfa0 | `reiniciar_fisico_do_jogador` | Injury::reset_player |
-| 0x6c54a0 | `reiniciar_lance` | restart_play |
-| 0x452fe0 | `reiniciar_recordes` | reset_records |
-| 0x5477d0 | `rejeitado_por` | rejected_by |
-| 0x5d6d10 | `relacoes_do_elenco` | game_update_squad_relationships |
-| 0x60ba80 | `remapear_chave_de_clube` | remap_club_key_id |
-| 0x5abb10 | `remarcar_jogos_perto_da_data` | FIXTURE_MANAGER::reschedule_club_fixtures_near_date |
-| 0x714ca0 | `remover_da_lista` | remove_from_list |
-| 0x59a5d0 | `renda_da_partida` | FinanceTable::process_match_income |
-| 0x59af40 | `renda_do_estadio` | FinanceTable::calc_gate_receipts |
-| 0x79cee0 | `renovar_arbitros` | OfficialsManager::renew_officials |
-| 0x6c06b0 | `repartir_a` | split_a |
-| 0x6c07a0 | `repartir_b` | split_b |
-| 0x6c0a70 | `repartir_c` | split_c |
-| 0x6c0890 | `repartir_d` | split_d |
-| 0x6c0980 | `repartir_e` | split_e |
-| 0x6c0b70 | `repartir_f` | split_f |
-| 0x83bf40 | `reputacao_alvo_do_clube` | Shortlist_Manager::update_club_target_reputation |
-| 0x545e90 | `reputacao_do_clube_para_pessoa` | club_reputation_for_staff |
-| 0x6d3610 | `reputacao_do_jogador` | player_reputation |
-| 0x412f00 | `reputacao_do_premiado` | award_raise_winner_reputation |
-| 0x5407e0 | `reputacao_vista_por` | database_get_staff_reputation_for_viewer |
-| 0x85de20 | `reservar_estadio` | Stadium::add_booking |
-| 0x5cc510 | `resolver_datas_internacionais` | Friendly::resolve_international_dates |
-| 0x5315a0 | `resolver_indices_do_banco` | resolve_database_indexes |
-| 0x6ac470 | `resolver_o_ultimato_da_diretoria` | MANAGER_MANAGER::resolve_board_ultimatum |
-| 0x6f5c30 | `responder` | respond |
-| 0x725ca0 | `responder_continuar_da_partida` | match_screens_handle_continue_command |
-| 0x71bdc0 | `responder_detalhes_da_partida` | match_details_input |
-| 0x727c30 | `responder_escalacao_da_partida` | match_screens_handle_team_selection_input |
-| 0x722dc0 | `responder_estatisticas_do_time` | handle_team_stats_input |
-| 0x718930 | `responder_jogos_do_dia` | handle_day_fixtures_input |
-| 0x71a240 | `responder_tela_da_partida` | handle_match_screen_input |
-| 0x7874b0 | `responder_todas_as_noticias` | News::auto_respond_all |
-| 0x71b3d0 | `responder_ultimos_placares` | latest_scores_input |
-| 0x725860 | `responder_ultimos_placares_da_partida` | match_screens_handle_latest_scores_cycle |
-| 0x8c8090 | `resposta_da_ia_ao_lance` | TRANSFER_MANAGER::ai_respond_to_bid |
-| 0x735870 | `resposta_do_tecnico_da_maquina` | Media::pick_ai_manager_response |
-| 0x556570 | `restaurar_suspensoes_guardadas` | Discipline::restore_held_bans |
-| 0x8cfc90 | `restricoes_da_oferta` | TRANSFER_MANAGER::check_offer_restrictions |
-| 0x8cf6b0 | `restricoes_da_partida` | TRANSFER_MANAGER::fill_squad_restrictions |
-| 0x4b0890 | `resultado_da_eliminatoria_na_noticia` | comp_util_classify_tie_result_for_news |
-| 0x641dc0 | `resultado_do_desempate_da_serie_a` | ItaSerA::update_staff_records_for_status |
-| 0x76b600 | `resultado_entre_selecoes` | NationalTeams::record_international_result |
-| 0x58dea0 | `resultado_no_historico` | FIFA_RANKINGS::append_result |
-| 0x868830 | `resultado_nos_registros_dos_tecnicos` | Staff_Records::record_match_result |
-| 0x6ce460 | `resumo_da_partida` | match_summary |
-| 0x8bfcb0 | `retirar_oferta_de_transferencia` | withdraw_transfer_offer |
-| 0x541f90 | `reunir_elenco_do_clube` | database_collect_club_squad |
-| 0x5ab3c0 | `risco_de_doenca_na_viagem` | FIXTURE_MANAGER::add_away_trip_illness_risk |
-| 0x48d410 | `rodada_com_jogos_conhecidos` | Comp::are_round_fixtures_known |
-| 0x6bbe40 | `rolar_bola` | roll_ball |
-| 0x735160 | `rotulo_da_resposta_da_midia` | media_format_response_option_label |
-| 0x725a70 | `rotulo_do_controle` | match_control_label |
-| 0x69b650 | `saidas_pendentes_dos_tecnicos` | MANAGER_MANAGER::process_pending_departures |
-| 0x7aaeb0 | `sair_dos_cargos` | player_regen_retire_from_non_playing_staff |
-| 0x8626e0 | `salario_padrao_do_contrato` | STAFF_CONTRACT::set_default_wage |
-| 0x72adf0 | `salvar_estatisticas_da_partida` | Match_Stats::save |
-| 0x866620 | `satisfacao_com_o_contrato` | get_contract_satisfaction |
-| 0x5fa730 | `sede_da_edicao` | HostCountry::find_hosts |
-| 0x53a1b0 | `segundo_nome_da_nacao` | database_pick_second_name_for_nation |
-| 0x53a0e0 | `segundo_nome_pelo_peso` | database_pick_second_name_by_weight |
-| 0x53b4f0 | `selecao_b` | b_national_team |
-| 0x775790 | `selecao_ou_especial` | national_or_special |
-| 0x53b3d0 | `selecao_principal` | main_national_team |
-| 0x7757d0 | `selecao_que_tem_o_jogador` | NationalTeams::get_international_duty_club |
-| 0x6d4280 | `sem_partida` | no_match |
-| 0x7febb0 | `sem_tela_seguinte` | ScreenManager::is_forward_unavailable |
-| 0x5b73a0 | `separar_mascara` | split_mask |
-| 0x690c30 | `sequencia_atual_do_clube` | MANAGER_MANAGER::get_current_run |
-| 0x844300 | `serve_para_a_vaga` | shortlist_slot_fits |
-| 0x69f810 | `serve_para_o_cargo` | MANAGER_MANAGER::is_staff_suitable_for_job |
-| 0x7f6be0 | `sessao_de_edicao` | SCOUT_MANAGER::get_edit_session |
-| 0x5454c0 | `sigla_inglesa_da_nacao` | nation_get_english_three_letter_name |
-| 0x6beeb0 | `simulacao_rapida` | quick_simulation |
-| 0x7f7270 | `sincronizar_listas_dos_olheiros` | SCOUT_MANAGER::sync_scout_lists |
-| 0x64bd80 | `situacao_na_c1a` | ItaSerC1a::set_club_progress |
-| 0x64ff40 | `situacao_na_c1b` | ItaSerC1b::set_club_progress |
-| 0x573260 | `situacao_na_first` | EngFirst::set_club_progress |
-| 0x843e10 | `situacao_na_lista_de_observacao` | Shortlist_Manager::update_staff_status |
-| 0x850880 | `situacao_na_primera` | SpaFirst::set_club_progress |
-| 0x578660 | `situacao_na_third` | EngThird::set_club_progress |
-| 0x6f0970 | `soltar_bola` | release_ball |
-| 0x8c6ae0 | `soltar_jogadores_da_oferta` | TRANSFER_MANAGER::detach_offer_players |
-| 0x556d00 | `soltar_suspensao` | Discipline::release_ban |
-| 0x5567d0 | `soltar_suspensoes_guardadas` | Discipline::drop_held_bans |
-| 0x5d61d0 | `soma_presa` | clamp_char_sum |
-| 0x7160d0 | `somar_2b` | add_2b |
-| 0x6cf710 | `somar_disposicao` | add_disposition |
-| 0x685d30 | `somar_resultado_na_liga` | League::add_result |
-| 0x448ad0 | `somar_totais_de_transferencia` | Club_Records::add_transfer_totals |
-| 0x6d8c70 | `sons_terminados` | sounds_finished |
-| 0x7dab90 | `sortear_comentarista` | PunditList::pick_random_pundit |
-| 0x62e500 | `sortear_lesao_recorrente` | Injury::roll_recurring_injury |
-| 0x6f44a0 | `sortear_momento` | draw_moment |
-| 0x686a70 | `sortear_ordem_dos_clubes` | League::draw_team_order |
-| 0x586330 | `sorteio_das_quartas` | EuropeanCup::draw_quarter_finals |
-| 0x4cb0a0 | `subir_moral_pela_partida` | contract_manager_raise_match_morale |
-| 0x4cc0b0 | `subir_para_o_principal` | CONTRACT_MANAGER::move_to_first_team |
-| 0x6e1090 | `substituir` | substitute |
-| 0x842b00 | `suspender_clubes_que_miram_o_jogador` | Shortlist_Manager::suspend_clubs_shortlisting_player |
-| 0x7e8e10 | `suspensao_do_vermelho` | RulingBody::make_points_ban |
-| 0x6c38c0 | `tabela_a` | table_a |
-| 0x6c3920 | `tabela_a_1a` | table_a_1a |
-| 0x717430 | `tabela_a_1a_do_jogador` | player_table_a_1a |
-| 0x6c38f0 | `tabela_b` | table_b |
-| 0x717450 | `tabela_b_do_jogador` | player_table_b |
-| 0x64b670 | `tabela_da_c1a` | ItaSerC1a::create_table |
-| 0x64f820 | `tabela_da_c1b` | ItaSerC1b::create_table |
-| 0x8533d0 | `tabela_da_divisao_de_baixo_espanhola` | SpaLower::create_table |
-| 0x5be230 | `tabela_da_divisao_de_baixo_francesa` | FraLower::create_table |
-| 0x572bf0 | `tabela_da_first` | EngFirst::create_table |
-| 0x5bc2b0 | `tabela_da_franca_1` | FraFirst::create_table |
-| 0x5bef10 | `tabela_da_franca_2` | FraSecond::create_table |
-| 0x5c05d0 | `tabela_da_franca_3` | FraThird::create_table |
-| 0x7280e0 | `tabela_da_liga_ao_vivo` | match_screens_draw_live_league_table |
-| 0x574a20 | `tabela_da_premier` | EngPrm::create_table |
-| 0x84fc70 | `tabela_da_primera` | SpaFirst::create_table |
-| 0x584990 | `tabela_da_qualificacao_da_liga_dos_campeoes` | EuropeanCup::build_qualifying_entry_table |
-| 0x576630 | `tabela_da_second` | EngSecond::create_table |
-| 0x855b40 | `tabela_da_segunda` | SpaSecond::create_table |
-| 0x641510 | `tabela_da_serie_a` | ItaSerA::create_table |
-| 0x646780 | `tabela_da_serie_b` | ItaSerB::create_table |
-| 0x577f70 | `tabela_da_third` | EngThird::create_table |
-| 0x5ca4f0 | `tabela_das_datas_internacionais` | Friendly::build_international_date_table |
-| 0x5f9970 | `tabela_das_sedes` | HostCountry::init_default_table |
-| 0x5b9fa0 | `tabela_do_grupo_da_cfa` | FraCfa::create_group_table |
-| 0x717410 | `tabela_do_jogador` | player_table |
-| 0x933860 | `tamanho_dos_itens_do_padrao` | zget_matching_size |
-| 0x5fbd00 | `tatica_ativa_do_humano` | HUMAN_MANAGER::get_active_tactic |
-| 0x896660 | `tatica_do_clube` | Tactics::get_club_tactic |
-| 0x5fd210 | `tecnico_9a01` | manager_9a01 |
-| 0x5fd480 | `tecnico_9a05` | manager_9a05 |
-| 0x5fd6b0 | `tecnico_9a06` | manager_9a06 |
-| 0x5fe040 | `tecnico_9ace` | manager_9ace |
-| 0x5fea50 | `tecnico_9b23` | manager_9b23 |
-| 0x7ae570 | `tecnico_da_busca` | PLAYER_SEARCH::set_manager |
-| 0x53ca90 | `tecnico_do_clube_ou_selecao` | database_get_club_manager |
-| 0x86f950 | `tecnico_do_mes_na_liga` | Staff_Records::find_manager_of_the_month |
-| 0x72b940 | `tecnico_rival_para_comentar` | Media::pick_rival_manager_id |
-| 0x600e90 | `tecnico_substituto` | human_manager_get_stand_in_manager |
-| 0x787350 | `tecnico_tem_noticia_pendente` | News::has_urgent_items |
-| 0x897250 | `tem_copia_da_escalacao` | Tactics::has_selection_undo |
-| 0x6b59a0 | `tem_jogo` | has_match |
-| 0x735840 | `tem_noticia` | has_story |
-| 0x7a6e20 | `tem_reserva_de_tecnico` | PLAYER_REGEN::has_spare_non_player_record |
-| 0x9232c0 | `temperatura_do_jogo` | Weather::get_temperature |
-| 0x922ee0 | `tempo_das_cidades` | Weather::update_city_weather |
-| 0x8c34e0 | `tentar_concluir_oferta` | try_complete_offer |
-| 0x842740 | `tentar_emprestimo_pelo_jogador` | try_loan_offer_for_player |
-| 0x86b710 | `terceiro_da_copa_nos_registros` | Staff_Records::add_cup_third_place_record |
-| 0x8c2180 | `termos_aceitos` | TRANSFER_MANAGER::handle_player_accepted_terms |
-| 0x8c2060 | `termos_ao_jogador_da_troca` | TRANSFER_MANAGER::note_terms_offered_to_exchange_player |
-| 0x7164b0 | `teste_de_condicao` | condition_test |
-| 0x68a980 | `teto_da_divisao_dos_clubes` | League::limit_club_division_tier |
-| 0x84b230 | `teto_da_observacao` | shortlist_manager_max_fee_for_squad_status |
-| 0x84b1f0 | `teto_de_preco_pelo_estatuto` | shortlist_manager_max_fee_for_player_status |
-| 0x5968d0 | `teto_salarial` | Finance::get_max_wage |
-| 0x597db0 | `teto_salarial_do_pessoal` | Finance::get_max_staff_wage |
-| 0x418ff0 | `teve_falta_ao_treino` | AWOL::has_missed_training |
-| 0x419070 | `teve_incidente_de_forma` | AWOL::has_fitness_incident |
-| 0x74af60 | `texto_da_crise_financeira` | Media::write_financial_trouble_news_text |
-| 0x6ab2d0 | `texto_da_diretoria_sobre_os_jogadores` | build_board_player_performance_text |
-| 0x5482f0 | `texto_da_mascara_da_posicao` | position_mask_get_text |
-| 0x4cc2e0 | `texto_da_moral` | contract_manager_write_morale_text |
-| 0x55d3c0 | `texto_da_vaga_da_suspensao` | Discipline::get_slot_text |
-| 0x53ee50 | `texto_das_posicoes` | database_format_player_positions |
-| 0x785a20 | `texto_do_dado_da_noticia` | NewsItem::get_slot_string |
-| 0x6d8d10 | `texto_do_evento` | event_text |
-| 0x8e05a0 | `texto_do_fim_do_prazo` | TRANSFER_MANAGER::write_deadline_news_text |
-| 0x6ac880 | `texto_do_ultimato` | news_board_ultimatum_text |
-| 0x7a5090 | `texto_entre_aspas` | player_setup_read_quoted_token |
-| 0x53b620 | `tipo_11_a_15` | type_11_to_15 |
-| 0x7a3140 | `tipo_da_linha` | player_setup_type_from_name |
-| 0x7ae6e0 | `tipo_da_lista_da_busca` | PLAYER_SEARCH::set_list_type |
-| 0x867aa0 | `tipo_de_bonus_permitido` | staff_contract_is_bonus_type_allowed |
-| 0x4b02e0 | `tipo_de_confronto_na_liga` | comp_util_get_league_clash_type |
-| 0x5b57d0 | `tipo_de_marcacao` | Formation::set_marking_type |
-| 0x8b4e50 | `tipo_do_programa` | TRAINING_SCHEDULE::set_type |
-| 0x53b610 | `tipo_nao_11` | type_not_11 |
-| 0x7a6e30 | `tirar_a_ficha_reservada` | PLAYER_REGEN::take_spare_non_player_record |
-| 0x5c87b0 | `tirar_amistoso_marcado` | Friendly::remove_friendly_match |
-| 0x5fff30 | `tirar_apelido_de_todos` | HUMAN_MANAGER::remove_nickname_from_all |
-| 0x7a8690 | `tirar_aposentadoria_pendente` | PLAYER_REGEN::remove_retirement |
-| 0x8cb630 | `tirar_bonus_pela_selecao` | TRANSFER_MANAGER::remove_international_team_appearance_money |
-| 0x8cb590 | `tirar_bonus_por_jogo` | TRANSFER_MANAGER::remove_first_team_appearance_money |
-| 0x5c64e0 | `tirar_clube_dos_amistosos` | Friendly::remove_club_from_ai_plans |
-| 0x547f50 | `tirar_clube_favorito` | staff_remove_favoured_club |
-| 0x4d0bd0 | `tirar_contrato_de_emprestimo` | CONTRACT_MANAGER::remove_loan_contract |
-| 0x4ca1c0 | `tirar_conversas_de_contrato` | CONTRACT_MANAGER::remove_talks_records |
-| 0x775cd0 | `tirar_convocado_machucado` | NationalTeams::withdraw_injured_player |
-| 0x56a090 | `tirar_da_disputa` | DISPUTE::remove_dispute |
-| 0x896c60 | `tirar_da_escalacao` | Tactics::remove_player_from_selection |
-| 0x68d1f0 | `tirar_da_lista` | LLIST::remove |
-| 0x8442d0 | `tirar_da_lista_de_emprestimos` | shortlist_manager_remove_from_loan_list |
-| 0x844280 | `tirar_da_lista_de_transferencias` | shortlist_manager_remove_from_transfer_list |
-| 0x6cdd50 | `tirar_de_campo` | take_off_pitch |
-| 0x7762f0 | `tirar_do_elenco_da_selecao` | remove_player_from_squad |
-| 0x7c6bf0 | `tirar_idioma_do_jogador` | PlayerStats::remove_language |
-| 0x7549b0 | `tirar_interesses_de_transferencia` | Media::remove_transfer_interest |
-| 0x556830 | `tirar_jogador_da_disciplina` | Discipline::remove_player |
-| 0x775ba0 | `tirar_jogador_da_selecao` | NationalTeams::remove_player |
-| 0x8c41c0 | `tirar_jogador_da_troca` | TRANSFER_MANAGER::remove_exchange_player |
-| 0x7a8470 | `tirar_jogador_do_banco` | PLAYER_REGEN::remove_player_data_from_pool |
-| 0x690730 | `tirar_jogador_do_elenco_do_clube` | MANAGER_MANAGER::remove_player_from_squad |
-| 0x5abc30 | `tirar_jogo_do_calendario` | FIXTURE_MANAGER::remove_fixture |
-| 0x4d0b50 | `tirar_o_contrato_principal` | CONTRACT_MANAGER::remove_contract |
-| 0x69b790 | `tirar_o_tecnico_do_cargo` | MANAGER_MANAGER::remove_club_manager |
-| 0x4cca70 | `tirar_oferta_de_contrato` | CONTRACT_MANAGER::remove_contract_offer |
-| 0x4ccb30 | `tirar_oferta_de_contrato_da_vaga` | remove_contract_offer_for_transfer |
-| 0x8d0f60 | `tirar_oferta_de_transferencia` | TRANSFER_MANAGER::remove_offer |
-| 0x4cf560 | `tirar_ofertas_guardadas` | CONTRACT_MANAGER::remove_held_offers |
-| 0x4ccbf0 | `tirar_ofertas_pendentes` | CONTRACT_MANAGER::remove_pending_offers_for_staff |
-| 0x8b3640 | `tirar_ou_devolver_o_progresso` | TRAINING_MANAGER::remove_or_restore_training_progress |
-| 0x7f8ee0 | `tirar_pedido_de_observacao` | SCOUT_MANAGER::remove_scout_request |
-| 0x8cb4f0 | `tirar_percentual_da_proxima_venda` | TRANSFER_MANAGER::remove_next_sale_percentage |
-| 0x690890 | `tirar_pessoa_do_cargo_no_clube` | MANAGER_MANAGER::remove_staff_from_club |
-| 0x53c190 | `tirar_pessoa_do_clube` | database_remove_staff_from_club |
-| 0x547c10 | `tirar_pessoa_favorita` | staff_remove_favoured_staff |
-| 0x547c50 | `tirar_pessoa_rejeitada` | staff_remove_disliked_staff |
-| 0x7a82b0 | `tirar_reserva_de_tecnico` | PLAYER_REGEN::remove_spare_non_player_record |
-| 0x556270 | `tirar_suspensoes_de_fora_do_clube` | Discipline::clear_bans_invalid_for_club |
-| 0x8cbf70 | `tirar_transferencia_futura` | TRANSFER_MANAGER::remove_future_transfer |
-| 0x549d60 | `tirar_vinculo_de_opiniao` | staff_remove_opinion_link |
-| 0x6dbb80 | `titulares` | starters |
-| 0x5bb540 | `toco_um_com_dois` | stub_return_one_ret8 |
-| 0x5bb550 | `toco_um_com_um` | stub_return_one_ret4 |
-| 0x5c6830 | `torneio_do_clube_humano` | Friendly::find_human_club_tournament |
-| 0x6ccb60 | `tracar_lance` | trace_move |
-| 0x8cca10 | `transferencia_futura_do_jogador` | TRANSFER_MANAGER::get_future_transfer |
-| 0x53cc30 | `treinadores_do_clube` | database_get_club_coaches |
-| 0x84b6f0 | `troca_com_compensacao` | shortlist_manager_is_compensation_deal |
-| 0x869aa0 | `troca_de_tecnico_nos_registros` | Staff_Records::record_manager_job_change |
-| 0x59e940 | `troca_do_presidente` | FinanceTable::try_board_takeover |
-| 0x43f2d0 | `trocar_bytes_das_palavras` | swap_bytes_16_array |
-| 0x43f300 | `trocar_bytes_dos_dwords` | swap_bytes_32_array |
-| 0x4cbd20 | `trocar_lugar_no_elenco` | CONTRACT_MANAGER::toggle_squad_placement |
-| 0x7ae8a0 | `trocar_olheiro_da_busca` | PLAYER_SEARCH::set_scout |
-| 0x8b2470 | `trocar_os_programas_do_elenco` | TRAINING_MANAGER::reassign_squad_schedules |
-| 0x8973e0 | `trocar_vagas_da_escalacao` | Tactics::swap_selection_slots |
-| 0x8c5e40 | `trocas_oferecendo_o_jogador` | TRANSFER_MANAGER::get_exchange_offers_for_player |
-| 0x9050d0 | `uefa_enesimo_clube_da_nacao` | uefa_find_nth_unplaced_club_of_nation |
-| 0x904040 | `uefa_juntar_clubes_europeus` | UefaSeeding::collect_european_clubs |
-| 0x903b50 | `uefa_rodar_coeficientes` | UefaSeeding::roll_coefficients |
-| 0x904580 | `uefa_vagas_copa_da_uefa` | UefaSeeding::assign_uefa_cup_places |
-| 0x904e30 | `uefa_vagas_intertoto` | UefaSeeding::assign_intertoto_places |
-| 0x904210 | `uefa_vagas_liga_dos_campeoes` | UefaSeeding::assign_champions_league_places |
-| 0x903cc0 | `uefa_vagas_por_nacao` | UefaSeeding::set_place_counts |
-| 0x9035a0 | `uefa_virada_da_classificacao` | UefaSeeding::update_season |
-| 0x903890 | `uefa_voluntario_ingles` | UefaSeeding::pick_english_intertoto_club |
-| 0x7c1a60 | `ultima_nota_do_jogador` | PlayerStats::get_last_match_rating |
-| 0x5aee60 | `ultimo_ano_com_jogos` | FIXTURE_MANAGER::get_club_last_fixture_year |
-| 0x55d360 | `um_cartao_da_suspensao` | Discipline::is_one_booking_from_ban |
-| 0x4b0850 | `unidades` | units_digit |
-| 0x6d47e0 | `uniforme` | kit |
-| 0x7ae640 | `vaga_da_busca` | PLAYER_SEARCH::set_slot_index |
-| 0x5b2f10 | `vaga_da_casa` | slot_of_code |
-| 0x8c6200 | `vaga_da_negociacao` | TRANSFER_MANAGER::get_negotiation_slot |
-| 0x785830 | `vaga_da_noticia` | NewsItem::get_slot |
-| 0x8c61e0 | `vaga_da_oferta` | offer_slot |
-| 0x69ba50 | `vaga_de_tecnico` | MANAGER_MANAGER::add_job_vacancy |
-| 0x5c6740 | `vaga_do_amistoso` | Friendly::find_scheduled_friendly_slot |
-| 0x8972c0 | `vaga_do_escalado` | Tactics::find_selection_slot |
-| 0x7bd700 | `vaga_do_jogador_observado` | player_search_find_or_claim_player_slot |
-| 0x727e20 | `vaga_do_mais_bem_avaliado` | match_screens_find_best_rated_starter_slot |
-| 0x897ee0 | `vaga_extra_tatica` | extra_tactic_slot |
-| 0x4c79a0 | `vaga_livre_de_contrato` | CONTRACT_MANAGER::get_free_staff_contract_space |
-| 0x897590 | `vaga_marcada` | marked_slot |
-| 0x8cd450 | `vaga_no_elenco_para_a_oferta` | TRANSFER_MANAGER::check_squad_limits |
-| 0x6d5af0 | `vagas_do_lado_sem_conflito` | side_slots_without_conflict |
-| 0x5b8960 | `vagas_sem_conflito` | slots_without_conflict |
-| 0x79caa0 | `validar_arbitros` | officials_manager_validate_officials |
-| 0x700bd0 | `valor_do_chute` | shot_value |
-| 0x4d0c20 | `valor_do_contrato` | contract_value |
-| 0x4d0c60 | `valor_do_jogador` | CONTRACT_MANAGER::calc_player_value |
-| 0x840d80 | `valor_do_jogador_para_o_clube` | Shortlist_Manager::value_player_for_club |
-| 0x7165b0 | `valor_pela_condicao` | value_by_condition |
-| 0x71e750 | `valores_das_estatisticas_da_partida` | refresh_match_stats_values |
-| 0x723350 | `valores_das_notas_dos_jogadores` | refresh_player_ratings_rows |
-| 0x720320 | `valores_das_zonas_de_acao` | refresh_action_zones_values |
-| 0x6d5d80 | `variante_do_evento` | event_variant |
-| 0x757fa0 | `veiculo_pela_pessoa` | media_pick_outlet_type_for_person |
-| 0x757f30 | `veiculo_pelo_clube` | media_pick_outlet_type_for_club |
-| 0x6b7cf0 | `venceu_o_jogo` | won_the_match |
-| 0x6ab670 | `veredito_da_nota_na_partida` | get_player_match_rating_verdict |
-| 0x838eb0 | `versao_do_jogo_salvo_valida` | valid_saved_game_version |
-| 0x8cdb80 | `veto_da_diretoria_na_oferta` | TRANSFER_MANAGER::check_board_veto |
-| 0x696b10 | `veto_dos_fisios_e_da_diretoria` | check_board_transfer_veto |
-| 0x53a610 | `vetor_de_atributos_do_jogador` | database_player_to_attribute_vector |
-| 0x53a8b0 | `vetor_de_atributos_do_nao_jogador` | database_non_player_to_attribute_vector |
-| 0x687a20 | `vetor_dos_clubes_da_liga` | League::get_club_array |
-| 0x53aa10 | `vetor_para_o_jogador` | database_vector_to_player |
-| 0x53a980 | `vetor_para_o_nao_jogador` | database_vector_to_non_player |
-| 0x86b0b0 | `vice_da_copa_nos_registros` | Staff_Records::add_cup_runners_up_record |
-| 0x6fa140 | `virado_para` | facing |
-| 0x7e4a30 | `vitoria_maior` | match_record_is_bigger_win |
-| 0x70df20 | `x_fora_do_meio` | x_off_centre |
-| 0x6d5b20 | `zagueiros_do_lado_sem_conflito` | side_centre_backs_without_conflict |
-| 0x5b8dc0 | `zagueiros_sem_conflito` | centre_backs_without_conflict |
-| 0x7c6650 | `zerar_estatisticas_do_jogador` | PlayerStats::reset_player |
-| 0x6ce0f0 | `zerar_guardado` | clear_stored |
-| 0x76d7e0 | `zerar_marca_da_pessoa` | clear_person_mark |
-| 0x866ee0 | `zerar_moral_do_contrato` | STAFF_CONTRACT::reset_morale_state |
+| Endereço | Nome no código | Original / significado | Nome antigo em português |
+|---|---|---|---|
+| 0x9326e0 | `abrir_no_conteiner` | open_in_container | `abrir_no_conteiner` |
+| 0x8c0660 | `accept_loan_offer` | TRANSFER_MANAGER::accept_loan_offer | `aceitar_emprestimo` |
+| 0x8c0080 | `accept_transfer_bid` | TRANSFER_MANAGER::accept_transfer_bid | `aceitar_lance` |
+| 0x6bd840 | `action_order` | action_order | `ordem_de_acao` |
+| 0x7160d0 | `add_2b` | add_2b | `somar_2b` |
+| 0x5ab3c0 | `add_away_trip_illness_risk` | FIXTURE_MANAGER::add_away_trip_illness_risk | `risco_de_doenca_na_viagem` |
+| 0x556940 | `add_ban` | Discipline::add_ban | `acrescentar_suspensao` |
+| 0x85de20 | `add_booking` | Stadium::add_booking | `reservar_estadio` |
+| 0x8bf400 | `add_config_loan` | add_config_loan | `emprestimo_da_configuracao` |
+| 0x4cc490 | `add_contract_offer` | add_contract_offer | `acrescentar_oferta_de_contrato` |
+| 0x86b0b0 | `add_cup_runners_up_record` | Staff_Records::add_cup_runners_up_record | `vice_da_copa_nos_registros` |
+| 0x86b710 | `add_cup_third_place_record` | Staff_Records::add_cup_third_place_record | `terceiro_da_copa_nos_registros` |
+| 0x86a800 | `add_cup_winners_record` | Staff_Records::add_cup_winners_record | `campeao_da_copa_nos_registros` |
+| 0x4cd6d0 | `add_decision_date` | CONTRACT_MANAGER::add_decision_date | `acrescentar_data_de_decisao` |
+| 0x6cf710 | `add_disposition` | add_disposition | `somar_disposicao` |
+| 0x86c1d0 | `add_failed_to_qualify_record` | Staff_Records::add_failed_to_qualify_record | `registrar_a_nao_classificacao` |
+| 0x86cc50 | `add_first_cap_record` | Staff_Records::add_first_cap_record | `registrar_a_primeira_convocacao` |
+| 0x8cac40 | `add_first_team_appearance_money` | TRANSFER_MANAGER::add_first_team_appearance_money | `guardar_premio_por_jogo_no_time` |
+| 0x5aa680 | `add_fixture` | FIXTURE_MANAGER::add_fixture | `jogo_no_calendario` |
+| 0x86d800 | `add_free_release_records` | Staff_Records::add_free_release_records | `registrar_a_liberacao` |
+| 0x5c6f00 | `add_friendly_match` | Friendly::add_friendly_match | `acrescentar_amistoso` |
+| 0x8cb9a0 | `add_future_transfer` | TRANSFER_MANAGER::add_future_transfer | `acrescentar_transferencia_futura` |
+| 0x62e820 | `add_illness_outbreak` | Injury::add_illness_outbreak | `acrescentar_surto_de_doenca` |
+| 0x62d250 | `add_injury` | Injury::add_injury | `lesao_nova` |
+| 0x8cad90 | `add_international_team_appearance_money` | add_international_team_appearance_money | `guardar_premio_por_jogos_na_selecao` |
+| 0x69ba50 | `add_job_vacancy` | MANAGER_MANAGER::add_job_vacancy | `vaga_de_tecnico` |
+| 0x86c000 | `add_knocked_out_record` | Staff_Records::add_knocked_out_record | `registrar_a_eliminacao` |
+| 0x7c6a30 | `add_language` | PlayerStats::add_language | `acrescentar_idioma` |
+| 0x868c50 | `add_league_champions_record` | Staff_Records::add_league_champions_record | `campeao_da_liga_nos_registros` |
+| 0x86a070 | `add_league_finish_records` | Staff_Records::add_league_finish_records | `posicoes_no_fim_da_liga` |
+| 0x8bee50 | `add_loan_negotiation` | TRANSFER_MANAGER::add_loan_negotiation | `negociacao_de_emprestimo` |
+| 0x86da20 | `add_loan_records` | Staff_Records::add_loan_records | `registrar_o_emprestimo` |
+| 0x86c8c0 | `add_month_award_record` | Staff_Records::add_month_award_record | `registrar_premio_do_mes` |
+| 0x8caaf0 | `add_next_sale_percentage` | TRANSFER_MANAGER::add_next_sale_percentage | `guardar_percentual_da_proxima_venda` |
+| 0x8cb810 | `add_past_transfer` | TRANSFER_MANAGER::add_past_transfer | `guardar_transferencia_passada` |
+| 0x5c4b60 | `add_planned_friendly` | Friendly::add_planned_friendly | `acrescentar_amistoso_planejado` |
+| 0x7a8350 | `add_player_data_to_pool` | PLAYER_REGEN::add_player_data_to_pool | `guardar_jogador_no_banco` |
+| 0x767fa0 | `add_player_rating` | MONTH_RATINGS::add_player_rating | `nota_do_jogador_no_mes` |
+| 0x842c00 | `add_player_to_club_shortlists` | Shortlist_Manager::add_player_to_club_shortlists | `por_jogador_nas_listas_dos_clubes` |
+| 0x776250 | `add_player_to_squad` | add_player_to_squad | `por_no_elenco_da_selecao` |
+| 0x599800 | `add_players_sold` | Finance::add_players_sold | `receber_venda_de_jogador` |
+| 0x5999a0 | `add_prize_money` | Finance::add_prize_money | `receber_premio_em_dinheiro` |
+| 0x869480 | `add_promotion_record` | Staff_Records::add_promotion_record | `registrar_o_acesso` |
+| 0x86bdd0 | `add_qualified_for_round_record` | Staff_Records::add_qualified_for_round_record | `registrar_a_classificacao_na_fase` |
+| 0x7779b0 | `add_qualified_nation` | NationalTeams::add_qualified_nation | `acrescentar_nacao_classificada` |
+| 0x92e740 | `add_qualified_team` | WorldCup::add_qualified_team | `mundial_nacao_classificada` |
+| 0x86a1c0 | `add_relegation_record` | Staff_Records::add_relegation_record | `registrar_o_rebaixamento` |
+| 0x7a8510 | `add_retirement` | PLAYER_REGEN::add_retirement | `acrescentar_aposentadoria` |
+| 0x8423f0 | `add_shortlist_entry` | Shortlist_Manager::add_shortlist_entry | `acrescentar_na_lista_de_observacao` |
+| 0x7a81a0 | `add_spare_non_player_record` | PLAYER_REGEN::add_spare_non_player_record | `acrescentar_reserva_de_tecnico` |
+| 0x4c7950 | `add_staff_contract` | CONTRACT_MANAGER::add_staff_contract | `acrescentar_contrato_da_pessoa` |
+| 0x86dc30 | `add_supporters_player_of_year_record` | Staff_Records::add_supporters_player_of_year_record | `jogador_do_ano_da_torcida_no_registro` |
+| 0x86c730 | `add_team_of_year_record` | Staff_Records::add_team_of_year_record | `registrar_a_selecao_do_ano` |
+| 0x519690 | `add_team_result_news` | Cup::add_team_result_news | `noticia_do_desfecho_na_copa` |
+| 0x5c6e00 | `add_tournament` | Friendly::add_tournament | `acrescentar_torneio` |
+| 0x754740 | `add_transfer_interest` | Media::add_transfer_interest | `acrescentar_interesse_de_transferencia` |
+| 0x8be9d0 | `add_transfer_negotiation` | add_transfer_negotiation | `guardar_a_negociacao` |
+| 0x8be300 | `add_transfer_offer` | TRANSFER_MANAGER::add_transfer_offer | `por_oferta_de_transferencia` |
+| 0x86cd70 | `add_transfer_records` | Staff_Records::add_transfer_records | `registrar_a_transferencia` |
+| 0x448ad0 | `add_transfer_totals` | Club_Records::add_transfer_totals | `somar_totais_de_transferencia` |
+| 0x5987c0 | `add_tv_revenue` | Finance::add_tv_revenue | `receber_direitos_de_tv` |
+| 0x59b7e0 | `add_weekly_merchandising_income` | FinanceTable::add_weekly_merchandising_income | `receita_do_merchandising` |
+| 0x8c7070 | `add_work_permit` | TRANSFER_MANAGER::add_work_permit | `dar_permissao_de_trabalho` |
+| 0x86c390 | `add_year_award_record` | Staff_Records::add_year_award_record | `registrar_premio_do_ano` |
+| 0x7172d0 | `adjust_17` | adjust_17 | `ajustar_17` |
+| 0x7386f0 | `adjust_board_confidence` | Media::adjust_board_confidence | `ajustar_confianca_da_diretoria` |
+| 0x598340 | `adjust_max_wage` | Finance::adjust_max_wage | `ajustar_o_teto_salarial` |
+| 0x738340 | `adjust_supporter_confidence` | Media::adjust_supporter_confidence | `ajustar_confianca_da_torcida` |
+| 0x715f50 | `adjusted_rating` | adjusted_rating | `nota_ajustada` |
+| 0x8c2f50 | `advance_offer_to_club_approval` | advance_offer_to_club_approval | `passar_a_oferta_aos_clubes` |
+| 0x6f5b80 | `advance_row` | advance_row | `avancar_linha` |
+| 0x8b1730 | `advance_week_counter` | TRAINING_MANAGER::advance_week_counter | `avancar_a_semana` |
+| 0x401e10 | `african_nations_advance_stage` | AfricanNations::advance_stage | `cqk12_africana_fase_seguinte` |
+| 0x401ea0 | `african_nations_create_group_stage` | AfricanNations::create_group_stage | `cqs13_africana_grupo` |
+| 0x4012e0 | `african_nations_create_schedule` | AfricanNations::create_schedule | `cqp12_africana_tabela` |
+| 0x401b90 | `african_nations_record_season_honours` | AfricanNations::record_season_honours | `cqk12_africana_historico` |
+| 0x401ab0 | `african_nations_set_up_rules` | AfricanNations::set_up_rules | `cqk10_copa_africana_regras` |
+| 0x4025a0 | `african_nations_update_for_date` | AfricanNations::update_for_date | `cqs13_africana_dia` |
+| 0x401ba0 | `african_nations_update_staff_records_for_status` | AfricanNations::update_staff_records_for_status | `cqj10_copa_africana_registros` |
+| 0x91e840 | `african_nations_update_staff_records_for_status_91e840` | WcOceaniaLeague::update_staff_records_for_status | `cqj10_eliminatoria_oceania_registros` |
+| 0x6ce310 | `aggregate_score` | aggregate_score | `placar_agregado` |
+| 0x4cca30 | `agreed_contract_offer` | agreed_contract_offer | `oferta_acertada` |
+| 0x8c8090 | `ai_respond_to_bid` | TRANSFER_MANAGER::ai_respond_to_bid | `resposta_da_ia_ao_lance` |
+| 0x48ce10 | `all_stages_complete` | Comp::all_stages_complete | `competicao_todas_completas` |
+| 0x85a470 | `allocate_squad_number` | SQUAD_MANAGER::allocate_squad_number | `dar_numero_de_camisa` |
+| 0x83b6e0 | `allocate_transfer_budget` | Shortlist_Manager::allocate_transfer_budget | `distribuir_verba_de_transferencias` |
+| 0x686670 | `announce_team_status` | League::announce_team_status | `anunciar_situacao_na_liga` |
+| 0x6f4920 | `apontar` | aim (set facing direction) | `apontar` |
+| 0x58dea0 | `append_result` | FIFA_RANKINGS::append_result | `resultado_no_historico` |
+| 0x557000 | `apply_appeal_result` | Discipline::apply_appeal_result | `recurso_da_suspensao` |
+| 0x716450 | `apply_factor` | apply_factor | `aplicar_fator` |
+| 0x6bac40 | `apply_foul` | apply_foul | `aplicar_falta` |
+| 0x62c080 | `apply_match_effects` | Injury::apply_match_effects | `efeitos_fisicos_da_partida` |
+| 0x685f60 | `apply_result_to_table` | League::apply_result_to_table | `aplicar_resultado_na_tabela` |
+| 0x521d60 | `apply_round_rules_to_match` | Cup::apply_round_rules_to_match | `regras_da_rodada_no_jogo` |
+| 0x755340 | `apply_squad_reaction_to_player_story` | Media::apply_squad_reaction_to_player_story | `reacao_do_elenco_a_historia` |
+| 0x6e8910 | `apply_squad_rule` | apply_squad_rule | `cumprir_regra_do_elenco` |
+| 0x6d0b60 | `apply_substitutions` | apply_substitutions | `aplicar_trocas` |
+| 0x6bb950 | `apply_to_side` | apply_to_side | `aplicar_ao_lado` |
+| 0x6bb8d0 | `apply_to_team` | apply_to_team | `aplicar_ao_time` |
+| 0x8b2be0 | `apply_training_progress` | TRAINING_MANAGER::apply_training_progress | `aplicar_o_progresso` |
+| 0x6978f0 | `apply_transfer_confidence_changes` | MANAGER_MANAGER::apply_transfer_confidence_changes | `confianca_da_diretoria_na_transferencia` |
+| 0x7c5fe0 | `archive_player_stats` | PlayerStats::archive_player_stats | `arquivar_estatisticas` |
+| 0x48d410 | `are_round_fixtures_known` | Comp::are_round_fixtures_known | `rodada_com_jogos_conhecidos` |
+| 0x403350 | `area_layout` | Area::layout | `organizar_area` |
+| 0x40a620 | `argentina_rules_init_transfer_windows` | ARGENTINA_RULES::init_transfer_windows | `janelas_argentina` |
+| 0x7d3df0 | `argentina_rules_init_transfer_windows_7d3df0` | PORTUGAL_RULES::init_transfer_windows | `janelas_portugal` |
+| 0x5cbdf0 | `arrange_international_friendlies` | Friendly::arrange_international_friendlies | `amistosos_entre_selecoes` |
+| 0x40c070 | `asia_club_champ_advance_stage` | AsiaClubChamp::advance_stage | `cqt12_asia_fase_seguinte` |
+| 0x40b620 | `asia_club_champ_build_team_table` | AsiaClubChamp::build_team_table | `cqq12_asia_clubes_times` |
+| 0x40ae90 | `asia_club_champ_create_round_table` | AsiaClubChamp::create_round_table | `cqp11_asia_clubes_tabela` |
+| 0x40c3d0 | `asia_club_champ_create_semi_final_stage` | AsiaClubChamp::create_semi_final_stage | `cqt12_asia_semifinais` |
+| 0x40dfa0 | `asia_cup_winner_advance_stage` | AsiaCupWinner::advance_stage | `cqt13_recopa_asiatica_fase_seguinte` |
+| 0x402090 | `asia_cup_winner_create_knockout_stage` | AfricanNations::create_knockout_stage | `cqt13_africana_quartas` |
+| 0x40cf90 | `asia_cup_winner_create_round_table` | AsiaCupWinner::create_round_table | `cqp11_asia_recopa_tabela` |
+| 0x696570 | `assess_transfer_deal` | MANAGER_MANAGER::assess_transfer_deal | `avaliar_o_negocio_da_transferencia` |
+| 0x904210 | `assign_champions_league_places` | UefaSeeding::assign_champions_league_places | `uefa_vagas_liga_dos_campeoes` |
+| 0x859fe0 | `assign_club_squad_numbers` | SQUAD_MANAGER::assign_club_squad_numbers | `numerar_elenco` |
+| 0x904e30 | `assign_intertoto_places` | UefaSeeding::assign_intertoto_places | `uefa_vagas_intertoto` |
+| 0x859e20 | `assign_league_squad_numbers` | SQUAD_MANAGER::assign_league_squad_numbers | `numerar_liga` |
+| 0x4c6430 | `assign_libertadores_places` | ConmebolSeeding::assign_libertadores_places | `conmebol_vagas_libertadores` |
+| 0x904580 | `assign_uefa_cup_places` | UefaSeeding::assign_uefa_cup_places | `uefa_vagas_copa_da_uefa` |
+| 0x716270 | `attacking_role` | attacking_role | `papel_no_ataque` |
+| 0x411f70 | `aus_nsl_advance_stage` | AusNsl::advance_stage | `cqr3_fase_seguinte_da_nsl` |
+| 0x411b70 | `aus_nsl_create_table` | AusNsl::create_table | `cqm9_tabela_da_nsl` |
+| 0x408eb0 | `aus_nsl_record_season_honours` | ArgSecond::record_season_honours | `cqj8_historico_do_primeiro_estagio` |
+| 0x411ce0 | `aus_nsl_set_up_rules` | AusNsl::set_up_rules | `cqj8_regras_da_nsl` |
+| 0x411980 | `aus_nsl_update_staff_records_for_status` | AusNsl::update_staff_records_for_status | `cqk7_destino_na_nsl` |
+| 0x412c80 | `australia_rules` | AUSTRALIA_RULES::Australia_rules | `regras_australia` |
+| 0x7874b0 | `auto_respond_all` | News::auto_respond_all | `responder_todas_as_noticias` |
+| 0x767150 | `award_best_rated_player` | MONTH_AWARD::award_best_rated_player | `premiar_o_melhor_do_mes` |
+| 0x412f00 | `award_raise_winner_reputation` | award_raise_winner_reputation | `reputacao_do_premiado` |
+| 0x4190d0 | `awol_daily_update` | AWOL::daily_update | `faltas_do_dia` |
+| 0x41a630 | `awol_post_missed_training_news` | awol_post_missed_training_news | `noticia_da_falta_ao_treino` |
+| 0x53b4f0 | `b_national_team` | b_national_team | `selecao_b` |
+| 0x6d58f0 | `ball_goal_end` | ball_goal_end | `bola_na_area` |
+| 0x714d00 | `ball_in_attack` | ball_in_attack | `bola_no_ataque` |
+| 0x6cd490 | `ball_out` | ball_out | `bola_fora` |
+| 0x6d5950 | `behind_on_aggregate` | behind_on_aggregate | `atras_no_agregado` |
+| 0x6cd5f0 | `behind_the_extreme` | behind_the_extreme | `atras_do_extremo` |
+| 0x6e1940 | `best_in_list` | best_in_list | `melhor_da_lista` |
+| 0x69c540 | `best_manager_candidate_score` | MANAGER_MANAGER::best_manager_candidate_score | `melhor_nota_de_candidato_a_tecnico` |
+| 0x6e1a40 | `best_rated` | best_rated | `melhor_avaliado` |
+| 0x6cb700 | `beyond_the_line` | beyond_the_line | `alem_da_linha` |
+| 0x6aaee0 | `board_named_players_after_match` | board_named_players_after_match | `jogadores_que_a_diretoria_cita` |
+| 0x410910 | `bra_champ_cup_create_round_table` | AsiaSuperCup::create_round_table | `cqp10_supercopa_asiatica_tabela` |
+| 0x425c10 | `bra_champ_cup_create_schedule` | BraChampCup::create_schedule | `cqp10_copa_dos_campeoes_tabela` |
+| 0x426230 | `bra_champ_cup_set_up_rules` | BraChampCup::set_up_rules | `cqi12_copa_dos_campeoes_regras` |
+| 0x427c20 | `bra_cup_build_team_table` | BraCup::build_team_table | `cqo12_times_da_copa` |
+| 0x427700 | `bra_cup_create_round_table` | BraCup::create_round_table | `cqo12_copa_do_brasil_tabela` |
+| 0x427ec0 | `bra_cup_set_up_rounds` | BraCup::set_up_rounds | `cqo12_regras_da_copa` |
+| 0x427d10 | `bra_cup_start_new_season` | BraCup::start_new_season | `cqr5_virada_copa_do_brasil` |
+| 0x662950 | `bra_cup_start_new_season_662950` | JapEmpCup::start_new_season | `cqr5_virada_copa_do_imperador` |
+| 0x42a950 | `bra_nat_first_advance_stage` | BraNatFirst::advance_stage | `cqq7_fase_seguinte_da_serie_a` |
+| 0x42cdd0 | `bra_nat_first_advance_stage_42cdd0` | BraNatSecond::advance_stage | `cqq7_fase_seguinte_da_serie_b` |
+| 0x42a9e0 | `bra_nat_first_create_play_off_stage` | BraNatFirst::create_play_off_stage | `cqq7_play_off_da_serie_a` |
+| 0x42ce60 | `bra_nat_first_create_play_off_stage_42ce60` | BraNatSecond::create_play_off_stage | `cqq7_play_off_da_serie_b` |
+| 0x42a480 | `bra_nat_first_create_table` | BraNatFirst::create_table | `cql7_tabela_da_serie_a` |
+| 0x42ca70 | `bra_nat_first_create_table_42ca70` | BraNatSecond::create_table | `cql7_tabela_da_serie_b` |
+| 0x42ae90 | `bra_nat_first_process_promotion_relegation_chain` | BraNatFirst::process_promotion_relegation_chain | `cqq8_acesso_e_rebaixamento` |
+| 0x42a5a0 | `bra_nat_first_set_up_rules` | BraNatFirst::set_up_rules | `cqi7_regras_da_serie_a` |
+| 0x42cb70 | `bra_nat_first_set_up_rules_42cb70` | BraNatSecond::set_up_rules | `cqi7_regras_da_serie_b` |
+| 0x42a640 | `bra_nat_first_start_new_season` | BraNatFirst::start_new_season | `cqq8_virada_da_serie_a` |
+| 0x42cc10 | `bra_nat_first_start_new_season_42cc10` | BraNatSecond::start_new_season | `cqq8_virada_da_serie_b` |
+| 0x42abc0 | `bra_nat_first_update_staff_records_for_status` | BraNatFirst::update_staff_records_for_status | `cqj9_destino_na_serie_a` |
+| 0x42e980 | `bra_nat_third_create_final_stage` | BraNatThird::create_final_stage | `cqs4_final_da_serie_c` |
+| 0x42ee80 | `bra_nat_third_create_group_stage` | BraNatThird::create_group_stage | `cqs3_grupo_da_serie_c` |
+| 0x42dc90 | `bra_nat_third_create_table` | BraNatThird::create_table | `cql7_tabela_da_serie_c` |
+| 0x42e100 | `bra_nat_third_set_club_progress` | BraNatThird::set_club_progress | `cqk8_progresso_na_serie_c` |
+| 0x42f0a0 | `bra_nat_third_set_predicted_positions` | BraNatThird::set_predicted_positions | `cqs4_posicoes_previstas_da_serie_c` |
+| 0x42de50 | `bra_nat_third_set_up_rules` | BraNatThird::set_up_rules | `cqi7_regras_da_serie_c` |
+| 0x42def0 | `bra_nat_third_start_new_season` | BraNatThird::start_new_season | `cqs4_virada_da_serie_c` |
+| 0x42eb00 | `bra_nat_third_update_staff_records_for_status` | BraNatThird::update_staff_records_for_status | `cqj9_destino_na_serie_c` |
+| 0x42ffc0 | `bra_reg_bahia_advance_stage` | BraRegBahia::advance_stage | `cqp7_fase_seguinte_do_baiano` |
+| 0x430050 | `bra_reg_bahia_create_semi_final_stage` | BraRegBahia::create_semi_final_stage | `cqn7_mata_mata_do_baiano` |
+| 0x4360c0 | `bra_reg_bahia_create_semi_final_stage_4360c0` | BraRegNorth::create_semi_final_stage | `cqn7_mata_mata_do_norte` |
+| 0x42fd10 | `bra_reg_bahia_create_table` | BraRegBahia::create_table | `cql8_tabela_do_baiano` |
+| 0x42fe10 | `bra_reg_bahia_start_new_season` | BraRegBahia::start_new_season | `cqp7_virada_do_baiano` |
+| 0x430210 | `bra_reg_bahia_update_staff_records_for_status` | BraRegBahia::update_staff_records_for_status | `cqj9_destino_no_baiano` |
+| 0x431240 | `bra_reg_central_advance_stage` | BraRegCentral::advance_stage | `cqp7_fase_seguinte_do_centro_oeste` |
+| 0x4312d0 | `bra_reg_central_create_knockout_stage` | BraRegCentral::create_knockout_stage | `cqn9_mata_mata_do_centro_oeste` |
+| 0x430ef0 | `bra_reg_central_load_region_clubs` | BraRegCentral::load_region_clubs | `cql8_tabela_do_centro_oeste` |
+| 0x430ff0 | `bra_reg_central_set_up_rules` | BraRegCentral::set_up_rules | `cqi8_regras_do_centro_oeste` |
+| 0x43bc70 | `bra_reg_central_set_up_rules_43bc70` | BraRegSanta::set_up_rules | `cqi8_regras_do_catarinense` |
+| 0x431090 | `bra_reg_central_start_new_season` | BraRegCentral::start_new_season | `cqp7_virada_do_centro_oeste` |
+| 0x4314e0 | `bra_reg_central_update_staff_records_for_status` | BraRegCentral::update_staff_records_for_status | `cqk7_destino_no_centro_oeste` |
+| 0x432520 | `bra_reg_gaucho_advance_stage` | BraRegGaucho::advance_stage | `cqp7_fase_seguinte_do_gaucho` |
+| 0x4325b0 | `bra_reg_gaucho_create_knockout_stage` | BraRegGaucho::create_knockout_stage | `cqn9_mata_mata_do_gaucho` |
+| 0x4321d0 | `bra_reg_gaucho_load_region_clubs` | BraRegGaucho::load_region_clubs | `cql8_tabela_do_gaucho` |
+| 0x432970 | `bra_reg_gaucho_record_season_honours` | BraRegGaucho::record_season_honours | `cqj8_historico_do_estadual` |
+| 0x4322d0 | `bra_reg_gaucho_set_up_rules` | BraRegGaucho::set_up_rules | `cqi8_regras_do_gaucho` |
+| 0x432370 | `bra_reg_gaucho_start_new_season` | BraRegGaucho::start_new_season | `cqp7_virada_do_gaucho` |
+| 0x4338a0 | `bra_reg_goias_advance_stage` | BraRegGoias::advance_stage | `cqp8_fase_seguinte_do_goiano` |
+| 0x436030 | `bra_reg_goias_advance_stage_436030` | BraRegNorth::advance_stage | `cqp8_fase_seguinte_do_norte` |
+| 0x433930 | `bra_reg_goias_create_knockout_stage` | BraRegGoias::create_knockout_stage | `cqn9_mata_mata_do_goiano` |
+| 0x433540 | `bra_reg_goias_create_table` | BraRegGoias::create_table | `cql9_tabela_do_goiano` |
+| 0x435d80 | `bra_reg_goias_create_table_435d80` | BraRegNorth::create_table | `cql9_tabela_do_norte` |
+| 0x433640 | `bra_reg_goias_set_up_rules` | BraRegGoias::set_up_rules | `cqj7_regras_do_goiano` |
+| 0x665140 | `bra_reg_goias_set_up_rules_665140` | JapJ2::set_up_rules | `cqj7_regras_da_j2` |
+| 0x4336f0 | `bra_reg_goias_start_new_season` | BraRegGoias::start_new_season | `cqp8_virada_do_goiano` |
+| 0x435e80 | `bra_reg_goias_start_new_season_435e80` | BraRegNorth::start_new_season | `cqp8_virada_do_norte` |
+| 0x434ae0 | `bra_reg_minas_gerais_advance_stage` | BraRegMinasGerais::advance_stage | `cqo7_fase_seguinte_do_mineiro` |
+| 0x434b70 | `bra_reg_minas_gerais_create_final_stage` | BraRegMinasGerais::create_final_stage | `cqo7_final_do_mineiro` |
+| 0x4351b0 | `bra_reg_minas_gerais_create_half_season_stage` | BraRegMinasGerais::create_half_season_stage | `cqr1_turno_do_mineiro` |
+| 0x434810 | `bra_reg_minas_gerais_create_table` | BraRegMinasGerais::create_table | `cql9_tabela_do_mineiro` |
+| 0x434ed0 | `bra_reg_minas_gerais_record_season_honours` | BraRegMinasGerais::record_season_honours | `cqo7_fim_da_temporada_do_mineiro` |
+| 0x4350d0 | `bra_reg_minas_gerais_set_club_progress` | BraRegMinasGerais::set_club_progress | `cqk8_progresso_no_mineiro` |
+| 0x434910 | `bra_reg_minas_gerais_start_new_season` | BraRegMinasGerais::start_new_season | `cqr2_virada_do_mineiro` |
+| 0x434d90 | `bra_reg_minas_gerais_update_staff_records_for_status` | BraRegMinasGerais::update_staff_records_for_status | `cqk7_destino_no_mineiro` |
+| 0x437040 | `bra_reg_northeast_advance_stage` | BraRegNortheast::advance_stage | `cqp8_fase_seguinte_do_nordeste` |
+| 0x4370d0 | `bra_reg_northeast_create_semi_final_stage` | BraRegNortheast::create_semi_final_stage | `cqn7_mata_mata_do_nordeste` |
+| 0x436d90 | `bra_reg_northeast_create_table` | BraRegNortheast::create_table | `cqm7_tabela_do_nordeste` |
+| 0x436e90 | `bra_reg_northeast_start_new_season` | BraRegNortheast::start_new_season | `cqp8_virada_do_nordeste` |
+| 0x438230 | `bra_reg_parana_advance_stage` | BraRegParana::advance_stage | `cqo8_fase_seguinte_do_paranaense` |
+| 0x4382c0 | `bra_reg_parana_create_final_stage` | BraRegParana::create_final_stage | `cqo8_final_do_paranaense` |
+| 0x437ec0 | `bra_reg_parana_create_table` | BraRegParana::create_table | `cqm7_tabela_do_paranaense` |
+| 0x4384e0 | `bra_reg_parana_record_season_honours` | BraRegParana::record_season_honours | `cqo8_fim_da_temporada_do_paranaense` |
+| 0x437fc0 | `bra_reg_parana_set_up_rules` | BraRegParana::set_up_rules | `cqi9_regras_do_paranaense` |
+| 0x438060 | `bra_reg_parana_start_new_season` | BraRegParana::start_new_season | `cqr2_virada_do_paranaense` |
+| 0x439680 | `bra_reg_pern_advance_stage` | BraRegPern::advance_stage | `cqp9_fase_seguinte_do_pernambucano` |
+| 0x43bec0 | `bra_reg_pern_advance_stage_43bec0` | BraRegSanta::advance_stage | `cqp9_fase_seguinte_do_catarinense` |
+| 0x43cef0 | `bra_reg_pern_advance_stage_43cef0` | BraRegSp::advance_stage | `cqp9_fase_seguinte_do_paulista` |
+| 0x439710 | `bra_reg_pern_create_semi_final_stage` | BraRegPern::create_semi_final_stage | `cqn8_mata_mata_do_pernambucano` |
+| 0x43bf50 | `bra_reg_pern_create_semi_final_stage_43bf50` | BraRegSanta::create_semi_final_stage | `cqn8_mata_mata_do_catarinense` |
+| 0x43cf80 | `bra_reg_pern_create_semi_final_stage_43cf80` | BraRegSp::create_semi_final_stage | `cqn8_mata_mata_do_paulista` |
+| 0x439330 | `bra_reg_pern_create_table` | BraRegPern::create_table | `cqm7_tabela_do_pernambucano` |
+| 0x439430 | `bra_reg_pern_set_up_rules` | BraRegPern::set_up_rules | `cqi9_regras_do_pernambucano` |
+| 0x4394d0 | `bra_reg_pern_start_new_season` | BraRegPern::start_new_season | `cqp9_virada_do_pernambucano` |
+| 0x43bd10 | `bra_reg_pern_start_new_season_43bd10` | BraRegSanta::start_new_season | `cqp9_virada_do_catarinense` |
+| 0x43cd40 | `bra_reg_pern_start_new_season_43cd40` | BraRegSp::start_new_season | `cqp9_virada_do_paulista` |
+| 0x43a870 | `bra_reg_rio_advance_stage` | BraRegRio::advance_stage | `cqo9_fase_seguinte_do_carioca` |
+| 0x43a900 | `bra_reg_rio_create_final_stage` | BraRegRio::create_final_stage | `cqo9_final_do_carioca` |
+| 0x43afa0 | `bra_reg_rio_create_half_season_stage` | BraRegRio::create_half_season_stage | `cqr1_turno_do_carioca` |
+| 0x43a500 | `bra_reg_rio_create_table` | BraRegRio::create_table | `cqm8_tabela_do_carioca` |
+| 0x43bb70 | `bra_reg_rio_create_table_43bb70` | BraRegSanta::create_table | `cqm8_tabela_do_catarinense` |
+| 0x43cc40 | `bra_reg_rio_create_table_43cc40` | BraRegSp::create_table | `cqm8_tabela_do_paulista` |
+| 0x43ad20 | `bra_reg_rio_record_season_honours` | BraRegRio::record_season_honours | `cqo9_fim_da_temporada_do_carioca` |
+| 0x43a600 | `bra_reg_rio_set_up_rules` | BraRegRio::set_up_rules | `cqi9_regras_do_carioca` |
+| 0x43a6a0 | `bra_reg_rio_start_new_season` | BraRegRio::start_new_season | `cqr2_virada_do_carioca` |
+| 0x5dffe0 | `brazil_rules_init_transfer_windows` | GERMANY_RULES::init_transfer_windows | `janelas_alemanha` |
+| 0x6ab2d0 | `build_board_player_performance_text` | build_board_player_performance_text | `texto_da_diretoria_sobre_os_jogadores` |
+| 0x7c3e40 | `build_career_history` | PlayerStats::build_career_history | `historico_da_carreira` |
+| 0x8c8740 | `build_cash_offer_option` | TRANSFER_MANAGER::build_cash_offer_option | `montar_oferta_em_dinheiro` |
+| 0x8c8fd0 | `build_clause_offer_option` | TRANSFER_MANAGER::build_clause_offer_option | `oferta_com_clausula` |
+| 0x717db0 | `build_day_fixtures_screen` | build_day_fixtures_screen | `montar_jogos_do_dia` |
+| 0x6b7e50 | `build_engine` | build_engine | `construir_motor` |
+| 0x902b90 | `build_entrants` | UefaCup::build_entrants | `cqs9_uefa_inscritos` |
+| 0x4c37a0 | `build_first_group_table` | ConmebolLiber::build_first_group_table | `cqr10_libertadores_primeiro_grupo` |
+| 0x682b30 | `build_h2h_table` | League::build_h2h_table | `mini_tabela_do_confronto` |
+| 0x7a58f0 | `build_initial_retirement_list` | PLAYER_REGEN::build_initial_retirement_list | `lista_inicial_de_aposentadorias` |
+| 0x5ca4f0 | `build_international_date_table` | Friendly::build_international_date_table | `tabela_das_datas_internacionais` |
+| 0x71b300 | `build_latest_scores` | build_latest_scores | `montar_ultimos_placares` |
+| 0x71b630 | `build_match_details_screen` | build_match_details_screen | `montar_detalhes_da_partida` |
+| 0x718e90 | `build_match_screen` | build_match_screen | `montar_tela_da_partida` |
+| 0x7acfc0 | `build_nation_club_lists` | PLAYER_REGEN::build_nation_club_lists | `listas_de_clubes_por_nacao` |
+| 0x5ca3e0 | `build_nation_list` | Friendly::build_nation_list | `amistoso_lista_das_nacoes` |
+| 0x839e60 | `build_position_lists` | Shortlist_Manager::build_position_lists | `montar_listas_de_posicao` |
+| 0x5b7160 | `build_position_lookup` | Formation::build_position_lookup | `mapa_de_casas_da_formacao` |
+| 0x584990 | `build_qualifying_entry_table` | EuropeanCup::build_qualifying_entry_table | `tabela_da_qualificacao_da_liga_dos_campeoes` |
+| 0x591f80 | `build_save_game_summary` | build_save_game_summary | `montar_resumo_do_save` |
+| 0x76abf0 | `build_selection_pools` | build_selection_pools | `montar_reservas_das_selecoes` |
+| 0x85dfc0 | `build_venue_list` | Stadium::build_venue_list | `lista_de_estadios_neutros` |
+| 0x933080 | `buscar_no_conteiner` | seek_in_container | `buscar_no_conteiner` |
+| 0x5b57c0 | `byte_da_posicao` | position_byte | `byte_da_posicao` |
+| 0x6cfda0 | `byte_do_lado` | side_byte | `byte_do_lado` |
+| 0x59af40 | `calc_gate_receipts` | FinanceTable::calc_gate_receipts | `renda_do_estadio` |
+| 0x4d0c60 | `calc_player_value` | CONTRACT_MANAGER::calc_player_value | `valor_do_jogador` |
+| 0x682f70 | `calc_prize_fund` | League::calc_prize_fund | `premio_da_liga` |
+| 0x85cba0 | `calculate_match_attendance` | Stadium::calculate_match_attendance | `publico_do_jogo` |
+| 0x775f90 | `call_up_replacement` | call_up_replacement | `convocar_substituto` |
+| 0x6f4600 | `campo_pela_posicao` | field_by_position | `campo_pela_posicao` |
+| 0x8ce990 | `can_club_bid_for_player` | TRANSFER_MANAGER::can_club_bid_for_player | `clube_pode_chegar_ao_jogador` |
+| 0x7f9190 | `can_club_scout_nation` | SCOUT_MANAGER::can_club_scout_nation | `olheiros_cobrem_a_nacao` |
+| 0x8d0530 | `can_end_loan` | TRANSFER_MANAGER::can_end_loan | `pode_encerrar_emprestimo` |
+| 0x6f9f90 | `can_play` | can_play | `consegue_jogar` |
+| 0x776fc0 | `can_schedule_club_fixture` | NationalTeams::can_schedule_club_fixture | `pode_marcar_jogo_do_clube` |
+| 0x8ced40 | `can_sign_player` | TRANSFER_MANAGER::can_sign_player | `pode_contratar_jogador` |
+| 0x5fe700 | `can_watch_fixture` | HUMAN_MANAGER::can_watch_fixture | `pode_ver_a_partida` |
+| 0x5c8260 | `cancel_tournament` | Friendly::cancel_tournament | `cqg10_torneio_cancelado` |
+| 0x5c45a0 | `candidate_has_nearby_date` | Friendly::candidate_has_nearby_date | `amistoso_perto_da_data` |
+| 0x6eab60 | `card_by_severity` | card_by_severity | `cartao_pela_gravidade` |
+| 0x5b8dc0 | `centre_backs_without_conflict` | centre_backs_without_conflict | `zagueiros_sem_conflito` |
+| 0x544410 | `chance_to_know` | chance_to_know | `chance_de_conhecer` |
+| 0x696b10 | `check_board_transfer_veto` | check_board_transfer_veto | `veto_dos_fisios_e_da_diretoria` |
+| 0x8cdb80 | `check_board_veto` | TRANSFER_MANAGER::check_board_veto | `veto_da_diretoria_na_oferta` |
+| 0x5b3460 | `check_duplicate_position` | Formation::check_duplicate_position | `posicao_repetida_na_formacao` |
+| 0x868210 | `check_fifa_protected_period` | STAFF_CONTRACT::check_fifa_protected_period | `periodo_protegido` |
+| 0x6bba80 | `check_move` | check_move | `conferir_lance` |
+| 0x8cfc90 | `check_offer_restrictions` | TRANSFER_MANAGER::check_offer_restrictions | `restricoes_da_oferta` |
+| 0x8c7690 | `check_offer_work_permits` | TRANSFER_MANAGER::check_offer_work_permits | `permissoes_da_oferta` |
+| 0x923630 | `check_postponement` | Weather::check_postponement | `adiar_pelo_clima` |
+| 0x839290 | `check_quick_start_file` | check_quick_start_file | `filtro_do_inicio_rapido` |
+| 0x51d9f0 | `check_round_teams_for_nation` | Cup::check_round_teams_for_nation | `copa_sortear_separando_nacoes` |
+| 0x838e10 | `check_saved_game_file` | check_saved_game_file | `filtro_do_jogo_salvo` |
+| 0x8cd450 | `check_squad_limits` | TRANSFER_MANAGER::check_squad_limits | `vaga_no_elenco_para_a_oferta` |
+| 0x867240 | `check_transfer_request_withdrawal` | STAFF_CONTRACT::check_transfer_request_withdrawal | `conferir_retirada_do_pedido` |
+| 0x6c2310 | `choose_by_condition` | choose_by_condition | `escolher_pela_condicao` |
+| 0x6c2750 | `choose_by_role` | choose_by_role | `escolher_por_papel` |
+| 0x6c2880 | `choose_by_role_b` | choose_by_role_b | `escolher_por_papel_b` |
+| 0x6c2050 | `choose_by_role_c` | choose_by_role_c | `escolher_por_papel_c` |
+| 0x6c23f0 | `choose_by_role_e` | choose_by_role_e | `escolher_por_papel_e` |
+| 0x6e0230 | `choose_formation` | choose_formation | `escolher_formacao` |
+| 0x62d140 | `choose_injury_type` | Injury::choose_injury_type | `escolher_tipo_de_lesao` |
+| 0x79c7b0 | `choose_match_official` | OfficialsManager::choose_match_official | `escolher_arbitro_da_partida` |
+| 0x6bce80 | `choose_square` | choose_square | `escolher_casa` |
+| 0x6d0f80 | `choose_standout` | choose_standout | `escolher_destaque` |
+| 0x6ceb90 | `choose_taker` | choose_taker | `escolher_cobrador` |
+| 0x6c6a30 | `choose_teammate` | choose_teammate | `escolher_companheiro` |
+| 0x5d61d0 | `clamp_char_sum` | clamp_char_sum | `soma_presa` |
+| 0x76e070 | `class_by_national_side` | class_by_national_side | `classe_pela_selecao` |
+| 0x713e90 | `classify_move` | classify_move | `classificar_lance` |
+| 0x8c5430 | `clear_agreed_contract_flag` | clear_agreed_contract_flag | `desmarcar_contrato_acertado` |
+| 0x867520 | `clear_all_grievances` | STAFF_CONTRACT::clear_all_grievances | `limpar_todas_as_queixas` |
+| 0x5b5960 | `clear_assigned` | clear_assigned | `limpar_designados` |
+| 0x4196a0 | `clear_awol` | AWOL::clear_awol | `limpar_ausencia` |
+| 0x55e1d0 | `clear_ban_history` | Discipline::clear_ban_history | `apagar_historico_de_suspensoes` |
+| 0x556270 | `clear_bans_invalid_for_club` | Discipline::clear_bans_invalid_for_club | `tirar_suspensoes_de_fora_do_clube` |
+| 0x84aeb0 | `clear_bid_markers_for_player` | Shortlist_Manager::clear_bid_markers_for_player | `desmarcar_lances_pelo_jogador` |
+| 0x79bf40 | `clear_busy_flags` | OfficialsManager::clear_busy_flags | `limpar_arbitros_ocupados` |
+| 0x775000 | `clear_current_competition` | clear_current_competition | `limpar_competicao_atual` |
+| 0x86fc70 | `clear_human_manager_record` | Staff_Records::clear_human_manager_record | `limpar_registro_do_humano` |
+| 0x787630 | `clear_inbox` | News::clear_inbox | `esvaziar_caixa_de_entrada` |
+| 0x5fe8d0 | `clear_invalid_watched_fixtures` | HUMAN_MANAGER::clear_invalid_watched_fixtures | `limpar_partidas_assistidas` |
+| 0x86fc20 | `clear_manager_record` | Staff_Records::clear_manager_record | `limpar_registro_de_tecnico` |
+| 0x4197c0 | `clear_missed_training` | AWOL::clear_missed_training | `limpar_falta_ao_treino` |
+| 0x6bba10 | `clear_move` | clear_move | `limpar_lance` |
+| 0x6bd5b0 | `clear_path` | clear_path | `caminho_livre` |
+| 0x6c41b0 | `clear_path_to` | clear_path_to | `caminho_livre_ate` |
+| 0x76d7e0 | `clear_person_mark` | clear_person_mark | `zerar_marca_da_pessoa` |
+| 0x896e90 | `clear_selection_slot` | Tactics::clear_selection_slot | `limpar_vaga_da_escalacao` |
+| 0x6ce0f0 | `clear_stored` | clear_stored | `zerar_guardado` |
+| 0x6b5f00 | `close_day_match` | close_day_match | `fechar_partida_do_dia` |
+| 0x71c170 | `close_match_details` | close_match_details | `fechar_detalhes_da_partida` |
+| 0x71b120 | `close_match_screen` | close_match_screen | `fechar_tela_da_partida` |
+| 0x6c30e0 | `closest_on_side` | closest_on_side | `mais_perto_no_lado` |
+| 0x6cb780 | `closest_to_goal` | closest_to_goal | `mais_perto_do_gol` |
+| 0x547940 | `club_add_disliked_staff` | club_add_disliked_staff | `clube_acrescentar_pessoa_rejeitada` |
+| 0x547870 | `club_add_favoured_staff` | club_add_favoured_staff | `clube_acrescentar_pessoa_favorita` |
+| 0x544820 | `club_can_be_managed` | club_can_be_managed | `clube_pode_ser_dirigido` |
+| 0x544c70 | `club_collect_non_playing_staff` | club_collect_non_playing_staff | `pessoas_fora_do_elenco` |
+| 0x548150 | `club_count_squad_with_position_mask` | club_count_squad_with_position_mask | `contar_elenco_com_mascara` |
+| 0x545880 | `club_get_english_name` | club_get_english_name | `nome_ingles_do_clube` |
+| 0x545770 | `club_get_english_short_name` | club_get_english_short_name | `nome_curto_ingles_do_clube` |
+| 0x542100 | `club_get_national_team_name` | club_get_national_team_name | `nome_da_selecao` |
+| 0x549850 | `club_has_ball_winning_midfielders` | club_has_ball_winning_midfielders | `clube_tem_meias_que_roubam` |
+| 0x549100 | `club_has_enough_defenders` | club_has_enough_defenders | `clube_tem_defensores` |
+| 0x5493c0 | `club_has_enough_hard_workers` | club_has_enough_hard_workers | `clube_tem_esforcados` |
+| 0x549200 | `club_has_enough_midfielders` | club_has_enough_midfielders | `clube_tem_meias` |
+| 0x5492c0 | `club_has_enough_strikers` | club_has_enough_strikers | `clube_tem_atacantes` |
+| 0x549770 | `club_has_fast_striker` | club_has_fast_striker | `clube_tem_atacante_rapido` |
+| 0x549470 | `club_has_fit_goalkeeper` | club_has_fit_goalkeeper | `clube_tem_goleiro` |
+| 0x8cdc90 | `club_has_offer_for_player` | TRANSFER_MANAGER::club_has_offer_for_player | `clube_tem_oferta_pelo_jogador` |
+| 0x549940 | `club_has_two_creative_midfielders` | club_has_two_creative_midfielders | `clube_tem_meias_criativos` |
+| 0x443f50 | `club_history_save` | Club_History::save | `gravar_historico_dos_clubes` |
+| 0x84c680 | `club_history_save_84c680` | SimulatedStats::save | `gravar_estatisticas_simuladas` |
+| 0x48db80 | `club_in_competition` | club_in_competition | `clube_na_competicao` |
+| 0x522360 | `club_in_higher_division` | Cup::club_in_higher_division | `clube_da_divisao_mais_alta` |
+| 0x5448c0 | `club_is_b_team` | club_is_b_team | `clube_e_time_b` |
+| 0x549e50 | `club_is_in_major_nation` | club_is_in_major_nation | `clube_em_nacao_grande` |
+| 0x547770 | `club_is_in_season` | club_is_in_season | `clube_em_temporada` |
+| 0x5495b0 | `club_lacks_aerial_defenders` | club_lacks_aerial_defenders | `faltam_zagueiros_pelo_alto` |
+| 0x5494d0 | `club_lacks_aerial_strikers` | club_lacks_aerial_strikers | `faltam_atacantes_pelo_alto` |
+| 0x549690 | `club_lacks_fast_defenders` | club_lacks_fast_defenders | `faltam_zagueiros_rapidos` |
+| 0x5487b0 | `club_nation_is_not_argentina` | club_nation_is_not_argentina | `clube_fora_da_argentina` |
+| 0x5487d0 | `club_nation_not_argentina_france_croatia` | club_nation_not_argentina_france_croatia | `clube_fora_de_argentina_franca_croacia` |
+| 0x448cb0 | `club_records_update_career_records` | club_records_update_career_records | `recordes_de_carreira_no_clube` |
+| 0x8c36b0 | `club_rejects_offer` | TRANSFER_MANAGER::club_rejects_offer | `clube_recusa_a_oferta` |
+| 0x547bd0 | `club_remove_favoured_staff` | club_remove_favoured_staff | `clube_tirar_pessoa_favorita` |
+| 0x545e90 | `club_reputation_for_staff` | club_reputation_for_staff | `reputacao_do_clube_para_pessoa` |
+| 0x549a30 | `club_squad_strength_band` | club_squad_strength_band | `faixa_de_forca_do_elenco` |
+| 0x85add0 | `club_uses_squad_numbers` | SQUAD_MANAGER::club_uses_squad_numbers | `clube_usa_numeros` |
+| 0x6d5cd0 | `code_byte` | code_byte | `byte_do_codigo` |
+| 0x83bd00 | `codigo_da_posicao` | position_code | `codigo_da_posicao` |
+| 0x8c44e0 | `collapse_offer` | TRANSFER_MANAGER::collapse_offer | `desfazer_oferta` |
+| 0x8c47d0 | `collapse_offers_for_player` | TRANSFER_MANAGER::collapse_offers_for_player | `desfazer_ofertas_pelo_jogador` |
+| 0x7f9690 | `collect_club_scout_targets` | SCOUT_MANAGER::collect_club_scout_targets | `alvos_dos_olheiros_do_clube` |
+| 0x8420e0 | `collect_club_shortlist_entries` | Shortlist_Manager::collect_club_shortlist_entries | `entradas_do_clube_na_shortlist` |
+| 0x5abd90 | `collect_comp_fixtures_on_day` | FIXTURE_MANAGER::collect_comp_fixtures_on_day | `jogos_da_competicao_no_dia` |
+| 0x4c6280 | `collect_conmebol_clubs` | collect_conmebol_clubs | `conmebol_juntar_clubes` |
+| 0x5adba0 | `collect_day_clashes` | FIXTURE_MANAGER::collect_day_clashes | `conflitos_do_dia` |
+| 0x775580 | `collect_duty_competitions` | NationalTeams::collect_duty_competitions | `juntar_competicoes_das_convocacoes` |
+| 0x904040 | `collect_european_clubs` | UefaSeeding::collect_european_clubs | `uefa_juntar_clubes_europeus` |
+| 0x842180 | `collect_interested_clubs` | Shortlist_Manager::collect_interested_clubs | `clubes_interessados_no_jogador` |
+| 0x5219b0 | `collect_possible_teams` | Cup::collect_possible_teams | `clubes_possiveis_do_jogo` |
+| 0x58d610 | `collect_ranked_order` | FIFA_RANKINGS::collect_ranked_order | `ordem_do_ranking` |
+| 0x6d60b0 | `combine_with_previous` | combine_with_previous | `combinar_com_o_anterior` |
+| 0x7002f0 | `commentary_a` | commentary_a | `comentario_a` |
+| 0x70a860 | `commentary_b` | commentary_b | `comentario_b` |
+| 0x6db2d0 | `commentary_player_name` | commentary_player_name | `nome_do_jogador_na_narracao` |
+| 0x6d7b00 | `commentate_on_panel` | commentate_on_panel | `narrar_no_painel` |
+| 0x48dee0 | `comp_active_key_nation_of_club` | comp_active_key_nation_of_club | `nacao_chave_do_clube` |
+| 0x48dd70 | `comp_active_key_nation_of_fixture` | comp_active_key_nation_of_fixture | `nacao_chave_do_jogo` |
+| 0x48df40 | `comp_active_key_nation_of_stadium` | comp_active_key_nation_of_stadium | `nacao_chave_do_estadio` |
+| 0x48e1c0 | `comp_collect_club_list` | Comp::collect_club_list | `competicao_lista_de_clubes` |
+| 0x5455a0 | `comp_get_english_name` | comp_get_english_name | `nome_ingles_da_competicao` |
+| 0x48dcd0 | `comp_key_nation_entry_from_active_index` | comp_key_nation_entry_from_active_index | `entrada_da_nacao_chave_ativa` |
+| 0x4afce0 | `comp_util_add_history_record` | comp_util_add_history_record | `acrescentar_ao_historico` |
+| 0x4b0890 | `comp_util_classify_tie_result_for_news` | comp_util_classify_tie_result_for_news | `resultado_da_eliminatoria_na_noticia` |
+| 0x4bffc0 | `comp_util_format_stage_round_name` | comp_util_format_stage_round_name | `nome_da_fase_e_rodada` |
+| 0x4c0720 | `comp_util_get_club_strength_score` | comp_util_get_club_strength_score | `forca_do_clube` |
+| 0x4afa80 | `comp_util_get_fixture_venue_side` | comp_util_get_fixture_venue_side | `lado_do_jogo_para_o_clube` |
+| 0x4afd80 | `comp_util_get_latest_placed_club` | comp_util_get_latest_placed_club | `clube_colocado_mais_recente` |
+| 0x4b02e0 | `comp_util_get_league_clash_type` | comp_util_get_league_clash_type | `tipo_de_confronto_na_liga` |
+| 0x4b01d0 | `comp_util_get_parent_stage_id` | comp_util_get_parent_stage_id | `grupo_da_fase` |
+| 0x4b0010 | `comp_util_read_fixture_from_news_slots` | comp_util_read_fixture_from_news_slots | `partida_das_vagas_da_noticia` |
+| 0x4bf850 | `comp_util_scale_by_round` | comp_util_scale_by_round | `escala_pela_rodada` |
+| 0x4afb40 | `comp_util_shuffle_pointer_array` | comp_util_shuffle_pointer_array | `embaralhar_ponteiros` |
+| 0x4afbd0 | `comp_util_sort_and_shuffle_top_clubs` | comp_util_sort_and_shuffle_top_clubs | `ordenar_e_embaralhar_os_melhores` |
+| 0x4c08f0 | `comp_util_sort_clubs_by_strength` | comp_util_sort_clubs_by_strength | `ordenar_clubes_pela_forca` |
+| 0x4afeb0 | `comp_util_write_fixture_to_news_slots` | comp_util_write_fixture_to_news_slots | `gravar_jogo_na_noticia` |
+| 0x7e9050 | `compact_entries` | RulingBody::compact_entries | `compactar_disciplina_do_orgao` |
+| 0x778ef0 | `compare_by_club` | compare_by_club | `ordem_pelo_clube` |
+| 0x778ed0 | `compare_by_rating` | compare_by_rating | `ordem_das_reservas` |
+| 0x778e90 | `compare_call_up_records_by_date` | compare_call_up_records_by_date | `ordem_das_convocacoes_pela_data` |
+| 0x4dc910 | `compare_decision_dates` | compare_decision_dates | `comparar_datas_de_decisao` |
+| 0x5cc610 | `compare_fixture_records_by_date` | compare_fixture_records_by_date | `ordem_dos_amistosos_pela_data` |
+| 0x5c5290 | `compare_friendly_candidate_ptrs_by_nation` | compare_friendly_candidate_ptrs_by_nation | `ordem_pela_nacao_e_faixa` |
+| 0x5c5270 | `compare_friendly_candidates_by_band` | compare_friendly_candidates_by_band | `ordem_pela_faixa` |
+| 0x757ea0 | `compare_id_pair_keys` | compare_id_pair_keys | `ordem_das_chaves_de_ids` |
+| 0x4afba0 | `compare_nation_coefficients_desc` | compare_nation_coefficients_desc | `ordem_dos_coeficientes_das_nacoes` |
+| 0x5cc5f0 | `compare_nations_by_reputation_desc` | compare_nations_by_reputation_desc | `ordem_das_nacoes_pela_reputacao` |
+| 0x5d6220 | `compare_players_by_ability` | compare_players_by_ability | `ordem_por_habilidade` |
+| 0x68afd0 | `compare_projection_by_points_desc` | compare_projection_by_points_desc | `ordem_da_projecao_pelos_pontos` |
+| 0x68afb0 | `compare_projection_by_reputation_desc` | compare_projection_by_reputation_desc | `ordem_da_projecao_pela_reputacao` |
+| 0x58e240 | `compare_ranking_score_desc` | compare_ranking_score_desc | `ordem_das_pontuacoes` |
+| 0x545e00 | `compare_region_names` | compare_region_names | `ordem_das_regioes_pelo_nome` |
+| 0x58e220 | `compare_result_points_desc` | compare_result_points_desc | `ordem_dos_resultados_por_pontos` |
+| 0x549c30 | `compare_staff_by_player_ability_desc` | compare_staff_by_player_ability_desc | `ordem_do_elenco_pela_habilidade_atual` |
+| 0x757ee0 | `compare_story_log_records` | compare_story_log_records | `ordem_das_historias` |
+| 0x4b0700 | `competition_counts` | competition_counts | `competicao_conta` |
+| 0x4bff70 | `competition_criterion` | competition_criterion | `criterio_da_competicao` |
+| 0x684790 | `competition_flagged` | competition_flagged | `competicao_marcada` |
+| 0x6b6570 | `competition_number` | competition_number | `numero_da_competicao` |
+| 0x7c6930 | `competition_weight` | competition_weight | `peso_da_competicao` |
+| 0x8c38b0 | `complete_accepted_contract_offer` | TRANSFER_MANAGER::complete_accepted_contract_offer | `concluir_oferta_de_contrato_aceita` |
+| 0x6ce9c0 | `compute_percentages` | compute_percentages | `calcular_percentuais` |
+| 0x4c0f00 | `con_champ_create_round_table` | ConChamp::create_round_table | `cqp13_concacaf_tabela` |
+| 0x4c11a0 | `con_champ_select_qualified_clubs` | ConChamp::select_qualified_clubs | `cqi11_concacaf_classificados` |
+| 0x4c15f0 | `con_champ_set_up_rounds` | ConChamp::set_up_rounds | `cqi11_concacaf_rodadas` |
+| 0x4c1620 | `con_champ_update_for_date` | ConChamp::update_for_date | `cqi11_concacaf_dia` |
+| 0x4c20b0 | `con_merc_cup_advance_stage` | ConMercCup::advance_stage | `cqs10_merconorte_fase_seguinte` |
+| 0x4c1de0 | `con_merc_cup_create_first_group_table` | ConMercCup::create_first_group_table | `cqr12_merconorte_primeiro_grupo` |
+| 0x4c2140 | `con_merc_cup_create_group_stage` | ConMercCup::create_group_stage | `cqr12_merconorte_grupo` |
+| 0x4c1960 | `con_merc_cup_create_schedule` | ConMercCup::create_schedule | `cqp10_merconorte_tabela` |
+| 0x4c2330 | `con_merc_cup_create_semi_final_stage` | ConMercCup::create_semi_final_stage | `cqs10_merconorte_semifinais` |
+| 0x4c2560 | `con_merc_cup_select_invited_clubs` | ConMercCup::select_invited_clubs | `cqs11_merconorte_convidados` |
+| 0x4c1ed0 | `con_merc_cup_set_up_rules` | ConMercCup::set_up_rules | `cqj11_merconorte_regras` |
+| 0x4c2c90 | `con_merc_cup_update_for_date` | ConMercCup::update_for_date | `cqr12_merconorte_dia` |
+| 0x70dfa0 | `condicao_jogador` | player_condition | `condicao_jogador` |
+| 0x7164b0 | `condition_test` | condition_test | `teste_de_condicao` |
+| 0x6b5260 | `confirm_network_match` | confirm_network_match | `confirmar_partida_em_rede` |
+| 0x8c3310 | `confirm_offer_by_club` | confirm_offer_by_club | `confirmar_oferta_pelo_clube` |
+| 0x4c3a80 | `conmebol_liber_advance_stage` | ConmebolLiber::advance_stage | `cqk11_libertadores_fase_seguinte` |
+| 0x4c3b10 | `conmebol_liber_create_group_stage` | ConmebolLiber::create_group_stage | `cqr10_libertadores_grupo` |
+| 0x4c3d10 | `conmebol_liber_create_knockout_stage` | ConmebolLiber::create_knockout_stage | `cqs10_libertadores_mata_mata` |
+| 0x4c31c0 | `conmebol_liber_create_schedule` | ConmebolLiber::create_schedule | `cqo13_libertadores_tabela` |
+| 0x4c3f40 | `conmebol_liber_select_qualified_clubs` | ConmebolLiber::select_qualified_clubs | `cqk11_libertadores_classificados` |
+| 0x4c3890 | `conmebol_liber_set_up_rules` | ConmebolLiber::set_up_rules | `cqj11_libertadores_regras` |
+| 0x4c4410 | `conmebol_liber_update_for_date` | ConmebolLiber::update_for_date | `cqr10_libertadores_dia` |
+| 0x4c4080 | `conmebol_liber_update_staff_records_for_status` | ConmebolLiber::update_staff_records_for_status | `cqk11_libertadores_registros` |
+| 0x4c5140 | `conmebol_merc_advance_stage` | ConmebolMerc::advance_stage | `cqs11_mercosul_fase_seguinte` |
+| 0x4c4e60 | `conmebol_merc_create_first_group_table` | ConmebolMerc::create_first_group_table | `cqr11_mercosul_primeiro_grupo` |
+| 0x4c51d0 | `conmebol_merc_create_group_stage` | ConmebolMerc::create_group_stage | `cqr11_mercosul_grupo` |
+| 0x4c4930 | `conmebol_merc_create_schedule` | ConmebolMerc::create_schedule | `cqo13_mercosul_tabela` |
+| 0x4c5850 | `conmebol_merc_select_invited_clubs` | ConmebolMerc::select_invited_clubs | `cqo13_mercosul_convidados` |
+| 0x4c5c90 | `conmebol_merc_update_for_date` | ConmebolMerc::update_for_date | `cqr11_mercosul_dia` |
+| 0x4c6b70 | `conmebol_seeding_save_to_temp_file` | ConmebolSeeding::save_to_temp_file | `gravar_sementes_da_conmebol` |
+| 0x69aba0 | `consider_sacking_manager` | MANAGER_MANAGER::consider_sacking_manager | `pensar_em_demitir_o_tecnico` |
+| 0x42f2d0 | `construct_bra_reg_bahia` | BraRegBahia::BraRegBahia | `cqt1_construir_baiano` |
+| 0x4304b0 | `construct_bra_reg_central` | BraRegCentral::BraRegCentral | `cqt1_construir_centro_oeste` |
+| 0x4317c0 | `construct_bra_reg_gaucho` | BraRegGaucho::BraRegGaucho | `cqt1_construir_gaucho` |
+| 0x432b50 | `construct_bra_reg_goias` | BraRegGoias::BraRegGoias | `cqt2_construir_goiano` |
+| 0x433d50 | `construct_bra_reg_minas_gerais` | BraRegMinasGerais::BraRegMinasGerais | `cqt2_construir_mineiro` |
+| 0x435340 | `construct_bra_reg_north` | BraRegNorth::BraRegNorth | `cqt2_construir_norte` |
+| 0x4363f0 | `construct_bra_reg_northeast` | BraRegNortheast::BraRegNortheast | `cqt3_construir_nordeste` |
+| 0x437400 | `construct_bra_reg_parana` | BraRegParana::BraRegParana | `cqt3_construir_paranaense` |
+| 0x4388f0 | `construct_bra_reg_pern` | BraRegPern::BraRegPern | `cqt3_construir_pernambucano` |
+| 0x439a40 | `construct_bra_reg_rio` | BraRegRio::BraRegRio | `cqt4_construir_carioca` |
+| 0x43b130 | `construct_bra_reg_santa` | BraRegSanta::BraRegSanta | `cqt4_construir_catarinense` |
+| 0x43c280 | `construct_bra_reg_sp` | BraRegSp::BraRegSp | `cqt4_construir_paulista` |
+| 0x43f0e0 | `construct_brazil_rules` | BRAZIL_RULES::BRAZIL_RULES | `regras_brasil` |
+| 0x6d5bf0 | `construct_commentary_queue` | construct_commentary_queue | `construir_fila_da_narracao` |
+| 0x518500 | `construct_croatia_rules` | CROATIA_RULES::CROATIA_RULES | `regras_croacia` |
+| 0x522e00 | `construct_cup_stage` | Cup_Stage::Cup_Stage | `cqs7_fase_de_copa` |
+| 0x571680 | `construct_eng_first` | EngFirst::EngFirst | `construir_first` |
+| 0x573380 | `construct_eng_prm` | EngPrm::EngPrm | `construir_premier` |
+| 0x5754a0 | `construct_eng_second` | EngSecond::EngSecond | `construir_second` |
+| 0x576dd0 | `construct_eng_third` | EngThird::EngThird | `construir_third` |
+| 0x579b30 | `construct_england_rules` | ENGLAND_RULES::ENGLAND_RULES | `regras_inglaterra` |
+| 0x5a9950 | `construct_finland_rules` | FINLAND_RULES::FINLAND_RULES | `regras_finlandia` |
+| 0x5b91c0 | `construct_fra_cfa` | FraCfa::FraCfa | `construir_cfa` |
+| 0x5bb160 | `construct_fra_first` | FraFirst::FraFirst | `construir_primeira_francesa` |
+| 0x5bd600 | `construct_fra_lower` | FraLower::FraLower | `construir_divisao_de_baixo_francesa` |
+| 0x5be330 | `construct_fra_second` | FraSecond::FraSecond | `construir_franca_2` |
+| 0x5bfb40 | `construct_fra_third` | FraThird::FraThird | `construir_franca_3` |
+| 0x5f9690 | `construct_holland_rules` | HOLLAND_RULES::HOLLAND_RULES | `regras_holanda` |
+| 0x63c210 | `construct_ireland_rules` | IRELAND_RULES::IRELAND_RULES | `regras_irlanda` |
+| 0x6406d0 | `construct_ita_ser_a` | ItaSerA::ItaSerA | `construir_serie_a` |
+| 0x645810 | `construct_ita_ser_b` | ItaSerB::ItaSerB | `construir_serie_b` |
+| 0x64aa70 | `construct_ita_ser_c1a` | ItaSerC1a::ItaSerC1a | `construir_c1a` |
+| 0x64ec20 | `construct_ita_ser_c1b` | ItaSerC1b::ItaSerC1b | `construir_c1b` |
+| 0x66e630 | `construct_korea_rules` | KOREA_RULES::KOREA_RULES | `regras_coreia` |
+| 0x6eada0 | `construct_match_player` | construct_match_player | `construir_jogador_da_partida` |
+| 0x729000 | `construct_match_stats` | Match_Stats::Match_Stats | `montar_estatisticas_da_partida` |
+| 0x77bbe0 | `construct_news_item` | NewsItem::NewsItem | `construir_noticia` |
+| 0x7936d0 | `construct_northern_ireland_rules` | NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES | `regras_irlanda_do_norte` |
+| 0x7944f0 | `construct_norway_rules` | NORWAY_RULES::NORWAY_RULES | `regras_noruega` |
+| 0x7cd830 | `construct_poland_rules` | POLAND_RULES::POLAND_RULES | `regras_polonia` |
+| 0x6e9460 | `construct_referee` | construct_referee | `construir_arbitro` |
+| 0x7f6390 | `construct_scotland_rules` | SCOTLAND_RULES::SCOTLAND_RULES | `regras_escocia` |
+| 0x84e130 | `construct_spa_first` | SpaFirst::SpaFirst | `construir_primera` |
+| 0x851020 | `construct_spa_lower` | SpaLower::SpaLower | `construir_divisao_de_baixo_espanhola` |
+| 0x8539a0 | `construct_spa_second` | SpaSecond::SpaSecond | `construir_segunda` |
+| 0x85e410 | `construct_staff_contract` | STAFF_CONTRACT::STAFF_CONTRACT | `cqe4_construir_contrato` |
+| 0x9020a0 | `construct_turkey_rules` | TURKEY_RULES::TURKEY_RULES | `regras_turquia` |
+| 0x90b940 | `construct_usa_rules` | USA_RULES::USA_RULES | `regras_eua` |
+| 0x90f080 | `construct_wales_rules` | WALES_RULES::WALES_RULES | `regras_pais_de_gales` |
+| 0x68abd0 | `contains_club` | League::contains_club | `liga_tem_o_clube` |
+| 0x7af600 | `contains_player` | PLAYER_SEARCH::contains_player | `jogador_na_busca` |
+| 0x6c9cd0 | `contest` | contest | `disputa` |
+| 0x6d4b70 | `context_commentary` | context_commentary | `comentario_de_contexto` |
+| 0x4ca470 | `contract_category` | contract_category | `categoria_do_contrato` |
+| 0x8676f0 | `contract_flags` | contract_flags | `bandeiras_do_contrato` |
+| 0x53ce90 | `contract_level` | contract_level | `nivel_do_contrato` |
+| 0x4cc2d0 | `contract_manager_get_player_morale` | contract_manager_get_player_morale | `moral_da_ficha` |
+| 0x4cb250 | `contract_manager_lower_match_morale` | contract_manager_lower_match_morale | `baixar_moral_pela_partida` |
+| 0x4ce450 | `contract_manager_lowest_wage_demand` | contract_manager_lowest_wage_demand | `menor_salario_pedido` |
+| 0x4cda70 | `contract_manager_offer_contract` | contract_manager_offer_contract | `contrato_oferecido` |
+| 0x4cc810 | `contract_manager_operator` | STAFF_CONTRACT::operator= | `copiar_contrato_de_pessoal` |
+| 0x4cb0a0 | `contract_manager_raise_match_morale` | contract_manager_raise_match_morale | `subir_moral_pela_partida` |
+| 0x4d45f0 | `contract_manager_season_end_month` | contract_manager_season_end_month | `mes_do_fim_da_temporada_do_clube` |
+| 0x4cc3a0 | `contract_manager_write_morale_comparison_text` | contract_manager_write_morale_comparison_text | `diferenca_de_moral_em_texto` |
+| 0x4cc2e0 | `contract_manager_write_morale_text` | contract_manager_write_morale_text | `texto_da_moral` |
+| 0x4cf5a0 | `contract_of` | contract_of | `contrato_de` |
+| 0x4cc9e0 | `contract_offer` | contract_offer | `oferta_de_contrato` |
+| 0x4cf6d0 | `contract_record` | contract_record | `ficha_de_contrato` |
+| 0x4d0c20 | `contract_value` | contract_value | `valor_do_contrato` |
+| 0x4cf5f0 | `contract_with_club` | contract_with_club | `contrato_com_clube` |
+| 0x70d690 | `control_of_move` | control_of_move | `dominio_do_lance` |
+| 0x777590 | `copy_date_and_mark` | copy_date_and_mark | `copiar_data_e_marca` |
+| 0x687710 | `copy_table` | League::copy_table | `copiar_tabela_da_liga` |
+| 0x6c4470 | `corner` | corner | `escanteio` |
+| 0x6cbbb0 | `count_active` | count_active | `contar_ativos` |
+| 0x8c1780 | `count_club_free_transfer_queue` | TRANSFER_MANAGER::count_club_free_transfer_queue | `fila_livre_do_clube` |
+| 0x448530 | `count_record_assign` | count_record_assign | `copiar_recorde_de_contagem` |
+| 0x450d30 | `count_record_construct` | count_record_construct | `construir_recorde_de_contagem` |
+| 0x58d710 | `count_results_in_period` | FIFA_RANKINGS::count_results_in_period | `jogos_da_selecao_no_periodo` |
+| 0x844540 | `count_slots_with_bids` | Shortlist_Manager::count_slots_with_bids | `contar_vagas_com_lance` |
+| 0x786fe0 | `count_unread` | News::count_unread | `noticias_nao_lidas` |
+| 0x48e360 | `counts_for_fixture_clash` | Comp::counts_for_fixture_clash | `conta_para_conflito_de_datas` |
+| 0x5d6280 | `cqt4_atualizar_media_de_publico` | atualizar_media_de_publico (sem nome no mapa) | `cqt4_atualizar_media_de_publico` |
+| 0x663a50 | `create_championship_final_stage` | JapJ1::create_championship_final_stage | `cqq9_final_da_j1` |
+| 0x58dd50 | `create_default_table` | FIFA_RANKINGS::create_default_table | `ranking_fifa_inicial` |
+| 0x5c2ae0 | `create_due_planned_friendlies` | Friendly::create_due_planned_friendlies | `criar_amistosos_planejados` |
+| 0x412010 | `create_finals_series_stage` | AusNsl::create_finals_series_stage | `cqr3_serie_final_da_nsl` |
+| 0x40e030 | `create_finals_stage` | AsiaCupWinner::create_finals_stage | `cqt13_recopa_asiatica_finais` |
+| 0x642a70 | `create_fixed_fixtures` | ItaSerA::create_fixed_fixtures | `calendario_fixo_da_serie_a` |
+| 0x6835c0 | `create_fixtures` | League::create_fixtures | `liga_criar_tabela` |
+| 0x827110 | `create_game_from_setup_file` | create_game_from_setup_file | `criar_jogo_pela_configuracao` |
+| 0x4121c0 | `create_grand_final_stage` | AusNsl::create_grand_final_stage | `cqr3_grande_final_da_nsl` |
+| 0x7978c0 | `create_group_a_table` | OceaniaClubChamp::create_group_a_table | `cqt10_oceania_grupo_a` |
+| 0x797e80 | `create_group_b_stage` | OceaniaClubChamp::create_group_b_stage | `cqt10_oceania_grupo_b` |
+| 0x40c110 | `create_group_stages` | AsiaClubChamp::create_group_stages | `cqt12_asia_grupos` |
+| 0x438760 | `create_half_stage` | BraRegParana::create_half_stage | `cqr1_turno_do_paranaense` |
+| 0x64fc30 | `create_play_off_stages` | ItaSerC1b::create_play_off_stages | `fases_do_fim_da_c1b` |
+| 0x64ba70 | `create_playoff_stages` | ItaSerC1a::create_playoff_stages | `fases_do_fim_da_c1a` |
+| 0x908fc0 | `create_second_division_stage` | UsaMls::create_second_division_stage | `cqs1_segunda_divisao_da_mls` |
+| 0x42e430 | `create_second_round_stage` | BraNatThird::create_second_round_stage | `cqs3_segunda_fase_da_serie_c` |
+| 0x56bab0 | `create_section_stage` | EngAutoCup::create_section_stage | `cqs5_trofeu_fase_das_chaves` |
+| 0x7c5d80 | `create_stats` | PlayerStats::create_stats | `criar_estatisticas` |
+| 0x40d4d0 | `create_team_entries` | AsiaCupWinner::create_team_entries | `cqq12_asia_recopa_times` |
+| 0x9091e0 | `create_third_division_stage` | UsaMls::create_third_division_stage | `cqs1_terceira_divisao_da_mls` |
+| 0x42e700 | `create_third_round_groups` | BraNatThird::create_third_round_groups | `cqs3_terceira_fase_da_serie_c` |
+| 0x51cb90 | `create_tie_fixtures` | Cup::create_tie_fixtures | `copa_criar_jogos_do_confronto` |
+| 0x866f60 | `criterio_da_comissao` | staff_criterion | `criterio_da_comissao` |
+| 0x521e00 | `cup_check_complete` | Cup::check_complete | `copa_completa` |
+| 0x51ebc0 | `cup_compare_draw_entries_by_seed` | cup_compare_draw_entries_by_seed | `ordem_dos_cabecas_de_chave` |
+| 0x5221c0 | `cup_compare_entries_by_level_asc` | cup_compare_entries_by_level_asc | `ordem_dos_cabecas_de_chave_crescente` |
+| 0x522190 | `cup_compare_entries_by_level_desc` | cup_compare_entries_by_level_desc | `ordem_dos_cabecas_de_chave_decrescente` |
+| 0x5221f0 | `cup_match_importance` | cup_match_importance | `importancia_da_partida` |
+| 0x5223a0 | `cup_rank_teams` | Cup::rank_teams | `posicoes_previstas_da_copa` |
+| 0x519a90 | `cup_record_season_honours` | Cup::record_season_honours | `copa_honras_da_temporada` |
+| 0x521e60 | `cup_set_round_draw_date` | cup_set_round_draw_date | `data_do_sorteio_da_rodada` |
+| 0x521eb0 | `cup_set_round_match_date` | cup_set_round_match_date | `data_do_jogo_da_rodada` |
+| 0x521f10 | `cup_set_round_match_day` | cup_set_round_match_day | `dia_da_rodada_da_copa` |
+| 0x518780 | `cup_start_new_season` | Cup::start_new_season | `copa_comeco_da_temporada` |
+| 0x51f890 | `cup_update_for_date` | Cup::update_for_date | `atualizar_copa_no_dia` |
+| 0x519890 | `cup_update_staff_records_for_status` | Cup::update_staff_records_for_status | `copa_registros_pelo_desfecho` |
+| 0x7f8420 | `current_search_has_no_club` | SCOUT_MANAGER::current_search_has_no_club | `busca_atual_sem_clube` |
+| 0x62c2f0 | `daily_wear` | daily_wear | `desgaste_diario` |
+| 0x53bd10 | `database_add_staff_to_club` | database_add_staff_to_club | `incluir_pessoa_no_clube` |
+| 0x539750 | `database_build_nation_name_index` | database_build_nation_name_index | `montar_indice_de_nomes` |
+| 0x542740 | `database_club_has_reserve_squad` | database_club_has_reserve_squad | `clube_pode_ter_reservas` |
+| 0x53b9a0 | `database_club_has_room_for_job` | database_club_has_room_for_job | `clube_tem_vaga_para_cargo` |
+| 0x53d7d0 | `database_club_nation_is_eec` | database_club_nation_is_eec | `nacao_do_clube_na_cee` |
+| 0x541f90 | `database_collect_club_squad` | database_collect_club_squad | `reunir_elenco_do_clube` |
+| 0x540490 | `database_colours_clash` | database_colours_clash | `cores_se_confundem` |
+| 0x53fd40 | `database_compare_clubs_by_latitude` | database_compare_clubs_by_latitude | `ordem_dos_clubes_pela_latitude` |
+| 0x53fe50 | `database_compare_clubs_by_longitude` | database_compare_clubs_by_longitude | `ordem_dos_clubes_pela_longitude` |
+| 0x53ffe0 | `database_compare_clubs_by_reputation` | database_compare_clubs_by_reputation | `ordem_dos_ponteiros_de_clube_pela_reputacao` |
+| 0x540080 | `database_compare_clubs_by_short_name` | database_compare_clubs_by_short_name | `ordem_dos_clubes_pelo_nome_curto` |
+| 0x540780 | `database_compare_comp_history_rows` | database_compare_comp_history_rows | `ordem_do_historico_de_competicao` |
+| 0x540270 | `database_compare_staff_by_full_name` | database_compare_staff_by_full_name | `ordem_das_pessoas_pelo_nome_completo` |
+| 0x53ff60 | `database_compare_staff_by_surname` | database_compare_staff_by_surname | `ordem_das_pessoas_pelo_sobrenome` |
+| 0x53c8d0 | `database_count_club_coaches` | database_count_club_coaches | `contar_treinadores_do_clube` |
+| 0x53c9b0 | `database_count_club_physios` | database_count_club_physios | `contar_fisioterapeutas` |
+| 0x53c590 | `database_count_club_squad` | database_count_club_squad | `contar_elenco_do_clube` |
+| 0x53e140 | `database_format_name_from_ids` | database_format_name_from_ids | `nome_por_ids` |
+| 0x53e2e0 | `database_format_name_from_strings` | database_format_name_from_strings | `nome_pelos_textos` |
+| 0x53eab0 | `database_format_official_name` | database_format_official_name | `nome_oficial` |
+| 0x53ee50 | `database_format_player_positions` | database_format_player_positions | `texto_das_posicoes` |
+| 0x53dba0 | `database_format_staff_name` | database_format_staff_name | `formatar_nome_da_pessoa` |
+| 0x540340 | `database_format_years_between_dates` | database_format_years_between_dates | `anos_entre_datas_em_texto` |
+| 0x527f20 | `database_free_staff_comp_history_table` | database_free_staff_comp_history_table | `liberar_historico_de_premios` |
+| 0x527ee0 | `database_free_staff_history_table` | database_free_staff_history_table | `liberar_historico_de_pessoas` |
+| 0x527240 | `database_generate_extra_non_playing_staff` | database_generate_extra_non_playing_staff | `gerar_comissao_extra` |
+| 0x53cb80 | `database_get_club_assistant` | database_get_club_assistant | `auxiliar_do_clube` |
+| 0x53cc30 | `database_get_club_coaches` | database_get_club_coaches | `treinadores_do_clube` |
+| 0x53b640 | `database_get_club_kit_colours` | database_get_club_kit_colours | `cores_do_uniforme_do_clube` |
+| 0x53ca90 | `database_get_club_manager` | database_get_club_manager | `tecnico_do_clube_ou_selecao` |
+| 0x53cd60 | `database_get_club_scouts` | database_get_club_scouts | `olheiros_do_clube` |
+| 0x53ac40 | `database_get_coaching_job_name` | database_get_coaching_job_name | `nome_do_cargo_de_treino` |
+| 0x540520 | `database_get_colour_family` | database_get_colour_family | `familia_da_cor` |
+| 0x53b7c0 | `database_get_comp_colours` | database_get_comp_colours | `cores_da_competicao` |
+| 0x53ad00 | `database_get_job_name` | database_get_job_name | `nome_do_cargo` |
+| 0x53cee0 | `database_get_language_name` | database_get_language_name | `nome_do_idioma` |
+| 0x543b10 | `database_get_non_player_attribute_name` | database_get_non_player_attribute_name | `nome_do_atributo_de_tecnico` |
+| 0x5428a0 | `database_get_player_attribute_name` | database_get_player_attribute_name | `nome_do_atributo_do_jogador` |
+| 0x5408c0 | `database_get_reputation_scope` | database_get_reputation_scope | `escopo_da_reputacao` |
+| 0x53ab90 | `database_get_staff_age` | database_get_staff_age | `idade_da_pessoa` |
+| 0x5407e0 | `database_get_staff_reputation_for_viewer` | database_get_staff_reputation_for_viewer | `reputacao_vista_por` |
+| 0x535920 | `database_global_9b5984` | global_9b5984 | `global_9b5984` |
+| 0x527f60 | `database_grow_comp_history_table` | database_grow_comp_history_table | `crescer_historico_de_competicoes` |
+| 0x53d7f0 | `database_is_basque_club` | database_is_basque_club | `clube_basco` |
+| 0x53d900 | `database_is_melanesian_nation` | database_is_melanesian_nation | `nacao_da_melanesia` |
+| 0x53d940 | `database_is_polynesian_nation` | database_is_polynesian_nation | `nacao_da_polinesia` |
+| 0x53d740 | `database_is_staff_eu_national` | database_is_staff_eu_national | `pessoa_e_comunitaria` |
+| 0x53d980 | `database_is_staff_foreign` | database_is_staff_foreign | `pessoa_e_estrangeira` |
+| 0x535930 | `database_language_file_exists` | database_language_file_exists | `arquivo_do_idioma_existe` |
+| 0x544970 | `database_merge_b_team_staff` | database_merge_b_team_staff | `juntar_o_time_b_ao_a` |
+| 0x53a8b0 | `database_non_player_to_attribute_vector` | database_non_player_to_attribute_vector | `vetor_de_atributos_do_nao_jogador` |
+| 0x539b90 | `database_pick_first_name_by_weight` | database_pick_first_name_by_weight | `primeiro_nome_pelo_peso` |
+| 0x539c60 | `database_pick_first_name_for_nation` | database_pick_first_name_for_nation | `primeiro_nome_da_nacao` |
+| 0x53a0e0 | `database_pick_second_name_by_weight` | database_pick_second_name_by_weight | `segundo_nome_pelo_peso` |
+| 0x53a1b0 | `database_pick_second_name_for_nation` | database_pick_second_name_for_nation | `segundo_nome_da_nacao` |
+| 0x535a80 | `database_player_initialisation` | database_player_initialisation | `inicializar_jogadores` |
+| 0x53a610 | `database_player_to_attribute_vector` | database_player_to_attribute_vector | `vetor_de_atributos_do_jogador` |
+| 0x539ae0 | `database_prune_comp_history_table` | database_prune_comp_history_table | `podar_historico_de_competicoes` |
+| 0x53c190 | `database_remove_staff_from_club` | database_remove_staff_from_club | `tirar_pessoa_do_clube` |
+| 0x53db40 | `database_sort_clubs_by_reputation` | database_sort_clubs_by_reputation | `ordenar_clubes_pela_reputacao` |
+| 0x53e990 | `database_staff_matches_names` | database_staff_matches_names | `pessoa_confere_com_os_nomes` |
+| 0x5267c0 | `database_trim_club_table` | database_trim_club_table | `cortar_tabela_de_clubes` |
+| 0x541e60 | `database_trim_senior_and_b_team_squads` | database_trim_senior_and_b_team_squads | `cortar_elencos_de_a_e_b` |
+| 0x53a980 | `database_vector_to_non_player` | database_vector_to_non_player | `vetor_para_o_nao_jogador` |
+| 0x53aa10 | `database_vector_to_player` | database_vector_to_player | `vetor_para_o_jogador` |
+| 0x6b6510 | `day_match_order` | day_match_order | `ordem_das_partidas_do_dia` |
+| 0x85fa00 | `days_to_end_date` | STAFF_CONTRACT::days_to_end_date | `dias_ate_o_fim_do_contrato` |
+| 0x54d580 | `db_files_open_for_read` | db_files_open_for_read | `abrir_arquivo_do_banco` |
+| 0x54d5b0 | `db_files_open_for_write` | db_files_open_for_write | `criar_arquivo_do_banco` |
+| 0x54d8a0 | `db_files_read_cities` | db_files_read_cities | `ler_cidades` |
+| 0x54db50 | `db_files_read_clubs` | db_files_read_clubs | `ler_clubes` |
+| 0x54dc90 | `db_files_read_clubs_v1` | db_files_read_clubs_v1 | `ler_clubes_v1` |
+| 0x550710 | `db_files_read_colours` | db_files_read_colours | `ler_cores` |
+| 0x550230 | `db_files_read_comp_history` | db_files_read_comp_history | `ler_historicos_de_competicao` |
+| 0x54feb0 | `db_files_read_comps` | db_files_read_comps | `ler_competicoes` |
+| 0x54ffd0 | `db_files_read_comps_v1` | db_files_read_comps_v1 | `ler_competicoes_v1` |
+| 0x54d5e0 | `db_files_read_continents` | db_files_read_continents | `ler_continentes` |
+| 0x550860 | `db_files_read_names` | db_files_read_names | `ler_nomes` |
+| 0x54d740 | `db_files_read_nations` | db_files_read_nations | `ler_nacoes` |
+| 0x54f030 | `db_files_read_non_players` | db_files_read_non_players | `ler_jogadores` |
+| 0x54f150 | `db_files_read_non_players_v1` | db_files_read_non_players_v1 | `ler_jogadores_v1` |
+| 0x5505c0 | `db_files_read_officials` | db_files_read_officials | `ler_arbitros` |
+| 0x54e880 | `db_files_read_players` | db_files_read_players | `ler_nao_jogadores` |
+| 0x54e9a0 | `db_files_read_players_v1` | db_files_read_players_v1 | `ler_nao_jogadores_v1` |
+| 0x54da00 | `db_files_read_stadiums` | db_files_read_stadiums | `ler_estadios` |
+| 0x54e630 | `db_files_read_staff` | db_files_read_staff | `ler_pessoas_110` |
+| 0x5504d0 | `db_files_read_staff_comp_history` | db_files_read_staff_comp_history | `ler_historico_de_competicoes_de_pessoal` |
+| 0x550380 | `db_files_read_staff_comps` | db_files_read_staff_comps | `ler_competicoes_de_pessoal` |
+| 0x54fc10 | `db_files_read_staff_extra` | db_files_read_staff_extra | `ler_preferencias` |
+| 0x54fd60 | `db_files_read_staff_history` | db_files_read_staff_history | `ler_historico_de_pessoas` |
+| 0x54e780 | `db_files_read_staff_v1` | db_files_read_staff_v1 | `ler_pessoas_157` |
+| 0x54d9a0 | `db_files_write_cities` | db_files_write_cities | `gravar_cidades` |
+| 0x54e5d0 | `db_files_write_clubs` | db_files_write_clubs | `gravar_clubes` |
+| 0x550320 | `db_files_write_comp_history` | db_files_write_comp_history | `gravar_historicos_de_competicao` |
+| 0x5501d0 | `db_files_write_comps` | db_files_write_comps | `gravar_competicoes` |
+| 0x54d6e0 | `db_files_write_continents` | db_files_write_continents | `gravar_continentes` |
+| 0x54d840 | `db_files_write_nations` | db_files_write_nations | `gravar_nacoes` |
+| 0x54fbb0 | `db_files_write_non_players` | db_files_write_non_players | `gravar_jogadores` |
+| 0x5506b0 | `db_files_write_officials` | db_files_write_officials | `gravar_arbitros` |
+| 0x550950 | `db_files_write_or_read_records_0x3c` | db_files_write_or_read_records_0x3c | `gravar_nomes` |
+| 0x54efd0 | `db_files_write_players` | db_files_write_players | `gravar_nao_jogadores` |
+| 0x550800 | `db_files_write_records_0x3a` | db_files_write_records_0x3a | `gravar_registros_58` |
+| 0x54daf0 | `db_files_write_stadiums` | db_files_write_stadiums | `gravar_estadios` |
+| 0x54e720 | `db_files_write_staff` | db_files_write_staff | `gravar_pessoas_110` |
+| 0x550470 | `db_files_write_staff_comps` | db_files_write_staff_comps | `gravar_competicoes_de_pessoal` |
+| 0x54fd00 | `db_files_write_staff_extra` | db_files_write_staff_extra | `gravar_preferencias` |
+| 0x54fe50 | `db_files_write_staff_history` | db_files_write_staff_history | `gravar_historico_de_pessoas` |
+| 0x51c020 | `decide_fixture_winner` | Cup::decide_fixture_winner | `decidir_jogo_da_copa` |
+| 0x6e9540 | `decide_foul` | decide_foul | `decidir_falta` |
+| 0x713fc0 | `decide_off_ball` | decide_off_ball | `decidir_sem_bola` |
+| 0x7103e0 | `decide_player` | decide_player | `decidir_jogador` |
+| 0x51f2f0 | `decide_tie_winner` | Cup::decide_tie_winner | `decidir_confronto_da_copa` |
+| 0x716310 | `defending_role` | defending_role | `papel_na_defesa` |
+| 0x6c3aa0 | `defensive_lines` | defensive_lines | `linhas_defensivas` |
+| 0x6cd770 | `deflect_ball` | deflect_ball | `desviar_bola` |
+| 0x785d40 | `deliver_to_manager` | News::deliver_to_manager | `entregar_noticia_ao_tecnico` |
+| 0x5b58e0 | `designated_for_position` | designated_for_position | `designado_da_posicao` |
+| 0x7160f0 | `designated_marked` | designated_marked | `marcado_designado` |
+| 0x523300 | `destroy_cup_stage` | Cup_Stage::~Cup_Stage | `cqs7_fim_da_fase_de_copa` |
+| 0x6b97a0 | `destroy_engine` | destroy_engine | `destruir_motor` |
+| 0x5b9460 | `destroy_fra_cfa` | FraCfa::~FraCfa | `destruir_cfa` |
+| 0x5bd870 | `destroy_fra_lower` | FraLower::~FraLower | `destruir_divisao_de_baixo_francesa` |
+| 0x6ebd60 | `destroy_match_player` | destroy_match_player | `destruir_jogador_da_partida` |
+| 0x7293c0 | `destroy_match_stats` | Match_Stats::~Match_Stats | `desmontar_estatisticas_da_partida` |
+| 0x8c6ae0 | `detach_offer_players` | TRANSFER_MANAGER::detach_offer_players | `soltar_jogadores_da_oferta` |
+| 0x6d26b0 | `develop_player` | develop_player | `evoluir_jogador` |
+| 0x6c4130 | `diferenca_jogador` | player_difference | `diferenca_jogador` |
+| 0x6c4180 | `diferenca_lado` | side_difference | `diferenca_lado` |
+| 0x715f30 | `difference_of_player` | difference_of_player | `diferenca_do_jogador` |
+| 0x6d4330 | `direct_marker` | direct_marker | `marcador_direto` |
+| 0x6f4a30 | `direction` | direction | `direcao` |
+| 0x556240 | `discipline_daily_update` | discipline_daily_update | `disciplina_do_dia` |
+| 0x556210 | `discipline_new_season` | discipline_new_season | `disciplina_temporada_nova` |
+| 0x556c70 | `discipline_operator` | BanRecord::operator= | `copiar_registro_de_suspensao` |
+| 0x448500 | `discipline_record_assign` | discipline_record_assign | `copiar_recorde_de_disciplina` |
+| 0x556830 | `discipline_remove_player` | Discipline::remove_player | `tirar_jogador_da_disciplina` |
+| 0x55cb20 | `discipline_set_slot` | discipline_set_slot | `disciplina_gravar_vaga` |
+| 0x547840 | `dislikes` | dislikes | `nao_gosta_de` |
+| 0x547d30 | `dislikes_club` | dislikes_club | `nao_gosta_do_clube` |
+| 0x776380 | `dislikes_national_side` | dislikes_national_side | `nao_gosta_da_selecao` |
+| 0x6cc4e0 | `distance_between` | distance_between | `distancia_entre` |
+| 0x6fa1e0 | `distance_to_goal` | distance_to_goal | `distancia_ao_gol` |
+| 0x6f09b0 | `distance_to_point` | distance_to_point | `distancia_ao_ponto` |
+| 0x402e70 | `draw` | Area::draw | `desenhar_area` |
+| 0x71f500 | `draw_action_zones_panel` | draw_action_zones_panel | `painel_das_zonas_de_acao` |
+| 0x4022c0 | `draw_finalists` | AfricanNations::draw_finalists | `cqs13_africana_sorteio` |
+| 0x92e940 | `draw_groups` | WorldCup::draw_groups | `mundial_sortear_grupos` |
+| 0x723d20 | `draw_latest_scores_panel` | draw_latest_scores_panel | `painel_dos_ultimos_placares` |
+| 0x71c270 | `draw_match_overview_panel` | draw_match_overview_panel | `painel_da_visao_geral_da_partida` |
+| 0x721000 | `draw_match_report_panel` | draw_match_report_panel | `painel_do_relatorio_da_partida` |
+| 0x71e040 | `draw_match_stats_panel` | draw_match_stats_panel | `painel_das_estatisticas_da_partida` |
+| 0x6f44a0 | `draw_moment` | draw_moment | `sortear_momento` |
+| 0x585290 | `draw_phase1_groups` | EuropeanCup::draw_phase1_groups | `campeoes_sortear_grupos` |
+| 0x585ab0 | `draw_phase2_groups` | EuropeanCup::draw_phase2_groups | `campeoes_sortear_segunda_fase` |
+| 0x722ed0 | `draw_player_ratings_panel` | draw_player_ratings_panel | `painel_das_notas_dos_jogadores` |
+| 0x586330 | `draw_quarter_finals` | EuropeanCup::draw_quarter_finals | `sorteio_das_quartas` |
+| 0x51c410 | `draw_round` | Cup::draw_round | `copa_sortear_rodada` |
+| 0x686a70 | `draw_team_order` | League::draw_team_order | `sortear_ordem_dos_clubes` |
+| 0x7217a0 | `draw_team_stats_panel` | draw_team_stats_panel | `painel_das_estatisticas_do_time` |
+| 0x7109f0 | `dribble` | dribble | `conduzir` |
+| 0x5567d0 | `drop_held_bans` | Discipline::drop_held_bans | `soltar_suspensoes_guardadas` |
+| 0x419710 | `end_absence` | AWOL::end_absence | `fim_da_ausencia` |
+| 0x6b4190 | `end_day` | end_day | `encerrar_dia` |
+| 0x774f30 | `end_duty_for_competition` | end_duty_for_competition | `encerrar_convocacoes_da_competicao` |
+| 0x774f90 | `end_duty_for_nation_in_competition` | end_duty_for_nation_in_competition | `encerrar_convocacoes_da_nacao` |
+| 0x4d07e0 | `end_loan` | CONTRACT_MANAGER::end_loan | `encerrar_o_emprestimo` |
+| 0x62e700 | `end_player_injury` | Injury::end_player_injury | `fim_da_lesao` |
+| 0x7c1350 | `end_season_for_key_nation` | PlayerStats::end_season_for_key_nation | `arquivar_estatisticas_da_nacao` |
+| 0x56bc50 | `eng_auto_cup_advance_stage` | EngAutoCup::advance_stage | `cqs5_trofeu_fase_seguinte` |
+| 0x56b3c0 | `eng_auto_cup_collect_entrants` | EngAutoCup::collect_entrants | `cqm10_trofeu_inscritos` |
+| 0x56bce0 | `eng_auto_cup_create_final_stage` | EngAutoCup::create_final_stage | `cqs6_trofeu_final` |
+| 0x56ade0 | `eng_auto_cup_create_round_table` | EngAutoCup::create_round_table | `cqp11_trofeu_tabela` |
+| 0x56c010 | `eng_auto_cup_rank_teams` | EngAutoCup::rank_teams | `cqs6_trofeu_classificacao` |
+| 0x56ccc0 | `eng_cc_cup_collect_entrants` | EngCcCup::collect_entrants | `cqm10_copa_da_liga_inscritos` |
+| 0x56c570 | `eng_cc_cup_create_round_table` | EngCcCup::create_round_table | `cql10_copa_da_liga_tabela` |
+| 0x56d640 | `eng_cc_cup_create_round_table_56d640` | EngCharity::create_round_table | `cql10_supercopa_tabela` |
+| 0x56f320 | `eng_cc_cup_create_round_table_56f320` | EngFaCup::create_round_table | `cql10_copa_da_inglaterra_tabela` |
+| 0x56d780 | `eng_cc_cup_select_teams` | EngCharity::select_teams | `cqm10_supercopa_clubes` |
+| 0x56caf0 | `eng_cc_cup_update_for_date` | EngCcCup::update_for_date | `cqn10_copa_da_liga_dia` |
+| 0x570550 | `eng_cc_cup_update_for_date_570550` | EngFaCup::update_for_date | `cqn10_copa_da_inglaterra_dia` |
+| 0x572ff0 | `eng_first_advance_stage` | EngFirst::advance_stage | `fase_seguinte_da_first` |
+| 0x5783c0 | `eng_first_create_play_off_stage` | EngThird::create_play_off_stage | `mata_mata_da_third` |
+| 0x573080 | `eng_first_create_playoff_stage` | EngFirst::create_playoff_stage | `mata_mata_da_first` |
+| 0x571980 | `eng_first_create_schedule` | EngFirst::create_schedule | `calendario_da_primeira_inglesa` |
+| 0x572bf0 | `eng_first_create_table` | EngFirst::create_table | `tabela_da_first` |
+| 0x573260 | `eng_first_set_club_progress` | EngFirst::set_club_progress | `situacao_na_first` |
+| 0x572d90 | `eng_first_set_up_rules` | EngFirst::set_up_rules | `regras_da_first` |
+| 0x544f30 | `eng_lng_free_tables` | eng_lng_free_tables | `liberar_tabelas_em_ingles` |
+| 0x573660 | `eng_prm_create_schedule` | EngPrm::create_schedule | `calendario_da_premiership` |
+| 0x574a20 | `eng_prm_create_table` | EngPrm::create_table | `tabela_da_premier` |
+| 0x577f70 | `eng_prm_create_table_577f70` | EngThird::create_table | `tabela_da_third` |
+| 0x574b70 | `eng_prm_set_up_rules` | EngPrm::set_up_rules | `regras_da_premier` |
+| 0x5780c0 | `eng_prm_set_up_rules_5780c0` | EngThird::set_up_rules | `regras_da_third` |
+| 0x5769e0 | `eng_second_advance_stage` | EngSecond::advance_stage | `fase_seguinte_da_second` |
+| 0x576a70 | `eng_second_create_play_off_stage` | EngSecond::create_play_off_stage | `mata_mata_da_second` |
+| 0x5757a0 | `eng_second_create_schedule` | EngSecond::create_schedule | `calendario_da_segunda_inglesa` |
+| 0x5770e0 | `eng_second_create_schedule_5770e0` | EngThird::create_schedule | `calendario_da_terceira_inglesa` |
+| 0x576630 | `eng_second_create_table` | EngSecond::create_table | `tabela_da_second` |
+| 0x578660 | `eng_second_set_club_progress` | EngThird::set_club_progress | `situacao_na_third` |
+| 0x576780 | `eng_second_set_up_rules` | EngSecond::set_up_rules | `regras_da_second` |
+| 0x576c50 | `eng_second_update_staff_records_for_status` | EngSecond::update_staff_records_for_status | `registros_pela_situacao_inglesa` |
+| 0x6cfd40 | `engine_card_by_severity` | engine_card_by_severity | `motor_cartao_pela_gravidade` |
+| 0x6cfca0 | `engine_decide_foul` | engine_decide_foul | `motor_decidir_falta` |
+| 0x6cfd70 | `engine_look_for_offside` | engine_look_for_offside | `motor_procurar_impedimento` |
+| 0x6b98c0 | `engine_loop` | engine_loop | `laco_do_motor` |
+| 0x6cfd10 | `engine_punish_foul` | engine_punish_foul | `motor_punir_falta` |
+| 0x6cfcd0 | `engine_punish_move` | engine_punish_move | `motor_punir_lance` |
+| 0x579d60 | `england_rules_can_loan_player` | ENGLAND_RULES::can_loan_player | `cqe5_pode_emprestar` |
+| 0x57a020 | `england_rules_daily_update` | ENGLAND_RULES::daily_update | `cqe5_dia_das_regras` |
+| 0x579c70 | `england_rules_get_loan_period` | ENGLAND_RULES::get_loan_period | `cqe6_periodo_inglaterra` |
+| 0x57a3c0 | `eur_super_cup_create_round_table` | EurSuperCup::create_round_table | `cqp10_supercopa_europeia_tabela` |
+| 0x63c9d0 | `eur_super_cup_init_team_list` | ItaC1Super::init_team_list | `cqq11_c1_vagas` |
+| 0x57a500 | `eur_super_cup_select_teams` | EurSuperCup::select_teams | `cqq11_europeia_clubes` |
+| 0x410a50 | `eur_super_cup_select_teams_410a50` | AsiaSuperCup::select_teams | `cqq11_asiatica_clubes` |
+| 0x57e8f0 | `euro_champ_qual_set_up_rules` | EuroChampQual::set_up_rules | `cqs8_eurocopa_regras` |
+| 0x5851d0 | `european_cup_advance_stage` | EuropeanCup::advance_stage | `proxima_fase_da_liga_dos_campeoes` |
+| 0x586660 | `european_cup_collect_club_list` | EuropeanCup::collect_club_list | `clubes_da_liga_dos_campeoes` |
+| 0x584fa0 | `european_cup_collect_entrants` | EuropeanCup::collect_entrants | `inscritos_da_liga_dos_campeoes` |
+| 0x586f60 | `european_cup_compare_clubs_by_seed` | european_cup_compare_clubs_by_seed | `campeoes_ordem_dos_potes` |
+| 0x5871e0 | `european_cup_compare_phase2_draw_entries` | european_cup_compare_phase2_draw_entries | `campeoes_ordem_da_segunda_fase` |
+| 0x583c50 | `european_cup_create_round_table` | EuropeanCup::create_round_table | `campeoes_rodadas_da_fase` |
+| 0x586900 | `european_cup_rank_teams` | EuropeanCup::rank_teams | `campeoes_posicoes_previstas` |
+| 0x586c00 | `european_cup_set_club_progress` | EuropeanCup::set_club_progress | `progresso_do_clube_na_liga_dos_campeoes` |
+| 0x584ae0 | `european_cup_update_staff_records_for_status` | EuropeanCup::update_staff_records_for_status | `registros_da_liga_dos_campeoes` |
+| 0x6d5d00 | `event_at_front` | event_at_front | `evento_na_frente` |
+| 0x6d8d10 | `event_text` | event_text | `texto_do_evento` |
+| 0x6d5d80 | `event_variant` | event_variant | `variante_do_evento` |
+| 0x6f55c0 | `evolve_moment` | evolve_moment | `evoluir_momento` |
+| 0x6fad40 | `execute_pass` | execute_pass | `executar_passe` |
+| 0x757c70 | `expire_story_log` | Media::expire_story_log | `expirar_historias_da_midia` |
+| 0x897ee0 | `extra_tactic_slot` | extra_tactic_slot | `vaga_extra_tatica` |
+| 0x6fa140 | `facing` | facing | `virado_para` |
+| 0x6cb960 | `faixa` | band | `faixa` |
+| 0x6f5b20 | `faixa_jogador` | player_band | `faixa_jogador` |
+| 0x4485b0 | `fans_player_record_assign` | fans_player_record_assign | `copiar_recorde_do_torcedor` |
+| 0x547790 | `favourite_of` | favourite_of | `favorito_de` |
+| 0x729ff0 | `fill_match_record` | Match_Stats::fill_match_record | `preencher_registro_da_partida` |
+| 0x7e4750 | `fill_match_record_from_fixture` | fill_match_record_from_fixture | `registro_da_partida_pelo_clube` |
+| 0x8cf6b0 | `fill_squad_restrictions` | TRANSFER_MANAGER::fill_squad_restrictions | `restricoes_da_partida` |
+| 0x7e4920 | `fill_staff_name_ref` | fill_staff_name_ref | `referencia_ao_nome` |
+| 0x721cd0 | `fill_team_stats_rows` | fill_team_stats_rows | `preencher_estatisticas_do_time` |
+| 0x8cb6d0 | `fill_vacated_staff_job` | fill_vacated_staff_job | `preencher_vaga_da_comissao` |
+| 0x59cdd0 | `fin_prm_end_season_for_nation` | FinanceTable::end_season_for_nation | `fim_de_temporada_da_nacao` |
+| 0x68a4d0 | `final_day_margin_needed` | League::final_day_margin_needed | `margem_do_ultimo_dia` |
+| 0x8c9390 | `finalise_transfer` | finalise_transfer | `efetivar_transferencia` |
+| 0x59b4c0 | `finance_get_days_to_season_start` | finance_get_days_to_season_start | `dias_ate_a_temporada` |
+| 0x85c800 | `find_available_venue` | Stadium::find_available_venue | `estadio_neutro` |
+| 0x768130 | `find_best_player` | MONTH_RATINGS::find_best_player | `melhor_do_mes` |
+| 0x8cdd80 | `find_club_offer_for_player` | TRANSFER_MANAGER::find_club_offer_for_player | `oferta_do_clube_pelo_jogador` |
+| 0x48cc70 | `find_club_progress` | Comp::find_club_progress | `competicao_progresso_do_clube` |
+| 0x68ab70 | `find_club_row` | League::find_club_row | `linha_do_clube` |
+| 0x7f8610 | `find_club_search_entry` | SCOUT_MANAGER::find_club_search_entry | `entrada_do_jogador_na_busca_do_clube` |
+| 0x8d0ea0 | `find_first_team_appearance_money` | TRANSFER_MANAGER::find_first_team_appearance_money | `premio_por_jogo_do_jogador` |
+| 0x5ad780 | `find_fixture_clashes` | FIXTURE_MANAGER::find_fixture_clashes | `conflitos_do_jogo` |
+| 0x5acbe0 | `find_fixtures` | FIXTURE_MANAGER::find_fixtures | `achar_jogos_do_calendario` |
+| 0x5c88f0 | `find_friendly_match` | find_friendly_match | `amistoso_do_clube` |
+| 0x5c4cb0 | `find_friendly_opponent` | Friendly::find_friendly_opponent | `adversario_do_amistoso` |
+| 0x55cb60 | `find_held_ban` | Discipline::find_held_ban | `punicao_guardada` |
+| 0x8cc930 | `find_highest_offer_for_player` | TRANSFER_MANAGER::find_highest_offer_for_player | `maior_oferta_pelo_jogador` |
+| 0x5fa730 | `find_hosts` | HostCountry::find_hosts | `sede_da_edicao` |
+| 0x5c68b0 | `find_human_club_open_invitation` | Friendly::find_human_club_open_invitation | `convite_aberto_do_clube_humano` |
+| 0x5c6830 | `find_human_club_tournament` | Friendly::find_human_club_tournament | `torneio_do_clube_humano` |
+| 0x8d0f00 | `find_international_appearance_money` | TRANSFER_MANAGER::find_international_appearance_money | `premio_de_jogos_na_selecao_achado` |
+| 0x786b70 | `find_item_by_id` | News::find_item_by_id | `achar_noticia_pelo_id` |
+| 0x86f950 | `find_manager_of_the_month` | Staff_Records::find_manager_of_the_month | `tecnico_do_mes_na_liga` |
+| 0x62bf60 | `find_match_injury` | Injury::find_match_injury | `batida_do_jogador` |
+| 0x8c72d0 | `find_negotiated_loan_contract` | TRANSFER_MANAGER::find_negotiated_loan_contract | `emprestimo_negociado` |
+| 0x5ab510 | `find_new_fixture_date` | FIXTURE_MANAGER::find_new_fixture_date | `nova_data_do_jogo` |
+| 0x7a5790 | `find_new_retirements` | PLAYER_REGEN::find_new_retirements | `novas_aposentadorias` |
+| 0x8cf0e0 | `find_next_allowed_transfer_date` | TRANSFER_MANAGER::find_next_allowed_transfer_date | `primeiro_dia_permitido_da_oferta` |
+| 0x5ac920 | `find_next_fixture` | FIXTURE_MANAGER::find_next_fixture | `proxima_partida` |
+| 0x5fa7d0 | `find_next_hosts` | HostCountry::find_next_hosts | `proxima_sede` |
+| 0x8d0dd0 | `find_next_sale_percentage` | TRANSFER_MANAGER::find_next_sale_percentage | `percentual_da_proxima_venda_achado` |
+| 0x8cf470 | `find_next_window_open_date` | TRANSFER_MANAGER::find_next_window_open_date | `proxima_janela_aberta` |
+| 0x4c6730 | `find_nth_unqualified_club_of_nation` | ConmebolSeeding::find_nth_unqualified_club_of_nation | `conmebol_enesimo_clube_da_nacao` |
+| 0x8b4b20 | `find_position_training` | TRAINING_MANAGER::find_position_training | `achar_o_treino_de_posicao` |
+| 0x729e30 | `find_record_fixture` | Match_Stats::find_record_fixture | `ficha_do_registro` |
+| 0x7a7ed0 | `find_retirement_entry` | PLAYER_REGEN::find_retirement_entry | `entrada_da_aposentadoria` |
+| 0x5c6740 | `find_scheduled_friendly_slot` | Friendly::find_scheduled_friendly_slot | `vaga_do_amistoso` |
+| 0x8972c0 | `find_selection_slot` | Tactics::find_selection_slot | `vaga_do_escalado` |
+| 0x5ac7a0 | `find_stored_fixture` | FIXTURE_MANAGER::find_stored_fixture | `jogo_guardado_igual` |
+| 0x5c5040 | `find_tour_opponent` | Friendly::find_tour_opponent | `adversario_da_excursao` |
+| 0x519c90 | `find_tree_slot_for_fixture` | Cup::find_tree_slot_for_fixture | `chave_do_jogo_na_copa` |
+| 0x8c7260 | `find_work_permit` | TRANSFER_MANAGER::find_work_permit | `permissao_de_trabalho_de` |
+| 0x6d1770 | `fine_positions` | fine_positions | `posicoes_finas` |
+| 0x5ae6d0 | `fix_man_comp_has_fixture_on_date` | fix_man_comp_has_fixture_on_date | `competicao_tem_jogo_na_data` |
+| 0x5aaf00 | `fix_man_daily_update` | FIXTURE_MANAGER::daily_update | `calendario_dia` |
+| 0x5af5b0 | `fix_man_get_partner_key_nation_index` | fix_man_get_partner_key_nation_index | `nacao_parceira_do_clube` |
+| 0x5aee90 | `fix_man_load_club_dates` | fix_man_load_club_dates | `carregar_datas_dos_clubes` |
+| 0x5af390 | `fix_man_load_fixture_leg_checks` | fix_man_load_fixture_leg_checks | `carregar_conferencia_das_pernas` |
+| 0x5af040 | `fix_man_save_club_dates` | fix_man_save_club_dates | `gravar_datas_dos_clubes` |
+| 0x5af4a0 | `fix_man_save_fixture_leg_checks` | fix_man_save_fixture_leg_checks | `gravar_conferencia_das_pernas` |
+| 0x69d060 | `fix_missing_jobs` | MANAGER_MANAGER::fix_missing_jobs | `abrir_vagas_que_faltam` |
+| 0x729500 | `fixture_entry_matches` | Match_Stats::fixture_entry_matches | `entrada_do_jogo_bate` |
+| 0x7f9720 | `fixture_has_scouted_player` | SCOUT_MANAGER::fixture_has_scouted_player | `jogo_com_observado` |
+| 0x5afe00 | `fog_after_match` | fog_after_match | `nevoa_apos_partida` |
+| 0x5afd00 | `forget_person` | forget_person | `esquecer_pessoa` |
+| 0x775610 | `format_squad_label` | NationalTeams::format_squad_label | `nome_do_elenco_da_selecao` |
+| 0x5b59a0 | `formation_mask` | formation_mask | `mascara_da_formacao` |
+| 0x896570 | `formation_record` | formation_record | `registro_da_formacao` |
+| 0x6c2a40 | `formation_square` | formation_square | `casa_da_formacao` |
+| 0x6e9820 | `foul_decision` | foul_decision | `decisao_da_falta` |
+| 0x6cfc60 | `foul_in_engine` | foul_in_engine | `falta_no_motor` |
+| 0x5b9fa0 | `fra_cfa_create_group_table` | FraCfa::create_group_table | `tabela_do_grupo_da_cfa` |
+| 0x5b9510 | `fra_cfa_create_schedule` | FraCfa::create_schedule | `calendario_da_cfa` |
+| 0x64ef30 | `fra_cfa_create_schedule_64ef30` | ItaSerC1b::create_schedule | `calendario_da_c1_b` |
+| 0x5be230 | `fra_cfa_create_table` | FraLower::create_table | `tabela_da_divisao_de_baixo_francesa` |
+| 0x64ff40 | `fra_cfa_set_club_progress` | ItaSerC1b::set_club_progress | `situacao_na_c1b` |
+| 0x5ba0a0 | `fra_cfa_set_up_rules` | FraCfa::set_up_rules | `regras_da_cfa` |
+| 0x5baa50 | `fra_cup_collect_entrants` | FraCup::collect_entrants | `cqm11_copa_da_franca_inscritos` |
+| 0x5bd160 | `fra_cup_collect_entrants_5bd160` | FraLgeCup::collect_entrants | `cqm11_copa_da_liga_inscritos` |
+| 0x5ba3f0 | `fra_cup_create_round_table` | FraCup::create_round_table | `cql11_copa_da_franca_tabela` |
+| 0x5bcc40 | `fra_cup_create_round_table_5bcc40` | FraLgeCup::create_round_table | `cql11_copa_da_liga_francesa_tabela` |
+| 0x5bb690 | `fra_first_create_schedule` | FraFirst::create_schedule | `calendario_da_primeira_francesa` |
+| 0x5bc2b0 | `fra_first_create_table` | FraFirst::create_table | `tabela_da_franca_1` |
+| 0x650100 | `fra_first_set_up_fixed_fixtures` | ItaSerC1b::set_up_fixed_fixtures | `calendario_fixo_da_c1b` |
+| 0x5bc410 | `fra_first_set_up_rules` | FraFirst::set_up_rules | `regras_da_franca_1` |
+| 0x5be620 | `fra_second_create_schedule` | FraSecond::create_schedule | `calendario_da_segunda_francesa` |
+| 0x5bef10 | `fra_second_create_table` | FraSecond::create_table | `tabela_da_franca_2` |
+| 0x5bf0a0 | `fra_second_set_up_rules` | FraSecond::set_up_rules | `regras_da_franca_2` |
+| 0x5bf5d0 | `fra_super_create_round_table` | FraSuper::create_round_table | `cql12_supercopa_da_franca_tabela` |
+| 0x666020 | `fra_super_create_round_table_666020` | JapSuper::create_round_table | `cql12_supercopa_do_japao_tabela` |
+| 0x5bf770 | `fra_super_select_teams` | FraSuper::select_teams | `cqm11_supercopa_clubes` |
+| 0x5bfe30 | `fra_third_create_schedule` | FraThird::create_schedule | `calendario_da_terceira_francesa` |
+| 0x5bd920 | `fra_third_create_schedule_5bd920` | FraLower::create_schedule | `calendario_da_divisao_de_baixo_francesa` |
+| 0x5c05d0 | `fra_third_create_table` | FraThird::create_table | `tabela_da_franca_3` |
+| 0x5c0700 | `fra_third_set_up_rules` | FraThird::set_up_rules | `regras_da_franca_3` |
+| 0x6d5b50 | `free_event_tables` | free_event_tables | `liberar_tabelas_de_eventos` |
+| 0x82ff40 | `free_game_data` | free_game_data | `liberar_dados_do_jogo` |
+| 0x53a5b0 | `free_record` | free_record | `registro_livre` |
+| 0x687970 | `free_table` | League::free_table | `liberar_tabela_da_liga` |
+| 0x6d5a70 | `free_teammate` | free_teammate | `companheiro_livre` |
+| 0x8c1af0 | `free_transfer_staff` | free_transfer_staff | `liberar_sem_custo` |
+| 0x5cb9e0 | `friendly_cancel_national_fixture` | friendly_cancel_national_fixture | `cqg10_jogo_da_selecao_cancelado` |
+| 0x5ca090 | `friendly_check_match_invitation` | friendly_check_match_invitation | `convite_de_amistoso_valido` |
+| 0x5ca290 | `friendly_check_tournament_invitation` | friendly_check_tournament_invitation | `convite_de_torneio_valido` |
+| 0x5c52d0 | `friendly_club_reputation_tier` | friendly_club_reputation_tier | `faixa_de_reputacao_do_amistoso` |
+| 0x5c74d0 | `friendly_get_rest_days_for_kind` | friendly_get_rest_days_for_kind | `folga_do_amistoso` |
+| 0x5cbdd0 | `friendly_international_date_resolve` | friendly_international_date_resolve | `data_do_amistoso_internacional` |
+| 0x5cb9b0 | `friendly_international_date_set` | friendly_international_date_set | `preencher_data_internacional` |
+| 0x5c6b70 | `friendly_is_club_free_on_date` | friendly_is_club_free_on_date | `clube_livre_na_data` |
+| 0x5c2460 | `friendly_update_for_date` | Friendly::update_for_date | `atualizar_amistosos_do_dia` |
+| 0x8cbf40 | `future_transfer_assign` | future_transfer_assign | `copiar_transferencia_futura` |
+| 0x5d5a60 | `game_average` | game_average | `media_do_jogo` |
+| 0x5d7190 | `game_check_club_dressing_room_unrest` | game_check_club_dressing_room_unrest | `atrito_com_o_tecnico` |
+| 0x5d6aa0 | `game_check_players_missing_training` | game_check_players_missing_training | `faltas_ao_treino` |
+| 0x5ce0b0 | `game_spread_squad_morale_by_leadership` | game_spread_squad_morale_by_leadership | `moral_pela_lideranca` |
+| 0x5ce060 | `game_update_comps_for_date` | game_update_comps_for_date | `competicoes_do_dia` |
+| 0x5d5f20 | `game_update_nation_coefficients` | game_update_nation_coefficients | `coeficientes_das_nacoes` |
+| 0x5d6d10 | `game_update_squad_relationships` | game_update_squad_relationships | `relacoes_do_elenco` |
+| 0x5fbd00 | `get_active_tactic` | HUMAN_MANAGER::get_active_tactic | `tatica_ativa_do_humano` |
+| 0x545a60 | `get_adjective_form_index` | get_adjective_form_index | `forma_do_adjetivo` |
+| 0x8c5450 | `get_agreed_contract_club` | TRANSFER_MANAGER::get_agreed_contract_club | `clube_do_contrato_acertado` |
+| 0x452710 | `get_all_time_record` | Club_Records::get_all_time_record | `recordes_de_sempre` |
+| 0x690b70 | `get_board_confidence_band` | MANAGER_MANAGER::get_board_confidence_band | `faixa_da_confianca_da_diretoria` |
+| 0x8976a0 | `get_captain` | Tactics::get_captain | `capitao_guardado` |
+| 0x785670 | `get_category` | NewsItem::get_category | `categoria_da_noticia` |
+| 0x8b4f50 | `get_category_level` | TRAINING_SCHEDULE::get_category_level | `nivel_da_categoria_do_programa` |
+| 0x7c3920 | `get_category_record` | PlayerStats::get_category_record | `registro_da_categoria` |
+| 0x8c3e50 | `get_clause_count` | TRANSFER_MANAGER::get_clause_count | `contagem_da_clausula` |
+| 0x5a0590 | `get_club_finance` | FinanceTable::get_club_finance | `financas_do_clube` |
+| 0x5aee40 | `get_club_first_fixture_year` | FIXTURE_MANAGER::get_club_first_fixture_year | `primeiro_ano_com_jogos` |
+| 0x5aee60 | `get_club_last_fixture_year` | FIXTURE_MANAGER::get_club_last_fixture_year | `ultimo_ano_com_jogos` |
+| 0x7c47b0 | `get_club_league_stat` | PlayerStats::get_club_league_stat | `estatistica_da_liga_do_jogador` |
+| 0x896660 | `get_club_tactic` | Tactics::get_club_tactic | `tatica_do_clube` |
+| 0x8b4cd0 | `get_coach_assignments` | TRAINING_MANAGER::get_coach_assignments | `comissao_do_humano` |
+| 0x8b41d0 | `get_coaching_factor` | TRAINING_MANAGER::get_coaching_factor | `fator_do_treinador` |
+| 0x62c590 | `get_condition` | Injury::get_condition | `condicao_do_jogador` |
+| 0x6177f0 | `get_continent_adjective` | get_continent_adjective | `adjetivo_do_continente` |
+| 0x866620 | `get_contract_satisfaction` | get_contract_satisfaction | `satisfacao_com_o_contrato` |
+| 0x68d2e0 | `get_current` | LLIST::get_current | `item_do_cursor` |
+| 0x4ca300 | `get_current_contract_offers` | CONTRACT_MANAGER::get_current_contract_offers | `ofertas_de_contrato_do_clube` |
+| 0x690c30 | `get_current_run` | MANAGER_MANAGER::get_current_run | `sequencia_atual_do_clube` |
+| 0x48cec0 | `get_current_stage` | Comp::get_current_stage | `competicao_fase_atual` |
+| 0x69b350 | `get_departure_reason` | MANAGER_MANAGER::get_departure_reason | `motivo_da_saida_do_tecnico` |
+| 0x7f6be0 | `get_edit_session` | SCOUT_MANAGER::get_edit_session | `sessao_de_edicao` |
+| 0x8c5fc0 | `get_exchange_negotiations_for_player` | TRANSFER_MANAGER::get_exchange_negotiations_for_player | `negociacoes_de_troca_do_jogador` |
+| 0x8c5e40 | `get_exchange_offers_for_player` | TRANSFER_MANAGER::get_exchange_offers_for_player | `trocas_oferecendo_o_jogador` |
+| 0x867d30 | `get_expiry_band` | STAFF_CONTRACT::get_expiry_band | `faixa_do_vencimento` |
+| 0x7357c0 | `get_finable_story_kind` | Media::get_finable_story_kind | `historia_punivel_do_jogador` |
+| 0x48d2b0 | `get_first_stage_of_group` | Comp::get_first_stage_of_group | `competicao_primeira_fase_do_grupo` |
+| 0x5abf10 | `get_fixture_list` | FIXTURE_MANAGER::get_fixture_list | `calendario_lista` |
+| 0x5ae6a0 | `get_fixture_list_for_date` | FIXTURE_MANAGER::get_fixture_list_for_date | `lista_da_data` |
+| 0x48e190 | `get_fixture_match_importance` | Comp::get_fixture_match_importance | `importancia_do_jogo_na_competicao` |
+| 0x8d2fa0 | `get_fixture_rules_scope` | TRANSFER_MANAGER::get_fixture_rules_scope | `escopo_das_regras_da_partida` |
+| 0x521790 | `get_fixture_side_teams` | Cup::get_fixture_side_teams | `clubes_do_lado_do_jogo` |
+| 0x4c79a0 | `get_free_staff_contract_space` | CONTRACT_MANAGER::get_free_staff_contract_space | `vaga_livre_de_contrato` |
+| 0x8cca10 | `get_future_transfer` | TRANSFER_MANAGER::get_future_transfer | `transferencia_futura_do_jogador` |
+| 0x57d9d0 | `get_group_team_count` | EuroChampQual::get_group_team_count | `cqs8_eurocopa_tamanho_do_grupo` |
+| 0x839590 | `get_heading_colour` | get_heading_colour | `cor_do_titulo` |
+| 0x5fdc30 | `get_holiday_stamp` | HUMAN_MANAGER::get_holiday_stamp | `hora_das_ferias` |
+| 0x786960 | `get_inbox_items` | News::get_inbox_items | `noticias_da_caixa` |
+| 0x8cf5e0 | `get_ineligibility_code` | TRANSFER_MANAGER::get_ineligibility_code | `codigo_de_inelegibilidade` |
+| 0x7757d0 | `get_international_duty_club` | NationalTeams::get_international_duty_club | `selecao_que_tem_o_jogador` |
+| 0x7c6830 | `get_language_fluency` | PlayerStats::get_language_fluency | `fluencia_no_idioma` |
+| 0x7c1a60 | `get_last_match_rating` | PlayerStats::get_last_match_rating | `ultima_nota_do_jogador` |
+| 0x690bd0 | `get_league_confidence_band` | MANAGER_MANAGER::get_league_confidence_band | `faixa_da_confianca_na_liga` |
+| 0x86fab0 | `get_manager_of_year_candidates` | Staff_Records::get_manager_of_year_candidates | `candidatos_a_tecnico_do_ano` |
+| 0x86f5b0 | `get_manager_record` | Staff_Records::get_manager_record | `registro_do_tecnico` |
+| 0x8b3930 | `get_manager_schedule` | TRAINING_MANAGER::get_manager_schedule | `programa_do_humano` |
+| 0x62c510 | `get_match_condition` | Injury::get_match_condition | `condicao_de_jogo_do_jogador` |
+| 0x68a3e0 | `get_match_importance` | League::get_match_importance | `importancia_do_jogo_da_liga` |
+| 0x923010 | `get_match_weather` | Weather::get_match_weather | `clima_da_partida` |
+| 0x597db0 | `get_max_staff_wage` | Finance::get_max_staff_wage | `teto_salarial_do_pessoal` |
+| 0x5968d0 | `get_max_wage` | Finance::get_max_wage | `teto_salarial` |
+| 0x58e190 | `get_nation_strength_tier` | FIFA_RANKINGS::get_nation_strength_tier | `faixa_da_selecao` |
+| 0x8c6200 | `get_negotiation_slot` | TRANSFER_MANAGER::get_negotiation_slot | `vaga_da_negociacao` |
+| 0x8cc5b0 | `get_offer_response_delay` | TRANSFER_MANAGER::get_offer_response_delay | `prazo_da_resposta_a_oferta` |
+| 0x8c5cf0 | `get_offers_for_player` | TRANSFER_MANAGER::get_offers_for_player | `ofertas_pelo_jogador` |
+| 0x8c6100 | `get_open_offers_for_club_players` | TRANSFER_MANAGER::get_open_offers_for_club_players | `ofertas_abertas_pelos_jogadores_do_clube` |
+| 0x923970 | `get_pitch_condition` | Weather::get_pitch_condition | `gramado_do_jogo` |
+| 0x62c400 | `get_player_injury_status` | Injury::get_player_injury_status | `estado_da_lesao` |
+| 0x6ab670 | `get_player_match_rating_verdict` | get_player_match_rating_verdict | `veredito_da_nota_na_partida` |
+| 0x8b39f0 | `get_player_schedule` | TRAINING_MANAGER::get_player_schedule | `programa_de_treino_do_jogador` |
+| 0x8b4770 | `get_position_aptitude` | TRAINING_MANAGER::get_position_aptitude | `aptidao_para_a_posicao` |
+| 0x7dad20 | `get_pundit_name` | PunditList::get_pundit_name | `nome_do_veiculo` |
+| 0x580b50 | `get_qualification_status` | EuroChampQual::get_qualification_status | `cqs8_eurocopa_situacao` |
+| 0x62ed30 | `get_recurring_injury_type` | Injury::get_recurring_injury_type | `lesao_que_volta` |
+| 0x616f20 | `get_region_name` | get_region_name | `nome_da_regiao` |
+| 0x545dc0 | `get_regions_sorted_by_name` | get_regions_sorted_by_name | `regioes_pelo_nome` |
+| 0x5fed50 | `get_saved_lineup` | HUMAN_MANAGER::get_saved_lineup | `escalacao_guardada` |
+| 0x7ae950 | `get_scout` | PLAYER_SEARCH::get_scout | `olheiro_da_busca` |
+| 0x7aefd0 | `get_scout_assignment` | PLAYER_SEARCH::get_scout_assignment | `missao_do_olheiro` |
+| 0x4528d0 | `get_season_record` | Club_Records::get_season_record | `recordes_da_temporada` |
+| 0x7f6e30 | `get_selected_list` | SCOUT_MANAGER::get_selected_list | `lista_escolhida_do_tecnico` |
+| 0x8cf7e0 | `get_selection_limit` | get_selection_limit | `limite_de_escalacao` |
+| 0x785830 | `get_slot` | NewsItem::get_slot | `vaga_da_noticia` |
+| 0x785a20 | `get_slot_string` | NewsItem::get_slot_string | `texto_do_dado_da_noticia` |
+| 0x55d3c0 | `get_slot_text` | Discipline::get_slot_text | `texto_da_vaga_da_suspensao` |
+| 0x4cc130 | `get_squad_flags_for_club` | CONTRACT_MANAGER::get_squad_flags_for_club | `marcas_de_elenco_para_a_tela` |
+| 0x85a760 | `get_squad_number` | SQUAD_MANAGER::get_squad_number | `numero_de_camisa` |
+| 0x4cbb60 | `get_squad_placement` | CONTRACT_MANAGER::get_squad_placement | `lugar_no_elenco` |
+| 0x849f00 | `get_squad_status_for_club` | Shortlist_Manager::get_squad_status_for_club | `estatuto_no_elenco_pelo_clube` |
+| 0x48d200 | `get_stage` | Comp::get_stage | `fase_da_competicao` |
+| 0x7c1e30 | `get_stat` | PlayerStats::get_stat | `estatistica_da_categoria` |
+| 0x9232c0 | `get_temperature` | Weather::get_temperature | `temperatura_do_jogo` |
+| 0x5af2f0 | `get_time_slice` | FIXTURE_MANAGER::get_time_slice | `faixa_do_horario` |
+| 0x8b37c0 | `get_training_attribute_change` | TRAINING_MANAGER::get_training_attribute_change | `mudanca_do_atributo_pelo_treino` |
+| 0x8b4f60 | `get_training_load` | TRAINING_SCHEDULE::get_training_load | `carga_do_programa` |
+| 0x85d8a0 | `get_travel_distance_factor` | Stadium::get_travel_distance_factor | `fator_da_distancia` |
+| 0x5986b0 | `get_wealth_band` | Finance::get_wealth_band | `faixa_de_riqueza` |
+| 0x700420 | `goalkeeper_save` | goalkeeper_save | `defesa_do_goleiro` |
+| 0x451570 | `goals_in_match_record_assign` | goals_in_match_record_assign | `copiar_recorde_de_gols_na_partida` |
+| 0x450c10 | `goals_in_match_record_construct` | goals_in_match_record_construct | `construir_recorde_de_gols_na_partida` |
+| 0x5e1620 | `goldcup_advance_stage` | GoldCup::advance_stage | `cqs11_copa_america_fase_seguinte` |
+| 0x5e16b0 | `goldcup_create_group_stage` | GoldCup::create_group_stage | `cqr13_copa_america_grupo` |
+| 0x5e11e0 | `goldcup_create_group_table` | GoldCup::create_group_table | `cqr13_copa_america_primeiro_grupo` |
+| 0x5e0900 | `goldcup_create_schedule` | GoldCup::create_schedule | `cqp12_copa_america_tabela` |
+| 0x58b560 | `goldcup_create_schedule_58b560` | FifaConfed::create_schedule | `cqp12_confed_tabela` |
+| 0x5e2340 | `goldcup_set_predicted_positions` | GoldCup::set_predicted_positions | `cqs12_copa_america_previstas` |
+| 0x5e12d0 | `goldcup_set_up_rules` | GoldCup::set_up_rules | `cqk10_copa_america_regras` |
+| 0x91ecf0 | `goldcup_set_up_rules_91ecf0` | WcOceaniaLeague::set_up_rules | `cqk10_eliminatoria_oceania_regras` |
+| 0x5e1530 | `goldcup_start_new_season` | GoldCup::start_new_season | `cqs12_copa_america_temporada_nova` |
+| 0x5e2120 | `goldcup_update_for_date` | GoldCup::update_for_date | `cqr13_copa_america_dia` |
+| 0x5e13b0 | `goldcup_update_staff_records_for_status` | GoldCup::update_staff_records_for_status | `cqj10_copa_america_registros` |
+| 0x700360 | `gravar_8ea7` | write_8ea7 | `gravar_8ea7` |
+| 0x700370 | `gravar_8ea8` | write_8ea8 | `gravar_8ea8` |
+| 0x700350 | `gravar_8ea9` | write_8ea9 | `gravar_8ea9` |
+| 0x700390 | `gravar_8eaa` | write_8eaa | `gravar_8eaa` |
+| 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation | `gravar_formacao_tatica` |
+| 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot | `gravar_vaga_tatica` |
+| 0x5ecf20 | `greece_rules_init_transfer_windows` | GREECE_RULES::init_transfer_windows | `janelas_grecia` |
+| 0x424c00 | `greece_rules_init_transfer_windows_424c00` | BELGIUM_RULES::init_transfer_windows | `janelas_belgica` |
+| 0x7ec7e0 | `greece_rules_init_transfer_windows_7ec7e0` | RUSSIA_RULES::init_transfer_windows | `janelas_russia` |
+| 0x6854a0 | `group_decided` | group_decided | `grupo_decidido` |
+| 0x7e6f20 | `group_nation` | group_nation | `nacao_do_grupo` |
+| 0x718930 | `handle_day_fixtures_input` | handle_day_fixtures_input | `responder_jogos_do_dia` |
+| 0x71a240 | `handle_match_screen_input` | handle_match_screen_input | `responder_tela_da_partida` |
+| 0x8c2180 | `handle_player_accepted_terms` | TRANSFER_MANAGER::handle_player_accepted_terms | `termos_aceitos` |
+| 0x8c28c0 | `handle_player_rejected_terms` | handle_player_rejected_terms | `recusa_dos_termos` |
+| 0x722dc0 | `handle_team_stats_input` | handle_team_stats_input | `responder_estatisticas_do_time` |
+| 0x4d8610 | `handle_transfer_request` | CONTRACT_MANAGER::handle_transfer_request | `pedido_de_transferencia` |
+| 0x867b50 | `has_active_release_clause` | STAFF_CONTRACT::has_active_release_clause | `clausula_de_rescisao_ativa` |
+| 0x522910 | `has_club` | Cup::has_club | `copa_tem_o_clube` |
+| 0x8b4db0 | `has_fast_position_training` | TRAINING_MANAGER::has_fast_position_training | `aprende_depressa` |
+| 0x419070 | `has_fitness_incident` | AWOL::has_fitness_incident | `teve_incidente_de_forma` |
+| 0x757da0 | `has_logged_story` | Media::has_logged_story | `historia_ja_registrada` |
+| 0x6b59a0 | `has_match` | has_match | `tem_jogo` |
+| 0x418ff0 | `has_missed_training` | AWOL::has_missed_training | `teve_falta_ao_treino` |
+| 0x600740 | `has_nickname` | HUMAN_MANAGER::has_nickname | `humano_deu_apelido` |
+| 0x6847b0 | `has_relegation` | League::has_relegation | `liga_tem_rebaixamento` |
+| 0x7f8d70 | `has_scout_request` | SCOUT_MANAGER::has_scout_request | `pedido_de_observacao` |
+| 0x897250 | `has_selection_undo` | Tactics::has_selection_undo | `tem_copia_da_escalacao` |
+| 0x7a6e20 | `has_spare_non_player_record` | PLAYER_REGEN::has_spare_non_player_record | `tem_reserva_de_tecnico` |
+| 0x735840 | `has_story` | has_story | `tem_noticia` |
+| 0x787350 | `has_urgent_items` | News::has_urgent_items | `tecnico_tem_noticia_pendente` |
+| 0x5563f0 | `hold_bans_for_loan` | Discipline::hold_bans_for_loan | `guardar_suspensoes_do_emprestado` |
+| 0x8c4e10 | `hold_offers_at_window_close` | hold_offers_at_window_close | `ofertas_em_espera_na_janela` |
+| 0x6ce110 | `hold_position_one` | hold_position_one | `manter_posicao_um` |
+| 0x5fa850 | `host_country_daily_update` | HostCountry::daily_update | `calendario_das_sedes` |
+| 0x6d59b0 | `how_many_mark` | how_many_mark | `quantos_marcam` |
+| 0x600a50 | `human_club` | human_club | `clube_humano` |
+| 0x600e90 | `human_manager_get_stand_in_manager` | human_manager_get_stand_in_manager | `tecnico_substituto` |
+| 0x600c90 | `human_runs_club` | human_runs_club | `humano_manda_no_clube` |
+| 0x7c6ca0 | `improve_language` | PlayerStats::improve_language | `melhorar_idioma` |
+| 0x70d630 | `in_danger` | in_danger | `em_perigo` |
+| 0x714c60 | `in_list` | in_list | `na_lista` |
+| 0x6f4650 | `in_the_box` | in_the_box | `na_area` |
+| 0x6bbf60 | `individual_marking` | individual_marking | `marcacao_individual` |
+| 0x402ac0 | `init` | Area::init | `iniciar_area` |
+| 0x5cc2d0 | `init_banned_nation_pairs` | Friendly::init_banned_nation_pairs | `iniciar_pares_proibidos_de_amistoso` |
+| 0x68f130 | `init_club_board_records` | MANAGER_MANAGER::init_club_board_records | `iniciar_diretorias_dos_clubes` |
+| 0x5f9970 | `init_default_table` | HostCountry::init_default_table | `tabela_das_sedes` |
+| 0x63d5e0 | `init_first_group` | ItaCCup::init_first_group | `cqr7_copa_da_serie_c_grupo_um` |
+| 0x85e590 | `init_from_current_contract` | STAFF_CONTRACT::init_from_current_contract | `contrato_pelo_atual` |
+| 0x4019c0 | `init_group_a_table` | AfricanNations::init_group_a_table | `cqk12_africana_grupo_a` |
+| 0x57e7e0 | `init_group_one_table` | EuroChampQual::init_group_one_table | `cqs8_eurocopa_grupo_um` |
+| 0x859dc0 | `init_new_game` | SQUAD_MANAGER::init_new_game | `numerar_no_comeco` |
+| 0x8b3c50 | `init_player_entries` | TRAINING_MANAGER::init_player_entries | `fichas_de_treino_iniciais` |
+| 0x62cf70 | `init_records` | Injury::init_records | `registros_iniciais_de_lesao` |
+| 0x62a920 | `init_squad_fitness` | Injury::init_squad_fitness | `forma_inicial_dos_elencos` |
+| 0x6e9470 | `init_strictness` | init_strictness | `iniciar_rigor` |
+| 0x687430 | `init_table_row` | League::init_table_row | `iniciar_linha_da_tabela` |
+| 0x8c6e60 | `init_work_permits` | TRANSFER_MANAGER::init_work_permits | `iniciar_permissoes_de_trabalho` |
+| 0x6d0980 | `injure` | injure | `lesionar` |
+| 0x632040 | `injury_compare_entry_dates` | injury_compare_entry_dates | `ordem_da_volta_aos_treinos` |
+| 0x62b7b0 | `injury_daily_update` | Injury::daily_update | `dia_das_lesoes` |
+| 0x630c50 | `injury_get_category_name` | injury_get_category_name | `nome_da_categoria_da_lesao` |
+| 0x62ece0 | `injury_grade` | injury_grade | `grau_da_lesao` |
+| 0x62ce30 | `injury_player_in_close_season` | injury_player_in_close_season | `jogador_fora_da_temporada` |
+| 0x62dca0 | `injury_post_injury_news` | injury_post_injury_news | `noticia_da_lesao` |
+| 0x62bfa0 | `injury_reset_player` | Injury::reset_player | `reiniciar_fisico_do_jogador` |
+| 0x62ec00 | `injury_severity` | injury_severity | `gravidade_da_lesao` |
+| 0x5ab230 | `insert_fixture` | FIXTURE_MANAGER::insert_fixture | `guardar_jogo_no_calendario` |
+| 0x6ddab0 | `instructions` | instructions | `instrucoes` |
+| 0x6cc540 | `intercept` | intercept | `interceptar` |
+| 0x633f70 | `intertoto_cup_collect_club_list` | IntertotoCup::collect_club_list | `cqq10_intertoto_lista` |
+| 0x6336c0 | `intertoto_cup_collect_entrants` | IntertotoCup::collect_entrants | `cqq10_intertoto_inscritos` |
+| 0x633300 | `intertoto_cup_create_round_table` | IntertotoCup::create_round_table | `cqp13_intertoto_tabela` |
+| 0x632340 | `intertoto_cup_create_round_table_632340` | InterAmerCup::create_round_table | `cqp13_interamericana_tabela` |
+| 0x92b770 | `intertoto_cup_create_round_table_92b770` | WorldClubCup::create_round_table | `cqp13_intercontinental_tabela` |
+| 0x633d40 | `intertoto_cup_update_for_date` | IntertotoCup::update_for_date | `cqi10_intertoto_dia` |
+| 0x633c10 | `intertoto_cup_update_staff_records_for_status` | IntertotoCup::update_staff_records_for_status | `cqi10_intertoto_registros` |
+| 0x5cc3e0 | `is_banned_nation_pair` | Friendly::is_banned_nation_pair | `par_de_nacoes_sem_amistoso` |
+| 0x69eb50 | `is_club_in_financial_trouble` | MANAGER_MANAGER::is_club_in_financial_trouble | `clube_em_apuro_financeiro` |
+| 0x7f8500 | `is_club_in_session_searches` | SCOUT_MANAGER::is_club_in_session_searches | `clube_nas_buscas_da_sessao` |
+| 0x5c29b0 | `is_comp_current_on_date` | Friendly::is_comp_current_on_date | `competicao_na_data_do_amistoso` |
+| 0x4cbb20 | `is_contract_staff_job` | is_contract_staff_job | `cargo_com_contrato` |
+| 0x5fe420 | `is_fixture_watched` | HUMAN_MANAGER::is_fixture_watched | `humano_assiste_a_partida` |
+| 0x7febb0 | `is_forward_unavailable` | ScreenManager::is_forward_unavailable | `sem_tela_seguinte` |
+| 0x5c6710 | `is_friendly` | is_friendly | `e_amistoso` |
+| 0x784eb0 | `is_important_for` | NewsItem::is_important_for | `noticia_importante_para_a_pessoa` |
+| 0x4c6890 | `is_mercosur_invited_club` | ConmebolSeeding::is_mercosur_invited_club | `conmebol_convidado_da_mercosul` |
+| 0x53b900 | `is_national_team` | is_national_team | `e_selecao` |
+| 0x842080 | `is_on_shortlist` | Shortlist_Manager::is_on_shortlist | `esta_na_lista_de_observados` |
+| 0x55d360 | `is_one_booking_from_ban` | Discipline::is_one_booking_from_ban | `um_cartao_da_suspensao` |
+| 0x5c2990 | `is_own_comp_record` | Friendly::is_own_comp_record | `e_competicao_do_amistoso` |
+| 0x418f60 | `is_player_awol` | AWOL::is_player_awol | `ausente_sem_licenca` |
+| 0x631550 | `is_player_on_holiday` | Injury::is_player_on_holiday | `jogador_de_ferias` |
+| 0x5d6250 | `is_player_regen_day` | is_player_regen_day | `dia_das_aposentadorias` |
+| 0x7f7490 | `is_player_shortlisted` | SCOUT_MANAGER::is_player_shortlisted | `na_lista_do_olheiro` |
+| 0x55d270 | `is_player_suspended` | Discipline::is_player_suspended | `esta_suspenso` |
+| 0x8cde70 | `is_player_under_offer` | TRANSFER_MANAGER::is_player_under_offer | `jogador_sob_oferta` |
+| 0x7ae350 | `is_retirement_pending` | PLAYER_REGEN::is_retirement_pending | `aposentadoria_marcada` |
+| 0x5409b0 | `is_second_national_team` | is_second_national_team | `e_segunda_selecao` |
+| 0x85ddb0 | `is_stadium_free_on_date` | Stadium::is_stadium_free_on_date | `estadio_livre_na_data` |
+| 0x5ae870 | `is_stadium_in_use` | FIXTURE_MANAGER::is_stadium_in_use | `estadio_em_uso` |
+| 0x69f810 | `is_staff_suitable_for_job` | MANAGER_MANAGER::is_staff_suitable_for_job | `serve_para_o_cargo` |
+| 0x7103c0 | `is_the_stored` | is_the_stored | `e_o_guardado` |
+| 0x5fe290 | `is_watching_fixture` | HUMAN_MANAGER::is_watching_fixture | `partida_assistida_pelo_humano` |
+| 0x8c7950 | `is_work_permit_granted` | TRANSFER_MANAGER::is_work_permit_granted | `permissao_concedida` |
+| 0x6ac560 | `issue_board_ultimatum` | MANAGER_MANAGER::issue_board_ultimatum | `dar_o_ultimato_da_diretoria` |
+| 0x63f5b0 | `ita_cup_advance_stage` | ItaCup::advance_stage | `cqr7_copa_da_italia_fase_seguinte` |
+| 0x63d950 | `ita_cup_advance_stage_63d950` | ItaCCup::advance_stage | `cqr7_copa_da_serie_c_fase_seguinte` |
+| 0x63f250 | `ita_cup_create_first_group_table` | ItaCup::create_first_group_table | `cqr7_copa_da_italia_grupo_um` |
+| 0x63f640 | `ita_cup_create_group_stage` | ItaCup::create_group_stage | `cqr8_copa_da_italia_grupo` |
+| 0x63d9e0 | `ita_cup_create_group_stage_63d9e0` | ItaCCup::create_group_stage | `cqr8_copa_da_serie_c_grupo` |
+| 0x63f870 | `ita_cup_create_knockout_stage` | ItaCup::create_knockout_stage | `cqr9_copa_da_italia_mata_mata` |
+| 0x63dc10 | `ita_cup_create_knockout_stage_63dc10` | ItaCCup::create_knockout_stage | `cqr9_copa_da_serie_c_mata_mata` |
+| 0x65f920 | `ita_cup_create_round_table` | ItaSuper::create_round_table | `cqo10_supercopa_tabela` |
+| 0x63c890 | `ita_cup_create_round_table_63c890` | ItaC1Super::create_round_table | `cqo10_supercopa_c1_tabela` |
+| 0x63ec50 | `ita_cup_create_schedule` | ItaCup::create_schedule | `cqo10_copa_da_italia_tabela` |
+| 0x63cf90 | `ita_cup_create_schedule_63cf90` | ItaCCup::create_schedule | `cqo10_copa_c_tabela` |
+| 0x65fa60 | `ita_cup_init_team_list` | ItaSuper::init_team_list | `cqo11_supercopa_clubes` |
+| 0x63faf0 | `ita_cup_select_entrants` | ItaCup::select_entrants | `cqo11_copa_da_italia_inscritos` |
+| 0x63dfe0 | `ita_cup_select_entrants_63dfe0` | ItaCCup::select_entrants | `cqo11_copa_c_inscritos` |
+| 0x63f350 | `ita_cup_set_up_rules` | ItaCup::set_up_rules | `cqi12_copa_italia_regras` |
+| 0x63d6e0 | `ita_cup_set_up_rules_63d6e0` | ItaCCup::set_up_rules | `cqi12_copa_c_regras` |
+| 0x6471a0 | `ita_league_sort_clubs_level_on_points` | ita_league_sort_clubs_level_on_points | `ordem_dos_empatados_na_italia` |
+| 0x6409b0 | `ita_ser_a_create_schedule` | ItaSerA::create_schedule | `calendario_da_serie_a` |
+| 0x645af0 | `ita_ser_a_create_schedule_645af0` | ItaSerB::create_schedule | `calendario_da_serie_b` |
+| 0x641510 | `ita_ser_a_create_table` | ItaSerA::create_table | `tabela_da_serie_a` |
+| 0x646780 | `ita_ser_a_create_table_646780` | ItaSerB::create_table | `tabela_da_serie_b` |
+| 0x64f820 | `ita_ser_a_create_table_64f820` | ItaSerC1b::create_table | `tabela_da_c1b` |
+| 0x647230 | `ita_ser_a_set_up_fixed_fixtures` | ItaSerB::set_up_fixed_fixtures | `calendario_fixo_da_serie_b` |
+| 0x641640 | `ita_ser_a_set_up_rules` | ItaSerA::set_up_rules | `regras_da_serie_a` |
+| 0x6468a0 | `ita_ser_a_set_up_rules_6468a0` | ItaSerB::set_up_rules | `regras_da_serie_b` |
+| 0x64f920 | `ita_ser_a_set_up_rules_64f920` | ItaSerC1b::set_up_rules | `regras_da_c1b` |
+| 0x642880 | `ita_ser_a_update_for_date` | ItaSerA::update_for_date | `desempate_da_serie_a` |
+| 0x647050 | `ita_ser_a_update_for_date_647050` | ItaSerB::update_for_date | `desempate_da_serie_b` |
+| 0x641dc0 | `ita_ser_a_update_staff_records_for_status` | ItaSerA::update_staff_records_for_status | `resultado_do_desempate_da_serie_a` |
+| 0x64b9e0 | `ita_ser_c1a_advance_stage` | ItaSerC1a::advance_stage | `fase_seguinte_da_c1a` |
+| 0x578330 | `ita_ser_c1a_advance_stage_578330` | EngThird::advance_stage | `fase_seguinte_da_third` |
+| 0x64fba0 | `ita_ser_c1a_advance_stage_64fba0` | ItaSerC1b::advance_stage | `fase_seguinte_da_c1b` |
+| 0x64ad80 | `ita_ser_c1a_create_schedule` | ItaSerC1a::create_schedule | `calendario_da_c1_a` |
+| 0x64b670 | `ita_ser_c1a_create_table` | ItaSerC1a::create_table | `tabela_da_c1a` |
+| 0x64bd80 | `ita_ser_c1a_set_club_progress` | ItaSerC1a::set_club_progress | `situacao_na_c1a` |
+| 0x64be90 | `ita_ser_c1a_set_up_fixed_fixtures` | ItaSerC1a::set_up_fixed_fixtures | `calendario_fixo_da_c1a` |
+| 0x64b770 | `ita_ser_c1a_set_up_rules` | ItaSerC1a::set_up_rules | `regras_da_c1a` |
+| 0x6639c0 | `jap_j1_advance_stage` | JapJ1::advance_stage | `cqq9_fase_seguinte_da_j1` |
+| 0x663c20 | `jap_j1_create_half_season_stage` | JapJ1::create_half_season_stage | `cqr1_turno_da_j1` |
+| 0x6634e0 | `jap_j1_create_table` | JapJ1::create_table | `cqm9_tabela_da_j1` |
+| 0x665030 | `jap_j1_create_table_665030` | JapJ2::create_table | `cqm9_tabela_da_j2` |
+| 0x663620 | `jap_j1_set_up_rules` | JapJ1::set_up_rules | `cqj7_regras_da_j1` |
+| 0x6636d0 | `jap_j1_start_new_season` | JapJ1::start_new_season | `cqq9_virada_da_j1` |
+| 0x665a00 | `jap_j_cup_collect_entrants` | JapJCup::collect_entrants | `cqn12_copa_da_liga_inscritos` |
+| 0x6624f0 | `jap_j_cup_collect_entrants_6624f0` | JapEmpCup::collect_entrants | `cqn12_copa_do_imperador_inscritos` |
+| 0x90b530 | `jap_j_cup_collect_entrants_90b530` | UsaOpenCup::collect_entrants | `cqn12_copa_dos_eua_inscritos` |
+| 0x665640 | `jap_j_cup_create_round_table` | JapJCup::create_round_table | `cqn11_copa_da_liga_japonesa_tabela` |
+| 0x661ff0 | `jap_j_cup_create_round_table_661ff0` | JapEmpCup::create_round_table | `cqn11_copa_do_imperador_tabela` |
+| 0x90b170 | `jap_j_cup_create_round_table_90b170` | UsaOpenCup::create_round_table | `cqn11_copa_dos_eua_tabela` |
+| 0x665bc0 | `jap_j_cup_start_new_season` | JapJCup::start_new_season | `cqr5_virada_copa_da_liga_japonesa` |
+| 0x669bd0 | `key_nation_club_in_season` | key_nation_club_in_season | `clube_na_temporada` |
+| 0x669950 | `key_nation_get_club_season_year` | key_nation_get_club_season_year | `ano_da_temporada_do_clube` |
+| 0x6695c0 | `key_nation_get_main_continent` | key_nation_get_main_continent | `continente_principal` |
+| 0x669600 | `key_nation_get_main_nation` | key_nation_get_main_nation | `nacao_principal` |
+| 0x669360 | `key_nation_index_of_club` | key_nation_index_of_club | `linha_da_nacao_do_clube` |
+| 0x669470 | `key_nation_index_of_comp` | key_nation_index_of_comp | `indice_da_nacao_chave` |
+| 0x669340 | `key_nation_index_of_nation` | key_nation_index_of_nation | `linha_da_nacao` |
+| 0x669ae0 | `key_nation_is_international_comp` | key_nation_is_international_comp | `e_torneio_internacional` |
+| 0x669a10 | `key_nation_is_world_cup_comp` | key_nation_is_world_cup_comp | `e_copa_do_mundo` |
+| 0x6c51e0 | `kick_off` | kick_off | `pontape_inicial` |
+| 0x6d47e0 | `kit` | kit | `uniforme` |
+| 0x5b09d0 | `know_person` | know_person | `conhecer_pessoa` |
+| 0x71b3d0 | `latest_scores_input` | latest_scores_input | `responder_ultimos_placares` |
+| 0x685d30 | `league_add_result` | League::add_result | `somar_resultado_na_liga` |
+| 0x6844b0 | `league_build_round_robin_grid` | league_build_round_robin_grid | `montar_grade_de_turnos` |
+| 0x689ad0 | `league_check_complete` | League::check_complete | `liga_completa` |
+| 0x685cf0 | `league_compare_dates` | league_compare_dates | `ordem_das_datas_da_liga` |
+| 0x6834f0 | `league_compare_h2h_rows` | league_compare_h2h_rows | `ordem_do_confronto` |
+| 0x683210 | `league_compare_table_rows` | league_compare_table_rows | `ordem_das_linhas_da_tabela` |
+| 0x683410 | `league_compare_table_rows_h2h` | league_compare_table_rows_h2h | `ordem_pela_posicao_do_confronto` |
+| 0x687a20 | `league_get_club_array` | League::get_club_array | `vetor_dos_clubes_da_liga` |
+| 0x689c20 | `league_process_promotion_relegation_chain` | League::process_promotion_relegation_chain | `cadeia_de_acessos` |
+| 0x689c80 | `league_promote_and_relegate` | league_promote_and_relegate | `liga_promover_e_rebaixar` |
+| 0x6826d0 | `league_record` | league_record | `registro_da_liga` |
+| 0x684640 | `league_record_season_honours` | League::record_season_honours | `registrar_honras_da_temporada` |
+| 0x68a160 | `league_round_set_date` | league_round_set_date | `data_da_rodada_da_liga` |
+| 0x68a850 | `league_set_predicted_positions` | League::set_predicted_positions | `posicoes_previstas_da_liga` |
+| 0x6847c0 | `league_update_for_date` | League::update_for_date | `liga_dia` |
+| 0x686940 | `league_update_staff_records_for_status` | League::update_staff_records_for_status | `registros_pela_situacao_na_liga` |
+| 0x700320 | `ler_8ea7` | read_8ea7 | `ler_8ea7` |
+| 0x700330 | `ler_8ea8` | read_8ea8 | `ler_8ea8` |
+| 0x700340 | `ler_8ea9` | read_8ea9 | `ler_8ea9` |
+| 0x700380 | `ler_8eaa` | read_8eaa | `ler_8eaa` |
+| 0x700400 | `ler_8eb2` | read_8eb2 | `ler_8eb2` |
+| 0x547810 | `likes` | likes | `gosta_de` |
+| 0x547d60 | `likes_club` | likes_club | `gosta_do_clube` |
+| 0x68a980 | `limit_club_division_tier` | League::limit_club_division_tier | `teto_da_divisao_dos_clubes` |
+| 0x6cb930 | `limite` | limit | `limite` |
+| 0x70df40 | `limite_jogador` | player_limit | `limite_jogador` |
+| 0x6c4ec0 | `line_up_kickoff` | line_up_kickoff | `arrumar_saida` |
+| 0x6c4820 | `line_up_set_piece` | line_up_set_piece | `arrumar_bola_parada` |
+| 0x6e2f20 | `lineup_slot_score` | lineup_slot_score | `nota_para_a_vaga` |
+| 0x922810 | `load_config` | Weather::load_config | `ler_o_clima` |
+| 0x524d10 | `load_database_from_stream` | load_database_from_stream | `carregar_banco_do_save` |
+| 0x839760 | `load_fifa_transfer_rules` | load_fifa_transfer_rules | `carregar_regras_fifa` |
+| 0x5ac3b0 | `load_fixtures` | FIXTURE_MANAGER::load_fixtures | `calendario_carregar_ano` |
+| 0x5b5d10 | `load_from_disk` | Formation::load_from_disk | `ler_formacao_do_disco` |
+| 0x59b2a0 | `load_from_save` | FinanceTable::load_from_save | `carregar_financas` |
+| 0x82a9c0 | `load_game_data` | load_game_data | `carregar_jogo` |
+| 0x5fb160 | `load_temp_file` | HostCountry::load_temp_file | `carregar_sedes` |
+| 0x757a50 | `log_story` | Media::log_story | `registrar_historia_da_midia` |
+| 0x6fa490 | `long_ball` | long_ball | `lancar` |
+| 0x6ea760 | `look_for_offside` | look_for_offside | `procurar_impedimento` |
+| 0x6cd3d0 | `look_for_play` | look_for_play | `procurar_jogada` |
+| 0x450b20 | `lost_run_record_construct` | lost_run_record_construct | `construir_recorde_de_derrotas_seguidas` |
+| 0x53b3d0 | `main_national_team` | main_national_team | `selecao_principal` |
+| 0x84a020 | `make_club_bids` | Shortlist_Manager::make_club_bids | `lances_do_clube` |
+| 0x8c8860 | `make_exchange_option` | TRANSFER_MANAGER::make_exchange_option | `opcao_de_troca` |
+| 0x8bed60 | `make_loan_offer` | TRANSFER_MANAGER::make_loan_offer | `fazer_oferta_de_emprestimo` |
+| 0x7e8e10 | `make_points_ban` | RulingBody::make_points_ban | `suspensao_do_vermelho` |
+| 0x4484d0 | `man_of_match_record_assign` | man_of_match_record_assign | `copiar_recorde_de_melhor_em_campo` |
+| 0x5fd210 | `manager_9a01` | manager_9a01 | `tecnico_9a01` |
+| 0x5fd480 | `manager_9a05` | manager_9a05 | `tecnico_9a05` |
+| 0x5fd6b0 | `manager_9a06` | manager_9a06 | `tecnico_9a06` |
+| 0x5fe040 | `manager_9ace` | manager_9ace | `tecnico_9ace` |
+| 0x5fea50 | `manager_9b23` | manager_9b23 | `tecnico_9b23` |
+| 0x5cdde0 | `manager_manager_adjust_board_confidence` | manager_manager_adjust_board_confidence | `mudar_confianca_da_diretoria` |
+| 0x68d080 | `manager_manager_clear` | LLIST::clear | `esvaziar_lista` |
+| 0x68d1f0 | `manager_manager_remove` | LLIST::remove | `tirar_da_lista` |
+| 0x690730 | `manager_manager_remove_player_from_squad` | MANAGER_MANAGER::remove_player_from_squad | `tirar_jogador_do_elenco_do_clube` |
+| 0x5afde0 | `manager_table` | manager_table | `quadro_do_tecnico` |
+| 0x518790 | `map_fixture_tree` | Cup::map_fixture_tree | `copa_arvore_dos_confrontos` |
+| 0x7163f0 | `mark_800000` | mark_800000 | `marca_800000` |
+| 0x5af180 | `mark_calendar_year` | mark_calendar_year | `marcar_ano_no_calendario` |
+| 0x7775c0 | `mark_clubs_with_fixtures` | NationalTeams::mark_clubs_with_fixtures | `marcar_clubes_com_jogo` |
+| 0x787140 | `mark_item_read` | News::mark_item_read | `marcar_noticia_lida` |
+| 0x84b580 | `mark_player_under_offer` | Shortlist_Manager::mark_player_under_offer | `marcar_sob_oferta` |
+| 0x5b5910 | `mark_position` | mark_position | `marcar_posicao` |
+| 0x897760 | `mark_slot` | mark_slot | `marcar_vaga` |
+| 0x6d10a0 | `mark_stars` | mark_stars | `marcar_craques` |
+| 0x6d4250 | `marked_moment` | marked_moment | `momento_marcado` |
+| 0x897590 | `marked_slot` | marked_slot | `vaga_marcada` |
+| 0x6d5930 | `match_abandoned` | match_abandoned | `partida_abandonada` |
+| 0x60efd0 | `match_club_comp_key_id` | match_club_comp_key_id | `casar_chave_de_competicao_de_clube` |
+| 0x6146b0 | `match_club_key_id` | match_club_key_id | `casar_chave_de_clube` |
+| 0x725a70 | `match_control_label` | match_control_label | `rotulo_do_controle` |
+| 0x6b6970 | `match_day_drop_viewer_and_finish_match` | match_day_drop_viewer_and_finish_match | `largar_partida_assistida` |
+| 0x6b5040 | `match_day_interest` | match_day_interest | `interesse_do_dia` |
+| 0x71bdc0 | `match_details_input` | match_details_input | `responder_detalhes_da_partida` |
+| 0x60d810 | `match_nation_key_id` | match_nation_key_id | `casar_chave_de_nacao` |
+| 0x6b61e0 | `match_of_interest` | match_of_interest | `partida_de_interesse` |
+| 0x6eecb0 | `match_performance` | match_performance | `desempenho_na_partida` |
+| 0x71df00 | `match_player_row_assign` | match_player_row_assign | `atribuir_linha_do_jogador` |
+| 0x448110 | `match_record_assign` | match_record_assign | `copiar_registro_de_partida` |
+| 0x7e4b00 | `match_record_is_bigger_defeat` | match_record_is_bigger_defeat | `derrota_maior` |
+| 0x7e4a30 | `match_record_is_bigger_win` | match_record_is_bigger_win | `vitoria_maior` |
+| 0x7e56d0 | `match_record_result_code` | match_record_result_code | `codigo_do_resultado` |
+| 0x7280e0 | `match_screens_draw_live_league_table` | match_screens_draw_live_league_table | `tabela_da_liga_ao_vivo` |
+| 0x7260f0 | `match_screens_draw_team_selection` | match_screens_draw_team_selection | `desenhar_conferencia_da_escalacao` |
+| 0x727e20 | `match_screens_find_best_rated_starter_slot` | match_screens_find_best_rated_starter_slot | `vaga_do_mais_bem_avaliado` |
+| 0x725ca0 | `match_screens_handle_continue_command` | match_screens_handle_continue_command | `responder_continuar_da_partida` |
+| 0x725860 | `match_screens_handle_latest_scores_cycle` | match_screens_handle_latest_scores_cycle | `responder_ultimos_placares_da_partida` |
+| 0x727c30 | `match_screens_handle_team_selection_input` | match_screens_handle_team_selection_input | `responder_escalacao_da_partida` |
+| 0x727fb0 | `match_screens_handle_waiting_screen` | match_screens_handle_waiting_screen | `esperar_os_outros_jogadores` |
+| 0x72aa80 | `match_screens_load` | Match_Stats::load | `carregar_estatisticas_da_partida` |
+| 0x725f70 | `match_screens_open_team_selection` | match_screens_open_team_selection | `abrir_escalacao_da_partida` |
+| 0x7293f0 | `match_screens_record_match` | Match_Stats::record_match | `registrar_partida` |
+| 0x72adf0 | `match_screens_save` | Match_Stats::save | `salvar_estatisticas_da_partida` |
+| 0x728e90 | `match_screens_tally_live_score` | match_screens_tally_live_score | `contar_placar_ao_vivo` |
+| 0x6115e0 | `match_staff_comp_key_id` | match_staff_comp_key_id | `casar_chave_de_competicao_de_pessoa` |
+| 0x72b160 | `match_stats_compare_events` | match_stats_compare_events | `ordem_dos_eventos` |
+| 0x729bd0 | `match_stats_get_record_bucket` | match_stats_get_record_bucket | `balde_do_registro` |
+| 0x6ce460 | `match_summary` | match_summary | `resumo_da_partida` |
+| 0x71dd70 | `match_team_block_assign` | match_team_block_assign | `atribuir_bloco_do_time` |
+| 0x6b66a0 | `match_without_human` | match_without_human | `partida_sem_humano` |
+| 0x6d1cc0 | `match_wrap_up` | match_wrap_up | `fechamento` |
+| 0x735160 | `media_format_response_option_label` | media_format_response_option_label | `rotulo_da_resposta_da_midia` |
+| 0x757f30 | `media_pick_outlet_type_for_club` | media_pick_outlet_type_for_club | `veiculo_pelo_clube` |
+| 0x757fa0 | `media_pick_outlet_type_for_person` | media_pick_outlet_type_for_person | `veiculo_pela_pessoa` |
+| 0x72bbf0 | `media_queue_player_apology_news` | media_queue_player_apology_news | `noticia_do_pedido_de_desculpas` |
+| 0x41a360 | `miss_training` | AWOL::miss_training | `marcar_falta_ao_treino` |
+| 0x6830b0 | `move_club_to_division` | League::move_club_to_division | `mudar_clube_de_divisao` |
+| 0x6bab90 | `move_counts` | move_counts | `lance_valendo` |
+| 0x685640 | `move_fixtures_for_tv` | League::move_fixtures_for_tv | `liga_jogos_para_a_tv` |
+| 0x5ae9d0 | `move_nearby_club_fixtures` | FIXTURE_MANAGER::move_nearby_club_fixtures | `mover_jogos_vizinhos_do_clube` |
+| 0x714d40 | `move_off_ball` | move_off_ball | `mover_sem_bola` |
+| 0x51ebe0 | `move_round_fixtures_to_set_dates` | Cup::move_round_fixtures_to_set_dates | `copa_levar_jogos_as_datas` |
+| 0x6f46b0 | `move_to` | move_to | `mover_para` |
+| 0x4cc0b0 | `move_to_first_team` | CONTRACT_MANAGER::move_to_first_team | `subir_para_o_principal` |
+| 0x4cc0f0 | `move_to_reserves` | CONTRACT_MANAGER::move_to_reserves | `descer_para_os_reservas` |
+| 0x6be120 | `narrate_qualification` | narrate_qualification | `narrar_classificacao` |
+| 0x544670 | `nation_allows_free_transfers` | nation_allows_free_transfers | `nacao_com_transferencia_livre` |
+| 0x5453f0 | `nation_get_english_name` | nation_get_english_name | `nome_ingles_da_nacao` |
+| 0x5454c0 | `nation_get_english_three_letter_name` | nation_get_english_three_letter_name | `sigla_inglesa_da_nacao` |
+| 0x6181d0 | `nation_get_nationality_adjective` | nation_get_nationality_adjective | `adjetivo_da_nacao` |
+| 0x549ea0 | `nation_is_major_nation` | nation_is_major_nation | `nacao_grande` |
+| 0x5446d0 | `nation_is_uk_or_ireland` | nation_is_uk_or_ireland | `nacao_britanica_ou_irlanda` |
+| 0x775790 | `national_or_special` | national_or_special | `selecao_ou_especial` |
+| 0x7754c0 | `national_side_byte_42` | national_side_byte_42 | `byte_42_da_selecao` |
+| 0x775520 | `national_side_byte_43` | national_side_byte_43 | `byte_43_da_selecao` |
+| 0x76d780 | `national_side_class` | national_side_class | `classe_da_selecao` |
+| 0x76d430 | `national_team_ages` | national_team_ages | `idades_da_selecao` |
+| 0x76d810 | `national_team_level` | national_team_level | `nivel_para_a_selecao` |
+| 0x76db00 | `national_teams_can_change_squad` | national_teams_can_change_squad | `pode_mudar_a_convocacao` |
+| 0x76d560 | `national_teams_collect_fixture_opponents` | national_teams_collect_fixture_opponents | `cqf11_adversarios_da_selecao` |
+| 0x76b100 | `national_teams_daily_update` | NationalTeams::daily_update | `dia_das_selecoes` |
+| 0x76da80 | `national_teams_player_in_squad` | national_teams_player_in_squad | `esta_na_convocacao` |
+| 0x76d9b0 | `national_teams_player_is_eligible` | national_teams_player_is_eligible | `jogador_serve_a_selecao` |
+| 0x76e0b0 | `national_teams_post_call_up_news` | national_teams_post_call_up_news | `cqf11_noticia_da_convocacao` |
+| 0x76fd10 | `national_teams_post_player_called_up_news` | national_teams_post_player_called_up_news | `noticia_do_convocado` |
+| 0x76f7d0 | `national_teams_post_player_withdrawn_news` | national_teams_post_player_withdrawn_news | `noticia_da_saida_do_convocado` |
+| 0x7701f0 | `national_teams_post_replacement_needed_news` | national_teams_post_replacement_needed_news | `noticia_do_pedido_de_substituto` |
+| 0x76c060 | `national_teams_remove_duplicate_squad_entries` | national_teams_remove_duplicate_squad_entries | `apagar_repetidos_das_convocacoes` |
+| 0x775ba0 | `national_teams_remove_player` | NationalTeams::remove_player | `tirar_jogador_da_selecao` |
+| 0x7762f0 | `national_teams_remove_player_from_squad` | remove_player_from_squad | `tirar_do_elenco_da_selecao` |
+| 0x70df70 | `near_goal` | near_goal | `perto_do_gol` |
+| 0x70def0 | `near_own_goal` | near_own_goal | `perto_do_proprio_gol` |
+| 0x6c3010 | `nearest_to_point` | nearest_to_point | `mais_proximo_do_ponto` |
+| 0x6b55c0 | `network_step` | network_step | `passo_em_rede` |
+| 0x6d3de0 | `new_reputation` | new_reputation | `nova_reputacao` |
+| 0x6ac880 | `news_board_ultimatum_text` | news_board_ultimatum_text | `texto_do_ultimato` |
+| 0x7875e0 | `news_club_has_human_manager` | news_club_has_human_manager | `clube_de_tecnico_humano` |
+| 0x587600 | `news_create_not_for_sale_story` | news_create_not_for_sale_story | `noticia_nao_vende` |
+| 0x59fe10 | `news_dividend` | FinanceTable::news_dividend | `noticia_do_dividendo` |
+| 0x59ffb0 | `news_ground_works` | FinanceTable::news_ground_works | `noticia_das_obras` |
+| 0x786010 | `news_operator` | NewsItem::operator= | `copiar_noticia` |
+| 0x59fae0 | `news_request_refused` | FinanceTable::news_request_refused | `noticia_da_obra_recusada` |
+| 0x6d78b0 | `next_event` | next_event | `proximo_evento` |
+| 0x68d1b0 | `next_list_item` | next_list_item | `proximo_da_lista` |
+| 0x6d4280 | `no_match` | no_match | `sem_partida` |
+| 0x8c2060 | `note_terms_offered_to_exchange_player` | TRANSFER_MANAGER::note_terms_offered_to_exchange_player | `termos_ao_jogador_da_troca` |
+| 0x8c1f80 | `note_terms_offered_to_main_player` | TRANSFER_MANAGER::note_terms_offered_to_main_player | `marcar_termos_oferecidos` |
+| 0x797df0 | `oceania_club_champ_advance_stage` | OceaniaClubChamp::advance_stage | `cqt11_oceania_fase_seguinte` |
+| 0x798050 | `oceania_club_champ_create_knockout_stage` | OceaniaClubChamp::create_knockout_stage | `cqt11_oceania_semifinais` |
+| 0x797230 | `oceania_club_champ_create_schedule` | OceaniaClubChamp::create_schedule | `cqq12_oceania_tabela` |
+| 0x798220 | `oceania_club_champ_select_qualified_clubs` | OceaniaClubChamp::select_qualified_clubs | `cqt11_oceania_clubes` |
+| 0x7979b0 | `oceania_club_champ_set_up_rules` | OceaniaClubChamp::set_up_rules | `cqj11_oceania_clubes_regras` |
+| 0x797b40 | `oceania_club_champ_update_for_date` | OceaniaClubChamp::update_for_date | `cqt10_oceania_dia` |
+| 0x6cb910 | `off_centre` | off_centre | `fora_do_meio` |
+| 0x6e6340 | `off_match_score` | off_match_score | `nota_fora_da_partida` |
+| 0x4486c0 | `offer_breaks_fee_record` | Club_Records::offer_breaks_fee_record | `oferta_bate_o_recorde` |
+| 0x8c1e40 | `offer_contract_to_offer_player` | TRANSFER_MANAGER::offer_contract_to_offer_player | `oferecer_contrato_ao_jogador_da_oferta` |
+| 0x8c61e0 | `offer_slot` | offer_slot | `vaga_da_oferta` |
+| 0x79c5c0 | `officials_manager_add_random_officials` | officials_manager_add_random_officials | `arbitros_sorteados` |
+| 0x79d410 | `officials_manager_compare_comp_level` | officials_manager_compare_comp_level | `ordem_das_vagas_de_competicao` |
+| 0x79d480 | `officials_manager_compare_nation_then_quality_asc` | officials_manager_compare_nation_then_quality_asc | `ordem_dos_arbitros_crescente` |
+| 0x79d4e0 | `officials_manager_compare_nation_then_quality_desc` | officials_manager_compare_nation_then_quality_desc | `ordem_dos_arbitros_decrescente` |
+| 0x79c530 | `officials_manager_operator` | Official::operator= | `copiar_ficha_de_arbitro` |
+| 0x79caa0 | `officials_manager_validate_officials` | officials_manager_validate_officials | `validar_arbitros` |
+| 0x450cd0 | `oldest_player_record_construct` | oldest_player_record_construct | `construir_recorde_do_mais_velho` |
+| 0x5c6570 | `on_friendly_fixture_cancelled` | Friendly::on_friendly_fixture_cancelled | `cqg10_amistoso_cancelado` |
+| 0x717cc0 | `open_day_fixtures_screen` | open_day_fixtures_screen | `abrir_jogos_do_dia` |
+| 0x71b1b0 | `open_latest_scores` | open_latest_scores | `abrir_ultimos_placares` |
+| 0x71b4a0 | `open_match_details` | open_match_details | `abrir_detalhes_da_partida` |
+| 0x718aa0 | `open_match_screen` | open_match_screen | `abrir_tela_da_partida` |
+| 0x727f00 | `open_waiting_screen` | open_waiting_screen | `abrir_tela_de_espera` |
+| 0x6f4a70 | `opponent_state` | opponent_state | `estado_do_adversario` |
+| 0x6c87e0 | `opposition_challenge` | opposition_challenge | `desafio_adversario` |
+| 0x4b0780 | `order_by_5f` | order_by_5f | `ordem_por_5f` |
+| 0x4b07b0 | `order_by_80` | order_by_80 | `ordem_por_80` |
+| 0x4b0810 | `order_by_80_asc` | order_by_80_asc | `ordem_por_80_cresc` |
+| 0x4b07d0 | `order_by_80_desc` | order_by_80_desc | `ordem_por_80_desc` |
+| 0x6e0fe0 | `order_by_condition` | order_by_condition | `ordem_por_condicao` |
+| 0x6e0df0 | `order_by_table` | order_by_table | `ordem_por_tabela` |
+| 0x540a50 | `partner_club` | partner_club | `clube_parceiro` |
+| 0x6fa250 | `pass_ball` | pass_ball | `passar` |
+| 0x84b180 | `passes_work_permit_check` | passes_work_permit_check | `passa_na_permissao` |
+| 0x8cb940 | `past_transfer_copy_construct` | past_transfer_copy_construct | `copiar_transferencia_passada` |
+| 0x8cb340 | `pay_appearance_money` | TRANSFER_MANAGER::pay_appearance_money | `pagar_premio_por_jogos` |
+| 0x599960 | `pay_bonuses` | Finance::pay_bonuses | `pagar_os_bonus` |
+| 0x8ca8a0 | `pay_fee_and_record_clauses` | TRANSFER_MANAGER::pay_fee_and_record_clauses | `pagar_transferencia_e_clausulas` |
+| 0x8e4f20 | `pay_former_club_fee_cuts` | TRANSFER_MANAGER::pay_former_club_fee_cuts | `parte_dos_clubes_anteriores` |
+| 0x599850 | `pay_league_fine` | Finance::pay_league_fine | `pagar_multa_da_liga` |
+| 0x8cb0f0 | `pay_next_sale_percentage` | TRANSFER_MANAGER::pay_next_sale_percentage | `percentual_da_proxima_venda_pago` |
+| 0x5999e0 | `pay_other_costs` | Finance::pay_other_costs | `pagar_outros_custos` |
+| 0x599890 | `pay_players_bought` | Finance::pay_players_bought | `pagar_compra_de_jogador` |
+| 0x682e10 | `pay_prize_money` | League::pay_prize_money | `pagar_premios_da_liga` |
+| 0x522240 | `pay_round_prize_money` | Cup::pay_round_prize_money | `copa_premio_da_rodada` |
+| 0x5998e0 | `pay_sign_on_fee` | Finance::pay_sign_on_fee | `pagar_luvas` |
+| 0x8caee0 | `pay_transfer_instalments` | TRANSFER_MANAGER::pay_transfer_instalments | `pagar_prestacoes_das_transferencias` |
+| 0x683010 | `pay_tv_rights` | League::pay_tv_rights | `pagar_direitos_de_tv` |
+| 0x599920 | `pay_wages` | Finance::pay_wages | `pagar_salarios` |
+| 0x6be710 | `penalties` | penalties | `penaltis` |
+| 0x6c50d0 | `penalty` | penalty | `penalti` |
+| 0x6be520 | `penalty_order` | penalty_order | `ordem_dos_penaltis` |
+| 0x6e86d0 | `perceived_ability` | perceived_ability | `habilidade_vista` |
+| 0x6bd930 | `period_completed` | period_completed | `periodo_encerrado` |
+| 0x76e010 | `person_byte_44` | person_byte_44 | `byte_44_da_pessoa` |
+| 0x7751e0 | `person_competition` | person_competition | `competicao_da_pessoa` |
+| 0x76e040 | `person_field_3a` | person_field_3a | `campo_3a_da_pessoa` |
+| 0x69fc60 | `person_in_list` | person_in_list | `pessoa_na_lista` |
+| 0x8c1870 | `person_in_transfer_list` | person_in_transfer_list | `pessoa_na_lista_de_transferencias` |
+| 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person | `pessoa_da_vaga_tatica` |
+| 0x6e2000 | `pick` | pick | `escalar` |
+| 0x735870 | `pick_ai_manager_response` | Media::pick_ai_manager_response | `resposta_do_tecnico_da_maquina` |
+| 0x7ad0e0 | `pick_best_club_for_player` | PLAYER_REGEN::pick_best_club_for_player | `melhor_clube_para_o_jovem` |
+| 0x7ad590 | `pick_club_from_nation_list` | PLAYER_REGEN::pick_club_from_nation_list | `clube_da_nacao_para_o_jovem` |
+| 0x6b42a0 | `pick_day_match` | pick_day_match | `escolher_partida_do_dia` |
+| 0x903890 | `pick_english_intertoto_club` | UefaSeeding::pick_english_intertoto_club | `uefa_voluntario_ingles` |
+| 0x452da0 | `pick_fans_player_of_year` | Club_Records::pick_fans_player_of_year | `jogador_do_ano_da_torcida` |
+| 0x72b810 | `pick_former_international_pundit` | Media::pick_former_international_pundit | `escolher_comentarista` |
+| 0x7dab90 | `pick_random_pundit` | PunditList::pick_random_pundit | `sortear_comentarista` |
+| 0x72b940 | `pick_rival_manager_id` | Media::pick_rival_manager_id | `tecnico_rival_para_comentar` |
+| 0x5c4680 | `pick_tour_nation` | Friendly::pick_tour_nation | `pais_da_excursao` |
+| 0x5b7e60 | `pitch_cell` | pitch_cell | `casa_no_campo` |
+| 0x5c27a0 | `plan_ai_preseason_friendlies` | Friendly::plan_ai_preseason_friendlies | `planejar_pre_temporada_da_ia` |
+| 0x5c4770 | `plan_club_friendlies` | Friendly::plan_club_friendlies | `amistosos_dos_clubes` |
+| 0x5c4380 | `plan_friendly_on_free_date` | Friendly::plan_friendly_on_free_date | `planejar_amistoso_em_data_livre` |
+| 0x70dfd0 | `play` | play | `jogada` |
+| 0x6b4360 | `play_the_day` | play_the_day | `jogar_o_dia` |
+| 0x544380 | `player_attribute_rating` | player_attribute_rating | `nota_relativa_do_atributo` |
+| 0x5442f0 | `player_attribute_rating_with_scaled_ability` | player_attribute_rating_with_scaled_ability | `nota_relativa_com_habilidade_reduzida` |
+| 0x6e1cd0 | `player_by_record` | player_by_record | `jogador_pela_ficha` |
+| 0x8d0a70 | `player_club_uses_bosman` | player_club_uses_bosman | `clube_do_jogador_com_lei_bosman` |
+| 0x8cd150 | `player_has_pending_offer` | TRANSFER_MANAGER::player_has_pending_offer | `jogador_com_oferta_pendente` |
+| 0x717470 | `player_highlight` | player_highlight | `destaque_do_jogador` |
+| 0x6c2fe0 | `player_in_block` | player_in_block | `jogador_no_bloco` |
+| 0x6cda20 | `player_left` | player_left | `jogador_saiu` |
+| 0x7163c0 | `player_marks_rot` | player_marks_rot | `marcas_do_jogador_rot` |
+| 0x6f09f0 | `player_move` | player_move | `mover_jogador` |
+| 0x8c7560 | `player_needs_work_permit` | TRANSFER_MANAGER::player_needs_work_permit | `precisa_de_permissao_de_trabalho` |
+| 0x6bd760 | `player_order` | player_order | `ordem_dos_jogadores` |
+| 0x6ebd70 | `player_rating` | player_rating | `nota_do_jogador` |
+| 0x7a79c0 | `player_regen_check_initial_retirement` | player_regen_check_initial_retirement | `aposentadoria_no_inicio` |
+| 0x7a7310 | `player_regen_check_retirement` | player_regen_check_retirement | `aposentadoria_por_idade` |
+| 0x7a8050 | `player_regen_check_unemployed_retirement` | player_regen_check_unemployed_retirement | `aposentadoria_do_desempregado` |
+| 0x7ae240 | `player_regen_compare_queue_entries` | player_regen_compare_queue_entries | `ordem_da_fila_de_regens` |
+| 0x7ae2a0 | `player_regen_compare_retirements` | player_regen_compare_retirements | `ordem_das_aposentadorias` |
+| 0x7a6e60 | `player_regen_pick_staff_for_non_player_data` | player_regen_pick_staff_for_non_player_data | `escolher_doador_de_dados` |
+| 0x7aa340 | `player_regen_post_retirement_announcement_news` | player_regen_post_retirement_announcement_news | `noticia_da_aposentadoria_anunciada` |
+| 0x7a92e0 | `player_regen_post_retirement_news` | player_regen_post_retirement_news | `noticia_da_aposentadoria` |
+| 0x7a8ba0 | `player_regen_post_youth_promotion_news` | player_regen_post_youth_promotion_news | `noticia_do_jovem_promovido` |
+| 0x7aaeb0 | `player_regen_retire_from_non_playing_staff` | player_regen_retire_from_non_playing_staff | `sair_dos_cargos` |
+| 0x7ad220 | `player_regen_score_club_for_player` | player_regen_score_club_for_player | `nota_do_clube_para_o_jovem` |
+| 0x7a7150 | `player_regen_score_non_player_candidate` | player_regen_score_non_player_candidate | `nota_do_doador_de_dados` |
+| 0x7a6f10 | `player_regen_sign_for_club` | player_regen_sign_for_club | `contratar_o_regen` |
+| 0x6d3610 | `player_reputation` | player_reputation | `reputacao_do_jogador` |
+| 0x7bd700 | `player_search_find_or_claim_player_slot` | player_search_find_or_claim_player_slot | `vaga_do_jogador_observado` |
+| 0x7bca90 | `player_search_get_club_target_rating` | player_search_get_club_target_rating | `nota_alvo_do_clube` |
+| 0x7bd310 | `player_search_record_scouted_club_match` | player_search_record_scouted_club_match | `cqf10_historico_do_clube_observado` |
+| 0x7b5be0 | `player_search_scout_match` | PLAYER_SEARCH::scout_match | `cqf10_olheiro_no_jogo` |
+| 0x7bd830 | `player_search_slot_get_match_entry` | player_search_slot_get_match_entry | `jogo_do_historico` |
+| 0x7bd870 | `player_search_slot_sum_goals` | player_search_slot_sum_goals | `gols_do_historico` |
+| 0x7a50f0 | `player_setup_find_staff` | player_setup_find_staff | `pessoa_pelo_nome` |
+| 0x7a32e0 | `player_setup_injury_from_name` | player_setup_injury_from_name | `lesao_pelo_nome` |
+| 0x7a5090 | `player_setup_read_quoted_token` | player_setup_read_quoted_token | `texto_entre_aspas` |
+| 0x7a3140 | `player_setup_type_from_name` | player_setup_type_from_name | `tipo_da_linha` |
+| 0x714d30 | `player_side` | player_side | `lado_do_jogador` |
+| 0x7c2150 | `player_statistic` | player_statistic | `estatistica_do_jogador` |
+| 0x7c6d90 | `player_stats_compare_history_by_club` | player_stats_compare_history_by_club | `ordem_da_historia_por_clube` |
+| 0x7c6de0 | `player_stats_compare_history_by_staff` | player_stats_compare_history_by_staff | `ordem_do_historico_por_pessoa` |
+| 0x7c6d40 | `player_stats_compare_language_entries` | player_stats_compare_language_entries | `ordem_dos_idiomas` |
+| 0x7c3d20 | `player_stats_get_career_goals` | player_stats_get_career_goals | `gols_na_carreira` |
+| 0x7c3bb0 | `player_stats_get_goals_for_club` | player_stats_get_goals_for_club | `gols_pelo_clube` |
+| 0x7c0d70 | `player_stats_record_match` | PlayerStats::record_match | `registrar_partida_nas_estatisticas` |
+| 0x7c6650 | `player_stats_reset_player` | PlayerStats::reset_player | `zerar_estatisticas_do_jogador` |
+| 0x7c6e30 | `player_stats_years_since_at_club` | player_stats_years_since_at_club | `anos_desde_o_clube` |
+| 0x717430 | `player_table_a_1a` | player_table_a_1a | `tabela_a_1a_do_jogador` |
+| 0x717450 | `player_table_b` | player_table_b | `tabela_b_do_jogador` |
+| 0x6cbc00 | `players_in_line` | players_in_line | `jogadores_na_linha` |
+| 0x6cc070 | `players_on_path` | players_on_path | `jogadores_no_trajeto` |
+| 0x6bce20 | `pode_escolher` | can_choose | `pode_escolher` |
+| 0x68aad0 | `points_for_result` | League::points_for_result | `pontos_do_resultado` |
+| 0x6cb6c0 | `por_diferenca` | by_difference | `por_diferenca` |
+| 0x933170 | `posicao_no_conteiner` | position_in_container | `posicao_no_conteiner` |
+| 0x5b5270 | `position_marks` | position_marks | `marcas_da_posicao` |
+| 0x5b7d20 | `position_mask` | position_mask | `mascara_de_posicoes` |
+| 0x5482f0 | `position_mask_get_text` | position_mask_get_text | `texto_da_mascara_da_posicao` |
+| 0x6c2be0 | `position_place_players` | position (place players) | `posicionar` |
+| 0x6cf750 | `possession_statistic` | possession_statistic | `estatistica_de_posse` |
+| 0x8db8a0 | `post_appearance_money_news` | post_appearance_money_news | `noticia_premio_por_jogos` |
+| 0x6a4c40 | `post_board_confidence_update_news` | post_board_confidence_update_news | `noticia_da_confianca_da_diretoria` |
+| 0x6a4a20 | `post_board_expectations_news` | post_board_expectations_news | `noticia_das_expectativas_da_diretoria` |
+| 0x6a5fa0 | `post_board_match_reaction_news` | MANAGER_MANAGER::post_board_match_reaction_news | `noticia_da_reacao_da_diretoria` |
+| 0x6ac700 | `post_board_ultimatum_news` | post_board_ultimatum_news | `noticia_do_ultimato` |
+| 0x4d6d70 | `post_bosman_departure_news` | post_bosman_departure_news | `noticia_saida_pela_lei_bosman` |
+| 0x5a7f20 | `post_coach_fine_feedback_news` | post_coach_fine_feedback_news | `noticia_retorno_do_treinador` |
+| 0x4da590 | `post_contract_end_news` | post_contract_end_news | `noticia_fim_do_contrato` |
+| 0x4d6790 | `post_contract_expiry_news` | post_contract_expiry_news | `noticia_contrato_acabando` |
+| 0x8d7cd0 | `post_contract_talks_news` | post_contract_talks_news | `noticia_conversa_de_contrato` |
+| 0x522950 | `post_draw_news` | Cup::post_draw_news | `copa_noticia_do_confronto_pendente` |
+| 0x62e010 | `post_due_recovery_news` | Injury::post_due_recovery_news | `noticias_de_volta_aos_treinos` |
+| 0x6a44a0 | `post_fa_expectations_news` | post_fa_expectations_news | `noticia_das_expectativas_da_federacao` |
+| 0x6a5a60 | `post_fa_performance_news` | MANAGER_MANAGER::post_fa_performance_news | `noticia_da_avaliacao_da_federacao` |
+| 0x74ae60 | `post_financial_trouble_news` | Media::post_financial_trouble_news | `noticia_de_apuro_financeiro` |
+| 0x5a74b0 | `post_fine_reaction_news` | post_fine_reaction_news | `noticia_reacao_a_multa` |
+| 0x5faec0 | `post_host_news` | HostCountry::post_host_news | `noticia_das_sedes` |
+| 0x6a0540 | `post_job_offer_news` | MANAGER_MANAGER::post_job_offer_news | `noticia_da_oferta_de_emprego` |
+| 0x69fd50 | `post_job_rumour_news` | post_job_rumour_news | `noticia_do_boato_do_tecnico` |
+| 0x8e1780 | `post_loan_offer_news` | post_loan_offer_news | `noticia_do_emprestimo_oferecido` |
+| 0x6a2e00 | `post_manager_appointment_news` | MANAGER_MANAGER::post_manager_appointment_news | `noticia_do_tecnico_novo` |
+| 0x6a1b00 | `post_manager_departure_news` | MANAGER_MANAGER::post_manager_departure_news | `noticia_da_saida_do_tecnico` |
+| 0x6a0e70 | `post_manager_under_pressure_news` | MANAGER_MANAGER::post_manager_under_pressure_news | `noticia_da_pressao` |
+| 0x6b79a0 | `post_match_club` | post_match_club | `clube_do_pos_jogo` |
+| 0x6b74a0 | `post_match_events` | post_match_events | `eventos_do_pos_jogo` |
+| 0x6b6cc0 | `post_match_players` | post_match_players | `jogadores_do_pos_jogo` |
+| 0x8d76d0 | `post_offer_accepted_news` | post_offer_accepted_news | `noticia_da_oferta_aceita` |
+| 0x8de790 | `post_offer_collapsed_news` | post_offer_collapsed_news | `noticia_oferta_desfeita` |
+| 0x8d3090 | `post_offer_made_news` | TRANSFER_MANAGER::post_offer_made_news | `noticia_da_oferta_feita` |
+| 0x8d5170 | `post_offer_rejected_news` | post_offer_rejected_news | `noticia_oferta_recusada` |
+| 0x743370 | `post_player_backing_request_news` | Media::post_player_backing_request_news | `noticia_de_pedido_de_apoio` |
+| 0x743a50 | `post_player_criticism_reaction_news` | Media::post_player_criticism_reaction_news | `noticia_de_reacao_a_critica` |
+| 0x8d8310 | `post_player_rejects_move_news` | post_player_rejects_move_news | `noticia_da_recusa_em_se_mudar` |
+| 0x630ee0 | `post_recovery_news` | Injury::post_recovery_news | `noticia_da_volta_aos_treinos` |
+| 0x8db3a0 | `post_sale_percentage_news` | TRANSFER_MANAGER::post_sale_percentage_news | `noticia_do_percentual_da_venda` |
+| 0x6a5d10 | `post_supporter_protest_news` | post_supporter_protest_news | `noticia_do_protesto_da_torcida` |
+| 0x8e05d0 | `post_transfer_agreed_news` | post_transfer_agreed_news | `noticia_transferencia_acertada` |
+| 0x8dbef0 | `post_transfer_completed_news` | post_transfer_completed_news | `noticia_transferencia_concluida` |
+| 0x8dda90 | `post_transfer_delay_request_news` | post_transfer_delay_request_news | `noticia_pedido_de_adiamento` |
+| 0x8da5e0 | `post_transfer_finalised_news` | post_transfer_finalised_news | `noticia_transferencia_finalizada` |
+| 0x4d71b0 | `post_transfer_listed_news` | CONTRACT_MANAGER::post_transfer_listed_news | `noticia_de_jogador_listado` |
+| 0x4d9460 | `post_transfer_request_withdrawn_news` | post_transfer_request_withdrawn_news | `noticia_pedido_de_transferencia_retirado` |
+| 0x4d9f80 | `post_wants_new_contract_news` | post_wants_new_contract_news | `noticia_quer_contrato_novo` |
+| 0x5d5a20 | `pow_double` | pow_double | `pow_do_game` |
+| 0x6b7f20 | `prepare_match` | prepare_match | `preparar_partida` |
+| 0x6bcbd0 | `pressure` | pressure | `pressao` |
+| 0x6c3a00 | `pressure_at_point` | pressure_at_point | `pressao_no_ponto` |
+| 0x6bd6b0 | `pressure_in_box` | pressure_in_box | `pressao_na_area` |
+| 0x6abef0 | `process_ban_appeals` | MANAGER_MANAGER::process_ban_appeals | `apelacoes_de_suspensao` |
+| 0x59ed70 | `process_club_finance_events` | FinanceTable::process_club_finance_events | `eventos_financeiros_da_semana` |
+| 0x4cd9c0 | `process_due_decision_dates` | CONTRACT_MANAGER::process_due_decision_dates | `decidir_as_datas_vencidas` |
+| 0x8cbbe0 | `process_due_future_transfers` | TRANSFER_MANAGER::process_due_future_transfers | `concluir_transferencias_futuras` |
+| 0x8c63a0 | `process_due_offer` | TRANSFER_MANAGER::process_due_offer | `processar_oferta_vencida` |
+| 0x85a9b0 | `process_euro_registration` | SQUAD_MANAGER::process_euro_registration | `inscricao_europeia` |
+| 0x583b10 | `process_fixture` | EuropeanCup::process_fixture | `processar_jogo_da_liga_dos_campeoes` |
+| 0x8c18c0 | `process_free_transfer_queue` | TRANSFER_MANAGER::process_free_transfer_queue | `fila_da_transferencia_livre` |
+| 0x5c5f40 | `process_friendly_reply` | Friendly::process_friendly_reply | `amistoso_responder_pedido` |
+| 0x55ca00 | `process_match` | Discipline::process_match | `disciplina_da_partida` |
+| 0x59a5d0 | `process_match_income` | FinanceTable::process_match_income | `renda_da_partida` |
+| 0x69b650 | `process_pending_departures` | MANAGER_MANAGER::process_pending_departures | `saidas_pendentes_dos_tecnicos` |
+| 0x7a65d0 | `process_regen_queue` | PLAYER_REGEN::process_regen_queue | `fila_de_regens` |
+| 0x7a59e0 | `process_retirements` | PLAYER_REGEN::process_retirements | `aposentadorias_do_dia` |
+| 0x754a30 | `process_transfer_interest` | Media::process_transfer_interest | `boatos_de_transferencia` |
+| 0x758200 | `process_transfer_squad_reactions` | Media::process_transfer_squad_reactions | `reacoes_dos_elencos_a_transferencia` |
+| 0x7774b0 | `prune_club_call_up_records` | prune_club_call_up_records | `podar_registros_de_convocacao` |
+| 0x6e9630 | `punish_foul` | punish_foul | `punir_falta` |
+| 0x6ea4e0 | `punish_move` | punish_move | `punir_lance` |
+| 0x6d1210 | `punishments` | punishments | `punicoes` |
+| 0x6e0d00 | `put_in_place` | put_in_place | `colocar_na_vaga` |
+| 0x540020 | `qsort_comparator_club_ids_by_reputation` | qsort comparator (club ids by reputation) | `ordem_dos_clubes_pela_reputacao` |
+| 0x5402f0 | `qsort_comparator_squad_by_player_0xb` | qsort comparator (squad by player +0xb) | `ordem_do_elenco_pela_habilidade` |
+| 0x5aac70 | `queue_fixture_moved_news` | FIXTURE_MANAGER::queue_fixture_moved_news | `noticia_do_jogo_remarcado` |
+| 0x8c16b0 | `queue_free_transfer` | TRANSFER_MANAGER::queue_free_transfer | `enfileirar_transferencia_livre` |
+| 0x758de0 | `queue_manager_fa_complaint_story` | Media::queue_manager_fa_complaint_story | `noticia_queixa_a_federacao` |
+| 0x732c80 | `queue_player_gratitude_news` | Media::queue_player_gratitude_news | `noticia_de_gratidao_do_jogador` |
+| 0x452cb0 | `queue_record_news` | Club_Records::queue_record_news | `guardar_noticia_de_recorde` |
+| 0x75cfc0 | `queue_sale_unrest_story` | Media::queue_sale_unrest_story | `noticia_do_companheiro_desassossegado` |
+| 0x75b6e0 | `queue_signing_celebration_story` | Media::queue_signing_celebration_story | `noticia_da_comemoracao_da_contratacao` |
+| 0x7a87d0 | `queue_staff_for_regen` | PLAYER_REGEN::queue_staff_for_regen | `guardar_vaga_para_regen` |
+| 0x75c390 | `queue_trophy_praise_story` | Media::queue_trophy_praise_story | `noticia_do_titulo` |
+| 0x6beeb0 | `quick_simulation` | quick_simulation | `simulacao_rapida` |
+| 0x51e220 | `randomize_round_teams` | Cup::randomize_round_teams | `copa_sortear_times_da_rodada` |
+| 0x6e1cf0 | `rate_player` | rate_player | `avaliar_jogador` |
+| 0x736720 | `rate_player_form_for_story` | Media::rate_player_form_for_story | `nota_do_jogador_para_a_historia` |
+| 0x448230 | `rating_record_assign` | rating_record_assign | `copiar_recorde_de_nota` |
+| 0x7c1950 | `ratings_average` | ratings_average | `media_das_notas` |
+| 0x6cb9b0 | `reaches` | reaches | `alcanca` |
+| 0x713d90 | `reaches_the_point` | reaches_the_point | `alcanca_o_ponto` |
+| 0x717400 | `read_1bc` | read_1bc | `ler_1bc` |
+| 0x700410 | `read_8f7a` | read_8f7a | `ler_8f7a` |
+| 0x6d9c40 | `read_events` | read_events | `ler_eventos` |
+| 0x6d9e50 | `read_events_cfg` | read_events_cfg | `ler_eventos_cfg` |
+| 0x729600 | `read_match_record` | Match_Stats::read_match_record | `ler_registro_da_partida` |
+| 0x76d7b0 | `read_person_mark` | read_person_mark | `ler_marca_da_pessoa` |
+| 0x922c40 | `read_region` | Weather::read_region | `ler_regiao_do_clima` |
+| 0x922d20 | `read_region_period` | Weather::read_region_period | `ler_periodo_do_clima` |
+| 0x8983f0 | `read_tactics_row` | read_tactics_row | `ler_linha_tatica` |
+| 0x8b2470 | `reassign_squad_schedules` | TRAINING_MANAGER::reassign_squad_schedules | `trocar_os_programas_do_elenco` |
+| 0x58dfc0 | `recalculate_scores` | FIFA_RANKINGS::recalculate_scores | `pontuacoes_do_ranking` |
+| 0x7a7eb0 | `record_bits` | record_bits | `bits_do_registro` |
+| 0x7771c0 | `record_club_call_ups` | NationalTeams::record_club_call_ups | `registrar_convocados_por_clube` |
+| 0x6d98b0 | `record_events` | record_events | `gravar_eventos` |
+| 0x68aa30 | `record_final_positions` | League::record_final_positions | `gravar_posicoes_finais_da_liga` |
+| 0x448490 | `record_holder_assign` | record_holder_assign | `copiar_recordista` |
+| 0x450d40 | `record_holder_construct` | record_holder_construct | `construir_recordista` |
+| 0x8ce920 | `record_international_appearance` | TRANSFER_MANAGER::record_international_appearance | `registrar_jogo_pela_selecao` |
+| 0x76b600 | `record_international_result` | NationalTeams::record_international_result | `resultado_entre_selecoes` |
+| 0x579fd0 | `record_loan` | ENGLAND_RULES::record_loan | `cqe5_registrar_emprestimo` |
+| 0x869aa0 | `record_manager_job_change` | Staff_Records::record_manager_job_change | `troca_de_tecnico_nos_registros` |
+| 0x767ee0 | `record_match_ratings` | MONTH_RATINGS::record_match_ratings | `guardar_notas_da_partida` |
+| 0x868830 | `record_match_result` | Staff_Records::record_match_result | `resultado_nos_registros_dos_tecnicos` |
+| 0x6bb9a0 | `record_move` | record_move | `registrar_lance` |
+| 0x7003b0 | `record_possession` | record_possession | `registrar_posse` |
+| 0x79ce10 | `record_referee_grade` | record_referee_grade | `registrar_nota_do_arbitro` |
+| 0x896290 | `record_tactic_result` | Tactics::record_tactic_result | `registrar_resultado_da_tatica` |
+| 0x521b30 | `record_team_progress` | Cup::record_team_progress | `copa_progresso_do_time` |
+| 0x62bd10 | `recover_injury` | recover_injury | `recuperar_lesao` |
+| 0x6f5810 | `recover_stamina` | recover_stamina | `recuperar_folego` |
+| 0x6e1aa0 | `redo_team` | redo_team | `refazer_time` |
+| 0x6d4a20 | `referee_grade` | referee_grade | `nota_do_arbitro` |
+| 0x720320 | `refresh_action_zones_values` | refresh_action_zones_values | `valores_das_zonas_de_acao` |
+| 0x59cf50 | `refresh_all_wage_bills` | FinanceTable::refresh_all_wage_bills | `refazer_todas_as_folhas` |
+| 0x724520 | `refresh_latest_scores_rows` | refresh_latest_scores_rows | `atualizar_ultimos_placares` |
+| 0x71e750 | `refresh_match_stats_values` | refresh_match_stats_values | `valores_das_estatisticas_da_partida` |
+| 0x723350 | `refresh_player_ratings_rows` | refresh_player_ratings_rows | `valores_das_notas_dos_jogadores` |
+| 0x71d9e0 | `refresh_possession_bar` | refresh_possession_bar | `atualizar_barra_da_posse` |
+| 0x7a8b70 | `regen_queue_entry_assign` | regen_queue_entry_assign | `copiar_entrada_da_fila_de_regens` |
+| 0x7abac0 | `regenerate_as_youth_player` | PLAYER_REGEN::regenerate_as_youth_player | `refazer_como_jovem` |
+| 0x5ca030 | `register_comp_objects` | Friendly::register_comp_objects | `registrar_competicoes_do_amistoso` |
+| 0x62be00 | `register_injury` | register_injury | `registrar_lesao` |
+| 0x519fc0 | `register_semi_final_losers_for_uefa` | Cup::register_semi_final_losers_for_uefa | `copa_semifinalistas_para_a_uefa` |
+| 0x8bfa30 | `reject_loan_offer` | TRANSFER_MANAGER::reject_loan_offer | `recusar_oferta_de_emprestimo` |
+| 0x8bf680 | `reject_transfer_offer` | reject_transfer_offer | `recusar_oferta_de_transferencia` |
+| 0x5477d0 | `rejected_by` | rejected_by | `rejeitado_por` |
+| 0x6f0970 | `release_ball` | release_ball | `soltar_bola` |
+| 0x556d00 | `release_ban` | Discipline::release_ban | `soltar_suspensao` |
+| 0x775070 | `release_competitions_of_continent` | release_competitions_of_continent | `liberar_competicoes_do_continente` |
+| 0x76d880 | `release_overage_u21_players` | release_overage_u21_players | `dispensar_acima_da_idade_do_sub21` |
+| 0x6831a0 | `relegate_club_to_division` | League::relegate_club_to_division | `liga_rebaixar_clube` |
+| 0x60ba80 | `remap_club_key_id` | remap_club_key_id | `remapear_chave_de_clube` |
+| 0x5c64e0 | `remove_club_from_ai_plans` | Friendly::remove_club_from_ai_plans | `tirar_clube_dos_amistosos` |
+| 0x69b790 | `remove_club_manager` | MANAGER_MANAGER::remove_club_manager | `tirar_o_tecnico_do_cargo` |
+| 0x4d0b50 | `remove_contract` | CONTRACT_MANAGER::remove_contract | `tirar_o_contrato_principal` |
+| 0x4cca70 | `remove_contract_offer` | CONTRACT_MANAGER::remove_contract_offer | `tirar_oferta_de_contrato` |
+| 0x4ccb30 | `remove_contract_offer_for_transfer` | remove_contract_offer_for_transfer | `tirar_oferta_de_contrato_da_vaga` |
+| 0x56a090 | `remove_dispute` | DISPUTE::remove_dispute | `tirar_da_disputa` |
+| 0x8c41c0 | `remove_exchange_player` | TRANSFER_MANAGER::remove_exchange_player | `tirar_jogador_da_troca` |
+| 0x8cb590 | `remove_first_team_appearance_money` | TRANSFER_MANAGER::remove_first_team_appearance_money | `tirar_bonus_por_jogo` |
+| 0x5abc30 | `remove_fixture` | FIXTURE_MANAGER::remove_fixture | `tirar_jogo_do_calendario` |
+| 0x5c87b0 | `remove_friendly_match` | Friendly::remove_friendly_match | `tirar_amistoso_marcado` |
+| 0x714ca0 | `remove_from_list` | remove_from_list | `remover_da_lista` |
+| 0x8cbf70 | `remove_future_transfer` | TRANSFER_MANAGER::remove_future_transfer | `tirar_transferencia_futura` |
+| 0x4cf560 | `remove_held_offers` | CONTRACT_MANAGER::remove_held_offers | `tirar_ofertas_guardadas` |
+| 0x8cb630 | `remove_international_team_appearance_money` | TRANSFER_MANAGER::remove_international_team_appearance_money | `tirar_bonus_pela_selecao` |
+| 0x7c6bf0 | `remove_language` | PlayerStats::remove_language | `tirar_idioma_do_jogador` |
+| 0x4d0bd0 | `remove_loan_contract` | CONTRACT_MANAGER::remove_loan_contract | `tirar_contrato_de_emprestimo` |
+| 0x8cb4f0 | `remove_next_sale_percentage` | TRANSFER_MANAGER::remove_next_sale_percentage | `tirar_percentual_da_proxima_venda` |
+| 0x5fff30 | `remove_nickname_from_all` | HUMAN_MANAGER::remove_nickname_from_all | `tirar_apelido_de_todos` |
+| 0x8d0f60 | `remove_offer` | TRANSFER_MANAGER::remove_offer | `tirar_oferta_de_transferencia` |
+| 0x8b3640 | `remove_or_restore_training_progress` | TRAINING_MANAGER::remove_or_restore_training_progress | `tirar_ou_devolver_o_progresso` |
+| 0x4ccbf0 | `remove_pending_offers_for_staff` | CONTRACT_MANAGER::remove_pending_offers_for_staff | `tirar_ofertas_pendentes` |
+| 0x7a8470 | `remove_player_data_from_pool` | PLAYER_REGEN::remove_player_data_from_pool | `tirar_jogador_do_banco` |
+| 0x896c60 | `remove_player_from_selection` | Tactics::remove_player_from_selection | `tirar_da_escalacao` |
+| 0x7a8690 | `remove_retirement` | PLAYER_REGEN::remove_retirement | `tirar_aposentadoria_pendente` |
+| 0x7f8ee0 | `remove_scout_request` | SCOUT_MANAGER::remove_scout_request | `tirar_pedido_de_observacao` |
+| 0x7a82b0 | `remove_spare_non_player_record` | PLAYER_REGEN::remove_spare_non_player_record | `tirar_reserva_de_tecnico` |
+| 0x690890 | `remove_staff_from_club` | MANAGER_MANAGER::remove_staff_from_club | `tirar_pessoa_do_cargo_no_clube` |
+| 0x4ca1c0 | `remove_talks_records` | CONTRACT_MANAGER::remove_talks_records | `tirar_conversas_de_contrato` |
+| 0x7549b0 | `remove_transfer_interest` | Media::remove_transfer_interest | `tirar_interesses_de_transferencia` |
+| 0x79cee0 | `renew_officials` | OfficialsManager::renew_officials | `renovar_arbitros` |
+| 0x41add0 | `report_poor_fitness` | AWOL::report_poor_fitness | `incidente_de_forma` |
+| 0x5abb10 | `reschedule_club_fixtures_near_date` | FIXTURE_MANAGER::reschedule_club_fixtures_near_date | `remarcar_jogos_perto_da_data` |
+| 0x694c80 | `reset_board_for_new_manager` | MANAGER_MANAGER::reset_board_for_new_manager | `diretoria_do_tecnico_novo` |
+| 0x866ee0 | `reset_morale_state` | STAFF_CONTRACT::reset_morale_state | `zerar_moral_do_contrato` |
+| 0x631f90 | `reset_player_history` | Injury::reset_player_history | `recomecar_historico_de_lesoes` |
+| 0x452fe0 | `reset_records` | reset_records | `reiniciar_recordes` |
+| 0x6ac470 | `resolve_board_ultimatum` | MANAGER_MANAGER::resolve_board_ultimatum | `resolver_o_ultimato_da_diretoria` |
+| 0x5315a0 | `resolve_database_indexes` | resolve_database_indexes | `resolver_indices_do_banco` |
+| 0x5cc510 | `resolve_international_dates` | Friendly::resolve_international_dates | `resolver_datas_internacionais` |
+| 0x5ae380 | `resolve_same_day_clash` | FIXTURE_MANAGER::resolve_same_day_clash | `conflito_de_jogos_no_mesmo_dia` |
+| 0x6f5c30 | `respond` | respond | `responder` |
+| 0x6c54a0 | `restart_play` | restart_play | `reiniciar_lance` |
+| 0x556570 | `restore_held_bans` | Discipline::restore_held_bans | `restaurar_suspensoes_guardadas` |
+| 0x4cf4a0 | `resubmit_held_offers` | CONTRACT_MANAGER::resubmit_held_offers | `reenviar_ofertas_guardadas` |
+| 0x7aace0 | `retire_from_playing_staff` | PLAYER_REGEN::retire_from_playing_staff | `aposentar_do_elenco` |
+| 0x7a8780 | `retire_record_assign` | retire_record_assign | `copiar_aposentadoria_pendente` |
+| 0x6a5610 | `review_national_team_performance` | MANAGER_MANAGER::review_national_team_performance | `avaliar_a_selecao_na_competicao` |
+| 0x86fb80 | `rewind_staff_history` | Staff_Records::rewind_staff_history | `recomecar_historico_da_pessoa` |
+| 0x717c70 | `role_880` | role_880 | `papel_880` |
+| 0x6bbe40 | `roll_ball` | roll_ball | `rolar_bola` |
+| 0x903b50 | `roll_coefficients` | UefaSeeding::roll_coefficients | `uefa_rodar_coeficientes` |
+| 0x62e500 | `roll_recurring_injury` | Injury::roll_recurring_injury | `sortear_lesao_recorrente` |
+| 0x68a030 | `rotate_round` | rotate_round | `girar_rodada` |
+| 0x4b0870 | `round_below_1000` | round_below_1000 | `arredondar_abaixo_de_1000` |
+| 0x897dc0 | `row_person` | row_person | `pessoa_da_linha` |
+| 0x7e7ed0 | `ruling_body_start_new_season` | RulingBody::start_new_season | `nova_temporada_do_orgao` |
+| 0x92e7f0 | `run_group_draw` | WorldCup::run_group_draw | `mundial_sorteio_dos_grupos` |
+| 0x448170 | `run_record_assign` | run_record_assign | `copiar_registro_de_sequencia` |
+| 0x448670 | `run_record_construct` | run_record_construct | `construir_recorde_de_sequencia` |
+| 0x524d30 | `save_database_for_game` | save_database_for_game | `gravar_banco_no_save` |
+| 0x8395b0 | `save_fifa_transfer_rules` | save_fifa_transfer_rules | `gravar_regras_fifa` |
+| 0x59b3b0 | `save_finance_dat` | FinanceTable::save_finance_dat | `gravar_financas` |
+| 0x82e430 | `save_game_data` | save_game_data | `gravar_jogo` |
+| 0x79bb80 | `save_official_stats` | OfficialsManager::save_official_stats | `gravar_estatisticas_dos_arbitros` |
+| 0x70d430 | `save_shot` | save_shot | `defender` |
+| 0x5fb320 | `save_temp_file` | HostCountry::save_temp_file | `gravar_paises_anfitrioes` |
+| 0x5c57d0 | `schedule_assign_opponent` | Friendly::schedule_assign_opponent | `marcar_adversario_do_amistoso` |
+| 0x4cc930 | `schedule_decision_for_transfer` | CONTRACT_MANAGER::schedule_decision_for_transfer | `marcar_decisao_da_transferencia` |
+| 0x7a7f20 | `schedule_injury_retirement` | PLAYER_REGEN::schedule_injury_retirement | `aposentar_pela_lesao` |
+| 0x4ccca0 | `schedule_loan_end` | CONTRACT_MANAGER::schedule_loan_end | `agendar_fim_do_emprestimo` |
+| 0x8c6220 | `schedule_offer` | TRANSFER_MANAGER::schedule_offer | `agendar_oferta` |
+| 0x4cd230 | `schedule_offer_decision` | CONTRACT_MANAGER::schedule_offer_decision | `marcar_decisao_da_oferta` |
+| 0x5c4040 | `schedule_tour_matches` | Friendly::schedule_tour_matches | `marcar_jogos_da_excursao` |
+| 0x85da00 | `score_venue_for_fixture` | Stadium::score_venue_for_fixture | `nota_do_estadio_neutro` |
+| 0x7f6650 | `scotland_rules_can_loan_player` | SCOTLAND_RULES::can_loan_player | `cqe6_pode_emprestar_escocia` |
+| 0x63c3d0 | `scotland_rules_can_loan_player_63c3d0` | IRELAND_RULES::can_loan_player | `cqe6_pode_emprestar_irlanda` |
+| 0x661770 | `scotland_rules_can_loan_player_661770` | ITALY_RULES::can_loan_player | `cqe6_pode_emprestar_italia` |
+| 0x7f6530 | `scotland_rules_get_loan_period` | SCOTLAND_RULES::get_loan_period | `cqe6_periodo_escocia` |
+| 0x7b7490 | `scout_covers_nation` | PLAYER_SEARCH::scout_covers_nation | `busca_cobre_a_nacao` |
+| 0x7f8750 | `scout_manager_daily_update` | SCOUT_MANAGER::daily_update | `cqf12_olheiros_do_dia` |
+| 0x7f8c00 | `scout_manager_scout_match` | SCOUT_MANAGER::scout_match | `olheiros_na_partida` |
+| 0x7fc150 | `scout_manager_write_list_name` | scout_manager_write_list_name | `nome_da_lista_do_olheiro` |
+| 0x7f6cd0 | `scout_record` | scout_record | `registro_do_observador` |
+| 0x6cd330 | `search_on_side` | search_on_side | `procurar_no_lado` |
+| 0x59cfa0 | `season_end_club_update` | FinanceTable::season_end_club_update | `fim_de_temporada_do_clube` |
+| 0x5b2e80 | `sector_slot_taken` | sector_slot_taken | `casa_do_setor_ocupada` |
+| 0x92f230 | `seed_teams` | WorldCup::seed_teams | `mundial_cabecas_de_chave` |
+| 0x6dbc50 | `select_automatically` | select_automatically | `escalar_automatico` |
+| 0x85aae0 | `select_euro_registered_players` | SQUAD_MANAGER::select_euro_registered_players | `inscrever_na_europa` |
+| 0x56b730 | `select_section_clubs` | EngAutoCup::select_section_clubs | `cqs5_trofeu_clubes` |
+| 0x6db500 | `select_side` | select_side | `escalar_lado` |
+| 0x76c120 | `select_squad` | NationalTeams::select_squad | `escolher_elenco_da_selecao` |
+| 0x76bab0 | `select_squads_for_fixture` | NationalTeams::select_squads_for_fixture | `convocar_selecoes_para_o_jogo` |
+| 0x5fbe20 | `select_tactic_slot` | HUMAN_MANAGER::select_tactic_slot | `escolher_vaga_de_tatica` |
+| 0x599a20 | `sell_season_tickets` | Finance::sell_season_tickets | `ingressos_da_temporada` |
+| 0x786090 | `send_by_scope` | News::send_by_scope | `noticia_pelo_alcance` |
+| 0x7706c0 | `send_club_international_report_news` | NationalTeams::send_club_international_report_news | `cqf11_relatorio_da_selecao` |
+| 0x683ee0 | `send_fixture_list_news` | League::send_fixture_list_news | `liga_noticia_da_tabela` |
+| 0x5c5570 | `send_friendly_request` | Friendly::send_friendly_request | `amistoso_enviar_pedido` |
+| 0x684230 | `send_group_draw_news` | League::send_group_draw_news | `liga_noticia_dos_grupos` |
+| 0x48e3e0 | `send_prize_money_news` | Comp::send_prize_money_news | `noticia_do_premio` |
+| 0x448e30 | `send_record_news` | Club_Records::send_record_news | `noticias_de_recordes` |
+| 0x7f9a60 | `send_scout_report_news` | SCOUT_MANAGER::send_scout_report_news | `cqf12_noticia_do_relatorio` |
+| 0x7f9890 | `send_scout_reports` | SCOUT_MANAGER::send_scout_reports | `cqf12_relatorios_dos_olheiros` |
+| 0x786780 | `send_to_all_managers` | News::send_to_all_managers | `noticia_para_todos_os_tecnicos` |
+| 0x7861e0 | `send_to_club_manager` | News::send_to_club_manager | `noticia_ao_tecnico_do_clube` |
+| 0x786860 | `send_to_comp_region` | News::send_to_comp_region | `noticia_para_a_regiao_da_competicao` |
+| 0x786640 | `send_to_continent_managers` | News::send_to_continent_managers | `noticia_para_os_tecnicos_do_continente` |
+| 0x7862d0 | `send_to_division_managers` | News::send_to_division_managers | `noticia_para_os_tecnicos_da_divisao` |
+| 0x786520 | `send_to_nation_club_managers` | News::send_to_nation_club_managers | `noticia_para_os_tecnicos_da_nacao` |
+| 0x7863f0 | `send_to_nation_managers` | News::send_to_nation_managers | `noticia_para_os_tecnicos_do_pais` |
+| 0x48ea40 | `send_tv_rights_news` | Comp::send_tv_rights_news | `noticia_da_tv` |
+| 0x522610 | `separate_shared_stadium_ties` | Cup::separate_shared_stadium_ties | `copa_separar_estadio_compartilhado` |
+| 0x557120 | `serve_international_bans` | Discipline::serve_international_bans | `cumprir_suspensoes_internacionais` |
+| 0x844300 | `serve_para_a_vaga` | shortlist_slot_fits | `serve_para_a_vaga` |
+| 0x8c5410 | `set_agreed_contract_flag` | set_agreed_contract_flag | `marcar_contrato_acertado` |
+| 0x69f7c0 | `set_board_ratings` | MANAGER_MANAGER::set_board_ratings | `gravar_notas_da_diretoria` |
+| 0x4c6960 | `set_bra_champ_cup_winner` | ConmebolSeeding::set_bra_champ_cup_winner | `conmebol_campeao_dos_campeoes` |
+| 0x897880 | `set_captain` | Tactics::set_captain | `escolher_capitao` |
+| 0x4a2540 | `set_club_final_position` | Comp_Stats::set_club_final_position | `gravar_posicao_do_clube` |
+| 0x68aa80 | `set_club_season_expectations` | League::set_club_season_expectations | `liga_expectativas_da_temporada` |
+| 0x775220 | `set_current_competition` | NationalTeams::set_current_competition | `definir_competicao_da_selecao` |
+| 0x8b3d40 | `set_default_schedules` | TRAINING_MANAGER::set_default_schedules | `programas_padrao` |
+| 0x8626e0 | `set_default_wage` | STAFF_CONTRACT::set_default_wage | `salario_padrao_do_contrato` |
+| 0x7f6af0 | `set_edit_session` | SCOUT_MANAGER::set_edit_session | `escolher_sessao_de_edicao` |
+| 0x85c260 | `set_fixture_venue` | Stadium::set_fixture_venue | `estadio_da_partida` |
+| 0x867560 | `set_flags` | STAFF_CONTRACT::set_flags | `marcas_do_contrato` |
+| 0x5b50d0 | `set_formation_flag` | set_formation_flag | `ligar_marca_da_formacao` |
+| 0x51e870 | `set_home_teams_for_round` | Cup::set_home_teams_for_round | `copa_mandantes_da_rodada` |
+| 0x5fdd30 | `set_human_field` | set_human_field | `gravar_dado_do_humano` |
+| 0x786d30 | `set_item_slot` | News::set_item_slot | `gravar_marca_da_noticia` |
+| 0x601a40 | `set_key_ids` | set_key_ids | `definir_chaves_fixas` |
+| 0x603834 | `set_key_ids_1080` | set_key_ids_1080 | `definir_chaves_fixas_1080` |
+| 0x7ae6e0 | `set_list_type` | PLAYER_SEARCH::set_list_type | `tipo_da_lista_da_busca` |
+| 0x7ae570 | `set_manager` | PLAYER_SEARCH::set_manager | `tecnico_da_busca` |
+| 0x5b57d0 | `set_marking_type` | Formation::set_marking_type | `tipo_de_marcacao` |
+| 0x785790 | `set_news_field` | set_news_field | `gravar_dado_da_noticia` |
+| 0x5fd2f0 | `set_on_holiday` | set_on_holiday | `ferias_do_humano` |
+| 0x76c0f0 | `set_person_44` | set_person_44 | `ligar_44_da_pessoa` |
+| 0x70a8c0 | `set_piece_code` | set_piece_code | `codigo_de_bola_parada` |
+| 0x903cc0 | `set_place_counts` | UefaSeeding::set_place_counts | `uefa_vagas_por_nacao` |
+| 0x5c2d40 | `set_preseason_windows` | Friendly::set_preseason_windows | `janelas_da_pre_temporada` |
+| 0x7ae8a0 | `set_scout` | PLAYER_SEARCH::set_scout | `trocar_olheiro_da_busca` |
+| 0x6a3770 | `set_season_expectations` | MANAGER_MANAGER::set_season_expectations | `expectativas_da_temporada` |
+| 0x7f6f20 | `set_selected_list` | SCOUT_MANAGER::set_selected_list | `escolher_lista_do_tecnico` |
+| 0x897bb0 | `set_set_piece_taker` | Tactics::set_set_piece_taker | `marcar_batedor_de_bola_parada` |
+| 0x5b3560 | `set_slot_coordinate` | Formation::set_slot_coordinate | `coordenada_da_casa` |
+| 0x7ae640 | `set_slot_index` | PLAYER_SEARCH::set_slot_index | `vaga_da_busca` |
+| 0x5b2ba0 | `set_slot_position` | Formation::set_slot_position | `posicao_na_formacao` |
+| 0x7858c0 | `set_slot_string` | NewsItem::set_slot_string | `gravar_texto_na_noticia` |
+| 0x85a850 | `set_squad_number` | SQUAD_MANAGER::set_squad_number | `gravar_numero_de_camisa` |
+| 0x5b5290 | `set_square` | set_square | `gravar_casa` |
+| 0x62c660 | `set_training_load` | Injury::set_training_load | `gravar_carga_de_treino` |
+| 0x8b4e50 | `set_type` | TRAINING_SCHEDULE::set_type | `tipo_do_programa` |
+| 0x79bf60 | `set_up_officials` | OfficialsManager::set_up_officials | `montar_os_arbitros` |
+| 0x51c800 | `set_up_round` | Cup::set_up_round | `montar_rodada_da_copa` |
+| 0x5e1cd0 | `set_up_team_list` | GoldCup::set_up_team_list | `cqs12_copa_america_selecoes` |
+| 0x90a540 | `set_up_teams` | UsaMlsAllStars::set_up_teams | `cqr6_times_do_jogo_das_estrelas` |
+| 0x6b3c10 | `set_up_the_day` | set_up_the_day | `montar_o_dia` |
+| 0x7671c0 | `set_winner` | MONTH_AWARD::set_winner | `gravar_vencedor_do_mes` |
+| 0x5aa2d0 | `set_year` | FIXTURE_MANAGER::set_year | `ano_do_calendario` |
+| 0x8c91e0 | `settle_previous_transfer_clauses` | settle_previous_transfer_clauses | `acertar_clausulas_anteriores` |
+| 0x702050 | `shoot` | shoot | `chutar` |
+| 0x83b6c0 | `shortlist_compare_slots_by_index` | shortlist_compare_slots_by_index | `ordem_das_vagas` |
+| 0x849ce0 | `shortlist_entry` | shortlist_entry | `entrada_da_lista` |
+| 0x8442b0 | `shortlist_manager_add_to_loan_list` | shortlist_manager_add_to_loan_list | `por_na_lista_de_emprestimos` |
+| 0x849d60 | `shortlist_manager_estimate_squad_status` | shortlist_manager_estimate_squad_status | `estimar_estatuto_no_elenco` |
+| 0x84b6f0 | `shortlist_manager_is_compensation_deal` | shortlist_manager_is_compensation_deal | `troca_com_compensacao` |
+| 0x84b1f0 | `shortlist_manager_max_fee_for_player_status` | shortlist_manager_max_fee_for_player_status | `teto_de_preco_pelo_estatuto` |
+| 0x84b230 | `shortlist_manager_max_fee_for_squad_status` | shortlist_manager_max_fee_for_squad_status | `teto_da_observacao` |
+| 0x84af00 | `shortlist_manager_predict_selling_club_response` | shortlist_manager_predict_selling_club_response | `prever_resposta_do_vendedor` |
+| 0x844660 | `shortlist_manager_release_club_slot_targets` | shortlist_manager_release_club_slot_targets | `liberar_alvos_da_lista_do_clube` |
+| 0x8442d0 | `shortlist_manager_remove_from_loan_list` | shortlist_manager_remove_from_loan_list | `tirar_da_lista_de_emprestimos` |
+| 0x844280 | `shortlist_manager_remove_from_transfer_list` | shortlist_manager_remove_from_transfer_list | `tirar_da_lista_de_transferencias` |
+| 0x84b4d0 | `shortlist_manager_squad_status_allowed` | shortlist_manager_squad_status_allowed | `estatuto_permitido` |
+| 0x83c090 | `shortlist_set_up_formation_slots` | shortlist_set_up_formation_slots | `montar_vagas_da_formacao` |
+| 0x6f6c00 | `shot` | shot | `chute` |
+| 0x70a910 | `shot_on_goal` | shot_on_goal | `chute_a_gol` |
+| 0x70c040 | `shot_outcome` | shot_outcome | `desfecho_do_chute` |
+| 0x700bd0 | `shot_value` | shot_value | `valor_do_chute` |
+| 0x6d5b20 | `side_centre_backs_without_conflict` | side_centre_backs_without_conflict | `zagueiros_do_lado_sem_conflito` |
+| 0x6bba50 | `side_of_move` | side_of_move | `lado_do_lance` |
+| 0x6d5af0 | `side_slots_without_conflict` | side_slots_without_conflict | `vagas_do_lado_sem_conflito` |
+| 0x6f4a40 | `side_state` | side_state | `estado_do_lado` |
+| 0x6bbb60 | `side_strength` | side_strength | `forca_do_lado` |
+| 0x6d42a0 | `side_under_control` | side_under_control | `lado_sob_controle` |
+| 0x4cf720 | `sign_contract` | CONTRACT_MANAGER::sign_contract | `assinar_contrato` |
+| 0x4d01e0 | `sign_loan_contract` | CONTRACT_MANAGER::sign_loan_contract | `assinar_contrato_de_emprestimo` |
+| 0x5b2ae0 | `slot_code` | slot_code | `casa_da_vaga` |
+| 0x5b2f10 | `slot_of_code` | slot_of_code | `vaga_da_casa` |
+| 0x5b8960 | `slots_without_conflict` | slots_without_conflict | `vagas_sem_conflito` |
+| 0x6c3950 | `smallest_distance` | smallest_distance | `menor_distancia` |
+| 0x83a780 | `sort_position_lists` | Shortlist_Manager::sort_position_lists | `ordenar_listas_de_posicao` |
+| 0x51d2d0 | `sort_round_teams` | Cup::sort_round_teams | `copa_sortear_pela_semente` |
+| 0x6827d0 | `sort_table` | League::sort_table | `ordenar_tabela_da_liga` |
+| 0x6d8c70 | `sounds_finished` | sounds_finished | `sons_terminados` |
+| 0x84d220 | `spa_cup_create_round_table` | SpaCup::create_round_table | `cql11_copa_do_rei_tabela` |
+| 0x584ad0 | `spa_cup_record_season_honours` | EuropeanCup::record_season_honours | `cqt5_historico_liga_dos_campeoes` |
+| 0x5e93e0 | `spa_cup_record_season_honours_5e93e0` | GreCup::record_season_honours | `cqt5_historico_copa_da_grecia` |
+| 0x637750 | `spa_cup_record_season_honours_637750` | IreLgeCup::record_season_honours | `cqt5_historico_copa_da_liga_irlandesa` |
+| 0x63d770 | `spa_cup_record_season_honours_63d770` | ItaCCup::record_season_honours | `cqt5_historico_copa_da_serie_c` |
+| 0x84d740 | `spa_cup_update_for_date` | SpaCup::update_for_date | `cqt5_copa_do_rei_dia` |
+| 0x84e450 | `spa_first_create_schedule` | SpaFirst::create_schedule | `calendario_da_primera` |
+| 0x84fc70 | `spa_first_create_table` | SpaFirst::create_table | `tabela_da_primera` |
+| 0x850880 | `spa_first_set_club_progress` | SpaFirst::set_club_progress | `situacao_na_primera` |
+| 0x84fdf0 | `spa_first_set_up_rules` | SpaFirst::set_up_rules | `regras_da_primera` |
+| 0x654180 | `spa_first_update_staff_records_for_status` | ItaSerC2a::update_staff_records_for_status | `registros_pela_situacao_na_c2a` |
+| 0x851260 | `spa_lower_create_schedule` | SpaLower::create_schedule | `calendario_da_divisao_de_baixo_espanhola` |
+| 0x8533d0 | `spa_lower_create_table` | SpaLower::create_table | `tabela_da_divisao_de_baixo_espanhola` |
+| 0x853790 | `spa_lower_set_up_rules` | SpaLower::set_up_rules | `regras_da_divisao_de_baixo` |
+| 0x853c90 | `spa_second_create_schedule` | SpaSecond::create_schedule | `calendario_da_segunda_espanhola` |
+| 0x855b40 | `spa_second_create_table` | SpaSecond::create_table | `tabela_da_segunda` |
+| 0x855cc0 | `spa_second_set_up_rules` | SpaSecond::set_up_rules | `regras_da_segunda` |
+| 0x858960 | `spa_super_create_round_table` | SpaSuper::create_round_table | `cql12_supercopa_da_espanha_tabela` |
+| 0x858aa0 | `spa_super_select_teams` | SpaSuper::select_teams | `cqm12_supercopa_da_espanha_clubes` |
+| 0x666160 | `spa_super_select_teams_666160` | JapSuper::select_teams | `cqm12_supercopa_do_japao_clubes` |
+| 0x6cbad0 | `space_ahead` | space_ahead | `espaco_a_frente` |
+| 0x859630 | `spain_rules_can_loan_player` | SPAIN_RULES::can_loan_player | `cqe6_pode_emprestar_espanha` |
+| 0x859470 | `spain_rules_init_transfer_windows` | SPAIN_RULES::init_transfer_windows | `janelas_espanha` |
+| 0x5c15e0 | `spain_rules_init_transfer_windows_5c15e0` | FRANCE_RULES::init_transfer_windows | `janelas_franca` |
+| 0x6613f0 | `spain_rules_init_transfer_windows_6613f0` | ITALY_RULES::init_transfer_windows | `janelas_italia` |
+| 0x76d940 | `special_club` | special_club | `clube_especial` |
+| 0x6cb650 | `special_code` | special_code | `codigo_especial` |
+| 0x6c06b0 | `split_a` | split_a | `repartir_a` |
+| 0x6c07a0 | `split_b` | split_b | `repartir_b` |
+| 0x6c0a70 | `split_c` | split_c | `repartir_c` |
+| 0x6c0890 | `split_d` | split_d | `repartir_d` |
+| 0x6c0980 | `split_e` | split_e | `repartir_e` |
+| 0x6c0b70 | `split_f` | split_f | `repartir_f` |
+| 0x5b73a0 | `split_mask` | split_mask | `separar_mascara` |
+| 0x62e9e0 | `spread_illness_outbreaks` | Injury::spread_illness_outbreaks | `espalhar_surtos_de_doenca` |
+| 0x859cc0 | `squad_manager_save` | SQUAD_MANAGER::save | `gravar_gerente_de_elencos` |
+| 0x5b5a60 | `square_bit` | square_bit | `bit_da_casa` |
+| 0x85e380 | `stadium_compare_bookings` | stadium_compare_bookings | `ordem_das_reservas_do_estadio` |
+| 0x85e350 | `stadium_compare_venues_by_capacity` | stadium_compare_venues_by_capacity | `ordem_pela_capacidade` |
+| 0x85b820 | `stadium_daily_update` | Stadium::daily_update | `estadios_do_dia` |
+| 0x545990 | `stadium_get_english_name` | stadium_get_english_name | `nome_ingles_do_estadio` |
+| 0x547e70 | `staff_add_disliked_club` | staff_add_disliked_club | `acrescentar_clube_rejeitado` |
+| 0x547a10 | `staff_add_favoured_staff` | staff_add_favoured_staff | `acrescentar_pessoa_favorita` |
+| 0x549cf0 | `staff_add_opinion_link` | staff_add_opinion_link | `juntar_vinculo_de_opiniao` |
+| 0x544710 | `staff_adjust_morale` | staff_adjust_morale | `ajustar_moral_da_pessoa` |
+| 0x4cb990 | `staff_can_take_job` | staff_can_take_job | `pode_assumir_o_cargo` |
+| 0x549c90 | `staff_clear_opinion_links` | staff_clear_opinion_links | `limpar_vinculos_de_opiniao` |
+| 0x5456a0 | `staff_comp_get_english_name` | staff_comp_get_english_name | `nome_ingles_da_competicao_de_pessoal` |
+| 0x543fd0 | `staff_compute_non_player_attribute` | staff_compute_non_player_attribute | `atributo_calculado_do_nao_jogador` |
+| 0x543540 | `staff_compute_player_attribute` | staff_compute_player_attribute | `atributo_calculado_do_jogador` |
+| 0x867aa0 | `staff_contract_is_bonus_type_allowed` | staff_contract_is_bonus_type_allowed | `tipo_de_bonus_permitido` |
+| 0x547c90 | `staff_count_disliked_staff_at_club` | staff_count_disliked_staff_at_club | `contar_rejeitados_no_clube` |
+| 0x547ce0 | `staff_count_favoured_staff_at_club` | staff_count_favoured_staff_at_club | `contar_favoritos_no_clube` |
+| 0x547f90 | `staff_fade_staff_relationships` | staff_fade_staff_relationships | `esmaecer_relacoes` |
+| 0x5480f0 | `staff_get_disliked_staff` | staff_get_disliked_staff | `pessoas_rejeitadas` |
+| 0x548090 | `staff_get_favoured_staff` | staff_get_favoured_staff | `pessoas_favoritas` |
+| 0x5481a0 | `staff_get_natural_position_mask` | staff_get_natural_position_mask | `mascara_da_posicao_natural` |
+| 0x543f30 | `staff_get_non_player_attribute` | staff_get_non_player_attribute | `atributo_do_nao_jogador` |
+| 0x549dd0 | `staff_get_opinion_link_staff` | staff_get_opinion_link_staff | `pessoa_da_opiniao` |
+| 0x5431e0 | `staff_get_player_attribute` | staff_get_player_attribute | `atributo_da_pessoa` |
+| 0x543440 | `staff_get_player_attribute_for_viewer` | staff_get_player_attribute_for_viewer | `atributo_para_quem_ve` |
+| 0x546ab0 | `staff_get_player_strength_flags` | staff_get_player_strength_flags | `forcas_do_jogador` |
+| 0x5470d0 | `staff_get_player_weakness_flags` | staff_get_player_weakness_flags | `fraquezas_do_jogador` |
+| 0x846920 | `staff_interest_in_joining_club` | Shortlist_Manager::staff_interest_in_joining_club | `cqe4_interesse` |
+| 0x548810 | `staff_is_best_favoured_candidate` | staff_is_best_favoured_candidate | `melhor_candidato_a_favorito` |
+| 0x544600 | `staff_is_listed_by_request` | staff_is_listed_by_request | `pessoa_listada_a_pedido` |
+| 0x544590 | `staff_is_loan_listed` | staff_is_loan_listed | `pessoa_listada_para_emprestimo` |
+| 0x4cb960 | `staff_is_not_board_member` | staff_is_not_board_member | `fora_da_diretoria` |
+| 0x543280 | `staff_is_player_attribute_visible` | staff_is_player_attribute_visible | `atributo_visivel` |
+| 0x5444a0 | `staff_is_transfer_listed` | staff_is_transfer_listed | `pessoa_listada_pelo_clube` |
+| 0x544520 | `staff_is_transfer_listed_or_requested` | staff_is_transfer_listed_or_requested | `pessoa_listada_para_transferencia` |
+| 0x539490 | `staff_normalise_non_player_attributes` | staff_normalise_non_player_attributes | `normalizar_atributos_do_nao_jogador` |
+| 0x538bc0 | `staff_normalise_player_attributes` | staff_normalise_player_attributes | `normalizar_atributos_do_jogador` |
+| 0x538ec0 | `staff_normalise_player_physical_attributes` | staff_normalise_player_physical_attributes | `normalizar_atributos_fisicos_do_jogador` |
+| 0x548da0 | `staff_pick_favoured_team_mate` | staff_pick_favoured_team_mate | `escolher_companheiro_favorito` |
+| 0x870220 | `staff_records_compare_clubs_by_manager_points` | staff_records_compare_clubs_by_manager_points | `ordem_pelos_pontos_do_tecnico` |
+| 0x86dda0 | `staff_records_daily_update` | Staff_Records::daily_update | `pontos_dos_tecnicos_no_dia` |
+| 0x86d6e0 | `staff_records_end_season_for_nation` | Staff_Records::end_season_for_nation | `pontos_dos_tecnicos_no_fim_da_competicao` |
+| 0x547c50 | `staff_remove_disliked_staff` | staff_remove_disliked_staff | `tirar_pessoa_rejeitada` |
+| 0x547f50 | `staff_remove_favoured_club` | staff_remove_favoured_club | `tirar_clube_favorito` |
+| 0x547c10 | `staff_remove_favoured_staff` | staff_remove_favoured_staff | `tirar_pessoa_favorita` |
+| 0x549d60 | `staff_remove_opinion_link` | staff_remove_opinion_link | `tirar_vinculo_de_opiniao` |
+| 0x540980 | `staff_set_squad_flags` | staff_set_squad_flags | `marcar_elenco_da_pessoa` |
+| 0x6df460 | `stance` | stance | `postura` |
+| 0x6b5a70 | `start_next_match` | start_next_match | `iniciar_proxima_partida` |
+| 0x6dbb80 | `starters` | starters | `titulares` |
+| 0x6b5ce0 | `step_day_match` | step_day_match | `andar_partida_do_dia` |
+| 0x6cd660 | `store_extremes` | store_extremes | `guardar_extremos` |
+| 0x896fe0 | `store_instructions` | store_instructions | `guardar_instrucoes` |
+| 0x68a1c0 | `store_round_match` | store_round_match | `registrar_jogo_da_rodada` |
+| 0x6dbb10 | `store_tactic` | store_tactic | `guardar_tatica` |
+| 0x5b3c70 | `stored_cell` | stored_cell | `casa_guardada` |
+| 0x897990 | `stored_taker` | stored_taker | `batedor_guardado` |
+| 0x735780 | `story_with_response_two` | story_with_response_two | `noticia_com_resposta_2` |
+| 0x5bb550 | `stub_return_one_ret4` | stub_return_one_ret4 | `toco_um_com_um` |
+| 0x5bb540 | `stub_return_one_ret8` | stub_return_one_ret8 | `toco_um_com_dois` |
+| 0x6e1090 | `substitute` | substitute | `substituir` |
+| 0x842b00 | `suspend_clubs_shortlisting_player` | Shortlist_Manager::suspend_clubs_shortlisting_player | `suspender_clubes_que_miram_o_jogador` |
+| 0x43f2d0 | `swap_bytes_16_array` | swap_bytes_16_array | `trocar_bytes_das_palavras` |
+| 0x43f300 | `swap_bytes_32_array` | swap_bytes_32_array | `trocar_bytes_dos_dwords` |
+| 0x8973e0 | `swap_selection_slots` | Tactics::swap_selection_slots | `trocar_vagas_da_escalacao` |
+| 0x7f7270 | `sync_scout_lists` | SCOUT_MANAGER::sync_scout_lists | `sincronizar_listas_dos_olheiros` |
+| 0x6c38c0 | `tabela_a` | table_a | `tabela_a` |
+| 0x6c38f0 | `tabela_b` | table_b | `tabela_b` |
+| 0x717410 | `tabela_do_jogador` | player_table | `tabela_do_jogador` |
+| 0x6c3920 | `table_a_1a` | table_a_1a | `tabela_a_1a` |
+| 0x55cae0 | `table_penalty` | table_penalty | `punicao_da_tabela` |
+| 0x70ec80 | `tackle` | tackle | `dividida` |
+| 0x6cfe10 | `tackle_injury` | tackle_injury | `lesao_na_dividida` |
+| 0x898040 | `tactics_byte` | tactics_byte | `byte_tatico` |
+| 0x8982b0 | `tactics_row` | tactics_row | `linha_tatica` |
+| 0x6f0630 | `take_ball` | take_ball | `pegar_bola` |
+| 0x6cdd50 | `take_off_pitch` | take_off_pitch | `tirar_de_campo` |
+| 0x7a6e30 | `take_spare_non_player_record` | PLAYER_REGEN::take_spare_non_player_record | `tirar_a_ficha_reservada` |
+| 0x6cdd00 | `take_the_field` | take_the_field | `entrar_em_campo` |
+| 0x450c60 | `tally_record_construct` | tally_record_construct | `construir_recorde_de_ocorrencias` |
+| 0x6c0c60 | `team_strength` | team_strength | `forca_do_time` |
+| 0x6c4290 | `throw_in` | throw_in | `lateral` |
+| 0x6f56c0 | `tire_fatigue` | tire (fatigue) | `desgastar` |
+| 0x4cbd20 | `toggle_squad_placement` | CONTRACT_MANAGER::toggle_squad_placement | `trocar_lugar_no_elenco` |
+| 0x6ccb60 | `trace_move` | trace_move | `tracar_lance` |
+| 0x8b2230 | `training_manager_cpp_0x8b2230` | (training_manager.cpp, 0x8b2230) | `nomes_padrao_dos_programas` |
+| 0x5d5ac0 | `training_manager_get_player_entry` | training_manager_get_player_entry | `entrada_do_treino` |
+| 0x448550 | `transfer_fee_record_assign` | transfer_fee_record_assign | `copiar_recorde_de_valor` |
+| 0x4485d0 | `transfer_fee_record_construct` | transfer_fee_record_construct | `construir_recorde_de_valor_pago` |
+| 0x448620 | `transfer_fee_record_construct_2` | transfer_fee_record_construct_2 | `construir_recorde_de_valor_recebido` |
+| 0x842320 | `transfer_list_player` | Shortlist_Manager::transfer_list_player | `por_jogador_a_venda` |
+| 0x8d0780 | `transfer_manager_calc_compensation_fee` | transfer_manager_calc_compensation_fee | `compensacao_pela_pessoa` |
+| 0x8d0040 | `transfer_manager_can_loan_player` | TRANSFER_MANAGER::can_loan_player | `pode_emprestar` |
+| 0x8cf880 | `transfer_manager_check_matchday_squad_limit` | transfer_manager_check_matchday_squad_limit | `limite_do_banco_do_dia` |
+| 0x8c6db0 | `transfer_manager_close_offer_contract_offers` | transfer_manager_close_offer_contract_offers | `fechar_propostas_da_oferta` |
+| 0x8c5880 | `transfer_manager_daily_update` | TRANSFER_MANAGER::daily_update | `dia_das_transferencias` |
+| 0x8d0590 | `transfer_manager_get_loan_period` | TRANSFER_MANAGER::get_loan_period | `periodo_do_emprestimo` |
+| 0x8d0bb0 | `transfer_manager_get_next_window_dates` | transfer_manager_get_next_window_dates | `janela_fixa_de_transferencias` |
+| 0x8cee70 | `transfer_manager_get_offer_completion_date` | transfer_manager_get_offer_completion_date | `data_de_conclusao_da_oferta` |
+| 0x5d5ab0 | `transfer_manager_get_shortlist_manager` | transfer_manager_get_shortlist_manager | `lista_de_observados` |
+| 0x8c5800 | `transfer_manager_get_squad_status_for_reason` | transfer_manager_get_squad_status_for_reason | `estatuto_pelo_motivo` |
+| 0x8c54c0 | `transfer_manager_get_squad_status_reason` | transfer_manager_get_squad_status_reason | `motivo_pelo_status_no_elenco` |
+| 0x8c5560 | `transfer_manager_is_rejection_reason_valid` | transfer_manager_is_rejection_reason_valid | `motivo_da_recusa_vale` |
+| 0x8c7470 | `transfer_manager_offer_needs_work_permit` | transfer_manager_offer_needs_work_permit | `oferta_precisa_de_permissao` |
+| 0x8cd240 | `transfer_manager_selling_club_must_accept` | transfer_manager_selling_club_must_accept | `clube_vendedor_deve_aceitar` |
+| 0x8d0d90 | `transfer_offer_closed` | transfer_offer_closed | `oferta_fechada` |
+| 0x4cd030 | `trigger_relegation_clauses` | CONTRACT_MANAGER::trigger_relegation_clauses | `acionar_clausulas_de_rebaixamento` |
+| 0x59dd40 | `try_board_debt_payment` | FinanceTable::try_board_debt_payment | `diretoria_paga_a_divida` |
+| 0x59e940 | `try_board_takeover` | FinanceTable::try_board_takeover | `troca_do_presidente` |
+| 0x59e5a0 | `try_cash_injection` | FinanceTable::try_cash_injection | `injecao_de_dinheiro` |
+| 0x8c34e0 | `try_complete_offer` | try_complete_offer | `tentar_concluir_oferta` |
+| 0x59e050 | `try_finance_boost_event` | FinanceTable::try_finance_boost_event | `impulso_das_financas` |
+| 0x842740 | `try_loan_offer_for_player` | try_loan_offer_for_player | `tentar_emprestimo_pelo_jogador` |
+| 0x53b620 | `type_11_to_15` | type_11_to_15 | `tipo_11_a_15` |
+| 0x53b610 | `type_not_11` | type_not_11 | `tipo_nao_11` |
+| 0x9025c0 | `uefa_cup_create_round_table` | UefaCup::create_round_table | `cqq10_uefa_tabela` |
+| 0x9030e0 | `uefa_cup_update_staff_records_for_status` | UefaCup::update_staff_records_for_status | `cqi10_uefa_registros` |
+| 0x9050d0 | `uefa_find_nth_unplaced_club_of_nation` | uefa_find_nth_unplaced_club_of_nation | `uefa_enesimo_clube_da_nacao` |
+| 0x905510 | `uefa_seeding_save_to_temp_file` | UefaSeeding::save_to_temp_file | `gravar_sementes_da_uefa` |
+| 0x450b70 | `unbeaten_run_record_construct` | unbeaten_run_record_construct | `construir_recorde_de_invencibilidade` |
+| 0x4b0850 | `units_digit` | units_digit | `unidades` |
+| 0x8c1290 | `unsettle_player_after_bid` | unsettle_player_after_bid | `desassossegar_pelo_lance` |
+| 0x4ca6d0 | `update_after_match` | CONTRACT_MANAGER::update_after_match | `contratos_depois_do_jogo` |
+| 0x8c39f0 | `update_appearance_clauses_after_match` | update_appearance_clauses_after_match | `jogos_das_permissoes_e_clausulas` |
+| 0x6ec010 | `update_attributes` | update_attributes | `atualizar_atributos` |
+| 0x556e90 | `update_ban_progress` | Discipline::update_ban_progress | `contar_jogo_da_suspensao` |
+| 0x6951e0 | `update_board_after_fixture` | MANAGER_MANAGER::update_board_after_fixture | `diretoria_depois_da_partida` |
+| 0x695240 | `update_board_confidence_after_match` | MANAGER_MANAGER::update_board_confidence_after_match | `confianca_depois_da_partida` |
+| 0x922ee0 | `update_city_weather` | Weather::update_city_weather | `tempo_das_cidades` |
+| 0x83a730 | `update_club_shortlist` | Shortlist_Manager::update_club_shortlist | `refazer_lista_do_clube` |
+| 0x83bf40 | `update_club_target_reputation` | Shortlist_Manager::update_club_target_reputation | `reputacao_alvo_do_clube` |
+| 0x8b2880 | `update_coach_assignments` | TRAINING_MANAGER::update_coach_assignments | `distribuir_os_treinadores` |
+| 0x4c61b0 | `update_for_new_season` | ConmebolSeeding::update_for_new_season | `conmebol_virada_do_ano` |
+| 0x6869a0 | `update_head_to_head` | League::update_head_to_head | `atualizar_confronto_direto` |
+| 0x5cbb00 | `update_international_friendlies` | Friendly::update_international_friendlies | `amistosos_internacionais_do_dia` |
+| 0x447430 | `update_league_position_records` | Club_Records::update_league_position_records | `recordes_de_posicao_na_liga` |
+| 0x6f4aa0 | `update_player` | update_player | `atualizar_jogador` |
+| 0x62c680 | `update_player_fitness` | Injury::update_player_fitness | `fisico_do_dia` |
+| 0x8b1750 | `update_player_training` | TRAINING_MANAGER::update_player_training | `atualizar_o_treino_do_jogador` |
+| 0x684cd0 | `update_positions_and_status` | League::update_positions_and_status | `posicoes_e_situacao_na_liga` |
+| 0x68ac40 | `update_projected_positions` | League::update_projected_positions | `projetar_posicoes_da_liga` |
+| 0x58d460 | `update_rankings` | FIFA_RANKINGS::update_rankings | `atualizar_ranking_da_fifa` |
+| 0x9035a0 | `update_season` | UefaSeeding::update_season | `uefa_virada_da_classificacao` |
+| 0x452a90 | `update_season_rating_record` | Club_Records::update_season_rating_record | `recorde_de_nota_da_temporada` |
+| 0x843e10 | `update_staff_status` | Shortlist_Manager::update_staff_status | `situacao_na_lista_de_observacao` |
+| 0x448760 | `update_transfer_fee_records` | Club_Records::update_transfer_fee_records | `recordes_de_valor_de_transferencia` |
+| 0x8c6bc0 | `update_transfer_window_news` | TRANSFER_MANAGER::update_transfer_window_news | `janelas_avisos_do_dia` |
+| 0x598370 | `update_wage_bill` | Finance::update_wage_bill | `folha_salarial_do_clube` |
+| 0x8c7e20 | `update_work_permit_on_move` | TRANSFER_MANAGER::update_work_permit_on_move | `permissao_de_trabalho_na_mudanca` |
+| 0x8c7330 | `update_work_permits` | TRANSFER_MANAGER::update_work_permits | `atualizar_permissoes_de_trabalho` |
+| 0x59b630 | `upgrade_training_facilities` | FinanceTable::upgrade_training_facilities | `melhorar_o_centro_de_treino` |
+| 0x9099d0 | `usa_mls_add_result` | UsaMls::add_result | `cqk9_resultado_na_mls` |
+| 0x909400 | `usa_mls_advance_stage` | UsaMls::advance_stage | `cqr4_fase_seguinte_da_mls` |
+| 0x90a400 | `usa_mls_all_stars_create_round_table` | UsaMlsAllStars::create_round_table | `cqm12_jogo_das_estrelas_tabela` |
+| 0x6664e0 | `usa_mls_all_stars_start_new_season` | JapSuper::start_new_season | `cqr6_virada_supercopa_japonesa` |
+| 0x90a760 | `usa_mls_all_stars_start_new_season_90a760` | UsaMlsAllStars::start_new_season | `cqr6_virada_jogo_das_estrelas` |
+| 0x90b790 | `usa_mls_all_stars_start_new_season_90b790` | UsaOpenCup::start_new_season | `cqr6_virada_copa_dos_eua` |
+| 0x90a900 | `usa_mls_all_stars_update_for_date` | UsaMlsAllStars::update_for_date | `cqn10_jogo_das_estrelas_dia` |
+| 0x9097d0 | `usa_mls_create_final_stage` | UsaMls::create_final_stage | `cqr4_final_da_mls` |
+| 0x9094c0 | `usa_mls_create_playoff_stage` | UsaMls::create_playoff_stage | `cqr4_play_off_da_mls` |
+| 0x908560 | `usa_mls_create_table` | UsaMls::create_table | `cqs1_tabela_da_mls` |
+| 0x90a000 | `usa_mls_get_club_all_star_conference` | usa_mls_get_club_all_star_conference | `cqk9_conferencia_das_estrelas` |
+| 0x909a40 | `usa_mls_get_club_array` | UsaMls::get_club_array | `cqs2_clubes_da_mls` |
+| 0x909dd0 | `usa_mls_set_club_progress` | UsaMls::set_club_progress | `cqk8_progresso_na_mls` |
+| 0x909bb0 | `usa_mls_set_predicted_positions` | UsaMls::set_predicted_positions | `cqs2_posicoes_previstas_da_mls` |
+| 0x908660 | `usa_mls_set_up_rules` | UsaMls::set_up_rules | `cqj8_regras_da_mls` |
+| 0x908e00 | `usa_mls_start_new_season` | UsaMls::start_new_season | `cqs2_virada_da_mls` |
+| 0x908200 | `usa_mls_update_staff_records_for_status` | UsaMls::update_staff_records_for_status | `cqk9_destino_na_mls` |
+| 0x90cd50 | `utils_clear_temp_folder` | utils_clear_temp_folder | `limpar_pasta_temporaria` |
+| 0x838eb0 | `valid_saved_game_version` | valid_saved_game_version | `versao_do_jogo_salvo_valida` |
+| 0x7165b0 | `value_by_condition` | value_by_condition | `valor_pela_condicao` |
+| 0x840d80 | `value_player_for_club` | Shortlist_Manager::value_player_for_club | `valor_do_jogador_para_o_clube` |
+| 0x758010 | `warn_squad_of_position_rival` | Media::warn_squad_of_position_rival | `aviso_ao_rival_de_posicao` |
+| 0x9191e0 | `wc_europe_league_set_up_rules` | WcEuropeLeague::set_up_rules | `cqj12_eliminatoria_europa_regras` |
+| 0x912eb0 | `wc_europe_league_set_up_rules_912eb0` | WcAsiaLeague::set_up_rules | `cqj12_eliminatoria_asia_regras` |
+| 0x921040 | `wc_europe_league_set_up_rules_921040` | WcSouthAmericanLeague::set_up_rules | `cqj12_eliminatoria_sul_americana_regras` |
+| 0x6d5a10 | `who_marks` | who_marks | `quem_marca` |
+| 0x6bc030 | `who_to_mark` | who_to_mark | `quem_marcar` |
+| 0x450bc0 | `winless_run_record_construct` | winless_run_record_construct | `construir_recorde_sem_vencer` |
+| 0x775cd0 | `withdraw_injured_player` | NationalTeams::withdraw_injured_player | `tirar_convocado_machucado` |
+| 0x8bfcb0 | `withdraw_transfer_offer` | withdraw_transfer_offer | `retirar_oferta_de_transferencia` |
+| 0x450ad0 | `won_run_record_construct` | won_run_record_construct | `construir_recorde_de_vitorias_seguidas` |
+| 0x6b7cf0 | `won_the_match` | won_the_match | `venceu_o_jogo` |
+| 0x62c3d0 | `word_0c` | word_0c | `palavra_0c` |
+| 0x92d540 | `world_cup_create_group_stage` | WorldCup::create_group_stage | `mundial_fase_do_grupo` |
+| 0x92d0f0 | `world_cup_create_group_table` | WorldCup::create_group_table | `mundial_tabela_do_grupo_um` |
+| 0x92c290 | `world_cup_create_schedule` | WorldCup::create_schedule | `mundial_rodadas_da_fase` |
+| 0x92f680 | `world_cup_set_predicted_positions` | WorldCup::set_predicted_positions | `mundial_posicoes_previstas` |
+| 0x92f1a0 | `world_cup_update_for_date` | WorldCup::update_for_date | `mundial_dia` |
+| 0x70a890 | `write_19c` | write_19c | `gravar_19c` |
+| 0x7160e0 | `write_2b` | write_2b | `gravar_2b` |
+| 0x7003a0 | `write_8ed8` | write_8ed8 | `gravar_8ed8` |
+| 0x8e05a0 | `write_deadline_news_text` | TRANSFER_MANAGER::write_deadline_news_text | `texto_do_fim_do_prazo` |
+| 0x74af60 | `write_financial_trouble_news_text` | Media::write_financial_trouble_news_text | `texto_da_crise_financeira` |
+| 0x729820 | `write_match_record` | Match_Stats::write_match_record | `gravar_registro_da_partida` |
+| 0x5465a0 | `write_player_description` | write_player_description | `descricao_do_jogador` |
+| 0x5461b0 | `write_position_name` | write_position_name | `nome_da_posicao` |
+| 0x8984d0 | `write_tactics_row` | write_tactics_row | `gravar_linha_tatica` |
+| 0x70df20 | `x_off_centre` | x_off_centre | `x_fora_do_meio` |
+| 0x450c70 | `youngest_player_record_construct` | youngest_player_record_construct | `construir_recorde_do_mais_novo` |
+| 0x933610 | `zadd_matching_files` | zadd_matching_files | `empacotar_no_conteiner` |
+| 0x932b00 | `zclose` | zclose | `fechar_conteiner` |
+| 0x933320 | `zextract_matching_files` | zextract_matching_files | `desempacotar_do_conteiner` |
+| 0x9331c0 | `zget_archive_id` | zget_archive_id | `id_do_conteiner` |
+| 0x933860 | `zget_matching_size` | zget_matching_size | `tamanho_dos_itens_do_padrao` |
+| 0x933a00 | `zipdir_match_filename_pattern` | zipdir_match_filename_pattern | `casar_nome_com_padrao` |
+| 0x932c30 | `zipdir_zread` | zread | `ler_do_conteiner` |
+| 0x932e10 | `zipdir_zwrite` | zwrite | `gravar_no_conteiner` |
 
 ## Sorteio e datas
 

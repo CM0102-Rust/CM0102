@@ -101,7 +101,7 @@ const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
 /// fica de fora. O laço da original ([esp+0x11c] de 1 a 2) roda o corpo uma vez, com o total 0x25.
 /// O resumo é um buffer zerado aqui; na original, o que o 0x591f80 não escreve (o clube dos 16
 /// técnicos não humanos, o resto dos textos) é sobra da pilha dela, gravada no `general.dat`.
-unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
+unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
     let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7a1820usize);
     let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x7a1710usize);
     let apagar: unsafe extern "C" fn(*const u8) -> i32 = core::mem::transmute(0x94643ausize);
@@ -323,6 +323,6 @@ unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
 
 // ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
-unsafe extern "C" fn comparar_gravar_jogo(caminho: *const u8, a4: u32) -> u32 {
+unsafe extern "C" fn comparar_save_game_data(caminho: *const u8, a4: u32) -> u32 {
     orig::<unsafe extern "C" fn(*const u8, u32) -> u32>(%%I0%%)(caminho, a4)
 }

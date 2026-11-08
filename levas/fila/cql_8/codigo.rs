@@ -56,19 +56,19 @@ unsafe fn cql8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 
 /// { 0x42fd10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_table()`: o Baiano tem 10 clubes (divisão reserva +0x60 = [0x9cf9c0]).
 /// Fonte 0x98acac, linha 0x167.
-unsafe extern "thiscall" fn cql8_tabela_do_baiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -> u32 {
     cql8_tabela(this, 0xa, 0x98acac, 0x167, 0x9cf9c0, 0, "cql_8 baiano cheio")
 }
 
 /// { 0x430ef0 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::load_region_clubs()`: o Centro-Oeste tem 15 clubes (divisão reserva +0x60 = [0x9cf998]).
 /// Fonte 0x98ae10, linha 0x168.
-unsafe extern "thiscall" fn cql8_tabela_do_centro_oeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_central_load_region_clubs(this: usize) -> u32 {
     cql8_tabela(this, 0xf, 0x98ae10, 0x168, 0x9cf998, 0, "cql_8 centro_oeste cheio")
 }
 
 /// { 0x4321d0 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::load_region_clubs()`: o Gaúcho tem 17 clubes (divisão reserva +0x60 = [0x9cf9c8]).
 /// Fonte 0x98ae50, linha 0x163.
-unsafe extern "thiscall" fn cql8_tabela_do_gaucho(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     cql8_tabela(this, 0x11, 0x98ae50, 0x163, 0x9cf9c8, 0, "cql_8 gaucho cheio")
 }
 
@@ -98,17 +98,17 @@ unsafe fn cql8_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
     r
 }
 
-unsafe extern "thiscall" fn comparar_cql8_tabela_do_baiano(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cql8_comparar("cql8_tabela_do_baiano", this, 0xa, 0x9cf9c0, || o(this))
+    cql8_comparar("bra_reg_bahia_create_table", this, 0xa, 0x9cf9c0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cql8_tabela_do_centro_oeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_central_load_region_clubs(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cql8_comparar("cql8_tabela_do_centro_oeste", this, 0xf, 0x9cf998, || o(this))
+    cql8_comparar("bra_reg_central_load_region_clubs", this, 0xf, 0x9cf998, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cql8_tabela_do_gaucho(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_gaucho_load_region_clubs(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cql8_comparar("cql8_tabela_do_gaucho", this, 0x11, 0x9cf9c8, || o(this))
+    cql8_comparar("bra_reg_gaucho_load_region_clubs", this, 0x11, 0x9cf9c8, || o(this))
 }

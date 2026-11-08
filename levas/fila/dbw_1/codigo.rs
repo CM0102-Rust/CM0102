@@ -185,7 +185,7 @@ unsafe fn menos_um_das_chaves_1080_dbw() {
 /// { 0x601a40 } (cdecl, index.cpp, set_key_ids): na carga da base (0x528540), as chaves fixas do jogo (cores,
 /// continentes, nações, competições, prêmios, clubes) recebem a linha da base pelo nome; as que ficam sem valor vão ao
 /// relato. A entrada do cm0102.exe: o -1 nas 1.282 globais de MENOS_UM_DAS_CHAVES e o miolo `chaves_fixas`. Devolve 1.
-unsafe extern "C" fn definir_chaves_fixas() -> u32 {
+unsafe extern "C" fn set_key_ids() -> u32 {
     menos_um_das_chaves_dbw();
     chaves_fixas(u32::MAX, true)
 }
@@ -193,7 +193,7 @@ unsafe extern "C" fn definir_chaves_fixas() -> u32 {
 /// { 0x603834 } (cdecl, só no cm0102-1080.exe): a mesma rotina pela entrada do 1080 (a chamada de 0x52d8fa vai para
 /// ela): o -1 nas faixas inteiras 0x9cf178..0x9d0527 e 0xb63c9c..0xb63d03 (também as 4 globais que a original não toca)
 /// e o mesmo miolo. Devolve 1.
-unsafe extern "C" fn definir_chaves_fixas_1080() -> u32 {
+unsafe extern "C" fn set_key_ids_1080() -> u32 {
     menos_um_das_chaves_1080_dbw();
     chaves_fixas(MARCA_DAS_CHAVES_1080, true)
 }
@@ -201,22 +201,22 @@ unsafe extern "C" fn definir_chaves_fixas_1080() -> u32 {
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 const REGIOES_DAS_CHAVES_DBW: [(usize, usize); 3] = [(0x9cf178, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
-unsafe extern "C" fn comparar_definir_chaves_fixas() -> u32 {
+unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     let o = orig::<unsafe extern "C" fn() -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
         menos_um_das_chaves_dbw();
         chaves_fixas(u32::MAX, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("definir_chaves_fixas() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
     r
 }
 
-unsafe extern "C" fn comparar_definir_chaves_fixas_1080() -> u32 {
+unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
     let o = orig::<unsafe extern "C" fn() -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
         menos_um_das_chaves_1080_dbw();
         chaves_fixas(MARCA_DAS_CHAVES_1080, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("definir_chaves_fixas_1080() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
     r
 }

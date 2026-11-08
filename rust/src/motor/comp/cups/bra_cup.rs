@@ -86,13 +86,13 @@ pub(crate) unsafe fn cqr5_comparar(nome: &str, this: usize, original: impl FnOnc
 /// [pt] { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
 /// virada (`cqr5_virada`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
 /// 0x189, 0x190 e 0x197.
-pub(crate) unsafe extern "thiscall" fn cqr5_virada_copa_do_brasil(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> u32 {
     cqr5_virada(this, 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: a Copa do Brasil
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_brasil(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR5_VIRADA_COPA_DO_BRASIL);
-    cqr5_comparar("cqr5_virada_copa_do_brasil", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON);
+    cqr5_comparar("bra_cup_start_new_season", this, || o(this))
 }
 
 /// rule: the same turn in the Emperor's Cup (Japan): tables freed, history archived, year +1, the entrants
@@ -102,13 +102,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_brasil(this:
 /// [pt] { 0x662950 } (thiscall, ret 0, jap_emp_cup.cpp; a virtual +0x08 da Copa do Imperador): `JapEmpCup::start_new_season()`,
 /// a virada (`cqr5_virada`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
 /// linhas 0x217, 0x21e e 0x225.
-pub(crate) unsafe extern "thiscall" fn cqr5_virada_copa_do_imperador(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season_662950(this: usize) -> u32 {
     cqr5_virada(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: a Copa do Imperador
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqr5_virada_copa_do_imperador(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR5_VIRADA_COPA_DO_IMPERADOR);
-    cqr5_comparar("cqr5_virada_copa_do_imperador", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_start_new_season_662950(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CUP_START_NEW_SEASON_662950);
+    cqr5_comparar("bra_cup_start_new_season_662950", this, || o(this))
 }
 
 
@@ -138,14 +138,14 @@ pub(crate) const CQO12_COPA_DO_BRASIL: [Cql10R; 7] = [
 ///
 /// [pt] { 0x427700 } (thiscall, ret 0x10, bra_cup.cpp; a virtual +0x3c da Copa do Brasil): `BraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa4 sem memória.
-pub(crate) unsafe extern "thiscall" fn cqo12_copa_do_brasil_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql10_tabela(this, fase, rodadas, extra, saida, &CQO12_COPA_DO_BRASIL, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqo12_copa_do_brasil_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO12_COPA_DO_BRASIL_TABELA);
-    cql10_comparar("cqo12_copa_do_brasil_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqo12_copa_do_brasil_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CUP_CREATE_ROUND_TABLE);
+    cql10_comparar("bra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| bra_cup_create_round_table(this, fase, r, e, s))
 }
 
 
@@ -183,14 +183,14 @@ pub(crate) unsafe fn cqo12_times(this: usize) -> i32 {
 ///
 /// [pt] regra: a Copa do Brasil tem 71 vagas, uma por inscrito, na ordem da lista dos inscritos, todas com a classe 0 e a
 /// situação 0xff (ainda sem jogo [inferência])
-pub(crate) unsafe extern "thiscall" fn cqo12_times_da_copa(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> i32 {
     cqo12_times(this)
 }
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
 /// sua, comparada nas 71 vagas (com a devolução 1) e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_cqo12_times_da_copa(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO12_TIMES_DA_COPA);
+pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_build_team_table(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_BUILD_TEAM_TABLE);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0x3e, 2usize), (0xb67a34, 4)];
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo12_times_da_copa(this: usize)
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqo12_times_da_copa({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("bra_cup_build_team_table({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -239,14 +239,14 @@ pub(crate) unsafe fn cqo12_regras(this: usize) -> i32 {
 ///
 /// [pt] regra: os jogos da Copa do Brasil têm 7 reservas no banco e 3 substituições; o fundo de prêmios é de 500 mil; monta
 /// a tabela das rodadas
-pub(crate) unsafe extern "thiscall" fn cqo12_regras_da_copa(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn bra_cup_set_up_rounds(this: usize) -> i32 {
     cqo12_regras(this)
 }
 
 /// Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
 /// duas (+0xa3) comparadas nos bytes gravados (cql10_gravados) e a da cópia liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_cqo12_regras_da_copa(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQO12_REGRAS_DA_COPA);
+pub(crate) unsafe extern "thiscall" fn comparar_bra_cup_set_up_rounds(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_SET_UP_ROUNDS);
     let to = core::cell::Cell::new(0usize);
     let tr = core::cell::Cell::new(0usize);
     let antes = read_u32_as_usize(this + 0xa3);
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo12_regras_da_copa(this: usize
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("cqo12_regras_da_copa({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.registrar(igual && a == b && tabela, || format!("bra_cup_set_up_rounds({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }
 

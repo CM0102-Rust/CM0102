@@ -23,7 +23,7 @@ unsafe fn cpn6_clube_do_contrato(c: usize) -> usize {
 /// próprio clube, o nibble alto do +0x4f do contrato com o clube (0x4cf5f0; sem ele, 7); clube humano (0x600a50) com
 /// cargo 11 a 15 (0x53b620): a estimativa 0x849d60; senão, o clube da pessoa (+0x39) sendo o clube ou o parceiro dele
 /// (0x540a50) leva ao contrato com o clube; nenhum: 7.
-unsafe extern "thiscall" fn estatuto_no_elenco_pelo_clube(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
+unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
     if clube == 0 {
         return 7;
     }
@@ -42,16 +42,16 @@ unsafe extern "thiscall" fn estatuto_no_elenco_pelo_clube(this: usize, pessoa: u
     if !cargo.is_null() {
         *cargo = cpn6_b(pessoa + 0x3d);
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpn6_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpn6_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
     let pelo_contrato = if cpn6_clube_do_contrato(c) == clube {
         true
     } else {
         // ponytail: o 3º argumento é empurrado como dword 1; o cargo vai num byte (a 0x53b620 só lê o byte)
         let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-        let tipo_11_a_15: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
-        if humano(clube, 1, 1, 0, 0) != 0 && tipo_11_a_15(cpn6_b(pessoa + 0x3d) as i8) != 0 {
+        let type_11_to_15: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
+        if humano(clube, 1, 1, 0, 0) != 0 && type_11_to_15(cpn6_b(pessoa + 0x3d) as i8) != 0 {
             let estimar: unsafe extern "stdcall" fn(usize, usize) -> u32 = core::mem::transmute(0x849d60usize);
             return estimar(pessoa, clube) as u8;
         }
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn estatuto_no_elenco_pelo_clube(this: usize, pessoa: u
 /// [0xb74448]): a reputação passa a ser o maior de 1,5 × ela e 0,75 × a do clube (truncado, 16 bits). A razão (limitada
 /// a 0,1..2): acima de 1,5: 1; o float dela acima de 1,2 com o clube abaixo de 8500: 2; até 1,2 com a reputação até
 /// 6500: 5 (acima de 0,6 e idade +0x18 abaixo de 23), 4 (24 ou mais) ou 6; senão 3. Só roda para o clube humano.
-unsafe extern "stdcall" fn estimar_estatuto_no_elenco(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
     let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
     let reputacao: unsafe extern "C" fn(usize, usize, u32) -> u16 = core::mem::transmute(0x5407e0usize);
     let mut rep = if reputacao(pessoa, tecnico(clube), 0) as i16 > 1 { reputacao(pessoa, tecnico(clube), 0) as i16 } else { 1 };
@@ -87,8 +87,8 @@ unsafe extern "stdcall" fn estimar_estatuto_no_elenco(pessoa: usize, clube: usiz
         rc = 1;
     }
     let t = tecnico(clube);
-    let na_lista: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
-    if na_lista(cpn6_d(0xb74448), pessoa, t) != 0 {
+    let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
+    if in_list(cpn6_d(0xb74448), pessoa, t) != 0 {
         let a = rep as f64 * f64_em(0x968940);
         let b = rc as f64 * f64_em(0x969040);
         rep = ftol(if a > b { a } else { b }) as i16;
@@ -121,8 +121,8 @@ unsafe extern "stdcall" fn estimar_estatuto_no_elenco(pessoa: usize, clube: usiz
 /// vira −1; o alvo válido cujo contrato (0x4cf5a0, guardado em [0xae1080]; o de tipo 5 em +0x35 não conta) não é do
 /// clube, nem o clube dele (+0x39) é o clube, e com o +0x17 da vaga em −1: o evento 3 da lista (0x843e10) com o tipo
 /// "não é 11" do +0 da vaga (no byte baixo do endereço da vaga, como a original).
-unsafe extern "thiscall" fn liberar_alvos_da_lista_do_clube(this: usize, clube: usize, entrada: usize) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: usize, clube: usize, entrada: usize) {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let atualizar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x843e10usize);
     for k in 0..40usize {
         let o = k * 0x25;
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn liberar_alvos_da_lista_do_clube(this: usize, clube: 
             continue;
         }
         let p = cpn6_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
-        let c = contrato_de(cpn6_d(0xae1050), p);
+        let c = contract_of(cpn6_d(0xae1050), p);
         *(0xae1080 as *mut usize) = c;
         let do_contrato = if c != 0 && cpn6_b(c + 0x35) & 0x3f != 5 { cpn6_clube_do_contrato(c) } else { 0 };
         if do_contrato == clube || cpn6_d(p + 0x39) == clube {
@@ -153,26 +153,26 @@ unsafe extern "thiscall" fn liberar_alvos_da_lista_do_clube(this: usize, clube: 
 }
 
 /// Comparador: lado a lado pelo estatuto, pelo cargo de saída e por [0xae1080].
-unsafe extern "thiscall" fn comparar_estatuto_no_elenco_pelo_clube(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
+unsafe extern "thiscall" fn comparar_get_squad_status_for_club(this: usize, pessoa: usize, clube: usize, cargo: *mut u8) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8) -> u8>(%%I0%%);
     let saida = if cargo.is_null() { 0xae1080 } else { cargo as usize };
     let reg = [(0xae1080usize, 4usize), (saida, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, cargo), || estatuto_no_elenco_pelo_clube(this, pessoa, clube, cargo));
-    PLACAR.registrar(igual && r == n, || format!("estatuto_no_elenco_pelo_clube({:#x}, {:#x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, clube, cargo), || get_squad_status_for_club(this, pessoa, clube, cargo));
+    PLACAR.registrar(igual && r == n, || format!("get_squad_status_for_club({:#x}, {:#x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
 /// Comparador: pelo valor (o byte baixo; a original deixa a palavra de estado do x87 em ah).
-unsafe extern "stdcall" fn comparar_estimar_estatuto_no_elenco(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_shortlist_manager_estimate_squad_status(pessoa: usize, clube: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(pessoa, clube);
-    let n = estimar_estatuto_no_elenco(pessoa, clube);
-    PLACAR.registrar(r as u8 == n as u8, || format!("estimar_estatuto_no_elenco({:#x}, {:#x}) original={:#x} rust={}", pessoa, clube, r, n));
+    let n = shortlist_manager_estimate_squad_status(pessoa, clube);
+    PLACAR.registrar(r as u8 == n as u8, || format!("shortlist_manager_estimate_squad_status({:#x}, {:#x}) original={:#x} rust={}", pessoa, clube, r, n));
     r
 }
 
 /// Comparador: só a original.
 // ponytail: a 0x843e10 muda a lista do clube (e outras) a cada evento e não pode rodar duas vezes; a cópia tem o ramo
 // e a prova é pela carreira (modo Rust contra a original).
-unsafe extern "thiscall" fn comparar_liberar_alvos_da_lista_do_clube(this: usize, clube: usize, entrada: usize) {
+unsafe extern "thiscall" fn comparar_shortlist_manager_release_club_slot_targets(this: usize, clube: usize, entrada: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, clube, entrada)
 }

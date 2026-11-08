@@ -43,7 +43,7 @@ unsafe fn cpu5_adiar_se_nao_zero(n: i32) -> u8 {
 /// devolve 0x12. Depois o clima do jogo (0x923010, gravado na vaga do argumento como na original): chuva 5 com 1 a 13
 /// graus, estádio descoberto (+0x4d) de até 20000 lugares: sorteio por lugares e mandante (+0x64), zero = 9; chuva 8
 /// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
-unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
     let chave: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(0x669360usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
@@ -178,14 +178,14 @@ unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize) -> u8 {
 }
 
 // ponytail: sorteia: só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_adiar_pelo_clima(this: usize, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_check_postponement(this: usize, jogo: usize) -> u8 {
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%)(this, jogo)
 }
 
 /// { 0x5a0590 } (thiscall, ret 4, finance.cpp): `FinanceTable::get_club_finance(clube)`: o registro de finanças
 /// (0x167 bytes em [this]) do clube pelo id (+0); clube B com parceiro A (0x540a50 com o byte devolvido 0): o do A.
 /// Clube nulo: a caixa "Error" de finance.CPP (a original).
-unsafe extern "thiscall" fn financas_do_clube(this: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn get_club_finance(this: usize, clube: usize) -> usize {
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, clube);
     }
@@ -200,21 +200,21 @@ unsafe extern "thiscall" fn financas_do_clube(this: usize, clube: usize) -> usiz
 }
 
 /// Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
-unsafe extern "thiscall" fn comparar_financas_do_clube(this: usize, clube: usize) -> usize {
+unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, clube: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if clube == 0 {
         return o(this, clube);
     }
     let r = o(this, clube);
-    let n = financas_do_clube(this, clube);
-    PLACAR.registrar(r == n, || format!("financas_do_clube(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
+    let n = get_club_finance(this, clube);
+    PLACAR.registrar(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
     r
 }
 
 /// { 0x85e380 } (cdecl, stadium.cpp): `stadium_compare_bookings(a, b)`, a ordem das reservas do estádio (qsort em
 /// 0x85ba1b, 0x85c4ba, 0x85ddf3, 0x85df26): pela data (+4, Date::operator< 0x456770 e > 0x456740), depois pelo id do
 /// estádio (+0).
-unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let (d0, d1) = (cpu5_d(b + 4) as u32, cpu5_d(b + 8) as u32);
@@ -228,9 +228,9 @@ unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: pelo valor.
-unsafe extern "C" fn comparar_ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_das_reservas_do_estadio(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_reservas_do_estadio({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    let n = stadium_compare_bookings(a, b);
+    PLACAR.registrar(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }

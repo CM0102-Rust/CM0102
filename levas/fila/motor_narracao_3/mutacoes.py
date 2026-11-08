@@ -1,4 +1,4 @@
-# Mutacoes do fechamento do motor (6). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
+# Mutacoes do match_wrap_up do motor (6). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
 MUTACOES = [
     ('p_parte', "                *(p as *mut u16) |= 0x8000;", "                *(p as *mut u16) |= 0x4000;"),
     ('p_anel', "    *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };", "    *c = if c.read().wrapping_add(1) > 0xa { 0 } else { c.read().wrapping_add(1) };"),

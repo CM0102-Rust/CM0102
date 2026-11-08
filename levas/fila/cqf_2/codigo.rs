@@ -93,7 +93,7 @@ unsafe fn cqf2_regra(this: usize, nacao: usize) -> Option<usize> {
 /// 0x5563f0, os números (0x85a850, 0x540980, 0x85add0/0x85a470), 0x4196a0, o registro da transferência passada
 /// (0x8cb810: a pessoa, os +0x33 de +4, +8 e +0xc dela, os ids de A e B, 0, 2 e hoje), o status 0x14 com 5 dias, a
 /// marca, o fim (0x8c6db0) e a pessoa fora das listas (0x842b00 com 1).
-unsafe extern "thiscall" fn termos_aceitos(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
+unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
     let noticia_resposta: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, usize, u32, u32, u32) = core::mem::transmute(0x8d8e90usize);
     let seguir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c2f50usize);
     let elenco: unsafe extern "C" fn(usize, u32, u32) -> i8 = core::mem::transmute(0x53c590usize);
@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn termos_aceitos(this: usize, pessoa: usize, vaga: i32
 
 /// Comparador da 0x8c2180: só a original (entrega notícias, conclui ou recusa o empréstimo, assina contrato, registra a
 /// transferência, mexe nas listas).
-unsafe extern "thiscall" fn comparar_termos_aceitos(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
+unsafe extern "thiscall" fn comparar_handle_player_accepted_terms(this: usize, pessoa: usize, vaga: i32, contrato: usize, tipo: u32, noticia: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32, u32)>(%%I0%%)(this, pessoa, vaga, contrato, tipo, noticia) // ponytail: só a original
 }
 
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn comparar_termos_aceitos(this: usize, pessoa: usize, 
 /// (+0x80); 14 = até 3; 15.. os ids, com 1 (no lugar 13) se o 2º repete o 1º e 2 (no 12) se o 3º repete um deles; por
 /// fim o "fora da lista" no lugar seguinte. Os destinatários (0x8d1da0 com 0x21a, até 30, com [0xde1f54] e ficha) e a
 /// entrega (0x7861e0).
-unsafe extern "thiscall" fn noticia_de_jogador_listado(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usize, clube: usize) {
     let contrato_com: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let lista_fim: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -395,6 +395,6 @@ unsafe extern "thiscall" fn noticia_de_jogador_listado(this: usize, jogador: usi
 }
 
 /// Comparador da 0x4d71b0: só a original (sorteia, entrega a notícia, que aloca).
-unsafe extern "thiscall" fn comparar_noticia_de_jogador_listado(this: usize, jogador: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_post_transfer_listed_news(this: usize, jogador: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, jogador, clube) // ponytail: só a original
 }

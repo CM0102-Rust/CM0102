@@ -40,7 +40,7 @@ unsafe fn cpq7_permissao(this: usize, pessoa: usize) -> usize {
 /// permissão: a nova (0x8c7070 com o ano de hoje, ordenando), depois de hoje + 52 semanas (0x54c770, sem uso). Se não
 /// precisa (a 0x8c7560 é chamada de novo) ou sem clube: tira a permissão que tiver (a marca 0x20, a última no lugar
 /// dela, conta − 1 e reordena com 0x945333).
-unsafe extern "thiscall" fn permissao_de_trabalho_na_mudanca(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn update_work_permit_on_move(this: usize, pessoa: usize, clube: usize) {
     let precisa: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
     if clube != 0 {
         if precisa(this, pessoa, clube, 1) != 0 {
@@ -95,14 +95,14 @@ unsafe extern "thiscall" fn permissao_de_trabalho_na_mudanca(this: usize, pessoa
 /// TRANSFER_OFFER local: 0x8e5680, ids em +8 e +0xc, +0x1f = 0, motivo 0x13; 0x8e5710); senão a notícia da permissão
 /// recusada (0x8e4290); devolve 0. Senão assina (0x4cf720) e, assinado, o clube paga as luvas (0x5a0590, 0x5998e0) e
 /// devolve 1.
-unsafe extern "thiscall" fn concluir_oferta_de_contrato_aceita(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn complete_accepted_contract_offer(this: usize, oferta: usize) -> u32 {
     let precisa: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
     let concedida: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c7950usize);
     let pessoa = cpq7_pessoa(cpq7_d(oferta));
     let clube = cpq7_clube(cpq7_d(oferta + 4));
     if precisa(this, pessoa, clube, 1) != 0 && concedida(this, pessoa, cpq7_d(clube + 0x53), oferta, 0, 0) == 0 {
-        let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-        let c = contrato_de(cpq7_d(0xae1050), pessoa);
+        let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+        let c = contract_of(cpq7_d(0xae1050), pessoa);
         *(0xae1080 as *mut usize) = c;
         if c != 0 && cpq7_b(c + 0x35) & 0x3f == 5 {
             let construir: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x8e5680usize);
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn concluir_oferta_de_contrato_aceita(this: usize, ofer
 /// jogador principal (+0xc), atualiza a lista do clube (0x849ce0 e 0x843e10 com 1) e retira a oferta (0x8bfcb0, motivo
 /// 0x16); sendo da troca, soma o valor dele (+0x52) ao da oferta (+0x1b) e o tira da troca (0x8c41c0 com 1 e 0x16).
 /// Devolve o que a última chamada devolveu.
-unsafe extern "thiscall" fn oferecer_contrato_ao_jogador_da_oferta(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn offer_contract_to_offer_player(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
     let construir: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x85e410usize);
     let oferecer: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, usize, f64, u32) -> u32 = core::mem::transmute(0x4cda70usize);
     let mut c = [0u8; 0x50];
@@ -172,18 +172,18 @@ unsafe extern "thiscall" fn oferecer_contrato_ao_jogador_da_oferta(this: usize, 
 
 /// Comparador: grava as permissões (pode crescer o vetor e reordena): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_permissao_de_trabalho_na_mudanca(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_update_work_permit_on_move(this: usize, pessoa: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, pessoa, clube)
 }
 
 /// Comparador: assina o contrato (aloca), paga e posta notícias: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_concluir_oferta_de_contrato_aceita(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_complete_accepted_contract_offer(this: usize, oferta: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, oferta)
 }
 
 /// Comparador: acrescenta ofertas de contrato (aloca), mexe nas listas e retira ofertas: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_oferecer_contrato_ao_jogador_da_oferta(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_offer_contract_to_offer_player(this: usize, clube: usize, pessoa: usize, oferta: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, clube, pessoa, oferta)
 }

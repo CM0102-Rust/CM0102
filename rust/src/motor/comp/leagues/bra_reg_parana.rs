@@ -14,7 +14,7 @@ use super::*;
 /// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
-pub(crate) unsafe extern "thiscall" fn cqo8_fase_seguinte_do_paranaense(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x98af98, 0x202);
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn cqo8_fase_seguinte_do_paranaense(this: us
 ///   para a terceira vaga das fases ([+0xc]+8; sem fase: a caixa da linha 0x250 e volta, sem liberar). Com ela:
 ///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     let sementes: [u8; 4] = [0, 1, 0, 0];
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let lista = alocar(8);
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn cqo8_final_do_paranaense(this: usize) {
 ///   cada um no saldo (0x5a0590 em [0xae2a38] -> as finanças do clube, thiscall, ret 4; 0x5999a0 Finance::add_prize_money,
 ///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
-pub(crate) unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     if read_usize(this + 0x30) == 2 {
         let f = read_usize(read_usize(this + 0xc) + 8);
@@ -143,22 +143,22 @@ pub(crate) unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this:
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
-pub(crate) unsafe extern "thiscall" fn comparar_cqo8_fase_seguinte_do_paranaense(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_advance_stage(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO8_FASE_SEGUINTE_DO_PARANAENSE)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_ADVANCE_STAGE)(this);
     let depois = read_usize(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
-    PLACAR.registrar(igual, || format!("cqo8_fase_seguinte_do_paranaense({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.registrar(igual, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
-pub(crate) unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_final_stage(this: usize) {
     let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO8_FINAL_DO_PARANAENSE)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_CREATE_FINAL_STAGE)(this);
     let igual = if a == b {
         let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
@@ -176,14 +176,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo8_final_do_paranaense(this: u
             read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(igual, || format!("cqo8_final_do_paranaense({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
+    PLACAR.registrar(igual, || format!("bra_reg_parana_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_8 historico da final" e "cqo_8 premios") e é provada pelas mutações e pelas duas carreiras Rust.
-pub(crate) unsafe extern "thiscall" fn comparar_cqo8_fim_da_temporada_do_paranaense(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQO8_FIM_DA_TEMPORADA_DO_PARANAENSE)(this)
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_record_season_honours(this: usize) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_RECORD_SEASON_HONOURS)(this)
 }
 
 // ---------- 274a leva: as regras dos estaduais Paranaense, Pernambucano (Norte), Carioca e Mineiro (bra_reg_parana.cpp, bra_reg_pern.cpp, bra_reg_rio.cpp) ----------
@@ -243,7 +243,7 @@ pub(crate) unsafe fn cqi9_regras_carioca(o: usize) {
 ///
 /// [pt] { 0x437fc0 } (thiscall, bra_reg_parana.cpp): `BraRegParana::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_paranaense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     cqi9_regras_parana(this);
     crate::comparacao::ramo("cqi_9 regras do paranaense");
     cqi7_calendario(this);
@@ -252,13 +252,13 @@ pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_paranaense(this: usize) ->
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_paranaense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI9_REGRAS_DO_PARANAENSE)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_SET_UP_RULES)(this), || {
         cqi9_regras_parana(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_paranaense({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_parana_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -268,13 +268,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_paranaense(this: 
 /// Original: `BraRegParana::BraRegParana` (0x437400, bra_reg_parana.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, ano: u32, registro: usize) -> usize {
     cqt3_construir(this, ano, registro, &CQT3_PARANAENSE, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_paranaense(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT3_CONSTRUIR_PARANAENSE);
-    cqt3_comparar("cqt3_construir_paranaense", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_parana(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PARANA);
+    cqt3_comparar("construct_bra_reg_parana", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
 }
 
 /// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
@@ -283,13 +283,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_paranaense(this: 
 ///
 /// [pt] { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
 /// Fonte 0x98af98, linha 0x169.
-pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_paranaense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) -> u32 {
     cqm7_tabela(this, 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_paranaense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM7_TABELA_DO_PARANAENSE);
-    cqm7_comparar("cqm7_tabela_do_paranaense", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_CREATE_TABLE);
+    cqm7_comparar("bra_reg_parana_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// One half of the Parana state league: when the first game of a half is processed, it builds that half's round-robin
@@ -300,13 +300,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_paranaense(this: 
 ///
 /// [pt] { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
 /// caixa da linha 0x3d5).
-pub(crate) unsafe extern "thiscall" fn cqr1_turno_do_paranaense(this: usize, k: u32) {
+pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
     cqr1_turno(this, k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: os pontos por vitória no Paranaense
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_paranaense(this: usize, k: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CQR1_TURNO_DO_PARANAENSE);
-    cqr1_comparar("cqr1_turno_do_paranaense", this, k, || o(this, k))
+pub(crate) unsafe extern "thiscall" fn comparar_create_half_stage(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CREATE_HALF_STAGE);
+    cqr1_comparar("create_half_stage", this, k, || o(this, k))
 }
 
 /// The Parana state league turnover: archives the season in the statistics, clears the table, the schedule and the
@@ -316,11 +316,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_paranaense(this: u
 /// Original: `BraRegParana::start_new_season` (0x438060, bra_reg_parana.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
-pub(crate) unsafe extern "thiscall" fn cqr2_virada_do_paranaense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_parana_start_new_season(this: usize) -> u32 {
     cqr2_virada(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_paranaense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR2_VIRADA_DO_PARANAENSE);
-    cqr2_comparar("cqr2_virada_do_paranaense", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_START_NEW_SEASON);
+    cqr2_comparar("bra_reg_parana_start_new_season", this, || o(this))
 }

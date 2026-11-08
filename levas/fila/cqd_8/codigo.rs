@@ -90,7 +90,7 @@ unsafe fn cqd8_meio_byte(e: usize, k: usize) -> i8 {
 /// e sem lesão 0x62c400: a marca 0x8000 (0x867700), −5 em +0x44 (−100..100) e 0x5885c0); taxa negativa, sorteio(−taxa)
 /// < 5 dá nota − 2 e, abaixo de 1, o item acaba (taxa 0, nota 1). Aplica o progresso (0x8b2be0) e, com itens acabados,
 /// tira-os da lista (o último no lugar) e reordena (qsort 0x945333 com 0x8b4e00).
-unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize, pular: u32) {
+unsafe extern "thiscall" fn update_player_training(this: usize, p: usize, pular: u32) {
     if p == 0 {
         aviso_em(0xa8ccd0, 0x18a);
         return;
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn atualizar_o_treino_do_jogador(this: usize, p: usize,
 /// o que a 0x8b2be0 grava) e na carga da ficha de forma (31 bytes por jogador em [[0xb63d28]], +0x1e), com os sorteios
 /// da cópia fora da contagem. Só a original: os casos de erro e o jogador com treino de posição (0x8b4b20 antes de
 /// rodar): ali a 0x8b4450, a marca do contrato (0x867700) e a 0x5885c0 mexem fora dessas regiões.
-unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, p: usize, pular: u32) {
+unsafe extern "thiscall" fn comparar_update_player_training(this: usize, p: usize, pular: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     if p == 0 || cqd8_i(p) >= cqd8_i(0xae2364) || cqd8_d(p + 0x61) == 0 {
         return o(this, p, pular);
@@ -337,8 +337,8 @@ unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, 
         reg.push((cqd8_d(les).wrapping_add((cqd8_i(p) as isize * 31 + 0x1e) as usize), 1));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, pular),
-        || crate::aleatorio::sem_contar(|| atualizar_o_treino_do_jogador(this, p, pular)));
-    PLACAR.registrar(igual, || format!("atualizar_o_treino_do_jogador(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
+        || crate::aleatorio::sem_contar(|| update_player_training(this, p, pular)));
+    PLACAR.registrar(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p, pular as u16, mo.0, mr.0));
 }
 
 /// { 0x8b39f0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_player_schedule(pessoa)`, pelo diário
@@ -347,7 +347,7 @@ unsafe extern "thiscall" fn comparar_atualizar_o_treino_do_jogador(this: usize, 
 /// [0xae1080]; técnico +0xcf entre os 16 últimos ids): lesionado (0x62c400 = 2) o programa 1 do humano, this + 0x4d8 +
 /// 0x60e × ([0xae2364] − id − 1); senão o da vaga da entrada do treino (+0, fora de 0..9 a 1); fora dos 16, a caixa
 /// (linha 0x68f) e 0. Senão: lesionado, o programa 0 (this); senão this + 0x9b × vaga (com sinal).
-unsafe extern "thiscall" fn programa_de_treino_do_jogador(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize) -> usize {
     if p == 0 || cqd8_d(p + 0x61) == 0 {
         aviso_em(0xa8ccd0, 0x6ad);
         return 0;
@@ -375,29 +375,29 @@ unsafe extern "thiscall" fn programa_de_treino_do_jogador(this: usize, p: usize)
 }
 
 /// Comparador: a devolução e [0xae1080] lado a lado; sem pessoa ou sem ficha (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_programa_de_treino_do_jogador(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn comparar_get_player_schedule(this: usize, p: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if p == 0 || cqd8_d(p + 0x61) == 0 {
         return o(this, p);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p), || programa_de_treino_do_jogador(this, p));
-    PLACAR.registrar(igual && r == n, || format!("programa_de_treino_do_jogador(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo.0, mr.0));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p), || get_player_schedule(this, p));
+    PLACAR.registrar(igual && r == n, || format!("get_player_schedule(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo.0, mr.0));
     r
 }
 
 /// { 0x8b4f50 } (thiscall, ret 4, training_manager.cpp): `TRAINING_SCHEDULE::get_category_level(categoria)`: o nível da
 /// categoria (+4 + categoria, com sinal) do programa, no al; os bytes de cima do eax ficam com a categoria estendida
 /// (movsx), como na original. Pela update_player_training (0x8b1750, as cinco categorias de cada atualização).
-unsafe extern "thiscall" fn nivel_da_categoria_do_programa(this: usize, categoria: u32) -> u32 {
+unsafe extern "thiscall" fn get_category_level(this: usize, categoria: u32) -> u32 {
     let k = categoria as u8 as i8 as i32;
     let v = *((this as isize + k as isize + 4) as *const u8);
     (k as u32 & 0xffff_ff00) | v as u32
 }
 
 /// Comparador: a devolução inteira (só lê).
-unsafe extern "thiscall" fn comparar_nivel_da_categoria_do_programa(this: usize, categoria: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_category_level(this: usize, categoria: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, categoria);
-    let n = nivel_da_categoria_do_programa(this, categoria);
-    PLACAR.registrar(r == n, || format!("nivel_da_categoria_do_programa({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
+    let n = get_category_level(this, categoria);
+    PLACAR.registrar(r == n, || format!("get_category_level({:x}, {}) original={:x} rust={:x}", this, categoria as u8 as i8, r, n));
     r
 }

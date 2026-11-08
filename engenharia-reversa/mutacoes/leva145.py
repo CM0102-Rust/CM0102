@@ -14,9 +14,9 @@ MUTACOES = [
     ('l_meio', "} else if byte(m, 0x8eae) == lado && if lado == 0 { by >= 3 } else { by <= 8 } {", "} else if byte(m, 0x8eae) == lado && if lado == 0 { by >= 4 } else { by <= 8 } {"),
     ('l_area', "let a1 = (2..=6).contains(&bx) && (10..=11).contains(&by);", "let a1 = (2..=6).contains(&bx) && (9..=11).contains(&by);"),
     ('l_guarda', "for (lado, campo) in [(0u32, 0x8eac), (1, 0x8ead)] {", "for (lado, campo) in [(0u32, 0x8ead), (1, 0x8eac)] {"),
-    ('l_trinta', "*w(0x8ed0) = (*w(0x8ed0) as i32 / 30 * 30) as i16;", "*w(0x8ed0) = (*w(0x8ed0) as i32 / 15 * 15) as i16;", "laco fim para os penaltis"),
+    ('l_trinta', "*w(0x8ed0) = (*w(0x8ed0) as i32 / 30 * 30) as i16;", "*w(0x8ed0) = (*w(0x8ed0) as i32 / 15 * 15) as i16;", "laco fim para os penalties"),
     ('l_agregado', "*tb(0x4c) = (*tb(0x4c)).wrapping_add(*tb(0x48));", "*tb(0x4c) = (*tb(0x4c)).wrapping_add(*tb(0x47));"),
     ('l_vagas', "            if k < 3 {\n                *((alvo + 0x1ae + k as usize * 4) as *mut usize) = q;", "            if k < 2 {\n                *((alvo + 0x1ae + k as usize * 4) as *mut usize) = q;"),
     ('l_pressao_area', "if *((m + 0xb049) as *const u32) & 0x1000 != 0 {", "if *((m + 0xb049) as *const u32) & 0x2000 != 0 {"),
-    ('l_disputa', "if byte(m, 0x1c5) == 0 && byte(m, 0x8ea9) == 4 && u(0x477e) == 0 {", "if byte(m, 0x1c5) == 0 && byte(m, 0x8ea9) == 3 && u(0x477e) == 0 {", "laco disputa marcada"),
+    ('l_disputa', "if byte(m, 0x1c5) == 0 && byte(m, 0x8ea9) == 4 && u(0x477e) == 0 {", "if byte(m, 0x1c5) == 0 && byte(m, 0x8ea9) == 3 && u(0x477e) == 0 {", "laco contest marcada"),
 ]

@@ -41,7 +41,7 @@ const PESSOA_COM_CAIXA_DBN2: [(usize, usize, usize, usize, usize, u32); 3] = [
 /// competições de clube. Erros do original, copiados: a última divisão alta do clube (+0x5b) zera +0x60 (que depois vira
 /// a competição 0) e fica crua; o estádio vizinho alto (+0x48) zera a cidade (+0x38) e fica cru. Não lê os registros
 /// alvo nem aloca.
-unsafe extern "C" fn resolver_indices_do_banco(leniente: u32) {
+unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -222,11 +222,11 @@ unsafe extern "C" fn resolver_indices_do_banco(leniente: u32) {
     });
 }
 
-/// { 0x53db40 } (cdecl, Database.cpp): `database_sort_clubs_by_reputation(refazer)`, na criação, no carregar_jogo
+/// { 0x53db40 } (cdecl, Database.cpp): `database_sort_clubs_by_reputation(refazer)`, na criação, no load_game_data
 /// 0x82a9c0 (vetor ausente do save) e no laço diário 0x5cccd0. Com `refazer` (byte) ≠ 0, o vetor [0xae2d1c] recebe os
 /// ids (+0) dos [0xae235c] clubes na ordem da tabela; depois qsort (0x945333) dos [0xae235c] ids com 0x540020 (pela
 /// reputação).
-unsafe extern "C" fn ordenar_clubes_pela_reputacao(refazer: u32) {
+unsafe extern "C" fn database_sort_clubs_by_reputation(refazer: u32) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
@@ -247,7 +247,7 @@ fn diferenca_dbn2(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memor
 
 /// Comparador de 0x5315a0: original e cópia lado a lado sobre as 12 tabelas inteiras (~50 MB na carga) e o texto de
 /// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
-unsafe extern "C" fn comparar_resolver_indices_do_banco(leniente: u32) {
+unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
     let o = orig::<unsafe extern "C" fn(u32)>(%%I0%%);
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
@@ -262,11 +262,11 @@ unsafe extern "C" fn comparar_resolver_indices_do_banco(leniente: u32) {
             regioes.push((rd(p), gi(cont) as usize * tam));
         }
     }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(leniente), || resolver_indices_do_banco(leniente));
+    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(leniente), || resolve_database_indexes(leniente));
     let onde = diferenca_dbn2(&mo, &mr);
     PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("resolver_indices_do_banco({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
-        None => format!("resolver_indices_do_banco({}): diverge", leniente),
+        Some((a, x, y)) => format!("resolve_database_indexes({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
+        None => format!("resolve_database_indexes({}): diverge", leniente),
     });
     // ponytail: ~50 MB por foto; não voltam às sobras
     mo.0.clear();
@@ -274,14 +274,14 @@ unsafe extern "C" fn comparar_resolver_indices_do_banco(leniente: u32) {
 }
 
 /// Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
-unsafe extern "C" fn comparar_ordenar_clubes_pela_reputacao(refazer: u32) {
+unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(refazer: u32) {
     let o = orig::<unsafe extern "C" fn(u32)>(%%I1%%);
     let v = *(0xae2d1c as *const usize);
     let n = core::ptr::read_unaligned(0xae235c as *const i32);
     if v == 0 || n <= 0 {
         return o(refazer);
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(refazer), || ordenar_clubes_pela_reputacao(refazer));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(refazer), || database_sort_clubs_by_reputation(refazer));
     let onde = diferenca_dbn2(&mo, &mr);
-    PLACAR.registrar(igual, || format!("ordenar_clubes_pela_reputacao({}): diverge em {:x?}", refazer as u8, onde));
+    PLACAR.registrar(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
 }

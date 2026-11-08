@@ -237,7 +237,7 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
         cqd10_tirar(this, item);
         return;
     }
-    // a vaga para o regen: hoje (até 29 anos) ou de 1 a 65 dias depois (se passar do dia 365, sorteio(35) do ano
+    // a vaga para o regen: hoje (até 29 anos) ou de 1 a 65 dias depois (se pass_ball do dia 365, sorteio(35) do ano
     // seguinte)
     vaga[0] = cqd10_i(item) as u32;
     let hoje = cqd10_d(0xae2c90) as u32;
@@ -299,13 +299,13 @@ unsafe fn cqd10_aposentar(this: usize, item: usize, p: usize, vaga: &mut [u32; 3
 /// (a data passou): o jovem (até 29) com clube ou marca, fora do motivo 8, desiste; com ficha de contrato (0x4cf6d0)
 /// ou sob oferta (0x8cde70), desiste (marcas & 0xcf); quem mudou de clube há menos de 210 dias, até 37 anos, com
 /// contrato, fora da lista e sem +0x45, fica; senão a notícia (0x7a92e0), as ofertas (0x4ccbf0), o contrato, a seleção
-/// (0x775ba0), as listas de observação, o elenco (0x7aace0), as faltas (0x4196a0, 0x4197c0) e a disputa (0x56a090); o
+/// (0x775ba0), as listas de observação, o elenco (0x7aace0), as faltas (0x4196a0, 0x4197c0) e a contest (0x56a090); o
 /// jogador pode virar técnico; com ficha e registro de não jogador, a ficha vai para o banco (0x7a8350) e o contrato
 /// novo (0x85e960); senão a vaga para o regen (0x7a87d0) e, com registro de não jogador, sai dos cargos (0x7aaeb0) ou
 /// é refeito como não jogador (0x7ab340). Não vencida: com a data do anúncio passada e sem anúncio, a notícia do
 /// anúncio (0x7aa340, se as marcas & 0x30 não forem 0x10), a marca de anunciada e as marcas 0x10; senão para. No fim
 /// ordena as vagas para o regen ([this+0x10], [this+0x14] de 12 bytes) com 0x7ae240.
-unsafe extern "thiscall" fn aposentadorias_do_dia(this: usize) {
+unsafe extern "thiscall" fn process_retirements(this: usize) {
     let mut vaga = [0u32; 3]; // a pessoa e a data (dia, ano, bissexto)
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     padrao(vaga.as_mut_ptr() as usize + 4);
@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn aposentadorias_do_dia(this: usize) {
 
 // ponytail: chama as notícias (alocam e entregam), o regen como não jogador, os contratos novos e as listas: o caminho
 // só se sabe rodando e não pode rodar duas vezes. Só a original; a cópia leva os ramos e a carreira a prova.
-unsafe extern "thiscall" fn comparar_aposentadorias_do_dia(this: usize) {
+unsafe extern "thiscall" fn comparar_process_retirements(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -364,7 +364,7 @@ unsafe extern "thiscall" fn comparar_aposentadorias_do_dia(this: usize) {
 /// nação e da do clube (0x7863f0); técnico de cargo 5 de clube com divisão: aos da divisão (0x7862d0); não jogador: ao
 /// clube (0x7861e0); jogador: aos interessados. Motivo 8 com +0xb da ficha acima de 4250 e clube de contrato
 /// (0x4cf5a0, guardado em [0xae1080]): o seguro (0x58a980 com +0x52).
-unsafe extern "stdcall" fn noticia_da_aposentadoria(p: usize, motivo: u32, anunciada: u32) {
+unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, motivo: u32, anunciada: u32) {
     if p == 0 {
         return;
     }
@@ -462,7 +462,7 @@ unsafe extern "stdcall" fn noticia_da_aposentadoria(p: usize, motivo: u32, anunc
 }
 
 // ponytail: aloca e entrega a notícia (0x77bbe0, 0x786780...). Só a original; a cópia leva o ramo.
-unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria(p: usize, motivo: u32, anunciada: u32) {
+unsafe extern "stdcall" fn comparar_player_regen_post_retirement_news(p: usize, motivo: u32, anunciada: u32) {
     orig::<unsafe extern "stdcall" fn(usize, u32, u32)>(%%I1%%)(p, motivo, anunciada)
 }
 
@@ -474,7 +474,7 @@ unsafe extern "stdcall" fn comparar_noticia_da_aposentadoria(p: usize, motivo: u
 /// habilidades vistas (0x6e86d0 com 2 e com 1) contra reputação / 50 + 75 (veredito 2) e reputação / 100 + 50 (1).
 /// Com veredito: 7 auxiliar?, 8..0xb quem (id e nomes), 0xc e 0xd os vereditos; senão −1. Ao alcance do clube
 /// (0x786090).
-unsafe extern "stdcall" fn noticia_do_jovem_promovido(j: usize, c: usize) {
+unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: usize, c: usize) {
     if j == 0 || c == 0 {
         return;
     }
@@ -549,6 +549,6 @@ unsafe extern "stdcall" fn noticia_do_jovem_promovido(j: usize, c: usize) {
 }
 
 // ponytail: aloca e entrega a notícia e sorteia a opinião: só a original; a cópia leva o ramo.
-unsafe extern "stdcall" fn comparar_noticia_do_jovem_promovido(j: usize, c: usize) {
+unsafe extern "stdcall" fn comparar_player_regen_post_youth_promotion_news(j: usize, c: usize) {
     orig::<unsafe extern "stdcall" fn(usize, usize)>(%%I2%%)(j, c)
 }

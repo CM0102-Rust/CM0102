@@ -134,7 +134,7 @@ pub(crate) const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
 ///
 /// [pt] { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
 /// (+0x2c = 0, +0xc = 0) e o estádio mínimo de 10.000 lugares, todos sentados.
-pub(crate) unsafe extern "thiscall" fn construir_premier(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_PREMIER)
 }
 
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn construir_premier(this: usize, ano: u32, 
 ///
 /// [pt] { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
 /// liga (o play-off) e o estádio mínimo de 6.000 lugares, 1.000 sentados.
-pub(crate) unsafe extern "thiscall" fn construir_third(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     cql6_construir(this, ano, registro, &CQL6_THIRD)
 }
 
@@ -166,16 +166,16 @@ pub(crate) unsafe fn cql6_comparar(nome: &str, this: usize, ano: u32, registro: 
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_premier(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_PREMIER);
-    cql6_comparar("construir_premier", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_PRM);
+    cql6_comparar("construct_eng_prm", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
 }
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_third(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_THIRD);
-    cql6_comparar("construir_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_THIRD);
+    cql6_comparar("construct_eng_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
 }
 
 // ---------- 275a leva: as regras das quatro divisões inglesas: turnos, pontos, vagas de acesso, mata-mata e rebaixamento, desempates e a tabela de rodadas (eng_prm.cpp, eng_first.cpp, eng_second.cpp, eng_third.cpp) ----------
@@ -218,7 +218,7 @@ pub(crate) fn cqi4_comuns() -> Vec<(usize, u8, u32)> {
 /// [pt] { 0x574b70 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::set_up_rules()`. A Premier: as comuns, +0xab e +0xdb = 0
 /// (as palavras copiadas em cada partida), ninguém sobe (+0xbe = 0, +0xbf = 0, +0xc0 = 0), 3 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
-pub(crate) unsafe extern "thiscall" fn regras_da_premier(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da premier");
     cqi4_regras(this, &cqi4_premier())
 }
@@ -256,7 +256,7 @@ pub(crate) unsafe fn cqi4_second() -> Vec<(usize, u8, u32)> {
 /// (+0xbe), 4 ao mata-mata (+0xbf, do 4º ao 7º), 1 cai (+0xc1), a Second acima ([0x9cf5c4]) e abaixo a Conference
 /// ([0x9cf69c]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da nação, [[+4]+0x5d]
 /// [inferência]), senão −1; 5 reservas e 3 substituições.
-pub(crate) unsafe extern "thiscall" fn regras_da_third(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_4 regras da third");
     cqi4_regras(this, &cqi4_third(this))
 }
@@ -299,16 +299,16 @@ pub(crate) unsafe fn cqi4_comparar(nome: &str, this: usize, escritas: Vec<(usize
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_premier(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_PREMIER);
-    cqi4_comparar("regras_da_premier", this, cqi4_premier(), || o(this), || regras_da_premier(this))
+pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_SET_UP_RULES);
+    cqi4_comparar("eng_prm_set_up_rules", this, cqi4_premier(), || o(this), || eng_prm_set_up_rules(this))
 }
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_third(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_THIRD);
-    cqi4_comparar("regras_da_third", this, cqi4_third(this), || o(this), || regras_da_third(this))
+pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_set_up_rules_5780c0(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_SET_UP_RULES_5780C0);
+    cqi4_comparar("eng_prm_set_up_rules_5780c0", this, cqi4_third(this), || o(this), || eng_prm_set_up_rules_5780c0(this))
 }
 
 // ---------- 275a leva: a tabela das quatro divisões inglesas: os clubes de cada divisão, o fundo de prêmios e o dinheiro da TV no início da temporada (eng_prm.cpp, eng_second.cpp, eng_third.cpp, eng_first.cpp) ----------
@@ -383,7 +383,7 @@ pub(crate) unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 ///
 /// [pt] { 0x574a20 } (thiscall, ret 0, eng_prm.cpp): `EngPrm::create_table()`: 20 clubes ([0x9cf5bc]), cota 250.000 do
 /// fundo de prêmios e a TV: 12.000.000 a cada clube depois de 1999 (5.000.000 antes). Fonte 0x9c43b0, linha 0x1ee.
-pub(crate) unsafe extern "thiscall" fn tabela_da_premier(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn eng_prm_create_table(this: usize) -> u32 {
     cqi5_tabela(this, 0x14, 0x9c43b0, 0x1ee, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || {
         let valor = if cqi5_depois_de_1999() { 0xb71b00 } else { 0x4c4b40 }; // cqi5: a TV da Premier
         cqi5_pagar(this, valor, 0)
@@ -396,7 +396,7 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_premier(this: usize) -> u32 {
 ///
 /// [pt] { 0x577f70 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_table()`: 24 clubes ([0x9cf5c8]), cota 10.000
 /// e a TV: 1.000.000 depois de 1999 (200.000 antes). Fonte 0x9c4424, linha 0x1fa.
-pub(crate) unsafe extern "thiscall" fn tabela_da_third(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn eng_prm_create_table_577f70(this: usize) -> u32 {
     cqi5_tabela(this, 0x18, 0x9c4424, 0x1fa, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || cqi5_pagar(this, if cqi5_depois_de_1999() { 0xf4240 } else { 0x30d40 }, 0))
 }
 
@@ -432,15 +432,15 @@ pub(crate) unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, co
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_premier(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_PREMIER);
-    cqi5_comparar("tabela_da_premier", this, 0x14, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_CREATE_TABLE);
+    cqi5_comparar("eng_prm_create_table", this, 0x14, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0x3d090, || o(this))
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_third(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_THIRD);
-    cqi5_comparar("tabela_da_third", this, 0x18, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_table_577f70(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_PRM_CREATE_TABLE_577F70);
+    cqi5_comparar("eng_prm_create_table_577f70", this, 0x18, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, 0x2710, || o(this))
 }
 
 /// the Premiership schedule: 38 rounds (20 clubs), from 19 August to 20 May; Christmas (four fixed-date rounds) by the
@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_third(this: usize) -> 
 ///
 /// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
 /// &extra, &é_liga)`: só a fase −1, 38 rodadas (`CQP5_PREMIERSHIP_NATAL`); as outras devolvem 0. Fonte 0x9c43b0.
-pub(crate) unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
@@ -472,7 +472,7 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_premiership(this: usize, fa
     }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_premiership(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_PREMIERSHIP);
-    cqp5_comparar("calendario_da_premiership", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_premiership(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_PRM_CREATE_SCHEDULE);
+    cqp5_comparar("eng_prm_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| eng_prm_create_schedule(this, fase, r, e, l))
 }

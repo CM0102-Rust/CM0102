@@ -22,8 +22,8 @@ unsafe fn cpp10_q(a: usize) -> f64 {
 }
 
 unsafe fn cpp10_selecao(clube: usize) -> bool {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    e_selecao(clube) != 0
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    is_national_team(clube) != 0
 }
 
 /// O clube pelo índice (registro de 0x245 bytes em [0xae23b4]).
@@ -63,7 +63,7 @@ unsafe fn cpp10_nota_da_torcida(p: usize, clube: usize, st: usize) -> f64 {
 /// (_ftol); dos 50 do elenco (+0xd7) jogadores (+0x61, id abaixo de [0xae2364]) do clube (+0x39) com a estatística 6
 /// (0x7c3920 sobre [0xb74350]) de jogos acima de 0 e do mínimo (16 bits com sinal), o de maior nota
 /// (`cpp10_nota_da_torcida`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
-unsafe extern "thiscall" fn jogador_do_ano_da_torcida(this: usize, clube: usize, registro: usize) -> u32 {
+unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
     let jogos_do_clube = || cpp10_b(cpp10_d(this + 0x1c).wrapping_add((cpp10_i(clube) as usize).wrapping_mul(106)) + 0x10) as i8;
     if jogos_do_clube() == 0 && cpp10_w(clube + 0x80) < 0xbb8 {
         return 0;
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn jogador_do_ano_da_torcida(this: usize, clube: usize,
 /// clube da nação (0x669360, registro de 72 bytes em 0xb63d60): cada jogador (+0x61, id abaixo de [0xae2364]) das 50
 /// vagas (+0xd7) sem empréstimo (0x4cf6d0 sobre [0xae1050]) ou emprestado ao próprio clube (+0x39) tem as estatísticas
 /// arquivadas (0x7c5fe0 com −1, 0, 0, −1, 0). Devolve 1.
-unsafe extern "thiscall" fn arquivar_estatisticas_da_nacao(this: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     if nacao == 0 {
         aviso_em(0xa78310, 0x396);
         return 0;
@@ -178,11 +178,11 @@ unsafe fn cpp10_copiar_recorde(a: usize, o: usize, d: usize) {
 /// a data de hoje e o empréstimo (+4 ≠ 0); acima do de sempre, copiado para ele, e se passa de 1000 × (reputação +
 /// 300): o recorde na fila de notícias (0x452cb0, 0x1c, se ainda não está) e o técnico (+0xbf) passa a gostar da pessoa
 /// (0x547a10, forçado). O mesmo para o vendedor no recorde recebido (+0x33c; a fila com 0x1d, sem o gostar). 1.
-unsafe extern "thiscall" fn recordes_de_valor_de_transferencia(this: usize, t: usize) -> u32 {
+unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let pessoa = cpp10_d(0xae23bc).wrapping_add((cpp10_i(t + 0xc) as usize).wrapping_mul(0x6e));
     let comprador = cpp10_clube(cpp10_i(t + 8));
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let contrato = contrato_de(cpp10_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato = contract_of(cpp10_d(0xae1050), pessoa);
     core::ptr::write_unaligned(0xae1080 as *mut usize, contrato);
     let vendedor = if contrato != 0 { cpp10_clube(cpp10_i(contrato + 4)) } else { 0 };
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
@@ -237,34 +237,34 @@ unsafe extern "thiscall" fn recordes_de_valor_de_transferencia(this: usize, t: u
 }
 
 /// Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
-unsafe extern "thiscall" fn comparar_jogador_do_ano_da_torcida(this: usize, clube: usize, registro: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || jogador_do_ano_da_torcida(this, clube, registro));
-    PLACAR.registrar(igual && r == n, || format!("jogador_do_ano_da_torcida(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || pick_fans_player_of_year(this, clube, registro));
+    PLACAR.registrar(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", cpp10_d(clube), r, mo, n, mr));
     r
 }
 
 /// Comparador: a 0x7c5fe0 move as estatísticas para o histórico (aloca): roda só a original e confere a devolução
 /// (1, ou 0 sem nação).
-unsafe extern "thiscall" fn comparar_arquivar_estatisticas_da_nacao(this: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_end_season_for_key_nation(this: usize, nacao: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(this, nacao);
-    PLACAR.registrar(r == (nacao != 0) as u32, || format!("arquivar_estatisticas_da_nacao({:x}) devolveu {}", nacao, r));
+    PLACAR.registrar(r == (nacao != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nacao, r));
     r
 }
 
 /// Comparador: a original põe na fila de notícias (realoca) e o gostar sorteia: o plano antes (os quatro registros
 /// criados na mesma ordem da original, e os recordes pago e recebido esperados); a original roda; pega os registros
 /// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
-unsafe extern "thiscall" fn comparar_recordes_de_valor_de_transferencia(this: usize, t: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%);
     let pessoa = cpp10_d(0xae23bc).wrapping_add((cpp10_i(t + 0xc) as usize).wrapping_mul(0x6e));
     let comprador = cpp10_clube(cpp10_i(t + 8));
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let contrato = contrato_de(cpp10_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contrato = contract_of(cpp10_d(0xae1050), pessoa);
     let vendedor = if contrato != 0 { cpp10_clube(cpp10_i(contrato + 4)) } else { 0 };
     if vendedor == 0 {
         let r = o(this, t);
-        PLACAR.registrar(r == 1 && cpp10_d(0xae1080) == 0, || format!("recordes_de_valor_de_transferencia sem vendedor: {} [0xae1080]={:x}", r, cpp10_d(0xae1080)));
+        PLACAR.registrar(r == 1 && cpp10_d(0xae1080) == 0, || format!("update_transfer_fee_records sem vendedor: {} [0xae1080]={:x}", r, cpp10_d(0xae1080)));
         return r;
     }
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4528d0usize);
@@ -302,7 +302,7 @@ unsafe extern "thiscall" fn comparar_recordes_de_valor_de_transferencia(this: us
                  (cpp10_i(rg[2] + 0x33c), cpp10_d(rg[2] + 0x358)), (cpp10_i(rg[3] + 0x33c), cpp10_d(rg[3] + 0x358))];
     let fila_agora = cpp10_i(this + 0x2c);
     PLACAR.registrar(r == 1 && agora == plano && fila_agora == fila && cpp10_d(0xae1080) == contrato, || {
-        format!("recordes_de_valor_de_transferencia(valor {}) plano {:x?} fila {} x {:x?} fila {}", valor, plano, fila, agora, fila_agora)
+        format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", valor, plano, fila, agora, fila_agora)
     });
     r
 }

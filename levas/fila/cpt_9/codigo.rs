@@ -49,7 +49,7 @@ unsafe fn cpt9_baixo(a: usize, d: i8) {
 /// (+3 alto) e a 4 (+5 baixo). Depois o treino de posição (0x8b4b20): com a entrada de aprendizado de 15 para cima, a
 /// posição ou o lado da máscara vai a 20; abaixo, volta a 1 se ainda sobrar mais de uma posição (+0xf..+0x15) ou lado
 /// (+0x17..+0x19) de 15 para cima. Quente: sem contador.
-unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: usize) {
+unsafe extern "thiscall" fn apply_training_progress(this: usize, pessoa: usize, d: usize) {
     if pessoa == 0 {
         aviso_em(0xa8ccd0, 0x4b3);
         return;
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn aplicar_o_progresso(this: usize, pessoa: usize, d: u
 
 /// Comparador: lado a lado na ficha (+0xf..+0x41) e na entrada de treino do jogador (6 bytes), sem os casos de erro e
 /// sem as pessoas que não são jogadores (só a original).
-unsafe extern "thiscall" fn comparar_aplicar_o_progresso(this: usize, pessoa: usize, d: usize) {
+unsafe extern "thiscall" fn comparar_apply_training_progress(this: usize, pessoa: usize, d: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if pessoa == 0 || cpt9_d(pessoa + 0x61) == 0 || cpt9_i(pessoa) >= cpt9_i(0xae2364) {
         return o(this, pessoa, d);
@@ -183,8 +183,8 @@ unsafe extern "thiscall" fn comparar_aplicar_o_progresso(this: usize, pessoa: us
     let f = cpt9_d(pessoa + 0x61);
     let e = cpt9_d(this + 0x651d) + 6 * cpt9_i(f) as usize;
     let regioes = [(f + 0xf, 0x33), (e, 6)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, d), || aplicar_o_progresso(this, pessoa, d));
-    PLACAR.registrar(igual, || format!("aplicar_o_progresso(pessoa {:x}, d {:x?}) {:x?} x {:x?}", pessoa, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, d), || apply_training_progress(this, pessoa, d));
+    PLACAR.registrar(igual, || format!("apply_training_progress(pessoa {:x}, d {:x?}) {:x?} x {:x?}", pessoa, core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
 }
 
 /// { 0x8b4b20 } (thiscall, ret 8, training_manager.cpp): `TRAINING_MANAGER::find_position_training(pessoa, &primeira)`:
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn comparar_aplicar_o_progresso(this: usize, pessoa: us
 /// binária (0x946464, ordem 0x8b4e00) do id da pessoa na lista do treino de posição (this +0x6521, conta +0x6525, itens
 /// de 8 bytes); não achou: 0; achou: recua até o primeiro item da pessoa, grava-o na saída e devolve quantos seguidos são
 /// dela.
-unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
+unsafe extern "thiscall" fn find_position_training(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
     if pessoa == 0 {
         aviso_em(0xa8ccd0, 0x995);
         return 0;
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn achar_o_treino_de_posicao(this: usize, pessoa: usize
 }
 
 /// Comparador: a devolução e a saída (reposta entre as duas), sem os casos de erro (só a original).
-unsafe extern "thiscall" fn comparar_achar_o_treino_de_posicao(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
+unsafe extern "thiscall" fn comparar_find_position_training(this: usize, pessoa: usize, saida: *mut usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32>(%%I1%%);
     if pessoa == 0 || saida.is_null() || cpt9_d(pessoa + 0x61) == 0 {
         return o(this, pessoa, saida);
@@ -243,17 +243,17 @@ unsafe extern "thiscall" fn comparar_achar_o_treino_de_posicao(this: usize, pess
     let r = o(this, pessoa, saida);
     let so = *saida;
     *saida = antes;
-    let n = achar_o_treino_de_posicao(this, pessoa, saida);
+    let n = find_position_training(this, pessoa, saida);
     let sr = *saida;
     *saida = so;
-    PLACAR.registrar(r == n && so == sr, || format!("achar_o_treino_de_posicao(pessoa {:x}) original={} {:x} rust={} {:x}", pessoa, r, so, n, sr));
+    PLACAR.registrar(r == n && so == sr, || format!("find_position_training(pessoa {:x}) original={} {:x} rust={} {:x}", pessoa, r, so, n, sr));
     r
 }
 
 /// { 0x8b4db0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::has_fast_position_training(pessoa)`, pelo
 /// diário das pessoas (game_daily_staff_update 0x5ce2d0): 1 se algum item do treino de posição da pessoa (0x8b4b20) tem
 /// aprendizado (+7) acima de 50; senão 0.
-unsafe extern "thiscall" fn aprende_depressa(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn has_fast_position_training(this: usize, pessoa: usize) -> u32 {
     let achar: unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32 = core::mem::transmute(0x8b4b20usize);
     let mut p = 0usize;
     let n = achar(this, pessoa, &mut p);
@@ -266,9 +266,9 @@ unsafe extern "thiscall" fn aprende_depressa(this: usize, pessoa: usize) -> u32 
 }
 
 /// Comparador: a devolução (as duas só leem; a busca roda pelas duas).
-unsafe extern "thiscall" fn comparar_aprende_depressa(this: usize, pessoa: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_has_fast_position_training(this: usize, pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, pessoa);
-    let n = aprende_depressa(this, pessoa);
-    PLACAR.registrar(r == n, || format!("aprende_depressa(pessoa {:x}) original={} rust={}", pessoa, r, n));
+    let n = has_fast_position_training(this, pessoa);
+    PLACAR.registrar(r == n, || format!("has_fast_position_training(pessoa {:x}) original={} rust={}", pessoa, r, n));
     r
 }

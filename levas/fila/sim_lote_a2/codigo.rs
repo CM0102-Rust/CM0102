@@ -19,7 +19,7 @@ unsafe fn noticia_da_caixa(noticias: usize, inicio: i32, k: i32) -> usize {
 /// o total da entrada (+8, negativo vira 0). Com categoria: das 100 notícias da caixa (início na entrada
 /// +0; −1 = vazia, 0), as ocupadas (+0xd6) da categoria (0x785670) ainda não lidas (+0xda = 0). Técnico
 /// nulo ou fora da faixa: a original (caixa de erro).
-unsafe extern "thiscall" fn noticias_nao_lidas(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
+unsafe extern "thiscall" fn count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
     let entrada = match if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) } {
         Some(e) => e,
         None => return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%)(noticias, tecnico, categoria),
@@ -74,7 +74,7 @@ unsafe fn alvo_da_marca(noticias: usize, tecnico: usize, id: u32, vaga: i32, cop
 /// { 0x786d30 } (thiscall, ret 0x14, news.cpp): grava `valor` na vaga `vaga` (dword +5 + 4 × vaga) da
 /// notícia `id` (+0xd6) da caixa do técnico humano, primeiro na `copia` (se houver) e depois na da caixa;
 /// 1 se achou. Caixa vazia: só a cópia, 0. Casos de erro: a original.
-unsafe extern "thiscall" fn gravar_marca_da_noticia(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
+unsafe extern "thiscall" fn set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
     let alvo = match alvo_da_marca(noticias, tecnico, id, vaga, copia) {
         Ok(a) => a,
         Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%)(noticias, tecnico, id, vaga, valor, copia),
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn gravar_marca_da_noticia(noticias: usize, tecnico: us
 /// { 0x7875e0 } (stdcall, ret 4, news.cpp): 1 se um humano dirige o `clube` (0x600a50 com férias
 /// ignoradas); antes de devolver, consulta as férias (0x5fd210 em [0xb63c98]) do técnico do clube
 /// (0x53ca90), sem usar a resposta. Clube nulo: 0.
-unsafe extern "stdcall" fn clube_de_tecnico_humano(clube: usize) -> u32 {
+unsafe extern "stdcall" fn news_club_has_human_manager(clube: usize) -> u32 {
     if clube == 0 {
         return 0;
     }
@@ -110,19 +110,19 @@ unsafe extern "stdcall" fn clube_de_tecnico_humano(clube: usize) -> u32 {
     1 // humano
 }
 
-unsafe extern "thiscall" fn comparar_noticias_nao_lidas(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_count_unread(noticias: usize, tecnico: usize, categoria: u32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(%%I0%%);
     let entrada = if tecnico == 0 { None } else { entrada_da_caixa_do_tecnico(noticias, tecnico) };
     let Some(entrada) = entrada else {
         return o(noticias, tecnico, categoria);
     };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(entrada + 8, 4)], || o(noticias, tecnico, categoria),
-        || noticias_nao_lidas(noticias, tecnico, categoria));
-    PLACAR.registrar(igual && r == n, || format!("noticias_nao_lidas(categoria {}) original={} rust={} {:x?} x {:x?}", categoria as u8, r, n, mo, mr));
+        || count_unread(noticias, tecnico, categoria));
+    PLACAR.registrar(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", categoria as u8, r, n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_gravar_marca_da_noticia(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_set_item_slot(noticias: usize, tecnico: usize, id: u32, vaga: i32, valor: u32, copia: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(%%I1%%);
     let Ok(alvo) = alvo_da_marca(noticias, tecnico, id, vaga, copia) else {
         return o(noticias, tecnico, id, vaga, valor, copia);
@@ -135,15 +135,15 @@ unsafe extern "thiscall" fn comparar_gravar_marca_da_noticia(noticias: usize, te
         regioes.push((a + 5 + 4 * vaga as usize, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(noticias, tecnico, id, vaga, valor, copia),
-        || gravar_marca_da_noticia(noticias, tecnico, id, vaga, valor, copia));
-    PLACAR.registrar(igual && r == n, || format!("gravar_marca_da_noticia(vaga {}) original={} rust={} {:x?} x {:x?}", vaga, r, n, mo, mr));
+        || set_item_slot(noticias, tecnico, id, vaga, valor, copia));
+    PLACAR.registrar(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", vaga, r, n, mo, mr));
     r
 }
 
-unsafe extern "stdcall" fn comparar_clube_de_tecnico_humano(clube: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_news_club_has_human_manager(clube: usize) -> u32 {
     // só consultas: as duas rodam de novo sem efeito
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(clube);
-    let n = clube_de_tecnico_humano(clube);
-    PLACAR.registrar(r == n, || format!("clube_de_tecnico_humano original={} rust={}", r, n));
+    let n = news_club_has_human_manager(clube);
+    PLACAR.registrar(r == n, || format!("news_club_has_human_manager original={} rust={}", r, n));
     r
 }

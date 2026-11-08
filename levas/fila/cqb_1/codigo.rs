@@ -46,7 +46,7 @@ fn cqb1_div(a: i32, b: i32) -> i32 {
     a.wrapping_div(b)
 }
 
-/// { 0x59a5d0 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::process_match_income(partida, resultado)`, pelo fechamento
+/// { 0x59a5d0 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::process_match_income(partida, resultado)`, pelo match_wrap_up
 /// da partida do dia (0x6b5f00). Sem resultado ou sem partida: a caixa (a original). Seleção de um dos lados: nada. Os
 /// valores: com público (+0x34 do resultado), a TV pelo público (1 / (sorteio(10) + 2) inteiro, que é 0, mais 1,75, ×
 /// público) e a renda do estádio (+0x38); os custos do jogo (sem os dois clubes de +0x64 = 1: público / 4; senão por
@@ -58,7 +58,7 @@ fn cqb1_div(a: i32, b: i32) -> i32 {
 /// neutro +0x3c): a TV 3/4 ao mandante e 1/4 ao visitante (+0x158, +0xb8, saldo), o líquido ao mandante (+0x140,
 /// +0xa0, saldo) e, com estádio próprio (+0x6d, +0x69), a manutenção ((sorteio(15) + 1) × 0,01 + 0,85) × o +0x3c do
 /// estádio (+0x12c, +0x8c, menos no saldo). Fora dela: metade de cada um para os dois.
-unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resultado: usize) {
+unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, resultado: usize) {
     if resultado == 0 || partida == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(tabela, partida, resultado); // a caixa
     }
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn renda_da_partida(tabela: usize, partida: usize, resu
 
 /// Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
-unsafe extern "thiscall" fn comparar_renda_da_partida(tabela: usize, partida: usize, resultado: usize) {
+unsafe extern "thiscall" fn comparar_process_match_income(tabela: usize, partida: usize, resultado: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if resultado == 0 || partida == 0 || cqb1_d(partida + 0x1c) == 0 || cqb1_d(partida + 0x20) == 0 {
         return o(tabela, partida, resultado);
@@ -232,8 +232,8 @@ unsafe extern "thiscall" fn comparar_renda_da_partida(tabela: usize, partida: us
     }
     let mut reg = vec![(fm, 0x167), (fv, 0x167)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(tabela, partida, resultado), || crate::aleatorio::sem_contar(|| renda_da_partida(tabela, partida, resultado)));
-    PLACAR.registrar(igual, || format!("renda_da_partida(partida {:x}) original={:x?} rust={:x?}", partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(tabela, partida, resultado), || crate::aleatorio::sem_contar(|| process_match_income(tabela, partida, resultado)));
+    PLACAR.registrar(igual, || format!("process_match_income(partida {:x}) original={:x?} rust={:x?}", partida, mo, mr));
 }
 
 /// { 0x59af40 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::calc_gate_receipts(partida, publico)`, pelo registro da
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_renda_da_partida(tabela: usize, partida: us
 /// público; na liga do mandante (+0x57), menos o desconto (float +0x160 das finanças) × o valor. Depois pelo tipo da
 /// nação (+0x7e: 2 → /4; 3 → /10), × 1,25 na liga de 0x9cf570 ou pelos clubes de 0x9d0250 (1,5), 0x9d0110 e 0x9d024c
 /// (1,3), 0x9d0248 (0,75) e 0x9d0244 (0,9), e × 1,2 na nação de 0x9cf314.
-unsafe extern "thiscall" fn renda_do_estadio(tabela: usize, partida: usize, publico: i32) -> i32 {
+unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
     if partida == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%)(tabela, partida, publico); // a caixa
     }
@@ -314,28 +314,28 @@ unsafe extern "thiscall" fn renda_do_estadio(tabela: usize, partida: usize, publ
 
 /// Comparador da 0x59af40: a devolução (só lê; a 0x540a50 pode zerar a marca +0x244 do clube, igual nas duas). Sem
 /// partida: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_renda_do_estadio(tabela: usize, partida: usize, publico: i32) -> i32 {
+unsafe extern "thiscall" fn comparar_calc_gate_receipts(tabela: usize, partida: usize, publico: i32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(%%I1%%);
     if partida == 0 {
         return o(tabela, partida, publico);
     }
     let r = o(tabela, partida, publico);
-    let n = renda_do_estadio(tabela, partida, publico);
-    PLACAR.registrar(r == n, || format!("renda_do_estadio(partida {:x}, publico {}) original={} rust={}", partida, publico, r, n));
+    let n = calc_gate_receipts(tabela, partida, publico);
+    PLACAR.registrar(r == n, || format!("calc_gate_receipts(partida {:x}, publico {}) original={} rust={}", partida, publico, r, n));
     r
 }
 
 /// { 0x599850 } (thiscall, ret 4, fin_prm.cpp): `Finance::pay_league_fine(valor)`, pelas multas da liga (0x49f570,
 /// 0x6a9e60): soma o valor às multas do ano (+0x128) e do mês (+0x88) e o tira do saldo.
-unsafe extern "thiscall" fn pagar_multa_da_liga(this: usize, valor: i32) {
+unsafe extern "thiscall" fn pay_league_fine(this: usize, valor: i32) {
     cpz13_somar32(this + 0x128, valor);
     cpz13_somar32(this + 0x88, valor);
     cpz13_somar_saldo(this, -(valor as i64));
 }
 
 /// Comparador da 0x599850: lado a lado no registro de finanças (0x167 bytes).
-unsafe extern "thiscall" fn comparar_pagar_multa_da_liga(this: usize, valor: i32) {
+unsafe extern "thiscall" fn comparar_pay_league_fine(this: usize, valor: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pagar_multa_da_liga(this, valor));
-    PLACAR.registrar(igual, || format!("pagar_multa_da_liga(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x167)], || o(this, valor), || pay_league_fine(this, valor));
+    PLACAR.registrar(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", valor, mo, mr));
 }

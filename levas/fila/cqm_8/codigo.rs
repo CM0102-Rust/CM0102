@@ -56,19 +56,19 @@ unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32, g: usize,
 
 /// { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
 /// Fonte 0x98b014, linha 0x169.
-unsafe extern "thiscall" fn cqm8_tabela_do_carioca(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_rio_create_table(this: usize) -> u32 {
     cqm8_tabela(this, 0xc, 0x98b014, 0x169, 0x9cf9dc, 0, "cqm_8 carioca cheio")
 }
 
 /// { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
 /// Fonte 0x98b050, linha 0x167.
-unsafe extern "thiscall" fn cqm8_tabela_do_catarinense(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
     cqm8_tabela(this, 0xa, 0x98b050, 0x167, 0x9cf9b0, 0, "cqm_8 catarinense cheio")
 }
 
 /// { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
 /// Fonte 0x98b090, linha 0x159.
-unsafe extern "thiscall" fn cqm8_tabela_do_paulista(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
     cqm8_tabela(this, 0x10, 0x98b090, 0x159, 0x9cf9e4, 0, "cqm_8 paulista cheio")
 }
 
@@ -98,17 +98,17 @@ unsafe fn cqm8_comparar(nome: &str, this: usize, n: i16, g: usize, original: imp
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqm8_tabela_do_carioca(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqm8_comparar("cqm8_tabela_do_carioca", this, 0xc, 0x9cf9dc, || o(this))
+    cqm8_comparar("bra_reg_rio_create_table", this, 0xc, 0x9cf9dc, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqm8_tabela_do_catarinense(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqm8_comparar("cqm8_tabela_do_catarinense", this, 0xa, 0x9cf9b0, || o(this))
+    cqm8_comparar("bra_reg_rio_create_table_43bb70", this, 0xa, 0x9cf9b0, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqm8_tabela_do_paulista(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqm8_comparar("cqm8_tabela_do_paulista", this, 0x10, 0x9cf9e4, || o(this))
+    cqm8_comparar("bra_reg_rio_create_table_43cc40", this, 0x10, 0x9cf9e4, || o(this))
 }

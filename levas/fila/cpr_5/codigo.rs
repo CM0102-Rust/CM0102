@@ -85,7 +85,7 @@ unsafe fn cpr5_zerar_marcas(l: usize) {
 /// cima (10000; +6 acima de 9500 vira 10000 − sorteio(500)); zera as marcas e põe as expectativas da temporada
 /// (0x6a3770 com 1). Sem técnico (fora do clube parceiro): confianças 5000, +0xe = 16, marcas zeradas; clube
 /// dirigível (ou com competição e nação com +0x11c & 3) recebe as expectativas e a vaga (0x69ba50).
-unsafe extern "thiscall" fn iniciar_diretorias_dos_clubes(this: usize) {
+unsafe extern "thiscall" fn init_club_board_records(this: usize) {
     // (1) as pessoas
     let mut k = 0i32;
     while k < cpr5_d(0xae2364) as i32 {
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn iniciar_diretorias_dos_clubes(this: usize) {
         }
     }
     // (2) os clubes
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
     let data_dma: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn iniciar_diretorias_dos_clubes(this: usize) {
         let l = cpr5_d(this).wrapping_add(ofs);
         i += 1;
         ofs += 0x49;
-        if e_selecao(clube) != 0 {
+        if is_national_team(clube) != 0 {
             let n = cpr5_d(clube + 0x53);
             if n == 0 || cpr5_d(n + 0x71) == 0 {
                 continue;
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn iniciar_diretorias_dos_clubes(this: usize) {
             cpr5_zerar_marcas(l);
             let dirigivel: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x544820usize);
             if dirigivel(clube) == 0 {
-                if e_selecao(clube) != 0 {
+                if is_national_team(clube) != 0 {
                     continue;
                 }
                 let objs = cpr5_d(0xadadfc);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn iniciar_diretorias_dos_clubes(this: usize) {
 
 // ponytail: sorteia, põe as expectativas (0x6a3770) e abre vagas (0x69ba50, aloca): só a original; a cópia leva os
 // ramos (roda uma vez, no começo da carreira).
-unsafe extern "thiscall" fn comparar_iniciar_diretorias_dos_clubes(this: usize) {
+unsafe extern "thiscall" fn comparar_init_club_board_records(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn comparar_iniciar_diretorias_dos_clubes(this: usize) 
 /// (0x557000 com os campos +0x11..+0x18); depois a notícia do resultado (0x6ac060) e a apelação sai (0x68d1f0). Item
 /// nulo: a caixa "Error" (0x57f5) e para. Pelo dia a dia da diretoria (0x68f9c0); só as apelações do humano entram na
 /// lista.
-unsafe extern "thiscall" fn apelacoes_de_suspensao(this: usize) {
+unsafe extern "thiscall" fn process_ban_appeals(this: usize) {
     let lista = || cpr5_d(this + 0x14);
     cpr5_pd(lista() + 0xa, cpr5_d(lista() + 2) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -303,7 +303,7 @@ unsafe extern "thiscall" fn apelacoes_de_suspensao(this: usize) {
 }
 
 // ponytail: aplica a disciplina, solta a notícia e libera a apelação: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_apelacoes_de_suspensao(this: usize) {
+unsafe extern "thiscall" fn comparar_process_ban_appeals(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
 
@@ -313,7 +313,7 @@ unsafe extern "thiscall" fn comparar_apelacoes_de_suspensao(this: usize) {
 /// ([0xb64738]), nenhuma partida da lista do dia dela (data +0x28/+0x2a, fatia +0x3f; 0x5ae6a0) tem um clube dele: 1.
 /// Senão 0. Partida nula: a caixa "Error" (0x707) e 0. Pela limpeza das partidas assistidas (0x5fe8d0) e pela escolha
 /// da partida (0x5fe500).
-unsafe extern "thiscall" fn pode_ver_a_partida(this: usize, partida: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     if partida == 0 {
         aviso_em(0x9cf11c, 0x707);
         return 0;
@@ -359,12 +359,12 @@ unsafe extern "thiscall" fn pode_ver_a_partida(this: usize, partida: usize, huma
 }
 
 /// Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
-unsafe extern "thiscall" fn comparar_pode_ver_a_partida(this: usize, partida: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, partida, humano);
     if partida == 0 {
         return r;
     }
-    let n = pode_ver_a_partida(this, partida, humano);
-    PLACAR.registrar(r == n, || format!("pode_ver_a_partida(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
+    let n = can_watch_fixture(this, partida, humano);
+    PLACAR.registrar(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
     r
 }

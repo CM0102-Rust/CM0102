@@ -77,7 +77,7 @@ unsafe fn cpo1_limite(clube: usize) -> i32 {
 /// presidente (+0xbf; 0x547790/0x5477d0/0x547810/0x547840) = 0x40 ou 0x100. Pelo clube vendedor (+0x39 do jogador)
 /// tira o valor do gasto e marca `f2` com as faixas espelhadas (0,25/0,5/2/4; 0,125/8) e 0x20 ou 0x80. Transferência
 /// já avaliada (+0x1f = 1): nada (as marcas ficam como estão).
-unsafe extern "thiscall" fn avaliar_o_negocio_da_transferencia(this: usize, transf: usize, f1: usize, f2: usize) {
+unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
     if *((transf + 0x1f) as *const u8) == 1 {
         return;
     }
@@ -219,7 +219,7 @@ unsafe fn cpo1_pela_razao(e: usize, f: u32) {
 /// (0x5a0590), a dele: razão 1: −125/−500, 2: −25/−250, 8: +25/+25, 0x10: +75/+75 (confiança +6 e humor +0x14);
 /// favorito e rejeitado no humor +0x16 (e +0x14). Limita a confiança a 1..10000 e +0x16 a −10000 ou mais; no fim o
 /// jogador sai das pessoas favoritas do presidente do vendedor (0x547c10).
-unsafe extern "thiscall" fn confianca_da_diretoria_na_transferencia(this: usize, transf: usize) {
+unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: usize, transf: usize) {
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
     let mut fc: usize = transf; // a vaga do argumento
     let mut fv: usize = this; // o ecx empurrado no prólogo
@@ -249,8 +249,8 @@ unsafe extern "thiscall" fn confianca_da_diretoria_na_transferencia(this: usize,
     if selecao(vendedor) != 0 {
         return;
     }
-    let financas_do_clube: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-    let fin = financas_do_clube(cpo1_d(0xae2a38), cpo1_d(pessoa + 0x39));
+    let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
+    let fin = get_club_finance(cpo1_d(0xae2a38), cpo1_d(pessoa + 0x39));
     if fin != 0 && *((fin + 0x165) as *const u8) == 1 {
         return;
     }
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn confianca_da_diretoria_na_transferencia(this: usize,
 /// (+0xcf) está no cargo há mais de 100 dias (0x54cdb0 desde +0x3e), põe a saída na lista (+4, 0x68d0d0, 6 bytes: 1, o
 /// motivo 2, ou 7 se a linha do clube na tabela da divisão (0x4a4850) não tem jogos (+0x55), e o id do clube), marca
 /// o bit 2 em +2 da linha da diretoria e devolve 1. Senão 0.
-unsafe extern "thiscall" fn resolver_o_ultimato_da_diretoria(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -> u8 {
     let lista = cpo1_d(this + 0x10);
     if cpo1_w(lista) == 0 {
         return 0;
@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn resolver_o_ultimato_da_diretoria(this: usize, clube:
 
 /// Comparador: a avaliação pede o valor do jogador (0x4d0c60, que sorteia): lado a lado com o estado do sorteador, as
 /// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
-unsafe extern "thiscall" fn comparar_avaliar_o_negocio_da_transferencia(this: usize, transf: usize, f1: usize, f2: usize) {
+unsafe extern "thiscall" fn comparar_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
@@ -337,13 +337,13 @@ unsafe extern "thiscall" fn comparar_avaliar_o_negocio_da_transferencia(this: us
         reg.push((cpo1_linha(this, cpo1_d(vendedor)) + 0x38, 8));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf, f1, f2),
-        || crate::aleatorio::sem_contar(|| avaliar_o_negocio_da_transferencia(this, transf, f1, f2)));
-    PLACAR.registrar(igual, || format!("avaliar_o_negocio_da_transferencia({:x}) {:x?} x {:x?}", transf, mo, mr));
+        || crate::aleatorio::sem_contar(|| assess_transfer_deal(this, transf, f1, f2)));
+    PLACAR.registrar(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
 /// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
-unsafe extern "thiscall" fn comparar_confianca_da_diretoria_na_transferencia(this: usize, transf: usize) {
+unsafe extern "thiscall" fn comparar_apply_transfer_confidence_changes(this: usize, transf: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     let pessoa = cpo1_d(0xae23bc).wrapping_add(cpo1_d(transf + 0xc).wrapping_mul(0x6e));
@@ -357,13 +357,13 @@ unsafe extern "thiscall" fn comparar_confianca_da_diretoria_na_transferencia(thi
         }
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, transf),
-        || crate::aleatorio::sem_contar(|| confianca_da_diretoria_na_transferencia(this, transf)));
-    PLACAR.registrar(igual, || format!("confianca_da_diretoria_na_transferencia({:x}) {:x?} x {:x?}", transf, mo, mr));
+        || crate::aleatorio::sem_contar(|| apply_transfer_confidence_changes(this, transf)));
+    PLACAR.registrar(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
 }
 
 /// Comparador: a original tira o item da lista (e o libera) e acrescenta a saída: roda só ela e confere o plano: a
 /// lista das saídas (+4) cresce de 1 quando devolve 1 (e a linha da diretoria fica com o bit 2) e fica igual com 0.
-unsafe extern "thiscall" fn comparar_resolver_o_ultimato_da_diretoria(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_resolve_board_ultimatum(this: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let saidas = cpo1_d(this + 4);
     if saidas == 0 || cpo1_d(this + 0x10) == 0 {
@@ -373,6 +373,6 @@ unsafe extern "thiscall" fn comparar_resolver_o_ultimato_da_diretoria(this: usiz
     let r = o(this, clube);
     let depois = cpo1_w(cpo1_d(this + 4)) as i32;
     let ok = depois == antes + (r != 0) as i32 && (r == 0 || *((cpo1_linha(this, cpo1_d(clube)) + 2) as *const u8) & 2 != 0);
-    PLACAR.registrar(ok, || format!("resolver_o_ultimato_da_diretoria(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
+    PLACAR.registrar(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", clube, r, antes, depois));
     r
 }

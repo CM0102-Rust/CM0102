@@ -48,7 +48,7 @@ unsafe fn cqa4_copa_principal(comp: usize) -> bool {
     cqa4_d(0xb63d7e_usize.wrapping_add((cqa4_indice(comp) as i8 as isize * 72) as usize)) == comp
 }
 
-/// A vaga na Copa da UEFA que o campeão da copa (`copa_registros_pelo_desfecho`, desfecho 1) ganha: a Copa da Liga
+/// A vaga na Copa da UEFA que o campeão da copa (`cup_update_staff_records_for_status`, desfecho 1) ganha: a Copa da Liga
 /// inglesa ([0x9cf750]) sempre; senão, a copa principal de uma nação europeia ([0x9cfa10] o continente, pela nação
 /// +0x5d e o continente +0x71), não amistosa, com o clube ainda sem competição europeia (−1) e a nação com índice.
 unsafe fn cqa4_vaga_na_uefa(comp: usize, clube: usize) -> bool {
@@ -83,7 +83,7 @@ unsafe fn cqa4_registro_de_final(f: usize, clube: usize, jogo: usize, final_: u3
 /// e não é a do terceiro lugar (+7 ≠ 0x8c), a classificação (0x86bdd0) com o peso rodada × 99 / (rodadas − 1) + 1;
 /// 0xff: a eliminação (0x86c000) com o peso rodada × 99 / rodadas + 1. Os registros de fase levam os dwords que a
 /// original empurra: a palavra do jogo (+0x32, +0x30) ou da rodada (+7) sobre os 16 bits altos do registrador.
-unsafe extern "thiscall" fn copa_registros_pelo_desfecho(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
+unsafe extern "thiscall" fn cup_update_staff_records_for_status(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
     if cqa4_b(jogo + 0x3a) == 1 || cqa4_d(copa + 0x2c) != 0 || cqa4_b(copa + 0x44) != 0xff {
         return 0;
     }
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn copa_registros_pelo_desfecho(copa: usize, clube: usi
 /// Comparador da 0x519890: só a original (os registros vão ao histórico das pessoas e mexem nas reputações e no moral,
 /// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
 /// UEFA quando o campeão ganha a vaga; senão não muda. Sem clube: só a original.
-unsafe extern "thiscall" fn comparar_copa_registros_pelo_desfecho(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_status(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%);
     if clube == 0 || jogo == 0 {
         return o(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: sem clube ou jogo, só a original
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_copa_registros_pelo_desfecho(copa: usize, c
         && cqa4_vaga_na_uefa(cqa4_d(copa + 4), clube) { cqa4_i(0x9cf6f0) } else { antes };
     let r = o(copa, clube, desfecho, a3, a4, jogo, final_);
     let depois = cqa4_i(estado);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("copa_registros_pelo_desfecho(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
+    PLACAR.registrar(r == 0 && depois == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
     r
 }
 
@@ -223,7 +223,7 @@ unsafe fn cqa4_honras(copa: usize) -> (usize, usize, usize, usize) {
 /// a linha do histórico (0x4afce0: 5 pushes; add esp, 0x14 -> cdecl(copa, campeão, vice, terceiro, anfitriã)) com os
 /// quatro de cqa4_honras; fora da competição amistosa, na copa principal da nação (cqa4_copa_principal), os
 /// semifinalistas para a UEFA (0x519fc0: ecx = a copa -> thiscall, ret 0).
-unsafe extern "thiscall" fn copa_honras_da_temporada(copa: usize) {
+unsafe extern "thiscall" fn cup_record_season_honours(copa: usize) {
     let (campeao, vice, terceiro, anfitria) = cqa4_honras(copa);
     let historico: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(0x4afce0usize);
     historico(copa, campeao, vice, terceiro, anfitria);
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn copa_honras_da_temporada(copa: usize) {
 /// Comparador da 0x519a90: só a original (a 0x4afce0 pode crescer o histórico e a 0x519fc0 tem o seu comparador). O
 /// plano, feito antes: a linha livre do histórico (cpa2_linha_livre) recebe a competição (+4), o ano [0xae2c92] e os
 /// quatro de cqa4_honras. Sem linha livre (o histórico cresce) ou sem a competição: só a original.
-unsafe extern "thiscall" fn comparar_copa_honras_da_temporada(copa: usize) {
+unsafe extern "thiscall" fn comparar_cup_record_season_honours(copa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let linha = cpa2_linha_livre();
     if linha == 0 || cqa4_d(copa + 4) == 0 {
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn comparar_copa_honras_da_temporada(copa: usize) {
     o(copa);
     let lido = (cqa4_d(linha + 4), core::ptr::read_unaligned((linha + 8) as *const u16), cqa4_d(linha + 0xa), cqa4_d(linha + 0xe), cqa4_d(linha + 0x12), cqa4_d(linha + 0x16));
     let previsto = (cqa4_d(copa + 4), ano, campeao, vice, terceiro, anfitria);
-    PLACAR.registrar(lido == previsto, || format!("copa_honras_da_temporada: linha {:x?} prevista {:x?}", lido, previsto));
+    PLACAR.registrar(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
 }
 
 /// Os dois clubes (ids) que a 0x519fc0 manda à semeadura da UEFA, ou None quando ela sai sem mandar: a rodada 0x82
@@ -306,7 +306,7 @@ unsafe fn cqa4_semifinalistas(copa: usize) -> Option<(i32, i32)> {
 /// { 0x519fc0 } (thiscall, ret 0, Cup.cpp): `Cup::register_semi_final_losers_for_uefa()`: os semifinalistas fora da
 /// final (cqa4_semifinalistas) vão à semeadura da UEFA (0x905790: push b; push a; push id da competição; ecx =
 /// [0xde1f58]; sem add esp -> thiscall, ret 0xc).
-unsafe extern "thiscall" fn copa_semifinalistas_para_a_uefa(copa: usize) {
+unsafe extern "thiscall" fn register_semi_final_losers_for_uefa(copa: usize) {
     if let Some((a, b)) = cqa4_semifinalistas(copa) {
         let f: unsafe extern "thiscall" fn(usize, i32, i32, i32) = core::mem::transmute(0x905790usize);
         f(cqa4_d(0xde1f58), cqa4_i(cqa4_d(copa + 4)), a, b);
@@ -315,12 +315,12 @@ unsafe extern "thiscall" fn copa_semifinalistas_para_a_uefa(copa: usize) {
 
 /// Comparador da 0x519fc0: lado a lado na tabela da semeadura (+0x440, 50 vagas de 12 bytes, onde a 0x905790 grava; ela
 /// não aloca: acha a vaga da competição ou a primeira livre). Sem a semeadura: só a original.
-unsafe extern "thiscall" fn comparar_copa_semifinalistas_para_a_uefa(copa: usize) {
+unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_uefa(copa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let s = cqa4_d(0xde1f58);
     if s == 0 {
         return o(copa); // ponytail: sem a semeadura, só a original
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(s + 0x440, 50 * 12)], || o(copa), || copa_semifinalistas_para_a_uefa(copa));
-    PLACAR.registrar(igual, || format!("copa_semifinalistas_para_a_uefa(copa {:x}) a semeadura difere ({:?})", copa, cqa4_semifinalistas(copa)));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(s + 0x440, 50 * 12)], || o(copa), || register_semi_final_losers_for_uefa(copa));
+    PLACAR.registrar(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", copa, cqa4_semifinalistas(copa)));
 }

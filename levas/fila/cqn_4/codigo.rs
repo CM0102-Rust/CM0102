@@ -19,7 +19,7 @@ unsafe fn cqn4_registro(g: usize) -> usize {
 /// acesso, de play-off nem de rebaixamento (+0xbe..+0xc1 = 0), a liga de cima de id [0x9cf624] (+0x1c) e nenhuma de
 /// baixo (+0x20 = −1), os bits de regra 0x43 (+0xd9); por fim o calendário (a virtual +0x3c: push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, esi -> thiscall, ret 0x10) em +0xba. Devolve 1.
-unsafe extern "thiscall" fn regras_da_cfa(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3c) as *mut u16, 2);
     *((this + 0xc4) as *mut u8) = 2;
     *((this + 0xc7) as *mut u8) = 2;
@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn regras_da_cfa(this: usize) -> u32 {
 }
 
 /// O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
-unsafe extern "thiscall" fn comparar_regras_da_cfa(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     let b = |k: usize| *((this + k) as *const u8);
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_regras_da_cfa(this: usize) -> u32 {
         && b(0xc5) == 4 && b(0xc6) == 1 && b(0xc7) == 2 && b(0x42) == 1 && b(0xbe) == 0 && b(0xbf) == 0 && b(0xc0) == 0 && b(0xc1) == 0
         && cqn4_d(this + 0x1c) == cqn4_d(0x9cf624) && cqn4_d(this + 0x20) == 0xffff_ffff
         && core::ptr::read_unaligned((this + 0xd9) as *const u16) == 0x43;
-    PLACAR.registrar(ok, || format!("regras_da_cfa({:#x}): devolveu {}, campos fora do esperado", this, r));
+    PLACAR.registrar(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));
     r
 }
 
@@ -193,14 +193,14 @@ const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
 /// fundo; competição de id [0x9cf5d8]): até 72 clubes, os da primeira e da segunda divisões ([0x9cf5cc], [0x9cf5d0];
 /// [inferência: os times reserva]) e até 34 da divisão genérica cuja competição de reserva é a CFA, embaralhados em 4
 /// grupos de 18. Fonte 0x9ccaf0, linhas 0x40, 0x64, 0x6b.
-unsafe extern "thiscall" fn construir_cfa(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) -> usize {
     cqn4_construir(this, ano, &CQN4_CFA)
 }
 
 /// { 0x5bd600 } (thiscall, ret 4, fra_lower.cpp, 578 bytes): `FraLower::FraLower(ano)`, a divisão de baixo francesa
 /// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
 /// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
-unsafe extern "thiscall" fn construir_divisao_de_baixo_francesa(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn construct_fra_lower(this: usize, ano: u32) -> usize {
     cqn4_construir(this, ano, &CQN4_BAIXO)
 }
 
@@ -215,14 +215,14 @@ unsafe fn cqn4_comparar(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, origin
     r
 }
 
-unsafe extern "thiscall" fn comparar_construir_cfa(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%);
-    cqn4_comparar("construir_cfa", this, ano, &CQN4_CFA, || o(this, ano))
+    cqn4_comparar("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
 }
 
-unsafe extern "thiscall" fn comparar_construir_divisao_de_baixo_francesa(this: usize, ano: u32) -> usize {
+unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%);
-    cqn4_comparar("construir_divisao_de_baixo_francesa", this, ano, &CQN4_BAIXO, || o(this, ano))
+    cqn4_comparar("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
 }
 
 /// O corpo dos dois destrutores (thiscall, ret 0, quadro SEH só no caminho de exceção; iguais fora a vtable): a vtable
@@ -264,22 +264,22 @@ unsafe fn cqn4_destruir(this: usize, vtabela: usize) {
 }
 
 /// { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
-unsafe extern "thiscall" fn destruir_cfa(this: usize) {
+unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da cfa");
     cqn4_destruir(this, 0x96a7b0)
 }
 
 /// { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
-unsafe extern "thiscall" fn destruir_divisao_de_baixo_francesa(this: usize) {
+unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
     crate::comparacao::ramo("cqn_4 destrutor da divisao de baixo");
     cqn4_destruir(this, 0x96ab78)
 }
 
 /// Soltam memória: só a original.
-unsafe extern "thiscall" fn comparar_destruir_cfa(this: usize) {
+unsafe extern "thiscall" fn comparar_destroy_fra_cfa(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%)(this)
 }
 
-unsafe extern "thiscall" fn comparar_destruir_divisao_de_baixo_francesa(this: usize) {
+unsafe extern "thiscall" fn comparar_destroy_fra_lower(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I4%%)(this)
 }

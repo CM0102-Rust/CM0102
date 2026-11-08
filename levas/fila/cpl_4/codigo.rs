@@ -32,7 +32,7 @@ unsafe fn cpl4_sem_espaco(linha: u32, texto: usize) {
 /// primeira vaga vazia (pessoa +0 = −1); senão (ou sem vaga vazia) a do fim: cheio, cresce de 200 em 200 (realloc
 /// 0x945667, ou malloc 0x944e46 sem vetor; sem memória, caixa 0x175 e −1) e a conta sobe. Devolve o índice. Os dois
 /// chamadores (a criação dos contratos 0x4c7560 e a 0x4c7950) passam 1.
-unsafe extern "thiscall" fn vaga_livre_de_contrato(this: usize, so_no_fim: u32) -> i32 {
+unsafe extern "thiscall" fn get_free_staff_contract_space(this: usize, so_no_fim: u32) -> i32 {
     if so_no_fim == 0 {
         let n = cpl4_d(this + 8) as i32;
         let p = cpl4_d(this);
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn vaga_livre_de_contrato(this: usize, so_no_fim: u32) 
 /// [0xae2d0c]), põe o id dela no contrato (+0) e gera o contrato inicial (0x85e960 com o valor). Pela contratação
 /// de técnico (0x68f9c0, MANAGER_MANAGER::daily_update) e pelo regen que assina com um clube (0x7a6f10). Devolve o
 /// eax da original (o da 0x85e960, ou o índice negativo); os chamadores não o leem.
-unsafe extern "thiscall" fn acrescentar_contrato_da_pessoa(this: usize, pessoa: usize, valor: u32) -> u32 {
+unsafe extern "thiscall" fn add_staff_contract(this: usize, pessoa: usize, valor: u32) -> u32 {
     let vaga: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(0x4c79a0usize);
     let i = vaga(this, 1);
     if i < 0 {
@@ -130,7 +130,7 @@ unsafe fn cpl4_lembretes(this: usize, pessoa: usize, data: usize, tipo: u8) -> (
 /// (id da pessoa +0, data +4, fatia do dia +0xc, tipo +0xd). O tipo 1 leva antes os lembretes de tipo 2
 /// (`cpl4_lembretes`), sem fatia (+0xc fica como está). Pelas propostas: a decisão da pessoa (0x4cd230, 0x4ce4e0).
 /// As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
-unsafe extern "thiscall" fn acrescentar_data_de_decisao(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
+unsafe extern "thiscall" fn add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     crate::comparacao::ramo("cpl_4 data de decisao");
     if cpl4_d(this + 0x14) as i32 > (cpl4_d(this + 0x10) as i32).wrapping_sub(4) {
         let cap = cpl4_d(this + 0x10).wrapping_add(100);
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn acrescentar_data_de_decisao(this: usize, pessoa: usi
 // o plano antes, roda só a original e confere; o modo Rust e a carreira provam as cópias.
 
 /// Comparador: a vaga esperada (a primeira vazia, ou a do fim com a conta + 1 e a capacidade + 200 se cheio).
-unsafe extern "thiscall" fn comparar_vaga_livre_de_contrato(this: usize, so_no_fim: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_get_free_staff_contract_space(this: usize, so_no_fim: u32) -> i32 {
     let (n, cap, p) = (cpl4_d(this + 8), cpl4_d(this + 4), cpl4_d(this));
     let mut livre = -1i32;
     if so_no_fim == 0 {
@@ -188,14 +188,14 @@ unsafe extern "thiscall" fn comparar_vaga_livre_de_contrato(this: usize, so_no_f
     }
     let (er, en, ecap) = if livre >= 0 { (livre, n, cap) } else { (n as i32, n.wrapping_add(1), if n == cap { cap.wrapping_add(200) } else { cap }) };
     PLACAR.registrar(r == er && cpl4_d(this + 8) == en && cpl4_d(this + 4) == ecap, || {
-        format!("vaga_livre_de_contrato({}) devolveu {} (esperava {}), conta {} -> {} (esperava {}), capacidade {} -> {} (esperava {})",
+        format!("get_free_staff_contract_space({}) devolveu {} (esperava {}), conta {} -> {} (esperava {}), capacidade {} -> {} (esperava {})",
             so_no_fim, r, er, n, cpl4_d(this + 8), en, cap, cpl4_d(this + 4), ecap)
     });
     r
 }
 
 /// Comparador: a vaga é a do fim (a conta de antes); confere a ligação da pessoa, o id no contrato e a conta.
-unsafe extern "thiscall" fn comparar_acrescentar_contrato_da_pessoa(this: usize, pessoa: usize, valor: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_add_staff_contract(this: usize, pessoa: usize, valor: u32) -> u32 {
     let n = cpl4_d(this + 8);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, pessoa, valor);
     if cpl4_d(this) == 0 {
@@ -205,14 +205,14 @@ unsafe extern "thiscall" fn comparar_acrescentar_contrato_da_pessoa(this: usize,
     let ligada = cpl4_d(cpl4_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f)));
     let no_contrato = cpl4_d(cpl4_d(this).wrapping_add(n.wrapping_mul(0x50)));
     PLACAR.registrar(ligada == n && no_contrato == id && cpl4_d(this + 8) == n.wrapping_add(1), || {
-        format!("acrescentar_contrato_da_pessoa(pessoa {}, valor {}) vaga {} (esperava {}), id no contrato {}, conta {} -> {}",
+        format!("add_staff_contract(pessoa {}, valor {}) vaga {} (esperava {}), id no contrato {}, conta {} -> {}",
             id, valor, ligada, n, no_contrato, n, cpl4_d(this + 8))
     });
     r
 }
 
 /// Comparador: os lembretes e a entrada esperados antes da original; confere a conta e cada entrada nova.
-unsafe extern "thiscall" fn comparar_acrescentar_data_de_decisao(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
+unsafe extern "thiscall" fn comparar_add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
     let n = cpl4_d(this + 0x14);
     let (lembretes, k) = cpl4_lembretes(this, pessoa, data, tipo as u8);
     let d = core::ptr::read_unaligned(data as *const [u8; 8]);
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn comparar_acrescentar_data_de_decisao(this: usize, pe
     }
     certo &= cpl4_d(e(k)) == id && data_de(k) == d && *((e(k) + 0xc) as *const u8) == fatia as u8 && *((e(k) + 0xd) as *const u8) == tipo as u8;
     PLACAR.registrar(certo, || {
-        format!("acrescentar_data_de_decisao(pessoa {}, fatia {}, tipo {}) conta {} -> {} (esperava {}), lembretes {:?}, entradas {:?}",
+        format!("add_decision_date(pessoa {}, fatia {}, tipo {}) conta {} -> {} (esperava {}), lembretes {:?}, entradas {:?}",
             id, fatia as u8, tipo as u8, n, cpl4_d(this + 0x14), n + k + 1, &lembretes[..k],
             (0..=k).map(|j| core::ptr::read_unaligned(e(j) as *const [u8; 14])).collect::<Vec<_>>())
     });

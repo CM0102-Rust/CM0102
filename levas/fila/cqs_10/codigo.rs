@@ -118,31 +118,31 @@ unsafe fn cqs10_comparar_mata_mata(nome: &str, this: usize, times: usize, fases:
 /// { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
 /// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
 /// lista) e 0x26a (sem fase).
-unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
+unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this: usize) {
     cqs10_mata_mata(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }
 
-unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
+unsafe extern "thiscall" fn comparar_conmebol_liber_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
+    cqs10_comparar_mata_mata("conmebol_liber_create_knockout_stage", this, 0x10, 7, 7, || o(this))
 }
 
 /// { 0x4c2330 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::create_semi_final_stage()`, as semifinais da
 /// Merconorte: os 4 (o primeiro do grupo 1 e das 3 fases de grupo) na fase 3; caixas nas linhas 0x21d (sem lista) e
 /// 0x23b (sem fase).
-unsafe extern "thiscall" fn cqs10_merconorte_semifinais(this: usize) {
+unsafe extern "thiscall" fn con_merc_cup_create_semi_final_stage(this: usize) {
     cqs10_mata_mata(this, 4, 3, 3, 0x9a7d6c, 0x21d, 0x23b, "cqs_10 classificados da merconorte");
 }
 
-unsafe extern "thiscall" fn comparar_cqs10_merconorte_semifinais(this: usize) {
+unsafe extern "thiscall" fn comparar_con_merc_cup_create_semi_final_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqs10_comparar_mata_mata("cqs10_merconorte_semifinais", this, 4, 3, 3, || o(this))
+    cqs10_comparar_mata_mata("con_merc_cup_create_semi_final_stage", this, 4, 3, 3, || o(this))
 }
 
 /// { 0x4c20b0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x28): `ConMercCup::advance_stage()`, a fase seguinte da
 /// Merconorte: na última fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x1c7; senão +0x30 sobe e, chegando a 3
 /// (depois dos grupos), as semifinais (0x4c2330: mov ecx, this -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     let f = cqs10_d(this + 0x30) as i32;
     if f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9a7d6c, 0x1c7);
@@ -158,11 +158,11 @@ unsafe extern "thiscall" fn cqs10_merconorte_fase_seguinte(this: usize) {
 
 // ponytail: as semifinais (0x4c2330) alocam e sorteiam: não rodam duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa e não muda nada).
-unsafe extern "thiscall" fn comparar_cqs10_merconorte_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let f = cqs10_d(this + 0x30) as i32;
     let ultima = f >= (cqs10_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqs10_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("cqs10_merconorte_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.registrar(depois == if ultima { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }

@@ -67,7 +67,7 @@ unsafe fn cqa13_marcas(c: usize, marcas: u32) -> bool {
     if CQA13_ENSAIO {
         CPW7_ENSAIO = true;
         CPW7_DECISAO = 0;
-        marcas_do_contrato(c, marcas);
+        set_flags(c, marcas);
         CPW7_ENSAIO = false;
         if CPW7_DECISAO != 0 {
             CQA13_PAROU = true;
@@ -206,7 +206,7 @@ unsafe fn cqa13_porta_voz(clube: usize, p: usize) -> usize {
 /// clube (com liga), com a força e a reputação do clube (ou a nação entre as sete de 0x9cf31c..): as queixas 0x40000000 /
 /// 0x20000000 pela saída do companheiro, a moral −25, a marca 0x400, as 0x200/0x800 e a queixa 0x80000000 tiradas; se
 /// algo mudou e o jogador era craque, o companheiro desassossegado (0x75cfc0).
-unsafe extern "thiscall" fn reacoes_dos_elencos_a_transferencia(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
+unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
     if p == 0 || novo == 0 {
         return;
     }
@@ -490,7 +490,7 @@ unsafe extern "thiscall" fn reacoes_dos_elencos_a_transferencia(this: usize, p: 
 /// do mesmo estado: o sorteio, [0xae1080] (a ficha do último contrato), a data estática da 0x54cdb0, a linha da torcida
 /// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
 /// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
-unsafe extern "thiscall" fn comparar_reacoes_dos_elencos_a_transferencia(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
+unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(%%I0%%);
     if p == 0 || novo == 0 || cqa13_d(p + 0x61) == 0 || cqa13_c(p + 0x18) < 0x13 || cqa13_rep(p) < 0x109a {
         return o(this, p, novo, velho, flag);
@@ -526,7 +526,7 @@ unsafe extern "thiscall" fn comparar_reacoes_dos_elencos_a_transferencia(this: u
     let antes = crate::comparacao::Memoria::ler(&reg);
     CQA13_ENSAIO = true;
     CQA13_PAROU = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| reacoes_dos_elencos_a_transferencia(this, p, novo, velho, flag)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_transfer_squad_reactions(this, p, novo, velho, flag)));
     CQA13_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
@@ -538,7 +538,7 @@ unsafe extern "thiscall" fn comparar_reacoes_dos_elencos_a_transferencia(this: u
     let mo = crate::comparacao::Memoria::ler(&reg);
     PLACAR.registrar(mo == mr, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
-        format!("reacoes_dos_elencos_a_transferencia(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p, novo, velho, dif)
+        format!("process_transfer_squad_reactions(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p, novo, velho, dif)
     });
 }
 
@@ -549,7 +549,7 @@ unsafe extern "thiscall" fn comparar_reacoes_dos_elencos_a_transferencia(this: u
 /// a nação +0x53 ou −1), as posições (0x5b7d20), o tipo, a resposta do técnico da máquina (0x735870 com 0x82; 0 com
 /// técnico humano), no tipo 2 o porta-voz (id e chaves), a reputação do clube acima de 7250, o técnico (id e chaves) e
 /// `a`; vai ao técnico do clube do jogador (0x7861e0).
-unsafe extern "thiscall" fn noticia_da_comemoracao_da_contratacao(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
+unsafe extern "thiscall" fn queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
     if p == 0 || cqa13_d(p + 0x1a) == 0 {
         return;
     }
@@ -609,18 +609,18 @@ unsafe extern "thiscall" fn noticia_da_comemoracao_da_contratacao(this: usize, p
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_da_comemoracao_da_contratacao(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
+unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(%%I1%%)(this, p, clube, tipo, a, porta_voz)
 }
 
 /// { 0x75cfc0 } (thiscall, ret 0x10, media.cpp, quadro SEH da notícia local): `Media::queue_sale_unrest_story(velho,
 /// novo, jogador, companheiro)`, pelas reações à transferência (0x758200). Velho clube com técnico (+0xcf), fora da
 /// seleção (0x53b900), companheiro e jogador com ficha (+0x61). A notícia 0xbe4: o técnico, o companheiro e o jogador
-/// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não passar de
+/// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não pass_ball de
 /// sorteio(5) + 10), o veículo (0x757f30), o comentarista (0x7dab90 com a nação +0x53 ou −1) e 2; vai ao técnico do velho
 /// clube (0x7861e0).
-unsafe extern "thiscall" fn noticia_do_companheiro_desassossegado(_this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
-    if velho == 0 || cqa13_d(velho + 0xcf) == 0 || e_selecao(velho) != 0 {
+unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
+    if velho == 0 || cqa13_d(velho + 0xcf) == 0 || is_national_team(velho) != 0 {
         return;
     }
     if comp == 0 || cqa13_d(comp + 0x61) == 0 || p == 0 || cqa13_d(p + 0x61) == 0 {
@@ -657,6 +657,6 @@ unsafe extern "thiscall" fn noticia_do_companheiro_desassossegado(_this: usize, 
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca) e sorteia: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_companheiro_desassossegado(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_queue_sale_unrest_story(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, velho, novo, p, comp)
 }

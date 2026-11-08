@@ -62,7 +62,7 @@ fn faixa_dbv1(x: i16, a: i16, b: i16) -> bool {
 /// 0x539490). Os vetores da pilha (0x54, 0x290) só são limpos na entrada: o que uma pessoa deixa passa à seguinte, como
 /// na original; o melhor escore ([esp+0x40], −31073 na entrada) também. Sem pessoas: a caixa e o fim, pela original.
 /// A local de [esp+0x114] (1, zerada com clube de reputação 0) nunca é lida.
-unsafe extern "C" fn inicializar_jogadores(data: usize) {
+unsafe extern "C" fn database_player_initialisation(data: usize) {
     if *(0xae2364 as *const i32) == 0 || *(0xae23bc as *const usize) == 0 {
         return orig::<unsafe extern "C" fn(usize)>(%%I0%%)(data);
     }
@@ -1171,7 +1171,7 @@ unsafe extern "C" fn inicializar_jogadores(data: usize) {
 /// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
 /// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
 /// contar sorteios). Sem pessoas (caixa e fim): só a original.
-unsafe extern "C" fn comparar_inicializar_jogadores(data: usize) {
+unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
     let o = orig::<unsafe extern "C" fn(usize)>(%%I0%%);
     let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
     let rd = |a: usize| *(a as *const usize);
@@ -1190,11 +1190,11 @@ unsafe extern "C" fn comparar_inicializar_jogadores(data: usize) {
         regioes.push((rd(0xae23c0), gi(0xae2368) * 68));
     }
     let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(data),
-        || crate::aleatorio::sem_contar(|| inicializar_jogadores(data)));
+        || crate::aleatorio::sem_contar(|| database_player_initialisation(data)));
     let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])));
     PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("inicializar_jogadores: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
-        None => "inicializar_jogadores: estado do sorteador diferente".to_string(),
+        Some((a, x, y)) => format!("database_player_initialisation: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
+        None => "database_player_initialisation: estado do sorteador diferente".to_string(),
     });
     // ponytail: dezenas de MB por foto; não voltam às sobras
     mo.0.clear();

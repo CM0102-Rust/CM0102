@@ -32,7 +32,7 @@ unsafe fn cpu6_regiao(this: usize, cidade: usize) -> Option<usize> {
 /// leitura 1 (+0x25..+0x29: 0, 1, 2, 3, 5), e a faixa da temperatura pela leitura 2 (+0x2a..+0x30: 1, 0, 2..6, senão 3).
 /// Sem cidade: saida[3], [0] e [1] = 0 e a faixa 2. saida[2] = a temperatura (0x9232c0); abaixo de zero, a chuva vira
 /// neve/gelo: 1 → 6, 2 e 3 → 6/7/8 e 5 → 8/7/9 pelo vento da cidade 0/1/outro.
-unsafe extern "thiscall" fn clima_da_partida(this: usize, s: *mut u8, jogo: usize) {
+unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usize) {
     let temperatura: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(0x9232c0usize);
     if cpu6_d(this) == 0 || cpu6_d(this + 8) == 0 {
         return;
@@ -177,18 +177,18 @@ unsafe extern "thiscall" fn clima_da_partida(this: usize, s: *mut u8, jogo: usiz
 }
 
 /// Comparador: lado a lado nos 4 bytes da saída.
-unsafe extern "thiscall" fn comparar_clima_da_partida(this: usize, s: *mut u8, jogo: usize) {
+unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s: *mut u8, jogo: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(%%I0%%);
     let regioes = [(s as usize, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, s, jogo), || clima_da_partida(this, s, jogo));
-    PLACAR.registrar(igual, || format!("clima_da_partida(jogo {:#x}) {:x?} x {:x?}", jogo, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, s, jogo), || get_match_weather(this, s, jogo));
+    PLACAR.registrar(igual, || format!("get_match_weather(jogo {:#x}) {:x?} x {:x?}", jogo, mo.0, mr.0));
 }
 
 /// { 0x9232c0 } (thiscall, ret 8, weather.cpp): `Weather::get_temperature(faixa, jogo)`, pelo clima da partida. Com o
 /// dia d (do jogo +0x2a, sem sinal; sem jogo o dia do jogo) e x = d × faixa: faixa 0: x % 6 + 1; 1: x % 6 − 5; 2:
 /// x % 7 + 7; 3: x % 8 + 14; 4: x % 7 + 22; 5: x % 6 + 29; 6: x % 6 + 35; outra: −100. Jogo da fatia da noite (+0x3f = 2):
 /// abaixo de 10, − 2; senão × 0,8 truncado. (Lê +0x3f do jogo mesmo sem jogo, como a original.)
-unsafe extern "thiscall" fn temperatura_do_jogo(_this: usize, faixa: u32, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn get_temperature(_this: usize, faixa: u32, jogo: usize) -> u8 {
     let f = faixa as u8 as i8 as i32;
     let d: i32 = if jogo != 0 {
         core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32
@@ -216,10 +216,10 @@ unsafe extern "thiscall" fn temperatura_do_jogo(_this: usize, faixa: u32, jogo: 
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_temperatura_do_jogo(this: usize, faixa: u32, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_temperature(this: usize, faixa: u32, jogo: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(%%I1%%)(this, faixa, jogo);
-    let n = temperatura_do_jogo(this, faixa, jogo);
-    PLACAR.registrar(r == n, || format!("temperatura_do_jogo(faixa {}, jogo {:#x}) original={} rust={}", faixa as u8 as i8, jogo, r as i8, n as i8));
+    let n = get_temperature(this, faixa, jogo);
+    PLACAR.registrar(r == n, || format!("get_temperature(faixa {}, jogo {:#x}) original={} rust={}", faixa as u8 as i8, jogo, r as i8, n as i8));
     r
 }
 
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn comparar_temperatura_do_jogo(this: usize, faixa: u32
 /// com o estádio de marca +0x4d e os lugares +0x3c: chuva 5: 2/1 ou 8/1; chuva 1: 2 ou 0 por h < 6/4; chuva 2 e 3: por
 /// h < 4/1/3; chuva 4: 2 ou 1/2; abaixo de 1 grau, chuva 1 e 8: 2, 0x10 ou 1; chuva 9: 2, 1 ou 0x20/1; sem chuva a 29
 /// graus ou mais: 0x40 ou 4; senão 0.
-unsafe extern "thiscall" fn gramado_do_jogo(_this: usize, clima: *const u8, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: *const u8, jogo: usize) -> u8 {
     if jogo == 0 {
         return 0;
     }
@@ -297,9 +297,9 @@ unsafe extern "thiscall" fn gramado_do_jogo(_this: usize, clima: *const u8, jogo
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_gramado_do_jogo(this: usize, clima: *const u8, jogo: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_pitch_condition(this: usize, clima: *const u8, jogo: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(%%I2%%)(this, clima, jogo);
-    let n = gramado_do_jogo(this, clima, jogo);
-    PLACAR.registrar(r == n, || format!("gramado_do_jogo(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), jogo, r, n));
+    let n = get_pitch_condition(this, clima, jogo);
+    PLACAR.registrar(r == n, || format!("get_pitch_condition(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), jogo, r, n));
     r
 }

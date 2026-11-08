@@ -94,13 +94,13 @@ unsafe fn cqs12_selecoes(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs12_copa_america_selecoes(this: usize) -> u32 {
+unsafe extern "thiscall" fn set_up_team_list(this: usize) -> u32 {
     cqs12_selecoes(this)
 }
 
 /// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
-unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this: usize) ->
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqs12_copa_america_selecoes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -137,7 +137,7 @@ const CQS12_PREVISTAS: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
 /// volta), ordenada pela reputação (qsort 0x945333 com 0x4b07d0, +0xf2 itens), e a posição prevista de cada uma na
 /// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
 /// ret 8): 1, 2, 3, 3, quatro 5, 9 e três 10 (as 12 primeiras da cópia); a cópia liberada (0x9452ca).
-unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize) {
+unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize) {
 // ponytail: a estatística acha ou cria a entrada de cada seleção (aloca): não roda duas vezes. Só a original; o plano:
 // a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
 // cada uma das 12 igual à da faixa.
-unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
+unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     if cqs12_d(this + 8) == 0 || cqs12_d(this + 0xee) == 0 || cqs12_d(this + 0xf2) != 0xc {
         return o(this);
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
         let e = if v[k] != 0 { achar(cqs12_d(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) as u32 != CQS12_PREVISTAS[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("cqs12_copa_america_previstas: a posição prevista da vaga {:?} não bate", errado));
+    PLACAR.registrar(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }
 
 /// { 0x5e1530 } (thiscall, ret 0, goldcup.cpp; a virtual +8): `GoldCup::start_new_season()`, a Copa América seguinte:
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
 /// Comp_Stats::archive_season_and_reset: push 1; mov ecx, [+8] -> thiscall, ret 4), as fases 0..+0x30 destruídas (a
 /// virtual 0 de cada uma com 1: o destrutor que libera), o ano +0x40 sobe 2, +0x45 = 0, +0x30 = −1 e as regras de novo
 /// (a virtual +0x8c, thiscall, ret 0; 0: a caixa da linha 0x28b).
-unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: usize) {
+unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     let soltar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x687970usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
@@ -225,10 +225,10 @@ unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: usize) {
 // ponytail: libera as tabelas e destrói as fases: não roda duas vezes. Só a original; o plano: o ano sobe 2, +0x45 = 0,
 // +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
 // quando havia antes).
-unsafe extern "thiscall" fn comparar_cqs12_copa_america_temporada_nova(this: usize) {
+unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let ano = cqs12_w(this + 0x40);
     o(this);
     let ok = cqs12_w(this + 0x40) == ano.wrapping_add(2) && cqs12_d(this + 0x45) == 0 && cqs12_d(this + 0x30) as i32 == -1 && cqs12_d(this + 0x4c) == 0;
-    PLACAR.registrar(ok, || format!("cqs12_copa_america_temporada_nova({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, cqs12_w(this + 0x40), cqs12_d(this + 0x45), cqs12_d(this + 0x30) as i32));
+    PLACAR.registrar(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, cqs12_w(this + 0x40), cqs12_d(this + 0x45), cqs12_d(this + 0x30) as i32));
 }

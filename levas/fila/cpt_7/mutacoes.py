@@ -2,7 +2,7 @@
 # cidade, depois da semente): um sorteio so na medida (dois sorteios a menos por cidade) e o vento sem o sorteio (um a
 # menos por cidade); a contagem de sorteios muda desde a criacao e tudo o que sorteia depois muda. Uma na nota do estadio
 # neutro (0x85da00, pela busca do estadio neutro dos jogos da selecao inglesa): sem o sorteio(100) final, um sorteio a
-# menos por candidato (pode escapar se nenhuma busca neutra passar pela nota antes de 2002-06-01).
+# menos por candidato (pode escapar se nenhuma busca neutra pass_ball pela nota antes de 2002-06-01).
 MUTACOES = [
     ('cpt7_um_sorteio_na_medida', '            let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida',
      '            let b = a; // mutacao: um sorteio so',

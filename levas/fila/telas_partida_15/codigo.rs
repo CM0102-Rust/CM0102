@@ -77,18 +77,18 @@ unsafe fn aviso_da_escalacao(texto_obj: usize, msg: *const u8, caixa_sobre: bool
 
 /// { 0x7260f0 } (cdecl, match_screens.cpp, ~7 KB com os pedaços até 0x727c2e): desenha a conferência
 /// da escalação do clube (parâmetro 0) para o jogo (parâmetro 1) e a equipe (parâmetro 2). Passa pelas
-/// 20 vagas da tática (0x8968f0): conta titulares (< 11), reservas (< 11 + o banco [jogo+0x4d] & 0xf)
+/// 20 vagas da tática (0x8968f0): conta starters (< 11), reservas (< 11 + o banco [jogo+0x4d] & 0xf)
 /// e os de fora; dos que estão no time, junta os convocados pela seleção (0x7757d0), os emprestados a
 /// outro clube (0x4cf6d0/0x4cf5a0, fora da seleção), os inelegíveis com o mesmo motivo do primeiro
 /// (0x8cf5e0), os suspensos (0x55d270), os lesionados e os indisponíveis (0x62c400/0x62ed70: lesão de
 /// tipo 0x4d a 0x51 no idioma 0 conta como indisponível) e os sem permissão de trabalho (0x8c7560, fora
 /// da competição [0x9cf684] e de amistoso). Depois o fundo do clube, o menu, as cores e o título com o
 /// nome. O primeiro grupo não vazio, nessa ordem, vira o aviso "Team Selection" com os nomes (ligados)
-/// e o botão "Ok"; senão o limite do banco do dia (0x8cf880); senão menos de 11 titulares; senão
+/// e o botão "Ok"; senão o limite do banco do dia (0x8cf880); senão menos de 11 starters; senão
 /// "Please Confirm": o capitão escolhido (0x727e20) quando não há um válido, os cobradores de bola
 /// parada fora dos 11, os reservas que faltam, os de fora do grupo, "Proceed to the match ?" e a lista
 /// com "No" e "Yes".
-unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
+unsafe extern "C" fn match_screens_draw_team_selection() {
     crate::comparacao::ramo("telas conferencia da escalacao");
     let criar: unsafe extern "thiscall" fn(*mut usize, usize) -> usize = core::mem::transmute(0x4ae590usize);
     let destruir: unsafe extern "thiscall" fn(*mut usize) = core::mem::transmute(0x4ae630usize);
@@ -100,7 +100,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let inelegivel: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x8cf5e0usize);
     let suspenso: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(0x55d270usize);
-    let estado_da_lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
+    let get_player_injury_status: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x62ed70usize);
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     let sem_permissao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
@@ -140,7 +140,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
     let banco = || (*((jogo + 0x4d) as *const u8) & 0xf) as i8;
     let competicao = || core::ptr::read_unaligned((jogo + 0x14) as *const usize);
 
-    let (mut titulares, mut reservas, mut fora) = (0i8, 0i8, 0i8);
+    let (mut starters, mut reservas, mut fora) = (0i8, 0i8, 0i8);
     let mut convocados = ([0usize; 20], 0i8);
     let mut emprestados = ([0usize; 20], 0i8);
     let mut indisponiveis = ([0usize; 20], 0i8);
@@ -161,7 +161,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
         }
         let v = vaga as i8;
         if v < 11 {
-            titulares += 1;
+            starters += 1;
         } else if v < banco() + 0xb {
             reservas += 1;
         } else {
@@ -189,7 +189,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
             por(&mut suspensos, p);
         }
         let tipo_ruim = |l: usize| l != 0 && (0x4d..=0x51).contains(&*(l as *const i8));
-        if estado_da_lesao(g(0xb63d28), p) == 1 {
+        if get_player_injury_status(g(0xb63d28), p) == 1 {
             let l = lesao(g(0xb63d28), p);
             if tipo_ruim(l) {
                 if idioma() == 0 {
@@ -198,7 +198,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
                     por(&mut lesionados, p);
                 }
             }
-        } else if estado_da_lesao(g(0xb63d28), p) == 2 {
+        } else if get_player_injury_status(g(0xb63d28), p) == 2 {
             if idioma() != 0 {
                 por(&mut lesionados, p);
             } else if tipo_ruim(lesao(g(0xb63d28), p)) {
@@ -277,12 +277,12 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
     } else if limite_do_banco(g(0xde1f54), clube, jogo, m, 0, 2, 0) != 0 {
         titulo_da_escalacao(0xa17b64);
         aviso_da_escalacao(tu, m, true, false);
-    } else if titulares < 11 {
+    } else if starters < 11 {
         titulo_da_escalacao(0xa17b64);
         let (mut maximo, mut quantos) = ([0u8; 0xc8], [0u8; 0xc8]);
         por_extenso((banco() + 0xb) as i32, maximo.as_mut_ptr(), 0xc8, 1);
-        por_extenso(titulares as i32, quantos.as_mut_ptr(), 0xc8, 1);
-        match titulares {
+        por_extenso(starters as i32, quantos.as_mut_ptr(), 0xc8, 1);
+        match starters {
             0 => texto(mu, 0xa17150, maximo.as_ptr()),
             1 => texto(mu, 0xa170cc, maximo.as_ptr()),
             _ => texto(mu, 0xa17038, quantos.as_ptr(), maximo.as_ptr()),
@@ -371,7 +371,7 @@ unsafe extern "C" fn desenhar_conferencia_da_escalacao() {
 /// `zip`) a quantidade em +4, o índice (12 bytes cada, alocado em [this]), os quatro cursores dos
 /// baldes (+8), +0x1c e +0x18. Zip nulo: a original (caixa de erro). Sem o arquivo: erro 0x49e; falha
 /// de leitura ou de alocação: erro 0x4a5/0x4ae/0x4b6/0x4be/0x4c6/0x4ce e fecha. Devolve 1 se leu.
-unsafe extern "thiscall" fn carregar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
+unsafe extern "thiscall" fn match_screens_load(estat: usize, zip: usize) -> u32 {
     if zip == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip);
     }
@@ -419,7 +419,7 @@ unsafe extern "thiscall" fn carregar_estatisticas_da_partida(estat: usize, zip: 
 /// escrita) a quantidade (+4), o índice [this], os quatro cursores (+8), +0x1c e +0x18. Zip nulo: a
 /// original (caixa de erro); sem abrir, o jogo para (erro 0x4f1); falha de escrita: erro
 /// 0x4f8/0x500/0x508/0x510/0x518 e fecha. Devolve 1 se gravou.
-unsafe extern "thiscall" fn salvar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
+unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usize) -> u32 {
     if zip == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip);
     }
@@ -458,17 +458,17 @@ unsafe extern "thiscall" fn salvar_estatisticas_da_partida(estat: usize, zip: us
 
 /// A conferência é comparada de verdade pela lista de exibição (o Text local é alocado e liberado
 /// dentro de cada execução).
-unsafe extern "C" fn comparar_desenhar_conferencia_da_escalacao() {
+unsafe extern "C" fn comparar_match_screens_draw_team_selection() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
-    comparar_painel_pela_lista("desenhar_conferencia_da_escalacao", || o(), || desenhar_conferencia_da_escalacao());
+    comparar_painel_pela_lista("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
 }
 
 // ponytail: carregar e salvar mexem no arquivo do save (e carregar aloca o índice): rodar duas vezes
 // leria/gravaria duas vezes, então o comparador só chama a original; as cópias se provam no modo Rust.
-unsafe extern "thiscall" fn comparar_carregar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_match_screens_load(estat: usize, zip: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip)
 }
 
-unsafe extern "thiscall" fn comparar_salvar_estatisticas_da_partida(estat: usize, zip: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_match_screens_save(estat: usize, zip: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip)
 }

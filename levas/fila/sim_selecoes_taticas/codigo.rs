@@ -10,7 +10,7 @@ unsafe fn convocacoes_das_selecoes(nacao: usize) -> [usize; 2] {
 
 /// { 0x76c060 } (stdcall, ret 4, national_teams.cpp): apaga as convocações repetidas das duas
 /// seleções da nação: em cada uma, todo id não nulo zera as vagas seguintes com o mesmo id.
-unsafe extern "stdcall" fn apagar_repetidos_das_convocacoes(nacao: usize) {
+unsafe extern "stdcall" fn national_teams_remove_duplicate_squad_entries(nacao: usize) {
     for vagas in convocacoes_das_selecoes(nacao) {
         let vaga = |i: usize| (vagas + 4 * i) as *mut u32;
         for i in 0..50 {
@@ -31,7 +31,7 @@ unsafe extern "stdcall" fn apagar_repetidos_das_convocacoes(nacao: usize) {
 /// pessoa: linha tática do clube (0x8982b0 com `time`; -1 devolve 0) e as 20 vagas (dwords em +0x601 +
 /// linha x 0x91 + 2) comparadas com o id; não está: 0xff. Clube ou pessoa nulos: a original (caixa
 /// de erro).
-unsafe extern "thiscall" fn vaga_do_escalado(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
+unsafe extern "thiscall" fn find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
     if clube == 0 || pessoa.is_null() {
         return orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
     }
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn vaga_do_escalado(tatica: usize, clube: usize, pessoa
 /// assunto: tem de ser da nação do clube, +0x53). De outra nação: a reputação tem de vencer 6500 +
 /// sorteio de 100, a ficha +0xc ≥ 6000 e o assunto não pode desgostar dele (0x547840). Fica o de
 /// maior peso (o primeiro aceito sempre entra). Sem clube e sem assunto: 0.
-unsafe extern "thiscall" fn escolher_comentarista(_this: usize, clube: usize, assunto: usize) -> usize {
+unsafe extern "thiscall" fn pick_former_international_pundit(_this: usize, clube: usize, assunto: usize) -> usize {
     if assunto == 0 && clube == 0 {
         return 0;
     }
@@ -118,34 +118,34 @@ unsafe extern "thiscall" fn escolher_comentarista(_this: usize, clube: usize, as
     melhor
 }
 
-unsafe extern "stdcall" fn comparar_apagar_repetidos_das_convocacoes(nacao: usize) {
+unsafe extern "stdcall" fn comparar_national_teams_remove_duplicate_squad_entries(nacao: usize) {
     let o = orig::<unsafe extern "stdcall" fn(usize)>(%%I0%%);
     if nacao == 0 {
         return o(nacao);
     }
     let [a, b] = convocacoes_das_selecoes(nacao);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 200), (b, 200)], || o(nacao), || apagar_repetidos_das_convocacoes(nacao));
-    PLACAR.registrar(igual, || format!("apagar_repetidos_das_convocacoes {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(a, 200), (b, 200)], || o(nacao), || national_teams_remove_duplicate_squad_entries(nacao));
+    PLACAR.registrar(igual, || format!("national_teams_remove_duplicate_squad_entries {:x?} x {:x?}", mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_vaga_do_escalado(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_find_selection_slot(tatica: usize, clube: usize, pessoa: *const i32, time: u32) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(%%I1%%)(tatica, clube, pessoa, time);
     if clube == 0 || pessoa.is_null() {
         return r;
     }
-    let n = vaga_do_escalado(tatica, clube, pessoa, time);
-    PLACAR.registrar(r == n, || format!("vaga_do_escalado(time {}) original={} rust={}", time, r, n));
+    let n = find_selection_slot(tatica, clube, pessoa, time);
+    PLACAR.registrar(r == n, || format!("find_selection_slot(time {}) original={} rust={}", time, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_escolher_comentarista(this: usize, clube: usize, assunto: usize) -> usize {
+unsafe extern "thiscall" fn comparar_pick_former_international_pundit(this: usize, clube: usize, assunto: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
     if assunto == 0 && clube == 0 {
         return o(this, clube, assunto);
     }
     // o comentarista sai só do sorteio
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube, assunto),
-        || crate::aleatorio::sem_contar(|| escolher_comentarista(this, clube, assunto)));
-    PLACAR.registrar(igual && r == n, || format!("escolher_comentarista {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| pick_former_international_pundit(this, clube, assunto)));
+    PLACAR.registrar(igual && r == n, || format!("pick_former_international_pundit {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

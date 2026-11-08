@@ -71,7 +71,7 @@ unsafe fn cpw13_somar(this: usize, c: usize, conta: u8, d: *mut u8) -> bool {
 /// convocados seguidos de cada clube (+0x39), pulando as vagas vazias, as pessoas fora da faixa ([0xae2364]) e as de
 /// outro elenco (+0x5e bit 3 sem `b`, bit 2 com), e ao mudar de clube soma a conta do anterior no registro dele
 /// (cpw13_somar). O último clube da volta fica sem registro (como na original).
-unsafe extern "thiscall" fn registrar_convocados_por_clube(this: usize, time: usize, b: u32, p: usize) {
+unsafe extern "thiscall" fn record_club_call_ups(this: usize, time: usize, b: u32, p: usize) {
     let padrao: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x54a110usize);
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let mut d = [0u8; 8];
@@ -137,7 +137,7 @@ unsafe fn cpw13_pode_realocar(this: usize, time: usize) -> bool {
 /// Comparador: lado a lado no elenco do time (50 vagas) e, de cada clube do elenco que conta, no registro (6 bytes) e
 /// no vetor de entradas inteiro (capacidade × 9). Quando algum vetor pode crescer (0x945667 solta o velho; não roda
 /// duas vezes): só a original, conferindo depois o elenco ordenado pelo clube (o mesmo qsort sobre uma cópia, antes).
-unsafe extern "thiscall" fn comparar_registrar_convocados_por_clube(this: usize, time: usize, b: u32, p: usize) {
+unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize, time: usize, b: u32, p: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(%%I0%%);
     if p != 0 && cpw13_pode_realocar(this, time) {
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn comparar_registrar_convocados_por_clube(this: usize,
         crate::aleatorio::pausar_rastro(|| qsort(esperado.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
         o(this, time, b, p);
         let obtido: Vec<u32> = (0..0x32usize).map(|i| cpw13_d(time + 0xd7 + 4 * i) as u32).collect();
-        PLACAR.registrar(obtido == esperado, || format!("registrar_convocados_por_clube({:x}) elenco original={:x?} esperado={:x?}", time, obtido, esperado));
+        PLACAR.registrar(obtido == esperado, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", time, obtido, esperado));
         return;
     }
     let mut reg = vec![(time + 0xd7, 0xc8)];
@@ -169,13 +169,13 @@ unsafe extern "thiscall" fn comparar_registrar_convocados_por_clube(this: usize,
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, time, b, p), || registrar_convocados_por_clube(this, time, b, p));
-    PLACAR.registrar(igual, || format!("registrar_convocados_por_clube({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, time, b, p), || record_club_call_ups(this, time, b, p));
+    PLACAR.registrar(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
 }
 
 /// { 0x48e190 } (thiscall, ret 0xc, comp.cpp): `Comp::get_fixture_match_importance(partida, a, b)`: a fase da partida
 /// (+0x42; 0xff = a própria competição, senão [+0xc] + 4 × fase) responde pela virtual +0x54 com os mesmos argumentos.
-unsafe extern "thiscall" fn importancia_do_jogo_na_competicao(this: usize, p: usize, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let fase = *((p + 0x42) as *const u8);
     let c = if fase == 0xff { this } else { cpw13_d(cpw13_d(this + 0xc).wrapping_add(4 * (fase as i8 as i32) as usize)) };
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(cpw13_d(cpw13_d(c) + 0x54));
@@ -183,16 +183,16 @@ unsafe extern "thiscall" fn importancia_do_jogo_na_competicao(this: usize, p: us
 }
 
 /// Comparador: pelo valor (a virtual da fase só lê; roda duas vezes).
-unsafe extern "thiscall" fn comparar_importancia_do_jogo_na_competicao(this: usize, p: usize, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I1%%)(this, p, a, b);
-    let n = importancia_do_jogo_na_competicao(this, p, a, b);
-    PLACAR.registrar(r == n, || format!("importancia_do_jogo_na_competicao({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
+    let n = get_fixture_match_importance(this, p, a, b);
+    PLACAR.registrar(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
     r
 }
 
 /// { 0x48d200 } (thiscall, ret 4, comp.cpp): `Comp::get_stage(k)`: −1 a própria competição, 0..+0x30 a fase
 /// [+0xc] + 4 × k; fora disso a caixa (linha 0x36e) e 0, pela original.
-unsafe extern "thiscall" fn fase_da_competicao(this: usize, k: i32) -> usize {
+unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
     if k < -1 || k > cpw13_d(this + 0x30) as i32 {
         return orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%)(this, k);
     }
@@ -203,13 +203,13 @@ unsafe extern "thiscall" fn fase_da_competicao(this: usize, k: i32) -> usize {
 }
 
 /// Comparador: pelo valor (só lê). A caixa: só a original.
-unsafe extern "thiscall" fn comparar_fase_da_competicao(this: usize, k: i32) -> usize {
+unsafe extern "thiscall" fn comparar_get_stage(this: usize, k: i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%);
     if k < -1 || k > cpw13_d(this + 0x30) as i32 {
         return o(this, k); // ponytail: a caixa, só a original
     }
     let r = o(this, k);
-    let n = fase_da_competicao(this, k);
-    PLACAR.registrar(r == n, || format!("fase_da_competicao({:x}, {}) original={:x} rust={:x}", this, k, r, n));
+    let n = get_stage(this, k);
+    PLACAR.registrar(r == n, || format!("get_stage({:x}, {}) original={:x} rust={:x}", this, k, r, n));
     r
 }

@@ -7,7 +7,7 @@
 /// critérios da liga (+0xc5): 1 saldo, 2 gols pró, 3 byte +0x12, 4 byte +4, 5 palavra +0x31 (na
 /// coluna 0, critério 6 = byte +4 e fim); na coluna 0 com os dois no número de jogos da liga (+0xa7), o
 /// id em +0x69 dos clubes; por fim o id do clube.
-unsafe extern "C" fn ordem_das_linhas_da_tabela(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn league_compare_table_rows(a: usize, b: usize) -> i32 {
     let liga = *(0xb679fc as *const usize);
     let coluna = core::ptr::read_unaligned((liga + 0xad) as *const i32);
     if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
@@ -73,7 +73,7 @@ unsafe extern "C" fn ordem_das_linhas_da_tabela(a: usize, b: usize) -> i32 {
 /// em casa, negativo fora). Zera tudo; o clube `n` enfrenta 1..n−1 numa rodada que anda de 2 em 2
 /// (casa para a primeira metade); depois cada clube k de n−1 até 2 preenche as vagas vazias com os
 /// clubes 1..n, alternando o mando a partir da paridade de n−1−k. Devolve 1.
-unsafe extern "stdcall" fn montar_grade_de_turnos(grade: *const *mut i32, n: i32) -> u32 {
+unsafe extern "stdcall" fn league_build_round_robin_grid(grade: *const *mut i32, n: i32) -> u32 {
     let celula = |i: i32, j: i32| (*grade.offset(i as isize)).offset(j as isize);
     for i in 1..=n {
         for j in 1..n {
@@ -141,7 +141,7 @@ unsafe fn margem_para(liga: usize, linha: usize, alvo: usize) -> u8 {
 /// cima (+0xbe/+0xbf) ou fugir das de baixo (+0xc0/+0xc1); 0xff se nenhuma. Com pontos iguais a quem
 /// está à frente sem margem possível, grava 0x14 em `saida` (decisivo) e devolve 0 ou 0xff. Só o al é
 /// devolvido (quem chama usa al).
-unsafe extern "thiscall" fn margem_do_ultimo_dia(liga: usize, linha: usize, saida: *mut u8) -> u8 {
+unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, saida: *mut u8) -> u8 {
     let p = |r: usize| core::ptr::read_unaligned((r + 0x19) as *const i16) as i32;
     let extra = *((liga + 0xc2) as *const i8) as i32;
     let pos = *((linha + 4) as *const i8);
@@ -246,26 +246,26 @@ unsafe extern "thiscall" fn margem_do_ultimo_dia(liga: usize, linha: usize, said
     0xff
 }
 
-unsafe extern "C" fn comparar_ordem_das_linhas_da_tabela(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_league_compare_table_rows(a: usize, b: usize) -> i32 {
     // a comparação particular de [0xb67a00] (se houver) roda nos dois lados: só lê as linhas
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_das_linhas_da_tabela(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_linhas_da_tabela original={} rust={}", r, n));
+    let n = league_compare_table_rows(a, b);
+    PLACAR.registrar(r == n, || format!("league_compare_table_rows original={} rust={}", r, n));
     r
 }
 
-unsafe extern "stdcall" fn comparar_montar_grade_de_turnos(grade: *const *mut i32, n: i32) -> u32 {
+unsafe extern "stdcall" fn comparar_league_build_round_robin_grid(grade: *const *mut i32, n: i32) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(*const *mut i32, i32) -> u32>(%%I1%%);
     let regioes: Vec<(usize, usize)> = (1..=n.max(0)).map(|i| (*grade.offset(i as isize) as usize + 4, (n.max(1) as usize - 1) * 4)).collect();
-    let (r, s, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(grade, n), || montar_grade_de_turnos(grade, n));
-    PLACAR.registrar(igual && r == s, || format!("montar_grade_de_turnos({}) {:x?} x {:x?}", n, mo, mr));
+    let (r, s, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(grade, n), || league_build_round_robin_grid(grade, n));
+    PLACAR.registrar(igual && r == s, || format!("league_build_round_robin_grid({}) {:x?} x {:x?}", n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_margem_do_ultimo_dia(liga: usize, linha: usize, saida: *mut u8) -> u8 {
+unsafe extern "thiscall" fn comparar_final_day_margin_needed(liga: usize, linha: usize, saida: *mut u8) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u8>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida as usize, 1)], || o(liga, linha, saida),
-        || margem_do_ultimo_dia(liga, linha, saida));
-    PLACAR.registrar(igual && r == n, || format!("margem_do_ultimo_dia original={:#x} rust={:#x} {:x?} x {:x?}", r, n, mo, mr));
+        || final_day_margin_needed(liga, linha, saida));
+    PLACAR.registrar(igual && r == n, || format!("final_day_margin_needed original={:#x} rust={:#x} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

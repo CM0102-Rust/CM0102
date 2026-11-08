@@ -95,7 +95,7 @@ unsafe fn cqa1_premios(copa: usize, r: i32, contar: bool) -> Option<(i32, i32)> 
 /// desfecho +5 do time, 3 se era 1 na partida 0x136, e a rodada seguinte: a palavra +7 dela se não é a última nem
 /// 0x8c, sobre os 16 bits altos do ponteiro da rodada, como a original deixa no ebp) e o dinheiro (0x5999a0 nas
 /// finanças 0x5a0590); o perdedor só o dinheiro; o fundo perde os dois.
-unsafe extern "thiscall" fn copa_premio_da_rodada(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
+unsafe extern "thiscall" fn pay_round_prize_money(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
     let r = rodada as i16 as i32;
     let (ao_vencedor, ao_perdedor) = match cqa1_premios(copa, r, true) {
         Some(p) => p,
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn copa_premio_da_rodada(copa: usize, vencedor: usize, 
 /// Comparador da 0x522240, em ensaio: a cópia sem a notícia e a original inteira, a partir do mesmo estado (o fundo e
 /// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
 /// sem finanças ou com a divisão que cai: só a original.
-unsafe extern "thiscall" fn comparar_copa_premio_da_rodada(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
+unsafe extern "thiscall" fn comparar_pay_round_prize_money(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(%%I0%%);
     let (cv, cp) = (cqa1_d(vencedor), cqa1_d(perdedor));
     if cv == 0 || cp == 0 || cv == cp || cqa1_premios(copa, rodada as i16 as i32, false).is_none() {
@@ -141,13 +141,13 @@ unsafe extern "thiscall" fn comparar_copa_premio_da_rodada(copa: usize, vencedor
     let regioes = [(copa + 0x28, 4), (fv, 0x167), (fp, 0x167)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CQA1_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| copa_premio_da_rodada(copa, vencedor, perdedor, rodada, partida)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_round_prize_money(copa, vencedor, perdedor, rodada, partida)));
     CQA1_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(copa, vencedor, perdedor, rodada, partida);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("copa_premio_da_rodada(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
+    PLACAR.registrar(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
 }
 
 /// Os confrontos [início, fim) que a 0x51e870 percorre: um só (`laco`; o fim é a palavra baixa de laco + 1, como o
@@ -174,7 +174,7 @@ unsafe fn cqa1_inverter(t: usize) {
 /// (byte baixo de +0xb): bit 1, se a virtual +0x90 (club_in_higher_division(clube a, clube b)) devolve o clube b;
 /// senão bit 8, se o nível (+4 do time, com sinal) de a é menor que o de b; senão, com o estádio da copa (+0x24) ≠
 /// −1, se o clube b existe, tem estádio (+0x69) e o id dele (+0) é o da copa.
-unsafe extern "thiscall" fn copa_mandantes_da_rodada(copa: usize, rodada: u32, laco: u32) {
+unsafe extern "thiscall" fn set_home_teams_for_round(copa: usize, rodada: u32, laco: u32) {
     let r = rodada as i16 as i32;
     let (ini, fim) = cqa1_faixa(copa, rodada, laco);
     let regra = cqa1_b(cqa1_rodada(copa, r) + 0xb);
@@ -209,15 +209,15 @@ unsafe extern "thiscall" fn copa_mandantes_da_rodada(copa: usize, rodada: u32, l
 }
 
 /// Comparador da 0x51e870: lado a lado nos confrontos percorridos (a virtual +0x90 só consulta e roda nos dois lados).
-unsafe extern "thiscall" fn comparar_copa_mandantes_da_rodada(copa: usize, rodada: u32, laco: u32) {
+unsafe extern "thiscall" fn comparar_set_home_teams_for_round(copa: usize, rodada: u32, laco: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%);
     let (ini, fim) = cqa1_faixa(copa, rodada, laco);
     let mut reg = Vec::new();
     if ini < fim {
         reg.push((cqa1_confronto(copa, rodada as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada, laco), || copa_mandantes_da_rodada(copa, rodada, laco));
-    PLACAR.registrar(igual, || format!("copa_mandantes_da_rodada(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada, laco), || set_home_teams_for_round(copa, rodada, laco));
+    PLACAR.registrar(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
 }
 
 /// Os argumentos da virtual +0x68 que a 0x521b30 chama para o time `t` na rodada `r`: (p1, p2, p3) ou None.
@@ -280,7 +280,7 @@ unsafe fn cqa1_progresso(copa: usize, t: i32, r: i32) -> Option<(u8, u8, u8)> {
 /// da rodada seguinte. Sem ela: na final, 1 → (1, 1, 1), 2 → os confrontos (+0x1a) da final + 1 três vezes; noutra,
 /// desfecho ≠ 0 → o +0x5b três vezes; 0 → (x, 1, x) com os confrontos + 1 da final antes dela, senão o +0x5b da
 /// seguinte. Os desfechos fora desses não chamam nada.
-unsafe extern "thiscall" fn copa_progresso_do_time(copa: usize, time: u32, rodada: u32) {
+unsafe extern "thiscall" fn record_team_progress(copa: usize, time: u32, rodada: u32) {
     let (t, r) = (time as i16 as i32, rodada as i16 as i32);
     if let Some((p1, p2, p3)) = cqa1_progresso(copa, t, r) {
         // a virtual +0x68: 5 pushes; ecx = a copa; sem add esp -> thiscall(copa, clube, comp, p1, p2, p3), ret 0x14
@@ -296,7 +296,7 @@ unsafe extern "thiscall" fn copa_progresso_do_time(copa: usize, time: u32, rodad
 /// copa (+8, achado pela 0x4a4850: push clube; ecx = as estatísticas; thiscall, ret 4), que a +0x68 grava; as versões
 /// que repassam a outra competição gravam fora da região (aí a comparação só confere que nada mudou nela). Sem
 /// estatísticas, sem clube ou sem registro: só a original.
-unsafe extern "thiscall" fn comparar_copa_progresso_do_time(copa: usize, time: u32, rodada: u32) {
+unsafe extern "thiscall" fn comparar_record_team_progress(copa: usize, time: u32, rodada: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I2%%);
     let stats = cqa1_d(copa + 8);
     let clube = cqa1_d(cqa1_time(copa, time as i16 as i32));
@@ -305,6 +305,6 @@ unsafe extern "thiscall" fn comparar_copa_progresso_do_time(copa: usize, time: u
     if reg == 0 {
         return o(copa, time, rodada); // ponytail: sem registro para olhar, só a original
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(copa, time, rodada), || copa_progresso_do_time(copa, time, rodada));
-    PLACAR.registrar(igual, || format!("copa_progresso_do_time(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(copa, time, rodada), || record_team_progress(copa, time, rodada));
+    PLACAR.registrar(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
 }

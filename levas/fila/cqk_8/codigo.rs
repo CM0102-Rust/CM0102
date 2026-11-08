@@ -17,7 +17,7 @@ unsafe fn cqk8_gravar(e: usize, atual: u8, minima: u8, maxima: u8) {
 /// b, c)` (slot 27 do Mineiro, do Paranaense e do Carioca): grava os três códigos de progresso do clube na entrada dele
 /// (+0x73, +0x74, +0x75); na fase de pontos corridos (-1), o segundo abaixo de 3 vira 1 e o terceiro abaixo de 3 vira 2.
 /// Devolve a entrada.
-unsafe extern "thiscall" fn cqk8_progresso_no_mineiro(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
     let (a, mut b, c) = (a as u8, b as u8, c as u8);
     if fase as u8 == 0xff {
@@ -37,10 +37,10 @@ unsafe extern "thiscall" fn cqk8_progresso_no_mineiro(this: usize, clube: usize,
 
 /// Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
 /// busca depois; a original e a cópia a chamam de novo); a devolução.
-unsafe extern "thiscall" fn comparar_cqk8_progresso_no_mineiro(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(%%I0%%)(this, clube, fase, a, b, c), || cqk8_progresso_no_mineiro(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_no_mineiro({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(%%I0%%)(this, clube, fase, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, clube, fase, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_minas_gerais_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }
 
@@ -56,7 +56,7 @@ fn cqk8_mls(x: u8, ate_3: u8) -> u8 {
 /// { 0x909dd0 } (thiscall, ret 0x14, usa_mls.cpp): `UsaMls::set_club_progress(clube, fase, a, b, c)`: nas fases 0 e 1
 /// e na temporada (-1), a: 1 → 1, 2 → 3, 3 → 7, 4 → 10; b: 1..3 → 1, 4 → 10; c: 1..3 → 7, 4 → 10; na fase 2, cada
 /// código vira 2 × código − 1; depois, os códigos como vêm. Devolve a entrada.
-unsafe extern "thiscall" fn cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+unsafe extern "thiscall" fn usa_mls_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
     let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
     if fa < 2 {
@@ -81,10 +81,10 @@ unsafe extern "thiscall" fn cqk8_progresso_na_mls(this: usize, clube: usize, fas
 }
 
 /// Comparador: como o do Mineiro.
-unsafe extern "thiscall" fn comparar_cqk8_progresso_na_mls(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+unsafe extern "thiscall" fn comparar_usa_mls_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(%%I1%%)(this, clube, fase, a, b, c), || cqk8_progresso_na_mls(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_mls({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(%%I1%%)(this, clube, fase, a, b, c), || usa_mls_set_club_progress(this, clube, fase, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("usa_mls_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }
 
@@ -106,7 +106,7 @@ fn cqk8_serie_c(x: u8, um_dois: u8) -> u8 {
 /// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
 /// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
 /// entrada.
-unsafe extern "thiscall" fn cqk8_progresso_na_serie_c(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
     let (fa, a, b, c) = (fase as u8 as i8, a as u8, b as u8, c as u8);
     if fa < 7 {
@@ -123,9 +123,9 @@ unsafe extern "thiscall" fn cqk8_progresso_na_serie_c(this: usize, clube: usize,
 }
 
 /// Comparador: como o do Mineiro.
-unsafe extern "thiscall" fn comparar_cqk8_progresso_na_serie_c(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
+unsafe extern "thiscall" fn comparar_bra_nat_third_set_club_progress(this: usize, clube: usize, fase: u32, a: u32, b: u32, c: u32) -> usize {
     let e = cqk8_entrada(this, clube);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(%%I2%%)(this, clube, fase, a, b, c), || cqk8_progresso_na_serie_c(this, clube, fase, a, b, c));
-    PLACAR.registrar(igual && r == n, || format!("cqk8_progresso_na_serie_c({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(e + 0x73, 3)], || orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(%%I2%%)(this, clube, fase, a, b, c), || bra_nat_third_set_club_progress(this, clube, fase, a, b, c));
+    PLACAR.registrar(igual && r == n, || format!("bra_nat_third_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, clube, fase as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

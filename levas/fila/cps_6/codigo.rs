@@ -55,7 +55,7 @@ unsafe fn cps6_dias_desde(p: usize) -> i32 {
 /// valem 1, −5 se não gosta do técnico, +2 se gosta) < 43: sorteio(+0x5b + 100, 50 ou 25 conforme os dias desde +0x3e:
 /// < 30, < 90, < 180) zerado é falta. (2) Senão, com +0x5b < 10 e vínculo com o clube: as marcas do vínculo (+0x45:
 /// 0x8000, 0x30000; com +0x5b < 5, 0x7800) dão sorteios(+0x5b) que, zerados, são falta. A falta: 0x41a360.
-unsafe extern "C" fn faltas_ao_treino() {
+unsafe extern "C" fn game_check_players_missing_training() {
     let ausente: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x418f60usize);
     let treino: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8b39f0usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
@@ -153,14 +153,14 @@ unsafe extern "C" fn faltas_ao_treino() {
 }
 
 // ponytail: sorteia e a falta (0x41a360) multa, sorteia e mexe na forma: só a original; a cópia leva os ramos.
-unsafe extern "C" fn comparar_faltas_ao_treino() {
+unsafe extern "C" fn comparar_game_check_players_missing_training() {
     orig::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
 /// { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
 /// [0xadadf8] relida a cada volta) recebe o dia (virtual +0x14 com a data do jogo 0xae2c90 e a marca); com a marca, o
 /// passo seguinte do [0xae2a58] (0x5aaf00, que a original chama em salto de cauda). Pelo laço do dia do jogo (com 1).
-unsafe extern "C" fn competicoes_do_dia(marca: u32) {
+unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
     let m = marca as u8 as i8;
     let mut i = 0i32;
     while i < cps6_d(0xadadf8) as i32 {
@@ -179,7 +179,7 @@ unsafe extern "C" fn competicoes_do_dia(marca: u32) {
 }
 
 // ponytail: passa o dia de todas as competições (virtuais) e do [0xae2a58]: só a original; a cópia leva o ramo.
-unsafe extern "C" fn comparar_competicoes_do_dia(marca: u32) {
+unsafe extern "C" fn comparar_game_update_comps_for_date(marca: u32) {
     orig::<unsafe extern "C" fn(u32)>(%%I1%%)(marca)
 }
 
@@ -191,7 +191,7 @@ unsafe fn cps6_confianca(this: usize, clube: usize) -> usize {
 /// { 0x5cdde0 } (thiscall, ret 8, game.cpp): `manager_manager_adjust_board_confidence(clube, delta)`: soma `delta`
 /// (palavra) à confiança da diretoria no clube (+6 da linha do MANAGER_MANAGER [0xb67a44]), presa em 1..10000. Clube
 /// nulo: nada. Pelo laço do dia do jogo (com −5).
-unsafe extern "thiscall" fn mudar_confianca_da_diretoria(this: usize, clube: usize, delta: u32) {
+unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(this: usize, clube: usize, delta: u32) {
     if clube == 0 {
         return;
     }
@@ -206,12 +206,12 @@ unsafe extern "thiscall" fn mudar_confianca_da_diretoria(this: usize, clube: usi
 }
 
 /// Comparador: lado a lado pela confiança (2 bytes).
-unsafe extern "thiscall" fn comparar_mudar_confianca_da_diretoria(this: usize, clube: usize, delta: u32) {
+unsafe extern "thiscall" fn comparar_manager_manager_adjust_board_confidence(this: usize, clube: usize, delta: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if clube == 0 {
         return o(this, clube, delta);
     }
     let c = cps6_confianca(this, clube);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 2)], || o(this, clube, delta), || mudar_confianca_da_diretoria(this, clube, delta));
-    PLACAR.registrar(igual, || format!("mudar_confianca_da_diretoria(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 2)], || o(this, clube, delta), || manager_manager_adjust_board_confidence(this, clube, delta));
+    PLACAR.registrar(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", clube, delta as i32, mo, mr));
 }

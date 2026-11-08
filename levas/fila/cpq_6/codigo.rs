@@ -21,8 +21,8 @@ unsafe fn cpq6_pessoa(id: usize) -> usize {
 /// O clube do contrato da `pessoa` (0x4cf5a0 com o gerente de contratos [0xae1050], guardado em [0xae1080]); contrato
 /// de tipo 5 (+0x35 & 0x3f) não conta.
 unsafe fn cpq6_vendedor(pessoa: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpq6_d(0xae1050), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpq6_d(0xae1050), pessoa);
     *(0xae1080 as *mut usize) = c;
     if c != 0 && cpq6_b(c + 0x35) & 0x3f != 5 {
         cpq6_clube(cpq6_d(c + 4))
@@ -46,10 +46,10 @@ const CPQ6_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae
 /// que não é de tipo 5, as duas nações): entre clubes da nação [0x9cf4a8], metade do valor; fora disso, só abaixo de 24
 /// anos na data (o fim do contrato, no tipo 2; senão hoje) e entre nações britânicas ou a Irlanda (0x5446d0), metade
 /// do valor. Os outros casos, 0.
-unsafe extern "stdcall" fn compensacao_pela_pessoa(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
+unsafe extern "stdcall" fn transfer_manager_calc_compensation_fee(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
     let padrao: unsafe extern "thiscall" fn(*mut [u32; 2]) -> usize = core::mem::transmute(0x54a110usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], usize) -> usize = core::mem::transmute(0x417c10usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let dias_ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
     let idade: unsafe extern "C" fn(usize, *const [u32; 2]) -> u16 = core::mem::transmute(0x53ab90usize);
@@ -65,14 +65,14 @@ unsafe extern "stdcall" fn compensacao_pela_pessoa(pessoa: usize, comprador: usi
         return 0;
     }
     if cpq6_d(pessoa + 0x61) == 0 && cpq6_d(pessoa + 0x69) != 0 {
-        let c = contrato_de(gerente(), pessoa);
+        let c = contract_of(gerente(), pessoa);
         if c == 0 || cpq6_b(c + 0x35) & 0x3f != 2 {
             return 0;
         }
         return resto(c).clamp(1000, 1_000_000);
     }
     if cpq6_b(0xae233c) == 1 && sem_regras_novas == 0 {
-        let c = contrato_de(gerente(), pessoa);
+        let c = contract_of(gerente(), pessoa);
         if c == 0 || cpq6_b(c + 0x35) & 0x3f != 2 {
             return 0;
         }
@@ -80,7 +80,7 @@ unsafe extern "stdcall" fn compensacao_pela_pessoa(pessoa: usize, comprador: usi
         let v = valor(gerente(), pessoa, cpq6_clube(cpq6_d(c + 4)), 1, 0xffff_ffff, 0);
         return v.wrapping_add(r) / 2;
     }
-    let c = contrato_de(gerente(), pessoa);
+    let c = contract_of(gerente(), pessoa);
     if c == 0 {
         return 0;
     }
@@ -119,7 +119,7 @@ unsafe extern "stdcall" fn compensacao_pela_pessoa(pessoa: usize, comprador: usi
 /// as cláusulas: a porcentagem da próxima venda (+0x3f, 0x8caaf0, marca 8), o prêmio por jogo no time (+0x35 com o byte
 /// +0x39, 0x8cac40, marca 2) e o prêmio por jogo pela seleção (+0x3a com +0x3e, 0x8cad90, marca 4); as marcas no
 /// registro de 8 bytes da pessoa em [this+0x86e].
-unsafe extern "thiscall" fn pagar_transferencia_e_clausulas(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, oferta: usize) {
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let totais: unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32 = core::mem::transmute(0x448ad0usize);
     let pagar: unsafe extern "thiscall" fn(usize, i64) = core::mem::transmute(0x599890usize);
@@ -204,8 +204,8 @@ unsafe extern "thiscall" fn pagar_transferencia_e_clausulas(this: usize, oferta:
 /// o vendedor em crise (+0x165 das finanças = 1), o preço pedido (0x4d1600) não abaixo de 20 × a reputação (+0x80;
 /// pelo menos 20000), o valor ponderado da oferta (0x8e7b50) acima de 50000 e o dobro dele acima do preço: motivo 0x1c
 /// e 1 (com `estrito`, só se o preço ficar abaixo de 1,3 × o valor ponderado). Senão 0.
-unsafe extern "stdcall" fn clube_vendedor_deve_aceitar(oferta: usize, estrito: u32, motivo: *mut u16) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usize, estrito: u32, motivo: *mut u16) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let ativa: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x867b50usize);
     let exibir: unsafe extern "thiscall" fn(*const u32, u32) -> i64 = core::mem::transmute(0x43f460usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
@@ -217,7 +217,7 @@ unsafe extern "stdcall" fn clube_vendedor_deve_aceitar(oferta: usize, estrito: u
     if vendedor == 0 {
         return 1;
     }
-    let c = contrato_de(cpq6_d(0xae1050), pessoa);
+    let c = contract_of(cpq6_d(0xae1050), pessoa);
     crate::comparacao::ramo("cpq_6 clube deve aceitar");
     if ativa(c) != 0 && cpq6_d(oferta + 4) == 0 && cpq6_b(oferta + 0x40) == 0 {
         let (multa, valor) = (cpq6_d(c + 0x21) as u32, cpq6_d(oferta + 0x1b) as u32);
@@ -252,28 +252,28 @@ unsafe extern "stdcall" fn clube_vendedor_deve_aceitar(oferta: usize, estrito: u
 }
 
 /// Comparador: pelo valor (lado a lado pelas estáticas das datas; o valor do jogador 0x4d0c60 e a idade só calculam).
-unsafe extern "stdcall" fn comparar_compensacao_pela_pessoa(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
+unsafe extern "stdcall" fn comparar_transfer_manager_calc_compensation_fee(pessoa: usize, comprador: usize, sem_regras_novas: u32) -> i32 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(%%I0%%);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&CPQ6_ESTATICAS, || o(pessoa, comprador, sem_regras_novas), || compensacao_pela_pessoa(pessoa, comprador, sem_regras_novas));
-    PLACAR.registrar(igual && ro == rr, || format!("compensacao_pela_pessoa(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { cpq6_d(pessoa) } else { 0 }, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&CPQ6_ESTATICAS, || o(pessoa, comprador, sem_regras_novas), || transfer_manager_calc_compensation_fee(pessoa, comprador, sem_regras_novas));
+    PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if pessoa != 0 { cpq6_d(pessoa) } else { 0 }, ro, rr, igual));
     ro
 }
 
 /// Comparador: paga, acrescenta nas listas (aloca) e marca: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_pagar_transferencia_e_clausulas(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_pay_fee_and_record_clauses(this: usize, oferta: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
 }
 
 /// Comparador: lado a lado pelo motivo e [0xae1080], e pelo valor devolvido (o preço e o valor ponderado só calculam).
-unsafe extern "stdcall" fn comparar_clube_vendedor_deve_aceitar(oferta: usize, estrito: u32, motivo: *mut u16) -> u32 {
+unsafe extern "stdcall" fn comparar_transfer_manager_selling_club_must_accept(oferta: usize, estrito: u32, motivo: *mut u16) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(usize, u32, *mut u16) -> u32>(%%I2%%);
     let mut reg: Vec<(usize, usize)> = vec![(0xae1080, 4)];
     if !motivo.is_null() {
         reg.push((motivo as usize, 2));
     }
     reg.extend_from_slice(&CPQ6_ESTATICAS);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(oferta, estrito, motivo), || clube_vendedor_deve_aceitar(oferta, estrito, motivo));
-    PLACAR.registrar(igual && ro == rr, || format!("clube_vendedor_deve_aceitar(estrito {}) {} x {}, memória igual {}", estrito, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(oferta, estrito, motivo), || transfer_manager_selling_club_must_accept(oferta, estrito, motivo));
+    PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_selling_club_must_accept(estrito {}) {} x {}, memória igual {}", estrito, ro, rr, igual));
     ro
 }

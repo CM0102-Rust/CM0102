@@ -88,7 +88,7 @@ unsafe fn cqc4_liberar(l: usize) {
 
 /// { 0x5ab510 } (thiscall, ret 4, fix_man.cpp; quadro SEH só das datas): `FIXTURE_MANAGER::find_new_fixture_date(jogo)`,
 /// pela entrada no calendário (0x5aa680), pelos conflitos do mesmo dia (0x5ae380) e pela remarcação (0x5ae9d0). Sem
-/// jogo: a caixa (a original). Pela casa das unidades da rodada (+0x30, 0x4b0850: push; add esp, 4 -> cdecl) 3 ou 4,
+/// jogo: a caixa (a original). Pela casa das units_digit da rodada (+0x30, 0x4b0850: push; add esp, 4 -> cdecl) 3 ou 4,
 /// o registro de 15 bytes do jogo na lista de conferência das pernas [0xae2a48] (0x68d0d0). A janela pelo tipo (+0x3a):
 /// 2, até a data de +0x24/+0x26 (sem ela, a caixa e 2 semanas), começando 4 semanas depois (se o fim passa de 20
 /// semanas) ou 3 dias depois; 4 e 6, de 3 dias a 2 semanas; 5, de 0 a 1 semana; 7, 8 e 10, de 3 dias antes a 1 semana;
@@ -96,7 +96,7 @@ unsafe fn cqc4_liberar(l: usize) {
 /// 6, 0, 3, 4, de 4 em 4 dias da janela: o dia alvo (0x54a2d0) a partir de 2 dias depois de hoje e dentro da janela
 /// vira a data (+0x28, +0x2a) e a faixa (+0x3f, 0x5af2f0); sem conflito (0x5ad780), com gravidade 1 ou abaixo do tipo,
 /// fica. Sem achar: 2 dias depois da data do jogo (ou de hoje, se já passou).
-unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
     if jogo == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, jogo); // a caixa
     }
@@ -110,9 +110,9 @@ unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
     let mut tmp = [0u8; 8];
     let r = cqc4_nova(&mut tmp, cqc4_w(jogo + 0x2a), cqc4_w(jogo + 0x28));
     cqc4_atribuir(&mut j, r);
-    let unidades: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
+    let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
     let rodada = cqc4_w(jogo + 0x30) as i16 as i32;
-    if unidades(rodada) == 3 || unidades(rodada) == 4 {
+    if units_digit(rodada) == 3 || units_digit(rodada) == 4 {
         let mut reg = [0u8; 15];
         reg[0..4].copy_from_slice(&core::slice::from_raw_parts(jogo as *const u8, 4));
         reg[4] = cqc4_b(jogo + 0x42);
@@ -206,16 +206,16 @@ unsafe extern "thiscall" fn nova_data_do_jogo(this: usize, jogo: usize) {
 
 /// O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
-unsafe extern "thiscall" fn comparar_nova_data_do_jogo(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn comparar_find_new_fixture_date(this: usize, jogo: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
-    let unidades: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
+    let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
     // a caixa da janela sem data (+0x24, tipo 2) apareceria duas vezes: só a original
-    if jogo == 0 || matches!(unidades(cqc4_w(jogo + 0x30) as i16 as i32), 3 | 4) || (cqc4_b(jogo + 0x3a) == 2 && cqc4_w(jogo + 0x24) == 0) {
+    if jogo == 0 || matches!(units_digit(cqc4_w(jogo + 0x30) as i16 as i32), 3 | 4) || (cqc4_b(jogo + 0x3a) == 2 && cqc4_w(jogo + 0x24) == 0) {
         return o(this, jogo);
     }
     let reg = [(jogo, 0x4f)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || nova_data_do_jogo(this, jogo));
-    PLACAR.registrar(igual, || format!("nova_data_do_jogo(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || find_new_fixture_date(this, jogo));
+    PLACAR.registrar(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
 /// { 0x5aa680 } (thiscall, ret 8, fix_man.cpp; quadro SEH das datas e do gerenciador novo): `FIXTURE_MANAGER::add_fixture(jogo,
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_nova_data_do_jogo(this: usize, jogo: usize)
 /// a nação-chave (0x48dd70), a ordem (0x5ab3c0), os jogos de seleções (0x7e6720 em [0xb74434], 0x76bab0 em [0xb74318]),
 /// os vizinhos (0x5ae9d0, chave 3 ou 5); se não entrou, na lista do dia, fatia e chave (0x68d0d0). Fora do ano, no
 /// bloco do outro ano (+0x112c: 0x5aa2d0 para o ano, ou novo de 0x1184 bytes, 0x5a9cf0; sem memória, a caixa e 0).
-unsafe extern "thiscall" fn jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
+unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) -> u32 {
     let fase: unsafe extern "C" fn(usize) = core::mem::transmute(0x5af180usize);
     let nova_data: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5ab510usize);
     let entrar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x5aa680usize);
@@ -421,7 +421,7 @@ unsafe extern "thiscall" fn jogo_no_calendario(this: usize, jogo: usize, zerar: 
 /// O comparador da entrada no calendário: só a original (ponytail: grava nas listas do calendário, aloca nós e o
 /// bloco do outro ano, remarca e entrega notícias; não pode rodar duas vezes). A cópia segue no modo Rust, com os
 /// contadores.
-unsafe extern "thiscall" fn comparar_jogo_no_calendario(this: usize, jogo: usize, zerar: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_add_fixture(this: usize, jogo: usize, zerar: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, zerar)
 }
 
@@ -434,7 +434,7 @@ unsafe extern "thiscall" fn comparar_jogo_no_calendario(this: usize, jogo: usize
 /// ano novo, bissexto em +0x1132 (0x54cfe0: push ano; add esp, 4 -> cdecl), as listas novas (new 0xe: 0x944cf1, push;
 /// add esp, 4 -> cdecl; 0x68d020: ecx = bloco -> thiscall; sem memória, a caixa e 0) e a carga dos jogos do ano
 /// (0x5ac3b0: ecx = bloco -> thiscall). Devolve 1.
-unsafe extern "thiscall" fn ano_do_calendario(this: usize, ano: u32) -> u32 {
+unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
     let a = ano as u16;
     if a == cqc4_w(this + 0x1130) {
         return 1;
@@ -517,6 +517,6 @@ unsafe extern "thiscall" fn ano_do_calendario(this: usize, ano: u32) -> u32 {
 
 /// O comparador do ano do calendário: só a original (ponytail: grava e lê os arquivos dos jogos do ano e refaz todas
 /// as listas; não pode rodar duas vezes).
-unsafe extern "thiscall" fn comparar_ano_do_calendario(this: usize, ano: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_year(this: usize, ano: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I2%%)(this, ano)
 }

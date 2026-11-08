@@ -9,7 +9,7 @@ const CLUBES_BASCOS: [usize; 23] = [
 
 /// { 0x53d7f0 } (cdecl, Database.cpp): 1 se o `clube` é da Espanha ([0x9cf488], nação +0x53) e o id
 /// dele é um dos 23 clubes bascos (`CLUBES_BASCOS`). Clube ou nação nulos: 0.
-unsafe extern "C" fn clube_basco(clube: usize) -> u32 {
+unsafe extern "C" fn database_is_basque_club(clube: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     if clube == 0 {
         return 0;
@@ -26,11 +26,11 @@ unsafe extern "C" fn clube_basco(clube: usize) -> u32 {
 /// (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
 /// Sem contrato ou clube: (0, 0). Comum a 0x5444a0 e 0x544590 (e 0x544520, 0x544600).
 unsafe fn vinculo_da_lista(pessoa: usize, clube: usize) -> (usize, usize) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let mut clube = clube;
     if clube == 0 {
-        let c = contrato_de(*(0xae1050 as *const usize), pessoa);
+        let c = contract_of(*(0xae1050 as *const usize), pessoa);
         *(0xae1080 as *mut usize) = c;
         if c == 0 {
             return (0, 0);
@@ -47,7 +47,7 @@ unsafe fn vinculo_da_lista(pessoa: usize, clube: usize) -> (usize, usize) {
 /// { 0x5444a0 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
 /// contrato) está na lista de transferências pelo clube (vínculo +0x4e, bit 1), a não ser que o clube
 /// não seja de técnico humano (0x600a50 com 1, 1, 0, 0) e a função no clube da pessoa (+0x3d) seja 0xf.
-unsafe extern "C" fn pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if pessoa == 0 {
         return 0;
@@ -64,7 +64,7 @@ unsafe extern "C" fn pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u
 
 /// { 0x544590 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
 /// contrato) está na lista de empréstimos (vínculo +0x4e, bit 2).
-unsafe extern "C" fn pessoa_listada_para_emprestimo(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -72,27 +72,27 @@ unsafe extern "C" fn pessoa_listada_para_emprestimo(pessoa: usize, clube: usize)
     (v != 0 && *((v + 0x4e) as *const u8) & 2 != 0) as u32
 }
 
-unsafe extern "C" fn comparar_clube_basco(clube: usize) -> u32 {
+unsafe extern "C" fn comparar_database_is_basque_club(clube: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(clube);
-    let n = clube_basco(clube);
-    PLACAR.registrar(r == n, || format!("clube_basco({:x}) original={} rust={}", clube, r, n));
+    let n = database_is_basque_club(clube);
+    PLACAR.registrar(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_pessoa_listada_pelo_clube(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0, 0x4cf5f0 e 0x600a50 (clube não
     // nulo) só leem
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_pelo_clube(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_pelo_clube({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_transfer_listed(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_pessoa_listada_para_emprestimo(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_para_emprestimo(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_para_emprestimo({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_loan_listed(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }

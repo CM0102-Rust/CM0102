@@ -24,18 +24,18 @@ pub(crate) const CQM2_NORUEGA: [[u8; 6]; 2] = [
 /// Original: `NORWAY_RULES::NORWAY_RULES` (0x7944f0, norway_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x7944f0 } (thiscall, ret 0x14, norway_rules.cpp, `NORWAY_RULES::NORWAY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Noruega (regra 17): a base (0x8e84a0), a vtable 0x96dfe4, 1 janela(s) de `CQM2_NORUEGA`. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_noruega(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_norway_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_2 noruega");
     cqm2_construir(this, [a1, a2, a3, a4, a5], 0x96dfe4, 1, &CQM2_NORUEGA, 0xa69870, 0x51);
     this
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_noruega(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_NORUEGA);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_norway_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_NORWAY_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_noruega", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_noruega(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_norway_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_norway_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -50,18 +50,18 @@ pub(crate) const CQM2_IRLANDA_DO_NORTE: [[u8; 6]; 2] = [
 /// Original: `NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES` (0x7936d0, northern_ireland_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x7936d0 } (thiscall, ret 0x14, northern_ireland_rules.cpp, `NORTHERN_IRELAND_RULES::NORTHERN_IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda do Norte (regra 16): a base (0x8e84a0), a vtable 0x96df9c, 1 janela(s) de `CQM2_IRLANDA_DO_NORTE`. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_irlanda_do_norte(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_northern_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_2 irlanda_do_norte");
     cqm2_construir(this, [a1, a2, a3, a4, a5], 0x96df9c, 1, &CQM2_IRLANDA_DO_NORTE, 0xa697f4, 0x4e);
     this
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_irlanda_do_norte(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_IRLANDA_DO_NORTE);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_northern_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_NORTHERN_IRELAND_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_irlanda_do_norte", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_irlanda_do_norte(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_northern_ireland_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_northern_ireland_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -76,18 +76,18 @@ pub(crate) const CQM2_PAIS_DE_GALES: [[u8; 6]; 2] = [
 /// Original: `WALES_RULES::WALES_RULES` (0x90f080, wales_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x90f080 } (thiscall, ret 0x14, wales_rules.cpp, `WALES_RULES::WALES_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência do País de Gales (regra 26): a base (0x8e84a0), a vtable 0x970a9c, 1 janela(s) de `CQM2_PAIS_DE_GALES`. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_pais_de_gales(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_wales_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqm_2 pais_de_gales");
     cqm2_construir(this, [a1, a2, a3, a4, a5], 0x970a9c, 1, &CQM2_PAIS_DE_GALES, 0xad4404, 0x4e);
     this
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_pais_de_gales(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_PAIS_DE_GALES);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_wales_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_WALES_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_pais_de_gales", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_pais_de_gales(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_wales_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_wales_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }

@@ -86,7 +86,7 @@ unsafe fn cpw8_trecho(x: i32, base: i32, k: usize) -> i32 {
 /// por dia de férias; a condição de jogo (+0xa) sobe 500 × dias livres e 250 × em recuperação pelo fator do cansaço
 /// (+0xc).
 /// Grava as duas e a data de hoje.
-unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     cpw8_estatica(1, 0xb63d08, 0x62ce20);
     cpw8_estatica(2, 0xb63d18, 0x62ce10);
     cpw8_estatica(4, 0xb63d20, 0x62ce00);
@@ -311,7 +311,7 @@ unsafe extern "thiscall" fn fisico_do_dia(this: usize, pessoa: usize) {
 /// guardado do clube (0xb63d08..0xb63d34) e o sorteio. A cópia roda em ensaio, sem o fim da lesão (0x62e700): quando
 /// ela chega lá, fica a original sozinha (já rodou primeiro). Na primeira vez (estáticas por criar, com atexit) e sem
 /// registro (pessoa nula, id fora da tabela, sem ficha): só a original.
-unsafe extern "thiscall" fn comparar_fisico_do_dia(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_update_player_fitness(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     if *(0xb63d10 as *const u8) & 7 != 7 || pessoa == 0 || cpw8_i(pessoa) < 0 || cpw8_i(pessoa) >= cpw8_i(0xae2364) || cpw8_d(pessoa + 0x61) == 0 {
         return o(this, pessoa); // ponytail: as estáticas e o atexit da primeira vez não podem rodar duas vezes
@@ -324,21 +324,21 @@ unsafe extern "thiscall" fn comparar_fisico_do_dia(this: usize, pessoa: usize) {
     CPW8_TERMINOU = false;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa), || {
         CPW8_ENSAIO = true;
-        crate::aleatorio::sem_contar(|| fisico_do_dia(this, pessoa));
+        crate::aleatorio::sem_contar(|| update_player_fitness(this, pessoa));
         CPW8_ENSAIO = false;
     });
     if CPW8_TERMINOU {
         crate::comparacao::ramo("cpw_8 fim da lesao so na original");
         return;
     }
-    PLACAR.registrar(igual, || format!("fisico_do_dia(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    PLACAR.registrar(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x690bd0 } (thiscall, ret 4, manager_manager.cpp): `MANAGER_MANAGER::get_league_confidence_band(clube)`: a
 /// confiança da diretoria na liga (palavra com sinal +0x12 do registro de 0x49 bytes do clube em [this]) em faixas:
 /// abaixo de −2000: 0; −1000: 1; −500: 2; 500: 3; 1000: 4; 2000: 5; senão 6. Pelo texto da confiança (0x690d80).
 /// Só o al conta (o resto do eax é o que sobrou da conta do endereço).
-unsafe extern "thiscall" fn faixa_da_confianca_na_liga(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn get_league_confidence_band(this: usize, clube: usize) -> u8 {
     let v = cpw8_w(cpw8_d(this).wrapping_add((cpw8_i(clube) as u32).wrapping_mul(0x49) as usize) + 0x12);
     if v < -2000 {
         0
@@ -357,26 +357,26 @@ unsafe extern "thiscall" fn faixa_da_confianca_na_liga(this: usize, clube: usize
     }
 }
 
-unsafe extern "thiscall" fn comparar_faixa_da_confianca_na_liga(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_league_confidence_band(this: usize, clube: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, clube);
-    let n = faixa_da_confianca_na_liga(this, clube);
-    PLACAR.registrar(r == n, || format!("faixa_da_confianca_na_liga(clube {:x}) original={} rust={}", clube, r, n));
+    let n = get_league_confidence_band(this, clube);
+    PLACAR.registrar(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x69f7c0 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::set_board_ratings(clube, valor)`: as quatro
 /// notas da diretoria (+6, +8, +0xc e +0xa do registro de 0x49 bytes do clube em [this], palavras, nessa ordem) recebem
 /// o valor (16 bits). Pela configuração inicial dos jogadores (0x7a46a6).
-unsafe extern "thiscall" fn gravar_notas_da_diretoria(this: usize, clube: usize, valor: u32) {
+unsafe extern "thiscall" fn set_board_ratings(this: usize, clube: usize, valor: u32) {
     for off in [6usize, 8, 0xc, 0xa] {
         let r = cpw8_d(this).wrapping_add((cpw8_i(clube) as u32).wrapping_mul(0x49) as usize);
         core::ptr::write_unaligned((r + off) as *mut u16, valor as u16);
     }
 }
 
-unsafe extern "thiscall" fn comparar_gravar_notas_da_diretoria(this: usize, clube: usize, valor: u32) {
+unsafe extern "thiscall" fn comparar_set_board_ratings(this: usize, clube: usize, valor: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     let r = cpw8_d(this).wrapping_add((cpw8_i(clube) as u32).wrapping_mul(0x49) as usize);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 0x49)], || o(this, clube, valor), || gravar_notas_da_diretoria(this, clube, valor));
-    PLACAR.registrar(igual, || format!("gravar_notas_da_diretoria(clube {:x}, {:x}) {:x?} x {:x?}", clube, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 0x49)], || o(this, clube, valor), || set_board_ratings(this, clube, valor));
+    PLACAR.registrar(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", clube, valor, mo, mr));
 }

@@ -51,7 +51,7 @@ fn cpu10_dias(codigo: i32, e: i8) -> Option<u16> {
 /// 0xffff) ou os dias (os jogos ficam 0xff) da suspensão. No registro: +0 jogos, +1 = 0, +2 dias, +4 a data de hoje
 /// ([0xae2c90], 0x417c10), +0x10 = 3, +0x1c o id do jogador (+0), +0x6f = (+0x48 do jogador == 0). Devolve 1; sem
 /// suspensão, 0 sem gravar nada.
-unsafe extern "thiscall" fn suspensao_do_vermelho(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
+unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
     let codigo = match *((j + 0x2c) as *const u8) {
         0 => *((j + 0x2e) as *const i8) as i32, // cpu10: a falta do primeiro tipo
         1 => *((j + 0x2f) as *const i8) as i32,
@@ -83,11 +83,11 @@ unsafe extern "thiscall" fn suspensao_do_vermelho(this: usize, r: usize, j: usiz
 }
 
 /// Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
-unsafe extern "thiscall" fn comparar_suspensao_do_vermelho(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     let regioes = [(r, 0x70)];
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || suspensao_do_vermelho(this, r, j, por_jogos));
-    PLACAR.registrar(igual && a == b, || format!("suspensao_do_vermelho(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
+    PLACAR.registrar(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", cpu10_d(j), por_jogos, a, b, mo, mr));
     a
 }
 
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn comparar_suspensao_do_vermelho(this: usize, r: usize
 /// entrada; senão zera os cartões (+4, +5, +8 e os 6 bits baixos de +0xd). Liberar: a vaga guardada do jogador no
 /// órgão (0x55cb60 pela vaga +4) com o mesmo +5 fica com −1 em +6; sem ela, grava a vaga (0x55cb20, tipo +5, −1); o id
 /// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
-unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
+unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
     let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
 // ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
-unsafe extern "thiscall" fn comparar_nova_temporada_do_orgao(this: usize) {
+unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
 }
 
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn comparar_nova_temporada_do_orgao(this: usize) {
 /// guardado do jogador (0x55cb60 pela vaga +4: com o mesmo +5, o novo índice em +6; sem ela, 0x55cb20 com o tipo +5 e
 /// o índice). Conta +0x13 = n, capacidade +0xf = n + 100 e realoca (0x945667) com (n + 100) × 14 bytes; sem memória, a
 /// caixa (linha 0x594) e segue.
-unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
+unsafe extern "thiscall" fn compact_entries(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
     let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
     let mut destino = cpu10_d(this + 0xb);
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize) {
 
 /// Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
 /// original e confere a conta, a capacidade e as entradas na nova ordem.
-unsafe extern "thiscall" fn comparar_compactar_disciplina_do_orgao(this: usize) {
+unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
     let mut esperado: Vec<u8> = Vec::new();
     let base = cpu10_d(this + 0xb);
     for k in 0..cpu10_i(this + 0x13).max(0) as usize {
@@ -209,6 +209,6 @@ unsafe extern "thiscall" fn comparar_compactar_disciplina_do_orgao(this: usize) 
     let p = cpu10_d(this + 0xb);
     let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];
     PLACAR.registrar(cpu10_d(this + 0x13) as u32 == n && cpu10_d(this + 0xf) as u32 == n + 100 && iguais, || {
-        format!("compactar_disciplina_do_orgao: conta {} (esperava {}), capacidade {}, entradas iguais {}", cpu10_d(this + 0x13), n, cpu10_d(this + 0xf), iguais)
+        format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", cpu10_d(this + 0x13), n, cpu10_d(this + 0xf), iguais)
     });
 }

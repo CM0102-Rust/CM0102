@@ -8,7 +8,7 @@ unsafe fn cpj4_d(a: usize) -> usize {
 /// da oferta (+0x1b) bate o recorde de valor pago do clube comprador (+8; os recordes de sempre pela 0x452710, criando
 /// se preciso)? Tem de ser ao menos 50 × reputação (+0x80) + 500.000; com `exigir`, também ao menos reputação² × a
 /// constante 0x967880 (_ftol); e acima de zero e do recorde (+0x313). Oferta nula: 0.
-unsafe extern "thiscall" fn oferta_bate_o_recorde(this: usize, oferta: usize, exigir: u32) -> u8 {
+unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
     if oferta == 0 {
         return 0;
     }
@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn oferta_bate_o_recorde(this: usize, oferta: usize, ex
 /// forma (+0xa) × condição de jogo (+8) / 10.000 do registro de 31 bytes [this] do id, no mínimo 100 e no máximo 9000
 /// enquanto ele se recupera (0x62c400 = 1); em porcentagem (× 0x96bac8 + 0x968968, _ftol), no máximo 100. Pessoa fora
 /// dos jogadores ([0xae2364]): 100 ou 10.000. Jogador nulo: 0.
-unsafe extern "thiscall" fn condicao_do_jogador(this: usize, jogador: usize, em_porcento: u32) -> u16 {
+unsafe extern "thiscall" fn get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
     if jogador == 0 {
         return 0;
     }
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn condicao_do_jogador(this: usize, jogador: usize, em_
 /// saída, pede a tabela de 42 bytes das restrições da partida (0x8cf6b0 com 1; o `this` passa direto) e fica com a
 /// primeira que existe (≠ 0xff): +5 ou +3 (tipo 1), +2 ou +0 (tipo 2), +0x16 com a quantidade em +0x17 (tipo 3, a
 /// idade em +1). O tipo vai em +0 e a quantidade em +5.
-unsafe extern "thiscall" fn limite_de_escalacao(this: usize, partida: usize, saida: *mut u8) {
+unsafe extern "thiscall" fn get_selection_limit(this: usize, partida: usize, saida: *mut u8) {
     core::ptr::write_unaligned(saida as *mut u32, 0);
     core::ptr::write_unaligned(saida.add(4) as *mut u16, 0);
     let mut t = [0u8; 0x2c];
@@ -91,24 +91,24 @@ unsafe extern "thiscall" fn limite_de_escalacao(this: usize, partida: usize, sai
 
 /// Comparador: a 0x452710 cria os recordes do clube na primeira vez (a original primeiro; a cópia acha os mesmos):
 /// pelo valor.
-unsafe extern "thiscall" fn comparar_oferta_bate_o_recorde(this: usize, oferta: usize, exigir: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I0%%)(this, oferta, exigir);
-    let n = oferta_bate_o_recorde(this, oferta, exigir);
-    PLACAR.registrar(r == n, || format!("oferta_bate_o_recorde({:x}, {}) original={} rust={}", oferta, exigir, r, n));
+    let n = offer_breaks_fee_record(this, oferta, exigir);
+    PLACAR.registrar(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", oferta, exigir, r, n));
     r
 }
 
 /// Comparador: pelo valor (a 0x62c400 só lê).
-unsafe extern "thiscall" fn comparar_condicao_do_jogador(this: usize, jogador: usize, em_porcento: u32) -> u16 {
+unsafe extern "thiscall" fn comparar_get_condition(this: usize, jogador: usize, em_porcento: u32) -> u16 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, jogador, em_porcento);
-    let n = condicao_do_jogador(this, jogador, em_porcento);
-    PLACAR.registrar(r == n, || format!("condicao_do_jogador({:x}, {}) original={} rust={}", jogador, em_porcento, r, n));
+    let n = get_condition(this, jogador, em_porcento);
+    PLACAR.registrar(r == n, || format!("get_condition({:x}, {}) original={} rust={}", jogador, em_porcento, r, n));
     r
 }
 
 /// Comparador: lado a lado pelos 6 bytes da saída (a 0x8cf6b0 só escreve na tabela local).
-unsafe extern "thiscall" fn comparar_limite_de_escalacao(this: usize, partida: usize, saida: *mut u8) {
+unsafe extern "thiscall" fn comparar_get_selection_limit(this: usize, partida: usize, saida: *mut u8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8)>(%%I2%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida as usize, 6)], || o(this, partida, saida), || limite_de_escalacao(this, partida, saida));
-    PLACAR.registrar(igual, || format!("limite_de_escalacao({:x}) {:x?} x {:x?}", partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida as usize, 6)], || o(this, partida, saida), || get_selection_limit(this, partida, saida));
+    PLACAR.registrar(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", partida, mo, mr));
 }

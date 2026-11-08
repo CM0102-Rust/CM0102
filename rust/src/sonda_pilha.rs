@@ -181,7 +181,7 @@ pub unsafe fn instalar_lista() {
         let mut c: Vec<u8> = original.clone();
         c.push(0xe9);
         c.extend(((end as usize + n) as i32).wrapping_sub((tramp + c.len() + 4) as i32).to_le_bytes());
-        // trecho: push eax/ecx/edi (na própria pilha: outra thread pode passar pela mesma rotina); lea edi, [esp − 4];
+        // trecho: push eax/ecx/edi (na própria pilha: outra thread pode pass_ball pela mesma rotina); lea edi, [esp − 4];
         // mov ecx, quadro/4; mov eax, veneno; std; rep stosd; cld (de cima para baixo: passa pela página de guarda na
         // ordem, como o __chkstk); pop; jmp trampolim. O quadro envenenado fica 12 bytes abaixo da entrada.
         let trecho = tramp + c.len();

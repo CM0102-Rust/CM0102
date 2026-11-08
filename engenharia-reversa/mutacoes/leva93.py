@@ -4,6 +4,6 @@ MUTACOES = [
     ('k_nibble', "            mover(j, (casa & 0xf) as i8, (casa >> 4) as i8);\n            linhas(this);", "            mover(j, (casa >> 4) as i8, (casa & 0xf) as i8);\n            linhas(this);"),
     ('k_passou', "                d >= 0\n", "                d > 0\n"),
     ('k_sai', "        let sai_jogando = lado_bola as i32 == l as i32;", "        let sai_jogando = lado_bola as i32 != l as i32;"),
-    ('k_2b', "            gravar_2b(j, 0);", "            gravar_2b(j, 1);"),
+    ('k_2b', "            write_2b(j, 0);", "            write_2b(j, 1);"),
     ('k_19a', "    *((quem + 0x19a) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb4 } else { 0 };", "    *((quem + 0x19a) as *mut u16) = if byte(this, 0x8ea8) != 0 { 0xb5 } else { 0 };"),
 ]

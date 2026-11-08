@@ -4,7 +4,7 @@
 # lesoes de todos os jogadores mudam). Entre o fim e o inicio na temporada: o jogador fora da temporada 0x62ce30 e a
 # forma da pre-temporada mudam nessa janela (julho de 2001 e maio de 2002, se a linha da nacao tiver a janela nessas
 # datas). O fim no mesmo ano depois do inicio: a data da transferencia 0x8cee70 (o fim da temporada do vendedor mais
-# 7 dias) cai um ano antes nas transferencias de agosto a dezembro que passam por ela (pode escapar se nenhuma passar).
+# 7 dias) cai um ano antes nas transferencias de agosto a dezembro que passam por ela (pode escapar se nenhuma pass_ball).
 # Chamada a cada jogador: sem contador.
 MUTACOES = [
     ('cpu2_fim_no_mesmo_ano', 'cpu2_data(fim, c, y.wrapping_add(1)); // cpu2: o fim no ano seguinte',

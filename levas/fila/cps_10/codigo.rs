@@ -15,7 +15,7 @@ unsafe fn cps10_i(a: usize) -> i32 {
 /// [0xb74350]: entradas de 0x2b bytes, seis por temporada e clube) e a soma, em 16 bits, do byte +0xdf dos grupos cujo
 /// clube (+0xd9, com sinal, não negativo) é o id do `clube`; a tabela é liberada (0x9452ca, também quando nula).
 /// Quente (cada jogador de cada partida): sem contador.
-unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
+unsafe extern "stdcall" fn player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
     if pessoa == 0 {
         aviso_em(0xa78310, 0xb04);
         return 0;
@@ -52,14 +52,14 @@ unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
 }
 
 /// Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
-unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize) -> u16 {
+unsafe extern "stdcall" fn comparar_player_stats_get_goals_for_club(pessoa: usize, clube: usize) -> u16 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u16>(%%I0%%);
     if pessoa == 0 || clube == 0 || (cps10_i(pessoa) < cps10_i(0xae2364) && cps10_d(pessoa + 0x61) == 0) {
         return o(pessoa, clube);
     }
     let r = o(pessoa, clube);
-    let n = gols_pelo_clube(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("gols_pelo_clube(pessoa {:x}, clube {:x}) original={} rust={}", pessoa, clube, r, n));
+    let n = player_stats_get_goals_for_club(pessoa, clube);
+    PLACAR.registrar(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }
 
@@ -67,7 +67,7 @@ unsafe extern "stdcall" fn comparar_gols_pelo_clube(pessoa: usize, clube: usize)
 /// `Staff_Records::add_team_of_year_record(pessoa, clube, prêmio, a, b)` (pela TEAM_AWARD::record_winners 0x8affb0):
 /// pessoa ou prêmio nulos, a caixa "Error" (linha 0x7ee). Senão o histórico da pessoa (tipo 0x32: o id do clube ou −1,
 /// o id do prêmio, `a` em 16 bits sem sinal e `b` como byte com sinal), no arquivo (0x58e340).
-unsafe extern "thiscall" fn registrar_a_selecao_do_ano(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
+unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
     crate::comparacao::ramo("cps_10 selecao do ano");
     if pessoa == 0 || premio == 0 {
         aviso_em(0xa83b78, 0x7ee);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn registrar_a_selecao_do_ano(this: usize, pessoa: usiz
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_registrar_a_selecao_do_ano(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
+unsafe extern "thiscall" fn comparar_add_team_of_year_record(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(%%I1%%)(this, pessoa, clube, premio, a, b)
 }
 
@@ -103,7 +103,7 @@ unsafe fn cps10_registro(clube: usize) -> usize {
 /// candidatos a técnico do ano (0x86fab0): os registros dos técnicos dos dois clubes (cps10_registro); sem os dois, 0;
 /// só sem o de `a`, 1; só sem o de `b`, −1; com os dois, os pontos da temporada na liga (+0xba) de `b` menos os de
 /// `a` (mais pontos primeiro).
-unsafe extern "C" fn ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let (ca, cb) = (cps10_d(a), cps10_d(b));
     let ra = cps10_registro(ca);
     let rb = cps10_registro(cb);
@@ -118,9 +118,9 @@ unsafe extern "C" fn ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
 }
 
 // ponytail: a 0x86f5b0 cria o registro que falta; a original roda antes e a cópia só acha os que ela criou.
-unsafe extern "C" fn comparar_ordem_pelos_pontos_do_tecnico(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_pelos_pontos_do_tecnico(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_pelos_pontos_do_tecnico(clubes {:x}, {:x}) original={} rust={}", cps10_d(a), cps10_d(b), r, n));
+    let n = staff_records_compare_clubs_by_manager_points(a, b);
+    PLACAR.registrar(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", cps10_d(a), cps10_d(b), r, n));
     r
 }

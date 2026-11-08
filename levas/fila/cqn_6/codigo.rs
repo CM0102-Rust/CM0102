@@ -70,13 +70,13 @@ unsafe fn cqn6_fixos(this: usize, tabela: &[(u8, u8, u16, u32, u32)], arquivo: u
 
 /// { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
-unsafe extern "thiscall" fn calendario_fixo_da_c1a(this: usize) {
+unsafe extern "thiscall" fn ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
     cqn6_fixos(this, &CQN6_C1A, 0x9ea474, 0x3fd)
 }
 
 /// { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
-unsafe extern "thiscall" fn calendario_fixo_da_c1b(this: usize) {
+unsafe extern "thiscall" fn fra_first_set_up_fixed_fixtures(this: usize) {
     cqn6_fixos(this, &CQN6_C1B, 0x9ea558, 0x404)
 }
 /// O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
@@ -89,40 +89,40 @@ unsafe fn cqn6_comparar(nome: &str, this: usize, original: impl FnOnce()) {
     PLACAR.registrar(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", nome, this, v));
 }
 
-unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1a(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn6_comparar("calendario_fixo_da_c1a", this, || o(this))
+    cqn6_comparar("ita_ser_c1a_set_up_fixed_fixtures", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_calendario_fixo_da_c1b(this: usize) {
+unsafe extern "thiscall" fn comparar_fra_first_set_up_fixed_fixtures(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn6_comparar("calendario_fixo_da_c1b", this, || o(this))
+    cqn6_comparar("fra_first_set_up_fixed_fixtures", this, || o(this))
 }
 
 /// { 0x5bb540 } (thiscall, ret 8, fra_first.cpp, 8 bytes): `stub_return_one_ret8(a, b)`, o toco das competições que não
 /// jogam partidas no lugar do add_result (o slot +4): ignora os dois e devolve 1.
-unsafe extern "thiscall" fn toco_um_com_dois(_this: usize, _a: u32, _b: u32) -> u32 {
+unsafe extern "thiscall" fn stub_return_one_ret8(_this: usize, _a: u32, _b: u32) -> u32 {
     1 // cqn6: o toco devolve 1
 }
 
 /// { 0x5bb550 } (thiscall, ret 4, fra_first.cpp, 8 bytes): `stub_return_one_ret4(a)`, o padrão do slot 25 das
 /// competições e do slot 6 do órgão disciplinar: ignora o argumento e devolve 1.
-unsafe extern "thiscall" fn toco_um_com_um(_this: usize, _a: u32) -> u32 {
+unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {
     1
 }
 
 /// Os dois tocos: compara a devolução.
-unsafe extern "thiscall" fn comparar_toco_um_com_dois(this: usize, a: u32, b: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_stub_return_one_ret8(this: usize, a: u32, b: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, a, b);
-    let n = toco_um_com_dois(this, a, b);
-    PLACAR.registrar(r == n, || format!("toco_um_com_dois: original={} rust={}", r, n));
+    let n = stub_return_one_ret8(this, a, b);
+    PLACAR.registrar(r == n, || format!("stub_return_one_ret8: original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_toco_um_com_um(this: usize, a: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_stub_return_one_ret4(this: usize, a: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I3%%)(this, a);
-    let n = toco_um_com_um(this, a);
-    PLACAR.registrar(r == n, || format!("toco_um_com_um: original={} rust={}", r, n));
+    let n = stub_return_one_ret4(this, a);
+    PLACAR.registrar(r == n, || format!("stub_return_one_ret4: original={} rust={}", r, n));
     r
 }
 

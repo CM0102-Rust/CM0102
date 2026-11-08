@@ -70,7 +70,7 @@ fn cqi8_regioes(o: usize) -> [(usize, usize); 4] {
 
 /// { 0x430ff0 } (thiscall, bra_reg_central.cpp): `BraRegCentral::set_up_rules` (slot 36), as regras e o calendário;
 /// devolve 1.
-unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
     cqi8_regras_centro(this);
     crate::comparacao::ramo("cqi_8 regras do centro-oeste");
     cqi8_calendario(this);
@@ -79,19 +79,19 @@ unsafe extern "thiscall" fn cqi8_regras_do_centro_oeste(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
 /// saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_cqi8_regras_do_centro_oeste(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
         cqi8_regras_centro(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi8_regras_do_centro_oeste({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_central_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x4322d0 } (thiscall, bra_reg_gaucho.cpp): `BraRegGaucho::set_up_rules`, nas vtables do Gaúcho (0x96811c), do
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
-unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     cqi8_regras_gaucho(this);
     crate::comparacao::ramo("cqi_8 regras do gaucho");
     cqi8_calendario(this);
@@ -99,19 +99,19 @@ unsafe extern "thiscall" fn cqi8_regras_do_gaucho(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Centro-Oeste.
-unsafe extern "thiscall" fn comparar_cqi8_regras_do_gaucho(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
         cqi8_regras_gaucho(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi8_regras_do_gaucho({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_gaucho_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x43bc70 } (thiscall, bra_reg_santa.cpp): `BraRegSanta::set_up_rules`, nas vtables do Baiano (0x967fb4) e do
 /// Catarinense (0x9686bc); devolve 1.
-unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
     cqi8_regras_catarinense(this);
     crate::comparacao::ramo("cqi_8 regras do catarinense");
     cqi8_calendario(this);
@@ -119,12 +119,12 @@ unsafe extern "thiscall" fn cqi8_regras_do_catarinense(this: usize) -> u32 {
 }
 
 /// Comparador: como o do Centro-Oeste.
-unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_central_set_up_rules_43bc70(this: usize) -> u32 {
     let reg = cqi8_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
         cqi8_regras_catarinense(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi8_regras_do_catarinense({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_central_set_up_rules_43bc70({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

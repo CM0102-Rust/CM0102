@@ -41,7 +41,7 @@ unsafe fn cqd6_humano(clube: usize) -> bool {
 /// 4. a lista das conferências das pernas ([0xae2a48]): cada entrada cuja copa (ou fase +4 dela) tem +0x43 = 1 rotula
 ///    os jogos seguintes da rodada (0x522c70: push +0xb; push +7; push rodada; ecx = a copa -> thiscall, ret 0xc); a
 ///    lista é esvaziada (0x68d080).
-unsafe extern "thiscall" fn calendario_dia(this: usize) {
+unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
     let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c8e0usize);
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn calendario_dia(this: usize) {
 /// O comparador do dia do calendário: só a original (ponytail: as notícias vão aos técnicos, os nós dos amistosos e
 /// das filas são liberados e os jogos de reservas entram no calendário: não roda duas vezes). Confere o que a rotina
 /// garante: a fila das notícias some ([+0x1128] = 0 se havia) e a lista das conferências fica vazia.
-unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
+unsafe extern "thiscall" fn comparar_fix_man_daily_update(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let havia = cqd6_d(this + 0x1128);
     let antes = cqd6_w(0xae2a48);
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
     let fila = cqd6_d(this + 0x1128);
     let depois = cqd6_w(0xae2a48);
     PLACAR.registrar((havia == 0 || fila == 0) && (antes == 0 || depois == 0),
-        || format!("calendario_dia: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, fila, antes, depois));
+        || format!("fix_man_daily_update: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, fila, antes, depois));
 }
 
 /// { 0x5abf10 } (thiscall, ret 0x10, fix_man.cpp, quadro SEH sem destrutor no caminho normal):
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn comparar_calendario_dia(this: usize) {
 /// é do ano, ele é trocado para o ano (0x5aa2d0: push ano; ecx = o outro -> thiscall, ret 4); sem o outro, um bloco
 /// novo (0x944cf1, 0x1184 bytes; 0x5a9cf0: push 0; push this; push ano; ecx = o novo -> thiscall, ret 0xc) entra em
 /// +0x112c; sem memória, a caixa da linha 0x681 e 0. A lista: [[bloco + (dia·3 + fatia)·4] + tipo·4].
-unsafe extern "thiscall" fn calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
+unsafe extern "thiscall" fn get_fixture_list(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
     let trocar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x5aa2d0usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(0x5a9cf0usize);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn calendario_lista(this: usize, ano: u32, dia: u32, fa
 
 /// O comparador da lista do dia: com o ano no bloco ou no outro bloco, as duas (só leem) e a mesma lista; senão só a
 /// original (ponytail: troca o bloco do outro ano, que grava e lê o arquivo, ou aloca um bloco novo).
-unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
+unsafe extern "thiscall" fn comparar_get_fixture_list(this: usize, ano: u32, dia: u32, fatia: u32, tipo: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize>(%%I1%%);
     let outro = cqd6_d(this + 0x112c);
     let direto = cqd6_w(this + 0x1130) == ano as i16 || (outro != 0 && cqd6_w(outro + 0x1130) == ano as i16);
@@ -201,8 +201,8 @@ unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia
         return o(this, ano, dia, fatia, tipo);
     }
     let r = o(this, ano, dia, fatia, tipo);
-    let n = calendario_lista(this, ano, dia, fatia, tipo);
-    PLACAR.registrar(r == n, || format!("calendario_lista(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
+    let n = get_fixture_list(this, ano, dia, fatia, tipo);
+    PLACAR.registrar(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
         ano as u16, dia as u16, fatia as u8, tipo as u8 as i8, r, n));
     r
 }
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn comparar_calendario_lista(this: usize, ano: u32, dia
 /// 0x4f; push &jogo; ecx = a lista -> thiscall, ret 8; falhando, o jogo para, 0x785) na lista do dia (+0x2a), fatia
 /// (+0x3f) e nação-chave do jogo (0x48dd70: push &jogo; push competição; add esp, 8 -> cdecl). No fim, fclose
 /// (0x945a09).
-unsafe extern "thiscall" fn calendario_carregar_ano(this: usize) {
+unsafe extern "thiscall" fn load_fixtures(this: usize) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
@@ -286,10 +286,10 @@ unsafe extern "thiscall" fn calendario_carregar_ano(this: usize) {
 
 /// O comparador da carga dos jogos do ano: só a original (ponytail: lê o arquivo e aloca os nós das listas; não roda
 /// duas vezes). Confere o nome gravado em +0x1133.
-unsafe extern "thiscall" fn comparar_calendario_carregar_ano(this: usize) {
+unsafe extern "thiscall" fn comparar_load_fixtures(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
     let esperado = format!("fixtures_{}.tmp", cqd6_w(this + 0x1130) as u16);
     let s = core::slice::from_raw_parts((this + 0x1133) as *const u8, esperado.len() + 1);
     PLACAR.registrar(&s[..esperado.len()] == esperado.as_bytes() && s[esperado.len()] == 0,
-        || format!("calendario_carregar_ano: nome {:?} (esperado {})", s, esperado));
+        || format!("load_fixtures: nome {:?} (esperado {})", s, esperado));
 }

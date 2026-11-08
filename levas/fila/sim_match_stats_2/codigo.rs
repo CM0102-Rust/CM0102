@@ -7,7 +7,7 @@
 /// e, por time (+0x11f + 0x625 × t), as estatísticas, a formação (0x5b2ae0), o capitão (0x897590 com
 /// `sem_renda`) e os 20 jogadores de 0x49 bytes (número da camisa por 0x85a760, dando um com
 /// 0x85a470 quando falta). Partida ou registro nulos: a original (caixa de erro). Devolve 1.
-unsafe extern "thiscall" fn preencher_registro_da_partida(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
+unsafe extern "thiscall" fn fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     if m == 0 || reg == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(estat, m, reg, sem_renda);
     }
@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn preencher_registro_da_partida(estat: usize, m: usize
 /// { 0x72b160 } (cdecl, match_stats.cpp, comparador do qsort dos eventos de 4 bytes): mesmo grupo
 /// (tipos 1..3 entre si, 7..8 entre si, ou o mesmo tipo +2) desempata pelo minuto (+3, sem sinal) e
 /// depois pela ordem de chegada (+0 com sinal, metade); grupos diferentes: a diferença dos tipos.
-unsafe extern "C" fn ordem_dos_eventos(a: *const u8, b: *const u8) -> i32 {
+unsafe extern "C" fn match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
     let (ta, tb) = (*a.add(2), *b.add(2));
     let mesmo = (matches!(ta, 1..=3) && matches!(tb, 1..=3)) || (matches!(ta, 7 | 8) && matches!(tb, 7 | 8));
     if !mesmo {
@@ -231,7 +231,7 @@ unsafe extern "C" fn ordem_dos_eventos(a: *const u8, b: *const u8) -> i32 {
 /// tabela de idiomas ([this+0x3c], [this+0x44] entradas de 6 bytes: id, idioma, fluência), achado por
 /// busca binária (0x946464 com 0x7c6d40): as seguintes descem uma casa, a última vira id −1 e
 /// idioma 0 e a contagem cai. Sem tabela ou sem a entrada: nada.
-unsafe extern "thiscall" fn tirar_idioma_do_jogador(estat: usize, ficha: usize, idioma: i8) {
+unsafe extern "thiscall" fn remove_language(estat: usize, ficha: usize, idioma: i8) {
     let tabela = *((estat + 0x3c) as *const usize);
     if tabela == 0 {
         return;
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn tirar_idioma_do_jogador(estat: usize, ficha: usize, 
     *contagem -= 1;
 }
 
-unsafe extern "thiscall" fn comparar_preencher_registro_da_partida(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%);
     // ponytail: a primeira chamada (data estática e atexit) e os erros só pela original
     if m == 0 || reg == 0 || *(0xb6b7c4 as *const u8) & 1 == 0 {
@@ -267,23 +267,23 @@ unsafe extern "thiscall" fn comparar_preencher_registro_da_partida(estat: usize,
     }
     // o número da camisa dado pela original (0x85a470) fica fora das regiões: a cópia já o acha dado
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg, 0xd7a)], || o(estat, m, reg, sem_renda),
-        || preencher_registro_da_partida(estat, m, reg, sem_renda));
+        || fill_match_record(estat, m, reg, sem_renda));
     PLACAR.registrar(igual && r == n, || {
         let difs: Vec<usize> = mo.0[0].1.iter().zip(mr.0[0].1.iter()).enumerate().filter(|(_, (a, b))| a != b).map(|(i, _)| i).take(16).collect();
-        format!("preencher_registro_da_partida(sem_renda={}) original={} rust={} bytes diferentes em {:x?}", sem_renda, r, n, difs)
+        format!("fill_match_record(sem_renda={}) original={} rust={} bytes diferentes em {:x?}", sem_renda, r, n, difs)
     });
     r
 }
 
-unsafe extern "C" fn comparar_ordem_dos_eventos(a: *const u8, b: *const u8) -> i32 {
+unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
     let r = orig::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(%%I1%%)(a, b);
-    let n = ordem_dos_eventos(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_eventos({:x?}, {:x?}) original={} rust={}",
+    let n = match_stats_compare_events(a, b);
+    PLACAR.registrar(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
         core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_tirar_idioma_do_jogador(estat: usize, ficha: usize, idioma: i8) {
+unsafe extern "thiscall" fn comparar_remove_language(estat: usize, ficha: usize, idioma: i8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i8)>(%%I2%%);
     let tabela = *((estat + 0x3c) as *const usize);
     let contagem = *((estat + 0x44) as *const i32);
@@ -291,6 +291,6 @@ unsafe extern "thiscall" fn comparar_tirar_idioma_do_jogador(estat: usize, ficha
         return o(estat, ficha, idioma);
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(estat + 0x44, 4), (tabela, contagem as usize * 6)],
-        || o(estat, ficha, idioma), || tirar_idioma_do_jogador(estat, ficha, idioma));
-    PLACAR.registrar(igual, || format!("tirar_idioma_do_jogador({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
+        || o(estat, ficha, idioma), || remove_language(estat, ficha, idioma));
+    PLACAR.registrar(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", idioma, mo.0[0].1, mr.0[0].1));
 }

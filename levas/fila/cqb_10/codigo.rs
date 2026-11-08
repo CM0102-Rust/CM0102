@@ -32,7 +32,7 @@ unsafe fn cqb10_achar(this: usize, dado: usize) -> usize {
 /// lista: a cabeça (+2) ou o próximo do anterior, a cauda (+6) ou o anterior do próximo, a conta (+0, palavra) − 1, o
 /// cursor (+0xa) anda se estava nele; o item (0x68d010) e o nó (0x944c94) são liberados. Devolve 1; sem achar, 0. Por
 /// ~77 chamadores (listas de ofertas, faltas, ultimatos, vagas de técnico, amistosos...).
-unsafe extern "thiscall" fn tirar_da_lista(this: usize, dado: usize) -> u32 {
+unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> u32 {
     let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d010usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let no = cqb10_achar(this, dado);
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn tirar_da_lista(this: usize, dado: usize) -> u32 {
 /// Comparador: a 0x68d1f0 libera o nó e o item (não roda duas vezes): o plano antes (o nó achado pela cópia, a cabeça,
 /// a cauda, a conta, o cursor e os vizinhos); a original tira; confere a devolução, o cabeçalho (14 bytes) e os elos
 /// dos vizinhos.
-unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_manager_manager_remove(this: usize, dado: usize) -> u32 {
     let no = cqb10_achar(this, dado);
     let antes: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
     let (prox, ant) = if no != 0 { (cqb10_d(no + 6), cqb10_d(no + 0xa)) } else { (0, 0) };
@@ -85,13 +85,13 @@ unsafe extern "thiscall" fn comparar_tirar_da_lista(this: usize, dado: usize) ->
             && (no == cabeca || cqb10_d(ant + 6) == prox)
             && (no == cauda || cqb10_d(prox + 0xa) == ant)
     };
-    PLACAR.registrar(ok, || format!("tirar_da_lista({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
+    PLACAR.registrar(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, dado, r, no, antes, depois));
     r
 }
 
 /// { 0x68d080 } (thiscall, ret 0): `LLIST::clear()`: libera, da cabeça (+2) em diante, o item (0x68d010) e o nó
 /// (0x944c94) de cada um (a cabeça vai andando) e zera a conta (+0, palavra), a cabeça, a cauda (+6) e o cursor (+0xa).
-unsafe extern "thiscall" fn esvaziar_lista(this: usize) {
+unsafe extern "thiscall" fn manager_manager_clear(this: usize) {
     let liberar_item: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d010usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     while cqb10_d(this + 2) != 0 {
@@ -108,14 +108,14 @@ unsafe extern "thiscall" fn esvaziar_lista(this: usize) {
 }
 
 /// Comparador: libera os nós (não roda duas vezes): só a original; confere o cabeçalho zerado (14 bytes).
-unsafe extern "thiscall" fn comparar_esvaziar_lista(this: usize) {
+unsafe extern "thiscall" fn comparar_manager_manager_clear(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
-    PLACAR.registrar(depois == [0u8; 14], || format!("esvaziar_lista({:#x}) cabeçalho {:x?}", this, depois));
+    PLACAR.registrar(depois == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, depois));
 }
 
 /// { 0x68d2e0 } (thiscall, ret 0): `LLIST::get_current()`: o item do nó do cursor (+0xa), sem andar; sem cursor, 0.
-unsafe extern "thiscall" fn item_do_cursor(this: usize) -> usize {
+unsafe extern "thiscall" fn get_current(this: usize) -> usize {
     let no = cqb10_d(this + 0xa);
     if no == 0 {
         return 0;
@@ -123,9 +123,9 @@ unsafe extern "thiscall" fn item_do_cursor(this: usize) -> usize {
     cqb10_d(no)
 }
 
-unsafe extern "thiscall" fn comparar_item_do_cursor(this: usize) -> usize {
+unsafe extern "thiscall" fn comparar_get_current(this: usize) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%)(this);
-    let n = item_do_cursor(this);
-    PLACAR.registrar(r == n, || format!("item_do_cursor({:#x}) original={:#x} rust={:#x}", this, r, n));
+    let n = get_current(this);
+    PLACAR.registrar(r == n, || format!("get_current({:#x}) original={:#x} rust={:#x}", this, r, n));
     r
 }

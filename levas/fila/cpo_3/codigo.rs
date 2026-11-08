@@ -44,7 +44,7 @@ unsafe fn cpo3_mes(data: usize) -> i16 {
 /// (+2) da data não são os guardados (+0x14 mês, +0x16 ano), zera os pontos do mês (+0xca, +0xce) de todos os
 /// registros e guarda o mês e o ano novos. No primeiro dia do ano (dia +0 = 0) passa os pontos do ano (+0xb6) de cada
 /// registro com pessoa (+0x86) ao hall da fama (0x5ef270 em [0xb5ded8]) e os zera.
-unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize) {
+unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize) {
     if cpo3_mes(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16) {
         crate::comparacao::ramo("cpo_3 virada do mes");
         let base = cpo3_d(this + 8);
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_dia(this: usize, data: usize)
 /// registro: liga (+0xc2) da competição: soma a copa (+0xbe) se ela também é dessa competição (+0xc6 = −1, +0xbe = 0),
 /// passa os pontos (+0xba) ao hall da fama (0x5ef330) se a competição guarda (+0x11c), zera e +0xc2 = −1; só a copa da
 /// competição: passa +0xbe, zera e +0xc6 = −1.
-unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, entrada: usize) {
     let p = cpo3_d(entrada + 4);
     let pela_global = p != 0 && cpo3_d(p) == cpo3_d(0x9cfa10);
     if !pela_global && cpo3_d(entrada) == 0 {
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn pontos_dos_tecnicos_no_fim_da_competicao(this: usize
 /// bytes, conta +0x3e) com técnico (+0xcf) no clube (+0x39) desde duas semanas atrás (0x54cab0 da data do jogo; ano
 /// +0x40 sem sinal, dia +0x3e com sinal), o de mais pontos no mês (+0xce do registro 0x86f5b0, criado se falta), só
 /// acima de 0. Devolve o técnico ou 0.
-unsafe extern "thiscall" fn tecnico_do_mes_na_liga(this: usize, indice: i32) -> usize {
+unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, indice: i32) -> usize {
     let liga = cpo3_d(cpo3_d(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {
         aviso_em(0xa83b78, 0x104e);
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn tecnico_do_mes_na_liga(this: usize, indice: i32) -> 
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef270, soma): roda só a original e confere o plano: na virada, os pontos
 /// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
-unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_dia(this: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let virada = cpo3_mes(data) as i32 != cpo3_w(this + 0x14) as u16 as i32 || cpo3_w(data + 2) != cpo3_w(this + 0x16);
     let ano = cpo3_w(data) == 0;
@@ -183,12 +183,12 @@ unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_dia(this: usize, dat
         }
         ok &= certo;
     }
-    PLACAR.registrar(ok, || format!("pontos_dos_tecnicos_no_dia(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
+    PLACAR.registrar(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
 }
 
 /// Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
 /// quatro campos (+0xba, +0xbe, +0xc2, +0xc6) de cada registro.
-unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_fim_da_competicao(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: usize, entrada: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let p = cpo3_d(entrada + 4);
     if !(p != 0 && cpo3_d(p) == cpo3_d(0x9cfa10)) && cpo3_d(entrada) == 0 {
@@ -219,18 +219,18 @@ unsafe extern "thiscall" fn comparar_pontos_dos_tecnicos_no_fim_da_competicao(th
         let s = cpo3_registro(this, k) + 0xba;
         plano[k as usize] != (cpo3_d(s), cpo3_d(s + 4), cpo3_i(s + 8), cpo3_i(s + 0xc))
     });
-    PLACAR.registrar(errado.is_none(), || format!("pontos_dos_tecnicos_no_fim_da_competicao(competição {}) registro {:?} difere do plano", id, errado));
+    PLACAR.registrar(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
 }
 
 /// Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
-unsafe extern "thiscall" fn comparar_tecnico_do_mes_na_liga(this: usize, indice: i32) -> usize {
+unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indice: i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> usize>(%%I2%%);
     let liga = cpo3_d(cpo3_d(0xadadfc).wrapping_add((indice as usize).wrapping_mul(4)));
     if *((liga + 0x43) as *const u8) != 2 {
         return o(this, indice);
     }
     let r = o(this, indice);
-    let n = tecnico_do_mes_na_liga(this, indice);
-    PLACAR.registrar(r == n, || format!("tecnico_do_mes_na_liga({}) original={:x} rust={:x}", indice, r, n));
+    let n = find_manager_of_the_month(this, indice);
+    PLACAR.registrar(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
     r
 }

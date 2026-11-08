@@ -25,7 +25,7 @@ unsafe fn opiniao_gravar(c: usize, d: usize, v: i32) {
 /// { 0x549c90 } (cdecl, Database.cpp): `staff_clear_opinion_links(pessoa)`: −1 nos dois vínculos do contrato da
 /// pessoa (+0x27, +0x37, +0x3b, +0x4b). Na criação, a cada contrato gerado (0x85e960, por
 /// CONTRACT_MANAGER::initialise_all_staff_contracts); na carreira, nas propostas e nas queixas.
-unsafe extern "C" fn limpar_vinculos_de_opiniao(pessoa: usize) {
+unsafe extern "C" fn staff_clear_opinion_links(pessoa: usize) {
     if let Some(c) = registro_de_opinioes(pessoa) {
         for k in [0usize, 0x14] {
             opiniao_gravar(c, k + 0x27, -1);
@@ -34,17 +34,17 @@ unsafe extern "C" fn limpar_vinculos_de_opiniao(pessoa: usize) {
     }
 }
 
-unsafe extern "C" fn comparar_limpar_vinculos_de_opiniao(pessoa: usize) {
+unsafe extern "C" fn comparar_staff_clear_opinion_links(pessoa: usize) {
     let o = orig::<unsafe extern "C" fn(usize)>(%%I0%%);
     let Some(c) = registro_de_opinioes(pessoa) else { return o(pessoa) }; // não escreve nada
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa), || limpar_vinculos_de_opiniao(pessoa));
-    PLACAR.registrar(igual, || format!("limpar_vinculos_de_opiniao({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa), || staff_clear_opinion_links(pessoa));
+    PLACAR.registrar(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x549cf0 } (cdecl, Database.cpp): `staff_add_opinion_link(pessoa, outra, valor)`: com as duas pessoas válidas
 /// (não nulas, id < [0xae2364]), grava o id da `outra` e o `valor` no primeiro vínculo se ele está vazio (+0x27 = −1),
 /// senão no segundo (+0x3b/+0x4b, por cima do que houver). Na carreira, pelos eventos do contrato (0x867700).
-unsafe extern "C" fn juntar_vinculo_de_opiniao(pessoa: usize, outra: usize, valor: i32) {
+unsafe extern "C" fn staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
     let Some(c) = registro_de_opinioes(pessoa) else { return };
     if outra == 0 {
         return;
@@ -62,18 +62,18 @@ unsafe extern "C" fn juntar_vinculo_de_opiniao(pessoa: usize, outra: usize, valo
     }
 }
 
-unsafe extern "C" fn comparar_juntar_vinculo_de_opiniao(pessoa: usize, outra: usize, valor: i32) {
+unsafe extern "C" fn comparar_staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
     let o = orig::<unsafe extern "C" fn(usize, usize, i32)>(%%I1%%);
     let Some(c) = registro_de_opinioes(pessoa) else { return o(pessoa, outra, valor) };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, outra, valor),
-        || juntar_vinculo_de_opiniao(pessoa, outra, valor));
-    PLACAR.registrar(igual, || format!("juntar_vinculo_de_opiniao({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
+        || staff_add_opinion_link(pessoa, outra, valor));
+    PLACAR.registrar(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
 }
 
 /// { 0x549d60 } (cdecl, Database.cpp): `staff_remove_opinion_link(pessoa, valor)`: esvazia (−1 no id e no valor) o
 /// primeiro vínculo com esse `valor` (+0x37) ou, se não, o segundo (+0x4b); nenhum com o valor: nada. Na carreira,
 /// quando a queixa passa (0x867240, 0x8674e0).
-unsafe extern "C" fn tirar_vinculo_de_opiniao(pessoa: usize, valor: i32) {
+unsafe extern "C" fn staff_remove_opinion_link(pessoa: usize, valor: i32) {
     let Some(c) = registro_de_opinioes(pessoa) else { return };
     if opiniao_ler(c, 0x37) == valor {
         opiniao_gravar(c, 0x27, -1);
@@ -84,9 +84,9 @@ unsafe extern "C" fn tirar_vinculo_de_opiniao(pessoa: usize, valor: i32) {
     }
 }
 
-unsafe extern "C" fn comparar_tirar_vinculo_de_opiniao(pessoa: usize, valor: i32) {
+unsafe extern "C" fn comparar_staff_remove_opinion_link(pessoa: usize, valor: i32) {
     let o = orig::<unsafe extern "C" fn(usize, i32)>(%%I2%%);
     let Some(c) = registro_de_opinioes(pessoa) else { return o(pessoa, valor) };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, valor), || tirar_vinculo_de_opiniao(pessoa, valor));
-    PLACAR.registrar(igual, || format!("tirar_vinculo_de_opiniao({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, valor), || staff_remove_opinion_link(pessoa, valor));
+    PLACAR.registrar(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
 }

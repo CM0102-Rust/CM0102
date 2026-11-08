@@ -81,7 +81,7 @@ static mut CQB6_ENTREGAS: u32 = 0;
 /// soma 0 vira 1). Cada vaga com clube: ((valor / 20) / soma) × peso (peso abaixo de 1 vale 1) entra nas vendas das
 /// finanças do COMPRADOR (0x5a0590 com +8, 0x599800; é o que a original faz); acima de 11 × reputação (+0x80) − 10000
 /// do clube da vaga, a notícia com 5 = o valor e 6 = o id do clube vai ao técnico dele.
-unsafe extern "thiscall" fn parte_dos_clubes_anteriores(_this: usize, o: usize) {
+unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
     let p = cqb6_pessoa(cqb6_d(o + 0xc));
     if (cqb6_b(p + 0x18) as i8) < 0x17 { // cqb6: só acima de 22 anos
         return;
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn parte_dos_clubes_anteriores(_this: usize, o: usize) 
         u32::MAX
     } else {
         let c2 = cqb6_contrato(p);
-        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
+        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de pass_ball)
         if c2 != 0 && cqb6_b(c2 + 0x35) & 0x3f != 5 { cqb6_d(cqb6_clube_do_contrato(c2)) as u32 } else { u32::MAX }
     };
     if !CQB6_ENSAIO {
@@ -145,18 +145,18 @@ unsafe extern "thiscall" fn parte_dos_clubes_anteriores(_this: usize, o: usize) 
 
 /// Comparador da 0x8e4f20: a cópia em ensaio (sem a notícia) e a original a partir do mesmo estado, lado a lado nas
 /// finanças do comprador (0x167 bytes) e em [0xae1080]; com entrega da notícia, só as finanças.
-unsafe extern "thiscall" fn comparar_parte_dos_clubes_anteriores(this: usize, o: usize) {
+unsafe extern "thiscall" fn comparar_pay_former_club_fee_cuts(this: usize, o: usize) {
     let original = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let fin = cqb6_financas(cqb6_clube(cqb6_d(o + 8)));
     CQB6_ENTREGAS = 0;
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(fin, 0x167), (0xae1080, 4)], || original(this, o), || {
         CQB6_ENSAIO = true;
-        crate::aleatorio::sem_contar(|| parte_dos_clubes_anteriores(this, o));
+        crate::aleatorio::sem_contar(|| pay_former_club_fee_cuts(this, o));
         CQB6_ENSAIO = false;
     });
     let entregas = CQB6_ENTREGAS;
     let igual = igual || (entregas != 0 && mo.0[0] == mr.0[0]);
-    PLACAR.registrar(igual, || format!("parte_dos_clubes_anteriores(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
+    PLACAR.registrar(igual, || format!("pay_former_club_fee_cuts(oferta {:#x}) entregas={} original={:x?} rust={:x?}", o, entregas, mo, mr));
 }
 
 /// { 0x8cb0f0 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::pay_next_sale_percentage(pessoa, oferta)`,
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_parte_dos_clubes_anteriores(this: usize, o:
 /// × base / 100; de 1000 para cima: a notícia (0x8db3a0, com 1 se era a da oferta), os totais de transferência do
 /// clube (0x448ad0 em [0xad9dac]: a parte, o clube do contrato, o clube da cláusula +5), a parte entra nas vendas do
 /// clube da cláusula e sai pelas compras do clube do contrato. A cláusula fica (quem a tira é a 0x8cb4f0).
-unsafe extern "thiscall" fn percentual_da_proxima_venda_pago(this: usize, p: usize, o: usize) -> u32 {
+unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: usize, o: usize) -> u32 {
     let c = cqb6_contrato(p);
     if c == 0 || cqb6_clube_do_contrato(c) == 0 {
         return 0;
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn percentual_da_proxima_venda_pago(this: usize, p: usi
     let mut chave = [0u8; 0xd];
     core::ptr::write_unaligned(chave.as_mut_ptr().add(9) as *mut usize, cqb6_d(p));
     let c2 = cqb6_contrato(p);
-    // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
+    // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de pass_ball)
     let id_clube = if c2 != 0 { cqb6_d(cqb6_clube_do_contrato(c2)) } else { usize::MAX };
     core::ptr::write_unaligned(chave.as_mut_ptr().add(1) as *mut usize, id_clube);
     let busca: unsafe extern "C" fn(*const u8, usize, usize, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -245,7 +245,7 @@ unsafe fn cqb6_financas_da_clausula(this: usize, p: usize) -> Option<(usize, usi
 /// Comparador da 0x8cb0f0: a cópia em ensaio (sem a notícia e sem os totais do clube) e a original a partir do mesmo
 /// estado, lado a lado nas finanças dos dois clubes, em [0xae1080] e no sorteio (a 0x4d0c60 pode sortear); pago (a
 /// notícia e os totais da original podem regravar [0xae1080]), só as finanças e a devolução.
-unsafe extern "thiscall" fn comparar_percentual_da_proxima_venda_pago(this: usize, p: usize, o: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_pay_next_sale_percentage(this: usize, p: usize, o: usize) -> u32 {
     let original = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
@@ -255,12 +255,12 @@ unsafe extern "thiscall" fn comparar_percentual_da_proxima_venda_pago(this: usiz
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || original(this, p, o), || {
         CQB6_ENSAIO = true;
-        let n = crate::aleatorio::sem_contar(|| percentual_da_proxima_venda_pago(this, p, o));
+        let n = crate::aleatorio::sem_contar(|| pay_next_sale_percentage(this, p, o));
         CQB6_ENSAIO = false;
         n
     });
     let igual = r == n && (igual || (r != 0 && mo.0[3..] == mr.0[3..]));
-    PLACAR.registrar(igual, || format!("percentual_da_proxima_venda_pago(pessoa {:#x}, oferta {:#x}) original={} {:x?} rust={} {:x?}", p, o, r, mo, n, mr));
+    PLACAR.registrar(igual, || format!("pay_next_sale_percentage(pessoa {:#x}, oferta {:#x}) original={} {:x?} rust={} {:x?}", p, o, r, mo, n, mr));
     r
 }
 
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn comparar_percentual_da_proxima_venda_pago(this: usiz
 /// 5 = o clube da cláusula (+5), 6 = o clube vendedor (+1), 7 = a parte, 8 = `da_oferta`, 9 = o comprador (+8 da
 /// oferta) com `da_oferta`; senão o id do clube do contrato (0x4cf5a0; sem contrato ou sem clube: acaba sem entregar).
 /// Vai aos técnicos do clube da cláusula e do vendedor (0x7861e0).
-unsafe extern "thiscall" fn noticia_do_percentual_da_venda(_this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
+unsafe extern "thiscall" fn post_sale_percentage_news(_this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
     crate::comparacao::ramo("cqb_6 noticia do percentual");
     let p = cqb6_pessoa(cqb6_d(e + 9));
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn noticia_do_percentual_da_venda(_this: usize, e: usiz
             return;
         }
         let c2 = cqb6_contrato(p);
-        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
+        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de pass_ball)
         if c2 != 0 { cqb6_d(cqb6_clube_do_contrato(c2)) } else { usize::MAX }
     };
     cqb6_gravar(n, 9, v9 as u32);
@@ -303,6 +303,6 @@ unsafe extern "thiscall" fn noticia_do_percentual_da_venda(_this: usize, e: usiz
 
 /// Comparador da 0x8db3a0: só a original (a notícia é entregue e não pode sair duas vezes; a cópia leva o ramo no
 /// modo Rust). ponytail: sem plano a conferir além do que a original entrega.
-unsafe extern "thiscall" fn comparar_noticia_do_percentual_da_venda(this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
+unsafe extern "thiscall" fn comparar_post_sale_percentage_news(this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, i32, usize, u32)>(%%I2%%)(this, e, parte, o, da_oferta)
 }

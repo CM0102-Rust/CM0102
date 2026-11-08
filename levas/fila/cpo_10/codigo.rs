@@ -49,14 +49,14 @@ unsafe fn cpo10_regra(this: usize, nacao: usize) -> usize {
 /// 130 e da reputação do clube / 60, menos de 26 anos, em menos de 3 listas e estatuto positivo, com o interesse
 /// (0x846920) acima de [0x968e58]: o prazo × [0x968e18] até [0x968dd8]; senão um sorteio até estatuto/10 + 12 (o maior
 /// com 1..3). Dias = valor / 3, fatias = valor % 3.
-unsafe extern "thiscall" fn prazo_da_resposta_a_oferta(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let janela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x8e8ed0usize);
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let comprador = cpo10_clube(cpo10_d(oferta + 8));
     let p = cpo10_pessoa(cpo10_d(oferta + 0xc));
-    let c = contrato_de(cpo10_d(0xae1050), p);
+    let c = contract_of(cpo10_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     let dono = if c != 0 && cpo10_b(c + 0x35) & 0x3f != 5 { cpo10_clube(cpo10_d(c + 4)) } else { 0 };
     let k = com_clube(cpo10_d(0xae1050), p, dono);
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn prazo_da_resposta_a_oferta(this: usize, oferta: usiz
 /// 4 ou de 8, a figura das prestações (+0x1c das finanças) recebe as frações ([0x968918]/[0x968f30] ou
 /// [0x967880]/[0x969518]); acabada, sai da lista (0x68d1f0); senão os dois clubes ficam marcados (0x945501). Depois, em
 /// cada clube com finanças, a figura zera: sem marca; positiva só pagando; negativa só recebendo.
-unsafe extern "thiscall" fn pagar_prestacoes_das_transferencias(this: usize) {
+unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let livrar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn pagar_prestacoes_das_transferencias(this: usize) {
 /// ligada à vaga +0x20 sai (0x4ccb30, se o jogador da oferta tem contrato) e o +2 do registro de 8 bytes dele (+0x86e)
 /// baixa; sai a proposta de contrato do jogador com o comprador (0x4cca70), o +1 do registro do jogador baixa, a menor
 /// vaga livre (+0x85e) acompanha, a vaga +0x20 do vetor (+0) zera, a oferta é destruída e a conta +8 baixa.
-unsafe extern "thiscall" fn tirar_oferta_de_transferencia(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn remove_offer(this: usize, oferta: usize) {
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn tirar_oferta_de_transferencia(this: usize, oferta: u
         }
     }
     if cpo10_d(oferta + 4) != 0 {
-        let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+        let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
         let tirar_proposta: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(0x4ccb30usize);
         let l = cpo10_d(oferta + 4);
         cpo10_w(l + 0xa, cpo10_d(l + 2) as u32);
@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn tirar_oferta_de_transferencia(this: usize, oferta: u
             if e == 0 {
                 break;
             }
-            let c = contrato_de(cpo10_d(0xae1050), cpo10_pessoa(cpo10_d(oferta + 0xc)));
+            let c = contract_of(cpo10_d(0xae1050), cpo10_pessoa(cpo10_d(oferta + 0xc)));
             *(0xae1080 as *mut usize) = c;
             if c != 0 && cpo10_clube(cpo10_d(c + 4)) != 0 {
                 tirar_proposta(cpo10_d(0xae1050), cpo10_pessoa(cpo10_d(e)), cpo10_i(oferta + 0x20));
@@ -269,34 +269,34 @@ unsafe fn cpo10_itens(lista: usize) -> Vec<usize> {
 }
 
 /// Comparador: lado a lado pelas duas saídas, o sorteio, [0xae1080] e [0xb67a34] (a caixa da falta de ficha).
-unsafe extern "thiscall" fn comparar_prazo_da_resposta_a_oferta(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
+unsafe extern "thiscall" fn comparar_get_offer_response_delay(this: usize, oferta: usize, dias: *mut u8, fatias: *mut u8) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(%%I0%%);
     let mut reg = vec![(dias as usize, 1usize), (fatias as usize, 1), (0xae1080, 4), (0xb67a34, 4)];
     reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(
         &reg,
         || o(this, oferta, dias, fatias),
-        || crate::aleatorio::sem_contar(|| prazo_da_resposta_a_oferta(this, oferta, dias, fatias)),
+        || crate::aleatorio::sem_contar(|| get_offer_response_delay(this, oferta, dias, fatias)),
     );
-    PLACAR.registrar(igual, || format!("prazo_da_resposta_a_oferta({:#x}) {:x?} x {:x?}", oferta, mo, mr));
+    PLACAR.registrar(igual, || format!("get_offer_response_delay({:#x}) {:x?} x {:x?}", oferta, mo, mr));
 }
 
 /// Comparador: só a original, conferindo o plano (feito antes): saem da lista as prestações que tinham 1 a pagar.
 // ponytail: a original paga (finanças), tira itens da lista (libera) e aloca as marcas; não roda duas vezes. A cópia
 // tem os ramos e a prova é pela carreira.
-unsafe extern "thiscall" fn comparar_pagar_prestacoes_das_transferencias(this: usize) {
+unsafe extern "thiscall" fn comparar_pay_transfer_instalments(this: usize) {
     let lista = this + 0x872;
     let antes = cpo10_itens(lista);
     let acabam = antes.iter().filter(|&&e| cpo10_b(e + 0xc) == 1).count();
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     let depois = cpo10_itens(lista).len();
-    PLACAR.registrar(depois + acabam == antes.len(), || format!("pagar_prestacoes_das_transferencias: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
+    PLACAR.registrar(depois + acabam == antes.len(), || format!("pay_transfer_instalments: {} prestações, {} acabando, {} depois", antes.len(), acabam, depois));
 }
 
 /// Comparador: só a original, conferindo o plano (feito antes): a vaga zerada, as contas +8 e +0x14, a menor vaga livre
 /// e o +1 do registro do jogador.
 // ponytail: a original destrói e libera a oferta e mexe nas listas; não roda duas vezes.
-unsafe extern "thiscall" fn comparar_tirar_oferta_de_transferencia(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_remove_offer(this: usize, oferta: usize) {
     let vaga = cpo10_i(oferta + 0x20);
     let ligada = cpo10_i(oferta + 0x28) != -1;
     let (n8, n14, livre) = (cpo10_i(this + 8), cpo10_i(this + 0x14), cpo10_i(this + 0x85e));
@@ -308,6 +308,6 @@ unsafe extern "thiscall" fn comparar_tirar_oferta_de_transferencia(this: usize, 
         && cpo10_i(this + 0x14) == n14 - ligada as i32
         && cpo10_i(this + 0x85e) == livre.min(vaga)
         && cpo10_b(q) == ofertas.wrapping_sub(1);
-    PLACAR.registrar(ok, || format!("tirar_oferta_de_transferencia: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
+    PLACAR.registrar(ok, || format!("remove_offer: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
         vaga, n8, n14, cpo10_i(this + 8), cpo10_i(this + 0x14), livre, cpo10_i(this + 0x85e), ofertas, cpo10_b(q)));
 }

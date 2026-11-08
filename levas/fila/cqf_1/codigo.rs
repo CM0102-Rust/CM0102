@@ -98,7 +98,7 @@ unsafe fn cqf1_sem_memoria(linha: u32, texto: usize) {
 /// empréstimo oferecido (0x8e1780 com os termos) ou a da oferta feita (0x8d3090). O registro de 8 bytes do alvo
 /// ([this+0x86e]): bit 0 de +0 e +1 sobe; o +2 de cada jogador da troca sobe. Comprador humano e alvo com ficha de
 /// jogador (+0x61): 0x7f75f0 ([0xb74448], alvo, 0).
-unsafe extern "thiscall" fn por_oferta_de_transferencia(this: usize, oferta: usize, termos: u32) {
+unsafe extern "thiscall" fn add_transfer_offer(this: usize, oferta: usize, termos: u32) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     let fechar1: unsafe extern "C" fn() = core::mem::transmute(0x5cc7d0usize);
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn por_oferta_de_transferencia(this: usize, oferta: usi
 /// Comparador da 0x8be300: só a original (aloca a oferta e as listas, tira a oferta antiga, agenda, entrega a
 /// notícia). Confere o plano feito antes: a vaga (`cqf1_vagas`, com o vetor que cresce quando está cheio) e o número
 /// de série gravados na oferta de entrada e a série que sobe.
-unsafe extern "thiscall" fn comparar_por_oferta_de_transferencia(this: usize, oferta: usize, termos: u32) {
+unsafe extern "thiscall" fn comparar_add_transfer_offer(this: usize, oferta: usize, termos: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let (alvo, comprador) = (cqf1_d(oferta + 0xc), cqf1_d(oferta + 8));
     let primeira = cqf1_b(cqf1_d(this + 0x86e).wrapping_add(alvo.wrapping_mul(8)) + 1) == 0;
@@ -289,7 +289,7 @@ unsafe extern "thiscall" fn comparar_por_oferta_de_transferencia(this: usize, of
     }
     let (v, s, s2) = (cqf1_d(oferta + 0x20) as i32, cqf1_d(oferta + 0x24), cqf1_d(this + 0x85a));
     PLACAR.registrar(v == vaga && s == serie && s2 == serie.wrapping_add(1), || format!(
-        "por_oferta_de_transferencia(alvo {}, comprador {}): vaga original {} plano {}, série {} plano {}, próxima {} plano {}",
+        "add_transfer_offer(alvo {}, comprador {}): vaga original {} plano {}, série {} plano {}, próxima {} plano {}",
         alvo, comprador, v, vaga, s, serie, s2, serie.wrapping_add(1)));
 }
 
@@ -309,7 +309,7 @@ unsafe fn cqf1_segue(e: usize) -> bool {
 /// do comprador (0x84aeb0) e cada jogador da troca das do vendedor (o clube do contrato do jogador), e a oferta é
 /// agendada para 10 dias (0x8c6220). Se ela e todas as ofertas pelo jogador (+0) seguem (`cqf1_segue`), o bit 0 do
 /// registro de 8 bytes do jogador ([this+0x86e]) apaga.
-unsafe extern "thiscall" fn aceitar_emprestimo(this: usize, vaga: *mut usize, marcar: u32) {
+unsafe extern "thiscall" fn accept_loan_offer(this: usize, vaga: *mut usize, marcar: u32) {
     let decidir: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x4cc930usize);
     let noticia_aceita: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8d76d0usize);
     let noticia_recusa: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8d8310usize);
@@ -368,6 +368,6 @@ unsafe extern "thiscall" fn aceitar_emprestimo(this: usize, vaga: *mut usize, ma
 }
 
 /// Comparador da 0x8c0660: só a original (entrega notícias, agenda a oferta, mexe nas listas de observação).
-unsafe extern "thiscall" fn comparar_aceitar_emprestimo(this: usize, vaga: *mut usize, marcar: u32) {
+unsafe extern "thiscall" fn comparar_accept_loan_offer(this: usize, vaga: *mut usize, marcar: u32) {
     orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32)>(%%I1%%)(this, vaga, marcar) // ponytail: só a original
 }

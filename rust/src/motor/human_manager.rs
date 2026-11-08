@@ -8,18 +8,18 @@ use super::*;
 /// `qualquer`: sim. Senao, selecao: 0x5fd6b0; clube: 0x5fd480. Se nao, e o clube e do segundo
 /// conjunto de selecoes (0x5409b0), repete com a selecao principal da nacao dele (0x53b3d0),
 /// ja sem `qualquer`. Clube nulo: a original (caixa de erro, zera 0xb67a34, 0).
-pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qualquer: u8, pessoa: usize, forcar: u32) -> u32 {
+pub(crate) unsafe extern "C" fn human_club(clube: usize, sem_tatica: u32, qualquer: u8, pessoa: usize, forcar: u32) -> u32 {
     let h = *(G_HUMAN_MANAGER as *const usize);
     let (mut clube, mut qualquer, mut pessoa) = (clube, qualquer, pessoa);
     let t9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
     let t9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     loop {
         if clube == 0 {
-            return orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_CLUBE_HUMANO)(0, sem_tatica, qualquer, pessoa, forcar);
+            return orig::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(0, sem_tatica, qualquer, pessoa, forcar);
         }
         if pessoa == 0 {
             pessoa = *((clube + club::MANAGER) as *const usize);
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qual
                 if forcar != 0 || qualquer != 0 {
                     return 1;
                 }
-                let sim = if e_selecao(clube) != 0 { t9a06(h, pessoa, core::ptr::null_mut()) as u32 } else { t9a05(h, pessoa) };
+                let sim = if is_national_team(clube) != 0 { t9a06(h, pessoa, core::ptr::null_mut()) as u32 } else { t9a05(h, pessoa) };
                 if sim != 0 {
                     return 1;
                 }
@@ -60,17 +60,17 @@ pub(crate) unsafe fn pessoa_e_registro(this: usize, pessoa: usize) -> Option<(us
 
 /// { 0x5fe040 } (human_manager.cpp): campo +0x9ace do registro do tecnico humano da pessoa.
 /// Sem pessoa nenhuma ou fora da faixa: a original (caixa de erro, zera 0xb67a34, 0).
-pub(crate) unsafe extern "thiscall" fn tecnico_9ace(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn manager_9ace(this: usize, pessoa: usize) -> u32 {
     match pessoa_e_registro(this, pessoa) {
         Some((_, r)) => *((r + 0x9ace) as *const u32),
-        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TECNICO_9ACE)(this, pessoa),
+        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MANAGER_9ACE)(this, pessoa),
     }
 }
 
 /// { 0x5fd6b0 } (human_manager.cpp): byte +0x9a06 do registro do tecnico humano e diferente de
 /// zero? Se a pessoa tem clube (+0x24) de nacao com +0x88 abaixo de 400: falso, e `saida` = 1.
-/// `saida` (se houver) comeca em 0. Erros como em `tecnico_9ace`.
-pub(crate) unsafe extern "thiscall" fn tecnico_9a06(this: usize, pessoa: usize, saida: *mut u32) -> u8 {
+/// `saida` (se houver) comeca em 0. Erros como em `manager_9ace`.
+pub(crate) unsafe extern "thiscall" fn manager_9a06(this: usize, pessoa: usize, saida: *mut u32) -> u8 {
     if !saida.is_null() {
         *saida = 0;
     }
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a06(this: usize, pessoa: usize, 
             }
             (*((r + 0x9a06) as *const u8) != 0) as u8
         }
-        None => orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(IDX_TECNICO_9A06)(this, pessoa, saida),
+        None => orig::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(IDX_MANAGER_9A06)(this, pessoa, saida),
     }
 }
 
@@ -114,7 +114,7 @@ pub(crate) unsafe fn tecnico_humano(this: usize, pessoa: usize) -> Result<usize,
 
 /// { 0x5fd210 } (human_manager.cpp): campo +0x9a01 do registro do tecnico humano da pessoa (0 fora
 /// da faixa). Sem pessoa nenhuma: o original mostra uma caixa de erro e zera 0xb67a34.
-pub(crate) unsafe extern "thiscall" fn tecnico_9a01(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn manager_9a01(this: usize, pessoa: usize) -> u32 {
     match tecnico_humano(this, pessoa) {
         Ok(r) => *((r + 0x9a01) as *const u32),
         Err(sem_pessoa) => {
@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a01(this: usize, pessoa: usize) 
 
 /// { 0x5fd480 } (human_manager.cpp): byte +0x9a05 do registro do tecnico humano da pessoa e diferente
 /// de zero? Sem pessoa nenhuma ou fora da faixa: o original mostra uma caixa de erro e zera 0xb67a34.
-pub(crate) unsafe extern "thiscall" fn tecnico_9a05(this: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn manager_9a05(this: usize, pessoa: usize) -> u32 {
     match tecnico_humano(this, pessoa) {
         Ok(r) => (*((r + 0x9a05) as *const u8) != 0) as u32,
         Err(_) => {
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a05(this: usize, pessoa: usize) 
 /// { 0x5b5a60 } (formation.cpp): bit da mascara de formacao pelo codigo da casa tatica (byte alto:
 /// linha 1, 2, 4, 8; byte baixo: coluna). Tabela tirada do proprio jogo; 0x802 e 0x804 dao o mesmo
 /// bit no original. Codigo desconhecido: 0.
-pub(crate) unsafe extern "stdcall" fn bit_da_casa(codigo: i16) -> u32 {
+pub(crate) unsafe extern "stdcall" fn square_bit(codigo: i16) -> u32 {
     match codigo {
         0x1 => 0x1, 0x82 => 0x2, 0x84 => 0x40, 0x88 => 0x800, 0x90 => 0x10000, 0xa0 => 0x200000, 0xc0 => 0x4000000,
         0x102 => 0x4, 0x104 => 0x80, 0x108 => 0x1000, 0x110 => 0x20000, 0x120 => 0x400000, 0x140 => 0x8000000,
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "stdcall" fn bit_da_casa(codigo: i16) -> u32 {
 /// { 0x5b73a0 } (formation.cpp): separa a mascara em setor (o primeiro de 1, 2, 4 ... 0x40, em
 /// `setor`) e lado (0x80, 0x100, 0x200 (tambem com o bit 1), 0x400, 0x800, nessa ordem, em `lado`).
 /// Sem uma das partes: o original mostra uma caixa de erro, zera 0xb67a34 e devolve 0.
-pub(crate) unsafe extern "C" fn separar_mascara(m: u32, setor: *mut u16, lado: *mut u16) -> u32 {
+pub(crate) unsafe extern "C" fn split_mask(m: u32, setor: *mut u16, lado: *mut u16) -> u32 {
     match [1u16, 2, 4, 8, 0x10, 0x20, 0x40].iter().find(|&&b| m & b as u32 != 0) {
         Some(&b) => *setor = b,
         None => {
@@ -217,25 +217,25 @@ pub(crate) unsafe fn cpx8_registro(this: usize, k: usize) -> usize {
 /// (0x6db500), pela formação (0x6e0230), pelo dia de jogo (0x6b4360), pela tática do clube (0x896660) e pelas telas. O
 /// bloco de tática (0x1ecd bytes) da vaga ativa (byte com sinal em +0x9a69 do registro) do técnico (nulo: o humano da
 /// vez). Sem técnico ou fora da conta: a original (caixa "Error", 0).
-pub(crate) unsafe extern "thiscall" fn tatica_ativa_do_humano(this: usize, tecnico: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_active_tactic(this: usize, tecnico: usize) -> usize {
     let t = cpx8_tecnico(tecnico);
     let Some(k) = (if t != 0 { cpx8_indice(this, t) } else { None }) else {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TATICA_ATIVA_DO_HUMANO)(this, tecnico); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_ACTIVE_TACTIC)(this, tecnico); // caixa: só a original
     };
     let vaga = read_u8(cpx8_registro(this, k) + 0x9a69) as i8 as i32;
     read_usize(this).wrapping_add(vaga.wrapping_mul(0x1ecd) as usize).wrapping_add(k.wrapping_mul(0xa6ef))
 }
 
 /// Comparador: a devolução (rotina pura); sem técnico ou fora da conta, só a original (caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_tatica_ativa_do_humano(this: usize, tecnico: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TATICA_ATIVA_DO_HUMANO);
+pub(crate) unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_ACTIVE_TACTIC);
     let t = cpx8_tecnico(tecnico);
     if t == 0 || cpx8_indice(this, t).is_none() {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
-    let n = tatica_ativa_do_humano(this, tecnico);
-    PLACAR.registrar(r == n, || format!("tatica_ativa_do_humano(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
+    let n = get_active_tactic(this, tecnico);
+    PLACAR.registrar(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
     r
 }
 
@@ -247,13 +247,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_tatica_ativa_do_humano(this: usi
 /// pelos mesmos chamadores da 0x5fbd00. Técnico nulo: o humano da vez (sem nenhum, nada); clube nulo: o do técnico
 /// (+0x39). A vaga ativa (+0x9a69 do registro): 4 na segunda seleção (0x5409b0), 3 com `reserva` numa seleção
 /// (0x53b900), 2 numa seleção, 1 com `reserva`, 0 no time principal. Fora da conta: a original (caixa "Error").
-pub(crate) unsafe extern "thiscall" fn escolher_vaga_de_tatica(this: usize, reserva: u32, clube: usize, tecnico: usize) {
+pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
     let t = cpx8_tecnico(tecnico);
     if t == 0 {
         return;
     }
     let Some(k) = cpx8_indice(this, t) else {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_ESCOLHER_VAGA_DE_TATICA)(this, reserva, clube, tecnico); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserva, clube, tecnico); // caixa: só a original
     };
     let clube = if clube != 0 { clube } else { read_usize(t + 0x39) };
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
@@ -274,15 +274,15 @@ pub(crate) unsafe extern "thiscall" fn escolher_vaga_de_tatica(this: usize, rese
 
 /// Comparador: lado a lado pelo byte da vaga ativa do registro; sem técnico (nada) ou fora da conta (caixa), só a
 /// original.
-pub(crate) unsafe extern "thiscall" fn comparar_escolher_vaga_de_tatica(this: usize, reserva: u32, clube: usize, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_ESCOLHER_VAGA_DE_TATICA);
+pub(crate) unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT);
     let t = cpx8_tecnico(tecnico);
     let Some(k) = (if t != 0 { cpx8_indice(this, t) } else { None }) else {
         return o(this, reserva, clube, tecnico);
     };
     let reg = [(cpx8_registro(this, k) + 0x9a69, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserva, clube, tecnico), || escolher_vaga_de_tatica(this, reserva, clube, tecnico));
-    PLACAR.registrar(igual, || format!("escolher_vaga_de_tatica(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserva, clube, tecnico), || select_tactic_slot(this, reserva, clube, tecnico));
+    PLACAR.registrar(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
 }
 
 
@@ -301,7 +301,7 @@ pub(crate) unsafe fn cpj5_assistida(this: usize, i: usize) -> usize {
 /// [pt] { 0x5fe8d0 } (thiscall, human_manager.cpp): `HUMAN_MANAGER::clear_invalid_watched_fixtures()`: para cada um dos 16
 /// técnicos humanos (os últimos 16 de [0xae23bc]) ativo (+0x5f ≠ 0) que não pode mais ver a partida assistida dele
 /// (0x5fe700), zera os 79 bytes dela. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn limpar_partidas_assistidas(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn clear_invalid_watched_fixtures(this: usize) -> u32 {
     let pode_ver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CAN_WATCH_FIXTURE);
     for i in 0..0x10usize {
         let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
@@ -333,11 +333,11 @@ pub(crate) unsafe fn cpj5_alvos(this: usize, id: u32) -> Vec<usize> {
 
 
 /// Comparador: lado a lado pelas 16 partidas assistidas (a 0x5fe700 só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_limpar_partidas_assistidas(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_LIMPAR_PARTIDAS_ASSISTIDAS);
+pub(crate) unsafe extern "thiscall" fn comparar_clear_invalid_watched_fixtures(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_INVALID_WATCHED_FIXTURES);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (cpj5_assistida(this, i), 79)).collect();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || limpar_partidas_assistidas(this));
-    PLACAR.registrar(igual && r == n, || format!("limpar_partidas_assistidas {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this), || clear_invalid_watched_fixtures(this));
+    PLACAR.registrar(igual && r == n, || format!("clear_invalid_watched_fixtures {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -351,9 +351,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_limpar_partidas_assistidas(this:
 /// [pt] { 0x5fe420 } (thiscall, ret 4, human_manager.cpp): 1 se algum dos 16 técnicos humanos ativos
 /// (registros de 110 bytes em [0xae23bc], a partir de [0xae2364] − 16, +0x5f não nulo) escolheu
 /// assistir a `partida` (0x5fe290); senão 0. Partida nula: a original (caixa de erro e 0).
-pub(crate) unsafe extern "thiscall" fn humano_assiste_a_partida(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: usize) -> u32 {
     if partida == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HUMANO_ASSISTE_A_PARTIDA)(this, partida);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED)(this, partida);
     }
     let assiste: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_WATCHING_FIXTURE);
     for k in 0..16i32 {
@@ -391,13 +391,13 @@ pub(crate) unsafe fn indice_do_humano_do_apelido(this: usize, humano: usize) -> 
 /// deu apelido à pessoa de id [`pessoa`]: busca binária (0x946464 com 0x601a10, itens de 0x1e bytes)
 /// na lista +0xa6e3 (quantos em +0xa6eb) do registro dele (0xa6ef bytes em [this]). Pessoa ou humano
 /// nulos, ou lista vazia: 0. Humano fora da faixa: a original (caixa de erro e 0).
-pub(crate) unsafe extern "thiscall" fn humano_deu_apelido(this: usize, pessoa: usize, humano: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
     let i = match indice_do_humano_do_apelido(this, humano) {
         None => return 0,
-        Some(None) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_HUMANO_DEU_APELIDO)(this, pessoa, humano),
+        Some(None) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_HAS_NICKNAME)(this, pessoa, humano),
         Some(Some(i)) => i,
     };
     let buscar: unsafe extern "C" fn(*const u32, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
@@ -410,26 +410,26 @@ pub(crate) unsafe extern "thiscall" fn humano_deu_apelido(this: usize, pessoa: u
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_humano_assiste_a_partida(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: usize) -> u32 {
     // a 0x5fe290 só lê: pode rodar nos dois lados
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HUMANO_ASSISTE_A_PARTIDA);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED);
     if partida == 0 {
         return o(this, partida);
     }
     let r = o(this, partida);
-    let n = humano_assiste_a_partida(this, partida);
-    PLACAR.registrar(r == n, || format!("humano_assiste_a_partida original={} rust={}", r, n));
+    let n = is_fixture_watched(this, partida);
+    PLACAR.registrar(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_humano_deu_apelido(this: usize, pessoa: usize, humano: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_HUMANO_DEU_APELIDO);
+pub(crate) unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_HAS_NICKNAME);
     if pessoa != 0 && matches!(indice_do_humano_do_apelido(this, humano), Some(None)) {
         return o(this, pessoa, humano);
     }
     let r = o(this, pessoa, humano);
-    let n = humano_deu_apelido(this, pessoa, humano);
-    PLACAR.registrar(r == n, || format!("humano_deu_apelido original={} rust={}", r, n));
+    let n = has_nickname(this, pessoa, humano);
+    PLACAR.registrar(r == n, || format!("has_nickname original={} rust={}", r, n));
     r
 }
 
@@ -456,10 +456,10 @@ pub(crate) unsafe fn registro_do_tecnico_humano(gerente: usize, pessoa: usize) -
 ///
 /// [pt] { 0x5fdc30 } (thiscall, ret 4, human_manager.cpp): a hora (relógio em ms) guardada quando o técnico
 /// humano saiu de férias (+0x9a65 do registro). Fora da faixa: a original (caixa de erro, 0).
-pub(crate) unsafe extern "thiscall" fn hora_das_ferias(gerente: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn get_holiday_stamp(gerente: usize, pessoa: usize) -> u32 {
     match registro_do_tecnico_humano(gerente, pessoa) {
         Some(r) => core::ptr::read_unaligned((r + 0x9a65) as *const u32),
-        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HORA_DAS_FERIAS)(gerente, pessoa),
+        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GET_HOLIDAY_STAMP)(gerente, pessoa),
     }
 }
 
@@ -468,31 +468,31 @@ pub(crate) unsafe extern "thiscall" fn hora_das_ferias(gerente: usize, pessoa: u
 ///
 /// [pt] { 0x5fed50 } (thiscall, ret 4, human_manager.cpp): o endereço da escalação guardada do técnico
 /// humano (16 pares jogador e posição, +0x9b28 do registro). Fora da faixa: a original (caixa de erro, 0).
-pub(crate) unsafe extern "thiscall" fn escalacao_guardada(gerente: usize, pessoa: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_saved_lineup(gerente: usize, pessoa: usize) -> usize {
     match registro_do_tecnico_humano(gerente, pessoa) {
         Some(r) => r + 0x9b28,
-        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ESCALACAO_GUARDADA)(gerente, pessoa),
+        None => orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_SAVED_LINEUP)(gerente, pessoa),
     }
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_hora_das_ferias(gerente: usize, pessoa: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_get_holiday_stamp(gerente: usize, pessoa: usize) -> u32 {
     if registro_do_tecnico_humano(gerente, pessoa).is_none() {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HORA_DAS_FERIAS)(gerente, pessoa);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GET_HOLIDAY_STAMP)(gerente, pessoa);
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HORA_DAS_FERIAS)(gerente, pessoa);
-    let n = hora_das_ferias(gerente, pessoa);
-    PLACAR.registrar(r == n, || format!("hora_das_ferias original={} rust={}", r, n));
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GET_HOLIDAY_STAMP)(gerente, pessoa);
+    let n = get_holiday_stamp(gerente, pessoa);
+    PLACAR.registrar(r == n, || format!("get_holiday_stamp original={} rust={}", r, n));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_escalacao_guardada(gerente: usize, pessoa: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_get_saved_lineup(gerente: usize, pessoa: usize) -> usize {
     if registro_do_tecnico_humano(gerente, pessoa).is_none() {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ESCALACAO_GUARDADA)(gerente, pessoa);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_SAVED_LINEUP)(gerente, pessoa);
     }
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_ESCALACAO_GUARDADA)(gerente, pessoa);
-    let n = escalacao_guardada(gerente, pessoa);
-    PLACAR.registrar(r == n, || format!("escalacao_guardada original={:#x} rust={:#x}", r, n));
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_SAVED_LINEUP)(gerente, pessoa);
+    let n = get_saved_lineup(gerente, pessoa);
+    PLACAR.registrar(r == n, || format!("get_saved_lineup original={:#x} rust={:#x}", r, n));
     r
 }
 
@@ -502,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_escalacao_guardada(gerente: usiz
 /// [pt] { 0x600e90 } (cdecl, human_manager.cpp): quem responde pelo técnico do clube: o auxiliar (+0xd3)
 /// se houver; senão, dos cinco da comissão (+0x19f) com dados (+0x69), o de maior reputação (+0xa,
 /// ficando o primeiro no empate); 0 se nenhum.
-pub(crate) unsafe extern "C" fn tecnico_substituto(clube: usize) -> usize {
+pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(clube: usize) -> usize {
     let auxiliar = core::ptr::read_unaligned((clube + club::ASSISTANT_MANAGER) as *const usize);
     if auxiliar != 0 {
         return auxiliar;
@@ -521,10 +521,10 @@ pub(crate) unsafe extern "C" fn tecnico_substituto(clube: usize) -> usize {
     melhor
 }
 
-pub(crate) unsafe extern "C" fn comparar_tecnico_substituto(clube: usize) -> usize {
-    let r = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_TECNICO_SUBSTITUTO)(clube);
-    let n = tecnico_substituto(clube);
-    PLACAR.registrar(r == n, || format!("tecnico_substituto({:#x}) original={:#x} rust={:#x}", clube, r, n));
+pub(crate) unsafe extern "C" fn comparar_human_manager_get_stand_in_manager(clube: usize) -> usize {
+    let r = orig::<unsafe extern "C" fn(usize) -> usize>(IDX_HUMAN_MANAGER_GET_STAND_IN_MANAGER)(clube);
+    let n = human_manager_get_stand_in_manager(clube);
+    PLACAR.registrar(r == n, || format!("human_manager_get_stand_in_manager({:#x}) original={:#x} rust={:#x}", clube, r, n));
     r
 }
 
@@ -535,10 +535,10 @@ pub(crate) unsafe extern "C" fn comparar_tecnico_substituto(clube: usize) -> usi
 /// assistir: o registro dele (+0x9ad4..) com a mesma competição (+0x3f), datas (+0x2a, +0x28), clube
 /// (+0), +0x34 e os dois lados (+0xc, +0x10). Partida nula ou humano fora da faixa: a original (caixa
 /// de erro e 0).
-pub(crate) unsafe extern "thiscall" fn partida_assistida_pelo_humano(this: usize, partida: usize, humano: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     let r = match registro_da_partida_assistida(this, humano) {
-        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PARTIDA_ASSISTIDA_PELO_HUMANO)(this, partida, humano),
-        Ok(_) if partida == 0 => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PARTIDA_ASSISTIDA_PELO_HUMANO)(this, partida, humano),
+        Err(()) => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida, humano),
+        Ok(_) if partida == 0 => return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida, humano),
         Ok(0) => return 0,
         Ok(r) => r,
     };
@@ -555,15 +555,15 @@ pub(crate) unsafe extern "thiscall" fn partida_assistida_pelo_humano(this: usize
     if mesma { 1 } else { 0 } // outra partida
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_partida_assistida_pelo_humano(this: usize, partida: usize, humano: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PARTIDA_ASSISTIDA_PELO_HUMANO);
+pub(crate) unsafe extern "thiscall" fn comparar_is_watching_fixture(this: usize, partida: usize, humano: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE);
     let r = o(this, partida, humano);
     // ponytail: os casos de erro (caixa) só na original
     if partida == 0 || registro_da_partida_assistida(this, humano).is_err() {
         return r;
     }
-    let n = partida_assistida_pelo_humano(this, partida, humano);
-    PLACAR.registrar(r == n, || format!("partida_assistida_pelo_humano original={} rust={}", r, n));
+    let n = is_watching_fixture(this, partida, humano);
+    PLACAR.registrar(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
     r
 }
 
@@ -577,7 +577,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_partida_assistida_pelo_humano(th
 /// ([0xb64738]), nenhuma partida da lista do dia dela (data +0x28/+0x2a, fatia +0x3f; 0x5ae6a0) tem um clube dele: 1.
 /// Senão 0. Partida nula: a caixa "Error" (0x707) e 0. Pela limpeza das partidas assistidas (0x5fe8d0) e pela escolha
 /// da partida (0x5fe500).
-pub(crate) unsafe extern "thiscall" fn pode_ver_a_partida(this: usize, partida: usize, humano: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
     if partida == 0 {
         aviso_em(0x9cf11c, 0x707);
         return 0;
@@ -623,13 +623,13 @@ pub(crate) unsafe extern "thiscall" fn pode_ver_a_partida(this: usize, partida: 
 }
 
 /// Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_pode_ver_a_partida(this: usize, partida: usize, humano: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PODE_VER_A_PARTIDA)(this, partida, humano);
+pub(crate) unsafe extern "thiscall" fn comparar_can_watch_fixture(this: usize, partida: usize, humano: usize) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_WATCH_FIXTURE)(this, partida, humano);
     if partida == 0 {
         return r;
     }
-    let n = pode_ver_a_partida(this, partida, humano);
-    PLACAR.registrar(r == n, || format!("pode_ver_a_partida(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
+    let n = can_watch_fixture(this, partida, humano);
+    PLACAR.registrar(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, humano, r, n));
     r
 }
 
@@ -643,7 +643,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pode_ver_a_partida(this: usize, 
 /// sem valor, a cópia usa zero) o apelido da pessoa `*id` entre os [+0xa6eb] de 30 bytes; achou: puxa os seguintes um
 /// lugar, o último fica com id −1 e +4 = 0 e a contagem desce. No fim reordena (qsort) só o vetor do último técnico
 /// visto (sem técnicos, o `id` faz as vezes do técnico, como no original).
-pub(crate) unsafe extern "thiscall" fn tirar_apelido_de_todos(this: usize, id: usize) {
+pub(crate) unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id: usize) {
     if id == 0 {
         return;
     }
@@ -686,8 +686,8 @@ pub(crate) unsafe extern "thiscall" fn tirar_apelido_de_todos(this: usize, id: u
 
 /// Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
 /// leria pelo `id`), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_tirar_apelido_de_todos(this: usize, id: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_TIRAR_APELIDO_DE_TODOS);
+pub(crate) unsafe extern "thiscall" fn comparar_remove_nickname_from_all(this: usize, id: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_NICKNAME_FROM_ALL);
     let n = read_u32(this + 4) as i32;
     if id == 0 || n <= 0 {
         return o(this, id);
@@ -700,8 +700,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_tirar_apelido_de_todos(this: usi
             reg.push((read_u32(g + 0xa6e3) as usize, (read_u32(g + 0xa6eb) as i32).max(0) as usize * 30));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id), || tirar_apelido_de_todos(this, id));
-    PLACAR.registrar(igual, || format!("tirar_apelido_de_todos({:x}) {:x?} x {:x?}", id, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id), || remove_nickname_from_all(this, id));
+    PLACAR.registrar(igual, || format!("remove_nickname_from_all({:x}) {:x?} x {:x?}", id, mo, mr));
 }
 
 /// does the current human manager run the club (or the nation's main team)?
@@ -712,16 +712,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_tirar_apelido_de_todos(this: usi
 /// (+0xcf); sem `qualquer`, não pode ter as marcas +0x9ace (0x5fe040) nem +0x9a01 no registro de
 /// humanos [0xb63c98]; e então basta `forcar`, o clube ser seleção (0x53b900) ou a marca +0x9a05
 /// (0x5fd480). Clube nulo: a original (caixa de erro e 0).
-pub(crate) unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u32, forcar: i8) -> u32 {
-    let tecnico_9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
-    let tecnico_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let e_segunda_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
-    let selecao_principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
+pub(crate) unsafe extern "C" fn human_runs_club(clube: usize, qualquer: u32, forcar: i8) -> u32 {
+    let manager_9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
+    let manager_9a05: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_RESERVE_TEAM);
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+    let is_second_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_CLUB_IS_NATIONAL_TEAM);
+    let main_national_team: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let mut c = clube;
     loop {
         if c == 0 {
-            return orig::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMANO_MANDA_NO_CLUBE)(0, qualquer, forcar);
+            return orig::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(0, qualquer, forcar);
         }
         let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let humano = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const usize);
@@ -732,7 +732,7 @@ pub(crate) unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u3
             }
             let humanos = *(G_HUMAN_MANAGER as *const usize);
             if qualquer == 0 {
-                if tecnico_9ace(humanos, humano) != 0 {
+                if manager_9ace(humanos, humano) != 0 {
                     break 'proximo;
                 }
                 let i = (*(humano as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
@@ -743,22 +743,22 @@ pub(crate) unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u3
                     break 'proximo;
                 }
             }
-            if forcar != 0 || e_selecao(c) != 0 || tecnico_9a05(humanos, humano) != 0 {
+            if forcar != 0 || is_national_team(c) != 0 || manager_9a05(humanos, humano) != 0 {
                 crate::comparacao::ramo("humano manda no clube");
                 return 1;
             }
         }
-        if e_segunda_selecao(c) == 0 {
+        if is_second_national_team(c) == 0 {
             return 0;
         }
-        c = selecao_principal(core::ptr::read_unaligned((c + 0x53) as *const usize));
+        c = main_national_team(core::ptr::read_unaligned((c + 0x53) as *const usize));
     }
 }
 
-pub(crate) unsafe extern "C" fn comparar_humano_manda_no_clube(clube: usize, qualquer: u32, forcar: i8) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMANO_MANDA_NO_CLUBE)(clube, qualquer, forcar);
-    let n = humano_manda_no_clube(clube, qualquer, forcar);
-    PLACAR.registrar(r == n, || format!("humano_manda_no_clube({:#x}, {}, {}) original={} rust={}", clube, qualquer, forcar, r, n));
+pub(crate) unsafe extern "C" fn comparar_human_runs_club(clube: usize, qualquer: u32, forcar: i8) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(clube, qualquer, forcar);
+    let n = human_runs_club(clube, qualquer, forcar);
+    PLACAR.registrar(r == n, || format!("human_runs_club({:#x}, {}, {}) original={} rust={}", clube, qualquer, forcar, r, n));
     r
 }
 
@@ -769,26 +769,26 @@ pub(crate) unsafe extern "C" fn comparar_humano_manda_no_clube(clube: usize, qua
 /// humano `tecnico` (sem ele, o da vez em [0xb74c26 + 0x300 × [0xb77c7a]]) entre os humanos `this`
 /// ([this], 0xa6ef bytes cada; o índice é o id − [0xae2364] + 16, até [this+4] − 1). Devolve 1.
 /// Sem técnico ou índice fora: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn gravar_dado_do_humano(t: usize, valor: u32, tecnico: *const i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, valor: u32, tecnico: *const i32) -> u32 {
     let mut p = tecnico;
     if p.is_null() {
         let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
     }
     if p.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_GRAVAR_DADO_DO_HUMANO)(t, valor, tecnico);
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, valor, tecnico);
     }
     let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) {
-        return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_GRAVAR_DADO_DO_HUMANO)(t, valor, tecnico);
+        return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, valor, tecnico);
     }
     crate::comparacao::ramo("dado do humano gravado");
     core::ptr::write_unaligned((*(t as *const usize) + i as usize * 0xa6ef + 0x9a65) as *mut u32, valor);
     1
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_do_humano(t: usize, valor: u32, tecnico: *const i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_GRAVAR_DADO_DO_HUMANO);
+pub(crate) unsafe extern "thiscall" fn comparar_set_human_field(t: usize, valor: u32, tecnico: *const i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD);
     let mut p = tecnico;
     if p.is_null() {
         let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
@@ -800,8 +800,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_do_humano(t: usize, 
         let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
         if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) { vec![] } else { vec![(*(t as *const usize) + i as usize * 0xa6ef + 0x9a65, 4)] }
     };
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, valor, tecnico), || gravar_dado_do_humano(t, valor, tecnico));
-    PLACAR.registrar(igual && r == v, || format!("gravar_dado_do_humano({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, valor, tecnico, r, mo, v, mr));
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, valor, tecnico), || set_human_field(t, valor, tecnico));
+    PLACAR.registrar(igual && r == v, || format!("set_human_field({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, valor, tecnico, r, mo, v, mr));
     r
 }
 
@@ -815,7 +815,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_do_humano(t: usize, 
 /// passa a `férias`, com a conta dos humanos de férias (+0xc) subindo ao ligar e descendo ao desligar; ao ligar, as
 /// notícias pendentes do técnico com o clube (+0x39) e com a seleção (+0x24) são respondidas (0x7874b0); com o dia em
 /// [0xb67a50], o interesse do dia (0x6b5040).
-pub(crate) unsafe extern "thiscall" fn ferias_do_humano(this: usize, ferias: u32, tecnico: usize) {
+pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, ferias: u32, tecnico: usize) {
     let mut t = tecnico;
     if t == 0 {
         t = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
@@ -842,12 +842,12 @@ pub(crate) unsafe extern "thiscall" fn ferias_do_humano(this: usize, ferias: u32
     core::ptr::write_unaligned(marca as *mut u32, ferias);
     crate::comparacao::ramo("cpy_13 ferias do humano");
     if ferias != 0 {
-        let responder: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
+        let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
         if read_usize(t + 0x39) != 0 {
-            responder(read_usize(G_NEWS), t, read_usize(t + 0x39));
+            respond(read_usize(G_NEWS), t, read_usize(t + 0x39));
         }
         if read_usize(t + 0x24) != 0 {
-            responder(read_usize(G_NEWS), t, read_usize(t + 0x24));
+            respond(read_usize(G_NEWS), t, read_usize(t + 0x24));
         }
     }
     let dia = read_usize(G_MATCH_DAY);
@@ -857,8 +857,8 @@ pub(crate) unsafe extern "thiscall" fn ferias_do_humano(this: usize, ferias: u32
     }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_ferias_do_humano(this: usize, ferias: u32, tecnico: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_FERIAS_DO_HUMANO);
+pub(crate) unsafe extern "thiscall" fn comparar_set_on_holiday(this: usize, ferias: u32, tecnico: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_SET_ON_HOLIDAY);
     let t = if tecnico != 0 { tecnico } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)) };
     let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10) };
     if i < 0 || i > (read_usize(this + 4) as i32).wrapping_sub(1) {
@@ -869,5 +869,5 @@ pub(crate) unsafe extern "thiscall" fn comparar_ferias_do_humano(this: usize, fe
     let esperada = conta + if ferias != 0 && antes == 0 { 1 } else if ferias == 0 && antes != 0 { -1 } else { 0 };
     o(this, ferias, tecnico);
     let (depois, conta2) = (read_usize(marca) as u32, read_usize(this + 0xc) as i32);
-    PLACAR.registrar(depois == ferias && conta2 == esperada, || format!("ferias_do_humano({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
+    PLACAR.registrar(depois == ferias && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", ferias, t, antes, depois, conta, conta2, esperada));
 }

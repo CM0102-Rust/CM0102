@@ -93,7 +93,7 @@ const CQJ11_OCEANIA: Cqj11Regras = Cqj11Regras {
 /// `ConmebolLiber::set_up_rules()`: os grupos da Libertadores em dois turnos, 3 pontos a vitória e 1 o empate, os
 /// desempates (1, 2, 3, 0), dois classificados por grupo, clubes internacionais (+0x42 = 2), categoria 7, 7 no banco e 3
 /// substituições, começo no dia 15 do mês 0 do ano da competição, prêmios de 2.000.000; depois a tabela das rodadas.
-unsafe extern "thiscall" fn cqj11_libertadores_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da libertadores");
     let dia = 0xf; // cqj11: o dia do começo da Libertadores
     let vitoria = 3; // cqj11: a vitória nos grupos da Libertadores
@@ -101,37 +101,37 @@ unsafe extern "thiscall" fn cqj11_libertadores_regras(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqj11_libertadores_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj11_confere("cqj11_libertadores_regras", this, &CQJ11_LIBERTADORES, || o(this))
+    cqj11_confere("conmebol_liber_set_up_rules", this, &CQJ11_LIBERTADORES, || o(this))
 }
 
 /// { 0x4c1ed0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x8c; quadro SEH só da data local): `ConMercCup::
 /// set_up_rules()`: os grupos da Copa Merconorte em dois turnos, 3/1 pontos, desempates (1, 2, 3, 0), um classificado
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
-unsafe extern "thiscall" fn cqj11_merconorte_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da merconorte");
     cqj11_regras(this, &CQJ11_MERCONORTE, CQJ11_MERCONORTE.dia, 3)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqj11_merconorte_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj11_confere("cqj11_merconorte_regras", this, &CQJ11_MERCONORTE, || o(this))
+    cqj11_confere("con_merc_cup_set_up_rules", this, &CQJ11_MERCONORTE, || o(this))
 }
 
 /// { 0x7979b0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x8c; quadro SEH só da data local):
 /// `OceaniaClubChamp::set_up_rules()`: os grupos do Campeonato de Clubes da Oceania em turno único, 3/1 pontos,
 /// desempates (1, 2, 4, 0), dois classificados, categoria 8, 3 no banco e 3 substituições, +0x43 = 2, os bits de regra
 /// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
-unsafe extern "thiscall" fn cqj11_oceania_clubes_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da oceania");
     let dia = 0x14; // cqj11: o dia do começo na Oceania
     cqj11_regras(this, &CQJ11_OCEANIA, dia, 3)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqj11_oceania_clubes_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj11_confere("cqj11_oceania_clubes_regras", this, &CQJ11_OCEANIA, || o(this))
+    cqj11_confere("oceania_club_champ_set_up_rules", this, &CQJ11_OCEANIA, || o(this))
 }

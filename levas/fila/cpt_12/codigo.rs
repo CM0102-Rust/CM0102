@@ -35,7 +35,7 @@ unsafe fn cpt12_lista_nova() -> usize {
 /// adversário, com a data livre para ele (0x5c6b70) e o amistoso montado (0x5c6f00, o clube em casa), manda o pedido
 /// (0x5c5570) e guarda a data na lista dos dois (criadas se faltam; 0x68d0d0); a data anda 2 dias a cada adversário.
 /// Devolve 1.
-unsafe extern "thiscall" fn marcar_jogos_da_excursao(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
+unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let mais_dias: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let menos_dias: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c8e0usize);
@@ -135,13 +135,13 @@ unsafe extern "thiscall" fn marcar_jogos_da_excursao(this: usize, cand: usize, a
 
 /// { 0x5c5270 } (cdecl, friendly.cpp): o comparador do qsort dos candidatos do amistoso pela faixa (+5, com sinal),
 /// a maior primeiro: faixa de b − faixa de a.
-unsafe extern "C" fn ordem_pela_faixa(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
     *((b + 5) as *const i8) as i32 - *((a + 5) as *const i8) as i32
 }
 
 /// { 0x5c5290 } (cdecl, friendly.cpp): o comparador (qsort e bsearch) dos ponteiros para candidatos: pela nação (+6,
 /// a diferença em 32 bits); na mesma nação, pela faixa (+5, a maior primeiro), salvo faixa 0xff em um dos dois (0).
-unsafe extern "C" fn ordem_pela_nacao_e_faixa(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
     let (ca, cb) = (cpt12_d(a), cpt12_d(b));
     let dif = (cpt12_d(ca + 6) as u32).wrapping_sub(cpt12_d(cb + 6) as u32) as i32;
     if dif != 0 {
@@ -155,23 +155,23 @@ unsafe extern "C" fn ordem_pela_nacao_e_faixa(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: sorteia, monta amistosos e cria listas (não roda duas vezes): só a original.
-unsafe extern "thiscall" fn comparar_marcar_jogos_da_excursao(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_schedule_tour_matches(this: usize, cand: usize, adv: usize, n: u32) -> u32 {
     // ponytail: o sorteio e os amistosos novos não rodam duas vezes; a cópia se prova pela carreira
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I0%%)(this, cand, adv, n)
 }
 
 /// Comparador: rotina pura, pela devolução.
-unsafe extern "C" fn comparar_ordem_pela_faixa(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_friendly_candidates_by_band(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_pela_faixa(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_pela_faixa({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_friendly_candidates_by_band(a, b);
+    PLACAR.registrar(r == n, || format!("compare_friendly_candidates_by_band({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: rotina pura, pela devolução.
-unsafe extern "C" fn comparar_ordem_pela_nacao_e_faixa(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_friendly_candidate_ptrs_by_nation(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_pela_nacao_e_faixa(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_pela_nacao_e_faixa({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_friendly_candidate_ptrs_by_nation(a, b);
+    PLACAR.registrar(r == n, || format!("compare_friendly_candidate_ptrs_by_nation({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

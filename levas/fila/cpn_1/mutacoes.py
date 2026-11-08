@@ -5,7 +5,7 @@
 # (+0xd3, nunca humano): a noticia nao chega ao humano. Se a carreira nao tiver nenhuma noticia que peca resposta ao
 # clube do humano ate 2002-06-01, as tres PODEM ESCAPAR (ver os ramos).
 MUTACOES = [
-    ('cpn_resposta_do_clube', 'responder(vaga(atual), tecnico, cpn1_d(tecnico + 0x39)); // o clube',
+    ('cpn_resposta_do_clube', 'respond(vaga(atual), tecnico, cpn1_d(tecnico + 0x39)); // o clube',
      '// mutacao: sem a resposta automatica pelo clube',
      'cpn_1 resposta automatica'),
     ('cpn_alcance_clube', 'crate::comparacao::ramo("cpn_1 alcance do clube");',

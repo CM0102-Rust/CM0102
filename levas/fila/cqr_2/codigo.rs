@@ -93,31 +93,31 @@ unsafe fn cqr2_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32)
 }
 
 /// { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
-unsafe extern "thiscall" fn cqr2_virada_do_carioca(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_rio_start_new_season(this: usize) -> u32 {
     cqr2_virada(this, 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: o ano seguinte do Carioca
 }
 
 /// { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
-unsafe extern "thiscall" fn cqr2_virada_do_mineiro(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
     cqr2_virada(this, 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: o ano seguinte do Mineiro
 }
 
 /// { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
-unsafe extern "thiscall" fn cqr2_virada_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_reg_parana_start_new_season(this: usize) -> u32 {
     cqr2_virada(this, 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: o ano seguinte do Paranaense
 }
 
-unsafe extern "thiscall" fn comparar_cqr2_virada_do_carioca(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_rio_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqr2_comparar("cqr2_virada_do_carioca", this, || o(this))
+    cqr2_comparar("bra_reg_rio_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqr2_virada_do_mineiro(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqr2_comparar("cqr2_virada_do_mineiro", this, || o(this))
+    cqr2_comparar("bra_reg_minas_gerais_start_new_season", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqr2_virada_do_paranaense(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_reg_parana_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqr2_comparar("cqr2_virada_do_paranaense", this, || o(this))
+    cqr2_comparar("bra_reg_parana_start_new_season", this, || o(this))
 }

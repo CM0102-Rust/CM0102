@@ -44,7 +44,7 @@ const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
 /// do ano da Copa, levadas aos dias da semana 4, 4 e 2, código 1, valor 1), o jogo 2 de cada rodada vazio (−1) e os
 /// dois jogos de cada rodada da fase (`CQF6_JOGOS`). O mata-mata (fase 7, com as rotinas da copa) e as fases acima:
 /// a original. Devolve a tabela.
-unsafe extern "thiscall" fn mundial_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let f = fase as u8 as i8;
     if f >= 7 {
         return orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%)(this, fase, rodadas, id, liga);
@@ -99,7 +99,7 @@ unsafe fn cqf6_gravados(t: usize) -> Vec<u8> {
 /// Lado a lado nas fases de grupos: a original com as saídas de quem chama e a cópia com saídas próprias, a partir do
 /// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas alocadas têm de ser iguais (a da cópia é liberada).
 /// O mata-mata: só a original.
-unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_world_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
     if fase as u8 as i8 >= 7 {
         return o(this, fase, rodadas, id, liga);
@@ -110,14 +110,14 @@ unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: 
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(
         &reg,
         || o(this, fase, rodadas, id, liga),
-        || mundial_rodadas_da_fase(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
+        || world_cup_create_schedule(this, fase, &mut r2, &mut i2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }),
     );
     let saidas = *rodadas == r2 && *id == i2 && (liga.is_null() || *liga == l2);
     let tabela = if a != 0 && b != 0 { cqf6_gravados(a) == cqf6_gravados(b) } else { a == 0 && b == 0 };
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && saidas && tabela, || format!("mundial_rodadas_da_fase({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
+    PLACAR.registrar(igual && saidas && tabela, || format!("world_cup_create_schedule({}): saídas {} tabela {}", fase as u8 as i8, saidas, tabela));
     a
 }
 
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_mundial_rodadas_da_fase(this: usize, fase: 
 /// (0x90f4f0, 0x911e10, 0x91538e, 0x9184c0, 0x91e200, 0x920500): com a lista das nações (+0x36) abaixo do máximo
 /// (+0x38), a vaga +0x36 da tabela [+0x14] (6 bytes) recebe a situação 6 e o clube, e +0x36 sobe; cheia, a caixa da
 /// linha 0x456.
-unsafe extern "thiscall" fn mundial_nacao_classificada(this: usize, clube: usize) {
+unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: usize) {
     let n = cqf6_w(this + 0x36);
     if n >= cqf6_w(this + 0x38) {
         aviso_em(0xad5888, 0x456);
@@ -139,15 +139,15 @@ unsafe extern "thiscall" fn mundial_nacao_classificada(this: usize, clube: usize
 }
 
 /// Lado a lado (+0x36 e a vaga da tabela); lista cheia (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_mundial_nacao_classificada(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_add_qualified_team(this: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let n = cqf6_w(this + 0x36);
     if n >= cqf6_w(this + 0x38) || cqf6_d(this + 0x14) == 0 {
         return o(this, clube);
     }
     let reg = [(this + 0x36, 2usize), (cqf6_d(this + 0x14).wrapping_add((n as i32 * 6) as usize), 6usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || mundial_nacao_classificada(this, clube));
-    PLACAR.registrar(igual, || format!("mundial_nacao_classificada: {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube), || add_qualified_team(this, clube));
+    PLACAR.registrar(igual, || format!("add_qualified_team: {:x?} x {:x?}", mo, mr));
 }
 
 /// { 0x92f230 } (thiscall, ret 0, world_cup.cpp, sem SEH): `WorldCup::seed_teams()`, do dia da Copa (0x92f1a0, na
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_mundial_nacao_classificada(this: usize, clu
 /// [0x9cfa18]/[0x9cfa0c]/[0x9cfa1c] pote 2, [0x9cfa08]/[0x9cfa14] pote 3; sem nação ou continente, a caixa da linha
 /// 0x61e) com o id do clube nas vagas +0xee (5 bytes); por fim as 24 da tabela (a partir da 9ª) e as vagas +0x116 são
 /// ordenadas pelo pote (0x92f660).
-unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
+unsafe extern "thiscall" fn seed_teams(this: usize) {
     if cqf6_w(this + 0x40) == 0x7d2 {
         crate::comparacao::ramo("cqf_6 sem cabeças de chave em 2002");
         return;
@@ -271,12 +271,12 @@ unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
 
 /// Na Copa de 2002 (volta sem gravar nada) lado a lado em +0x4b; nas outras, só a original (caixas, e as saídas da
 /// 0x5fa730 que a original pode deixar sem gravar).
-unsafe extern "thiscall" fn comparar_mundial_cabecas_de_chave(this: usize) {
+unsafe extern "thiscall" fn comparar_seed_teams(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqf6_w(this + 0x40) != 0x7d2 {
         return o(this);
     }
     let reg = [(this + 0x36, 0x16usize), (this + 0xee, 0xa0usize)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || mundial_cabecas_de_chave(this));
-    PLACAR.registrar(igual, || "mundial_cabecas_de_chave: a Copa de 2002 mudou".to_string());
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || seed_teams(this));
+    PLACAR.registrar(igual, || "seed_teams: a Copa de 2002 mudou".to_string());
 }

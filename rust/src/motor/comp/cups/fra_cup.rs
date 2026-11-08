@@ -133,14 +133,14 @@ pub(crate) const CQL11_COPA_DA_FRANCA: [Cql11R; 9] = [
 ///
 /// [pt] { 0x5ba3f0 } (thiscall, ret 0x10, fra_cup.cpp; a virtual +0x3c da Copa da França): `FraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas; a caixa da linha 0xa6 sem memória.
-pub(crate) unsafe extern "thiscall" fn cql11_copa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_FRANCA, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql11_copa_da_franca_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL11_COPA_DA_FRANCA_TABELA);
-    cql11_comparar("cql11_copa_da_franca_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cql11_copa_da_franca_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE);
+    cql11_comparar("fra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| fra_cup_create_round_table(this, fase, r, e, s))
 }
 
 /// A Copa da Liga francesa (FraLgeCup): sete rodadas de setembro a abril do ano seguinte.
@@ -162,14 +162,14 @@ pub(crate) const CQL11_COPA_DA_LIGA_FRANCESA: [Cql11R; 7] = [
 ///
 /// [pt] { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa2 sem memória.
-pub(crate) unsafe extern "thiscall" fn cql11_copa_da_liga_francesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     cql11_tabela(this, fase, rodadas, extra, saida, &CQL11_COPA_DA_LIGA_FRANCESA, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql11_copa_da_liga_francesa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQL11_COPA_DA_LIGA_FRANCESA_TABELA);
-    cql11_comparar("cql11_copa_da_liga_francesa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cql11_copa_da_liga_francesa_tabela(this, fase, r, e, s))
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE_5BCC40);
+    cql11_comparar("fra_cup_create_round_table_5bcc40", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| fra_cup_create_round_table_5bcc40(this, fase, r, e, s))
 }
 
 /// A Copa do Rei (SpaCup): sete rodadas de agosto a maio do ano seguinte; o clube da divisão mais baixa joga em casa e
@@ -280,14 +280,14 @@ pub(crate) unsafe fn cqm11_copa_da_franca(this: usize) -> (i32, i32) {
 /// [inferência]); os da [0x9cf764] ligados (+0x60) à [0x9cf5d8] (o CFA [inferência]); os franceses da [0x9cf764] sem
 /// ligação; os franceses sem divisão que não são seleções — estes três grupos até 184 inscritos em 2001 e 182 nos
 /// outros anos; a Segunda e a Primeira; com a lista incompleta, devolve 0
-pub(crate) unsafe extern "thiscall" fn cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> i32 {
     cqm11_copa_da_franca(this).0
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm11_copa_da_franca_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM11_COPA_DA_FRANCA_INSCRITOS);
-    cqm10_comparar("cqm11_copa_da_franca_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_franca(this),
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS);
+    cqm10_comparar("fra_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_franca(this),
         |_, n| n.clamp(0, 0xde) as usize * 6)
 }
 
@@ -339,13 +339,13 @@ pub(crate) unsafe fn cqm11_copa_da_liga(this: usize) -> (i32, i32) {
 /// rodada e os 18 últimos na 2ª): os da divisão [0x9cf5d4] que não vieram da [0x9cf5d8] (até 16 em 2001 e 14 nos outros
 /// anos), completados até 16 com os da [0x9cf5d4] que vieram da [0x9cf5d8] (os promovidos [inferência]); a Segunda e a
 /// Primeira; com a lista incompleta, devolve 0
-pub(crate) unsafe extern "thiscall" fn cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
     cqm11_copa_da_liga(this).0
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm11_copa_da_liga_inscritos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CQM11_COPA_DA_LIGA_INSCRITOS);
-    cqm10_comparar("cqm11_copa_da_liga_inscritos", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_liga(this),
+pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS_5BD160);
+    cqm10_comparar("fra_cup_collect_entrants_5bd160", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || cqm11_copa_da_liga(this),
         |_, n| n.clamp(0, 0x36) as usize * 6)
 }
 

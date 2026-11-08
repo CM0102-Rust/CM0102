@@ -131,7 +131,7 @@ pub(crate) const CQT4_PAULISTA: Cqt4Estadual = Cqt4Estadual {
 /// Original: `BraRegRio::BraRegRio` (0x439a40, bra_reg_rio.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt4_construir_carioca(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
     cqt4_construir(this, ano, registro, &CQT4_CARIOCA, 7, true, "cqt_4 carioca novo") // cqt4: a disciplina e as posições previstas do Carioca
 }
 
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn cqt4_construir_carioca(this: usize, ano: 
 /// Original: `BraRegSanta::BraRegSanta` (0x43b130, bra_reg_santa.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x43b130 } (thiscall, ret 8, bra_reg_santa.cpp): `BraRegSanta::BraRegSanta(ano, registro)`: o Catarinense (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt4_construir_catarinense(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
     cqt4_construir(this, ano, registro, &CQT4_CATARINENSE, 7, true, "cqt_4 catarinense novo") // cqt4: a disciplina e as posições previstas do Catarinense
 }
 
@@ -151,23 +151,23 @@ pub(crate) unsafe extern "thiscall" fn cqt4_construir_catarinense(this: usize, a
 /// Original: `BraRegSp::BraRegSp` (0x43c280, bra_reg_sp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt4_construir_paulista(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
     cqt4_construir(this, ano, registro, &CQT4_PAULISTA, 7, true, "cqt_4 paulista novo") // cqt4: a disciplina e as posições previstas do Paulista
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt4_construir_carioca(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT4_CONSTRUIR_CARIOCA);
-    cqt4_comparar("cqt4_construir_carioca", this, ano, registro, &CQT4_CARIOCA, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_rio(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_RIO);
+    cqt4_comparar("construct_bra_reg_rio", this, ano, registro, &CQT4_CARIOCA, || o(this, ano, registro))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt4_construir_catarinense(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT4_CONSTRUIR_CATARINENSE);
-    cqt4_comparar("cqt4_construir_catarinense", this, ano, registro, &CQT4_CATARINENSE, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_santa(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_SANTA);
+    cqt4_comparar("construct_bra_reg_santa", this, ano, registro, &CQT4_CATARINENSE, || o(this, ano, registro))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt4_construir_paulista(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT4_CONSTRUIR_PAULISTA);
-    cqt4_comparar("cqt4_construir_paulista", this, ano, registro, &CQT4_PAULISTA, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_sp(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_SP);
+    cqt4_comparar("construct_bra_reg_sp", this, ano, registro, &CQT4_PAULISTA, || o(this, ano, registro))
 }
 
 
@@ -478,16 +478,16 @@ pub(crate) unsafe fn cqr1_comparar(nome: &str, this: usize, k: u32, original: im
 ///
 /// [pt] { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os
 /// doze clubes; a caixa da linha 0x3d5).
-pub(crate) unsafe extern "thiscall" fn cqr1_turno_do_carioca(this: usize, k: u32) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
     cqr1_turno(this, k, 0x98b014, 0x3d5, 0xb, 0xc2, "cqr_1 turno do carioca") // cqr1: os pontos por vitória no Carioca
 }
 
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqr1_turno_do_carioca(this: usize, k: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CQR1_TURNO_DO_CARIOCA);
-    cqr1_comparar("cqr1_turno_do_carioca", this, k, || o(this, k))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BRA_REG_RIO_CREATE_HALF_SEASON_STAGE);
+    cqr1_comparar("bra_reg_rio_create_half_season_stage", this, k, || o(this, k))
 }
 
 
@@ -591,15 +591,15 @@ pub(crate) unsafe fn cqr2_comparar(nome: &str, this: usize, original: impl FnOnc
 /// Original: `BraRegRio::start_new_season` (0x43a6a0, bra_reg_rio.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
-pub(crate) unsafe extern "thiscall" fn cqr2_virada_do_carioca(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_start_new_season(this: usize) -> u32 {
     cqr2_virada(this, 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: o ano seguinte do Carioca
 }
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_carioca(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR2_VIRADA_DO_CARIOCA);
-    cqr2_comparar("cqr2_virada_do_carioca", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_START_NEW_SEASON);
+    cqr2_comparar("bra_reg_rio_start_new_season", this, || o(this))
 }
 
 
@@ -618,7 +618,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr2_virada_do_carioca(this: usi
 /// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x43a900, call direto com o ecx da liga).
-pub(crate) unsafe extern "thiscall" fn cqo9_fase_seguinte_do_carioca(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
     let fase = read_usize(this + 0x30) as i32;
     if fase >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x98b014, 0x202);
@@ -649,7 +649,7 @@ pub(crate) unsafe extern "thiscall" fn cqo9_fase_seguinte_do_carioca(this: usize
 ///   para a terceira vaga das fases ([+0xc]+8; sem fase: a caixa da linha 0x250 e volta, sem liberar). Com ela:
 ///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
-pub(crate) unsafe extern "thiscall" fn cqo9_final_do_carioca(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let sementes: [u8; 4] = [0, 1, 0, 0];
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let lista = alocar(8);
@@ -721,7 +721,7 @@ pub(crate) unsafe extern "thiscall" fn cqo9_final_do_carioca(this: usize) {
 ///   cada um no saldo (0x5a0590 em [0xae2a38] -> as finanças do clube, thiscall, ret 4; 0x5999a0 Finance::add_prize_money,
 ///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
-pub(crate) unsafe extern "thiscall" fn cqo9_fim_da_temporada_do_carioca(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u32 {
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
     if read_usize(this + 0x30) == 2 {
         let f = read_usize(read_usize(this + 0xc) + 8);
@@ -747,22 +747,22 @@ pub(crate) unsafe extern "thiscall" fn cqo9_fim_da_temporada_do_carioca(this: us
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia; não pode
 /// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
 /// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
-pub(crate) unsafe extern "thiscall" fn comparar_cqo9_fase_seguinte_do_carioca(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_advance_stage(this: usize) {
     let antes = read_usize(this + 0x30) as i32;
     let ultima = antes >= (read_usize(this + 0x2c) as i32).wrapping_sub(1);
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO9_FASE_SEGUINTE_DO_CARIOCA)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_ADVANCE_STAGE)(this);
     let depois = read_usize(this + 0x30) as i32;
     let igual = if ultima { depois == antes } else if antes + 1 == 2 { depois == 2 || depois == 1 } else { depois == antes + 1 };
-    PLACAR.registrar(igual, || format!("cqo9_fase_seguinte_do_carioca({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.registrar(igual, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
 /// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
 /// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
 /// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
-pub(crate) unsafe extern "thiscall" fn comparar_cqo9_final_do_carioca(this: usize) {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_final_stage(this: usize) {
     let (a, b) = (cqo7_campeao_do_turno(this, 0), cqo7_campeao_do_turno(this, 1));
-    orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQO9_FINAL_DO_CARIOCA)(this);
+    orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_CREATE_FINAL_STAGE)(this);
     let igual = if a == b {
         let marca = |k: usize| *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let na_liga = (0..read_i16(this + 0x3e).max(0) as usize).all(|i| {
@@ -780,14 +780,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo9_final_do_carioca(this: usiz
             read_i16(fase + 0x3e) == 2 && read_usize(fase + 4) == read_usize(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && read_usize(this + 0x30) == 2
         }
     };
-    PLACAR.registrar(igual, || format!("cqo9_final_do_carioca({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
+    PLACAR.registrar(igual, || format!("bra_reg_rio_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this, a, b, read_usize(this + 0x30), read_usize(this + 0x2c)));
 }
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
 /// "cqo_9 historico da final" e "cqo_9 premios") e é provada pelas mutações e pelas duas carreiras Rust.
-pub(crate) unsafe extern "thiscall" fn comparar_cqo9_fim_da_temporada_do_carioca(this: usize) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQO9_FIM_DA_TEMPORADA_DO_CARIOCA)(this)
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_record_season_honours(this: usize) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_RECORD_SEASON_HONOURS)(this)
 }
 
 // ---------- 277a leva: a tabela dos estaduais: Carioca, Catarinense e Paulista (bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
@@ -840,7 +840,7 @@ pub(crate) unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 ///
 /// [pt] { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
 /// Fonte 0x98b014, linha 0x169.
-pub(crate) unsafe extern "thiscall" fn cqm8_tabela_do_carioca(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table(this: usize) -> u32 {
     cqm8_tabela(this, 0xc, 0x98b014, 0x169, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, 0, "cqm_8 carioca cheio")
 }
 
@@ -850,7 +850,7 @@ pub(crate) unsafe extern "thiscall" fn cqm8_tabela_do_carioca(this: usize) -> u3
 ///
 /// [pt] { 0x43bb70 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_table()`: o Catarinense tem 10 clubes (divisão reserva +0x60 = [0x9cf9b0]).
 /// Fonte 0x98b050, linha 0x167.
-pub(crate) unsafe extern "thiscall" fn cqm8_tabela_do_catarinense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
     cqm8_tabela(this, 0xa, 0x98b050, 0x167, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, 0, "cqm_8 catarinense cheio")
 }
 
@@ -860,7 +860,7 @@ pub(crate) unsafe extern "thiscall" fn cqm8_tabela_do_catarinense(this: usize) -
 ///
 /// [pt] { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
 /// Fonte 0x98b090, linha 0x159.
-pub(crate) unsafe extern "thiscall" fn cqm8_tabela_do_paulista(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
     cqm8_tabela(this, 0x10, 0x98b090, 0x159, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, 0, "cqm_8 paulista cheio")
 }
 
@@ -890,19 +890,19 @@ pub(crate) unsafe fn cqm8_comparar(nome: &str, this: usize, n: i16, g: usize, or
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm8_tabela_do_carioca(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM8_TABELA_DO_CARIOCA);
-    cqm8_comparar("cqm8_tabela_do_carioca", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE);
+    cqm8_comparar("bra_reg_rio_create_table", this, 0xc, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm8_tabela_do_catarinense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM8_TABELA_DO_CATARINENSE);
-    cqm8_comparar("cqm8_tabela_do_catarinense", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43bb70(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE_43BB70);
+    cqm8_comparar("bra_reg_rio_create_table_43bb70", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_SANTA_CATARINA_STATE_CHAMPIONS, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm8_tabela_do_paulista(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM8_TABELA_DO_PAULISTA);
-    cqm8_comparar("cqm8_tabela_do_paulista", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_create_table_43cc40(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_CREATE_TABLE_43CC40);
+    cqm8_comparar("bra_reg_rio_create_table_43cc40", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, || o(this))
 }
 
 /// Minas Gerais and Rio (the same routine in the two vtables): no top places in the overall table (the halves have
@@ -915,7 +915,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm8_tabela_do_paulista(this: us
 ///
 /// [pt] { 0x43a600 } (thiscall, bra_reg_rio.cpp): `BraRegRio::set_up_rules`, nas vtables do Mineiro (0x968284) e do
 /// Carioca (0x968608); devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     cqi9_regras_carioca(this);
     crate::comparacao::ramo("cqi_9 regras do carioca");
     cqi7_calendario(this);
@@ -923,12 +923,12 @@ pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_carioca(this: usize) -> u3
 }
 
 /// Comparador: como o do Paranaense.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_carioca(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_rio_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI9_REGRAS_DO_CARIOCA)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_SET_UP_RULES)(this), || {
         cqi9_regras_carioca(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_carioca({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_rio_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

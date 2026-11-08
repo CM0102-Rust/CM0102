@@ -21,7 +21,7 @@ unsafe fn dbq3_i16(a: usize) -> i16 {
 /// local (gravados antes de lidos) e um no próprio argumento; a cópia não. Chamada em 37 pontos: escolha do companheiro
 /// favorito (0x548da0, no diário das pessoas), motor de partidas (0x6b7f20), mídia (0x758010/0x758200, 0x72c1f0),
 /// prêmios (0x768cf0) e telas de pessoas.
-unsafe extern "C" fn mascara_da_posicao_natural(pessoa: usize) -> u32 {
+unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -45,7 +45,7 @@ unsafe extern "C" fn mascara_da_posicao_natural(pessoa: usize) -> u32 {
     }
     for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x18), (0x13, 0x38), (0x14, 0x30)] {
         if b(k) == 20 {
-            m |= bit; // o lateral, o zagueiro...
+            m |= bit; // o throw_in, o zagueiro...
         }
     }
     let algum_20 = (0x10..=0x14).any(|k| b(k) == 20);
@@ -69,17 +69,17 @@ unsafe extern "C" fn mascara_da_posicao_natural(pessoa: usize) -> u32 {
     0x10
 }
 
-unsafe extern "C" fn comparar_mascara_da_posicao_natural(pessoa: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_get_natural_position_mask(pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(pessoa);
-    let n = mascara_da_posicao_natural(pessoa);
-    PLACAR.registrar(r == n, || format!("mascara_da_posicao_natural({:x}) original={:x} rust={:x}", pessoa, r, n));
+    let n = staff_get_natural_position_mask(pessoa);
+    PLACAR.registrar(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
     r
 }
 
 /// { 0x548150 } (cdecl, Database.cpp): `club_count_squad_with_position_mask(clube, mascara)`: quantos dos 50 do elenco
 /// (+0xd7) com jogador (+0x61) têm a máscara da posição natural (0x5481a0, pelo endereço do jogo) igual a `mascara`.
 /// Só `al` (os três chamadores, 0x758010 e 0x758200, leem o byte). Na mídia.
-unsafe extern "C" fn contar_elenco_com_mascara(clube: usize, mascara: u32) -> u8 {
+unsafe extern "C" fn club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
     let mascara_de: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5481a0usize);
     let mut n = 0u8;
     for k in 0..50 {
@@ -91,10 +91,10 @@ unsafe extern "C" fn contar_elenco_com_mascara(clube: usize, mascara: u32) -> u8
     n
 }
 
-unsafe extern "C" fn comparar_contar_elenco_com_mascara(clube: usize, mascara: u32) -> u8 {
+unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, u32) -> u8>(%%I1%%)(clube, mascara);
-    let n = contar_elenco_com_mascara(clube, mascara);
-    PLACAR.registrar(r == n, || format!("contar_elenco_com_mascara({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
+    let n = club_count_squad_with_position_mask(clube, mascara);
+    PLACAR.registrar(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
     r
 }
 
@@ -112,13 +112,13 @@ unsafe extern "C" fn comparar_contar_elenco_com_mascara(clube: usize, mascara: u
 /// de nota mais alta (estritamente acima de −10000 e do anterior). As chamadas pelo endereço do jogo. Locais todas
 /// gravadas antes de lidas (a original usa o próprio argumento como cursor). No diário das pessoas
 /// (game_daily_staff_update 0x5ce2d0) e na tela da pessoa (0x87dd80).
-unsafe extern "C" fn escolher_companheiro_favorito(pessoa: usize, clube: usize) -> usize {
+unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
     if pessoa == 0 || clube == 0 || dbq3_u32(0xb74350) == 0 {
         return 0;
     }
     let idade: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
     let mascara_de: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5481a0usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cca10usize);
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     let id = dbq3_u32(pessoa) as i32;
@@ -146,7 +146,7 @@ unsafe extern "C" fn escolher_companheiro_favorito(pessoa: usize, clube: usize) 
         if dbq3_i8(o + 0x5a) < 11 && mascara_de(o) == mascara_de(pessoa) {
             continue;
         }
-        let contrato = contrato_de(dbq3_u32(0xae1050), o, clube);
+        let contrato = contract_of(dbq3_u32(0xae1050), o, clube);
         if contrato == 0 {
             continue;
         }
@@ -214,12 +214,12 @@ unsafe extern "C" fn escolher_companheiro_favorito(pessoa: usize, clube: usize) 
     melhor
 }
 
-unsafe extern "C" fn comparar_escolher_companheiro_favorito(pessoa: usize, clube: usize) -> usize {
+unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
     let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube),
-        || crate::aleatorio::sem_contar(|| escolher_companheiro_favorito(pessoa, clube)));
-    PLACAR.registrar(igual && r == n, || format!("escolher_companheiro_favorito({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_pick_favoured_team_mate(pessoa, clube)));
+    PLACAR.registrar(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }

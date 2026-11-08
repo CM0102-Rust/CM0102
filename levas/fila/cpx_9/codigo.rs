@@ -63,7 +63,7 @@ unsafe fn cpx9_regioes(this: usize, clube: usize, time: u32) -> Vec<(usize, usiz
 /// +0x5a: 0x897dc0 e 0x897ee0) e os batedores das cinco bolas paradas nos dois lados (0x897990 e 0x897bb0) que são ela
 /// ficam vazios. As cópias para desfazer do clube e do time somem. Devolve 1 se a tirou de uma vaga ou de bola parada.
 /// Clube ou pessoa nulos: a original (caixa "Error", 0).
-unsafe extern "thiscall" fn tirar_da_escalacao(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
+unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
     if clube == 0 || pessoa == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%)(this, clube, pessoa, time, papeis); // caixa: só a original
     }
@@ -108,14 +108,14 @@ unsafe extern "thiscall" fn tirar_da_escalacao(this: usize, clube: usize, pessoa
 
 /// Comparador: lado a lado pela devolução, pela linha do clube na tabela tática (as vagas, as extras e os batedores) e
 /// pelas cópias para desfazer com a conta. Clube ou pessoa nulos (caixa): só a original.
-unsafe extern "thiscall" fn comparar_tirar_da_escalacao(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_remove_player_from_selection(this: usize, clube: usize, pessoa: usize, time: u32, papeis: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time, papeis);
     }
     let reg = cpx9_regioes(this, clube, time);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, pessoa, time, papeis), || tirar_da_escalacao(this, clube, pessoa, time, papeis));
-    PLACAR.registrar(igual && r == n, || format!("tirar_da_escalacao(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, pessoa, time, papeis), || remove_player_from_selection(this, clube, pessoa, time, papeis));
+    PLACAR.registrar(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", clube, pessoa, time, papeis, r, mo, n, mr));
     r
 }
 
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn comparar_tirar_da_escalacao(this: usize, clube: usiz
 /// elenco (0x46835e). Vagas `a` e `b` (bytes com sinal, 0..19): troca os ids das duas vagas da escalação (+2 + 4 × vaga
 /// da linha tática, 0x90ba90 com 4 bytes) e as cópias para desfazer do clube e do time somem; devolve 1. Sem linha
 /// (0x8982b0): 0. Clube nulo ou vaga fora: a original (caixa "Error", 0).
-unsafe extern "thiscall" fn trocar_vagas_da_escalacao(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
+unsafe extern "thiscall" fn swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, clube, a, b, time); // caixa: só a original
@@ -141,22 +141,22 @@ unsafe extern "thiscall" fn trocar_vagas_da_escalacao(this: usize, clube: usize,
 
 /// Comparador: lado a lado pela devolução, pela linha tática do clube e pelas cópias para desfazer. Clube nulo ou vaga
 /// fora (caixa): só a original.
-unsafe extern "thiscall" fn comparar_trocar_vagas_da_escalacao(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_swap_selection_slots(this: usize, clube: usize, a: u32, b: u32, time: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(%%I1%%);
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if clube == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
         return o(this, clube, a, b, time);
     }
     let reg = cpx9_regioes(this, clube, time);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, a, b, time), || trocar_vagas_da_escalacao(this, clube, a, b, time));
-    PLACAR.registrar(igual && r == n, || format!("trocar_vagas_da_escalacao(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, a, b, time), || swap_selection_slots(this, clube, a, b, time));
+    PLACAR.registrar(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", clube, va, vb, time, r, mo, n, mr));
     r
 }
 
 /// { 0x897250 } (thiscall, ret 8, tactics.cpp): `Tactics::has_selection_undo(clube, time)`, pela tela do elenco
 /// (0x458a58). Com cópias (+0x5f0) e o humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]): a cópia dele (índice
 /// [0xae2364] − id − 1, de 0 a 15) existe (+8) e é deste clube (+0) e time (+4): 1; senão 0.
-unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
     if cpx9_b(this + 0x5f0) == 0 {
         return 0;
     }
@@ -173,9 +173,9 @@ unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube: usize, ti
 }
 
 /// Comparador: a devolução (rotina pura).
-unsafe extern "thiscall" fn comparar_tem_copia_da_escalacao(this: usize, clube: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_has_selection_undo(this: usize, clube: usize, time: u32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, clube, time);
-    let n = tem_copia_da_escalacao(this, clube, time);
-    PLACAR.registrar(r == n, || format!("tem_copia_da_escalacao(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
+    let n = has_selection_undo(this, clube, time);
+    PLACAR.registrar(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", clube, time, r, n));
     r
 }

@@ -48,12 +48,12 @@ const CPO7_CASO: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5
 /// 0x2000 ou 8 em +0x45, os tipos 0, 2, 4, 7, 9, 0xe e 0x23 viram 0x12 (+0x5d ≥ sorteio(10)) ou 0x21; lesionado
 /// (0x62ed70): 0xc. Nos tipos 0, 6, 14 e 17: com +0x44 da ficha abaixo de 10, sorteio(3) + 2; senão sorteio(5), e 0 ou 1
 /// sobe +0x44 da ficha (até 20).
-unsafe extern "thiscall" fn noticia_de_gratidao_do_jogador(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
+unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
     if jogador == 0 || cpo7_d(jogador + 0x61) == 0 || clube == 0 || cpo7_d(clube + 0xcf) == 0 {
         return;
     }
-    let contrato_com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    let contrato = contrato_com_clube(cpo7_d(0xae1050), jogador, clube);
+    let contract_with_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contrato = contract_with_club(cpo7_d(0xae1050), jogador, clube);
     if contrato == 0 {
         return;
     }
@@ -68,17 +68,17 @@ unsafe extern "thiscall" fn noticia_de_gratidao_do_jogador(this: usize, jogador:
     cpo7_dados(gravar, n, 0, jogador, true);
     gravar(n, 4, cpo7_d(clube) as u32);
     // a lista da mídia (this +0, conta em +8)
-    let mut na_lista = false;
+    let mut in_list = false;
     for i in 0..core::ptr::read_unaligned((this + 8) as *const i32).max(0) as usize {
         let e = cpo7_d(this) + i * 0x17;
         if cpo7_d(e + 8) == cpo7_d(jogador) && *((e + 0x10) as *const u8) == 2 {
-            na_lista = true;
+            in_list = true;
             break;
         }
     }
     let f45 = cpo7_d(contrato + 0x45);
     let mut t = tipo;
-    if na_lista || f45 & 0x2000 != 0 || f45 & 8 != 0 {
+    if in_list || f45 & 0x2000 != 0 || f45 & 8 != 0 {
         if [0xe, 0, 2, 9, 0x23, 4, 7].contains(&(tipo as i16)) {
             crate::comparacao::ramo("cpo_7 gratidao tipo");
             let s = sorteio(10);
@@ -135,12 +135,12 @@ unsafe extern "thiscall" fn noticia_de_gratidao_do_jogador(this: usize, jogador:
 /// ficha) acima de 4250, senão (2, ·): o segundo 1 se (+0x57 > 15 e +0x5d < 6, ou +0x5b < 10 e +0x59 < 6 na faixa de
 /// baixo), 3 se o tipo é 0x20, 1 ou 0x1e com +0x59 > 15, +0x5b > 10 e mais de 210 dias no clube, senão 2; 7 = tipo, 8 =
 /// quarto, 9 = listado para transferência (0x544520).
-unsafe extern "thiscall" fn noticia_de_pedido_de_apoio(_this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
+unsafe extern "thiscall" fn post_player_backing_request_news(_this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
     if jogador == 0 || cpo7_d(jogador + 0x61) == 0 || clube == 0 {
         return;
     }
-    let clube_humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    if clube_humano(clube, 0, 1, 0, 0) == 0 {
+    let human_club: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    if human_club(clube, 0, 1, 0, 0) == 0 {
         return;
     }
     crate::comparacao::ramo("cpo_7 pedido de apoio");
@@ -184,12 +184,12 @@ unsafe extern "thiscall" fn noticia_de_pedido_de_apoio(_this: usize, jogador: us
 /// > 15 e sem 0x181 em +0x45 do contrato; o maior quando o contrato tem 0x2000 ou 8, +0x5b < 10, +0x5d > 10, +0x59 < 15,
 /// mais de 23 anos e a resposta é 2; senão 0), 6 = resposta, 7 = confiança da diretoria abaixo de 4000, 8 = tópico,
 /// 9..0xc o técnico. Vai aos técnicos dos clubes que a 0x8d1da0 ([0xde1f54], 0x21a, até 30) devolve.
-unsafe extern "thiscall" fn noticia_de_reacao_a_critica(_this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
+unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
     if jogador == 0 || cpo7_d(jogador + 0x61) == 0 || clube == 0 || cpo7_d(clube + 0xcf) == 0 {
         return;
     }
-    let contrato_com_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
-    let contrato = contrato_com_clube(cpo7_d(0xae1050), jogador, clube);
+    let contract_with_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contrato = contract_with_club(cpo7_d(0xae1050), jogador, clube);
     if contrato == 0 {
         return;
     }
@@ -239,16 +239,16 @@ unsafe extern "thiscall" fn noticia_de_reacao_a_critica(_this: usize, jogador: u
 
 /// Comparador: a gratidão sorteia, sobe +0x44 da ficha e entrega a notícia: só a original (a prova é a carreira e o
 /// modo Rust).
-unsafe extern "thiscall" fn comparar_noticia_de_gratidao_do_jogador(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
+unsafe extern "thiscall" fn comparar_queue_player_gratitude_news(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I0%%)(this, jogador, clube, tipo, variante)
 }
 
 /// Comparador: a notícia vai à caixa do técnico (não pode rodar duas vezes): só a original.
-unsafe extern "thiscall" fn comparar_noticia_de_pedido_de_apoio(this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
+unsafe extern "thiscall" fn comparar_post_player_backing_request_news(this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I1%%)(this, jogador, clube, tipo, quarto)
 }
 
 /// Comparador: a notícia vai às caixas dos técnicos (não pode rodar duas vezes): só a original.
-unsafe extern "thiscall" fn comparar_noticia_de_reacao_a_critica(this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
+unsafe extern "thiscall" fn comparar_post_player_criticism_reaction_news(this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I2%%)(this, jogador, clube, topico, resposta)
 }

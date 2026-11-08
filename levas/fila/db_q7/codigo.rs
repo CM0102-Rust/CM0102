@@ -85,7 +85,7 @@ unsafe fn nome_aceito(nome: usize) -> bool {
 /// dela, fica o de maior peso (+0x3b, com sinal) entre os aceitos (`nome_aceito`). Com até 100: grupo de
 /// língua 0 sorteia na tabela inteira, mas devolve a linha da tabela dos SEGUNDOS nomes ([0xae23f4],
 /// assim na original); senão `nacao_que_empresta_nomes`. Só o rand() da CRT (não o 0x90cfc0).
-unsafe extern "C" fn primeiro_nome_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn database_pick_first_name_for_nation(nacao: usize) -> usize {
     let linha = |t: usize, i: i32| (*(t as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao == 0 {
         return linha(0xae23f0, sorteio_escalado(total_de_nomes_limitado(0xae2398)));
@@ -116,9 +116,9 @@ unsafe extern "C" fn primeiro_nome_da_nacao(nacao: usize) -> usize {
 }
 
 /// { 0x53a1b0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) para a `nacao`.
-/// Como `primeiro_nome_da_nacao` com os segundos nomes (+4, +0x1c, [0xae239c]), sem filtrar os nomes
+/// Como `database_pick_first_name_for_nation` com os segundos nomes (+4, +0x1c, [0xae239c]), sem filtrar os nomes
 /// no sorteio de 20 (só o maior peso).
-unsafe extern "C" fn segundo_nome_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn database_pick_second_name_for_nation(nacao: usize) -> usize {
     let linha = |i: i32| (*(0xae23f4 as *const usize)).wrapping_add((i as usize).wrapping_mul(60));
     if nacao == 0 {
         return linha(sorteio_escalado(total_de_nomes_limitado(0xae239c)));
@@ -170,7 +170,7 @@ unsafe fn copiar_nome_formatado(destino: usize, origem: usize) {
 /// [0xb63c98]). 1 "nome sobrenome", 2 "N.sobrenome", 3 "sobrenome, nome", 4 "sobrenome, N", 5 só um
 /// nome, 6 iniciais, 7 como o 1 sem preferir o comum; sempre com recuos (o que houver). Devolve 1.
 /// Pessoa ou destino nulos, tamanho (i16) < 0x69 ou estilo fora de 1..7: a original (caixa e 0).
-unsafe extern "C" fn formatar_nome_da_pessoa(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
+unsafe extern "C" fn database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
     let e = estilo as u8;
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&e) {
         return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(pessoa, destino, tamanho, estilo);
@@ -241,31 +241,31 @@ unsafe extern "C" fn formatar_nome_da_pessoa(pessoa: usize, destino: usize, tama
     1
 }
 
-unsafe extern "C" fn comparar_primeiro_nome_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) -> usize {
     // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| primeiro_nome_da_nacao(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("primeiro_nome_da_nacao({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_first_name_for_nation(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_segundo_nome_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| segundo_nome_da_nacao(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("segundo_nome_da_nacao({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| database_pick_second_name_for_nation(nacao)));
+    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_formatar_nome_da_pessoa(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
+unsafe extern "C" fn comparar_database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
     if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
         return o(pessoa, destino, tamanho, estilo); // caixa: só a original
     }
     // o destino tem pelo menos 0x69 bytes (a rotina exige); 0x600740 e 0x6005e0 só leem
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(destino, 0x69)], || o(pessoa, destino, tamanho, estilo),
-        || formatar_nome_da_pessoa(pessoa, destino, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("formatar_nome_da_pessoa({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
+        || database_format_staff_name(pessoa, destino, tamanho, estilo));
+    PLACAR.registrar(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
     r
 }

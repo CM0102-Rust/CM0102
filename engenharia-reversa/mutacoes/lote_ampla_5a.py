@@ -1,7 +1,7 @@
 # Lote 5a da carreira ampla (28/10/2026): as escapadas das levas 241 a 244 (direitos de TV, selecoes, regens, contratos),
 # numa carreira que passa da Copa e de janeiro de 2003. Uso: python mutacoes.py mutacoes\lote_ampla_5a.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limite 14400
 MUTACOES = [
-    ('cpa_tv_valor', '            somar_tv(financas_do_clube(*(G_FINANCE_TABLE as *const usize), clube), valor); // o dinheiro da TV', '            somar_tv(financas_do_clube(*(0xae2a38 as *const usize), clube), valor.wrapping_mul(2)); // mutacao: o dobro'),
+    ('cpa_tv_valor', '            somar_tv(get_club_finance(*(G_FINANCE_TABLE as *const usize), clube), valor); // o dinheiro da TV', '            somar_tv(get_club_finance(*(0xae2a38 as *const usize), clube), valor.wrapping_mul(2)); // mutacao: o dobro'),
     ('cpd_atual_aviso', '        cpd3_avisar_tecnicos(nacao); // o aviso da competição seguinte', '        // mutacao: sem o aviso da competicao seguinte'),
     ('cpd_continente_aviso', '                cpd3_avisar_tecnicos(nacao); // o aviso do continente', '                // mutacao: sem o aviso do continente'),
     ('cpe_datas_ano', 'if ya < yb { // o ano antes\n        return -1;', 'if ya < yb { // mutacao: invertido\n        return 1;'),

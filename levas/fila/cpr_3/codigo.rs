@@ -79,7 +79,7 @@ unsafe fn cpr3_futura(this: usize, jogador: usize, saida: *mut usize, l: usize) 
 /// pelo jogador (0x8c5cf0) e, sem achar, pelas trocas que o oferecem (0x8c5e40, com a lista esvaziada por 0x68d080), a
 /// primeira de estado 0x13 com índice ≠ −1; com `saida`, o registro de 12 bytes do vetor [this+0x920] (conta +0x928)
 /// com a oferta em +8; 1. Nenhuma: tira a marca 0x10 e 0.
-unsafe extern "thiscall" fn transferencia_futura_do_jogador(this: usize, jogador: usize, saida: *mut usize) -> u32 {
+unsafe extern "thiscall" fn get_future_transfer(this: usize, jogador: usize, saida: *mut usize) -> u32 {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mut lista = [0u8; 0x10];
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn transferencia_futura_do_jogador(this: usize, jogador
 /// marca 0x10 do jogador (+0xc) e dos jogadores da troca (lista +4, o cursor volta ao começo); no vetor [this+0x920]
 /// (conta +0x928), o primeiro registro com a oferta (+0x20 da oferta, +8 do registro) sai: os seguintes descem um
 /// (0x8cbf40) e a conta cai de 1.
-unsafe extern "thiscall" fn tirar_transferencia_futura(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn remove_future_transfer(this: usize, oferta: usize) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x8cbf40usize);
     *cpr3_marca(this, cpr3_d(oferta + 0xc)) &= 0xef;
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn tirar_transferencia_futura(this: usize, oferta: usiz
 /// com 0x778e90). A oferta fica com +0x2d = 1 e o estado 0x13. Suspende os clubes que miram o jogador (0x842b00 de
 /// [this+0x856], com 0) e liga a marca 0x10 dele; com contrato (0x4cf5a0) marcado em +0x49, a oferta vai a +0x4a do
 /// contrato. O mesmo (suspender e marcar) para cada jogador da troca (lista +4).
-unsafe extern "thiscall" fn acrescentar_transferencia_futura(this: usize, oferta: usize, data: usize) {
+unsafe extern "thiscall" fn add_future_transfer(this: usize, oferta: usize, data: usize) {
     crate::comparacao::ramo("cpr_3 acrescentar futura");
     if !cpl3_crescer(this, 0x920, 4, 10, 0xc, 0x27c3, 0xa8ec74) {
         return;
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn acrescentar_transferencia_futura(this: usize, oferta
     let copia: unsafe extern "thiscall" fn(usize, *mut [u16; 4], usize) -> usize = core::mem::transmute(0x417c10usize);
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let suspender: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x842b00usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let mut temp = [0u16; 4];
     copia(cpr3_d(this + 0x920).wrapping_add(cpr3_d(this + 0x928).wrapping_mul(0xc)), &mut temp, data);
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn acrescentar_transferencia_futura(this: usize, oferta
     *((oferta + 0x2c) as *mut u8) = 0x13; // transferência futura
     suspender(cpr3_d(this + 0x856), cpr3_pessoa(cpr3_d(oferta + 0xc)), 0);
     *cpr3_marca(this, cpr3_d(oferta + 0xc)) |= 0x10; // a marca da transferência futura
-    let c = contrato_de(cpr3_d(0xae1050), cpr3_pessoa(cpr3_d(oferta + 0xc)));
+    let c = contract_of(cpr3_d(0xae1050), cpr3_pessoa(cpr3_d(oferta + 0xc)));
     if c != 0 && cpr3_b(c + 0x49) != 0 {
         cpr3_por(c + 0x4a, cpr3_d(oferta + 0x20));
     }
@@ -168,18 +168,18 @@ unsafe extern "thiscall" fn acrescentar_transferencia_futura(this: usize, oferta
 
 /// Comparador: lado a lado pela marca do jogador e por `saida`, e pela devolução (tirar a marca é o único outro efeito;
 /// a cópia, depois da original, acha o mesmo).
-unsafe extern "thiscall" fn comparar_transferencia_futura_do_jogador(this: usize, jogador: usize, saida: *mut usize) -> u32 {
+unsafe extern "thiscall" fn comparar_get_future_transfer(this: usize, jogador: usize, saida: *mut usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> u32>(%%I0%%);
     let regioes = [(cpr3_marca(this, cpr3_d(jogador)) as usize, 1), (saida as usize, 4)];
     let n = if saida.is_null() { 1 } else { 2 };
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes[..n], || o(this, jogador, saida), || transferencia_futura_do_jogador(this, jogador, saida));
-    PLACAR.registrar(igual && r == c, || format!("transferencia_futura_do_jogador(jogador {}) original={} rust={} {:x?} x {:x?}", cpr3_d(jogador), r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes[..n], || o(this, jogador, saida), || get_future_transfer(this, jogador, saida));
+    PLACAR.registrar(igual && r == c, || format!("get_future_transfer(jogador {}) original={} rust={} {:x?} x {:x?}", cpr3_d(jogador), r, c, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pela conta e pelo vetor das futuras, pelas marcas do jogador e dos da troca e pelo cursor
 /// da lista da troca (não aloca nem libera).
-unsafe extern "thiscall" fn comparar_tirar_transferencia_futura(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_remove_future_transfer(this: usize, oferta: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let mut regioes = vec![(this + 0x928, 4), (cpr3_marca(this, cpr3_d(oferta + 0xc)) as usize, 1)];
     let n = cpr3_d(this + 0x928) as i32;
@@ -197,14 +197,14 @@ unsafe extern "thiscall" fn comparar_tirar_transferencia_futura(this: usize, ofe
         }
         regioes.push((l + 0xa, 4));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || tirar_transferencia_futura(this, oferta));
-    PLACAR.registrar(igual, || format!("tirar_transferencia_futura(oferta {:x}) {:x?} x {:x?}", cpr3_d(oferta + 0x20), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || remove_future_transfer(this, oferta));
+    PLACAR.registrar(igual, || format!("remove_future_transfer(oferta {:x}) {:x?} x {:x?}", cpr3_d(oferta + 0x20), mo, mr));
 }
 
 /// Comparador: a original acrescenta (pode realocar), reordena e suspende as listas de alvos: só ela, conferida pelo
 /// plano: a conta sobe de 1, o registro (data e oferta) está no vetor, o estado 0x13 com +0x2d = 1 e a marca 0x10 do
 /// jogador.
-unsafe extern "thiscall" fn comparar_acrescentar_transferencia_futura(this: usize, oferta: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_add_future_transfer(this: usize, oferta: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%);
     let n = cpr3_d(this + 0x928);
     let mut alvo = [0u8; 0xc];
@@ -217,5 +217,5 @@ unsafe extern "thiscall" fn comparar_acrescentar_transferencia_futura(this: usiz
     let conta = cpr3_d(this + 0x928);
     let marca = *cpr3_marca(this, cpr3_d(oferta + 0xc));
     let ok = conta == n.wrapping_add(1) && cpl3_tem(cpr3_d(this + 0x920), conta, 0xc, &alvo) && cpr3_b(oferta + 0x2c) == 0x13 && cpr3_b(oferta + 0x2d) == 1 && marca & 0x10 != 0;
-    PLACAR.registrar(ok, || format!("acrescentar_transferencia_futura(oferta {:x}): conta {} -> {}, estado {:#x}, marca {:#x}", cpr3_d(oferta + 0x20), n, conta, cpr3_b(oferta + 0x2c), marca));
+    PLACAR.registrar(ok, || format!("add_future_transfer(oferta {:x}): conta {} -> {}, estado {:#x}, marca {:#x}", cpr3_d(oferta + 0x20), n, conta, cpr3_b(oferta + 0x2c), marca));
 }

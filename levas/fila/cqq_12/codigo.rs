@@ -192,14 +192,14 @@ fn cqq12_oceania_fase(fase: u32) -> Option<Cqq12Fase> {
 
 /// { 0x797230 } (thiscall, ret 0x10, oceania_club_champ.cpp; a virtual +0x3c): `OceaniaClubChamp::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `cqq12_oceania_fase`.
-unsafe extern "thiscall" fn cqq12_oceania_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqq12_tabela(this, cqq12_oceania_fase(fase), rodadas, extra, liga, 0xa6a068)
 }
 
-unsafe extern "thiscall" fn comparar_cqq12_oceania_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_oceania_club_champ_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cqq12_comparar("cqq12_oceania_tabela", fase, cqq12_oceania_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqq12_oceania_tabela(this, fase, r, e, l))
+    cqq12_comparar("oceania_club_champ_create_schedule", fase, cqq12_oceania_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| oceania_club_champ_create_schedule(this, fase, r, e, l))
 }
 
 unsafe fn cqq12_d(a: usize) -> usize {
@@ -265,22 +265,22 @@ unsafe fn cqq12_comparar_times(nome: &str, this: usize, o: impl FnOnce() -> i32,
 
 /// { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
 /// linha 0x1cd sem memória).
-unsafe extern "thiscall" fn cqq12_asia_clubes_times(this: usize) -> i32 {
+unsafe extern "thiscall" fn asia_club_champ_build_team_table(this: usize) -> i32 {
     cqq12_times(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: os times da Liga dos Campeões asiática
 }
 
-unsafe extern "thiscall" fn comparar_cqq12_asia_clubes_times(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_asia_club_champ_build_team_table(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqq12_comparar_times("cqq12_asia_clubes_times", this, || o(this), || cqq12_asia_clubes_times(this))
+    cqq12_comparar_times("asia_club_champ_build_team_table", this, || o(this), || asia_club_champ_build_team_table(this))
 }
 
 /// { 0x40d4d0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::create_team_entries()`: os 16 times (a caixa
 /// da linha 0x185 sem memória).
-unsafe extern "thiscall" fn cqq12_asia_recopa_times(this: usize) -> i32 {
+unsafe extern "thiscall" fn create_team_entries(this: usize) -> i32 {
     cqq12_times(this, 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: os times da Recopa asiática
 }
 
-unsafe extern "thiscall" fn comparar_cqq12_asia_recopa_times(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_create_team_entries(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqq12_comparar_times("cqq12_asia_recopa_times", this, || o(this), || cqq12_asia_recopa_times(this))
+    cqq12_comparar_times("create_team_entries", this, || o(this), || create_team_entries(this))
 }

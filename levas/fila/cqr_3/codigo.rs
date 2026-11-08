@@ -21,7 +21,7 @@ unsafe fn cqr3_linha(t: usize, i: usize) -> usize {
 /// a fase −1; a série final dos seis primeiros, a fase 0; a grande final, a fase 1). Na última fase (+0x30 ≥ +0x2c − 1,
 /// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
 /// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
-unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
+unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
     let fase = cqr3_d(this + 0x30) as i32;
     if fase >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x987c20, 0x2f0);
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn cqr3_fase_seguinte_da_nsl(this: usize) {
 /// 4) [+0xc][0] = a fase e a tabela das rodadas liberada (free 0x9452ca). Sem fase: a caixa da linha 0x328 e 0. Com
 ///    ela: a notícia do sorteio (0x684230 na fase, thiscall, ret 0), +0x30 = 0 e 1.
 /// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
-unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
+unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn cqr3_serie_final_da_nsl(this: usize) -> u32 {
 /// 0x9452ca). Sem fase: a caixa da linha 0x35c e volta (sem liberar a lista). Com ela: Cup::set_up_round (0x51c800,
 /// thiscall(fase, 0), ret 4) e a lista liberada. A fase atual (+0x30 = 1) já foi gravada pela fase seguinte.
 /// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
-unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
+unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -130,18 +130,18 @@ unsafe extern "thiscall" fn cqr3_grande_final_da_nsl(this: usize) {
     soltar(lista);
 }
 
-unsafe extern "thiscall" fn comparar_cqr3_fase_seguinte_da_nsl(this: usize) {
+unsafe extern "thiscall" fn comparar_aus_nsl_advance_stage(this: usize) {
     let antes = cqr3_d(this + 0x30) as i32;
     let ultima = antes >= (cqr3_d(this + 0x2c) as i32).wrapping_sub(1);
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let depois = cqr3_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqr3_fase_seguinte_da_nsl({:#x}) antes={} depois={}", this, antes, depois));
+    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this, antes, depois));
 }
 
 /// O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
 /// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
 /// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
-unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_create_finals_series_stage(this: usize) -> u32 {
     let mut seis = [0usize; 6];
     for (i, c) in seis.iter_mut().enumerate() {
         *c = cqr3_linha(this, i);
@@ -158,14 +158,14 @@ unsafe extern "thiscall" fn comparar_cqr3_serie_final_da_nsl(this: usize) -> u32
         b.sort_unstable();
         a == b
     };
-    PLACAR.registrar(igual, || format!("cqr3_serie_final_da_nsl({:#x}) r={} fase={:#x} seis={:x?}", this, r, fase, seis));
+    PLACAR.registrar(igual, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this, r, fase, seis));
     r
 }
 
 /// O comparador da grande final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
 /// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
-unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
+unsafe extern "thiscall" fn comparar_create_grand_final_stage(this: usize) {
     let serie = cqr3_d(cqr3_d(this + 0xc));
     let (a, b) = (cqr3_linha(serie, 0), cqr3_linha(serie, 1));
     orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this);
@@ -175,5 +175,5 @@ unsafe extern "thiscall" fn comparar_cqr3_grande_final_da_nsl(this: usize) {
         let (x, y) = (cqr3_d(l), cqr3_d(l + 6));
         cqr3_w(fase + 0x3e) == 2 && cqr3_d(fase + 4) == cqr3_d(this + 4) && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.registrar(igual, || format!("cqr3_grande_final_da_nsl({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, fase));
+    PLACAR.registrar(igual, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this, a, b, fase));
 }

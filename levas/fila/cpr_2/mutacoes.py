@@ -1,4 +1,4 @@
-# Mutacoes (com o ramo de cada uma), todas em clube_pode_chegar_ao_jogador, que as listas de alvos dos clubes chamam
+# Mutacoes (com o ramo de cada uma), todas em can_club_bid_for_player, que as listas de alvos dos clubes chamam
 # todo dia (os outros dois so rodam com trocas e com o elenco no limite). O jogador com oferta em negociacao fica
 # livre para outros clubes (as listas de alvos e as ofertas seguintes mudam). O jogador com contrato acertado tambem
 # (e perde a marca 0x40). O jogador com transferencia futura acertada tambem. Os ramos dizem se a carreira passou por

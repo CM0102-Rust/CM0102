@@ -27,7 +27,7 @@ pub(crate) unsafe fn cqr10_sorteado(this: usize, k: usize) -> usize {
 /// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
 /// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
 /// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
-pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let clubes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CONMEBOLLIBER_SELECT_QUALIFIED_CLUBS);
     let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_CONMEBOLLIBER_BUILD_FIRST_GROUP_TABLE);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
@@ -66,8 +66,8 @@ pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_dia(this: usize, hoje:
 // ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 7 fases
 // criadas e a fase atual (+0x30) a última delas.
-pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQR10_LIBERTADORES_DIA);
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_LIBER_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo != 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_dia(this: usi
             && fases != 0
             && (0..7).all(|g| read_u32_as_usize(fases + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 6;
-        PLACAR.registrar(ok, || format!("cqr10_libertadores_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.registrar(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_dia(this: usi
 /// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
-pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_primeiro_grupo(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -119,8 +119,8 @@ pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_primeiro_grupo(this: u
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR10_LIBERTADORES_PRIMEIRO_GRUPO);
+pub(crate) unsafe extern "thiscall" fn comparar_build_first_group_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BUILD_FIRST_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_primeiro_grup
         }
     }
     let igual = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("cqr10_libertadores_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.registrar(igual, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_primeiro_grup
 /// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x22e e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
-pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: usize, g: i32) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -222,8 +222,8 @@ pub(crate) unsafe extern "thiscall" fn cqr10_libertadores_grupo(this: usize, g: 
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_grupo(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CQR10_LIBERTADORES_GRUPO);
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_create_group_stage(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CONMEBOL_LIBER_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..7).contains(&g) {
         return o(this, g);
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr10_libertadores_grupo(this: u
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("cqr10_libertadores_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        PLACAR.registrar(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }
@@ -343,7 +343,7 @@ pub(crate) const CQJ11_OCEANIA: Cqj11Regras = Cqj11Regras {
 /// `ConmebolLiber::set_up_rules()`: os grupos da Libertadores em dois turnos, 3 pontos a vitória e 1 o empate, os
 /// desempates (1, 2, 3, 0), dois classificados por grupo, clubes internacionais (+0x42 = 2), categoria 7, 7 no banco e 3
 /// substituições, começo no dia 15 do mês 0 do ano da competição, prêmios de 2.000.000; depois a tabela das rodadas.
-pub(crate) unsafe extern "thiscall" fn cqj11_libertadores_regras(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da libertadores");
     let dia = 0xf; // cqj11: o dia do começo da Libertadores
     let vitoria = 3; // cqj11: a vitória nos grupos da Libertadores
@@ -351,9 +351,9 @@ pub(crate) unsafe extern "thiscall" fn cqj11_libertadores_regras(this: usize) ->
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj11_libertadores_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQJ11_LIBERTADORES_REGRAS);
-    cqj11_confere("cqj11_libertadores_regras", this, &CQJ11_LIBERTADORES, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_LIBER_SET_UP_RULES);
+    cqj11_confere("conmebol_liber_set_up_rules", this, &CQJ11_LIBERTADORES, || o(this))
 }
 
 
@@ -400,7 +400,7 @@ pub(crate) unsafe fn cqk11_inscritos(this: usize, max: i32, saida: &mut [usize; 
 /// clubes, na ordem do banco, cuja competição da temporada (+0x1db) é a Libertadores, até 32; menos de 32, a caixa da
 /// linha 0x297 e devolve 0; senão a lista embaralhada (0x4afb40(lista, 32): push n; push lista; add esp, 8 -> cdecl; 3 ×
 /// 32 trocas sorteadas) e devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_classificados(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
@@ -427,8 +427,8 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_classificados(this: us
 /// Comparador da 0x4c3f40: lado a lado com as duas listas (a original aloca a dela, a cópia a sua): a original roda e a
 /// lista dela fica; o estado do sorteador volta, a cópia roda sem contar e a lista dela é comparada com a da original e
 /// liberada (0x9452ca: push; add esp, 4 -> cdecl). Com menos de 32 inscritos (as caixas): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_classificados(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQK11_LIBERTADORES_CLASSIFICADOS);
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_LIBER_SELECT_QUALIFIED_CLUBS);
     let mut v = [0usize; 32];
     if cqk11_inscritos(this, 0x20, &mut v) != 0x20 {
         return o(this); // ponytail: as caixas de erro: só a original
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_classificados
     estado.escrever();
     core::ptr::write_unaligned((this + 0xee) as *mut u32, ee as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, f2 as u32);
-    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| cqk11_libertadores_classificados(this)));
+    let rr = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| conmebol_liber_select_qualified_clubs(this)));
     let lb = read_u32_as_usize(this + 0xee);
     let b: [u32; 32] = if lb != 0 { core::ptr::read_unaligned(lb as *const [u32; 32]) } else { [0; 32] };
     let igual_estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois;
@@ -452,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_classificados
     core::ptr::write_unaligned((this + 0xee) as *mut u32, la as u32);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
     depois.escrever();
-    PLACAR.registrar(r == rr && a == b && igual_estado, || format!("cqk11_libertadores_classificados({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, igual_estado, a, b));
+    PLACAR.registrar(r == rr && a == b && igual_estado, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, igual_estado, a, b));
     r
 }
 
@@ -474,7 +474,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_classificados
 /// tabela +0xa7 dele se o clube que lá está é do continente [0x9cfa1c] (a nação +0x53, o continente +0x71 da nação, +0
 /// o id), senão na vaga 1; depois o arquivo da temporada das estatísticas dele (0x4a1c50 em +8: push 1 -> thiscall, ret
 /// 4) e as posições previstas (virtual +0x5c); 2, o registro de vice (0x86b0b0).
-pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
     let (d, f) = (desfecho as u8, fase as u8 as i8);
     let comp = read_u32_as_usize(this + 4);
     let final_ = |g: usize| {
@@ -527,8 +527,8 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize,
 // ponytail: os registros (histórico, convocações), o arquivo das estatísticas e as posições previstas do Mundial não
 // rodam duas vezes. Só a original; o plano: a devolução 0 e, no título (fase 7, desfecho 1), o campeão na vaga do
 // Mundial Interclubes que a regra escolhe (0 se lá está um clube do continente [0x9cfa1c], senão 1).
-pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQK11_LIBERTADORES_REGISTROS);
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CONMEBOL_LIBER_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let titulo = fase as u8 == 7 && desfecho as u8 == 1;
     let mut vaga = 0usize;
     if titulo {
@@ -539,7 +539,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(thi
     }
     let r = o(this, clube, desfecho, fase, a4, jogo, a6);
     let igual = r == 0 && (!titulo || read_u32_as_usize(vaga) == clube);
-    PLACAR.registrar(igual, || format!("cqk11_libertadores_registros({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, desfecho as u8, fase as u8, r, titulo, vaga));
+    PLACAR.registrar(igual, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", clube, desfecho as u8, fase as u8, r, titulo, vaga));
     r
 }
 
@@ -550,7 +550,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(thi
 /// [pt] { 0x4c3a80 } (thiscall, ret 0, conmebol_liber.cpp; a virtual +0x28): `ConmebolLiber::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x1f6; senão +0x30 sobe e, chegando a 7 (o fim dos sete grupos), o
 /// mata-mata (0x4c3d10: mov ecx, this -> thiscall, ret 0).
-pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize) {
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         aviso_em(0x9a7de4, 0x1f6);
@@ -567,15 +567,15 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_fase_seguinte(this: us
 
 // ponytail: o mata-mata (0x4c3d10) aloca a fase e sorteia: não roda duas vezes. Só a original; o plano: +0x30 sobe um
 // (fora da última fase, que dá a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQK11_LIBERTADORES_FASE_SEGUINTE);
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_LIBER_ADVANCE_STAGE);
     let f = read_u32_as_usize(this + 0x30) as i32;
     if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
         return o(this);
     }
     o(this);
     let depois = read_u32_as_usize(this + 0x30) as i32;
-    PLACAR.registrar(depois == f + 1, || format!("cqk11_libertadores_fase_seguinte({:#x}) fase {} -> {}", this, f, depois));
+    PLACAR.registrar(depois == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this, f, depois));
 }
 
 /// rule: the Copa Libertadores starts with six-round groups on Tuesdays [inference: weekday 2], from 25/2 to 1/4 (each
@@ -589,15 +589,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_fase_seguinte
 /// [pt] { 0x4c31c0 } (thiscall, ret 0x10, conmebol_liber.cpp; a virtual +0x3c da Libertadores): `ConmebolLiber::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (a caixa da linha 0x9f), o mata-mata na
 /// fase 7 (a caixa da linha 0xc5).
-pub(crate) unsafe extern "thiscall" fn cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo13_tabela(this, fase, rodadas, extra, liga, 7, &CQO13_LIBERTADORES_GRUPOS, &CQO13_LIBERTADORES, &[], 0x9a7de4, 0x9f, 0xc5,
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqo13_libertadores_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQO13_LIBERTADORES_TABELA);
-    cqo13_comparar("cqo13_libertadores_tabela", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqo13_libertadores_tabela(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CONMEBOL_LIBER_CREATE_SCHEDULE);
+    cqo13_comparar("conmebol_liber_create_schedule", fase, rodadas, extra, liga, 7, &[], || o(this, fase, rodadas, extra, liga),
+        |r, e, l| conmebol_liber_create_schedule(this, fase, r, e, l))
 }
 
 /// rule: the Libertadores knockout has 16 clubs: the top 2 (+0xbe) of each of the 8 groups (group 1 in table order, the
@@ -608,11 +608,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo13_libertadores_tabela(this: 
 /// [pt] { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
 /// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
 /// lista) e 0x26a (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqs10_libertadores_mata_mata(this: usize) {
+pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this: usize) {
     cqs10_mata_mata(this, 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqs10_libertadores_mata_mata(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS10_LIBERTADORES_MATA_MATA);
-    cqs10_comparar_mata_mata("cqs10_libertadores_mata_mata", this, 0x10, 7, 7, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_conmebol_liber_create_knockout_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_LIBER_CREATE_KNOCKOUT_STAGE);
+    cqs10_comparar_mata_mata("conmebol_liber_create_knockout_stage", this, 0x10, 7, 7, || o(this))
 }

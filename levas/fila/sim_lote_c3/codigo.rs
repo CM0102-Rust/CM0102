@@ -3,7 +3,7 @@
 /// { 0x5fe420 } (thiscall, ret 4, human_manager.cpp): 1 se algum dos 16 técnicos humanos ativos
 /// (registros de 110 bytes em [0xae23bc], a partir de [0xae2364] − 16, +0x5f não nulo) escolheu
 /// assistir a `partida` (0x5fe290); senão 0. Partida nula: a original (caixa de erro e 0).
-unsafe extern "thiscall" fn humano_assiste_a_partida(this: usize, partida: usize) -> u32 {
+unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: usize) -> u32 {
     if partida == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, partida);
     }
@@ -40,7 +40,7 @@ unsafe fn indice_do_humano_do_apelido(this: usize, humano: usize) -> Option<Opti
 /// deu apelido à pessoa de id [`pessoa`]: busca binária (0x946464 com 0x601a10, itens de 0x1e bytes)
 /// na lista +0xa6e3 (quantos em +0xa6eb) do registro dele (0xa6ef bytes em [this]). Pessoa ou humano
 /// nulos, ou lista vazia: 0. Humano fora da faixa: a original (caixa de erro e 0).
-unsafe extern "thiscall" fn humano_deu_apelido(this: usize, pessoa: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
     if pessoa == 0 {
         return 0;
     }
@@ -61,7 +61,7 @@ unsafe extern "thiscall" fn humano_deu_apelido(this: usize, pessoa: usize, human
 /// { 0x7a8780 } (thiscall, ret 4, player_regen.cpp): copia a aposentadoria pendente (0x1a bytes) de
 /// `origem`: o id da pessoa (+0) e do clube (+4), as datas em +8 e +0x10 (0x417c10, com o retorno numa
 /// local), o motivo (+0x18) e a marca de anunciada (+0x19). Devolve `this`.
-unsafe extern "thiscall" fn copiar_aposentadoria_pendente(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn retire_record_assign(this: usize, origem: usize) -> usize {
     let copiar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut local = [0u8; 8];
     *(this as *mut u32) = *(origem as *const u32);
@@ -73,32 +73,32 @@ unsafe extern "thiscall" fn copiar_aposentadoria_pendente(this: usize, origem: u
     this
 }
 
-unsafe extern "thiscall" fn comparar_humano_assiste_a_partida(this: usize, partida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_is_fixture_watched(this: usize, partida: usize) -> u32 {
     // a 0x5fe290 só lê: pode rodar nos dois lados
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if partida == 0 {
         return o(this, partida);
     }
     let r = o(this, partida);
-    let n = humano_assiste_a_partida(this, partida);
-    PLACAR.registrar(r == n, || format!("humano_assiste_a_partida original={} rust={}", r, n));
+    let n = is_fixture_watched(this, partida);
+    PLACAR.registrar(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_humano_deu_apelido(this: usize, pessoa: usize, humano: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_has_nickname(this: usize, pessoa: usize, humano: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if pessoa != 0 && matches!(indice_do_humano_do_apelido(this, humano), Some(None)) {
         return o(this, pessoa, humano);
     }
     let r = o(this, pessoa, humano);
-    let n = humano_deu_apelido(this, pessoa, humano);
-    PLACAR.registrar(r == n, || format!("humano_deu_apelido original={} rust={}", r, n));
+    let n = has_nickname(this, pessoa, humano);
+    PLACAR.registrar(r == n, || format!("has_nickname original={} rust={}", r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_copiar_aposentadoria_pendente(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn comparar_retire_record_assign(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || copiar_aposentadoria_pendente(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_aposentadoria_pendente {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || retire_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("retire_record_assign {:x?} x {:x?}", mo, mr));
     r
 }

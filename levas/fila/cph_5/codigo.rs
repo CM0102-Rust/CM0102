@@ -8,7 +8,7 @@ unsafe fn cph5_d(a: usize) -> u32 {
 /// com 0x7ae2a0) a aposentadoria pendente no vetor ([this+4], [this+8] registros de 26 bytes); achou: puxa as
 /// seguintes um lugar (0x7a8780, a cópia do registro), a última fica com pessoa −1 e +0x18, +8, +0xa, +0x10, +0x12
 /// zerados, e a contagem desce. Sem reordenar.
-unsafe extern "thiscall" fn tirar_aposentadoria_pendente(this: usize, chave: usize) {
+unsafe extern "thiscall" fn remove_retirement(this: usize, chave: usize) {
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let vetor = cph5_d(this + 4) as usize;
     let s = bsearch(chave, vetor, cph5_d(this + 8), 0x1a, 0x7ae2a0);
@@ -48,7 +48,7 @@ unsafe fn cph5_sortear(n: i32) -> i32 {
 /// de novo), sem clube e sem +0x24, desempregado há mais de 365 dias (365 × (ano − ano de +0x40) − dia de +0x3e + dia)
 /// e sorteio(nota +0xb do jogador) < 750. Sem nenhum dos dois registros: sempre. Aposenta: a saída (26 bytes) recebe a
 /// pessoa, o motivo 0x10, +0x19 = 0, o clube (−1 sem) e a data do jogo em +8 e +0x10; devolve 1. Senão 0.
-unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: usize) -> u8 {
+unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
     let mut sem_registro = false;
     if cph5_observado(pessoa) {
         return 0;
@@ -96,21 +96,21 @@ unsafe extern "stdcall" fn aposentadoria_do_desempregado(pessoa: usize, saida: u
     1
 }
 
-unsafe extern "thiscall" fn comparar_tirar_aposentadoria_pendente(this: usize, chave: usize) {
+unsafe extern "thiscall" fn comparar_remove_retirement(this: usize, chave: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let n = (*((this + 8) as *const i32)).max(0) as usize;
     let reg = [(this + 4, 8), (cph5_d(this + 4) as usize, n * 26)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, chave), || tirar_aposentadoria_pendente(this, chave));
-    PLACAR.registrar(igual, || format!("tirar_aposentadoria_pendente {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, chave), || remove_retirement(this, chave));
+    PLACAR.registrar(igual, || format!("remove_retirement {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pela saída (26 bytes), a cópia em sem_contar.
-unsafe extern "stdcall" fn comparar_aposentadoria_do_desempregado(pessoa: usize, saida: usize) -> u8 {
+unsafe extern "stdcall" fn comparar_player_regen_check_unemployed_retirement(pessoa: usize, saida: usize) -> u8 {
     let o = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I1%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((saida, 0x1a));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida),
-        || crate::aleatorio::sem_contar(|| aposentadoria_do_desempregado(pessoa, saida)));
-    PLACAR.registrar(igual && r == n, || format!("aposentadoria_do_desempregado({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| player_regen_check_unemployed_retirement(pessoa, saida)));
+    PLACAR.registrar(igual && r == n, || format!("player_regen_check_unemployed_retirement({:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }

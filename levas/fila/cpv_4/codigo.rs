@@ -35,8 +35,8 @@ unsafe fn cpv4_pessoa(id: usize) -> usize {
 /// (a data +0x12 por 0x417c10; de +0x30 e +0x31 só os 4 bits baixos), +0x20 da oferta e o id seguinte (+0x85a); a
 /// lista +4 dos termos é copiada numa nova (0xe bytes, 0x68d020, 0x68d2f0). Comprador (termos +8) humano: a notícia da
 /// negociação (0x8e4610 no empréstimo +0x1f = 1, senão 0x8d6bf0) e a oferta agendada em 14 dias; senão em 2 (0x8c6220).
-unsafe extern "thiscall" fn guardar_a_negociacao(this: usize, oferta: usize, termos: usize, marcar: u32) {
-    let marcar_sob_oferta: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x84b580usize);
+unsafe extern "thiscall" fn add_transfer_negotiation(this: usize, oferta: usize, termos: usize, marcar: u32) {
+    let mark_player_under_offer: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x84b580usize);
     let realocar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945667usize);
     let alocar_zerado: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945501usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn guardar_a_negociacao(this: usize, oferta: usize, ter
     if marcar != 0 {
         cpv4_pb(oferta + 0x2d, 1);
         cpv4_pb(termos + 0x2d, 1);
-        marcar_sob_oferta(cpv4_d(this + 0x856), cpv4_pessoa(cpv4_d(oferta + 0xc)), cpv4_clube(cpv4_d(oferta + 8)), cpv4_d(oferta));
+        mark_player_under_offer(cpv4_d(this + 0x856), cpv4_pessoa(cpv4_d(oferta + 0xc)), cpv4_clube(cpv4_d(oferta + 8)), cpv4_d(oferta));
     }
     let mut k = cpv4_d(oferta + 0x28);
     if k == usize::MAX {
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn guardar_a_negociacao(this: usize, oferta: usize, ter
 /// data das notícias ([0xdd6ec8]), nada. A notícia 0x1776 (local): 0..3 a pessoa, 4 = o cargo (+0x3d), 5 = o id do
 /// clube dela, 6 = o id do clube do boato, 7 = sorteio(4); aos destinatários (0x8d1da0 do gerente de transferências
 /// [0xde1f54], com 0x52, até 30; sem gerente, nenhum) pela entrega ao técnico (0x7861e0).
-unsafe extern "thiscall" fn noticia_do_boato_do_tecnico(_this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, pessoa: usize, clube: usize) {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     if pessoa == 0 || cpv4_d(pessoa + 0x39) == 0 || sorteio(4) == 0 {
         return;
@@ -184,15 +184,15 @@ unsafe extern "thiscall" fn noticia_do_boato_do_tecnico(_this: usize, pessoa: us
 /// post_player_rejects_move_news(oferta, motivo)`: o dono do jogador (+0xc; contrato 0x4cf5a0, nenhum no tipo 5), os
 /// destinatários (0x8d1130 com 0x2f, até 30), a notícia 0xfae (local): 0..3 o jogador, 4 = o id do dono (ou −1), 5 =
 /// +8, 6 = +0x1f, 7 = o motivo, 8 = o técnico do dono, 9 = o técnico do comprador (+8 > −1); a cada destinatário.
-unsafe extern "thiscall" fn noticia_da_recusa_em_se_mudar(this: usize, oferta: usize, motivo: u32) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "thiscall" fn post_player_rejects_move_news(this: usize, oferta: usize, motivo: u32) {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u32 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     crate::comparacao::ramo("cpv_4 recusa em se mudar");
     let p = cpv4_pessoa(cpv4_d(oferta + 0xc));
-    let c = contrato_de(cpv4_d(0xae1050), p);
+    let c = contract_of(cpv4_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     let dono = if c != 0 && cpv4_b(c + 0x35) & 0x3f != 5 { cpv4_clube(cpv4_d(c + 4)) } else { 0 };
     let mut clubes = [0usize; 30];
@@ -228,16 +228,16 @@ unsafe extern "thiscall" fn noticia_da_recusa_em_se_mudar(this: usize, oferta: u
 
 // ponytail: aloca e libera negociações e listas, agenda a oferta e manda notícias: não roda duas vezes. Só a original;
 // a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_guardar_a_negociacao(this: usize, oferta: usize, termos: usize, marcar: u32) {
+unsafe extern "thiscall" fn comparar_add_transfer_negotiation(this: usize, oferta: usize, termos: usize, marcar: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, oferta, termos, marcar)
 }
 
 // ponytail: sorteia e a notícia vai às caixas (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_boato_do_tecnico(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_post_job_rumour_news(this: usize, pessoa: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, pessoa, clube)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_da_recusa_em_se_mudar(this: usize, oferta: usize, motivo: u32) {
+unsafe extern "thiscall" fn comparar_post_player_rejects_move_news(this: usize, oferta: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, oferta, motivo)
 }

@@ -9,7 +9,7 @@ unsafe fn cqn3_d(a: usize) -> u32 {
 const CQN3_COPAS: [usize; 3] = [0x9cf6e8, 0x9cf6f0, 0x9cf6f8];
 
 /// Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
-/// lista alocada é solta pela 0x9452ca depois de `cada` passar por todos.
+/// lista alocada é solta pela 0x9452ca depois de `cada` pass_ball por todos.
 unsafe fn cqn3_clubes(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let metodo: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(cqn3_d(cqn3_d(comp) as usize + 0x58) as usize);
@@ -30,7 +30,7 @@ unsafe fn cqn3_clubes(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
 /// etapa) que está nela (+0x1db = o id): com técnico humano (0x7875e0, ecx = [0xb7431c]) recebe a notícia da inscrição
 /// (0x85b020(this, clube, id, etapa), original); senão a inscrição é feita (0x85aae0(clube, etapa, 0), com ecx =
 /// [0xdd7ef0]).
-unsafe extern "thiscall" fn inscricao_europeia(this: usize, etapa: u32) {
+unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let noticia: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x85b020usize);
     let inscrever: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8 = core::mem::transmute(0x85aae0usize);
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn inscricao_europeia(this: usize, etapa: u32) {
 /// Lado a lado: o ano das inscrições (+0), a marca +0x6d de todas as pessoas com contrato (a tabela inteira) e o
 /// [0xae1080] da 0x85aae0. Com algum clube das três copas com técnico humano (a notícia não roda duas vezes), só a
 /// original.
-unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, etapa: u32) {
+unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etapa: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let mut tem_humano = false;
@@ -88,14 +88,14 @@ unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, etapa: u32)
     }
     let n = (cqn3_d(0xae2364) as i32).max(0) as usize;
     let reg = [(this, 2usize), (cqn3_d(0xae23bc) as usize, n * 0x6e), (0xae1080, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, etapa), || inscricao_europeia(this, etapa));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, etapa), || process_euro_registration(this, etapa));
     PLACAR.registrar(igual, || {
         let base = cqn3_d(0xae23bc) as usize;
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| {
             let a0 = a.0;
             a.1.iter().zip(b.1.iter()).enumerate().filter(|(_, (x, y))| x != y).map(move |(i, (x, y))| (a0 + i, *x, *y))
         }).take(12).map(|(e, x, y)| if e >= base && e < base + n * 0x6e { format!("pessoa {} +{:x}: {}/{}", (e - base) / 0x6e, (e - base) % 0x6e, x, y) } else { format!("{:x}: {}/{}", e, x, y) }).collect();
-        format!("inscricao_europeia(etapa {}): {}", etapa as u8, d.join(", "))
+        format!("process_euro_registration(etapa {}): {}", etapa as u8, d.join(", "))
     });
 }
 
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, etapa: u32)
 /// [0xae23a8]) × 1/35 dá os pontos (+0xc, float) e, × 1000 (truncado, _ftol), os 6 dwords +0x14..+0x28 [inferência: os
 /// pontos de cada um dos últimos anos]. Depois a ordem pelos pontos (0x58d610(this, &conta), thiscall, a lista ordenada
 /// das nações com continente) dá a posição: +0x12 = a posição de antes (+0x10) e +0x10 = 1, 2, 3...; a lista é solta.
-unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
+unsafe extern "thiscall" fn create_default_table(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let ordem: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(0x58d610usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -141,12 +141,12 @@ unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
 
 /// Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
 /// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
-unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
+unsafe extern "thiscall" fn comparar_create_default_table(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     o(this);
     let mut s = [0usize; 1];
-    ranking_fifa_inicial(s.as_mut_ptr() as usize);
+    create_default_table(s.as_mut_ptr() as usize);
     let (ta, tb) = (cqn3_d(this) as usize, s[0]);
     let n = (cqn3_d(0xae2350) as i32).max(0) as usize * 0x2c;
     let igual = if ta != 0 && tb != 0 {
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
     if tb != 0 {
         soltar(tb);
     }
-    PLACAR.registrar(igual, || format!("ranking_fifa_inicial: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
+    PLACAR.registrar(igual, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }
 
 /// { 0x85dfc0 } (thiscall, ret 0, stadium.cpp, `Stadium::build_venue_list`): refaz a lista dos estádios para jogos
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize) {
 /// continente, +8 se é o estádio nacional (+0x80 da nação), +0xc o estádio. A lista cresce de 30 em 30 (0x944e46,
 /// realloc 0x945667; sem memória, as caixas das linhas 0x89c e 0x8ac, e para). No fim é ordenada (qsort com a
 /// 0x85e2f0) e +0x18 = 1.
-unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
+unsafe extern "thiscall" fn build_venue_list(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
 /// Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
 /// solta). Sem o HostCountry (a caixa), só a original.
-unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: usize) {
+unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     if cqn3_d(0xb5e134) == 0 {
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: usize) {
     s[0xc..0x18].fill(0);
     o(this);
     let r = s.as_mut_ptr() as usize;
-    lista_de_estadios_neutros(r);
+    build_venue_list(r);
     let a = core::slice::from_raw_parts(this as *const u8, 0x20);
     let campos = a[..0xc] == s[..0xc] && a[0x10..0x20] == s[0x10..0x20];
     let (la, lb) = (cqn3_d(this + 0xc) as usize, cqn3_d(r + 0xc) as usize);
@@ -271,5 +271,5 @@ unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: usize) {
     if lb != 0 {
         soltar(lb);
     }
-    PLACAR.registrar(campos && listas, || format!("lista_de_estadios_neutros: campos {} listas {} (contas {} e {})", campos, listas, cqn3_d(this + 0x10) as i32, cqn3_d(r + 0x10) as i32));
+    PLACAR.registrar(campos && listas, || format!("build_venue_list: campos {} listas {} (contas {} e {})", campos, listas, cqn3_d(this + 0x10) as i32, cqn3_d(r + 0x10) as i32));
 }

@@ -24,7 +24,7 @@ unsafe fn cor_em(a: usize) -> usize {
 /// tabela da página (0xa16178 / 0xa1618c; o texto em [0xa16118 + 4k], com os títulos de comentário
 /// próprios de cada página), a tabela dos valores, o lado `lado` no parâmetro 0x1b, -1 no 0x1a e o
 /// preenchimento (0x721cd0).
-unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das estatisticas do time");
     let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
     let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
@@ -120,7 +120,7 @@ unsafe extern "C" fn painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, 
 /// 0xd), dois separadores, o nome (0x53e140; "(c)" no capitão, [dados + 1573i + 0x153]) como botão
 /// (0x8040a0, item 0x7dc ou 0x7d7 pelo saldo de [dados] ou [dados+4]) quando a pessoa vale (0x53e990),
 /// senão texto; vazio (0xfb em +0x1d) sem nome; e as três células da nota. No fim, 0x723350.
-unsafe extern "C" fn painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das notas dos jogadores");
     let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
     let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
@@ -148,10 +148,10 @@ unsafe extern "C" fn painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i
             let reg = dados + 1573 * i + 73 * j + 0x190;
             let camisa = *((reg + 0x1c) as *const i8);
             formatar(BUF, 0x98806c, if camisa > 0 { camisa as i32 } else { j as i32 + 1 });
-            let titulares = (*((partida + 0x4d) as *const u8) & 0xf) as usize + 0xb;
+            let starters = (*((partida + 0x4d) as *const u8) & 0xf) as usize + 0xb;
             // as 11 primeiras: a original empurra eax = a partida com a cor em ax
             let fundo = if j < 0xb { (partida & 0xffff_0000) | cor_em(0xaebe04) } else { cor_reserva(0, 0, 0x40, 0) };
-            let r = if j < titulares {
+            let r = if j < starters {
                 texto_da_celula(sm, tabela, col, j, 0x30, fundo, 0xc, 1, cor_em(0xae3184), BUF)
             } else {
                 texto_da_celula(sm, tabela, col, j, 0x30, fundo, 0x2c, 1, cor_em(0xae3184), 0xad9c64)
@@ -220,7 +220,7 @@ const ROTULOS_DAS_ESTATISTICAS_DA_PARTIDA: [(usize, usize); 13] = [
 /// { 0x71e040 } (cdecl, match_screens.cpp): desenha as estatísticas da partida de `*topo` a `*base`: a
 /// tabela de 3 colunas (1, 5, 1) e 13 linhas, cada uma com as células dos dois times (colunas 0 e 2;
 /// o item da primeira no parâmetro 9) e o rótulo no meio; depois os valores (0x71e750).
-unsafe extern "C" fn painel_das_estatisticas_da_partida(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das estatisticas da partida");
     let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
     let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
@@ -263,27 +263,27 @@ unsafe fn comparar_painel_pela_lista(nome: &str, original: impl FnOnce(), rust: 
     });
 }
 
-unsafe extern "C" fn comparar_painel_das_estatisticas_do_time(lado: u32, topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn comparar_draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(u32, *mut i32, *mut i32)>(%%I0%%);
-    comparar_painel_pela_lista("painel_das_estatisticas_do_time", || o(lado, topo, base), || painel_das_estatisticas_do_time(lado, topo, base));
+    comparar_painel_pela_lista("draw_team_stats_panel", || o(lado, topo, base), || draw_team_stats_panel(lado, topo, base));
 }
 
-unsafe extern "C" fn comparar_painel_das_notas_dos_jogadores(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn comparar_draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
     // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if parametro_da_tela(0x1d) == 0 {
         return o(topo, base);
     }
-    comparar_painel_pela_lista("painel_das_notas_dos_jogadores", || o(topo, base), || painel_das_notas_dos_jogadores(topo, base));
+    comparar_painel_pela_lista("draw_player_ratings_panel", || o(topo, base), || draw_player_ratings_panel(topo, base));
 }
 
-unsafe extern "C" fn comparar_painel_das_estatisticas_da_partida(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn comparar_draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I2%%);
     // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
     // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
     if parametro_da_tela(0x1d) == 0 {
         return o(topo, base);
     }
-    comparar_painel_pela_lista("painel_das_estatisticas_da_partida", || o(topo, base), || painel_das_estatisticas_da_partida(topo, base));
+    comparar_painel_pela_lista("draw_match_stats_panel", || o(topo, base), || draw_match_stats_panel(topo, base));
 }

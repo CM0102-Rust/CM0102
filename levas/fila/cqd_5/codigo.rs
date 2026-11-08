@@ -55,7 +55,7 @@ unsafe fn cqd5_mesma_data(a: usize, b: usize) -> bool {
 ///   data da tabela da TV (+0xba; dia, ano − o da liga) cai daqui a 5 dias (Argentina [0x9cf218]), 20 (Itália
 ///   [0x9cf360]) ou 14 dias, o prazo das inscrições (0x859e20: push 0; push 0; push liga; mov ecx, [0xdd7ef0] ->
 ///   thiscall, ret 0xc); e +0xd1 fica com a data (0x417c10).
-unsafe extern "thiscall" fn liga_dia(this: usize, data: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, completo: u32) -> u32 {
     let semanas: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c770usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let nova: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
@@ -199,12 +199,12 @@ unsafe extern "thiscall" fn liga_dia(this: usize, data: usize, completo: u32) ->
 /// O comparador do dia da liga: só a original (ponytail: chama os métodos de cada fase e da liga, as notícias, os
 /// recordes e os jogos para a TV, que mexem no calendário: não roda duas vezes). Confere o que a rotina garante: 0 só
 /// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
-unsafe extern "thiscall" fn comparar_liga_dia(this: usize, data: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_league_update_for_date(this: usize, data: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let parada = cqd5_b(this + 0xb5) != 0 || cqd5_d(this + 0x45) == 0;
     let r = o(this, data, completo);
     let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (completo == 0 || cqd5_mesma_data(this + 0xd1, data)) };
-    PLACAR.registrar(ok, || format!("liga_dia(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
+    PLACAR.registrar(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
         completo, parada, r as u8, cqd5_d(this + 0xd1), cqd5_d(data)));
     r
 }
@@ -257,7 +257,7 @@ unsafe fn cqd5_jogo(this: usize, r: usize, ea: usize, eb: usize, off: usize, tip
 /// ((j − 1)/(n − 1)) e do ano + fase; com a nação +0x24, o clube dessa nação (+0x69) fica como mandante. Cada jogo vai
 /// ao calendário (cqd5_jogo). No fim, a grade é liberada e as datas do tipo 3 da tabela levam os jogos para a TV
 /// (0x685640). Devolve 1.
-unsafe extern "thiscall" fn liga_criar_tabela(this: usize) -> u32 {
+unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
@@ -436,13 +436,13 @@ unsafe extern "thiscall" fn liga_criar_tabela(this: usize) -> u32 {
 /// O comparador da criação dos jogos: só a original (ponytail: aloca a grade, sorteia a ordem dos clubes e põe os
 /// jogos no calendário, que aloca: não roda duas vezes). Confere o que a rotina garante: com a lista própria do ano, ela
 /// é liberada (+0xea = 0) quando devolve 1.
-unsafe extern "thiscall" fn comparar_liga_criar_tabela(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_create_fixtures(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = cqd5_d(this + 0xea);
     let propria = lista != 0 && cqd5_w(this + 0x40) as i32 == cqd5_w(lista + 2) as u16 as i32;
     let r = o(this);
     let ok = !(propria && r == 1) || cqd5_d(this + 0xea) == 0;
-    PLACAR.registrar(ok, || format!("liga_criar_tabela: lista própria {} devolveu {} +0xea {:x}", propria, r, cqd5_d(this + 0xea)));
+    PLACAR.registrar(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", propria, r, cqd5_d(this + 0xea)));
     r
 }
 
@@ -458,7 +458,7 @@ unsafe extern "thiscall" fn comparar_liga_criar_tabela(this: usize) -> u32 {
 /// ret 0x10); os dois ficam com +0x37 = 0xff. Senão, todos os rebaixados descem assim e depois todos os de baixo que
 /// sobem sobem. Os contados que diferem dos esperados (0xff = qualquer) dão a caixa da linha 0x15dc (sobem) ou 0x15e2
 /// (descem).
-unsafe extern "thiscall" fn liga_promover_e_rebaixar(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
+unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
     let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4cced0usize);
     let subir: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x6830b0usize);
     let rebaixamento: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x4cd030usize);
@@ -549,6 +549,6 @@ unsafe extern "thiscall" fn liga_promover_e_rebaixar(ecx: usize, acima: usize, a
 
 /// O comparador da promoção e do rebaixamento: só a original (ponytail: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_liga_promover_e_rebaixar(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
+unsafe extern "thiscall" fn comparar_league_promote_and_relegate(ecx: usize, acima: usize, abaixo: usize, contratos: u32, aos_pares: u32, sobem: u32, descem: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(%%I2%%)(ecx, acima, abaixo, contratos, aos_pares, sobem, descem)
 }

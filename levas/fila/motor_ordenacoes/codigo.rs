@@ -1,9 +1,9 @@
-// ---------- %%LEVA%%a leva: o fechamento do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
+// ---------- %%LEVA%%a leva: o match_wrap_up do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
 
 /// { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
 /// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome
 /// do primeiro clube (+0x20 → +0x38) na comparação de textos 0x90c1d0 (sem maiúsculas).
-unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
     let d = core::ptr::read_unaligned((a + 4) as *const i32).wrapping_sub(core::ptr::read_unaligned((b + 4) as *const i32));
     if d != 0 {
         return d;
@@ -26,7 +26,7 @@ unsafe extern "C" fn ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
 /// { 0x6bd840 } (cdecl, qsort, match_eng.cpp): a ordem dos jogadores na vez do motor ([0xb67a64]):
 /// com +0x8eb2 ligado, o de +0xf582 vem primeiro; depois o de +0x91de; os demais pela força
 /// (+0x104 + +0x105) × (+0x3b × 0,005 + 0,5) × +0x4d (f32), truncada, do maior para o menor.
-unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
+unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -> i32 {
     let (pa, pb) = (*a, *b);
     let m = *(0xb67a64 as *const usize);
     if *((m + 0x8eb2) as *const u8) != 0 {
@@ -57,7 +57,7 @@ unsafe extern "C" fn ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
 /// com sorteio(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
 /// outro sorteio(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
 /// byte de cima 3..5 troca 0x1f4b por 0x217e.
-unsafe extern "system" fn variante_do_evento(e: *const i16, lados: u32, tipo: u8) -> i16 {
+unsafe extern "system" fn event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     if sorteio(3) != 0 {
         return *e;
@@ -86,27 +86,27 @@ unsafe extern "system" fn variante_do_evento(e: *const i16, lados: u32, tipo: u8
     v
 }
 
-unsafe extern "C" fn comparar_ordem_das_partidas_do_dia(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_day_match_order(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_das_partidas_do_dia(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_partidas_do_dia({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+    let n = day_match_order(a, b);
+    PLACAR.registrar(r == n, || format!("day_match_order({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_ordem_de_acao(a: *const usize, b: *const usize) -> i32 {
+unsafe extern "C" fn comparar_action_order(a: *const usize, b: *const usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_de_acao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_de_acao({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
+    let n = action_order(a, b);
+    PLACAR.registrar(r == n, || format!("action_order({:#x}, {:#x}) original={} rust={}", *a, *b, r, n));
     r
 }
 
-unsafe extern "system" fn comparar_variante_do_evento(e: *const i16, lados: u32, tipo: u8) -> i16 {
+unsafe extern "system" fn comparar_event_variant(e: *const i16, lados: u32, tipo: u8) -> i16 {
     let o = orig::<unsafe extern "system" fn(*const i16, u32, u8) -> i16>(%%I2%%);
     if gravando_no_topo() {
         return o(e, lados, tipo);
     }
     let reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, lados, tipo), || crate::aleatorio::sem_contar(|| variante_do_evento(e, lados, tipo)));
-    PLACAR.registrar(igual && r == n, || format!("variante_do_evento({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, tipo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(e, lados, tipo), || crate::aleatorio::sem_contar(|| event_variant(e, lados, tipo)));
+    PLACAR.registrar(igual && r == n, || format!("event_variant({:#x}, {:#x}, {}) original={:#x} rust={:#x} {:x?} x {:x?}", *e, lados, tipo, r, n, mo, mr));
     r
 }

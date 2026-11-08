@@ -78,8 +78,8 @@ unsafe fn cpl2_sob_oferta(this: usize, pessoa: usize, visao: u32, lista: usize) 
     }
     let x = cpl2_d(cpl2_humano_da_vez() + 0x39);
     if x != 0 {
-        let oferta_de_contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cc9e0usize);
-        let o = oferta_de_contrato(cpl2_d(0xae1050), cpl2_d(pessoa), cpl2_d(x));
+        let contract_offer: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cc9e0usize);
+        let o = contract_offer(cpl2_d(0xae1050), cpl2_d(pessoa), cpl2_d(x));
         if o != 0 && *((o + 0x35) as *const u8) & 0x3f == 5 {
             return 1;
         }
@@ -93,7 +93,7 @@ unsafe fn cpl2_sob_oferta(this: usize, pessoa: usize, visao: u32, lista: usize) 
 /// humano da vez (0x600c90) ou o clube atual do jogador da oferta (+0xc; contrato 0x4cf5a0, que fica em [0xae1080]) é
 /// dele, ou se a pessoa está na shortlist dele (0x7f7490; vale depois da 1ª oferta); por fim, 1 se o humano (+0x39)
 /// tem oferta de contrato aceita (0x4cc9e0, +0x35 & 0x3f = 5) pela pessoa. Senão 0.
-unsafe extern "thiscall" fn jogador_sob_oferta(this: usize, pessoa: usize, visao: u32) -> u32 {
+unsafe extern "thiscall" fn is_player_under_offer(this: usize, pessoa: usize, visao: u32) -> u32 {
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mut l = [0u8; 0x10];
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn jogador_sob_oferta(this: usize, pessoa: usize, visao
 /// da pessoa (0x4cf5a0, guardado em [0xae1080]) é de nação com transferência livre no fim do contrato (0x544670);
 /// sem contrato que valha, sem clube ou sem nação (+0x53): 1. Pessoa nula: a original (caixa 0x3798 e 0). A data
 /// local da original (0x54a110) só serve ao quadro SEH. Quente (~31 milhões de chamadas): sem contador.
-unsafe extern "stdcall" fn clube_do_jogador_com_lei_bosman(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn player_club_uses_bosman(pessoa: usize) -> u32 {
     if pessoa == 0 {
         return orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
     }
@@ -130,7 +130,7 @@ unsafe extern "stdcall" fn clube_do_jogador_com_lei_bosman(pessoa: usize) -> u32
 /// jogador, o clube, o valor e "é o comprador" no byte baixo do ponteiro do comprador, como a original empurra). Bit
 /// 0x2000: motivo 0x24 e o jogador (+0x61) perde 10% das reputações +0xb (atual), +9 (na nação) e +0xd (mundial); 0x800: motivo 0x17; 0x200: 0x18;
 /// cada um devolve 1. Senão 0.
-unsafe extern "thiscall" fn veto_da_diretoria_na_oferta(_this: usize, oferta: usize, comprador: usize, _vendedor: usize, jogador: usize, decide: usize, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn check_board_veto(_this: usize, oferta: usize, comprador: usize, _vendedor: usize, jogador: usize, decide: usize, motivo: *mut u16) -> u32 {
     let valor: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x8e7b50usize);
     let v = valor(oferta, 0, 0, 1, 0, 1);
     // sem oferta, ou com a parte de troca (+4) preenchida: a diretoria não é consultada
@@ -174,31 +174,31 @@ unsafe fn cpl2_regioes(this: usize, pessoa: usize) -> [(usize, usize); 2] {
 }
 
 // ponytail: só lê (a lista local nasce e morre nela); com a pessoa nula, só a original (lê o endereço 0)
-unsafe extern "thiscall" fn comparar_jogador_sob_oferta(this: usize, pessoa: usize, visao: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_is_player_under_offer(this: usize, pessoa: usize, visao: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     if pessoa == 0 {
         return o(this, pessoa, visao);
     }
     let reg = cpl2_regioes(this, pessoa);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, visao), || jogador_sob_oferta(this, pessoa, visao));
-    PLACAR.registrar(igual && r == n, || format!("jogador_sob_oferta({}, visao {}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), visao, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, visao), || is_player_under_offer(this, pessoa, visao));
+    PLACAR.registrar(igual && r == n, || format!("is_player_under_offer({}, visao {}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), visao, r, n, mo, mr));
     r
 }
 
-unsafe extern "stdcall" fn comparar_clube_do_jogador_com_lei_bosman(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_player_club_uses_bosman(pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%);
     if pessoa == 0 {
         return o(pessoa);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa), || clube_do_jogador_com_lei_bosman(pessoa));
-    PLACAR.registrar(igual && r == n, || format!("clube_do_jogador_com_lei_bosman({}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa), || player_club_uses_bosman(pessoa));
+    PLACAR.registrar(igual && r == n, || format!("player_club_uses_bosman({}) original={} rust={} {:x?} x {:x?}", cpl2_d(pessoa), r, n, mo, mr));
     r
 }
 
 /// Comparador: a diretoria (0x696b10) mexe na confiança e não pode rodar duas vezes: o plano antes (as três palavras
 /// do jogador), a original roda e confere: devolução 0 ou 1; com motivo, 0x24 (as palavras a 90%), 0x17 ou 0x18 quando
 /// 1 e intocado quando 0; as palavras intocadas fora do motivo 0x24 (sem motivo, intocadas ou as três a 90%).
-unsafe extern "thiscall" fn comparar_veto_da_diretoria_na_oferta(this: usize, oferta: usize, comprador: usize, vendedor: usize, jogador: usize, decide: usize, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn comparar_check_board_veto(this: usize, oferta: usize, comprador: usize, vendedor: usize, jogador: usize, decide: usize, motivo: *mut u16) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, *mut u16) -> u32>(%%I2%%);
     let dados = if jogador == 0 { 0 } else { cpl2_d(jogador + 0x61) };
     if dados == 0 {
@@ -218,6 +218,6 @@ unsafe extern "thiscall" fn comparar_veto_da_diretoria_na_oferta(this: usize, of
         (1, true) => depois == antes || depois == a_90,
         _ => false,
     };
-    PLACAR.registrar(ok, || format!("veto_da_diretoria_na_oferta devolveu {}, motivo {:#x} (antes {:#x}), palavras {:?} -> {:?}", r, m, m0, antes, depois));
+    PLACAR.registrar(ok, || format!("check_board_veto devolveu {}, motivo {:#x} (antes {:#x}), palavras {:?} -> {:?}", r, m, m0, antes, depois));
     r
 }

@@ -61,7 +61,7 @@ const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0xc7, 1, 3), 
 /// `GoldCup::set_up_rules()`: os grupos da Copa América em turno único, 3 pontos a vitória e 1 o empate, a categoria 0xa
 /// (seleções), os desempates (1, 2, 3, 0), dois classificados por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 20 do mês 2 do ano da competição num dia da semana 5; depois a tabela das rodadas.
-unsafe extern "thiscall" fn cqk10_copa_america_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa america");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa América
     cqk10_campos(this, &CQK10_COPA_AMERICA, vitoria);
@@ -71,9 +71,9 @@ unsafe extern "thiscall" fn cqk10_copa_america_regras(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqk10_copa_america_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqk10_confere("cqk10_copa_america_regras", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
+    cqk10_confere("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
 }
 
 const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
@@ -83,7 +83,7 @@ const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xb
 /// `AfricanNations::set_up_rules()`: os grupos da Copa Africana em turno único, 3/1 pontos, a categoria 0xa, os
 /// desempates (1, 2, 3), dois classificados por grupo, seleções, 7 no banco e 3 substituições, a data em 5 do mês 9 do
 /// ano anterior ao da competição num dia da semana 5 [inferência: o sorteio] e +0xb8 = −1.
-unsafe extern "thiscall" fn cqk10_copa_africana_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa africana");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa Africana
     cqk10_campos(this, &CQK10_AFRICANA, vitoria);
@@ -93,9 +93,9 @@ unsafe extern "thiscall" fn cqk10_copa_africana_regras(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqk10_copa_africana_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_african_nations_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqk10_confere("cqk10_copa_africana_regras", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))
+    cqk10_confere("african_nations_set_up_rules", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))
 }
 
 const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
@@ -105,7 +105,7 @@ const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a
 /// `WcOceaniaLeague::set_up_rules()`: os grupos da eliminatória da Oceania em turno único, 3/1 pontos, a categoria 0xa,
 /// os desempates (1, 2, 3), um classificado por grupo, seleções, 7 no banco e 3 substituições, começo em 15 do mês 0
 /// do ano da competição num dia da semana 5.
-unsafe extern "thiscall" fn cqk10_eliminatoria_oceania_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da oceania");
     cqk10_campos(this, &CQK10_OCEANIA, 3);
     let dia = 0xf; // cqk10: o dia do começo na Oceania
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn cqk10_eliminatoria_oceania_regras(this: usize) -> u3
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqk10_eliminatoria_oceania_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqk10_confere("cqk10_eliminatoria_oceania_regras", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
+    cqk10_confere("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
 }

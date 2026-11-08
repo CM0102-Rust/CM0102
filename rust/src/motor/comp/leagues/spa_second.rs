@@ -230,7 +230,7 @@ pub(crate) const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_S
 /// [pt] { 0x853c90 } (thiscall, ret 0x10, spa_second.cpp, 7.827 bytes, método +0x3c): `SpaSecond::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
-pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
         0xff => {
@@ -257,9 +257,9 @@ pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_espanhola(this: usi
     }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_espanhola(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_SEGUNDA_ESPANHOLA);
-    cqq4_comparar("calendario_da_segunda_espanhola", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_espanhola(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SECOND_CREATE_SCHEDULE);
+    cqq4_comparar("spa_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_second_create_schedule(this, fase, r, e, l))
 }
 
 /// the Spanish Segunda: discipline rule 0x1a (the Spanish one), only the league
@@ -267,13 +267,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_espanhola(
 ///
 /// [pt] { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
 /// disciplina 0x1a, só a liga.
-pub(crate) unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_SEGUNDA)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_SEGUNDA);
-    cqm5_comparar("construir_segunda", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_SECOND);
+    cqm5_comparar("construct_spa_second", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
 }
 
 /// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from
@@ -284,14 +284,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, a
 /// pontos, o 4º desempate 3, 3 sobem direto (+0xbe), nenhum play-off de acesso, 4 caem (+0xc1), a Primera acima
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
-pub(crate) unsafe extern "thiscall" fn regras_da_segunda(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_4 regras da segunda");
     cqk4_regras(this, &cqk4_segunda(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_segunda(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_SEGUNDA);
-    cqk4_comparar("regras_da_segunda", this, cqk4_segunda(this), || o(this), || regras_da_segunda(this))
+pub(crate) unsafe extern "thiscall" fn comparar_spa_second_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_SET_UP_RULES);
+    cqk4_comparar("spa_second_set_up_rules", this, cqk4_segunda(this), || o(this), || spa_second_set_up_rules(this))
 }
 
 /// the Segunda has 22 clubs (the competition's, in database order); the B team of a Primera club is marked as not
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_segunda(this: usize) -
 /// lixo da pilha em cima; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret 0x10); o time B de um clube da
 /// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
-pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
@@ -347,8 +347,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
 
 /// Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_SEGUNDA);
+pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);
     let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
     let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut plano: Vec<(usize, bool)> = Vec::new();
@@ -370,6 +370,6 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -
             ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
         }
     }
-    PLACAR.registrar(ok, || format!("tabela_da_segunda({:#x}): devolveu {}, plano {:x?}", this, r, plano));
+    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
     r
 }

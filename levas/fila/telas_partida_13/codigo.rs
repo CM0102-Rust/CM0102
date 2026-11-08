@@ -1,12 +1,12 @@
 // ---------- %%LEVA%%a leva: as telas da partida (13): a barra da posse, o painel da visão geral da partida e a tabela da liga ao vivo (match_screens.cpp) ----------
 
-/// { 0x71d9e0 } (cdecl, match_screens.cpp): na partida (parâmetro 0), sem disputa de pênaltis
+/// { 0x71d9e0 } (cdecl, match_screens.cpp): na partida (parâmetro 0), sem contest de pênaltis
 /// ([estado + 0x53] = 0), pega as cores dos dois clubes (0x53b640 com os uniformes +0x152 e +0x777) e,
 /// se a posse (+0x142) mudou desde a cópia do parâmetro 0x1d (ou sem cópia), redesenha a barra da posse
 /// da visão geral: o percentual (50 sem valor ou sem a marca +0x767) em "%d%%" nos itens 3 e 4 a partir
 /// do parâmetro 0x21, repartidos de 0x115 a 0x2c9 na altura do parâmetro 0x22, e a cor do clube que tem
 /// mais posse no item 5. No fim guarda o estado na cópia (que nasce aqui se não existe).
-unsafe extern "C" fn atualizar_barra_da_posse() {
+unsafe extern "C" fn refresh_possession_bar() {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
     let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(0x800890usize);
@@ -73,7 +73,7 @@ unsafe fn visao_geral_avisa_erro() -> bool {
 
 /// { 0x71c270 } (cdecl, match_screens.cpp, ~6 KB): desenha a visão geral da partida de `*topo` a
 /// `*base` (`*base` −= 0x28 logo de saída). Na partida (parâmetro 0; estado em +0x5f): o título do
-/// período (pelo [estado + 0x4f], com os nomes do parâmetro 1 = 4 ou os outros) e, sem disputa de
+/// período (pelo [estado + 0x4f], com os nomes do parâmetro 1 = 4 ou os outros) e, sem contest de
 /// pênaltis ([estado + 0x53] = 0), a barra da posse (moldura, "Last 5 Mins", as cores dos clubes; o item
 /// no parâmetro 0x21, a altura no 0x22; `*base` −= 0x37) e a caixa do comentário (com o parâmetro 7 o
 /// narrador escreve o último lance nela, 0x6d7b00; o item no parâmetro 8). Fora dela: o estádio e a
@@ -81,8 +81,8 @@ unsafe fn visao_geral_avisa_erro() -> bool {
 /// intervalo, a prorrogação e os pênaltis, a competição (com o atalho 0x7e5 quando não é amistoso nem
 /// de seleção), a lista dos autores em duas colunas (gols, gol contra, pênalti perdido, expulsão,
 /// lesão; os minutos do mesmo jogador e tipo juntos, quebrando a linha com mais de 10 letras), a
-/// disputa de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
-unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut i32) {
+/// contest de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
+unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     if visao_geral_avisa_erro() {
         return orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%)(topo, base);
     }
@@ -390,7 +390,7 @@ unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut
         marcas[i - 1] = 1;
     }
 
-    // a disputa de pênaltis
+    // a contest de pênaltis
     if core::ptr::read_unaligned((e + 0x53) as *const u32) != 0 {
         let m = if linhas[0] > linhas[1] { linhas[0] } else { linhas[1] };
         linhas[lado_da_linha] = m;
@@ -483,7 +483,7 @@ unsafe extern "C" fn painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut
 /// (separadores 0x6400, posição, seta de subida/descida, nome com atalho 0x7d5 e cor do humano, e as
 /// colunas do registro pelo parâmetro 0x28), a rolagem (parâmetro 0x25) e o item da tabela no 0x26.
 /// Sem liga ou sem o parâmetro 0xe (caixa "Error"): a original.
-unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
+unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
     if liga == 0 || parametro_da_tela(0xe) == 0 {
         return orig::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%)(liga, topo, base);
     }
@@ -770,7 +770,7 @@ unsafe extern "C" fn tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
 /// A barra é comparada de verdade quando já existe a cópia do estado (parâmetro 0x1d) e a atualização
 /// é local: o `Display` do gerente, os parâmetros, a cópia (0xd7a bytes) e o texto 0xde1f64. Sem a cópia
 /// (nasce aqui) ou pela rede: só a original.
-unsafe extern "C" fn comparar_atualizar_barra_da_posse() {
+unsafe extern "C" fn comparar_refresh_possession_bar() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
     let p0 = parametro_da_tela(0);
     let copia = parametro_da_tela(0x1d);
@@ -784,15 +784,15 @@ unsafe extern "C" fn comparar_atualizar_barra_da_posse() {
         reg.push((copia, 0xd7a));
     }
     reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || atualizar_barra_da_posse());
-    PLACAR.registrar(igual, || format!("atualizar_barra_da_posse: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_possession_bar());
+    PLACAR.registrar(igual, || format!("refresh_possession_bar: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
 }
 
 /// A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
 /// do fim (o `Display` do gerente e a cópia do estado). Só a original: com o aviso de erro, com o
 /// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
 /// aloca) e com a atualização pela rede.
-unsafe extern "C" fn comparar_painel_da_visao_geral_da_partida(topo: *mut i32, base: *mut i32) {
+unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     let o = orig::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
     let p0 = parametro_da_tela(0);
     let foto = parametro_da_tela(0x1d);
@@ -812,14 +812,14 @@ unsafe extern "C" fn comparar_painel_da_visao_geral_da_partida(topo: *mut i32, b
     if foto != 0 {
         reg.push((foto, 0xd7a));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || painel_da_visao_geral_da_partida(topo, base));
-    PLACAR.registrar(igual, || format!("painel_da_visao_geral_da_partida: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || draw_match_overview_panel(topo, base));
+    PLACAR.registrar(igual, || format!("draw_match_overview_panel: diferencas em {:?}", diferencas_da_tela(&mo, &mr)));
 }
 
 /// A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a
 /// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
 /// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
-unsafe extern "C" fn comparar_tabela_da_liga_ao_vivo(liga: usize, topo: i32, base: i32) {
+unsafe extern "C" fn comparar_match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
     let o = orig::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%);
     if liga == 0 || parametro_da_tela(0xe) == 0 {
         return o(liga, topo, base);
@@ -830,5 +830,5 @@ unsafe extern "C" fn comparar_tabela_da_liga_ao_vivo(liga: usize, topo: i32, bas
     if tabela != 0 && n > 0 {
         extra.push((tabela, n as usize * 59));
     }
-    comparar_pela_lista_com("tabela_da_liga_ao_vivo", &extra, || o(liga, topo, base), || tabela_da_liga_ao_vivo(liga, topo, base));
+    comparar_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(liga, topo, base), || match_screens_draw_live_league_table(liga, topo, base));
 }

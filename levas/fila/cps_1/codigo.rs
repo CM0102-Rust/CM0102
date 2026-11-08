@@ -15,7 +15,7 @@ unsafe fn cps1_b(a: usize) -> u8 {
 /// (+0x4e: tira o bit 2 e liga o 8; moral +12 em 0x544710; as listas dos clubes 0x842c00; 0x4d71b0). Senão um sorteio
 /// pela força do pedido (+0x44) e pelo ânimo (+0x59) contra outro de 50 dá a queixa 0x10000 (0x867700); a moral cai 12
 /// e a força do pedido sobe ânimo × 5 + 56, presa em ±100.
-unsafe extern "thiscall" fn pedido_de_transferencia(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn handle_transfer_request(this: usize, contrato: usize) {
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2999);
     }
@@ -77,13 +77,13 @@ unsafe extern "thiscall" fn pedido_de_transferencia(this: usize, contrato: usize
 
 /// { 0x4cbb20 } (stdcall, ret 4, contract_manager.cpp): `is_contract_staff_job(cargo)`: 1 para os cargos (byte) 0, 6 a
 /// 0xd e 0xf, os que têm contrato pelo gerente de contratos; senão 0.
-unsafe extern "stdcall" fn cargo_com_contrato(cargo: u32) -> u32 {
+unsafe extern "stdcall" fn is_contract_staff_job(cargo: u32) -> u32 {
     matches!(cargo as u8, 0 | 6..=0xd | 0xf) as u32
 }
 
 /// { 0x4cb960 } (stdcall, ret 4, contract_manager.cpp): `staff_is_not_board_member(pessoa)`: 0 se o cargo (+0x3d) é de
 /// diretoria (1 a 4) num clube (+0x39); senão 1.
-unsafe extern "stdcall" fn fora_da_diretoria(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn staff_is_not_board_member(pessoa: usize) -> u32 {
     let cargo = cps1_b(pessoa + 0x3d);
     if (1..=4).contains(&cargo) && cps1_d(pessoa + 0x39) != 0 {
         return 0;
@@ -93,22 +93,22 @@ unsafe extern "stdcall" fn fora_da_diretoria(pessoa: usize) -> u32 {
 
 // ponytail: sorteia (0x90cfc0), põe na lista (0x842c00, 0x4d71b0), muda moral e queixas (que podem chamar o pedido de
 // novo): só a original; a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_pedido_de_transferencia(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn comparar_handle_transfer_request(this: usize, contrato: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, contrato)
 }
 
 /// Comparador: pelo valor.
-unsafe extern "stdcall" fn comparar_cargo_com_contrato(cargo: u32) -> u32 {
+unsafe extern "stdcall" fn comparar_is_contract_staff_job(cargo: u32) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(u32) -> u32>(%%I1%%)(cargo);
-    let n = cargo_com_contrato(cargo);
-    PLACAR.registrar(r == n, || format!("cargo_com_contrato({}) original={} rust={}", cargo as u8, r, n));
+    let n = is_contract_staff_job(cargo);
+    PLACAR.registrar(r == n, || format!("is_contract_staff_job({}) original={} rust={}", cargo as u8, r, n));
     r
 }
 
 /// Comparador: pelo valor.
-unsafe extern "stdcall" fn comparar_fora_da_diretoria(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_staff_is_not_board_member(pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
-    let n = fora_da_diretoria(pessoa);
-    PLACAR.registrar(r == n, || format!("fora_da_diretoria(pessoa {}, cargo {}) original={} rust={}", cps1_d(pessoa), cps1_b(pessoa + 0x3d), r, n));
+    let n = staff_is_not_board_member(pessoa);
+    PLACAR.registrar(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", cps1_d(pessoa), cps1_b(pessoa + 0x3d), r, n));
     r
 }

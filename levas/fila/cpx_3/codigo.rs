@@ -82,7 +82,7 @@ unsafe fn cpx3_numeros(clube: usize) {
 }
 
 /// { 0x8c9390 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::finalise_transfer(oferta)`, pelo
-/// fechamento da oferta (0x8c34e0) e pela transferência futura. A confiança das diretorias (0x6978f0); as regras da
+/// match_wrap_up da oferta (0x8c34e0) e pela transferência futura. A confiança das diretorias (0x6978f0); as regras da
 /// nação do comprador (as 28 de +0x8ac, pela nação +0xa): método 1 (sem +0x1f) ou 2 com a oferta; as cláusulas
 /// anteriores (0x8c91e0); com vendedor (contrato sem tipo 5), o pagamento (0x8ca8a0); sem +0x1f = 1, os registros do
 /// técnico (0x86cd70); os recordes do clube (0x448760). Com troca, o primeiro da troca sai do elenco do clube dele
@@ -90,7 +90,7 @@ unsafe fn cpx3_numeros(clube: usize) {
 /// ao comprador (0x8c9720) e os da troca ao vendedor, com os números de camisa; estado 0x14, a oferta volta em 10 dias
 /// (0x8c6220); sem rival em aberto, a marca de oferta (+0x86e) sai; os lances (0x84aeb0) e as ofertas de contrato
 /// ligadas (0x8c6db0).
-unsafe extern "thiscall" fn efetivar_transferencia(this: usize, o: usize) {
+unsafe extern "thiscall" fn finalise_transfer(this: usize, o: usize) {
     let p = cpx3_pessoa(cpx3_d(o + 0xc));
     let comprador = cpx3_clube(cpx3_d(o + 8));
     let vendedor = cpx3_clube_nao_5(p);
@@ -188,10 +188,10 @@ unsafe extern "thiscall" fn efetivar_transferencia(this: usize, o: usize) {
 
 // ponytail: muda jogadores de clube, paga e agenda (não pode rodar duas vezes): só a original, com o plano do estado
 // final (0x14, que nenhuma chamada depois dele muda); a cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_efetivar_transferencia(this: usize, o: usize) {
+unsafe extern "thiscall" fn comparar_finalise_transfer(this: usize, o: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, o);
     let e = cpx3_b(o + 0x2c);
-    PLACAR.registrar(e == 0x14, || format!("efetivar_transferencia(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
+    PLACAR.registrar(e == 0x14, || format!("finalise_transfer(oferta {:#x}) estado={:#x} (plano 0x14)", o, e));
 }
 
 /// A notícia local com a pessoa (o id e as três chaves) nas vagas `k` a `k` + 3.
@@ -244,12 +244,12 @@ unsafe fn cpx3_entregar(nt: usize, o: usize, lista: &[usize], n: i8) {
 }
 
 /// { 0x8dbef0 } (thiscall, ret 4, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
-/// post_transfer_completed_news(oferta)`, pelo fechamento da oferta (0x8c34e0). Os clubes humanos que recebem (0x8d1130
+/// post_transfer_completed_news(oferta)`, pelo match_wrap_up da oferta (0x8c34e0). Os clubes humanos que recebem (0x8d1130
 /// com 0x5f, até 30); sem nenhum, nada. A notícia 0xfa8: a pessoa, o comprador, o clube do contrato, o valor (+0x1b), 0,
 /// o valor total (0x8e7a70 com 1, 1, 0, 1), +0x2f, +0x11, as cláusulas (0x8e7ef0); com +0x2f, contrato de clube e +0x30
 /// & 0xf = 3, o fim do contrato se ainda vier (vagas 10 e 11). Os da troca (até 3, da vaga 15) e quantos (14); um
 /// sorteio(3) na vaga seguinte; com ficha, 1, os pontos fortes (0x546ab0, sorteia) e as posições (0x5b7d20), senão 0.
-unsafe extern "thiscall" fn noticia_transferencia_concluida(this: usize, o: usize) {
+unsafe extern "thiscall" fn post_transfer_completed_news(this: usize, o: usize) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -306,7 +306,7 @@ unsafe extern "thiscall" fn noticia_transferencia_concluida(this: usize, o: usiz
 }
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_transferencia_concluida(this: usize, o: usize) {
+unsafe extern "thiscall" fn comparar_post_transfer_completed_news(this: usize, o: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, o)
 }
 
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn comparar_noticia_transferencia_concluida(this: usize
 /// (0x8d1130 com 0xf, até 30); sem nenhum, nada. A notícia 0xfb3: a pessoa, o comprador, o clube do contrato, o valor
 /// (+0x1b), +0x2f, o valor total (0x8e7a70 com 0, 1, 0, 1), o nibble baixo de +0x30 com sinal, a data da conclusão (dia
 /// com sinal, ano), os da troca (até 3, da vaga 13) e quantos (12).
-unsafe extern "thiscall" fn noticia_transferencia_acertada(this: usize, o: usize, data: usize) {
+unsafe extern "thiscall" fn post_transfer_agreed_news(this: usize, o: usize, data: usize) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -345,6 +345,6 @@ unsafe extern "thiscall" fn noticia_transferencia_acertada(this: usize, o: usize
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_transferencia_acertada(this: usize, o: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_post_transfer_agreed_news(this: usize, o: usize, data: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, o, data)
 }

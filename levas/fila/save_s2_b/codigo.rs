@@ -21,7 +21,7 @@ unsafe fn aviso_do_setup(linha: u32) {
 /// cabeçalho dele): 2 bytes, [0xae233c] e [0xa83608], e `zclose`. Caminho nulo, item que não abre
 /// ou escrita que falha: a caixa "Error" (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38); nas escritas,
 /// depois da caixa o item é fechado. A original não devolve nada (`eax` sobra).
-unsafe extern "C" fn gravar_regras_fifa(save: usize) {
+unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
@@ -50,7 +50,7 @@ unsafe extern "C" fn gravar_regras_fifa(save: usize) {
 
 // ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
-unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
+unsafe extern "C" fn comparar_save_fifa_transfer_rules(save: usize) {
     orig::<unsafe extern "C" fn(usize)>(%%I0%%)(save)
 }
 
@@ -58,7 +58,7 @@ unsafe extern "C" fn comparar_gravar_regras_fifa(save: usize) {
 /// `fifa_transfer_rules.zip` (0x9326e0 lendo) em [0xae233c] e [0xa83608]; se [0xae233c] = 1, a
 /// regra em vigor [0xa83608] vira 5. Fecha o item. Erros: a caixa "Error" (Setup.cpp 0x3b4f, 0x3b57,
 /// 0x3b5d, 0x3b63), como na gravação.
-unsafe extern "C" fn carregar_regras_fifa(save: usize) {
+unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
@@ -90,7 +90,7 @@ unsafe extern "C" fn carregar_regras_fifa(save: usize) {
 
 // ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
-unsafe extern "C" fn comparar_carregar_regras_fifa(save: usize) {
+unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
     orig::<unsafe extern "C" fn(usize)>(%%I1%%)(save)
 }
 
@@ -117,7 +117,7 @@ unsafe fn copiar_texto(destino: *mut u8, fonte: *const u8) {
 ///   clube fica como estava no buffer do chamador);
 /// - +0xf64 a data do jogo (0x417c10 de 0xae2c90), +0x7d0 a versão (0x90d130), +0xf6c o tempo de
 ///   jogo ([0xdd7140] += time() − [0xdd7144]; [0xdd7144] = time()) e +0xf70 o time().
-unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
+unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
     let formatar: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let traduzir: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
@@ -184,14 +184,14 @@ unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
 // Lado a lado sobre o resumo inteiro (0xf74) e o relógio do tempo de jogo ([0xdd7140], [0xdd7144]),
 // restaurados entre as duas; compara só +0..+0xf6c: o tempo de jogo e o time() (+0xf6c, +0xf70) são
 // relógio (fixos só no modo simulação), como na prova do save.
-unsafe extern "C" fn comparar_montar_resumo_do_save(resumo: *mut u8) {
+unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
     let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
     let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
         || orig::<unsafe extern "C" fn(*mut u8)>(%%I2%%)(resumo),
-        || montar_resumo_do_save(resumo));
+        || build_save_game_summary(resumo));
     PLACAR.registrar(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);
-        format!("montar_resumo_do_save: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])
+        format!("build_save_game_summary: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])
     });
 }

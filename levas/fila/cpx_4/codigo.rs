@@ -68,7 +68,7 @@ unsafe fn cpx4_pode(p: usize, clube: usize, inicio: usize, fim: usize) -> Option
 /// números de camisa (0x85add0, 0x85a470); no time B, a pessoa vai às reservas (0x4cc0f0). Precisando de permissão de
 /// trabalho no clube (0x8c7560), o fim recebido anda 7 dias e a permissão é dada (0x8c7070 com a nação do clube e o ano
 /// do começo).
-unsafe extern "thiscall" fn emprestimo_da_configuracao(this: usize, p: usize, clube: usize, inicio: usize, fim: usize) {
+unsafe extern "thiscall" fn add_config_loan(this: usize, p: usize, clube: usize, inicio: usize, fim: usize) {
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x85e410usize);
     let mut local = [0u8; 0x50]; // o STAFF_CONTRACT local (0x50 bytes)
     let l = local.as_mut_ptr() as usize;
@@ -121,14 +121,14 @@ unsafe extern "thiscall" fn emprestimo_da_configuracao(this: usize, p: usize, cl
 
 // ponytail: assina o empréstimo, mexe no elenco e nas permissões (não pode rodar duas vezes): só a original, com o
 // plano pelas mesmas condições (passando, a pessoa sai emprestada; senão o empréstimo dela fica como estava).
-unsafe extern "thiscall" fn comparar_emprestimo_da_configuracao(this: usize, p: usize, clube: usize, inicio: usize, fim: usize) {
+unsafe extern "thiscall" fn comparar_add_config_loan(this: usize, p: usize, clube: usize, inicio: usize, fim: usize) {
     let emprestado: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
     let tinha = emprestado(cpx4_d(0xae1050), p);
     let passa = cpx4_pode(p, clube, inicio, fim).is_some();
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I0%%)(this, p, clube, inicio, fim);
     let tem = emprestado(cpx4_d(0xae1050), p);
     let igual = if passa { tem != 0 } else { tem == tinha };
-    PLACAR.registrar(igual, || format!("emprestimo_da_configuracao(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", cpx4_d(p), passa, tinha, tem));
+    PLACAR.registrar(igual, || format!("add_config_loan(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", cpx4_d(p), passa, tinha, tem));
 }
 
 /// O contrato principal da pessoa como a 0x4da590 o acha (o mesmo da 0x4cf5a0, em linha): sem pessoa, id fora da tabela
@@ -171,7 +171,7 @@ unsafe fn cpx4_interessados(p: usize, l: usize) -> Vec<usize> {
 /// os técnicos (0x786780); nacional (+0xb) acima de 7000, aos técnicos da nação da pessoa, da do clube e da do clube
 /// atual (+0x39) (0x7863f0) e aos clubes interessados (0x842180) de outras nações. Senão ao clube, ao clube atual no
 /// tipo 6 e aos interessados (0x7861e0).
-unsafe extern "thiscall" fn noticia_fim_do_contrato(this: usize, p: usize, tipo: u32, amplo: u32) {
+unsafe extern "thiscall" fn post_contract_end_news(this: usize, p: usize, tipo: u32, amplo: u32) {
     let c = cpx4_contrato(p);
     if c == 0 || cpx4_clube(cpx4_d(c + 4)) == 0 {
         return;
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn noticia_fim_do_contrato(this: usize, p: usize, tipo:
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_fim_do_contrato(this: usize, p: usize, tipo: u32, amplo: u32) {
+unsafe extern "thiscall" fn comparar_post_contract_end_news(this: usize, p: usize, tipo: u32, amplo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%)(this, p, tipo, amplo)
 }
 
@@ -274,7 +274,7 @@ unsafe extern "thiscall" fn comparar_noticia_fim_do_contrato(this: usize, p: usi
 /// clubes humanos que recebem (0x8d1130 com 1, ou 2 fora do estado 0x11; até 30); sem nenhum, nada. A notícia 0xfab: o
 /// clube do contrato (sem tipo 5) ou −1, o comprador, a pessoa (o id e as três chaves), o estado, 0, 0, a vaga +0x20 e o
 /// motivo; a cada destinatário.
-unsafe extern "thiscall" fn noticia_pedido_de_adiamento(this: usize, o: usize, motivo: u32) {
+unsafe extern "thiscall" fn post_transfer_delay_request_news(this: usize, o: usize, motivo: u32) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -311,6 +311,6 @@ unsafe extern "thiscall" fn noticia_pedido_de_adiamento(this: usize, o: usize, m
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_pedido_de_adiamento(this: usize, o: usize, motivo: u32) {
+unsafe extern "thiscall" fn comparar_post_transfer_delay_request_news(this: usize, o: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, o, motivo)
 }

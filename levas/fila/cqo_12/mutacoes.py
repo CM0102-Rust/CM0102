@@ -1,5 +1,5 @@
-# Mutacoes (cqo_12), na Copa do Brasil (o Brasil jogavel na carreira de 8 ligas; a copa de 2002 e jogada de fevereiro a
-# julho, dentro da janela): a 1a rodada jogada em 2/3 em vez de 23/2; as vagas tiradas dos inscritos de tras para a
+# Mutacoes (cqo_12), na Copa do Brasil (o Brasil jogavel na carreira de 8 ligas; a copa de 2002 e play de fevereiro a
+# julho, dentro da janela): a 1a rodada play em 2/3 em vez de 23/2; as vagas tiradas dos inscritos de tras para a
 # frente (os sorteios mudam); uma substituicao so em vez de 3 (as partidas da copa mudam). Os contadores ficam colados
 # no efeito.
 MUTACOES = [

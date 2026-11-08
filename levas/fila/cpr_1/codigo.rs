@@ -18,7 +18,7 @@ unsafe fn cpr1_limpar(t: *mut u8) {
 /// do tipo 4, a primeira das 28 regras de +0x8ac do continente (+0xe, tipo 2) ou da nação (+0xa) com o mesmo tipo
 /// (+0x12) enche a tabela (virtual +0x1c com a partida e `t`). Com `so_a_principal`, fica só o primeiro limite que
 /// existe: +5 ou +3 (gravado em +5), +2 ou +0 (gravado em +2), ou +0x16 com +0x17; o resto volta a 0xff.
-unsafe extern "thiscall" fn restricoes_da_partida(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
+unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
     cpr1_limpar(t);
     if partida == 0 {
         return;
@@ -73,9 +73,9 @@ unsafe extern "thiscall" fn restricoes_da_partida(this: usize, partida: usize, t
 /// (0x8cf7e0 em 6 bytes locais: +0 tipo, +1 idade, +5 quantidade); sem tipo, 0. O lado humano (+0x1c/+0x40 ou
 /// +0x20/+0x41) vai para a 0x8968f0. Pelas (+0x4d & 0xf) + 11 vagas, a pessoa da vaga (`jogadores[k]` ou a tática
 /// [0xde1d08] 0x8968f0) conta se é estrangeira na nação do clube (0x53d980 com 1; tipo 1, também fora da UE, 0x53d740)
-/// ou passa da idade (+0x18, tipo 3): +2 (titulares) ou +3 (as outras) e +4 (todas). A conta vai a `saida`; passando da
+/// ou passa da idade (+0x18, tipo 3): +2 (starters) ou +3 (as outras) e +4 (todas). A conta vai a `saida`; passando da
 /// quantidade, 1 e, com `msg`, o aviso (0x66f4e0) pelo tipo, pela conta e pela quantidade.
-unsafe extern "thiscall" fn limite_do_banco_do_dia(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, _nao_usado: u32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_limit(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, _nao_usado: u32, saida: usize) -> u32 {
     let limite: unsafe extern "thiscall" fn(usize, usize, *mut u8) = core::mem::transmute(0x8cf7e0usize);
     let da_tatica: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> usize = core::mem::transmute(0x8968f0usize);
     let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn limite_do_banco_do_dia(this: usize, clube: usize, pa
 /// 0xe (+0x76) ou jogador da UE (0x53d740 com nação 0): 0. Com `ignorar_a_dada`: 1. Senão 0 só se o contrato (0x4cf5a0)
 /// é do tipo 2 (+0x35 & 0x3f), o id cabe em [0xae2364], tem a marca 0x20 ([this+0x86e] + id × 8) e a permissão está no
 /// vetor [this+0x93a] (conta +0x93e; busca binária 0x946464 com 0x8e55c0); senão 1.
-unsafe extern "thiscall" fn precisa_de_permissao_de_trabalho(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
+unsafe extern "thiscall" fn player_needs_work_permit(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
     if clube == 0 || cpr1_d(clube + 0x53) == 0 {
         return 0;
     }
@@ -187,8 +187,8 @@ unsafe extern "thiscall" fn precisa_de_permissao_de_trabalho(this: usize, jogado
     if ignorar_a_dada != 0 {
         return 1;
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpr1_d(0xae1050), jogador);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpr1_d(0xae1050), jogador);
     if c != 0 && cpr1_b(c + 0x35) & 0x3f == 2 {
         let id = cpr1_d(jogador) as i32;
         if id < cpr1_d(0xae2364) as i32 && cpr1_b(cpr1_d(this + 0x86e).wrapping_add((id as usize).wrapping_mul(8))) & 0x20 != 0 {
@@ -203,15 +203,15 @@ unsafe extern "thiscall" fn precisa_de_permissao_de_trabalho(this: usize, jogado
 }
 
 /// Comparador: lado a lado pelos 42 bytes da tabela (o alcance e a virtual das regras só escrevem nela).
-unsafe extern "thiscall" fn comparar_restricoes_da_partida(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
+unsafe extern "thiscall" fn comparar_fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_a_principal: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32)>(%%I0%%);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(t as usize, 42)], || o(this, partida, t, so_a_principal), || restricoes_da_partida(this, partida, t, so_a_principal));
-    PLACAR.registrar(igual, || format!("restricoes_da_partida({:x}, {}) {:x?} x {:x?}", partida, so_a_principal, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(t as usize, 42)], || o(this, partida, t, so_a_principal), || fill_squad_restrictions(this, partida, t, so_a_principal));
+    PLACAR.registrar(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", partida, so_a_principal, mo, mr));
 }
 
 /// Comparador: lado a lado pela saída (6 bytes) e pelo aviso (0x100 bytes, com `msg`), e pela devolução. A 0x8968f0 pode
 /// pôr −1 numa vaga sem pessoa válida: a original já deixou assim e a cópia acha a mesma vaga vazia.
-unsafe extern "thiscall" fn comparar_limite_do_banco_do_dia(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, nao_usado: u32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_transfer_manager_check_matchday_squad_limit(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, nao_usado: u32, saida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize) -> u32>(%%I1%%);
     let mut regioes = [(0usize, 0usize); 2];
     let mut n = 0;
@@ -223,19 +223,19 @@ unsafe extern "thiscall" fn comparar_limite_do_banco_do_dia(this: usize, clube: 
         regioes[n] = (msg, 0x100);
         n += 1;
     }
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes[..n], || o(this, clube, partida, msg, jogadores, nao_usado, saida), || limite_do_banco_do_dia(this, clube, partida, msg, jogadores, nao_usado, saida));
-    PLACAR.registrar(igual && r == c, || format!("limite_do_banco_do_dia(clube {:x}, partida {:x}) original={} rust={} {:x?} x {:x?}", clube, partida, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes[..n], || o(this, clube, partida, msg, jogadores, nao_usado, saida), || transfer_manager_check_matchday_squad_limit(this, clube, partida, msg, jogadores, nao_usado, saida));
+    PLACAR.registrar(igual && r == c, || format!("transfer_manager_check_matchday_squad_limit(clube {:x}, partida {:x}) original={} rust={} {:x?} x {:x?}", clube, partida, r, c, mo, mr));
     r
 }
 
 /// Comparador: pelo valor (só lê). Jogador nulo com clube de nação: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_precisa_de_permissao_de_trabalho(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_player_needs_work_permit(this: usize, jogador: usize, clube: usize, ignorar_a_dada: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if jogador == 0 {
         return o(this, jogador, clube, ignorar_a_dada);
     }
     let r = o(this, jogador, clube, ignorar_a_dada);
-    let n = precisa_de_permissao_de_trabalho(this, jogador, clube, ignorar_a_dada);
-    PLACAR.registrar(r == n, || format!("precisa_de_permissao_de_trabalho(jogador {}, clube {:x}, {}) original={} rust={}", cpr1_d(jogador), clube, ignorar_a_dada, r, n));
+    let n = player_needs_work_permit(this, jogador, clube, ignorar_a_dada);
+    PLACAR.registrar(r == n, || format!("player_needs_work_permit(jogador {}, clube {:x}, {}) original={} rust={}", cpr1_d(jogador), clube, ignorar_a_dada, r, n));
     r
 }

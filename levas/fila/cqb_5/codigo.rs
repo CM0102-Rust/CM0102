@@ -82,7 +82,7 @@ unsafe fn cqb5_volta_ao_treino(tipo: i8, dias: i16) -> i16 {
 /// sorteio(dias) − 1 na retroativa). O físico de novo, a notícia (0x62dca0), +0xe = a vaga, a recorrência, a seleção
 /// (0x775cd0), +0x1c = 0, a recaída (0x62e500), a contagem das recaídas (de duas: aposentadoria 0x7a7f20 por sorteio),
 /// a aposentadoria pela idade e pela volta ao treino longa e o surto (0x62e820) nos tipos 0, 1 e 2. Devolve a vaga.
-unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
+unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
     let tipo = tipo_arg as u8 as i8;
     let original = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(%%I0%%);
     if p == 0 {
@@ -363,12 +363,12 @@ unsafe extern "thiscall" fn lesao_nova(this: usize, tipo_arg: u32, retroativa: u
 }
 
 /// Comparador da 0x62d250: só a original (aloca, entrega a notícia, agenda aposentadoria e chama originais que sorteiam
-/// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode lesionar de novo: não pode rodar duas vezes). Confere
+/// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode injure de novo: não pode rodar duas vezes). Confere
 /// o que a lesão garante depois: argumentos inválidos ou só recorrência dão −1; −1 de resto só com a pessoa ainda
 /// lesionada (+0xe ≠ −1) ou sem vetor; vaga válida com a pessoa ainda nela (+0xe = vaga, sem recaída que a tenha
 /// trocado): o tipo na vaga e em +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e = +0x2a e +0x2a = a volta ao treino pela
 /// duração +0x28 (o x87 da cópia).
-unsafe extern "thiscall" fn comparar_lesao_nova(this: usize, tipo_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_add_injury(this: usize, tipo_arg: u32, retroativa: u32, p: usize, jogo: usize, surto: u32, noticia: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(%%I0%%);
     let r = o(this, tipo_arg, retroativa, p, jogo, surto, noticia, rec_arg, so_recorrencia);
     let tipo = tipo_arg as u8 as i8;
@@ -384,7 +384,7 @@ unsafe extern "thiscall" fn comparar_lesao_nova(this: usize, tipo_arg: u32, retr
             r >= 0 // trocada depois (a recaída lesionou de novo): nada a conferir
         } else {
             let l = cqb5_lesao(this, r as usize);
-            // a recaída (0x62e500) pode lesionar de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
+            // a recaída (0x62e500) pode injure de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
             // a nova lesão a reocupa (a primeira livre), com o tipo dela; confere a nova
             let t = cqb5_b(l) as i8;
             let tipo = if t != tipo && (0x4d..=0x4f).contains(&t) { t } else { tipo };
@@ -396,7 +396,7 @@ unsafe extern "thiscall" fn comparar_lesao_nova(this: usize, tipo_arg: u32, retr
                 && cqb5_w(l + 0x2a) == cqb5_volta_ao_treino(tipo, cqb5_w(l + 0x28))
         }
     };
-    PLACAR.registrar(ok, || format!("lesao_nova(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", tipo_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
+    PLACAR.registrar(ok, || format!("add_injury(tipo {:#x}, retroativa {}, pessoa {:#x}, recorrencia {}, so {}) = {}", tipo_arg, retroativa, p, rec_arg as u8 as i8, so_recorrencia, r));
     r
 }
 
@@ -409,7 +409,7 @@ unsafe extern "thiscall" fn comparar_lesao_nova(this: usize, tipo_arg: u32, retr
 /// ou −1, 0xf = 0x420e9; a partida na notícia (0x7e4de0 com o byte 0x10). Mais de 100 dias: com potencial (+0xd da
 /// ficha) acima de 8000, a todos (0x786780); senão aos interessados (0x7861e0). Até 100: clube humano (0x7875e0), ao
 /// clube; o clube do contrato (0x4cf5a0) se for outro; a seleção.
-unsafe extern "thiscall" fn noticia_da_lesao(_this: usize, p: usize, l: usize, arg: u32) {
+unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: usize, l: usize, arg: u32) {
     crate::comparacao::ramo("cqb_5 noticia da lesao");
     let tm = cqb5_d(0xde1f54);
     let mut clubes = [0usize; 30];
@@ -495,7 +495,7 @@ unsafe extern "thiscall" fn noticia_da_lesao(_this: usize, p: usize, l: usize, a
 
 /// Comparador da 0x62dca0: só a original (entrega a notícia, que não pode sair duas vezes; a cópia leva o ramo no modo
 /// Rust). ponytail: sem plano a conferir além do que a original entrega.
-unsafe extern "thiscall" fn comparar_noticia_da_lesao(this: usize, p: usize, l: usize, arg: u32) {
+unsafe extern "thiscall" fn comparar_injury_post_injury_news(this: usize, p: usize, l: usize, arg: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, p, l, arg)
 }
 
@@ -503,7 +503,7 @@ unsafe extern "thiscall" fn comparar_noticia_da_lesao(this: usize, p: usize, l: 
 /// preço pedido, pelo dia da comissão e pelas transferências. Pessoa nula ou id além de [0xae2364]: 0 (só o al). Com
 /// `só_ler`, o bit 0 da marca da pessoa ([this+0xc] + id). Senão, com o bit e sem contrato (0x4cf5a0, guardado em
 /// [0xae1080]) ou sem clube do contrato, a ausência acaba (0x4196a0); devolve o bit relido.
-unsafe extern "thiscall" fn ausente_sem_licenca(this: usize, p: usize, so_ler: u32) -> u32 {
+unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_ler: u32) -> u32 {
     if p == 0 || cqb5_d(p) as i32 >= cqb5_d(0xae2364) as i32 {
         return 0;
     }
@@ -521,7 +521,7 @@ unsafe extern "thiscall" fn ausente_sem_licenca(this: usize, p: usize, so_ler: u
 
 /// Comparador da 0x418f60 (quente: sem alocar): lado a lado em [0xae1080] e no al devolvido; com o bit, sem `só_ler` e
 /// sem contrato ou clube (a 0x4196a0 tira e libera o nó da lista: não pode rodar duas vezes), só a original.
-unsafe extern "thiscall" fn comparar_ausente_sem_licenca(this: usize, p: usize, so_ler: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_is_player_awol(this: usize, p: usize, so_ler: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     if p != 0 && (cqb5_d(p) as i32) < cqb5_d(0xae2364) as i32 && so_ler == 0 && cqb5_b(cqb5_d(this + 0xc) + cqb5_d(p)) & 1 != 0 {
         let c = cqb5_contrato(p); // a original o refaz igual (e regrava [0xae1080])
@@ -529,7 +529,7 @@ unsafe extern "thiscall" fn comparar_ausente_sem_licenca(this: usize, p: usize, 
             return o(this, p, so_ler);
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, so_ler), || ausente_sem_licenca(this, p, so_ler));
-    PLACAR.registrar(igual && r as u8 == n as u8, || format!("ausente_sem_licenca(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_ler, r as u8, mo, n as u8, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(this, p, so_ler), || is_player_awol(this, p, so_ler));
+    PLACAR.registrar(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_ler, r as u8, mo, n as u8, mr));
     r
 }

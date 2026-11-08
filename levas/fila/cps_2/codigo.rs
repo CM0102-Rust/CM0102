@@ -20,7 +20,7 @@ unsafe fn cps2_b(a: usize) -> u8 {
 /// nação), começando pelo ano de +0x40. Menos de 5 anos até o ano de hoje ([0xae2c92]): a permissão (0x8c7070, sem
 /// ordenar; antes a original leva a data +0x3e de 52 em 52 semanas até a data [0xdd6ec8], sem usar o resultado); senão a
 /// segunda nacionalidade (+0x1e) vira a nação do clube. No fim ordena as permissões (qsort 0x945333 com 0x8e55c0).
-unsafe extern "thiscall" fn iniciar_permissoes_de_trabalho(this: usize) {
+unsafe extern "thiscall" fn init_work_permits(this: usize) {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mais_semanas: unsafe extern "thiscall" fn(usize, usize, i32) -> usize = core::mem::transmute(0x54c770usize);
@@ -97,23 +97,23 @@ unsafe extern "thiscall" fn iniciar_permissoes_de_trabalho(this: usize) {
 /// { 0x8c3e50 } (thiscall, ret 8, transfer_manager.cpp): `TRANSFER_MANAGER::get_clause_count(pessoa, tipo)`: no tipo 4,
 /// os jogos pela seleção (+0x22) menos os da época do acordo (byte +7 do registro de 8 bytes [this+0x86e] + id × 8);
 /// senão os jogos pelo clube (+0x3b) do contrato (0x4cf5a0, pedido duas vezes como na original), ou 0 sem contrato.
-unsafe extern "thiscall" fn contagem_da_clausula(this: usize, pessoa: usize, tipo: u32) -> u16 {
+unsafe extern "thiscall" fn get_clause_count(this: usize, pessoa: usize, tipo: u32) -> u16 {
     if tipo as u8 == 4 {
         let r = cps2_d(this + 0x86e).wrapping_add(cps2_d(pessoa).wrapping_mul(8));
         return (cps2_b(pessoa + 0x22) as u16).wrapping_sub(cps2_b(r + 7) as u16);
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    if contrato_de(cps2_d(0xae1050), pessoa) == 0 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    if contract_of(cps2_d(0xae1050), pessoa) == 0 {
         return 0;
     }
-    cps2_w(contrato_de(cps2_d(0xae1050), pessoa) + 0x3b)
+    cps2_w(contract_of(cps2_d(0xae1050), pessoa) + 0x3b)
 }
 
 /// { 0x8d0ea0 } (thiscall, ret 4, transfer_manager.cpp): `TRANSFER_MANAGER::find_first_team_appearance_money(pessoa)`:
 /// com o bit 2 do registro de 8 bytes ([this+0x86e] + id × 8), busca o prêmio por jogo da pessoa no vetor [this+0x88c]
 /// (conta +0x894; busca binária 0x946464 com 0x8b4e00, registros de 13 bytes) e o devolve; sem achar, tira o bit (soma
 /// 0xfe ao byte) e devolve 0.
-unsafe extern "thiscall" fn premio_por_jogo_do_jogador(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn find_first_team_appearance_money(this: usize, pessoa: usize) -> usize {
     let id = cps2_d(pessoa);
     if cps2_b(cps2_d(this + 0x86e).wrapping_add(id.wrapping_mul(8))) & 2 == 0 {
         return 0;
@@ -131,23 +131,23 @@ unsafe extern "thiscall" fn premio_por_jogo_do_jogador(this: usize, pessoa: usiz
 
 // ponytail: cresce o vetor das permissões (0x8c7070) e grava em todas as pessoas: só a original; a cópia leva os ramos
 // (roda uma vez, na criação do jogo).
-unsafe extern "thiscall" fn comparar_iniciar_permissoes_de_trabalho(this: usize) {
+unsafe extern "thiscall" fn comparar_init_work_permits(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_contagem_da_clausula(this: usize, pessoa: usize, tipo: u32) -> u16 {
+unsafe extern "thiscall" fn comparar_get_clause_count(this: usize, pessoa: usize, tipo: u32) -> u16 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u16>(%%I1%%)(this, pessoa, tipo);
-    let n = contagem_da_clausula(this, pessoa, tipo);
-    PLACAR.registrar(r == n, || format!("contagem_da_clausula(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
+    let n = get_clause_count(this, pessoa, tipo);
+    PLACAR.registrar(r == n, || format!("get_clause_count(pessoa {}, tipo {}) original={} rust={}", cps2_d(pessoa), tipo as u8, r, n));
     r
 }
 
 /// Comparador: lado a lado pelo byte do registro da pessoa, e pela devolução.
-unsafe extern "thiscall" fn comparar_premio_por_jogo_do_jogador(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_first_team_appearance_money(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cps2_d(this + 0x86e).wrapping_add(cps2_d(pessoa).wrapping_mul(8));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, pessoa), || premio_por_jogo_do_jogador(this, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("premio_por_jogo_do_jogador(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps2_d(pessoa), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, pessoa), || find_first_team_appearance_money(this, pessoa));
+    PLACAR.registrar(igual && r == n, || format!("find_first_team_appearance_money(pessoa {}) original={:x} rust={:x} {:x?} x {:x?}", cps2_d(pessoa), r, n, mo, mr));
     r
 }

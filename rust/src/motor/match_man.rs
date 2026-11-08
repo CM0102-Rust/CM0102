@@ -1,6 +1,6 @@
 use super::*;
 
-// ---------- centesima decima setima leva: escalar (0x6e2000) ----------
+// ---------- centesima decima setima leva: pick (0x6e2000) ----------
 
 /// { 0x6e2000 } (cdecl, match_man.cpp, ~3,9 KB, recursiva): distribui as `n` pessoas de `pessoas`
 /// pelas `m` vagas (+ `x` extras) e grava em `saida` a pessoa de cada vaga. Cada par (pessoa, vaga)
@@ -13,7 +13,7 @@ use super::*;
 /// 100 voltas). A memoria de trabalho e a do jogo (0x945501/0x9452ca), na mesma ordem. Devolve 1, ou 0
 /// sem pessoas ou sem vagas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn escalar(
+pub(crate) unsafe extern "C" fn pick(
     pessoas: usize, a2: u32, codigos: usize, a4: u32, a5: u32, saida: usize, modo: u32, clube: usize, comissao: usize,
     a10: u32, _a11: u32, mut marcas: usize, mut bytes: usize, a14: u32, mut curtos: usize,
 ) -> u8 {
@@ -315,7 +315,7 @@ pub(crate) unsafe extern "C" fn escalar(
     1
 }
 
-// ---------- centesima decima oitava leva: a postura do time (0x6df460) ----------
+// ---------- centesima decima oitava leva: a stance do time (0x6df460) ----------
 
 /// the stance the staff ask for (1 all-out attack … 5 park the bus). Starts from the sides' strength (with the engine
 /// running, +0x8ea5, the sum of the 0x6e86d0 scores of those on the pitch × 50 / 11; otherwise the +0x80 reputation),
@@ -325,15 +325,15 @@ pub(crate) unsafe extern "C" fn escalar(
 /// with the engine running and the factor within 0.5 of the stored one, keeps the current stance (+0x1ab)
 /// Original: `stance` (0x6df460, match_man.cpp (~3 KB), thiscall).
 ///
-/// [pt] { 0x6df460 } (thiscall, match_man.cpp): a postura que a comissao `c` (+0x12 motor, +0x18 lado,
+/// [pt] { 0x6df460 } (thiscall, match_man.cpp): a stance que a comissao `c` (+0x12 motor, +0x18 lado,
 /// +0x1f tecnico, +0x2f clube, +0x33 adversario, +0x37 partida) pede ao time: 1 ataque total, 2
 /// ataque, 3 equilibrio, 4 defesa, 5 retranca. Parte da forca dos dois lados (com o motor rodando
 /// (+0x8ea5), a soma das notas 0x6e86d0 dos que estao em campo * 50 / 11; senao a reputacao +0x80
 /// dos clubes), da posse (+0x1fc/+0x206/+0x210), do tempo (+0x8ed0), dos expulsos (+0x1ad) e do
 /// placar agregado (0x6ce310), e ajusta pela liga (posicoes na tabela, 0x4a4850), pelo tecnico e pelo
 /// fim do jogo (+0x8ed4 = 0x3de). Guarda o fator em motor+0x476a[lado] (10 e -1 nos extremos); com o
-/// motor rodando e o fator a menos de 0,5 do guardado, mantem a postura atual (+0x1ab).
-pub(crate) unsafe extern "thiscall" fn postura(c: usize) -> u8 {
+/// motor rodando e o fator a menos de 0,5 do guardado, mantem a stance atual (+0x1ab).
+pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let i = |p: usize, o: usize| *((p + o) as *const i32);
     let w = |p: usize, o: usize| *((p + o) as *const i16) as i32;
@@ -493,8 +493,8 @@ pub(crate) unsafe extern "thiscall" fn postura(c: usize) -> u8 {
     }
     let kb = k;
     if kb != 0 || x13 < 0 {
-        let pressao = (rep_b > 7500 && rep_b - rep_a > 2000) || (rep_b > 8500 && rep_b - rep_a > 750) || (rep_b > 8000 && x11 as i32 - 1 > x12 as i32);
-        if pressao {
+        let pressure = (rep_b > 7500 && rep_b - rep_a > 2000) || (rep_b > 8500 && rep_b - rep_a > 750) || (rep_b > 8000 && x11 as i32 - 1 > x12 as i32);
+        if pressure {
             let d = x12 as i32 - x11 as i32;
             if (d < 2 && w(m, 0x8ed4) == 0x1ef) || x12 <= x11 {
                 h *= 0.3;
@@ -592,22 +592,22 @@ pub(crate) unsafe extern "thiscall" fn postura(c: usize) -> u8 {
 /// 0x5fbd00). Senao da nota (0x6e2f20) a cada setor (7, bits 1..0x40) e faixa (5, bits 0x80..0x800)
 /// pelas duas melhores das `n` pessoas de `fichas` (o goleiro so na faixa do meio; com menos de 11, o
 /// ultimo setor vale metade e as pontas dos setores 1 a 3 ficam com a menor), e julga cada formacao
-/// do banco de taticas (0xde1d08): o tempo (+2, ate 3000) e a postura (0x6df460) pesam a nota da
+/// do banco de taticas (0xde1d08): o tempo (+2, ate 3000) e a stance (0x6df460) pesam a nota da
 /// formacao (+0x10/+0x18/+0x20, ate 3), o tecnico ajusta (+0x1c, +0xe, +0x1f; a favorita +0x43 vale
 /// x1,1 ou ate x3,75, as outras x0,1) e cada vaga soma a nota do seu setor e faixa (0x5b2ae0) e as
-/// marcas (0x5b5270/0x5b57c0); o equilibrio dos setores entra pela postura. Grava a melhor (0x8967d0),
-/// copia a tatica (0x896660) para o motor (+0x91e2 do lado) e para +0x2b e acerta as instrucoes
+/// marcas (0x5b5270/0x5b57c0); o equilibrio dos setores entra pela stance. Grava a melhor (0x8967d0),
+/// copia a tatica (0x896660) para o motor (+0x91e2 do lado) e para +0x2b e acerta as instructions
 /// (0x6ddab0). As notas das formacoes ficam numa lista da CRT do jogo (0x945501/0x9452ca). Devolve 0.
-pub(crate) unsafe extern "thiscall" fn escolher_formacao(c: usize, fichas: usize, a2: u32, a3: u32, a4: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, fichas: usize, a2: u32, a3: u32, a4: u32) -> u8 {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let w = |p: usize, o: usize| *((p + o) as *const i16) as i32;
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let postura: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_MAN_CHOOSE_MENTALITY);
+    let stance: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_MAN_CHOOSE_MENTALITY);
     let definir: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> u32 = core::mem::transmute(FN_TACTICS_SET_CLUB_TACTIC_INDEX);
     let carregar: unsafe extern "thiscall" fn(usize, usize, i32) -> usize = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTIC);
-    let instrucoes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_MAN_SET_COMPUTER_INSTRUCTIONS);
-    let pp = postura(c) as i8;
+    let instructions: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_MAN_SET_COMPUTER_INSTRUCTIONS);
+    let pp = stance(c) as i8;
     let clube = u(c, 0x2f);
     let mut escala = w(clube, 0x80) << 3;
     if escala <= 2000 {
@@ -648,7 +648,7 @@ pub(crate) unsafe extern "thiscall" fn escolher_formacao(c: usize, fichas: usize
     let copia = u(c, 0x2b);
     if tatica != 0 && copia != 0 {
         core::ptr::copy_nonoverlapping(tatica as *const u8, copia as *mut u8, 0x18e3);
-        instrucoes(c);
+        instructions(c);
     }
     0
 }
@@ -869,7 +869,7 @@ pub(crate) unsafe fn julgar_formacoes(
     melhor
 }
 
-// ---------- centesima vigesima leva: as instrucoes individuais (0x6ddab0) ----------
+// ---------- centesima vigesima leva: as instructions individuais (0x6ddab0) ----------
 
 /// the staff set the instructions of the tactic copied at +0x2b (0x5b50d0 general, 0x5b2ba0 per position, 0x5b5290
 /// 64-bit marks, 0x5b5910 man-marking in the engine's tactic block) and in the tactics bank (0x897ee0). With a human
@@ -882,7 +882,7 @@ pub(crate) unsafe fn julgar_formacoes(
 /// the marked player's side comes from the player's +0x19 (position 0 becomes the other side)
 /// Original: `instructions` (0x6ddab0, match_man.cpp (~6.4 KB), thiscall).
 ///
-/// [pt] { 0x6ddab0 } (thiscall, match_man.cpp, ~6,4 KB): a comissao `c` acerta as instrucoes da tatica
+/// [pt] { 0x6ddab0 } (thiscall, match_man.cpp, ~6,4 KB): a comissao `c` acerta as instructions da tatica
 /// copiada em +0x2b (0x5b50d0 gerais, 0x5b2ba0 posicao, 0x5b5290 marcas de 64 bits, 0x5b5910 marcacao
 /// individual no motor) e no banco de taticas (0x897ee0). Com tecnico humano a ser consultado nao
 /// mexe. Em casa (ou com sorteio contra a diferenca de reputacao nas competicoes +0x3a = 1 ou 9) pede
@@ -892,7 +892,7 @@ pub(crate) unsafe fn julgar_formacoes(
 /// (com 0x7c1e30 para os meias), passes, chutes de longe, dribles, desarmes, impedimento, cobrancas
 /// (acumulado dos que tem +0x2e alto), cruzamentos por tabela e o especialista de bola parada (0x897ee0
 /// para quem esta em +6/+0xa/+0xe da comissao).
-pub(crate) unsafe extern "thiscall" fn instrucoes(c: usize) {
+pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let w = |p: usize, o: usize| *((p + o) as *const i16);
     let attr: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_STAFF_GET_PLAYER_ATTRIBUTE);
@@ -906,7 +906,7 @@ pub(crate) unsafe extern "thiscall" fn instrucoes(c: usize) {
     let marcas: unsafe extern "thiscall" fn(usize, u32) -> u64 = core::mem::transmute(FN_FORMATION_GET_PLAYER_INSTRUCTIONS);
     let marcar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_FORMATION_SET_MARKING_TARGET);
     let banco: unsafe extern "thiscall" fn(usize, usize, u32, usize, i32) = core::mem::transmute(FN_TACTICS_SET_PLAYMAKER);
-    let quem_marca: unsafe extern "thiscall" fn(usize, u32, u32) -> i8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_FIND_MARKING_TARGET);
+    let who_marks: unsafe extern "thiscall" fn(usize, u32, u32) -> i8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_FIND_MARKING_TARGET);
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f32 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let (ca, cb) = (u(c, 0x2f), u(c, 0x33));
     let mut acc = 0i8;
@@ -1051,7 +1051,7 @@ pub(crate) unsafe extern "thiscall" fn instrucoes(c: usize) {
         }
         if (tb() & 8 != 0 || tb() & 0x10 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && f38 * 16.0 > a(7) as f64 {
             dois_ou_quatro();
-            let r = quem_marca(m, *((j + 0x27) as *const u8) as u32, byte(j, 0x19) as u8 as u32);
+            let r = who_marks(m, *((j + 0x27) as *const u8) as u32, byte(j, 0x19) as u8 as u32);
             if r != -1 {
                 let lado_o = (byte(j, 0x19) == 0) as usize;
                 let o = m + 0x1be * (r as isize as usize).wrapping_add(20 * lado_o) + 0x4796;
@@ -1261,7 +1261,7 @@ pub(crate) unsafe fn colocar_na_vaga_com(c: usize, pos: u32, pessoa: usize, extr
     1
 }
 
-pub(crate) unsafe extern "thiscall" fn colocar_na_vaga(c: usize, pos: u32, pessoa: usize, extra: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn put_in_place(c: usize, pos: u32, pessoa: usize, extra: u32) -> u8 {
     colocar_na_vaga_com(c, pos, pessoa, extra, &mut |_, this, a| {
         let iniciar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) = core::mem::transmute(FN_MATCH_PLAYER_SETUP);
         iniciar(this, a[0], a[1], a[2], a[3], a[4]);
@@ -1317,7 +1317,7 @@ pub(crate) unsafe fn condicao(j: usize) -> i32 {
 
 /// { 0x6e0df0 } (cdecl, comparador do qsort da substituicao): pela condicao (+0x35 + +0x4d), pesada
 /// pela tabela de `a` (2 e 4: x1,35; 8: x1,2 em `a` e x1,25 em `b`; 0x10: x1,1) nos dois lados.
-pub(crate) unsafe extern "C" fn ordem_por_tabela(pa: *const usize, pb: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn order_by_table(pa: *const usize, pb: *const usize) -> i32 {
     let (a, b) = (*pa, *pb);
     if let Some(r) = ordem_pontas(a, b) {
         return r;
@@ -1337,7 +1337,7 @@ pub(crate) unsafe extern "C" fn ordem_por_tabela(pa: *const usize, pb: *const us
 }
 
 /// { 0x6e0fe0 } (cdecl, comparador do qsort da substituicao): so pela condicao (+0x35 + +0x4d).
-pub(crate) unsafe extern "C" fn ordem_por_condicao(pa: *const usize, pb: *const usize) -> i32 {
+pub(crate) unsafe extern "C" fn order_by_condition(pa: *const usize, pb: *const usize) -> i32 {
     let (a, b) = (*pa, *pb);
     if let Some(r) = ordem_pontas(a, b) {
         return r;
@@ -1350,18 +1350,18 @@ pub(crate) unsafe extern "C" fn ordem_por_condicao(pa: *const usize, pb: *const 
 /// if able to play (0x62c400 ≠ 2, 0x55d270 and 0x7757d0 without impediment); returns how many
 /// Original: `starters` (0x6dbb80, match_man.cpp, thiscall).
 ///
-/// [pt] { 0x6dbb80 } (thiscall, match_man.cpp): os titulares do inicio do jogo. Para cada vaga de 0 a
+/// [pt] { 0x6dbb80 } (thiscall, match_man.cpp): os starters do inicio do jogo. Para cada vaga de 0 a
 /// 10 + (partida +0x4d & 0xf), a pessoa da tatica do clube (0x8968f0) entra (0x6e0d00) se puder jogar:
 /// 0x62c400 diferente de 2, e (partida sem competicao, -2, ou 0x55d270 sem impedimento) e 0x7757d0 sem
 /// impedimento. Devolve quantos entraram.
-pub(crate) unsafe extern "thiscall" fn titulares(c: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
     titulares_com(c, &mut |_, this, a| {
         let colocar: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8 = core::mem::transmute(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM);
         colocar(this, a[0], a[1] as usize, a[2]) as u32
     })
 }
 
-/// `titulares` com a 0x6e0d00 (poe na vaga) injetada.
+/// `starters` com a 0x6e0d00 (poe na vaga) injetada.
 pub(crate) unsafe fn titulares_com(c: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let da_tatica: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
@@ -1392,7 +1392,7 @@ pub(crate) unsafe fn titulares_com(c: usize, chamar: &mut dyn FnMut(usize, usize
 ///
 /// [pt] { 0x6dbb10 } (thiscall, match_man.cpp, virtual): guarda a tatica da comissao (+0x3f) no banco de
 /// taticas (0x8984d0). Com tecnico humano (+0x19) so quando 0x600a50 nega ou 0x5fd480 confirma.
-pub(crate) unsafe extern "thiscall" fn guardar_tatica(c: usize) {
+pub(crate) unsafe extern "thiscall" fn store_tactic(c: usize) {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
     let clube = u(c, 0x2f);
     if clube == 0 || u(G_TACTICS, 0) == 0 {
@@ -1443,11 +1443,11 @@ pub(crate) unsafe fn aviso_em(arquivo: usize, linha: u32) {
 /// suspensao 0x55d270, ja jogou 0x8cf5e0, impedido 0x7757d0, emprestado 0x4cf6d0/0x4cf5a0), escala
 /// (0x6e2000), escolhe a formacao (0x6e0230), as tres referencias (+6/+0xa/+0xe pela ficha +0xd
 /// + +0xb), o rodizio (0x8cf880/0x6e8910), poe nas vagas (0x6e0d00, 0x896a90), o capitao (0x897760),
-/// as instrucoes (0x6ddab0) e as ordens gerais pela postura (0x6df460, 0x5b50d0). Devolve quantos
+/// as instructions (0x6ddab0) e as ordens gerais pela stance (0x6df460, 0x5b50d0). Devolve quantos
 /// escalou. Os locais vivem num quadro com os deslocamentos da pilha original (zerado, como a
 /// original determinizada): os vetores se sobrepoem como la (o curto da 1a vaga extra, as vagas
 /// marcadas alem de 20).
-pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize, modo: u32) -> i8 {
+pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, outro: usize, modo: u32) -> i8 {
     let mut quadro = [0u8; 0x750];
     let f = quadro.as_mut_ptr() as usize;
     let b = |o: usize| (f + o) as *mut u8;
@@ -1482,11 +1482,11 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let melhor: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_MATCH_MAN_CHOOSE_CAPTAIN);
-    let escalar: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    let pick: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let consultar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
-    let guardar_instrucoes: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_TACTICS_CLEAR_OR_RESTORE_SELECTION);
-    let vaga_marcada: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(FN_TACTICS_FIND_SELECTION_SLOT);
+    let store_instructions: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_TACTICS_CLEAR_OR_RESTORE_SELECTION);
+    let marked_slot: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(FN_TACTICS_FIND_SELECTION_SLOT);
     let marcar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_TACTICS_REMOVE_PLAYER_FROM_SELECTION);
     let cedido: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_PLAYER_NEEDS_WORK_PERMIT);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
@@ -1503,8 +1503,8 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
     let colocar: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> u8 = core::mem::transmute(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM);
     let gravar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_TACTICS_SET_SELECTED_PLAYER);
     let capitao: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_CAPTAIN_FROM_SLOT);
-    let instrucoes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_MAN_SET_COMPUTER_INSTRUCTIONS);
-    let postura: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_MAN_CHOOSE_MENTALITY);
+    let instructions: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_MAN_SET_COMPUTER_INSTRUCTIONS);
+    let stance: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_MATCH_MAN_CHOOSE_MENTALITY);
     let geral: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_FORMATION_SET_TEAM_INSTRUCTION);
 
     let clube = u(t, 0x2f);
@@ -1722,16 +1722,16 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
         } else {
             0x8520c2
         };
-        escalar(f + 0x278, rd(0x18), f + 0x50, rd(0x30), 0, f + 0x56c, a7, clube, t, u(t, 0x1b) as u32, 0, 0, 0, 0, 0);
+        pick(f + 0x278, rd(0x18), f + 0x50, rd(0x30), 0, f + 0x56c, a7, clube, t, u(t, 0x1b) as u32, 0, 0, 0, 0, 0);
     }
 
     // os candidatos: quem pode jogar entra na lista; no modo 1 os das vagas marcadas so as ocupam
     let humano19 = byte(t, 0x19) as i32 as u32;
     let bl = modo as u8;
     if bl == 2 {
-        guardar_instrucoes(tatica, clube, humano19, 0, 0);
+        store_instructions(tatica, clube, humano19, 0, 0);
     }
-    let vaga = |p: usize| vaga_marcada(tatica, clube, p, humano19) as i8;
+    let vaga = |p: usize| marked_slot(tatica, clube, p, humano19) as i8;
     let marcar_se = |p: usize| {
         if bl == 1 && vaga(p) > -1 {
             marcar(tatica, clube, p, humano19, 1);
@@ -1961,7 +1961,7 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
     if humano(clube, 1, 1, 0, 0) != 0 && byte(t, 0x19) == 0 && cf != 0 && consultar(gerente, cf) != 0 && opcao(gerente, 3, u(clube, 0xcf)) != 0 {
         wd(0x14, rd(0x14) | 0x400000);
     }
-    escalar(f + 0x278, rd(0x18), f + 0xe8, rd(0x20), rd(0x40), f + 0x14c, rd(0x14), clube, t, u(t, 0x1b) as u32, 0, f + 0x5bc, f + 0xb4, *((u(t, 0x2b) + 0x584) as *const u32), f + 0x214);
+    pick(f + 0x278, rd(0x18), f + 0xe8, rd(0x20), rd(0x40), f + 0x14c, rd(0x14), clube, t, u(t, 0x1b) as u32, 0, f + 0x5bc, f + 0xb4, *((u(t, 0x2b) + 0x584) as *const u32), f + 0x214);
     let n = rd(0x30) as i32;
     if n - 1 > 0 {
         for i in 0..(n - 1) as usize {
@@ -2039,7 +2039,7 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
         }
     }
 
-    // nas vagas, o capitao, as instrucoes
+    // nas vagas, o capitao, as instructions
     let cap = melhor(t, f + 0x14c, 0xb);
     let n = rd(0x30) as i32;
     for k in 0..n.max(0) as usize {
@@ -2054,12 +2054,12 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
         }
     }
     let n_final = n.max(0) as usize;
-    instrucoes(t);
+    instructions(t);
     let nome = if u(t, 0x2b) != 0 { u(t, 0x2b) } else { 0xa15934 };
     let nome = core::ffi::CStr::from_ptr(nome as *const core::ffi::c_char).to_bytes();
     let especial = nome != b"3-4-3" && nome != b"3-5-2 Attacking";
 
-    // as ordens gerais pela postura (0x5b50d0)
+    // as ordens gerais pela stance (0x5b50d0)
     let g = |x: u32| geral(u(t, 0x2b), x);
     let a = |x: u32| {
         g(x);
@@ -2078,7 +2078,7 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
     let lim = |base: i32| if peso_do_lado() > 0 { base + 3 } else { base };
     let disposicao = |i: isize| *(((m as isize) + 0x476a + 4 * i) as *const f32) as f64;
     let e = |o: usize| byte(ficha, o) as i32;
-    match postura(t) as i8 {
+    match stance(t) as i8 {
         1 => {
             let d = disposicao(lado);
             let x = if ficha != 0 && !(d >= f64_em(0x968e18)) {
@@ -2141,8 +2141,8 @@ pub(crate) unsafe extern "thiscall" fn escalar_automatico(t: usize, outro: usize
 
 // ponytail: aloca a lista e os vetores do rodizio e chama 24 rotinas ainda originais; sem comparacao
 // propria, validada pela carreira (Rust x original), como as da 145a, 148a e 149a.
-pub(crate) unsafe extern "thiscall" fn comparar_escalar_automatico(t: usize, outro: usize, modo: u32) -> i8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i8>(IDX_ESCALAR_AUTOMATICO)(t, outro, modo)
+pub(crate) unsafe extern "thiscall" fn comparar_select_automatically(t: usize, outro: usize, modo: u32) -> i8 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> i8>(IDX_SELECT_AUTOMATICALLY)(t, outro, modo)
 }
 
 // ---------- centesima decima sexta leva: a substituicao (0x6e1090) ----------
@@ -2420,7 +2420,7 @@ pub(crate) unsafe fn substituir_com(c: usize, goleiro: u8, chamar: &mut dyn FnMu
 pub(crate) static PROXIMO_SEXTO: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(u32::MAX);
 
 /// { 0x6e1090 } (ret 4, match_man.cpp): ver `substituir_com`.
-pub(crate) unsafe extern "thiscall" fn substituir(c: usize, goleiro: u32) {
+pub(crate) unsafe extern "thiscall" fn substitute(c: usize, goleiro: u32) {
     substituir_com(c, goleiro as u8, &mut |rotina, this, a| {
         match rotina {
             0x6e2000 => {
@@ -2447,7 +2447,7 @@ pub(crate) unsafe extern "thiscall" fn substituir(c: usize, goleiro: u32) {
 
 // ---------- centesima decima quinta leva: a comissao refaz o time (0x6e1aa0) ----------
 
-/// Argumentos da 0x6e2000 (escalar: distribui as pessoas pelas posicoes, recursiva, aloca), cdecl.
+/// Argumentos da 0x6e2000 (pick: distribui as pessoas pelas posicoes, recursiva, aloca), cdecl.
 pub(crate) type Escalar = unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u32;
 
 /// { 0x6e1aa0 } (match_man.cpp) com as chamadas que mexem no jogo injetadas (0x6e0230 julga a
@@ -2553,7 +2553,7 @@ pub(crate) unsafe fn refazer_time_com(c: usize, chamar: &mut dyn FnMut(usize, us
 /// Original: `redo_team` (0x6e1aa0, match_man.cpp, thiscall).
 ///
 /// [pt] { 0x6e1aa0 } (match_man.cpp): ver `refazer_time_com`.
-pub(crate) unsafe extern "thiscall" fn refazer_time(c: usize) {
+pub(crate) unsafe extern "thiscall" fn redo_team(c: usize) {
     refazer_time_com(c, &mut |rotina, this, a| match rotina {
         0x6e0230 => {
             let f: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u8 = core::mem::transmute(FN_MATCH_MAN_CHOOSE_COMPUTER_TACTIC);
@@ -2580,7 +2580,7 @@ pub(crate) unsafe extern "thiscall" fn refazer_time(c: usize) {
 /// +0x1f, se o valor dele (0x544410 com o byte +0x17) ficar abaixo do id da pessoa mod 20, a nota
 /// cai para (1,1 - 0,01 x (endereco do objeto mod 20)) x nota, como no original. Empate fica com
 /// a primeira.
-pub(crate) unsafe extern "thiscall" fn melhor_da_lista(this: usize, lista: *const usize, n: i8) -> usize {
+pub(crate) unsafe extern "thiscall" fn best_in_list(this: usize, lista: *const usize, n: i8) -> usize {
     let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(FN_MATCH_MAN_GET_CAPTAIN_SCORE);
     let valor: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     let (mut melhor, mut nota) = (0usize, 0i16);
@@ -2614,7 +2614,7 @@ pub(crate) unsafe extern "thiscall" fn melhor_da_lista(this: usize, lista: *cons
 /// pela comissao (0x6e1cf0 com o clube +0x2f) entre os 20 do bloco que comeca em +0x23 (de 0x1be em
 /// 0x1be); o primeiro ativo entra mesmo com nota negativa, depois so nota estritamente maior. -1 sem
 /// nenhum ativo.
-pub(crate) unsafe extern "thiscall" fn melhor_avaliado(this: usize) -> i8 {
+pub(crate) unsafe extern "thiscall" fn best_rated(this: usize) -> i8 {
     let avaliar: unsafe extern "C" fn(usize, usize, usize) -> i16 = core::mem::transmute(FN_MATCH_MAN_GET_CAPTAIN_SCORE);
     let clube = *((this + 0x2f) as *const usize);
     let mut p = *((this + 0x23) as *const usize);
@@ -2643,7 +2643,7 @@ pub(crate) unsafe extern "thiscall" fn melhor_avaliado(this: usize) -> i8 {
 /// dias, 1 + (dias - 1000) x 0,000125. Depois pela idade +0x18 (x0,5 abaixo de 18, x0,75 abaixo de
 /// 21, x0,9 abaixo de 24, x1,05 acima de 25), x0,9 se os dias ficarem abaixo de (50 - +0x59) x 10 e
 /// x(0,01 x +0x5b + 0,9) com +0x5b abaixo de 10.
-pub(crate) unsafe extern "C" fn avaliar_jogador(pessoa: usize, jogador: usize, clube: usize) -> i16 {
+pub(crate) unsafe extern "C" fn rate_player(pessoa: usize, jogador: usize, clube: usize) -> i16 {
     let encaixe: unsafe extern "C" fn(usize, usize) -> i8 = core::mem::transmute(FN_DATABASE_GET_CONTRACT_RATING_MODIFIER);
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -2712,7 +2712,7 @@ pub(crate) unsafe extern "C" fn avaliar_jogador(pessoa: usize, jogador: usize, c
     v
 }
 
-// ---------- 173a leva: o fechamento do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
+// ---------- 173a leva: o match_wrap_up do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
 
 /// applies the squad rule (foreigners, non-EU or age): swaps restricted players for the candidates with the smallest
 /// score loss
@@ -2722,19 +2722,19 @@ pub(crate) unsafe extern "C" fn avaliar_jogador(pessoa: usize, jogador: usize, c
 /// comunidade, 2 estrangeiro, 3 acima da idade em +1; +2 máximo em campo, +3 máximo no banco, +4 e +5
 /// o permitido e o atual) na escalação do `clube` (nação +0x53; 0x53d980/0x53d740): tira os restritos
 /// da lista de reserva (`reserva`, `nr`); se há mais restritos em campo que o máximo (+2), escolhe entre
-/// os titulares restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
+/// os starters restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
 /// um, o de menor perda na nota (0x6e2f20), refazendo o banco (0x6e2000) se um titular saiu dele;
 /// depois faz o mesmo no banco (`saida` + `nt`) com o máximo +3 (ou +4 − +5).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
-    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, titulares: usize, banco: usize, reserva: usize,
+pub(crate) unsafe extern "C" fn apply_squad_rule(
+    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, starters: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
     let r = |k: usize| *((regra + k) as *const i8);
     if r(0) == 0 || r(5) >= r(4) {
         return;
     }
-    let escalar: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    let pick: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let nota: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
         core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_ROLE);
     let restrito = |p: usize| -> bool {
@@ -2813,7 +2813,7 @@ pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
             let mut nv = 0i8;
             let mut k = 0i8;
             while k < nt {
-                if restrito(*((titulares + 4 * k as usize) as *const usize)) {
+                if restrito(*((starters + 4 * k as usize) as *const usize)) {
                     let i = nv as usize;
                     vaga[i] = k;
                     cod[i] = w(codigos, k as i32);
@@ -2847,7 +2847,7 @@ pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
                 }
             }
             if nc != 0 {
-                escalar(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
+                pick(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
                     tecnico as u32, 0, m8.as_ptr() as usize, b1.as_ptr() as usize, marca, cod2.as_ptr() as usize);
                 let mut melhor = 0i32;
                 let mut saiu_do_banco = false;
@@ -2908,7 +2908,7 @@ pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
                         }
                     }
                     if n != 0 {
-                        escalar(escolha.as_ptr() as usize, n as u8 as u32, codigos + 2 * nt as isize as usize, nb as u8 as u32, 0, sai(nt as i32) as usize, modo,
+                        pick(escolha.as_ptr() as usize, n as u8 as u32, codigos + 2 * nt as isize as usize, nb as u8 as u32, 0, sai(nt as i32) as usize, modo,
                             clube, lado, tecnico as u32, 0, 0, 0, 0, curtos.wrapping_add(2 * nt as isize as usize));
                     }
                 }
@@ -2951,7 +2951,7 @@ pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
             }
         }
         if nc != 0 {
-            escalar(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
+            pick(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
                 tecnico as u32, 0, 0, 0, 0, cod2.as_ptr() as usize);
             let mut melhor = 0i32;
             loop {
@@ -2992,13 +2992,13 @@ pub(crate) unsafe extern "C" fn cumprir_regra_do_elenco(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn comparar_cumprir_regra_do_elenco(
-    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, titulares: usize, banco: usize, reserva: usize,
+pub(crate) unsafe extern "C" fn comparar_apply_squad_rule(
+    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, starters: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(IDX_CUMPRIR_REGRA_DO_ELENCO);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(IDX_APPLY_SQUAD_RULE);
     if gravando_no_topo() {
-        return o(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
+        return o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
     }
     let n = |v: u32| (v as u8 as i8).max(0) as usize;
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -3011,10 +3011,10 @@ pub(crate) unsafe extern "C" fn comparar_cumprir_regra_do_elenco(
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &reg,
-        || o(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado),
-        || crate::aleatorio::sem_contar(|| cumprir_regra_do_elenco(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
+        || o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado),
+        || crate::aleatorio::sem_contar(|| apply_squad_rule(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
     );
-    PLACAR.registrar(igual, || format!("cumprir_regra_do_elenco(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
+    PLACAR.registrar(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
 }
 // ---- as notas do jogador do match_man.cpp (0x6e6340 fora da partida, 0x6e2f20 para uma vaga): partes comuns ----
 
@@ -3054,7 +3054,7 @@ pub(crate) unsafe fn nota_externa(f: usize, k: u32, c: u32, x: f32) -> f64 {
 }
 
 /// A nota da posição (máscara `m`) pelos atributos da ficha `f` na tabela `tab` (0xa15d50 ou
-/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de lateral
+/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de throw_in
 /// (0x800/0x80) na faixa 0x10; a secundária da 0x6e2f20 não.
 pub(crate) unsafe fn nota_da_posicao(f: usize, m: u32, masc: u32, tab: usize, principal: bool) -> i32 {
     let fb = |k: usize| sb(f, k);
@@ -3484,8 +3484,8 @@ pub(crate) unsafe fn na_lista_de_transferencias(p: usize) -> Option<i8> {
     if x == 0 {
         return None;
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contrato_de(*(G_CONTRACT_MANAGER as *const usize), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     let dono = if c == 0 { 0 } else { *(G_CLUB_TABLE as *const usize) + *((c + 4) as *const usize) * 0x245 };
     let pode: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_PLAYER_NEEDS_WORK_PERMIT);
@@ -3624,7 +3624,7 @@ pub(crate) fn combinar_nota(flags: u32, l40: i32, l4c: i32) -> i32 {
 /// observador `o`: a nota da posição (tabela 0xa15d50) vezes o ajuste da reputação, forma,
 /// habilidade vista, idade, contrato e conhecimento do observador. -10000 sem ficha (+0x61) ou
 /// abaixo do limite.
-pub(crate) unsafe extern "C" fn nota_fora_da_partida(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
+pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
     if p == 0 {
         return -10000;
     }
@@ -3803,8 +3803,8 @@ pub(crate) unsafe extern "C" fn nota_fora_da_partida(p: usize, pos: u32, flags: 
 /// O valor para a habilidade potencial (flag 0x100): no clube do contrato (0x4cf5a0, que fica em
 /// [0xae1080]) a média x 25 mais o potencial (+7) x 25 (em 16 bits); fora dele, a média x 50.
 pub(crate) unsafe fn do_contrato_ou_media(p: usize, f: usize, clube: usize, soma: i32, cont: i8) -> i32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contrato_de(*(G_CONTRACT_MANAGER as *const usize), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let c = contract_of(*(G_CONTRACT_MANAGER as *const usize), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     let dono = if c == 0 { 0 } else { *(G_CLUB_TABLE as *const usize) + *((c + 4) as *const usize) * 0x245 };
     if dono == clube {
@@ -3852,7 +3852,7 @@ pub(crate) unsafe fn fora_da_nacao(p: usize, clube: usize, flags: u32, l4c: i32)
 /// 0x6e6340 (tabela 0xa15cfc), mais a condição na partida (`reg`, o jogador da partida), a tática,
 /// a idade dos veteranos e o bônus das férias. -10000 sem pessoa ou ficha; -1000000 vetado.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn nota_para_a_vaga(
+pub(crate) unsafe extern "C" fn lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, _marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
@@ -4278,8 +4278,8 @@ pub(crate) unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos
     l4c
 }
 
-pub(crate) unsafe extern "C" fn comparar_nota_fora_da_partida(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
-    let f = orig::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(IDX_NOTA_FORA_DA_PARTIDA);
+pub(crate) unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
+    let f = orig::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(IDX_OFF_MATCH_SCORE);
     if gravando_no_topo() {
         return f(p, pos, flags, clube, limite, o);
     }
@@ -4296,21 +4296,21 @@ pub(crate) unsafe extern "C" fn comparar_nota_fora_da_partida(p: usize, pos: u32
             r
         },
         || {
-            let (r, v) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(|| nota_fora_da_partida(p, pos, flags, clube, limite, o)));
+            let (r, v) = crate::aleatorio::rastrear(|| crate::aleatorio::sem_contar(|| off_match_score(p, pos, flags, clube, limite, o)));
             rastros.borrow_mut().1 = v;
             r
         },
     );
-    PLACAR.registrar(igual && r == n, || format!("nota_fora_da_partida({:#x}, pos {:#x}, flags {:#x}, limite {}) original={} rust={} sorteios {:?} x {:?} {:x?} x {:x?}", p, pos as u16, flags, limite, r, n, rastros.borrow().0, rastros.borrow().1, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limite {}) original={} rust={} sorteios {:?} x {:?} {:x?} x {:x?}", p, pos as u16, flags, limite, r, n, rastros.borrow().0, rastros.borrow().1, mo, mr));
     r
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "C" fn comparar_nota_para_a_vaga(
+pub(crate) unsafe extern "C" fn comparar_lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(IDX_NOTA_PARA_A_VAGA);
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(IDX_LINEUP_SLOT_SCORE);
     if gravando_no_topo() {
         return o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias);
     }
@@ -4319,9 +4319,9 @@ pub(crate) unsafe extern "C" fn comparar_nota_para_a_vaga(
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regioes,
         || o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias),
-        || crate::aleatorio::sem_contar(|| nota_para_a_vaga(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias)),
+        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias)),
     );
-    PLACAR.registrar(igual && r == n, || format!("nota_para_a_vaga({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
     r
 }
 
@@ -4335,11 +4335,11 @@ pub(crate) unsafe extern "C" fn comparar_nota_para_a_vaga(
 /// motor) e escala o time: o tecnico e a ficha dele, os jogadores do bloco, o lado, o clube, o
 /// adversario e a partida; o modo (+0x19 humano/+0x1a 3) pelo mando. No clube do humano, as linhas
 /// taticas guardadas (0x5fbe20/0x5fbd00) e, sem o tecnico humano, a escalacao automatica no modo 1
-/// (0x6dbc50, com o tecnico do clube 0x600e90) ou os titulares (0x6dbb80); fora isso, a automatica no
+/// (0x6dbc50, com o tecnico do clube 0x600e90) ou os starters (0x6dbb80); fora isso, a automatica no
 /// modo 2 e a conta dos da casa. Os reservas (+0x17) pelo banco da partida; le a linha tatica do
 /// clube. Devolve quantos foram escalados; em `*vagas`, o tamanho do time.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
+pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
     let b = |o: usize| (t + o) as *mut u8;
     let d = |o: usize| (t + o) as *mut usize;
     let u = |q: usize, o: usize| *((q + o) as *const usize);
@@ -4396,9 +4396,9 @@ pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico:
     let automatica: unsafe extern "thiscall" fn(usize, usize, u32) -> i8 = core::mem::transmute(FN_MATCH_MAN_PICK_TEAM);
     let gerente = *(G_HUMAN_MANAGER as *const usize);
     let n: i8;
-    if *(m as *const u8) == 0 && humano_usa(clube) != 0 && clube_humano(clube, 0, 1, 0, 0) != 0 {
-        if e_segunda_selecao(clube) != 0 {
-            *d(0x1b) = u(selecao_principal(u(clube, 0x53)), 0xcf);
+    if *(m as *const u8) == 0 && humano_usa(clube) != 0 && human_club(clube, 0, 1, 0, 0) != 0 {
+        if is_second_national_team(clube) != 0 {
+            *d(0x1b) = u(main_national_team(u(clube, 0x53)), 0xcf);
         }
         let preparar: unsafe extern "thiscall" fn(usize, i32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
         let guardadas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_HUMAN_MANAGER_GET_ACTIVE_TACTIC);
@@ -4415,13 +4415,13 @@ pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico:
             automatica(t, outro, 1)
         };
         n = if *b(0x19) == 0 {
-            titulares(t) as i8
-        } else if e_selecao(clube) == 0 {
-            if tecnico_9a05(gerente, u(clube, 0xcf)) == 0 { sem_tecnico(t) } else { titulares(t) as i8 }
-        } else if tecnico_9a06(gerente, u(clube, 0xcf), core::ptr::null_mut()) == 0 {
+            starters(t) as i8
+        } else if is_national_team(clube) == 0 {
+            if manager_9a05(gerente, u(clube, 0xcf)) == 0 { sem_tecnico(t) } else { starters(t) as i8 }
+        } else if manager_9a06(gerente, u(clube, 0xcf), core::ptr::null_mut()) == 0 {
             sem_tecnico(t)
         } else {
-            titulares(t) as i8
+            starters(t) as i8
         };
         *vagas = ((*((jogo + 0x4d) as *const u8) & 0xf) + 0xb) as i8;
     } else {
@@ -4451,13 +4451,13 @@ pub(crate) unsafe extern "thiscall" fn escalar_lado(t: usize, m: usize, tecnico:
     let sobra = (n as u8).wrapping_sub(0xb) as i8;
     let r = if banco as i8 >= sobra { sobra } else { banco as i8 };
     *b(0x17) = if r <= 0 { 0 } else if (banco as i8) < sobra { banco } else { sobra as u8 };
-    ler_linha_tatica(*(G_TACTICS as *const usize), *d(0x2f), (t + 0x3f) as *mut u8, byte(t, 0x19) as i32 as u32);
+    read_tactics_row(*(G_TACTICS as *const usize), *d(0x2f), (t + 0x3f) as *mut u8, byte(t, 0x19) as i32 as u32);
     n
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_escalar_lado(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(IDX_ESCALAR_LADO)(t, m, tecnico, linhas, jogadores, lado, clube, outro, jogo, vagas)
+pub(crate) unsafe extern "thiscall" fn comparar_select_side(t: usize, m: usize, tecnico: usize, linhas: usize, jogadores: usize, lado: u32, clube: usize, outro: usize, jogo: usize, vagas: *mut i8) -> i8 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8>(IDX_SELECT_SIDE)(t, m, tecnico, linhas, jogadores, lado, clube, outro, jogo, vagas)
 }
 
 /// a player's current or potential ability as an observer sees it (reputation, noise and the observer's knowledge)
@@ -4469,7 +4469,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_escalar_lado(t: usize, m: usize,
 /// ruído pseudoaleatório (id do jogador + [0xdd7120] + id do observador) que encolhe com o
 /// conhecimento do observador (0x544410 da ficha +0x69, níveis +0x17/+0x18, até 20). Com a ficha
 /// do observador, conhecimento alto e a semente favorável, a habilidade atual exata.
-pub(crate) unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
     let mut semente = (*(p as *const i32)).wrapping_add(*(G_GAME_RANDOM_SEED as *const i32));
     let mut rep = if rep > -1 {
         rep / 50
@@ -4488,7 +4488,7 @@ pub(crate) unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, t
         conhece = *((o + 0x69) as *const usize);
         semente = semente.wrapping_add(*(o as *const i32));
         if conhece != 0 && tipo == 2 && rep > 0x32 {
-            let k = chance_de_conhecer(conhece, *((conhece + 0x17) as *const i8)) as i8 as i32;
+            let k = chance_to_know(conhece, *((conhece + 0x17) as *const i8)) as i8 as i32;
             if rep as i32 + (k - 10) * 10 > semente % 200 {
                 return core::ptr::read_unaligned((ficha + 5) as *const i16);
             }
@@ -4501,7 +4501,7 @@ pub(crate) unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, t
             f * f32_em(0x96afb0) as f64
         } else {
             let nivel = *((conhece + if tipo == 2 { 0x17 } else { 0x18 }) as *const i8);
-            (chance_de_conhecer(conhece, nivel) as i8 as f64) * f
+            (chance_to_know(conhece, nivel) as i8 as f64) * f
         };
         certeza = (ftol(x + f64_em(0x968968)) as i8).min(0x14);
     }
@@ -4519,9 +4519,9 @@ pub(crate) unsafe extern "C" fn habilidade_vista(o: usize, p: usize, c: usize, t
     (((verdade + ruido) * peso + (20 - peso) * rep as i32) / 20) as i16
 }
 
-pub(crate) unsafe extern "C" fn comparar_habilidade_vista(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(IDX_HABILIDADE_VISTA)(o, p, c, tipo, rep);
-    let n = habilidade_vista(o, p, c, tipo, rep);
-    PLACAR.registrar(r == n, || format!("habilidade_vista({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
+pub(crate) unsafe extern "C" fn comparar_perceived_ability(o: usize, p: usize, c: usize, tipo: i8, rep: i16) -> i16 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize, i8, i16) -> i16>(IDX_PERCEIVED_ABILITY)(o, p, c, tipo, rep);
+    let n = perceived_ability(o, p, c, tipo, rep);
+    PLACAR.registrar(r == n, || format!("perceived_ability({:#x}, {:#x}, {}, {}) original={} rust={}", o, p, tipo, rep, r, n));
     r
 }

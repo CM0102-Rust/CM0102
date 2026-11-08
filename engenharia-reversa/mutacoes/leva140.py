@@ -15,7 +15,7 @@ MUTACOES = [
     ('s_gol', "if us + 0x2d > sortear((7 - local_28 as i32 * 3)", "if us + 0x2e > sortear((7 - local_28 as i32 * 3)", "simulacao rapida gol"),
     ('s_goleiros', "if byte(q, 0x19) >= 0 && tabela_do_jogador(q) == 1 {\n                mais((q + 0xf) as *mut u8);", "if byte(q, 0x19) >= 0 && tabela_do_jogador(q) == 2 {\n                mais((q + 0xf) as *mut u8);", "simulacao rapida gol"),
     ('s_assistencia', "somar(q, 0x15e);", "somar(q, 0x15f);", "simulacao rapida gol"),
-    ('s_penaltis', "*pb(0x49) = sortear(5) as i8;", "*pb(0x49) = sortear(6) as i8;", "simulacao rapida penaltis"),
+    ('s_penaltis', "*pb(0x49) = sortear(5) as i8;", "*pb(0x49) = sortear(6) as i8;", "simulacao rapida penalties"),
     ('s_mando', "mais(b(0xf5be + s * 0x36));", "mais(b(0xf5bd + s * 0x36));", "simulacao rapida gol do mando"),
     ('s_lesao', "cl = cl.wrapping_add(0xf);", "cl = cl.wrapping_add(0xe);", "simulacao rapida lesao"),
     ('s_nota', "as i8).clamp(1, 10);", "as i8).clamp(1, 9);"),

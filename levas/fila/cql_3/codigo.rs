@@ -25,7 +25,7 @@ unsafe fn cql3_ligas_a_numerar(mut cada: impl FnMut(usize)) {
 
 /// { 0x859dc0 } (thiscall, ret 0, squad_manager.cpp, `SQUAD_MANAGER::init_new_game`): zera o ano das inscrições (+0,
 /// word) e numera (0x859e20(this, liga, 1, 0)) cada liga de divisão que usa números (`cql3_ligas_a_numerar`).
-unsafe extern "thiscall" fn numerar_no_comeco(this: usize) {
+unsafe extern "thiscall" fn init_new_game(this: usize) {
     let numerar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x859e20usize);
     *(this as *mut u16) = 0;
     cql3_ligas_a_numerar(|c| numerar(this, c, 1, 0));
@@ -34,7 +34,7 @@ unsafe extern "thiscall" fn numerar_no_comeco(this: usize) {
 /// Só a original (ela numera as ligas pela 0x859e20, que manda notícia ao técnico humano: não roda duas vezes); o plano
 /// da cópia (as ligas, achadas antes, sem numerar) tem de ser o que a original fez (gravado pelo comparador da
 /// 0x859e20) e o +0 zerado.
-unsafe extern "thiscall" fn comparar_numerar_no_comeco(this: usize) {
+unsafe extern "thiscall" fn comparar_init_new_game(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let mut plano = Vec::new();
     cql3_ligas_a_numerar(|c| plano.push(c));
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn comparar_numerar_no_comeco(this: usize) {
     o(this);
     let feito = CQL3_PLANO.take().unwrap_or_default();
     let zerado = *(this as *const u16) == 0;
-    PLACAR.registrar(feito == plano && zerado, || format!("numerar_no_comeco: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
+    PLACAR.registrar(feito == plano && zerado, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plano, feito, zerado));
 }
 
 /// { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn comparar_numerar_no_comeco(this: usize) {
 /// negativos do elenco (0x541f90(clube, lista, 0)) viram positivos e o técnico recebe o pedido da lista de números
 /// (0x85aec0, original). Senão: com `inicial`, cada jogador do elenco (da tabela das pessoas com contrato e com ficha)
 /// recebe o número do banco (o +4 da ficha, entre 0 e 50); e o elenco é numerado (0x859fe0(clube, 1)).
-unsafe extern "thiscall" fn numerar_liga(this: usize, liga: usize, mut inicial: u32, automatico: u32) {
+unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, liga: usize, mut inicial: u32, automatico: u32) {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn numerar_liga(this: usize, liga: usize, mut inicial: 
 /// Lado a lado: o +0x3a dos contratos (o do clube e o de empréstimo) de quem está no elenco de cada clube da liga e
 /// no do clube ligado, e a marca da caixa. Com algum clube de técnico humano sem `automatico` (a notícia do pedido não
 /// roda duas vezes), só a original. A lista dos clubes vem do mesmo método +0x58 (solta depois).
-unsafe extern "thiscall" fn comparar_numerar_liga(this: usize, liga: usize, inicial: u32, automatico: u32) {
+unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, liga: usize, inicial: u32, automatico: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32)>(%%I1%%);
     if let Some(v) = (*core::ptr::addr_of_mut!(CQL3_PLANO)).as_mut() {
         v.push(liga);
@@ -149,17 +149,17 @@ unsafe extern "thiscall" fn comparar_numerar_liga(this: usize, liga: usize, inic
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, liga, inicial, automatico), || numerar_liga(this, liga, inicial, automatico));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, liga, inicial, automatico), || assign_league_squad_numbers(this, liga, inicial, automatico));
     PLACAR.registrar(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("numerar_liga(liga {:x}, {} {}): {}", liga, inicial, automatico, d.join(", "))
+        format!("assign_league_squad_numbers(liga {:x}, {} {}): {}", liga, inicial, automatico, d.join(", "))
     });
 }
 
-/// As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `CQL2_VAGAS`,
+/// As vagas da escalação de referência da 0x85aae0: os 11 starters e até 14 reservas (as da 0x859fe0, `CQL2_VAGAS`,
 /// até a 19ª; a 20ª aqui é de goleiro).
 const CQL3_VAGAS: [u16; 25] = [
-    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os titulares
+    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os starters
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // os reservas
 ];
 
@@ -169,16 +169,16 @@ const CQL3_VAGAS: [u16; 25] = [
 /// lista, 0)), os candidatos são os da tabela das pessoas com contrato, sem contrato do tipo 5 (+0x35 & 0x3f; o
 /// contrato achado fica em [0xae1080]), sem contrato de empréstimo e sem as marcas 8 e 0x10 (+0x6d & 0x18); fora da
 /// etapa 1, a marca 1 cai para 0 e a 4 vira 2, e os 2 são contados. A escalação de referência (0x6e2000 com
-/// `CQL3_VAGAS`, os 11 titulares e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
+/// `CQL3_VAGAS`, os 11 starters e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
 /// inscritos (2) que ficaram fora da escalação perdem a inscrição (vão a 4 com `marca`, senão 0) e a conta baixa (no
 /// mínimo 21). Depois cada escalado: na etapa 1, é inscrito (1 com `marca`, senão 2) e contado; nas outras, quem ainda
 /// não é 2 nem tem a marca 8 é inscrito do mesmo jeito enquanto a conta for menor que as vagas da escalação. Devolve a
 /// conta dos inscritos (char).
-unsafe extern "thiscall" fn inscrever_na_europa(_this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
+unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
-    let escalar: Escalar = core::mem::transmute(0x6e2000usize);
+    let pick: Escalar = core::mem::transmute(0x6e2000usize);
     let etapa = etapa as u8;
     let mut sq = [0usize; 50];
     elenco(c, sq.as_mut_ptr(), 0);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn inscrever_na_europa(_this: usize, c: usize, etapa: u
     }
     let vagas = CQL3_VAGAS;
     let mut esc = [0usize; 50];
-    escalar(cand.as_ptr() as usize, n as u32, vagas.as_ptr() as usize, 0xb, reservas as u32, esc.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
+    pick(cand.as_ptr() as usize, n as u32, vagas.as_ptr() as usize, 0xb, reservas as u32, esc.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     if etapa == 3 {
         let mut d = 0i8;
         while d < n as i8 && tirados < 2 {
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn inscrever_na_europa(_this: usize, c: usize, etapa: u
 
 /// Lado a lado: a marca de inscrição (+0x6d) de quem está no elenco (a mesma 0x541f90), o contrato achado [0xae1080]
 /// e a devolução.
-unsafe extern "thiscall" fn comparar_inscrever_na_europa(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_select_euro_registered_players(this: usize, c: usize, etapa: u32, marca: u32) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8>(%%I2%%);
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let mut sq = [0usize; 50];
@@ -270,10 +270,10 @@ unsafe extern "thiscall" fn comparar_inscrever_na_europa(this: usize, c: usize, 
             reg.push((p + 0x6d, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, etapa, marca), || inscrever_na_europa(this, c, etapa, marca));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, c, etapa, marca), || select_euro_registered_players(this, c, etapa, marca));
     PLACAR.registrar(igual && r == n, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("inscrever_na_europa(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, marca, r, n, d.join(", "))
+        format!("select_euro_registered_players(clube {:x}, etapa {}, marca {}): original {} rust {} {}", c, etapa as u8, marca, r, n, d.join(", "))
     });
     r
 }

@@ -72,7 +72,7 @@ unsafe fn cqc6_entrada(this: usize, data: usize) -> Option<usize> {
 /// escolhido: fora do tipo 3, a notícia 3 aos dois clubes; sai do calendário (0x5abc30), ganha a data da TV, a fatia e
 /// o tipo da vaga, o estádio (0x85c260) e volta ao calendário (0x5aa680); a vaga fica 0xff e o jogo sai da lista
 /// (0x68d1f0).
-unsafe extern "thiscall" fn liga_jogos_para_a_tv(this: usize, data: usize) {
+unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: usize) {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     // as datas pelos dwords que a original lê da pilha (dia|ano, ano|bissexto)
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn liga_jogos_para_a_tv(this: usize, data: usize) {
 /// dela (0x5abd90 numa lista provisória) e as vagas válidas (fatia 0..2) antes da primeira vazia; cada vaga válida leva
 /// um jogo enquanto a lista tiver (toda nota passa do −1 inicial), e a vaga fica 0xff: as vagas 0xff do bloco depois da
 /// original são min(válidas, jogos).
-unsafe extern "thiscall" fn comparar_liga_jogos_para_a_tv(this: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_move_fixtures_for_tv(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let e = match cqc6_entrada(this, data) {
         Some(e) => e,
@@ -261,7 +261,7 @@ unsafe extern "thiscall" fn comparar_liga_jogos_para_a_tv(this: usize, data: usi
     o(this, data);
     let esperado = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..bloco).filter(|k| cqc6_b(e + k * 7 + 0xb) == 0xff).count();
-    PLACAR.registrar(movidas == esperado, || format!("liga_jogos_para_a_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
+    PLACAR.registrar(movidas == esperado, || format!("move_fixtures_for_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
         data, bloco, validas, n, movidas, esperado));
 }
 
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn comparar_liga_jogos_para_a_tv(this: usize, data: usi
 /// no fim por 0x944c94 sem destrutor) com o id da competição, +0x3a, a primeira data (a da primeira entrada da tabela
 /// [+0xba] levada ao dia da semana de cada vaga, 0x54a2d0, a menor), o número de adversários; por clube, o id dele (2)
 /// e os dos outros (6 em diante), entregue a ele (0x7861e0).
-unsafe extern "thiscall" fn liga_noticia_dos_grupos(this: usize) {
+unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
     let n = cqc6_w(this + 0x3e);
     if n > 8 || n <= 0 {
         return;
@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn liga_noticia_dos_grupos(this: usize) {
 }
 
 /// Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
-unsafe extern "thiscall" fn comparar_liga_noticia_dos_grupos(this: usize) {
+unsafe extern "thiscall" fn comparar_send_group_draw_news(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this) // ponytail: só a notícia
 }
 
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn comparar_liga_noticia_dos_grupos(this: usize) {
 /// competição, do clube, o ano da liga e, por jogo, o dia, o ano, o adversário e 1 em casa ou 0 fora) ao clube, que
 /// entra na lista (0x68d0d0: push 4; push clube; mov ecx, lista -> thiscall, ret 8). Depois, nas fases ([+0xc], até
 /// +0x30) com +0x43 = 2, a mesma rotina com a lista.
-unsafe extern "thiscall" fn liga_noticia_da_tabela(this: usize, lista: usize) {
+unsafe extern "thiscall" fn send_fixture_list_news(this: usize, lista: usize) {
     let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -470,6 +470,6 @@ unsafe extern "thiscall" fn liga_noticia_da_tabela(this: usize, lista: usize) {
 }
 
 /// Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
-unsafe extern "thiscall" fn comparar_liga_noticia_da_tabela(this: usize, lista: usize) {
+unsafe extern "thiscall" fn comparar_send_fixture_list_news(this: usize, lista: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, lista) // ponytail: só as notícias
 }

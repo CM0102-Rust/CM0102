@@ -50,7 +50,7 @@ unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
 /// clube cuja posição (contada) módulo 9 é a da marca (0x40 → 0, 0x80 → 1, 0x100 → 2 ... 0x4000 → 8), livre na data
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
-unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let estado = (this + 0x18) as *mut u8;
@@ -226,16 +226,16 @@ unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) -> Option<([(
 }
 
 /// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `cqo1_regioes` e pela devolução; com reserva que pode alocar, só a original.
-unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(%%I1%%);
     let Some((r, m)) = cqo1_regioes(this, None) else {
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, cont, nacao, data, casa, fora, partida);
     };
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, cont, nacao, data, casa, fora, partida), || {
-        crate::aleatorio::sem_contar(|| estadio_neutro(this, marcas, cont, nacao, data, casa, fora, partida))
+        crate::aleatorio::sem_contar(|| find_available_venue(this, marcas, cont, nacao, data, casa, fora, partida))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("estadio_neutro(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
+    PLACAR.registrar(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
     ro
 }
 
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marcas: u32, co
 ///   sem nenhuma, a nação da competição (+0x5d). Com 0x20, a seleção joga no próprio país. Com 4, o estádio nacional
 ///   da nação (reservado); sem ele, 0x20 (seleção) ou 0x40. Depois a busca do estádio neutro (0x85c800) na nação e, sem
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
-unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
+unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     if partida == 0 {
         return aviso_em(0xa835b0, 0x1f0);
     }
@@ -442,7 +442,7 @@ unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u32, partida
 
 /// Lado a lado pela partida (0x44 bytes) e pelas regiões de `cqo1_regioes`; partida nula ou reserva que pode alocar:
 /// só a original.
-unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
+unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(%%I0%%);
     if partida == 0 {
         return o(this, marcas, partida, estadio);
@@ -451,6 +451,6 @@ unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, marcas: u32
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, partida, estadio);
     };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, partida, estadio), || crate::aleatorio::sem_contar(|| estadio_da_partida(this, marcas, partida, estadio)));
-    PLACAR.registrar(igual, || format!("estadio_da_partida(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, cqo1_d(partida), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, partida, estadio), || crate::aleatorio::sem_contar(|| set_fixture_venue(this, marcas, partida, estadio)));
+    PLACAR.registrar(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, cqo1_d(partida), mo, mr));
 }

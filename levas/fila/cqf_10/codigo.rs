@@ -26,9 +26,9 @@ unsafe fn cqf10_clube(id: usize) -> usize {
 
 /// O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) ou 0.
 unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     // 0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
-    let c = contrato_de(cqf10_d(0xae1050), pessoa);
+    let c = contract_of(cqf10_d(0xae1050), pessoa);
     core::ptr::write_unaligned(0xae1080 as *mut usize, c);
     if c != 0 { cqf10_clube(cqf10_d(c + 4)) } else { 0 }
 }
@@ -42,7 +42,7 @@ unsafe fn cqf10_clube_do_contrato(pessoa: usize) -> usize {
 /// nota, data, adversário, placar, competição, o lado (0x4afa80) e as estatísticas; o tipo +0x2e (1 titular, 2 reserva,
 /// 5/6 com a nota pelo +0x30) e a nota +0x15. Com o técnico do clube humano e as máscaras de atributos ligadas, o
 /// técnico passa a conhecer o jogador (0x5b09d0, que sorteia).
-unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: usize, jogo: usize, resultado: usize) {
+unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize, jogo: usize, resultado: usize) {
     let clube_obs = cqf10_clube(cqf10_d(this));
     for i in 0..0x32usize {
         let v = this + 4 + i * 0x1a2;
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn cqf10_historico_do_clube_observado(this: usize, jogo
 /// Comparador da 0x7bd310: lado a lado nas 50 vagas (o registro inteiro). Com as máscaras ligadas e o técnico do clube
 /// humano, a 0x5b09d0 grava o que se sabe do jogador e sorteia: aí só a original roda (ponytail: o caso de um humano
 /// observando o próprio clube; a carreira automática não chega a esta rotina).
-unsafe extern "thiscall" fn comparar_cqf10_historico_do_clube_observado(this: usize, jogo: usize, resultado: usize) {
+unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(this: usize, jogo: usize, resultado: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let clube_obs = cqf10_clube(cqf10_d(this));
     if cqf10_b(0x9cc270) != 0 && cqf10_d(clube_obs + 0xcf) != 0 {
@@ -187,8 +187,8 @@ unsafe extern "thiscall" fn comparar_cqf10_historico_do_clube_observado(this: us
     }
     let regioes = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (0xb67a34, 4)];
     let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, resultado),
-        || cqf10_historico_do_clube_observado(this, jogo, resultado));
-    PLACAR.registrar(igual, || format!("cqf10_historico_do_clube_observado(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", cqf10_d(this), jogo, mo, mr));
+        || player_search_record_scouted_club_match(this, jogo, resultado));
+    PLACAR.registrar(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", cqf10_d(this), jogo, mo, mr));
 }
 
 /// O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
@@ -200,7 +200,7 @@ static mut CQF10_RELATORIO: bool = false;
 /// scout_match(jogo, resultado, saida)`, pela partida observada (0x7f8c00). `this` é a lista de busca do olheiro: +0 o
 /// dono, +0xa o tipo (4 = observar partidas), +0x170 o registro do clube observado, +0x174..+0x184 os nomes do olheiro,
 /// +0x180 o id dele, +0x190 o clube acompanhado, +0x195 o jogador acompanhado, +0x1a5/+0x1ad o começo e o fim. Sem jogo
-/// ou resultado: a caixa da linha 0xef1. Do tipo 4, com olheiro que confere (0x53e990) e resultado de partida jogada
+/// ou resultado: a caixa da linha 0xef1. Do tipo 4, com olheiro que confere (0x53e990) e resultado de partida play
 /// (+0x4c zero): o clube acompanhado que joga recebe o histórico (0x7bd310); dentro das datas (antes do fim só com
 /// jogador acompanhado), se o jogo é do jogador acompanhado, relata; senão a busca tem de cobrir a nação da competição
 /// (0x7b7490) e o clube do olheiro tem de ter pedido (0x7f9690, 0x7f8d70 com 1) algum jogador de um dos dois clubes. O
@@ -209,7 +209,7 @@ static mut CQF10_RELATORIO: bool = false;
 /// (0x7f8d70 com 0), acompanhado ou com reputação vista abaixo de 4000 (0x5407e0) e nota de ao menos 15 (90 com o
 /// resultado sem notas), vira um relatório (0x7b62a0, modo 0 acompanhado, 1 pedido, 2 com +5 ≥ 8) que entra na saída
 /// (0x68d0d0, 0x67 bytes) se o byte +0x66 ficou ≥ 0. Devolve 1 com o relatório, senão 0.
-unsafe extern "thiscall" fn cqf10_olheiro_no_jogo(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn player_search_scout_match(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     // 0x68d020 / 0x68d040: lea ecx, local -> thiscall
@@ -405,7 +405,7 @@ unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, 
                     continue;
                 }
             }
-            // a nota: titulares (até o 11º) pela nota +4, senão +0, senão a do resultado (+0x4d); reservas descontam a
+            // a nota: starters (até o 11º) pela nota +4, senão +0, senão a do resultado (+0x4d); reservas descontam a
             // entrada (+2); resultado sem notas (+0x4c): titular vale 90
             let nota_de = |x: usize| -> u8 {
                 let a = cqf10_b(x + 4);
@@ -449,7 +449,7 @@ unsafe fn cqf10_corpo(this: usize, jogo: usize, resultado: usize, saida: usize, 
 /// Comparador da 0x7b5be0: o relatório sorteia (0x7b62a0, 0x5b09d0) e põe registros na saída (aloca): só a original
 /// roda. Antes, a cópia em ensaio decide até o relatório sem os efeitos (sem o histórico e sem o relatório, com o estado
 /// do sorteador guardado e devolvido) e diz a devolução e se o começo da lista vai a amanhã; a original tem de bater.
-unsafe extern "thiscall" fn comparar_cqf10_olheiro_no_jogo(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || resultado == 0 {
         return o(this, jogo, resultado, saida);
@@ -458,7 +458,7 @@ unsafe extern "thiscall" fn comparar_cqf10_olheiro_no_jogo(this: usize, jogo: us
     let antes = (cqf10_d(this + 0x1a5), cqf10_d(this + 0x1a9));
     CQF10_ENSAIO = true;
     CQF10_RELATORIO = false;
-    let n = crate::aleatorio::sem_contar(|| cqf10_olheiro_no_jogo(this, jogo, resultado, saida));
+    let n = crate::aleatorio::sem_contar(|| player_search_scout_match(this, jogo, resultado, saida));
     CQF10_ENSAIO = false;
     let relata = CQF10_RELATORIO;
     estado.escrever();
@@ -472,7 +472,7 @@ unsafe extern "thiscall" fn comparar_cqf10_olheiro_no_jogo(this: usize, jogo: us
     };
     let r = o(this, jogo, resultado, saida);
     let depois = (cqf10_w(this + 0x1a7) as u16, cqf10_w(this + 0x1a5));
-    PLACAR.registrar(r == n && depois == previsto, || format!("cqf10_olheiro_no_jogo(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
+    PLACAR.registrar(r == n && depois == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
         this, jogo, r, n, antes, previsto, depois));
     r
 }

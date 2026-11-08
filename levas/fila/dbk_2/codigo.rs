@@ -11,7 +11,7 @@
 /// que tem a pessoa (a primeira) é zerada; pessoa fora da casa: 0 (nas 12, 13 e 15 a primeira casa já zerada fica).
 /// Com `desligar`: zera o clube na pessoa (+0x24 na seleção, +0x39 no clube). Devolve 1. Clube nulo: 0. Pessoa nula: a
 /// original (caixa "Error" e 0).
-unsafe extern "C" fn tirar_pessoa_do_clube(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+unsafe extern "C" fn database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
     if clube == 0 {
         return 0;
     }
@@ -85,7 +85,7 @@ unsafe extern "C" fn tirar_pessoa_do_clube(clube: usize, pessoa: usize, data: us
 /// casas como estão. Com parceiro: os não nulos do clube e depois os do parceiro até 7; o resto zerado só quando os
 /// dois juntos não enchem as 7. Contador de 8 bits na original (no máximo 7). Devolve 1. Clube nulo: a original
 /// (caixa "Error" e 0). Na carreira, pela 0x7f7270 (as listas dos olheiros, nas transferências e contratações).
-unsafe extern "C" fn olheiros_do_clube(clube: usize, vetor: *mut usize) -> u32 {
+unsafe extern "C" fn database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%)(clube, vetor);
     }
@@ -122,7 +122,7 @@ unsafe extern "C" fn olheiros_do_clube(clube: usize, vetor: *mut usize) -> u32 {
     1
 }
 
-unsafe extern "C" fn comparar_tirar_pessoa_do_clube(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
+unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, data, desligar, como_jogador); // 0 ou caixa: só a original
@@ -139,20 +139,20 @@ unsafe extern "C" fn comparar_tirar_pessoa_do_clube(clube: usize, pessoa: usize,
         }
     }
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, data, desligar, como_jogador),
-        || tirar_pessoa_do_clube(clube, pessoa, data, desligar, como_jogador));
-    PLACAR.registrar(igual && r == m, || format!("tirar_pessoa_do_clube({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+        || database_remove_staff_from_club(clube, pessoa, data, desligar, como_jogador));
+    PLACAR.registrar(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, data != 0, desligar, r, m, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_olheiros_do_clube(clube: usize, vetor: *mut usize) -> u32 {
+unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
     }
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 28), (clube + 0x244, 1)],
-        || o(clube, vetor), || olheiros_do_clube(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("olheiros_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || o(clube, vetor), || database_get_club_scouts(clube, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

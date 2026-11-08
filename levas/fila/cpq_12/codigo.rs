@@ -13,7 +13,7 @@ unsafe fn cpq12_us(a: usize) -> usize {
 /// senão 1 para o mandante e 2 para o outro. Seleção (0x53b900): 1 se a nação do campo (+0x38, +0x1f) é a do clube
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
-unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
+unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
     let campo = cpq12_d(jogo + 0x18);
     let casa = cpq12_us(jogo + 0x1c);
     if campo == 0 {
@@ -49,11 +49,11 @@ unsafe extern "C" fn lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 
 }
 
 /// Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
-unsafe extern "C" fn comparar_lado_do_jogo_para_o_clube(clube: usize, jogo: usize) -> u8 {
+unsafe extern "C" fn comparar_comp_util_get_fixture_venue_side(clube: usize, jogo: usize) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%);
     let r = o(clube, jogo);
-    let n = lado_do_jogo_para_o_clube(clube, jogo);
-    PLACAR.registrar(r == n, || format!("lado_do_jogo_para_o_clube(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
+    let n = comp_util_get_fixture_venue_side(clube, jogo);
+    PLACAR.registrar(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", clube, jogo, r, n));
     r
 }
 
@@ -61,7 +61,7 @@ unsafe extern "C" fn comparar_lado_do_jogo_para_o_clube(clube: usize, jogo: usiz
 /// entrada, o coeficiente em double em +4) da game_update_nation_coefficients 0x5d6187 (no dia do mês da tabela
 /// 0x9cd200): maior antes (−1); menor ou sem ordem (NaN, a flag C0 do fcomp), 1; igual, 0. Quente (o qsort): sem
 /// contador. A original ordena e libera o vetor logo depois: a ordem não chega ao jogo (só o comparando acusa).
-unsafe extern "C" fn ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
     let x = core::ptr::read_unaligned((a + 4) as *const f64);
     let y = core::ptr::read_unaligned((b + 4) as *const f64);
     if x > y {
@@ -73,11 +73,11 @@ unsafe extern "C" fn ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i3
     0
 }
 
-unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%);
     let r = o(a, b);
-    let n = ordem_dos_coeficientes_das_nacoes(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_coeficientes_das_nacoes original={} rust={}", r, n));
+    let n = compare_nation_coefficients_desc(a, b);
+    PLACAR.registrar(r == n, || format!("compare_nation_coefficients_desc original={} rust={}", r, n));
     r
 }
 
@@ -87,7 +87,7 @@ unsafe extern "C" fn comparar_ordem_dos_coeficientes_das_nacoes(a: usize, b: usi
 /// com menos de 3 relatórios (+0x10, com sinal); com `so_vencidos`, só se a data do pedido (+8: dia, +0xa: ano) é
 /// anterior a hoje ([0xae2c90], ano sem sinal, dia com sinal). Devolve 1 ou 0. Jogador nulo: a original (caixa da
 /// linha 0x5da). A data local da original (0x54a110) só ocupa a chave depois do par.
-unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
+unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
     if jogador == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%)(this, jogador, clube, so_vencidos);
     }
@@ -135,13 +135,13 @@ unsafe extern "thiscall" fn pedido_de_observacao(this: usize, jogador: usize, cl
 }
 
 /// Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
-unsafe extern "thiscall" fn comparar_pedido_de_observacao(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if jogador == 0 {
         return o(this, jogador, clube, so_vencidos);
     }
     let r = o(this, jogador, clube, so_vencidos);
-    let n = pedido_de_observacao(this, jogador, clube, so_vencidos);
-    PLACAR.registrar(r == n, || format!("pedido_de_observacao(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
+    let n = has_scout_request(this, jogador, clube, so_vencidos);
+    PLACAR.registrar(r == n, || format!("has_scout_request(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
     r
 }

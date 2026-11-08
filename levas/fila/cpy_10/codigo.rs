@@ -89,7 +89,7 @@ unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
 /// (0x849ce0), a renovação (0x4cda70); depois, só com o crédito 1, sem a marca +0x45 do contrato, com +0x59 acima de 15
 /// e +0x5b acima de 10, sorteio(+0x59) acima de 5: a notícia do agradecimento ao técnico (0x58a070). Sem pessoa ou sem
 /// prêmio: a original (caixa "Error").
-unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+unsafe extern "thiscall" fn add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
     if p == 0 || premio == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%)(this, p, clube, premio, a4, a5, credito);
     }
@@ -99,14 +99,14 @@ unsafe extern "thiscall" fn registrar_premio_do_ano(this: usize, p: usize, clube
 /// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
+unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I0%%);
     if p == 0 || premio == 0 {
         return o(this, p, clube, premio, a4, a5, credito);
     }
     let (t3d, t28) = (cpy10_b(p + 0x3d), cpy10_b(p + 0x28));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("registrar_premio_do_ano jogador");
+        crate::comparacao::ramo("add_year_award_record jogador");
         return o(this, p, clube, premio, a4, a5, credito);
     }
     let r = cpq4_registro(this, p);
@@ -115,13 +115,13 @@ unsafe extern "thiscall" fn comparar_registrar_premio_do_ano(this: usize, p: usi
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
         || cpy10_premio(this, p, clube, premio, a4, a5, credito, false));
-    PLACAR.registrar(igual, || format!("registrar_premio_do_ano({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
+    PLACAR.registrar(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpy10_d(premio), mo, mr));
 }
 
 /// { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930) e pelos da competição (0x49fb93): 1 se `a` é vitória (gols +0x19 > +0x1a, bytes com sinal) por
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
-unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
+unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
     }
@@ -134,20 +134,20 @@ unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
+unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I1%%)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
-    let n = vitoria_maior(a, b);
-    PLACAR.registrar(r == n, || format!("vitoria_maior({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = match_record_is_bigger_win(a, b);
+    PLACAR.registrar(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930): 1 se `a` é derrota (+0x19 < +0x1a) por diferença maior que a de `b`, ou igual com mais gols
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
-unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
+unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
     }
@@ -160,12 +160,12 @@ unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-unsafe extern "C" fn comparar_derrota_maior(a: usize, b: usize) -> u32 {
+unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I2%%)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
-    let n = derrota_maior(a, b);
-    PLACAR.registrar(r == n, || format!("derrota_maior({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = match_record_is_bigger_defeat(a, b);
+    PLACAR.registrar(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

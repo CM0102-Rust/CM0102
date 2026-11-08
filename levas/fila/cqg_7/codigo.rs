@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o regen jovem: a pessoa aposentada refeita como jogador novo do banco de fichas (nação, nomes, idiomas, idade, habilidade, reputações, personalidade) e posta num clube; a saída da disputa (player_regen.cpp, dispute.cpp) ----------
+// ---------- %%LEVA%%a leva: o regen jovem: a pessoa aposentada refeita como jogador novo do banco de fichas (nação, nomes, idiomas, idade, habilidade, reputações, personalidade) e posta num clube; a saída da contest (player_regen.cpp, dispute.cpp) ----------
 
 unsafe fn cqg7_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const u32) as usize
@@ -96,7 +96,7 @@ unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
 /// clube: só limpa os bits. Senão: sai da seleção (0x775ba0), pega a ficha da frente do banco de fichas (this+0x3c,
 /// entradas de 16 bytes: ficha, nação, segunda nação; 0x7a8470), vira jogador (+0x5f = 2, +0x61 a ficha) e o registro
 /// de 79 bytes ganha a marca do regen (0x40) e perde as outras; as listas e históricos da pessoa são limpos (névoa,
-/// estatísticas, histórico, suspensões, lesões, disputa, disciplina, físico, contratos); a nação da ficha (ou, se ela
+/// estatísticas, histórico, suspensões, lesões, contest, disciplina, físico, contratos); a nação da ficha (ou, se ela
 /// tem reputação abaixo de 100, com 1/4, uma qualquer de reputação abaixo de 100), a segunda nação (a Espanha com 1/100
 /// mantém a anterior; outra que não o País Basco com 2/3 nenhuma), os nomes da nação, os idiomas (todos tirados; os da
 /// nação pelo peso, nível (peso − (20 − +0x56) × 10) / 75 até 10), a data de entrada hoje, +0x3d/+0x28 = 11. A idade e
@@ -107,7 +107,7 @@ unsafe fn cqg7_teto(f: usize, teto: i16, n: i32) {
 /// anos e nação de +0x11c, com 3/4, o melhor clube (0x7ad0e0) e o contrato (0x7a6f10, notícia 0x7a8ba0 no clube humano e
 /// o auxiliar pode gostar dele); senão, com chance, um clube da nação (0x7ad590). Sem clube e abaixo de 20 anos, as
 /// reputações até 1250 e +0xd = 1. No fim, os atributos normalizados (0x538ec0, 0x538bc0).
-unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
+unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     let marca = cqg7_r79(p, 0xb);
     let b = *marca;
     if b & 0x30 == 0 || cqg7_d(p + 0x39) != 0 {
@@ -584,14 +584,14 @@ unsafe extern "thiscall" fn refazer_como_jovem(this: usize, p: usize) {
 /// Comparador: só a original (ponytail: a rotina tira a ficha do banco, limpa listas e históricos, aloca idiomas e o
 /// contrato e manda notícia; não pode rodar duas vezes). A cópia roda no modo Rust (contadores "cqg_7 ...") e é provada
 /// pelas mutações e pelas duas carreiras Rust.
-unsafe extern "thiscall" fn comparar_refazer_como_jovem(this: usize, p: usize) {
+unsafe extern "thiscall" fn comparar_regenerate_as_youth_player(this: usize, p: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, p)
 }
 
 /// { 0x56a090 } (thiscall, ret 4, dispute.cpp): `DISPUTE::remove_dispute(pessoa)`: sem pessoa ou sem a tabela de marcas
 /// (+4), ou com a marca da pessoa zerada: nada. Senão zera a marca e, com a lista (+0), volta o cursor ao começo (+0xa =
 /// +2) e procura, nas `conta` (+0, palavra) primeiras, a entrada do id da pessoa (0x68d1b0): achando, tira-a (0x68d1f0).
-unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
+unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
     if p == 0 || cqg7_d(this + 4) == 0 {
         return;
     }
@@ -613,7 +613,7 @@ unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
             return;
         }
         if cqg7_i(no) == cqg7_i(p) {
-            crate::comparacao::ramo("cqg_7 saiu da disputa");
+            crate::comparacao::ramo("cqg_7 saiu da contest");
             let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x68d1f0usize);
             tirar(cqg7_d(this), no);
             return;
@@ -625,7 +625,7 @@ unsafe extern "thiscall" fn tirar_da_disputa(this: usize, p: usize) {
 /// Comparador: sem a marca (nada a fazer), lado a lado na marca e no cursor da lista. Com a marca, só a original com o
 /// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
 /// devolvido).
-unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
+unsafe extern "thiscall" fn comparar_remove_dispute(this: usize, p: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     if p == 0 || cqg7_d(this + 4) == 0 {
         return o(this, p);
@@ -637,8 +637,8 @@ unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
         if lista != 0 {
             reg.push((lista, 0xe));
         }
-        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p), || tirar_da_disputa(this, p));
-        PLACAR.registrar(igual, || format!("tirar_da_disputa(pessoa {:x}) {:x?} x {:x?}", p, mo.0, mr.0));
+        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p), || remove_dispute(this, p));
+        PLACAR.registrar(igual, || format!("remove_dispute(pessoa {:x}) {:x?} x {:x?}", p, mo.0, mr.0));
         return;
     }
     let mut achou = 0i16;
@@ -662,5 +662,5 @@ unsafe extern "thiscall" fn comparar_tirar_da_disputa(this: usize, p: usize) {
     o(this, p);
     let conta_depois = if lista != 0 { cqg7_w(lista) } else { 0 };
     PLACAR.registrar(*(m as *const u8) == 0 && conta_depois == conta_antes - achou,
-        || format!("tirar_da_disputa(pessoa {:x}) conta {} -> {} (achou {})", p, conta_antes, conta_depois, achou));
+        || format!("remove_dispute(pessoa {:x}) conta {} -> {} (achou {})", p, conta_antes, conta_depois, achou));
 }

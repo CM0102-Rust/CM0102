@@ -49,13 +49,13 @@ unsafe fn cqs8_regras(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs8_eurocopa_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize) -> u32 {
     cqs8_regras(this)
 }
 
 /// Lado a lado a partir do mesmo estado (os campos +0x3a..+0xc9 da copa, fora o ponteiro +0xba); a tabela das rodadas que
 /// cada lado aloca em +0xba (pela virtual +0x3c, original) só é conferida como montada, e a da cópia é liberada.
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_euro_champ_qual_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let antes = cqs8_d(this + 0xba);
     let reg = [(this + 0x3a, 0x80usize), (this + 0xbe, 0xb)];
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_regras(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && tabela, || format!("cqs8_eurocopa_regras({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
+    PLACAR.registrar(igual && a == b && tabela, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this, a, b, igual, tabela));
     a
 }
 
@@ -99,18 +99,18 @@ unsafe fn cqs8_tamanho(this: usize, g: u32) -> i16 {
     }
 }
 
-unsafe extern "thiscall" fn cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
+unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32) -> i16 {
     cqs8_tamanho(this, g)
 }
 
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_tamanho_do_grupo(this: usize, g: u32) -> i16 {
+unsafe extern "thiscall" fn comparar_get_group_team_count(this: usize, g: u32) -> i16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> i16>(%%I1%%);
     let r = o(this, g);
     if !matches!(*((this + 0xf6) as *const i8), 1 | 2) {
         return r; // ponytail: o formato desconhecido mostra a caixa: só a original
     }
     let n = cqs8_tamanho(this, g);
-    PLACAR.registrar(r == n, || format!("cqs8_eurocopa_tamanho_do_grupo(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
+    PLACAR.registrar(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + 0xf6) as *const i8), g as u8, r, n));
     r
 }
 
@@ -124,15 +124,15 @@ unsafe fn cqs8_situacao(this: usize, clube: usize) -> i16 {
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
 
-unsafe extern "thiscall" fn cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
+unsafe extern "thiscall" fn get_qualification_status(this: usize, clube: usize) -> i16 {
     cqs8_situacao(this, clube)
 }
 
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: usize) -> i16 {
+unsafe extern "thiscall" fn comparar_get_qualification_status(this: usize, clube: usize) -> i16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> i16>(%%I2%%);
     let r = o(this, clube);
     let n = cqs8_situacao(this, clube);
-    PLACAR.registrar(r == n, || format!("cqs8_eurocopa_situacao({:#x}) original={} rust={}", clube, r, n));
+    PLACAR.registrar(r == n, || format!("get_qualification_status({:#x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_situacao(this: usize, clube: 
 /// (+0x3e − 1) × +0x3c (words: as rodadas, ida e volta); cada seleção da lista +0xf7 (na ordem) na linha i
 /// (League::init_table_row 0x687430: push 0; push 0; push clube; push o dword do byte i com lixo em cima (só o byte é lido);
 /// mov ecx -> thiscall, ret 0x10); a notícia do grupo (0x684230, thiscall). Devolve 1.
-unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
+unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
     let tamanho: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(0x57d9d0usize);
     let n = tamanho(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn cqs8_eurocopa_grupo_um(this: usize) -> u32 {
 /// Só a original (a 0x687430 aloca a forma e o confronto direto de cada linha e a notícia vai aos humanos), conferindo o
 /// plano feito antes: devolve 1, +0x3e = o tamanho do grupo −1, +0xa7 = (+0x3e − 1) × +0x3c e as seleções de +0xf7 nas
 /// linhas, na ordem.
-unsafe extern "thiscall" fn comparar_cqs8_eurocopa_grupo_um(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_init_group_one_table(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
     let n = if matches!(*((this + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this) };
     let plano: Vec<usize> = (0..n as usize).map(|k| cqs8_d(cqs8_d(this + 0xf7) + k * 4)).collect();
@@ -184,6 +184,6 @@ unsafe extern "thiscall" fn comparar_cqs8_eurocopa_grupo_um(this: usize) -> u32 
     let t = cqs8_d(this + 0xb1);
     let ok = r == 1 && cqs8_w(this + 0x3e) == n && cqs8_w(this + 0xa7) == (n - 1).wrapping_mul(cqs8_w(this + 0x3c)) && t != 0
         && plano.iter().enumerate().all(|(k, &c)| cqs8_d(t + k * 0x3b) == c);
-    PLACAR.registrar(ok, || format!("cqs8_eurocopa_grupo_um({:#x}) devolveu {}; plano {:x?}", this, r, plano));
+    PLACAR.registrar(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this, r, plano));
     r
 }

@@ -43,14 +43,14 @@ unsafe fn cqk6_tabela(this: usize, clubes: usize, n: i16, arquivo: usize, linha:
 /// da lista (o construtor 0x5b91c0 sorteia os clubes dos 4 grupos), marcando os que estão na primeira ([0x9cf5cc]) ou
 /// na segunda ([0x9cf5d0]) divisão [inferência: os times reserva dos profissionais, que não sobem]. Fonte 0x9ccaf0,
 /// linha 0x185.
-unsafe extern "thiscall" fn tabela_do_grupo_da_cfa(this: usize, clubes: usize) -> u32 {
+unsafe extern "thiscall" fn fra_cfa_create_group_table(this: usize, clubes: usize) -> u32 {
     cqk6_tabela(this, clubes, 0x12, 0x9ccaf0, 0x185, &[0x9cf5cc, 0x9cf5d0])
 }
 
 /// { 0x5be230 } (thiscall, ret 4, fra_lower.cpp): `FraLower::create_table(clubes)`: a divisão de baixo francesa com
 /// 20 clubes da lista (o construtor 0x5bd600 escolhe-os), marcando os que estão no National ([0x9cf5d4]). Fonte
 /// 0x9ccbd0, linha 0x175.
-unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_francesa(this: usize, clubes: usize) -> u32 {
+unsafe extern "thiscall" fn fra_cfa_create_table(this: usize, clubes: usize) -> u32 {
     cqk6_tabela(this, clubes, 0x14, 0x9ccbd0, 0x175, &[0x9cf5d4])
 }
 
@@ -76,14 +76,14 @@ unsafe fn cqk6_comparar(nome: &str, this: usize, clubes: usize, n: i16, marcadas
     r
 }
 
-unsafe extern "thiscall" fn comparar_tabela_do_grupo_da_cfa(this: usize, clubes: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_cfa_create_group_table(this: usize, clubes: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
-    cqk6_comparar("tabela_do_grupo_da_cfa", this, clubes, 0x12, &[0x9cf5cc, 0x9cf5d0], || o(this, clubes))
+    cqk6_comparar("fra_cfa_create_group_table", this, clubes, 0x12, &[0x9cf5cc, 0x9cf5d0], || o(this, clubes))
 }
 
-unsafe extern "thiscall" fn comparar_tabela_da_divisao_de_baixo_francesa(this: usize, clubes: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_cfa_create_table(this: usize, clubes: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%);
-    cqk6_comparar("tabela_da_divisao_de_baixo_francesa", this, clubes, 0x14, &[0x9cf5d4], || o(this, clubes))
+    cqk6_comparar("fra_cfa_create_table", this, clubes, 0x14, &[0x9cf5d4], || o(this, clubes))
 }
 
 /// A situação do clube nas estatísticas da Série C1 (o corpo de 0x64bd80 e 0x64ff40): na entrada do clube
@@ -127,12 +127,12 @@ unsafe fn cqk6_situacao_na_c1(this: usize, clube: usize, fase: u8, atual: u8, me
 
 /// { 0x64bd80 } (thiscall, ret 0x14, ita_ser_c1a.cpp): `ItaSerC1a::set_club_progress(clube, fase, atual, melhor,
 /// pior)`, a virtual +0x68 da 0x684cd0 a cada linha da tabela.
-unsafe extern "thiscall" fn situacao_na_c1a(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+unsafe extern "thiscall" fn ita_ser_c1a_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cqk6_situacao_na_c1(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }
 
 /// { 0x64ff40 } (thiscall, ret 0x14, ita_ser_c1b.cpp): `ItaSerC1b::set_club_progress(...)`, igual à da C1/A.
-unsafe extern "thiscall" fn situacao_na_c1b(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+unsafe extern "thiscall" fn fra_cfa_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     cqk6_situacao_na_c1(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }
 
@@ -148,12 +148,12 @@ unsafe fn cqk6_comparar_situacao(nome: &str, this: usize, clube: usize, original
     PLACAR.registrar(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", nome, this, clube, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_situacao_na_c1a(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I2%%);
-    cqk6_comparar_situacao("situacao_na_c1a", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_c1a(this, clube, fase, atual, melhor, pior))
+    cqk6_comparar_situacao("ita_ser_c1a_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || ita_ser_c1a_set_club_progress(this, clube, fase, atual, melhor, pior))
 }
 
-unsafe extern "thiscall" fn comparar_situacao_na_c1b(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
+unsafe extern "thiscall" fn comparar_fra_cfa_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I3%%);
-    cqk6_comparar_situacao("situacao_na_c1b", this, clube, || o(this, clube, fase, atual, melhor, pior), || situacao_na_c1b(this, clube, fase, atual, melhor, pior))
+    cqk6_comparar_situacao("fra_cfa_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || fra_cfa_set_club_progress(this, clube, fase, atual, melhor, pior))
 }

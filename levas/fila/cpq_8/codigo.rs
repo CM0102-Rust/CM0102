@@ -20,8 +20,8 @@ unsafe fn cpq8_pessoa(id: usize) -> usize {
 
 /// O contrato da pessoa da oferta (+0xc; 0x4cf5a0 com o gerente [0xae1050]), guardado em [0xae1080].
 unsafe fn cpq8_contrato(oferta: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpq8_d(0xae1050), cpq8_pessoa(cpq8_d(oferta + 0xc)));
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpq8_d(0xae1050), cpq8_pessoa(cpq8_d(oferta + 0xc)));
     *(0xae1080 as *mut usize) = c;
     c
 }
@@ -58,7 +58,7 @@ unsafe fn cpq8_estado_encerrado(oferta: usize) -> bool {
 /// oferta e todas as da lista +0 (estados de `cpq8_estado_encerrado`), tira a marca 1 da pessoa. Atualiza a lista do
 /// comprador (0x849ce0 e 0x843e10 com 1), tira a oferta de contrato (0x4cca70), zera +0x10 e solta os contratos da troca
 /// (0x4ccb30 com a vaga +0x20; +4 do item = 0).
-unsafe extern "thiscall" fn desfazer_oferta(this: usize, oferta: usize, clube: usize, motivo: u32, tirar_futura: u32) {
+unsafe extern "thiscall" fn collapse_offer(this: usize, oferta: usize, clube: usize, motivo: u32, tirar_futura: u32) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     let marca = |id: usize| (cpq8_d(this + 0x86e) + id * 8) as *mut u8;
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn desfazer_oferta(this: usize, oferta: usize, clube: u
 /// fim, a porcentagem do salário e as duas cláusulas); acrescenta a oferta (0x8be300 com o contrato) e a oferta de
 /// contrato (0x4cc490 com a vaga +0x20 e o valor +0x24 da oferta, 0xb, 0, 1, 0). Destrói a oferta local (0x8e5710) e
 /// devolve a vaga (+0x20).
-unsafe extern "thiscall" fn fazer_oferta_de_emprestimo(this: usize, jogador: usize, clube: usize, fim: usize, percentual: u32, a5: u32, a6: u32) -> u32 {
+unsafe extern "thiscall" fn make_loan_offer(this: usize, jogador: usize, clube: usize, fim: usize, percentual: u32, a5: u32, a6: u32) -> u32 {
     let construir: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x8e5680usize);
     let emprestimo: unsafe extern "thiscall" fn(*mut u8, usize, usize) = core::mem::transmute(0x8e7810usize);
     let construir_contrato: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x85e410usize);
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn fazer_oferta_de_emprestimo(this: usize, jogador: usi
 /// restrições (0x8cfc90) seguram pelo comprador ou, havendo vendedor, pelo vendedor (motivo 9 não conta), desfaz a
 /// oferta (0x8c44e0 com o clube e o motivo); senão a notícia (0x8dbef0), conclui (0x8c9390), estado 0x14 e agenda
 /// (0x8c6220 com 0xa). Depois tira as processadas do começo do vetor (0x8cbf40 uma a uma) e diminui a conta.
-unsafe extern "thiscall" fn concluir_transferencias_futuras(this: usize) {
+unsafe extern "thiscall" fn process_due_future_transfers(this: usize) {
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let permissoes: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8c7690usize);
     let restricoes: unsafe extern "thiscall" fn(usize, usize, usize, *mut u32, u32) -> u32 = core::mem::transmute(0x8cfc90usize);
@@ -246,18 +246,18 @@ unsafe extern "thiscall" fn concluir_transferencias_futuras(this: usize) {
 
 /// Comparador: muda o estado, as listas e as marcas, posta notícia e agenda: roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_desfazer_oferta(this: usize, oferta: usize, clube: usize, motivo: u32, tirar_futura: u32) {
+unsafe extern "thiscall" fn comparar_collapse_offer(this: usize, oferta: usize, clube: usize, motivo: u32, tirar_futura: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(%%I0%%)(this, oferta, clube, motivo, tirar_futura)
 }
 
 /// Comparador: acrescenta a oferta e a oferta de contrato (alocam): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_fazer_oferta_de_emprestimo(this: usize, jogador: usize, clube: usize, fim: usize, percentual: u32, a5: u32, a6: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_make_loan_offer(this: usize, jogador: usize, clube: usize, fim: usize, percentual: u32, a5: u32, a6: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, jogador, clube, fim, percentual, a5, a6)
 }
 
 /// Comparador: conclui e desfaz transferências (elencos, dinheiro, notícias): roda só a original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_concluir_transferencias_futuras(this: usize) {
+unsafe extern "thiscall" fn comparar_process_due_future_transfers(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

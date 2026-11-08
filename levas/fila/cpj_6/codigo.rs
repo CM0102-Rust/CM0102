@@ -5,9 +5,9 @@ unsafe fn cpj6_d(a: usize) -> usize {
 }
 
 /// { 0x6951e0 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::update_board_after_fixture(partida,
-/// jogo)`: partida jogada (+0 ≠ −2, +0x40 ≠ 0): a confiança da diretoria de cada lado com técnico (+0xcf) muda pela
+/// jogo)`: partida play (+0 ≠ −2, +0x40 ≠ 0): a confiança da diretoria de cada lado com técnico (+0xcf) muda pela
 /// 0x695240 (mandante +0x1c com 1, visitante +0x20 com 0).
-unsafe extern "thiscall" fn diretoria_depois_da_partida(this: usize, partida: usize, jogo: usize) {
+unsafe extern "thiscall" fn update_board_after_fixture(this: usize, partida: usize, jogo: usize) {
     if cpj6_d(partida) as i32 == -2 || *((partida + 0x40) as *const u8) == 0 {
         return;
     }
@@ -38,7 +38,7 @@ unsafe fn cpj6_tribunal(this: usize, id: i32) -> Option<usize> {
 /// competição da partida (+0, id > −1) julga (0x7e7ff0 com 1, 1, 1). Sem ele, num amistoso (0x5c6710 sobre [0xae2c74]
 /// com +0x14) ou na competição [0x9cf684]: o tribunal da liga (+0x57) do mandante (+0x1c, com 1, 0, 0) e o do
 /// visitante (+0x20, com 0, 1, 0). Devolve o que o primeiro tribunal devolve (os outros caminhos, 0; ninguém lê).
-unsafe extern "thiscall" fn disciplina_da_partida(this: usize, partida: usize, resultado: u32) -> u32 {
+unsafe extern "thiscall" fn process_match(this: usize, partida: usize, resultado: u32) -> u32 {
     let julgar: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x7e7ff0usize);
     let id = cpj6_d(partida) as i32;
     if id > -1 {
@@ -91,7 +91,7 @@ unsafe fn cpj6_entradas(this: usize, id: u32) -> Vec<usize> {
 
 /// { 0x8420e0 } (thiscall, ret 8, shortlist_manager.cpp): `Shortlist_Manager::collect_club_shortlist_entries(clube,
 /// lista)`: acrescenta (0x68d0d0, 8 bytes) à `lista` cada entrada da shortlist do clube (`*clube`), na ordem.
-unsafe extern "thiscall" fn entradas_do_clube_na_shortlist(this: usize, clube: *const u32, lista: usize) {
+unsafe extern "thiscall" fn collect_club_shortlist_entries(this: usize, clube: *const u32, lista: usize) {
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x68d0d0usize);
     for e in cpj6_entradas(this, *clube) {
         acrescentar(lista, e, 8);
@@ -107,7 +107,7 @@ unsafe fn cpj6_serve(o: usize, clube: u32) -> bool {
 /// clube)`: com a marca de ofertas do jogador (byte +1 dos 8 de [+0x86e]), o primeiro registro do vetor [this] ([+4]
 /// deles) do jogador (+0xc): sem lista (+0), ele mesmo se serve; com lista, das ofertas (índices no vetor) que servem,
 /// a de maior valor (0x8e7a70 com 0, 0, 0, 1; a primeira no empate). Senão 0.
-unsafe extern "thiscall" fn maior_oferta_pelo_jogador(this: usize, jogador: *const u32, clube: *const u32) -> usize {
+unsafe extern "thiscall" fn find_highest_offer_for_player(this: usize, jogador: *const u32, clube: *const u32) -> usize {
     let id = *jogador;
     if *((cpj6_d(this + 0x86e).wrapping_add((id as usize).wrapping_mul(8)) + 1) as *const u8) == 0 {
         return 0;
@@ -149,30 +149,30 @@ unsafe extern "thiscall" fn maior_oferta_pelo_jogador(this: usize, jogador: *con
 }
 
 /// Comparador: a 0x695240 mexe na diretoria (e pode dar notícia): só a original (a prova é a carreira e o modo Rust).
-unsafe extern "thiscall" fn comparar_diretoria_depois_da_partida(this: usize, partida: usize, jogo: usize) {
-    crate::comparacao::ramo("diretoria_depois_da_partida");
+unsafe extern "thiscall" fn comparar_update_board_after_fixture(this: usize, partida: usize, jogo: usize) {
+    crate::comparacao::ramo("update_board_after_fixture");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%)(this, partida, jogo)
 }
 
 /// Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
-unsafe extern "thiscall" fn comparar_disciplina_da_partida(this: usize, partida: usize, resultado: u32) -> u32 {
-    crate::comparacao::ramo("disciplina_da_partida");
+unsafe extern "thiscall" fn comparar_process_match(this: usize, partida: usize, resultado: u32) -> u32 {
+    crate::comparacao::ramo("process_match");
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, partida, resultado)
 }
 
 /// Comparador: as entradas da cópia antes; a original acrescenta; confere os últimos itens da lista (8 bytes cada).
-unsafe extern "thiscall" fn comparar_entradas_do_clube_na_shortlist(this: usize, clube: *const u32, lista: usize) {
+unsafe extern "thiscall" fn comparar_collect_club_shortlist_entries(this: usize, clube: *const u32, lista: usize) {
     let esperado: Vec<[u8; 8]> = cpj6_entradas(this, *clube).iter().map(|&e| core::ptr::read_unaligned(e as *const [u8; 8])).collect();
     let antes = cpd1_itens(lista).len();
     orig::<unsafe extern "thiscall" fn(usize, *const u32, usize)>(%%I2%%)(this, clube, lista);
     let novos: Vec<[u8; 8]> = cpd1_itens(lista).iter().skip(antes).map(|&i| core::ptr::read_unaligned(i as *const [u8; 8])).collect();
-    PLACAR.registrar(novos == esperado, || format!("entradas_do_clube_na_shortlist({}) original {} itens, rust {}", *clube, novos.len(), esperado.len()));
+    PLACAR.registrar(novos == esperado, || format!("collect_club_shortlist_entries({}) original {} itens, rust {}", *clube, novos.len(), esperado.len()));
 }
 
 /// Comparador: pelo valor (a 0x8e7a70 só calcula; as duas voltam o cursor da lista ao começo).
-unsafe extern "thiscall" fn comparar_maior_oferta_pelo_jogador(this: usize, jogador: *const u32, clube: *const u32) -> usize {
+unsafe extern "thiscall" fn comparar_find_highest_offer_for_player(this: usize, jogador: *const u32, clube: *const u32) -> usize {
     let r = orig::<unsafe extern "thiscall" fn(usize, *const u32, *const u32) -> usize>(%%I3%%)(this, jogador, clube);
-    let n = maior_oferta_pelo_jogador(this, jogador, clube);
-    PLACAR.registrar(r == n, || format!("maior_oferta_pelo_jogador({}, {}) original={:#x} rust={:#x}", *jogador, *clube, r, n));
+    let n = find_highest_offer_for_player(this, jogador, clube);
+    PLACAR.registrar(r == n, || format!("find_highest_offer_for_player({}, {}) original={:#x} rust={:#x}", *jogador, *clube, r, n));
     r
 }

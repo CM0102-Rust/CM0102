@@ -29,7 +29,7 @@ unsafe fn cpz6_estrelas(g: usize) -> usize {
 /// competição [[0xadadfc] + 4·[0x9cf690]]: a data do jogo pelo registro +0xa3, dia +3 e ano +5 + o ano +0x40, 0x549ef0)
 /// para jogador de clube (+0x39) da liga [0x9cf590] (+0x57), com a data na janela: os 50 nomes (+0xd7) dos dois times
 /// (primeiro [0x9d00a8]; o texto 0xa62fa4 em 0xde1f64 se há `comentario`). Senão 0.
-unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
+unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
                                                       adversario: usize) -> usize {
     let criar: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -160,14 +160,14 @@ unsafe extern "thiscall" fn selecao_que_tem_o_jogador(this: usize, jogador: usiz
 
 /// Comparador da 0x7757d0 (2,1 milhões de chamadas até 2002-06-01: o lado a lado leve, sem alocar até 256 bytes): cada
 /// uma com a sua lista provisória (como a original); no texto de 0xde1f64 (0x80) e no do comentário (0x40) e na devolução.
-unsafe extern "thiscall" fn comparar_selecao_que_tem_o_jogador(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
+unsafe extern "thiscall" fn comparar_get_international_duty_club(this: usize, jogador: usize, data: usize, clube: usize, comentario: usize,
                                                                adversario: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize>(%%I0%%);
     let regioes = [(0xde1f64usize, 0x80usize), (comentario, 0x40)];
     let reg = if comentario != 0 { &regioes[..] } else { &regioes[..1] };
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg,|| o(this, jogador, data, clube, comentario, adversario),
-        || selecao_que_tem_o_jogador(this, jogador, data, clube, comentario, adversario));
-    PLACAR.registrar(igual && r == n, || format!("selecao_que_tem_o_jogador(jogador {:x}, data {:x}, clube {:x}, adversario {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+        || get_international_duty_club(this, jogador, data, clube, comentario, adversario));
+    PLACAR.registrar(igual && r == n, || format!("get_international_duty_club(jogador {:x}, data {:x}, clube {:x}, adversario {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         jogador, data, clube, adversario, r, n, mo, mr));
     r
 }
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn comparar_selecao_que_tem_o_jogador(this: usize, joga
 /// nacionalidade (+0x1a) tem de ser a da seleção (+0x53); convocado para outra seleção de outra nação: 0. A nação da
 /// seleção tem de ser a primeira ou a segunda (+0x1e) nacionalidade; sendo a nação [0x9cf434] e a segunda também: 0.
 /// Senão 1.
-unsafe extern "stdcall" fn jogador_serve_a_selecao(jogador: usize, tecnico: usize) -> u32 {
+unsafe extern "stdcall" fn national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
     let sel = cpz6_d(tecnico + 0x24);
     if cpz6_d(jogador + 0x61) == 0 || sel == 0 {
         return 0;
@@ -223,17 +223,17 @@ unsafe extern "stdcall" fn jogador_serve_a_selecao(jogador: usize, tecnico: usiz
 }
 
 /// Comparador da 0x76d9b0: pela devolução (só lê).
-unsafe extern "stdcall" fn comparar_jogador_serve_a_selecao(jogador: usize, tecnico: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_national_teams_player_is_eligible(jogador: usize, tecnico: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u32>(%%I1%%)(jogador, tecnico);
-    let n = jogador_serve_a_selecao(jogador, tecnico);
-    PLACAR.registrar(r == n, || format!("jogador_serve_a_selecao(jogador {:x}, tecnico {:x}) original={} rust={}", jogador, tecnico, r, n));
+    let n = national_teams_player_is_eligible(jogador, tecnico);
+    PLACAR.registrar(r == n, || format!("national_teams_player_is_eligible(jogador {:x}, tecnico {:x}) original={} rust={}", jogador, tecnico, r, n));
     r
 }
 
 /// { 0x775580 } (thiscall, ret 4, national_teams.cpp): `NationalTeams::collect_duty_competitions(saida)`, dos olheiros
 /// (0x7f7010). Sem a lista de convocações [this] ou sem `saida`: 0. Para cada convocação, a competição dela (+4) entra
 /// em `saida` (0x68d0d0, 4 bytes) se ainda não estiver lá; devolve quantas entraram (byte).
-unsafe extern "thiscall" fn juntar_competicoes_das_convocacoes(this: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn collect_duty_competitions(this: usize, saida: usize) -> u8 {
     let conv = cpz6_d(this);
     if conv == 0 || saida == 0 {
         return 0;
@@ -279,12 +279,12 @@ unsafe fn cpz6_itens(lista: usize) -> Vec<usize> {
 // ponytail: a 0x775580 acrescenta nós (aloca): só a original roda. O plano, feito antes pelos nós (sem mexer nos
 // cursores): as competições das convocações que ainda não estão em `saida`, na ordem, sem repetir; depois, a devolução
 // é quantas e os últimos itens de `saida` (4 bytes cada) são elas.
-unsafe extern "thiscall" fn comparar_juntar_competicoes_das_convocacoes(this: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_collect_duty_competitions(this: usize, saida: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let conv = cpz6_d(this);
     if conv == 0 || saida == 0 {
         let r = o(this, saida);
-        PLACAR.registrar(r == 0, || format!("juntar_competicoes_das_convocacoes(saida {:x}) sem lista original={}", saida, r));
+        PLACAR.registrar(r == 0, || format!("collect_duty_competitions(saida {:x}) sem lista original={}", saida, r));
         return r;
     }
     let mut tem: Vec<usize> = cpz6_itens(saida).iter().map(|&x| cpz6_d(x)).collect();
@@ -298,6 +298,6 @@ unsafe extern "thiscall" fn comparar_juntar_competicoes_das_convocacoes(this: us
     let r = o(this, saida);
     let depois: Vec<usize> = cpz6_itens(saida).iter().map(|&x| cpz6_d(x)).collect();
     let igual = r == (tem.len() - antes) as u8 && depois == tem;
-    PLACAR.registrar(igual, || format!("juntar_competicoes_das_convocacoes(saida {:x}) original={} plano={:x?} depois={:x?}", saida, r, tem, depois));
+    PLACAR.registrar(igual, || format!("collect_duty_competitions(saida {:x}) original={} plano={:x?} depois={:x?}", saida, r, tem, depois));
     r
 }

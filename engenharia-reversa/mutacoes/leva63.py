@@ -5,7 +5,7 @@ MUTACOES = [
     ('h_tatica', "            let tatica = sem_tatica == 0\n", "            let tatica = sem_tatica != 0\n"),
     ('h_9a01', "Ok(r) if *((r + 0x9a01) as *const u32) != 0));", "Ok(r) if *((r + 0x9a05) as *const u32) != 0));"),
     ('h_forcar', "                if forcar != 0 || qualquer != 0 {", "                if qualquer != 0 {"),
-    ('h_selecao', "let sim = if e_selecao(clube) != 0 {", "let sim = if e_selecao(clube) == 0 {"),
+    ('h_selecao', "let sim = if is_national_team(clube) != 0 {", "let sim = if is_national_team(clube) == 0 {"),
     ('h_segunda', "        qualquer = 0;\n", ""),
     ('h_volta', "        if segunda(clube) == 0 {\n            return 0;\n        }", "        if segunda(clube) == 0 || true {\n            return 0;\n        }"),
 ]

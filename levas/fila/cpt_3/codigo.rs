@@ -12,7 +12,7 @@ unsafe fn cpt3_d(a: usize) -> usize {
 /// bytes cada, escolhida em +0x11c), o byte +0x14 da linha; senão 0 com o mandante seleção e 3 sem. Senão, competição de
 /// nação (+0x5d): o byte +0x14 da linha dela, ou 3. Sem nação: Copa do Mundo e eliminatórias (0x669a10), 0; torneio
 /// internacional (0x669ae0), 1; senão o índice da nação-chave (0x669470). Chamada a cada jogo procurado: sem contador.
-unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
+unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let linha = |nacao: usize| (0..0x23usize).find(|&k| {
@@ -56,10 +56,10 @@ unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
     indice(comp)
 }
 
-unsafe extern "C" fn comparar_nacao_chave_do_jogo(comp: usize, partida: usize) -> u8 {
+unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> u8>(%%I0%%)(comp, partida);
-    let n = nacao_chave_do_jogo(comp, partida);
-    PLACAR.registrar(r == n, || format!("nacao_chave_do_jogo(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
+    let n = comp_active_key_nation_of_fixture(comp, partida);
+    PLACAR.registrar(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", cpt3_d(comp) as i32, partida, r, n));
     r
 }
 
@@ -73,7 +73,7 @@ const CPT3_INTERNACIONAIS: [usize; 10] = [0x9cf7a0, 0x9cf7a4, 0x9cf784, 0x9cf7ac
 
 /// { 0x669a10 } (cdecl, key_nation.cpp): `key_nation_is_world_cup_comp(competição)`: o id (+0) é a Copa do Mundo ou uma
 /// das eliminatórias, 1; senão 0. Competição nula: a caixa "Error" (linha 0x3d7) e 0.
-unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
+unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32 {
     if comp == 0 {
         aviso_em(0x9eaff4, 0x3d7);
         return 0;
@@ -82,20 +82,20 @@ unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
     CPT3_COPA.iter().any(|&g| cpt3_d(g) == id) as u32
 }
 
-unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
+unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
     if comp == 0 {
         return o(comp);
     }
     let r = o(comp);
-    let n = e_copa_do_mundo(comp);
-    PLACAR.registrar(r == n, || format!("e_copa_do_mundo(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
+    let n = key_nation_is_world_cup_comp(comp);
+    PLACAR.registrar(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
     r
 }
 
 /// { 0x669ae0 } (cdecl, key_nation.cpp): `key_nation_is_international_comp(competição)`: o id é um dos dez torneios de
 /// seleções fora da Copa do Mundo, 1; senão 0. Competição nula: a caixa (linha 0x3ef) e 0.
-unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
+unsafe extern "C" fn key_nation_is_international_comp(comp: usize) -> u32 {
     if comp == 0 {
         aviso_em(0x9eaff4, 0x3ef);
         return 0;
@@ -104,13 +104,13 @@ unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
     CPT3_INTERNACIONAIS.iter().any(|&g| cpt3_d(g) == id) as u32
 }
 
-unsafe extern "C" fn comparar_e_torneio_internacional(comp: usize) -> u32 {
+unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     if comp == 0 {
         return o(comp);
     }
     let r = o(comp);
-    let n = e_torneio_internacional(comp);
-    PLACAR.registrar(r == n, || format!("e_torneio_internacional(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
+    let n = key_nation_is_international_comp(comp);
+    PLACAR.registrar(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", cpt3_d(comp) as i32, r, n));
     r
 }

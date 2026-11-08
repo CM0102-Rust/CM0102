@@ -25,7 +25,7 @@ unsafe fn cqh9_bate(p: usize, k: usize, texto: usize) -> bool {
 /// (cada nome conferido só se o texto e o nome da pessoa existem). Com `clube`: o clube com esse nome (0x545880, 51
 /// caracteres); sem achar, 0. Com `no_elenco` 1: o primeiro das 50 vagas do elenco (+0xd7) com os nomes que batem;
 /// senão (ou nenhum do elenco), o técnico do clube (+0xcf) se os nomes batem; senão 0.
-unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
+unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
     if clube == 0 || *(clube as *const u8) == 0 {
         let mut p = cqh9_d(0xae23bc);
         for _ in 0..cqh9_i(0xae2364).max(0) {
@@ -73,17 +73,17 @@ unsafe extern "C" fn pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: us
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_pessoa_pelo_nome(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
+unsafe extern "C" fn comparar_player_setup_find_staff(primeiro: usize, comum: usize, segundo: usize, clube: usize, no_elenco: u32) -> usize {
     let r = orig::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(%%I0%%)(primeiro, comum, segundo, clube, no_elenco);
-    let n = pessoa_pelo_nome(primeiro, comum, segundo, clube, no_elenco);
-    PLACAR.registrar(r == n, || format!("pessoa_pelo_nome(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
+    let n = player_setup_find_staff(primeiro, comum, segundo, clube, no_elenco);
+    PLACAR.registrar(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", clube, no_elenco as u8, r, n));
     r
 }
 
 /// { 0x7a5090 } (cdecl, player_regen.cpp): `player_setup_read_quoted_token(origem, destino)`: copia para `destino` o
 /// texto entre as primeiras aspas de `origem`: espaços e '\r' no começo do texto e '\n' antes dele são pulados; termina
 /// nas aspas de fecho ou no zero (o destino ganha o zero) e devolve o ponteiro dois depois do fim.
-unsafe extern "C" fn texto_entre_aspas(origem: usize, destino: usize) -> usize {
+unsafe extern "C" fn player_setup_read_quoted_token(origem: usize, destino: usize) -> usize {
     let (mut i, mut n, mut aberto) = (0usize, 0usize, false);
     loop {
         let c = *((origem + i) as *const u8);
@@ -116,13 +116,13 @@ unsafe extern "C" fn texto_entre_aspas(origem: usize, destino: usize) -> usize {
 }
 
 /// Comparador: lado a lado no destino (até 0x100 bytes) e na devolução.
-unsafe extern "C" fn comparar_texto_entre_aspas(origem: usize, destino: usize) -> usize {
+unsafe extern "C" fn comparar_player_setup_read_quoted_token(origem: usize, destino: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> usize>(%%I1%%);
     if origem == 0 || destino == 0 {
         return o(origem, destino);
     }
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(destino, 0x100)], || o(origem, destino), || texto_entre_aspas(origem, destino));
-    PLACAR.registrar(igual && r == n, || format!("texto_entre_aspas({:x}) original={:x} rust={:x}", origem, r, n));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(destino, 0x100)], || o(origem, destino), || player_setup_read_quoted_token(origem, destino));
+    PLACAR.registrar(igual && r == n, || format!("player_setup_read_quoted_token({:x}) original={:x} rust={:x}", origem, r, n));
     r
 }
 
@@ -149,7 +149,7 @@ const CQH9_TIPOS: [(usize, u32); 14] = [
 /// MANAGER_CONF 2, RETIREMENT 0x200, INT_RETIREMENT 4, FUTURE_TRANSFER 8, LOAN 0x10, NANDROLONE e DRUGS 0x100,
 /// MISCONDUCT 0x1000, FALSE_PASSPORT 0x800, ARSE 0x20, PRESET_TACTICS 0x2000, COLOURBLIND 0x400, GERMAN 0x80, AWOL 0x40;
 /// nenhum 0), pela aplicação das linhas (0x7a3a10) na criação do jogo.
-unsafe extern "C" fn tipo_da_linha(nome: usize) -> u32 {
+unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
     for &(texto, bit) in CQH9_TIPOS.iter() {
         if cqh9_strncmp(nome, texto, 100) == 0 {
             crate::comparacao::ramo("cqh_9 tipo da linha");
@@ -160,9 +160,9 @@ unsafe extern "C" fn tipo_da_linha(nome: usize) -> u32 {
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_tipo_da_linha(nome: usize) -> u32 {
+unsafe extern "C" fn comparar_player_setup_type_from_name(nome: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nome);
-    let n = tipo_da_linha(nome);
-    PLACAR.registrar(r == n, || format!("tipo_da_linha({:x}) original={:x} rust={:x}", nome, r, n));
+    let n = player_setup_type_from_name(nome);
+    PLACAR.registrar(r == n, || format!("player_setup_type_from_name({:x}) original={:x} rust={:x}", nome, r, n));
     r
 }

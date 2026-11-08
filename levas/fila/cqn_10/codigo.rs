@@ -64,7 +64,7 @@ unsafe fn cqn10_base(this: usize, hoje: usize, fase: u32) -> u32 {
 /// sinal) e a fase não é 0: libera as tabelas (`cqn10_liberar`), +0x45 = 1, os inscritos (0x56ccc0, thiscall), as
 /// rodadas (virtual +0x8c), a árvore dos confrontos (virtual +0x94) e a ordem prevista (virtual +0x5c); uma devolução
 /// negativa dá a caixa (linhas 0x161, 0x168, 0x16f) e 0. Sempre, no fim, a atualização da copa.
-unsafe extern "thiscall" fn cqn10_copa_da_liga_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     if cqn10_d(this + 0x45) == 0 && cqn10_w(cqn10_d(0xde1f58) + 0x439) as u16 as i32 == cqn10_w(this + 0x40) as i32 && fase != 0 {
         cqn10_liberar(this);
         crate::comparacao::ramo("cqn_10 virada da copa da liga");
@@ -90,13 +90,13 @@ unsafe extern "thiscall" fn cqn10_copa_da_liga_dia(this: usize, hoje: usize, fas
 
 // ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
-unsafe extern "thiscall" fn comparar_cqn10_copa_da_liga_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let antes = cqn10_d(this + 0x45);
     let vira = antes == 0 && cqn10_w(cqn10_d(0xde1f58) + 0x439) as u16 as i32 == cqn10_w(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
     let depois = cqn10_d(this + 0x45);
-    PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("cqn10_copa_da_liga_dia({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
+    PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("eng_cc_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
     r
 }
 
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn comparar_cqn10_copa_da_liga_dia(this: usize, hoje: u
 /// = 1, os inscritos (0x56fab0, thiscall), as rodadas (virtual +0x8c), a árvore (virtual +0x94) — uma devolução negativa
 /// dá a caixa (linhas 0x3d6, 0x3dd, 0x3e4) e 1 —, a ordem prevista (virtual +0x5c) e o sorteio da 1ª rodada (0x51c800:
 /// push 0; mov ecx, copa -> thiscall, ret 4). Sempre, no fim, a atualização da copa.
-unsafe extern "thiscall" fn cqn10_copa_da_inglaterra_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: usize, hoje: usize, fase: u32) -> u32 {
     if cqn10_d(this + 0x45) == 0 && fase != 0 {
         if cqn10_e_hoje(cqn10_data(1, 9, 0x7cf, 0xffff_ffff), hoje) && *((this + 0xb2) as *const u8) == 0 {
             // ponytail: a pergunta de 1999 monta e entrega uma notícia (só nesse dia, fora de qualquer carreira nova)
@@ -141,14 +141,14 @@ unsafe extern "thiscall" fn cqn10_copa_da_inglaterra_dia(this: usize, hoje: usiz
 
 // ponytail: como a da Copa da Liga, só a original; o plano: +0x45 vai a 1 em 3 de outubro (com +0x45 = 0 e a fase), fora
 // do caminho de 1999.
-unsafe extern "thiscall" fn comparar_cqn10_copa_da_inglaterra_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date_570550(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     let antes = cqn10_d(this + 0x45);
     let vira = antes == 0 && fase != 0 && cqn10_e_hoje(cqn10_data(3, 9, cqn10_w(hoje + 2) as u16 as u32, 0xffff_ffff), hoje)
         && !(cqn10_e_hoje(cqn10_data(1, 9, 0x7cf, 0xffff_ffff), hoje) && *((this + 0xb2) as *const u8) == 0);
     let r = o(this, hoje, fase);
     let depois = cqn10_d(this + 0x45);
-    PLACAR.registrar(!vira || depois == 1, || format!("cqn10_copa_da_inglaterra_dia({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
+    PLACAR.registrar(!vira || depois == 1, || format!("eng_cc_cup_update_for_date_570550({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
     r
 }
 
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn comparar_cqn10_copa_da_inglaterra_dia(this: usize, h
 /// local, sem destrutor): `UsaMlsAllStars::update_for_date(hoje, fase)`: com a fase diferente de 0, no dia de Date(26, 6,
 /// ano de hoje, dia da semana 6) (o sábado de 26 de julho em diante [inferência]), a convocação das duas seleções
 /// (0x90a980, mov ecx -> thiscall, ret 0); depois a atualização da copa.
-unsafe extern "thiscall" fn cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
     let ano = cqn10_w(hoje + 2) as u16 as u32;
     let d = cqn10_data(0x1a, 6, ano, 6); // cqn10: a convocação do Jogo das Estrelas
@@ -169,6 +169,6 @@ unsafe extern "thiscall" fn cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize
 }
 
 // ponytail: a convocação mexe nos elencos e a atualização da copa joga: não rodam duas vezes. Só a original roda.
-unsafe extern "thiscall" fn comparar_cqn10_jogo_das_estrelas_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_all_stars_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%)(this, hoje, fase)
 }

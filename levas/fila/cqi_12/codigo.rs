@@ -64,7 +64,7 @@ unsafe fn cqi12_confere(nome: &str, this: usize, g: &Cqi12Regras, r: u32) {
 /// { 0x63f350 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x8c): `ItaCup::set_up_rules()`: os grupos da Copa da Itália
 /// em turno único, 3 pontos a vitória e 1 o empate, a categoria 4 (copa nacional), o desempate (4, 1, 2), um
 /// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
-unsafe extern "thiscall" fn cqi12_copa_italia_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa da italia");
     let mut g = CQI12_COPA_DA_ITALIA;
     g.vitoria = 3; // cqi12: a vitória nos grupos da Copa da Itália
@@ -73,24 +73,24 @@ unsafe extern "thiscall" fn cqi12_copa_italia_regras(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqi12_copa_italia_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this);
-    cqi12_confere("cqi12_copa_italia_regras", this, &CQI12_COPA_DA_ITALIA, r);
+    cqi12_confere("ita_cup_set_up_rules", this, &CQI12_COPA_DA_ITALIA, r);
     r
 }
 
 /// { 0x63d6e0 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x8c): `ItaCCup::set_up_rules()`: os grupos da Copa da
 /// Itália da Série C, com as mesmas regras da Copa da Itália e o fundo de prêmios de 300.000.
-unsafe extern "thiscall" fn cqi12_copa_c_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa da serie c");
     let turnos = 1i16; // cqi12: o turno único dos grupos da Série C
     cqi12_regras(this, &CQI12_COPA_DA_SERIE_C, turnos)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqi12_copa_c_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
-    cqi12_confere("cqi12_copa_c_regras", this, &CQI12_COPA_DA_SERIE_C, r);
+    cqi12_confere("ita_cup_set_up_rules_63d6e0", this, &CQI12_COPA_DA_SERIE_C, r);
     r
 }
 
@@ -98,14 +98,14 @@ unsafe extern "thiscall" fn comparar_cqi12_copa_c_regras(this: usize) -> u32 {
 /// Copa dos Campeões do Brasil em turno único, 3 pontos a vitória e 1 o empate, a categoria 0x17 (23, a das finais de
 /// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
 /// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
-unsafe extern "thiscall" fn cqi12_copa_dos_campeoes_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa dos campeoes");
     cqi12_regras(this, &CQI12_COPA_DOS_CAMPEOES, 1)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqi12_copa_dos_campeoes_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_champ_cup_set_up_rules(this: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this);
-    cqi12_confere("cqi12_copa_dos_campeoes_regras", this, &CQI12_COPA_DOS_CAMPEOES, r);
+    cqi12_confere("bra_champ_cup_set_up_rules", this, &CQI12_COPA_DOS_CAMPEOES, r);
     r
 }

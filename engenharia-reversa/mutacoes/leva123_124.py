@@ -1,4 +1,4 @@
-# A rodada conjunta da 123a e 124a levas (uma base, um jogo real e uma carreira; ate 01/10/2001 por causa dos penaltis).
+# A rodada conjunta da 123a e 124a levas (uma base, um jogo real e uma carreira; ate 01/10/2001 por causa dos penalties).
 MUTACOES = []
 for _n in (123, 124):
     _d = {}

@@ -49,7 +49,7 @@ unsafe fn cqa9_fim(contrato: usize, w: f64) -> i32 {
 /// do clube (+0x53: +0x7e e +0x85 ou a divisão +0x69; sem clube, sorteio(3) + 1), com piso. `modo`: a nação [0x9cf434]
 /// e a cláusula. Senão: os dias de contrato (com a lei Bosman 0x8d0a70) e as nações [0x9cf434], [0x9cf300], [0x9cf484];
 /// no fim a cláusula de rescisão ativa (0x867b50) limita.
-unsafe extern "thiscall" fn valor_do_jogador(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, _x: u32) -> i32 {
+unsafe extern "thiscall" fn calc_player_value(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, _x: u32) -> i32 {
     let c1080 = cqa9_contrato_principal(pessoa);
     *(0xae1080 as *mut usize) = c1080;
     let clube_do_contrato = if c1080 == 0 { 0 } else { cqa9_clube(cqa9_d(c1080 + 4)) };
@@ -293,12 +293,12 @@ fn cqa9_regioes() -> [(usize, usize); 11] {
 
 /// Comparador: lado a lado (sem alocar) com o estado do sorteador (sem clube, sorteio(3)), o [0xae1080] e as estáticas
 /// das datas da compensação; a cópia sem contar os sorteios. Quente (5,6 milhões de chamadas): sem contador.
-unsafe extern "thiscall" fn comparar_valor_do_jogador(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_calc_player_value(this: usize, pessoa: usize, clube: usize, modo: u32, habilidade: u32, x: u32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32>(%%I0%%);
     let regioes = cqa9_regioes();
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, pessoa, clube, modo, habilidade, x),
-        || crate::aleatorio::sem_contar(|| valor_do_jogador(this, pessoa, clube, modo, habilidade, x)));
-    PLACAR.registrar(igual && r == n, || format!("valor_do_jogador(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", pessoa, clube, modo as u8, habilidade as i16, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| calc_player_value(this, pessoa, clube, modo, habilidade, x)));
+    PLACAR.registrar(igual && r == n, || format!("calc_player_value(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", pessoa, clube, modo as u8, habilidade as i16, r, n, mo, mr));
     r
 }
 
@@ -306,7 +306,7 @@ unsafe extern "thiscall" fn comparar_valor_do_jogador(this: usize, pessoa: usize
 /// _)`: a diferença das morais (+0x45 das fichas, a − b, em byte) vira "Superior" (até −14 e desde 13), "Better" (−13 a
 /// −8 e 7 a 12), "Marginal" (−7 a −4 e 3 a 6) ou "Same" (−3 a 2) na saída (0x66f4e0 com 0xad9c64); devolve a diferença
 /// (o jogo lê o al), pela tela de comparação.
-unsafe extern "stdcall" fn diferenca_de_moral_em_texto(a: usize, b: usize, saida: usize, _x: u32) -> u8 {
+unsafe extern "stdcall" fn contract_manager_write_morale_comparison_text(a: usize, b: usize, saida: usize, _x: u32) -> u8 {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let dif = cqa9_b(cqa9_d(a + 0x61) + 0x45).wrapping_sub(cqa9_b(cqa9_d(b + 0x61) + 0x45));
     let f = if dif < -13 {
@@ -336,14 +336,14 @@ unsafe fn cqa9_texto(a: usize) -> Vec<u8> {
 
 /// Comparador: a original escreve; a cópia escreve de novo (sobrescreve) e o texto e a diferença têm de bater; fica o
 /// texto da original.
-unsafe extern "stdcall" fn comparar_diferenca_de_moral_em_texto(a: usize, b: usize, saida: usize, x: u32) -> u8 {
+unsafe extern "stdcall" fn comparar_contract_manager_write_morale_comparison_text(a: usize, b: usize, saida: usize, x: u32) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize, usize, u32) -> u8>(%%I1%%)(a, b, saida, x);
     let tr = cqa9_texto(saida);
-    let n = diferenca_de_moral_em_texto(a, b, saida, x);
+    let n = contract_manager_write_morale_comparison_text(a, b, saida, x);
     let tn = cqa9_texto(saida);
     core::ptr::copy_nonoverlapping(tr.as_ptr(), saida as *mut u8, tr.len());
     *((saida + tr.len()) as *mut u8) = 0;
-    PLACAR.registrar(r == n && tr == tn, || format!("diferenca_de_moral_em_texto original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
+    PLACAR.registrar(r == n && tr == tn, || format!("contract_manager_write_morale_comparison_text original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
     r
 }
 
@@ -352,7 +352,7 @@ unsafe extern "stdcall" fn comparar_diferenca_de_moral_em_texto(a: usize, b: usi
 /// emprestada (segundo contrato, +4 do registro de 79 bytes) a outro clube que não o `clube` nem o parceiro dele
 /// (0x540a50): com parceiro, 1; senão 2 com o bit 0x40 de +0x35 do contrato principal, 1 sem. Sem clube, a caixa
 /// "Error" (a original). O jogo lê o al.
-unsafe extern "thiscall" fn marcas_de_elenco_para_a_tela(this: usize, pessoa: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn get_squad_flags_for_club(this: usize, pessoa: usize, clube: usize) -> u8 {
     if clube == 0 || pessoa == 0 {
         // ponytail: sem clube a caixa de erro; sem pessoa a original lê [0x5e] e cai: as duas ficam com a original
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%)(this, pessoa, clube);
@@ -387,13 +387,13 @@ unsafe extern "thiscall" fn marcas_de_elenco_para_a_tela(this: usize, pessoa: us
     (*((c0 + 0x35) as *const u8) & 0x40 != 0) as u8 + 1
 }
 
-unsafe extern "thiscall" fn comparar_marcas_de_elenco_para_a_tela(this: usize, pessoa: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_squad_flags_for_club(this: usize, pessoa: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%);
     if clube == 0 || pessoa == 0 {
         return o(this, pessoa, clube);
     }
     let r = o(this, pessoa, clube);
-    let n = marcas_de_elenco_para_a_tela(this, pessoa, clube);
-    PLACAR.registrar(r == n, || format!("marcas_de_elenco_para_a_tela({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
+    let n = get_squad_flags_for_club(this, pessoa, clube);
+    PLACAR.registrar(r == n, || format!("get_squad_flags_for_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
     r
 }

@@ -15,8 +15,8 @@ unsafe fn cpp6_clube(id: usize) -> usize {
 
 /// O contrato da pessoa (0x4cf5a0 no CONTRACT_MANAGER [0xae1050]).
 unsafe fn cpp6_contrato(pessoa: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    contrato_de(cpp6_d(0xae1050), pessoa)
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    contract_of(cpp6_d(0xae1050), pessoa)
 }
 
 /// O contrato da pessoa, guardado em [0xae1080] como a original faz depois de cada chamada.
@@ -35,7 +35,7 @@ unsafe fn cpp6_contrato_guardado(pessoa: usize) -> usize {
 /// posições (0x5b7d20 com os vizinhos: 2→4, 8→0x10, 0x20→0x10, 0x80→0x100, 0x800→0x400), percorre os clubes do vetor
 /// [0xae2d1c] ([0xae235c] relido a cada volta) até o contador chegar a 5: fora seleção (0x53b900), o clube do contrato e
 /// o do jogador (+0x39), tenta a 0x842e10 e conta cada clube que o pôs na lista.
-unsafe extern "thiscall" fn por_jogador_nas_listas_dos_clubes(this: usize, jogador: usize, forcar: u32) {
+unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize, jogador: usize, forcar: u32) {
     let fichas = cpp6_d(jogador + 0x61);
     if fichas == 0 {
         return;
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn por_jogador_nas_listas_dos_clubes(this: usize, jogad
 /// contrato, com sinal) acima da diferença de dois sorteios(100), o jogador passa a desgostar do técnico do clube
 /// (0x547af0 com o +0xcf do clube, 1); com `notícia`, põe o jogador nas listas dos clubes (0x842c00 com 1) e dá a
 /// notícia (0x4d71b0 com o clube +0x39).
-unsafe extern "thiscall" fn por_jogador_a_venda(this: usize, jogador: usize, noticia: u32) {
+unsafe extern "thiscall" fn transfer_list_player(this: usize, jogador: usize, noticia: u32) {
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
     if listada(jogador, 0) != 0 {
         return;
@@ -182,7 +182,7 @@ unsafe fn cpp6_registro_do_premio(this: usize, jogador: usize, tipo: u32) -> usi
 /// original o empurra) cujos jogos (+8, com sinal) são os `jogos` (> 0): dá a notícia (0x8db8a0), soma o valor (+4)
 /// aos totais de transferência (0x448ad0 em [0xad9dac], com o clube atual e o antigo), o clube antigo (+9) recebe
 /// (0x599800) e o atual paga (0x599890), em 64 bits com sinal. Devolve 1 se pagou.
-unsafe extern "thiscall" fn pagar_premio_por_jogos(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
+unsafe extern "thiscall" fn pay_appearance_money(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
     let c = cpp6_contrato_guardado(jogador);
     if c == 0 || cpp6_clube(cpp6_d(c + 4)) == 0 {
         return 0;
@@ -217,13 +217,13 @@ unsafe extern "thiscall" fn pagar_premio_por_jogos(this: usize, jogador: usize, 
 /// Comparador: a 0x842e10 mexe nas vagas de muitos clubes (e as listas não cabem numa cópia barata): roda só a
 /// original.
 // ponytail: só a original; a cópia é provada pelo ramo e pela mutação na carreira.
-unsafe extern "thiscall" fn comparar_por_jogador_nas_listas_dos_clubes(this: usize, jogador: usize, forcar: u32) {
+unsafe extern "thiscall" fn comparar_add_player_to_club_shortlists(this: usize, jogador: usize, forcar: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, jogador, forcar)
 }
 
 /// Comparador: sorteia e dá notícia: roda só a original e confere o plano feito antes: sem listagem do clube e com
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
-unsafe extern "thiscall" fn comparar_por_jogador_a_venda(this: usize, jogador: usize, noticia: u32) {
+unsafe extern "thiscall" fn comparar_transfer_list_player(this: usize, jogador: usize, noticia: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
     let marca = listada(jogador, 0) == 0 && cpp6_contrato(jogador) != 0;
@@ -231,13 +231,13 @@ unsafe extern "thiscall" fn comparar_por_jogador_a_venda(this: usize, jogador: u
     if marca {
         let c = cpp6_contrato(jogador);
         let ok = c != 0 && cpp6_b(c + 0x4e) & 1 != 0 && cpp6_b(c + 0x4f) & 0xf0 == 0x70;
-        PLACAR.registrar(ok, || format!("por_jogador_a_venda(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
+        PLACAR.registrar(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", cpp6_d(jogador), c));
     }
 }
 
 /// Comparador: dá notícia e mexe nas finanças: roda só a original e confere a devolução com o plano (contrato, clube,
 /// registro do prêmio e jogos, sem efeitos).
-unsafe extern "thiscall" fn comparar_pagar_premio_por_jogos(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_pay_appearance_money(this: usize, jogador: usize, jogos: i32, tipo: u32, arg: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32) -> u32>(%%I2%%);
     let c = cpp6_contrato(jogador);
     let esperado = if c == 0 || cpp6_clube(cpp6_d(c + 4)) == 0 {
@@ -247,6 +247,6 @@ unsafe extern "thiscall" fn comparar_pagar_premio_por_jogos(this: usize, jogador
         (r != 0 && cpp6_b(r + 8) as i8 as i32 == jogos && jogos > 0) as u32
     };
     let r = o(this, jogador, jogos, tipo, arg);
-    PLACAR.registrar(r == esperado, || format!("pagar_premio_por_jogos(jogador {:x}, jogos {}, tipo {}) devolveu {}, esperava {}", cpp6_d(jogador), jogos, tipo as u8, r, esperado));
+    PLACAR.registrar(r == esperado, || format!("pay_appearance_money(jogador {:x}, jogos {}, tipo {}) devolveu {}, esperava {}", cpp6_d(jogador), jogos, tipo as u8, r, esperado));
     r
 }

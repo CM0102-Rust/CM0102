@@ -62,7 +62,7 @@ unsafe fn dbo1_gols_por_jogo(clube: usize, campo: usize) -> Option<i32> {
 /// 1,35 gol por jogo ([0x969588]; gols sofridos +0x6a da estatística / jogos): 0. Senão, 1 se mais de 2 zagueiros
 /// (posição +0x11 = 20) passam do limite /65 (teto 145). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day
 /// 0x7b3e20, relatório de um clube).
-unsafe extern "C" fn clube_tem_defensores(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_enough_defenders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -75,16 +75,16 @@ unsafe extern "C" fn clube_tem_defensores(clube: usize) -> u8 {
     (dbo1_contar(clube, limite, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_defensores(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(clube);
-    let n = clube_tem_defensores(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_defensores({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_enough_defenders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x549200 } (cdecl, Database.cpp): `club_has_enough_midfielders(clube)`: clube nulo: 0; senão 1 se mais de 2
 /// meias (posição +0x14, +0x12 ou +0x13 = 20, nessa ordem) passam do limite /65 (teto 145). Só `al`. Só pelo olheiro.
-unsafe extern "C" fn clube_tem_meias(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_enough_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -93,17 +93,17 @@ unsafe extern "C" fn clube_tem_meias(clube: usize) -> u8 {
     (dbo1_contar(clube, limite, meia) > 2) as u8 // meias (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_meias(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%)(clube);
-    let n = clube_tem_meias(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_meias({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_enough_midfielders(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// { 0x5492c0 } (cdecl, Database.cpp): `club_has_enough_strikers(clube)`: clube nulo: 0. Se o clube faz menos de
 /// 1,5 gol por jogo ([0x968940]; gols marcados +0x69 da estatística / jogos): 0. Senão, 1 se mais de 1 atacante
 /// (posição +0x15 = 20) passa do limite /65 (teto 150). Só `al`. Só pelo olheiro.
-unsafe extern "C" fn clube_tem_atacantes(clube: usize) -> u8 {
+unsafe extern "C" fn club_has_enough_strikers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
@@ -116,9 +116,9 @@ unsafe extern "C" fn clube_tem_atacantes(clube: usize) -> u8 {
     (dbo1_contar(clube, limite, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
 }
 
-unsafe extern "C" fn comparar_clube_tem_atacantes(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
-    let n = clube_tem_atacantes(clube);
-    PLACAR.registrar(r == n, || format!("clube_tem_atacantes({:x}) original={} rust={}", clube, r, n));
+    let n = club_has_enough_strikers(clube);
+    PLACAR.registrar(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));
     r
 }

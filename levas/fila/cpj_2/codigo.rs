@@ -22,7 +22,7 @@ unsafe fn cpj2_guardadas(this: usize, id: usize) -> *mut i8 {
 /// { 0x5567d0 } (thiscall, ret 4, discipline.cpp): `Discipline::drop_held_bans(pessoa)`: da lista das suspensões
 /// guardadas (+0x1c; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item do id `*pessoa` enquanto o contador
 /// do registro dele (+0x1c, com sinal) for positivo, descontando um a cada item.
-unsafe extern "thiscall" fn soltar_suspensoes_guardadas(this: usize, pessoa: *const u32) {
+unsafe extern "thiscall" fn drop_held_bans(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
     let n = cpj2_guardadas(this, *pessoa as usize);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpj2_d(l + 2));
@@ -45,7 +45,7 @@ unsafe fn cpj2_pendentes(id: usize) -> *mut u8 {
 /// com a lista das ofertas (+0x34) e ofertas pendentes no registro da pessoa (+8 do de 79 bytes em [0xae2d0c]): tira
 /// a marca de contrato acertado (0x8c5430 sobre [0xde1f54]) e, do começo da lista, cada oferta da pessoa (0x68d1f0),
 /// descontando o byte, até ele zerar.
-unsafe extern "thiscall" fn tirar_ofertas_pendentes(this: usize, pessoa: *const u32) {
+unsafe extern "thiscall" fn remove_pending_offers_for_staff(this: usize, pessoa: *const u32) {
     let l = cpj2_d(this + 0x34);
     if l == 0 || *cpj2_pendentes(*pessoa as usize) == 0 {
         return;
@@ -86,7 +86,7 @@ unsafe fn cpj2_acima_do_clube(oferta: usize) -> u32 {
 /// a primeira oferta de contrato da lista (+0x34) da pessoa (+0xc) e do clube (+8) da oferta de transferência ainda
 /// sem decisão (+0x62) fica marcada (1) e a decisão da pessoa é agendada (0x4cd230 com a vaga +0x20). Devolve se a
 /// habilidade da pessoa / 500 passa a reputação do clube.
-unsafe extern "thiscall" fn marcar_decisao_da_transferencia(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usize, oferta: usize) -> u32 {
     let l = cpj2_d(this + 0x34);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, cpj2_d(l + 2));
     let mut e = cpj2_proximo(l);
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn marcar_decisao_da_transferencia(this: usize, oferta:
 
 /// Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
 /// itens que ficaram e o contador.
-unsafe extern "thiscall" fn comparar_soltar_suspensoes_guardadas(this: usize, pessoa: *const u32) {
+unsafe extern "thiscall" fn comparar_drop_held_bans(this: usize, pessoa: *const u32) {
     let l = this + 0x1c;
     let n = cpj2_guardadas(this, *pessoa as usize);
     let antes = cpd1_itens(l);
@@ -119,11 +119,11 @@ unsafe extern "thiscall" fn comparar_soltar_suspensoes_guardadas(this: usize, pe
     }
     orig::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I0%%)(this, pessoa);
     let depois = cpd1_itens(l);
-    PLACAR.registrar(depois == esperado && *n == resta, || format!("soltar_suspensoes_guardadas({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *n, resta));
+    PLACAR.registrar(depois == esperado && *n == resta, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *n, resta));
 }
 
 /// Comparador: o mesmo plano pelo byte de pendentes; a original tira (e desmarca); confere os itens e o byte.
-unsafe extern "thiscall" fn comparar_tirar_ofertas_pendentes(this: usize, pessoa: *const u32) {
+unsafe extern "thiscall" fn comparar_remove_pending_offers_for_staff(this: usize, pessoa: *const u32) {
     let l = cpj2_d(this + 0x34);
     if l == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
@@ -141,16 +141,16 @@ unsafe extern "thiscall" fn comparar_tirar_ofertas_pendentes(this: usize, pessoa
     }
     orig::<unsafe extern "thiscall" fn(usize, *const u32)>(%%I1%%)(this, pessoa);
     let depois = cpd1_itens(l);
-    PLACAR.registrar(depois == esperado && *p == resta, || format!("tirar_ofertas_pendentes({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *p, resta));
+    PLACAR.registrar(depois == esperado && *p == resta, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *pessoa, antes.len(), depois.len(), esperado.len(), *p, resta));
 }
 
 /// Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
 /// das decisões); confere a marca e o valor.
-unsafe extern "thiscall" fn comparar_marcar_decisao_da_transferencia(this: usize, oferta: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_schedule_decision_for_transfer(this: usize, oferta: usize) -> u32 {
     let alvo = cpj2_oferta_a_marcar(cpj2_d(this + 0x34), oferta);
     let n = cpj2_acima_do_clube(oferta);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(this, oferta);
     let marcada = alvo.map_or(true, |e| *((e + 0x62) as *const u8) == 1);
-    PLACAR.registrar(marcada && r == n, || format!("marcar_decisao_da_transferencia({:x}) alvo {:x?} marcada={} original={} rust={}", oferta, alvo, marcada, r, n));
+    PLACAR.registrar(marcada && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", oferta, alvo, marcada, r, n));
     r
 }

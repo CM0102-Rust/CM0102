@@ -16,7 +16,7 @@ unsafe fn cpp13_reputacao(e: usize) -> i32 {
 /// { 0x522190 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_desc(a, b)`: o qsort das entradas das copas (sorteios da
 /// Copa da UEFA, Intertoto, copas do Japão e da Escócia) pelo nível, o maior primeiro; no empate pela reputação do
 /// clube, a menor primeiro. Quente (qsort): sem contador.
-unsafe extern "C" fn ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = cpp13_nivel(b) - cpp13_nivel(a); // o maior nível primeiro
     if r != 0 {
         return r;
@@ -27,7 +27,7 @@ unsafe extern "C" fn ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) 
 /// { 0x5221c0 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_asc(a, b)`: o qsort das entradas da copa da liga
 /// inglesa (0x56ccc0) pelo nível, o menor primeiro; no empate pela reputação do clube, a menor primeiro. Quente
 /// (qsort): sem contador.
-unsafe extern "C" fn ordem_dos_cabecas_de_chave_crescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = cpp13_nivel(a) - cpp13_nivel(b); // o menor nível primeiro
     if r != 0 {
         return r;
@@ -52,7 +52,7 @@ unsafe fn cpp13_ajustar(clube: usize, valor: i8, baixar: u32) {
 /// +0x3e), ajusta o byte +0x64 do clube (+0) a `valor` quando a situação da linha (+0x37) não é `fora` (0xfd = nenhuma)
 /// e de novo quando é `dentro` (0xfd = nenhuma). Os três primeiros argumentos são bytes empurrados como dword: só o
 /// byte baixo conta.
-unsafe extern "thiscall" fn teto_da_divisao_dos_clubes(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
+unsafe extern "thiscall" fn limit_club_division_tier(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
     let (valor, fora, dentro) = (valor as u8 as i8, fora as u8, dentro as u8);
     let mut i: i16 = 0;
     while i < *((this + 0x3e) as *const i16) {
@@ -68,29 +68,29 @@ unsafe extern "thiscall" fn teto_da_divisao_dos_clubes(this: usize, valor: u32, 
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_dos_cabecas_de_chave_decrescente(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_cabecas_de_chave_decrescente({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = cup_compare_entries_by_level_desc(a, b);
+    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave_crescente(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_dos_cabecas_de_chave_crescente(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_cabecas_de_chave_crescente({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = cup_compare_entries_by_level_asc(a, b);
+    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
-unsafe extern "thiscall" fn comparar_teto_da_divisao_dos_clubes(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
+unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: usize, valor: u32, fora: u32, dentro: u32, baixar: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(%%I2%%);
     let n = *((this + 0x3e) as *const i16);
     let tabela = cpp13_d(this + 0xb1);
     let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (cpp13_d(tabela + i * 0x3b) + 0x64, 1)).collect();
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, valor, fora, dentro, baixar),
-        || teto_da_divisao_dos_clubes(this, valor, fora, dentro, baixar));
-    PLACAR.registrar(igual, || format!("teto_da_divisao_dos_clubes(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
+        || limit_club_division_tier(this, valor, fora, dentro, baixar));
+    PLACAR.registrar(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
         valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
 }

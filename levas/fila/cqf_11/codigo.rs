@@ -83,7 +83,7 @@ unsafe fn cqf11_codigo(resultado: usize, lado: usize, jogador: usize) -> u32 {
 /// da partida pelo clube (0x7e4750, uma vez só) e os dados dele (0x7e4de0), o destaque (id e chaves, se é do clube;
 /// senão −1 nos quatro), quantos são, o clube, até 4 jogadores (o destaque primeiro, os outros pelo código de como
 /// foram, do maior para o menor), 0x420e9, sorteio(2) e os códigos. Os jogadores do grupo saem do vetor (zerados).
-unsafe extern "thiscall" fn cqf11_relatorio_da_selecao(this: usize, clube: usize, jogo: usize, resultado: usize, destaque: usize, elenco: *mut usize, conta: u32) {
+unsafe extern "thiscall" fn send_club_international_report_news(this: usize, clube: usize, jogo: usize, resultado: usize, destaque: usize, elenco: *mut usize, conta: u32) {
     let _ = this;
     let q = conta as u8 as i8;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn cqf11_relatorio_da_selecao(this: usize, clube: usize
 /// Comparador da 0x7706c0: a original entrega as notícias (aloca nas caixas): só ela roda, com os sorteios rastreados e o
 /// elenco guardado antes. Depois o elenco volta ao de antes, a cópia refaz em ensaio (sorteios da fita, sem entregar) e o
 /// elenco tem de sair igual ao da original, com os sorteios do ensaio iguais aos da fita (mesmos n, todos usados).
-unsafe extern "thiscall" fn comparar_cqf11_relatorio_da_selecao(this: usize, clube: usize, jogo: usize, resultado: usize, destaque: usize, elenco: *mut usize, conta: u32) {
+unsafe extern "thiscall" fn comparar_send_club_international_report_news(this: usize, clube: usize, jogo: usize, resultado: usize, destaque: usize, elenco: *mut usize, conta: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, *mut usize, u32)>(%%I0%%);
     let q = (conta as u8 as i8).max(0) as usize;
     let antes: Vec<usize> = (0..q).map(|k| *elenco.add(k)).collect();
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn comparar_cqf11_relatorio_da_selecao(this: usize, clu
         *elenco.add(k) = antes[k];
     }
     *core::ptr::addr_of_mut!(CQF11_FITA) = Some((fita, 0, false));
-    crate::aleatorio::sem_contar(|| cqf11_relatorio_da_selecao(this, clube, jogo, resultado, destaque, elenco, conta));
+    crate::aleatorio::sem_contar(|| send_club_international_report_news(this, clube, jogo, resultado, destaque, elenco, conta));
     let (k, falhou) = match &*core::ptr::addr_of!(CQF11_FITA) {
         Some((_, k, f)) => (*k, *f),
         None => (0, true),
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn comparar_cqf11_relatorio_da_selecao(this: usize, clu
     for k in 0..q {
         *elenco.add(k) = depois_o[k];
     }
-    PLACAR.registrar(!falhou && k == n && depois_o == depois_r, || format!("cqf11_relatorio_da_selecao(clube {:#x}, jogo {:#x}, conta {}) fita de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
+    PLACAR.registrar(!falhou && k == n && depois_o == depois_r, || format!("send_club_international_report_news(clube {:#x}, jogo {:#x}, conta {}) fita de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
         clube, jogo, q, n, k, falhou, depois_o, depois_r));
 }
 
@@ -250,7 +250,7 @@ unsafe extern "thiscall" fn comparar_cqf11_relatorio_da_selecao(this: usize, clu
 /// o tipo, quantos, `segunda`, quantos adversários e, com menos de 4, os ids deles (da lista dada ou montada uma vez pela
 /// 0x76d560 com o jogo, sem lista e sem `sem_adversarios`), e até 3 jogadores (id e chaves). A lista montada aqui é
 /// destruída e liberada no fim (0x68d040, 0x944c94).
-unsafe extern "thiscall" fn cqf11_noticia_da_convocacao(this: usize, selecao: usize, segunda: u32, jogo: usize, tipo: u32, sem_adversarios: u32, adversarios: usize, conta: u32) {
+unsafe extern "thiscall" fn national_teams_post_call_up_news(this: usize, selecao: usize, segunda: u32, jogo: usize, tipo: u32, sem_adversarios: u32, adversarios: usize, conta: u32) {
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let montar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x76d560usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn cqf11_noticia_da_convocacao(this: usize, selecao: us
 /// Comparador da 0x76e0b0: ela só monta e entrega notícias (aloca nas caixas dos humanos) e monta e libera a lista dos
 /// adversários: não pode rodar duas vezes e não grava nada do jogo além das caixas. Só a original roda (ponytail: o
 /// efeito é a caixa de entrada do humano; a lista dos adversários é conferida pela 0x76d560).
-unsafe extern "thiscall" fn comparar_cqf11_noticia_da_convocacao(this: usize, selecao: usize, segunda: u32, jogo: usize, tipo: u32, sem_adversarios: u32, adversarios: usize, conta: u32) {
+unsafe extern "thiscall" fn comparar_national_teams_post_call_up_news(this: usize, selecao: usize, segunda: u32, jogo: usize, tipo: u32, sem_adversarios: u32, adversarios: usize, conta: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32)>(%%I1%%)(this, selecao, segunda, jogo, tipo, sem_adversarios, adversarios, conta);
 }
 
@@ -348,7 +348,7 @@ static mut CQF11_PLANO: Option<Vec<u32>> = None;
 /// mandante; na segunda seleção, a seleção principal da nação dele, 0x53b4f0) e os adversários dos outros jogos da
 /// seleção de amanhã até 13 dias depois (0x5acbe0, com o byte +0x40 do jogo) que não são de fase final (as nove
 /// competições de seleções). Devolve a lista.
-unsafe extern "thiscall" fn cqf11_adversarios_da_selecao(this: usize, selecao: usize, jogo: usize) -> usize {
+unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(this: usize, selecao: usize, jogo: usize) -> usize {
     let _ = this;
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -431,13 +431,13 @@ unsafe extern "thiscall" fn cqf11_adversarios_da_selecao(this: usize, selecao: u
 
 /// Comparador da 0x76d560: a original aloca a lista nova (não pode rodar duas vezes): só ela roda; antes, a cópia em
 /// ensaio diz os valores que vão na lista (sem alocar), e a lista da original tem de ter exatamente esses, na ordem.
-unsafe extern "thiscall" fn comparar_cqf11_adversarios_da_selecao(this: usize, selecao: usize, jogo: usize) -> usize {
+unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_opponents(this: usize, selecao: usize, jogo: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(%%I2%%);
     *core::ptr::addr_of_mut!(CQF11_PLANO) = Some(Vec::new());
-    cqf11_adversarios_da_selecao(this, selecao, jogo);
+    national_teams_collect_fixture_opponents(this, selecao, jogo);
     let plano = (*core::ptr::addr_of_mut!(CQF11_PLANO)).take().unwrap_or_default();
     let r = o(this, selecao, jogo);
     let agora = cqf11_itens(r);
-    PLACAR.registrar(agora == plano, || format!("cqf11_adversarios_da_selecao(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
+    PLACAR.registrar(agora == plano, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", selecao, jogo, plano, agora));
     r
 }

@@ -30,7 +30,7 @@ fn cpz5_pelo_menos_1(x: i16) -> f64 {
 /// a = pró, b = contra e c = pontos (cada um pelo menos 1), q = c/p, g = a/p, h = g·q², r = p/b: +0x10 = r·h·g, +0x18
 /// = r·g·q²·q, +0x20 = r·r·h (a ordem das contas do x87). A escolha da formação do computador (0x6e0230) lê +2 e as
 /// três razões. Devolve 1.
-unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u32 {
     if jogo == 0 {
         aviso_em(0xa8b908, 0x1f9);
         return 0;
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usi
         let r = p / b;
         let f = |o: usize| (l + o) as *mut f64;
         core::ptr::write_unaligned(f(0x10), r * h * g);
-        core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: a razão da postura normal
+        core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: a razão da stance normal
         core::ptr::write_unaligned(f(0x20), r * r * h);
     }
     1
@@ -89,21 +89,21 @@ unsafe extern "thiscall" fn registrar_resultado_da_tatica(this: usize, jogo: usi
 
 /// Comparador da 0x896290: lado a lado nas linhas das táticas dos dois clubes (0x28 bytes cada) e na devolução; o
 /// registro da partida é local. Jogo ou clube nulos: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_registrar_resultado_da_tatica(this: usize, jogo: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_record_tactic_result(this: usize, jogo: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     if jogo == 0 || cpz5_d(jogo + 0x1c) == 0 || cpz5_d(jogo + 0x20) == 0 {
         return o(this, jogo);
     }
     let reg = [(cpz5_linha(this, cpz5_d(jogo + 0x1c)), 0x28), (cpz5_linha(this, cpz5_d(jogo + 0x20)), 0x28)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || registrar_resultado_da_tatica(this, jogo));
-    PLACAR.registrar(igual && r == n, || format!("registrar_resultado_da_tatica(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo), || record_tactic_result(this, jogo));
+    PLACAR.registrar(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", jogo, r, n, mo, mr));
     r
 }
 
 /// { 0x8976a0 } (thiscall, ret 8, tactics.cpp): `Tactics::get_captain(clube, time)`, das telas de tática (0x8a7440). Clube
 /// nulo: a caixa da linha 0x527 e 0. A linha do clube (0x8982b0, thiscall(this, clube, time), ret 8; −1: 0); devolve o
 /// dword +0x52 do registro de 0x91 bytes da linha na tabela tática (+0x601).
-unsafe extern "thiscall" fn capitao_guardado(this: usize, clube: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn get_captain(this: usize, clube: usize, time: u32) -> u32 {
     if clube == 0 {
         aviso_em(0xa8b908, 0x527);
         return 0;
@@ -117,21 +117,21 @@ unsafe extern "thiscall" fn capitao_guardado(this: usize, clube: usize, time: u3
 }
 
 /// Comparador da 0x8976a0: pela devolução (só lê; a linha nula ou fora da faixa mostra a caixa nas duas).
-unsafe extern "thiscall" fn comparar_capitao_guardado(this: usize, clube: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_get_captain(this: usize, clube: usize, time: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(this, clube, time);
     }
     let r = o(this, clube, time);
-    let n = capitao_guardado(this, clube, time);
-    PLACAR.registrar(r == n, || format!("capitao_guardado(clube {:x}, time {}) original={:x} rust={:x}", clube, time, r, n));
+    let n = get_captain(this, clube, time);
+    PLACAR.registrar(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", clube, time, r, n));
     r
 }
 
 /// { 0x897880 } (thiscall, ret 0xc, tactics.cpp): `Tactics::set_captain(clube, &pessoa, time)`, ao aplicar as mudanças da
 /// tela de tática (0x8a80d0). Clube nulo: a caixa da linha 0x579; ponteiro nulo: a da 0x581; 0. A linha do clube
 /// (0x8982b0; −1: 0); grava o dword apontado em +0x52 do registro da linha (+0x601) e devolve 1.
-unsafe extern "thiscall" fn escolher_capitao(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
     if clube == 0 {
         aviso_em(0xa8b908, 0x579);
         return 0;
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn escolher_capitao(this: usize, clube: usize, pessoa: 
 
 /// Comparador da 0x897880: lado a lado no dword do capitão da linha (achada antes pela 0x8982b0, que só lê) e na
 /// devolução. Clube ou ponteiro nulos, ou sem linha: só a original.
-unsafe extern "thiscall" fn comparar_escolher_capitao(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_captain(this: usize, clube: usize, pessoa: usize, time: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(%%I2%%);
     if clube == 0 || pessoa == 0 {
         return o(this, clube, pessoa, time);
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_escolher_capitao(this: usize, clube: usize,
         return o(this, clube, pessoa, time);
     }
     let p = cpz5_d(this + 0x601).wrapping_add((k as isize * 0x91) as usize) + 0x52;
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(p, 4)], || o(this, clube, pessoa, time), || escolher_capitao(this, clube, pessoa, time));
-    PLACAR.registrar(igual && r == n, || format!("escolher_capitao(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(p, 4)], || o(this, clube, pessoa, time), || set_captain(this, clube, pessoa, time));
+    PLACAR.registrar(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", clube, time, r, n, mo, mr));
     r
 }

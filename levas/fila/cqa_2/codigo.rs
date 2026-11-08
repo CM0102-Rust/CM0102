@@ -65,8 +65,8 @@ unsafe fn cqa2_decide(m: usize, forcar: u32) -> bool {
     if o == 0 || cqa2_b(m + 0x18) != 1 {
         return false;
     }
-    let clube_humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
-    clube_humano(o, 0, 1, 0, 0) == 0 || forcar != 0
+    let human_club: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    human_club(o, 0, 1, 0, 0) == 0 || forcar != 0
 }
 
 /// A decisão do convidado (depois da cqa2_decide): 3 aceita, 4 recusa. O fator: 1,65 (1,32 quando o
@@ -123,7 +123,7 @@ unsafe fn cqa2_decisao(m: usize, contar: bool) -> u8 {
 /// push &local; ecx = [0xae2a58] -> thiscall, ret 8). Com 3 ou 4: a vaga do amistoso marcado (0x5c6740) fica com +0x18
 /// = 3 ou com +0x10 = 0 e +0x18 = 0, e o pedido sai (0x5c87b0 com 0). Noutra situação, o pedido sai da lista das
 /// respostas (+0x34d4; 0x68d1f0, o cursor +0xa volta ao começo antes, depois de cada um e no fim).
-unsafe extern "thiscall" fn amistoso_responder_pedido(this: usize, m: usize, forcar: u32) {
+unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: usize, forcar: u32) {
     let a = cqa2_d(m + 0xc);
     if a == 0 {
         return;
@@ -149,8 +149,8 @@ unsafe extern "thiscall" fn amistoso_responder_pedido(this: usize, m: usize, for
         cqa2_pd(pp + 0x14, comp);
         cqa2_pd(pp + 0x18, estadio);
         cqa2_pd(pp + 4, if estadio != 0 { cqa2_d(estadio) } else { usize::MAX });
-        let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-        let sel = e_selecao(c2); // push c2; add esp, 4 -> cdecl
+        let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+        let sel = is_national_team(c2); // push c2; add esp, 4 -> cdecl
         p[0x2c..0x2e].copy_from_slice(&core::ptr::read_unaligned(0xae2c92 as *const u16).to_le_bytes());
         p[0x3a] = if sel != 0 { 9 } else { 1 };
         p[0x40] = 1;
@@ -234,7 +234,7 @@ unsafe fn cqa2_na_lista(l: usize, m: usize) -> bool {
 /// liberado pela 0x5c87b0). O plano, feito antes: a decisão (cqa2_decisao) e a vaga do amistoso (0x5c6740). Com 3 ou 4,
 /// a vaga fica com +0x18 = 3, ou com +0x10 = 0 e +0x18 = 0; sem decisão, o pedido continua com a mesma situação e sai
 /// da lista das respostas (+0x34d4). Sem quem pede ou sem nação num dos dois: só a original.
-unsafe extern "thiscall" fn comparar_amistoso_responder_pedido(this: usize, m: usize, forcar: u32) {
+unsafe extern "thiscall" fn comparar_process_friendly_reply(this: usize, m: usize, forcar: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let a = if m != 0 { cqa2_d(m + 0xc) } else { 0 };
     let outro = if m != 0 { cqa2_outro(m) } else { 0 };
@@ -251,7 +251,7 @@ unsafe extern "thiscall" fn comparar_amistoso_responder_pedido(this: usize, m: u
     } else {
         cqa2_b(m + 0x18) == s && !cqa2_na_lista(cqa2_d(this + 0x34d4), m)
     };
-    PLACAR.registrar(ok, || format!("amistoso_responder_pedido(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
+    PLACAR.registrar(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
 }
 
 /// { 0x5c5570 } (thiscall, ret 4, friendly.cpp, quadro SEH sem destrutor no caminho normal):
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn comparar_amistoso_responder_pedido(this: usize, m: u
 /// Guarda o ponteiro do pedido na lista (0x68d0d0: push 4; push &pedido; ecx = a lista -> thiscall, ret 8). Com o outro
 /// clube na situação 1 e de técnico humano: situação 2 e, se o +0x10 ou o +0x14 é de técnico humano, a notícia 6 ao
 /// outro.
-unsafe extern "thiscall" fn amistoso_enviar_pedido(this: usize, m: usize) {
+unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usize) {
     let o = cqa2_outro(m);
     if cqa2_d(this + 0x34d4) == 0 {
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
@@ -304,7 +304,7 @@ unsafe fn cqa2_conta(l: usize) -> usize {
 /// Comparador da 0x5c5570: só a original (o nó da lista e a notícia alocam). O plano, feito antes: a lista das
 /// respostas fica com um nó a mais e guarda o pedido; a situação vai a 2 quando o outro clube, na situação 1, é de
 /// técnico humano; senão não muda.
-unsafe extern "thiscall" fn comparar_amistoso_enviar_pedido(this: usize, m: usize) {
+unsafe extern "thiscall" fn comparar_send_friendly_request(this: usize, m: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%);
     let outro = cqa2_outro(m);
     let antes = cqa2_conta(cqa2_d(this + 0x34d4));
@@ -312,7 +312,7 @@ unsafe extern "thiscall" fn comparar_amistoso_enviar_pedido(this: usize, m: usiz
     o(this, m);
     let l = cqa2_d(this + 0x34d4);
     let ok = l == 0 || (cqa2_conta(l) == antes + 1 && cqa2_na_lista(l, m) && cqa2_b(m + 0x18) == s);
-    PLACAR.registrar(ok, || format!("amistoso_enviar_pedido(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, cqa2_conta(l), cqa2_b(m + 0x18), s));
+    PLACAR.registrar(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, antes, cqa2_conta(l), cqa2_b(m + 0x18), s));
 }
 
 /// As nações com continente (+0x71) da tabela [0xae23a8] (0x122 bytes cada, [0xae2350] delas), na ordem da tabela.
@@ -340,7 +340,7 @@ unsafe fn cqa2_ordenar(base: usize, n: u32) {
 /// { 0x5ca3e0 } (thiscall, ret 0, friendly.cpp): `Friendly::build_nation_list()`: +0x34fe = 0; aloca [0xae2350] × 4
 /// bytes (0x944e46: push n; add esp, 4 -> cdecl) em +0x34fa (sem memória, a caixa, linha 0x15af); põe nele as nações
 /// com continente (+0x71), contando em +0x34fe, e ordena pela reputação (0x945333 com 0x5cc5f0).
-unsafe extern "thiscall" fn amistoso_lista_das_nacoes(this: usize) {
+unsafe extern "thiscall" fn build_nation_list(this: usize) {
     core::ptr::write_unaligned((this + 0x34fe) as *mut i32, 0);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let p = malloc((cqa2_i(0xae2350) as u32).wrapping_mul(4));
@@ -358,7 +358,7 @@ unsafe extern "thiscall" fn amistoso_lista_das_nacoes(this: usize) {
 
 /// Comparador da 0x5ca3e0: só a original (aloca a lista). O plano, feito antes numa lista local com o mesmo qsort e a
 /// mesma ordem: a conta (+0x34fe) e as nações, na ordem.
-unsafe extern "thiscall" fn comparar_amistoso_lista_das_nacoes(this: usize) {
+unsafe extern "thiscall" fn comparar_build_nation_list(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let mut plano = cqa2_nacoes_com_continente();
     cqa2_ordenar(plano.as_mut_ptr() as usize, plano.len() as u32);
@@ -366,5 +366,5 @@ unsafe extern "thiscall" fn comparar_amistoso_lista_das_nacoes(this: usize) {
     let p = cqa2_d(this + 0x34fa);
     let n = cqa2_i(this + 0x34fe);
     let ok = p == 0 || (n as usize == plano.len() && (0..plano.len()).all(|k| cqa2_d(p + 4 * k) == plano[k]));
-    PLACAR.registrar(ok, || format!("amistoso_lista_das_nacoes: conta {} prevista {}", n, plano.len()));
+    PLACAR.registrar(ok, || format!("build_nation_list: conta {} prevista {}", n, plano.len()));
 }

@@ -136,7 +136,7 @@ pub(crate) const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
 ///
 /// [pt] { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
 /// (a Division 2), disciplina 0xc, só a liga.
-pub(crate) unsafe extern "thiscall" fn construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_FRANCA_2)
 }
 
@@ -162,9 +162,9 @@ pub(crate) unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: 
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUIR_FRANCA_2);
-    cqm5_comparar("construir_franca_2", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SECOND);
+    cqm5_comparar("construct_fra_second", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
 }
 
 /// the second: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as the top division
@@ -173,14 +173,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_franca_2(this: usize, 
 /// [pt] { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
 /// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
-pub(crate) unsafe extern "thiscall" fn regras_da_franca_2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da segunda");
     cqj5_regras(this, &cqj5_segunda(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_2(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_REGRAS_DA_FRANCA_2);
-    cqj5_comparar("regras_da_franca_2", this, cqj5_segunda(this), || o(this), || regras_da_franca_2(this))
+pub(crate) unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_SET_UP_RULES);
+    cqj5_comparar("fra_second_set_up_rules", this, cqj5_segunda(this), || o(this), || fra_second_set_up_rules(this))
 }
 
 /// the second has 20 clubs; no prize fund; TV pays by the division the club came from: 2,000,000 to those relegated
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_2(this: usize) 
 /// fundo (+0x28 = 0, +0xe1 = 2: nada a pagar no fim) e a TV pela divisão de onde o clube veio (+0x5b): 2.000.000 aos
 /// que caíram da primeira ([0x9cf5cc]), 1.500.000 aos que ficaram ([0x9cf5d0]) e 1.500.000 aos que subiram do
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
-pub(crate) unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
     if cqj6_encher(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
         return 0;
@@ -205,9 +205,9 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_franca_2(this: usize) -> u32 {
     1
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_2(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_TABELA_DA_FRANCA_2);
-    cqj6_comparar("tabela_da_franca_2", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_CREATE_TABLE);
+    cqj6_comparar("fra_second_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
 }
 
 /// the second division schedule: 38 rounds, from 31 July to 20 May; in 18 rounds one match goes to a TV slot (day 5,
@@ -216,11 +216,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_franca_2(this: usize) 
 ///
 /// [pt] { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
 /// 38 rodadas (`CQO4_SEGUNDA`). Fonte 0x9ccc0c, linha 0xa7.
-pub(crate) unsafe extern "thiscall" fn calendario_da_segunda_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqo4_calendario(this, fase, rodadas, extra, liga, &CQO4_LIGA_SEGUNDA)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_segunda_francesa(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CALENDARIO_DA_SEGUNDA_FRANCESA);
-    cqo4_comparar("calendario_da_segunda_francesa", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| calendario_da_segunda_francesa(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SECOND_CREATE_SCHEDULE);
+    cqo4_comparar("fra_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_second_create_schedule(this, fase, r, e, l))
 }

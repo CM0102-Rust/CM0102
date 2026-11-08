@@ -8,7 +8,7 @@ unsafe fn cpu1_d(a: usize) -> usize {
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
 /// 0x4cb250, pelas aposentadorias 0x7a7310, pelo amistoso livre 0x5c6b70, pelos prêmios do dia das nações e pelas vagas
 /// da UEFA. Chamada a cada jogador: sem contador.
-unsafe extern "C" fn linha_da_nacao(nacao: usize) -> u8 {
+unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
     for k in 0..0x23usize {
         if cpu1_d(0xb63d60 + 72 * k) == nacao {
             return k as u8; // cpu1: a linha da nacao dada
@@ -17,10 +17,10 @@ unsafe extern "C" fn linha_da_nacao(nacao: usize) -> u8 {
     4
 }
 
-unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
+unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize) -> u8>(%%I0%%)(nacao);
-    let n = linha_da_nacao(nacao);
-    PLACAR.registrar(r == n, || format!("linha_da_nacao(nação {:x}) original={} rust={}", nacao, r, n));
+    let n = key_nation_index_of_nation(nacao);
+    PLACAR.registrar(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -29,7 +29,7 @@ unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
 /// 0. Senão (a original chama 0x53b900 de novo): seleção, 1; a primeira linha cujo continente (+4) é o da nação do clube
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
-unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
+unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if selecao(clube) == 0 {
         let nacao = cpu1_d(clube + 0x53);
@@ -65,14 +65,14 @@ unsafe fn cpu1_caixa(clube: usize) -> bool {
         && !(0..0x23usize).any(|k| cpu1_d(0xb63d60 + 72 * k) == nacao)
 }
 
-unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I1%%);
     if cpu1_caixa(clube) {
         return o(clube);
     }
     let r = o(clube);
-    let n = linha_da_nacao_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("linha_da_nacao_do_clube(clube {:x}) original={} rust={}", clube, r, n));
+    let n = key_nation_index_of_club(clube);
+    PLACAR.registrar(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -81,7 +81,7 @@ unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
 /// (+0x15, sem sinal) abaixo de 60, e o dia de hoje ([0xae2c90], com sinal) antes do dia de início, o ano anterior. A
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
-unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
+unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) -> u16 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(0x669360usize);
     let ano = *(0xae2c92 as *const u16);
@@ -96,13 +96,13 @@ unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
     ano
 }
 
-unsafe extern "C" fn comparar_ano_da_temporada_do_clube(clube: usize) -> u16 {
+unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: usize) -> u16 {
     let o = orig::<unsafe extern "C" fn(usize) -> u16>(%%I2%%);
     if clube != 0 && cpu1_caixa(clube) {
         return o(clube);
     }
     let r = o(clube);
-    let n = ano_da_temporada_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("ano_da_temporada_do_clube(clube {:x}) original={} rust={}", clube, r, n));
+    let n = key_nation_get_club_season_year(clube);
+    PLACAR.registrar(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
     r
 }

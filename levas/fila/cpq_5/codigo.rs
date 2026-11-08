@@ -34,8 +34,8 @@ unsafe fn cpq5_pessoa(id: usize) -> usize {
 /// O clube do contrato da pessoa da oferta (+0xc): 0x4cf5a0 com o gerente de contratos [0xae1050], guardado em
 /// [0xae1080]; contrato de tipo 5 (+0x35 & 0x3f) não conta.
 unsafe fn cpq5_vendedor(oferta: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpq5_d(0xae1050), cpq5_pessoa(cpq5_d(oferta + 0xc)));
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpq5_d(0xae1050), cpq5_pessoa(cpq5_d(oferta + 0xc)));
     *(0xae1080 as *mut usize) = c;
     if c != 0 && cpq5_b(c + 0x35) & 0x3f != 5 {
         cpq5_clube(cpq5_d(c + 4))
@@ -61,7 +61,7 @@ fn cpq5_motivo_que_libera(m: u32) -> bool {
 /// do clube vendedor mais 7 dias (0x669bd0; fora da temporada, hoje; sem vendedor, a caixa "Error" 0x31da); 3 o dia
 /// seguinte ao fim do contrato (+0x2d), nunca antes de hoje (sem contrato, hoje). Outros tipos não gravam. Devolve o
 /// motivo (só o ax: 0 fora dos tipos 1 e 4). O vendedor (0x4cf5a0, guardado em [0xae1080]) é calculado sempre.
-unsafe extern "thiscall" fn data_de_conclusao_da_oferta(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
+unsafe extern "thiscall" fn transfer_manager_get_offer_completion_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let mais: unsafe extern "thiscall" fn(*const [u32; 2], *mut [u32; 2], u32) -> *const [u32; 2] = core::mem::transmute(0x54c5b0usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
     let hoje = CPQ5_HOJE as *const [u32; 2];
@@ -94,8 +94,8 @@ unsafe extern "thiscall" fn data_de_conclusao_da_oferta(this: usize, oferta: usi
             }
         }
         3 => {
-            let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-            let c = contrato_de(cpq5_d(0xae1050), cpq5_pessoa(cpq5_d(oferta + 0xc)));
+            let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+            let c = contract_of(cpq5_d(0xae1050), cpq5_pessoa(cpq5_d(oferta + 0xc)));
             if c != 0 {
                 let r = mais((c + 0x2d) as *const [u32; 2], &mut t2, 1);
                 copia(saida, &mut t, r);
@@ -118,11 +118,11 @@ unsafe extern "thiscall" fn data_de_conclusao_da_oferta(this: usize, oferta: usi
 /// regras da nação do comprador e, com o +4 da oferta e um vendedor (0x4cf5a0, guardado em [0xae1080]), da do vendedor:
 /// o primeiro dia que as duas permitem (ou cujo motivo libera: 0x14, 0x15, 0x1f, 0x11) vai para a saída e devolve 0;
 /// sem dia, devolve o primeiro motivo (9 não conta) e a saída fica hoje. Só o ax é devolvido.
-unsafe extern "thiscall" fn primeiro_dia_permitido_da_oferta(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
+unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let padrao: unsafe extern "thiscall" fn(*mut [u32; 2]) -> usize = core::mem::transmute(0x54a110usize);
     let mais: unsafe extern "thiscall" fn(*const [u32; 2], *mut [u32; 2], u32) -> *const [u32; 2] = core::mem::transmute(0x54c5b0usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let hoje = CPQ5_HOJE as *const [u32; 2];
     let (mut dia, mut limite, mut inicio, mut t, mut t2) = ([0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2]);
     padrao(&mut dia);
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn primeiro_dia_permitido_da_oferta(this: usize, oferta
     copia(saida, &mut t, hoje);
     let pessoa = cpq5_pessoa(cpq5_d(oferta + 0xc));
     if cpq5_b(oferta + 0x30) & 0xf == 4 {
-        let c = contrato_de(cpq5_d(0xae1050), pessoa);
+        let c = contract_of(cpq5_d(0xae1050), pessoa);
         if c != 0 {
             copia(&mut inicio, &mut t, (c + 0x2d) as *const [u32; 2]);
             t = *hoje;
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn primeiro_dia_permitido_da_oferta(this: usize, oferta
 /// dia do ano, com sinal). Dentro de uma janela, o início é hoje e o fim o da janela (15 de janeiro do ano seguinte, se
 /// for a de dezembro); antes de julho, 1º a 31 de julho; entre agosto e 14 de dezembro, 15 de dezembro a 15 de janeiro
 /// do ano seguinte. O fim só com `fim` não nulo. Não usa o ecx (os chamadores passam o gerente).
-unsafe extern "stdcall" fn janela_fixa_de_transferencias(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
+unsafe extern "stdcall" fn transfer_manager_get_next_window_dates(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
     let dma: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> *mut [u32; 2] = core::mem::transmute(0x549f70usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
     let hoje = CPQ5_HOJE as *const [u32; 2];
@@ -254,27 +254,27 @@ fn cpq5_regioes(saidas: &[usize]) -> Vec<(usize, usize)> {
 
 /// Comparador: lado a lado pela saída, [0xae1080] e as estáticas das datas, e pelo motivo (as regras, a temporada e a
 /// janela só calculam).
-unsafe extern "thiscall" fn comparar_data_de_conclusao_da_oferta(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
+unsafe extern "thiscall" fn comparar_transfer_manager_get_offer_completion_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I0%%);
     let reg = cpq5_regioes(&[saida as usize]);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, oferta, saida), || data_de_conclusao_da_oferta(this, oferta, saida));
-    PLACAR.registrar(igual && ro == rr, || format!("data_de_conclusao_da_oferta(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, oferta, saida), || transfer_manager_get_offer_completion_date(this, oferta, saida));
+    PLACAR.registrar(igual && ro == rr, || format!("transfer_manager_get_offer_completion_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
     ro
 }
 
 /// Comparador: lado a lado pela saída, [0xae1080] e as estáticas das datas, e pelo motivo.
-unsafe extern "thiscall" fn comparar_primeiro_dia_permitido_da_oferta(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
+unsafe extern "thiscall" fn comparar_find_next_allowed_transfer_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut [u32; 2]) -> u16>(%%I1%%);
     let reg = cpq5_regioes(&[saida as usize]);
-    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, oferta, saida), || primeiro_dia_permitido_da_oferta(this, oferta, saida));
-    PLACAR.registrar(igual && ro == rr, || format!("primeiro_dia_permitido_da_oferta(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
+    let (ro, rr, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this, oferta, saida), || find_next_allowed_transfer_date(this, oferta, saida));
+    PLACAR.registrar(igual && ro == rr, || format!("find_next_allowed_transfer_date(tipo {}) motivo {} x {}, memória igual {}", cpq5_b(oferta + 0x30) & 0xf, ro, rr, igual));
     ro
 }
 
 /// Comparador: lado a lado pelo início e o fim (só datas, sem estáticas).
-unsafe extern "stdcall" fn comparar_janela_fixa_de_transferencias(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
+unsafe extern "stdcall" fn comparar_transfer_manager_get_next_window_dates(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
     let o = orig::<unsafe extern "stdcall" fn(*mut [u32; 2], *mut [u32; 2])>(%%I2%%);
     let reg = cpq5_regioes(&[inicio as usize, fim as usize]);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(inicio, fim), || janela_fixa_de_transferencias(inicio, fim));
-    PLACAR.registrar(igual, || format!("janela_fixa_de_transferencias(hoje {:x}, fim {}) diferente", *(CPQ5_HOJE as *const u32), !fim.is_null()));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(inicio, fim), || transfer_manager_get_next_window_dates(inicio, fim));
+    PLACAR.registrar(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(CPQ5_HOJE as *const u32), !fim.is_null()));
 }

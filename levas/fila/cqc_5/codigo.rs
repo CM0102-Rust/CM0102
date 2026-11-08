@@ -69,7 +69,7 @@ unsafe fn cqc5_ao_calendario(p: usize) {
 /// mãos, com a copa ainda em [0xadadfc]: a volta +0x22 dias depois (0x549ef0, 0x54c5b0, 0x417c10), o código +4, a
 /// fatia pelo dia da semana (0x54a3f0: sábado ou domingo 1, senão 2), mando invertido, o estádio e o calendário.
 /// Devolve 1.
-unsafe extern "thiscall" fn copa_criar_jogos_do_confronto(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
+unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
     let id = cqc5_d(cqc5_d(this + 4));
     let ri = rodada as i16 as i32;
     let (mut k, mut adiar) = (confronto, adiar);
@@ -268,7 +268,7 @@ unsafe fn cqc5_jogos(clube: u32, comp: u32, (ano, dia): (i32, i32)) -> u32 {
 /// técnicos). O plano, feito antes: o confronto escolhido (o −1 procura a marca 1 ou 2), a devolução, a marca (2 ao
 /// adiar, 3 ao criar) e, criando com os dois times, os jogos do mandante na competição sobem 1 (2 na de duas mãos com a
 /// copa ainda ativa).
-unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(%%I0%%);
     let ri = rodada as i16 as i32;
     let id = cqc5_d(cqc5_d(this + 4)) as u32;
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, 
         }
         if k == -1 {
             let r = o(this, rodada, confronto, adiar);
-            PLACAR.registrar(r == 0, || format!("copa_criar_jogos_do_confronto(rodada {}) sem confronto marcado: {}", ri, r));
+            PLACAR.registrar(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
             return r;
         }
     }
@@ -321,7 +321,7 @@ unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, 
         depois = cqc5_jogos(ic, id, fim);
         ok = ok && depois == antes + esperado;
     }
-    PLACAR.registrar(ok, || format!("copa_criar_jogos_do_confronto(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
+    PLACAR.registrar(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
         ri, k, ad, r, marca, antes, depois, esperado));
     r
 }
@@ -333,7 +333,7 @@ unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, 
 /// clube dele (+0xa7, 6 bytes). A notícia 0x26: 0 = o id da copa, 1 = +0x3a, 2 = o código da rodada (+7), 3/4 = o
 /// mandante e −1 ou os dois possíveis, 5/6 = o visitante e −1 ou os dois possíveis; aos técnicos de cada clube dela
 /// (0x7861e0: push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8; os possíveis só se não nulos).
-unsafe extern "thiscall" fn copa_noticia_do_confronto_pendente(this: usize, rodada: u32, confronto: u32) {
+unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: u32) {
     let ri = rodada as i16 as i32;
     let t = cpq11_confronto(this, ri, confronto as i16 as i32);
     let (mut a1, mut a2, mut b1, mut b2, mut casa) = (0usize, 0usize, 0usize, 0usize, 0usize);
@@ -425,7 +425,7 @@ unsafe extern "thiscall" fn copa_noticia_do_confronto_pendente(this: usize, roda
 }
 
 /// Comparador da 0x522950: só a original (a notícia vai aos técnicos e não tem outro efeito).
-unsafe extern "thiscall" fn comparar_copa_noticia_do_confronto_pendente(this: usize, rodada: u32, confronto: u32) {
+unsafe extern "thiscall" fn comparar_post_draw_news(this: usize, rodada: u32, confronto: u32) {
     orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(%%I1%%)(this, rodada, confronto) // ponytail: só a notícia
 }
 
@@ -439,7 +439,7 @@ unsafe extern "thiscall" fn comparar_copa_noticia_do_confronto_pendente(this: us
 /// da data; push o código 1, ou 3 se a janela fecha (+5), com os bytes altos do mesmo dword; push janela -> thiscall,
 /// ret 0xc); ontem e janela que abre: o virtual com 0 e as ofertas em espera da nação das regras (+0xa; 0x8c4e10: push
 /// nação; mov ecx, esi -> thiscall, ret 4); daqui a uma semana e janela que abre: o virtual com 2.
-unsafe extern "thiscall" fn janelas_avisos_do_dia(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn update_transfer_window_news(this: usize, hoje: usize) {
     let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x54cfb0usize);
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let mais_semanas: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c770usize);
@@ -513,6 +513,6 @@ unsafe extern "thiscall" fn janelas_avisos_do_dia(this: usize, hoje: usize) {
 
 /// Comparador da 0x8c6bc0: só a original (ela só grava nas locais; os avisos das regras alocam notícias e as ofertas
 /// em espera mudam de status e são reagendadas).
-unsafe extern "thiscall" fn comparar_janelas_avisos_do_dia(this: usize, hoje: usize) {
+unsafe extern "thiscall" fn comparar_update_transfer_window_news(this: usize, hoje: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, hoje) // ponytail: nada próprio a conferir
 }

@@ -9,7 +9,7 @@
 /// o fim (0x6b98c0 com −1; estado +0x67, 2 ou 8 contam em [[0xb67a50]+0x25]), fora do 8 cria o resumo
 /// (+0x5f, 0xd7a bytes com 2 objetos de 0x625 em +0x11f; sem ele erro 0xa68) e registra (0x7293f0),
 /// libera o motor e tira a partida da fila [0xde2f70] (0x90d6b0).
-unsafe extern "C" fn largar_partida_assistida() {
+unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     crate::comparacao::ramo("telas largar a partida assistida");
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
@@ -21,7 +21,7 @@ unsafe extern "C" fn largar_partida_assistida() {
     let laco: unsafe extern "thiscall" fn(usize, i32) -> u32 = core::mem::transmute(0x6b98c0usize);
     let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
     let registrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7293f0usize);
-    let destruir_motor: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6b97a0usize);
+    let destroy_engine: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x6b97a0usize);
     let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x90d6b0usize);
     let vez = || *(0xb77c7a as *const i16) as isize;
 
@@ -98,7 +98,7 @@ unsafe extern "C" fn largar_partida_assistida() {
     }
     let m = core::ptr::read_unaligned(motor);
     if m != 0 {
-        destruir_motor(m);
+        destroy_engine(m);
         liberar(m);
     }
     core::ptr::write_unaligned(motor, 0);
@@ -110,7 +110,7 @@ unsafe extern "C" fn largar_partida_assistida() {
 /// à agenda [0xae2a58] (0x5acbe0) os jogos daquela data e competição numa lista local (0x68d020) e copia
 /// para `saida` o primeiro com o clube +4 na casa (+0xc) ou fora (+0x10). Devolve 1 se achou. Índice
 /// fora de 0..[this+0x1c] ou saída nula: a original (caixa de erro, 0).
-unsafe extern "thiscall" fn ficha_do_registro(estat: usize, k: i32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%)(estat, k, saida);
     }
@@ -145,16 +145,16 @@ unsafe extern "thiscall" fn ficha_do_registro(estat: usize, k: i32, saida: usize
 // ponytail: a partida deixada cria e libera o motor, anda a partida até o fim e a registra no arquivo
 // temporário: rodar duas vezes não dá, então o comparador só chama a original; a cópia se prova no
 // modo Rust (o ramo), na sessão do Lucas com rede (só um jogador da rede saindo a chama).
-unsafe extern "C" fn comparar_largar_partida_assistida() {
+unsafe extern "C" fn comparar_match_day_drop_viewer_and_finish_match() {
     orig::<unsafe extern "C" fn()>(%%I0%%)()
 }
 
-unsafe extern "thiscall" fn comparar_ficha_do_registro(estat: usize, k: i32, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize, k: i32, saida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return o(estat, k, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 0x4f)], || o(estat, k, saida), || ficha_do_registro(estat, k, saida));
-    PLACAR.registrar(igual && r == n, || format!("ficha_do_registro(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 0x4f)], || o(estat, k, saida), || find_record_fixture(estat, k, saida));
+    PLACAR.registrar(igual && r == n, || format!("find_record_fixture(k {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
     r
 }

@@ -18,7 +18,7 @@ unsafe fn cqa5_b(a: usize) -> u8 {
 /// (0x849ce0; achada, 0x843e10 com evento 1 e tipo 0). É a recusa da transferência (0x8bf680) sem o desassossego, sem
 /// a transferência futura, sem fechar as ofertas de contrato ligadas e sem a parte dos jogadores da troca no fim: os
 /// ajudantes `cpx1_*` (com o ensaio CPX1_ENSAIO) servem igual.
-unsafe extern "thiscall" fn recusar_oferta_de_emprestimo(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = *vaga;
     if marcar != 0 {
         *((o + 0x2d) as *mut u8) = 1;
@@ -42,9 +42,9 @@ unsafe extern "thiscall" fn recusar_oferta_de_emprestimo(this: usize, vaga: *mut
 
 /// Comparador da 0x8bfa30: o da recusa e da retirada (`cpx1_comparar`: a cópia em ensaio e a original do mesmo estado;
 /// iguais o estado, +0x10, a marca +4 dos jogadores da troca e a marca de oferta da pessoa).
-unsafe extern "thiscall" fn comparar_recusar_oferta_de_emprestimo(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
+unsafe extern "thiscall" fn comparar_reject_loan_offer(this: usize, vaga: *mut usize, marcar: u32, motivo: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32, u32)>(%%I0%%);
-    cpx1_comparar("recusar_oferta_de_emprestimo", this, vaga, || o(this, vaga, marcar, motivo), || recusar_oferta_de_emprestimo(this, vaga, marcar, motivo))
+    cpx1_comparar("reject_loan_offer", this, vaga, || o(this, vaga, marcar, motivo), || reject_loan_offer(this, vaga, marcar, motivo))
 }
 
 /// O ensaio do comparador da 0x8cd450: a cópia roda sem liberar o jogador escolhido (0x86d800 e 0x8c1af0 mexem no
@@ -121,7 +121,7 @@ unsafe fn cqa5_na_fila_livre(p: usize) -> bool {
 /// treinadores (+0x19f), 3 fisioterapeutas (+0x1cf), 7 olheiros (+0x1b3) — os do clube contam por ponteiro, os do
 /// parceiro só com id vivo — e o auxiliar (+0xd3 do clube ou do parceiro ocupado); passou do limite, o motivo + 0x22 e 0.
 /// Devolve 1.
-unsafe extern "thiscall" fn vaga_no_elenco_para_a_oferta(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
     if clube == 0 {
         aviso_em(0xa8d514, 0x2c3b);
         return 0;
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn vaga_no_elenco_para_a_oferta(this: usize, clube: usi
 /// os cursores da fila livre e da troca). Sem liberação: iguais a devolução e essas regiões. Com liberação (a cópia
 /// guardou o escolhido): iguais a devolução e o escolhido ter saído do clube (o contrato dele, pela 0x4cf5a0 que só
 /// lê, sem o clube); o resto a original refaz ao liberar. Clube nulo: a caixa, só a original.
-unsafe extern "thiscall" fn comparar_vaga_no_elenco_para_a_oferta(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
+unsafe extern "thiscall" fn comparar_check_squad_limits(this: usize, clube: usize, o: usize, contar_fila: u32, motivo: *mut u16) -> u32 {
     let f = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u16) -> u32>(%%I1%%);
     if clube == 0 {
         return f(this, clube, o, contar_fila, motivo);
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn comparar_vaga_no_elenco_para_a_oferta(this: usize, c
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CQA5_ENSAIO = true;
     CQA5_LIBERADO = 0;
-    let n = crate::aleatorio::pausar_rastro(|| vaga_no_elenco_para_a_oferta(this, clube, o, contar_fila, motivo));
+    let n = crate::aleatorio::pausar_rastro(|| check_squad_limits(this, clube, o, contar_fila, motivo));
     CQA5_ENSAIO = false;
     let liberado = CQA5_LIBERADO;
     let mr = crate::comparacao::Memoria::ler(&regioes);
@@ -334,7 +334,7 @@ unsafe extern "thiscall" fn comparar_vaga_no_elenco_para_a_oferta(this: usize, c
         c == 0 || cpx1_clube(cqa5_d(c + 4)) != clube
     };
     PLACAR.registrar(igual && r == n, || {
-        format!("vaga_no_elenco_para_a_oferta(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", clube, o, contar_fila, r, n, liberado, mo, mr)
+        format!("check_squad_limits(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", clube, o, contar_fila, r, n, liberado, mo, mr)
     });
     r
 }
@@ -344,7 +344,7 @@ unsafe extern "thiscall" fn comparar_vaga_no_elenco_para_a_oferta(this: usize, c
 /// [0xae1080]) e o clube; sem os dois, 0. A busca binária (0x946464: cdecl(chave, vetor [this+0x880], conta
 /// [this+0x888], 0xd, 0x8e54d0)) pela chave com o id do clube (+1, de novo pelo contrato) e o da pessoa (+9), os dois
 /// únicos campos que a comparação lê; achada, devolve o registro; senão a marca 8 sai e 0.
-unsafe extern "thiscall" fn percentual_da_proxima_venda_achado(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn find_next_sale_percentage(this: usize, p: usize) -> usize {
     let m = (cqa5_d(this + 0x86e).wrapping_add(cqa5_d(p).wrapping_mul(8))) as *mut u8;
     if *m & 8 == 0 {
         return 0;
@@ -368,10 +368,10 @@ unsafe extern "thiscall" fn percentual_da_proxima_venda_achado(this: usize, p: u
 }
 
 /// Comparador da 0x8d0dd0: lado a lado na marca da pessoa, em [0xae1080] e na devolução (só lê o resto).
-unsafe extern "thiscall" fn comparar_percentual_da_proxima_venda_achado(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_next_sale_percentage(this: usize, p: usize) -> usize {
     let f = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa5_d(this + 0x86e).wrapping_add(cqa5_d(p).wrapping_mul(8));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1), (0xae1080, 4)], || f(this, p), || percentual_da_proxima_venda_achado(this, p));
-    PLACAR.registrar(igual && r == n, || format!("percentual_da_proxima_venda_achado(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1), (0xae1080, 4)], || f(this, p), || find_next_sale_percentage(this, p));
+    PLACAR.registrar(igual && r == n, || format!("find_next_sale_percentage(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
     r
 }

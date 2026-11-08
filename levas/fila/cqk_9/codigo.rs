@@ -82,17 +82,17 @@ unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase: u32, jogo
 /// de não classificado (fase 0x413 na temporada, 0x47b na fase 0, 0x414 na 1) e -1; na fase 2, o vencedor (1) ganha
 /// o registro da final (0x417, 0x96, peso 0x50), quem passa (0) o da rodada do jogo e os eliminados (-1, 2) o de
 /// eliminação, com peso de 50 a 70 pela rodada; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
-unsafe extern "thiscall" fn cqk9_destino_na_mls(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
     cqk9_destino(this, clube, situacao, fase, jogo, true)
 }
 
 /// Comparador: só a original (os registros alocam e vão para o histórico do técnico; não rodam duas vezes) com a
 /// devolução prevista pelo ensaio.
-unsafe extern "thiscall" fn comparar_cqk9_destino_na_mls(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let n = cqk9_destino(this, clube, situacao, fase, jogo, false);
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I0%%)(this, clube, situacao, fase, a4, jogo, a6);
-    PLACAR.registrar(r == n, || format!("cqk9_destino_na_mls({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
+    PLACAR.registrar(r == n, || format!("usa_mls_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32));
     r
 }
 
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn comparar_cqk9_destino_na_mls(this: usize, clube: usi
 /// tabela geral (`League::add_result` 0x685d30) com a marca +0x42 do jogo em -1 quando abaixo de 2; no estágio 1 (a
 /// temporada regular), vai também para as tabelas das duas conferências (os estágios 0 e 1, pelo slot 2 deles, com a
 /// marca 0 e 1 e sem o bloco de estatísticas +8, guardado e devolvido). Devolve 1.
-unsafe extern "thiscall" fn cqk9_resultado_na_mls(this: usize, jogo: usize, estat: u32) -> u32 {
+unsafe extern "thiscall" fn usa_mls_add_result(this: usize, jogo: usize, estat: u32) -> u32 {
     if (*((jogo + 0x42) as *const i8)) < 2 {
         *((jogo + 0x42) as *mut u8) = 0xff;
     }
@@ -128,13 +128,13 @@ unsafe extern "thiscall" fn cqk9_resultado_na_mls(this: usize, jogo: usize, esta
 
 /// Comparador: só a original (ponytail: o resultado entra nas tabelas; não roda duas vezes), com o plano: a devolução
 /// 1, a marca +0x42 do jogo (1 no estágio 1; senão -1 se estava abaixo de 2) e o bloco +8 devolvido.
-unsafe extern "thiscall" fn comparar_cqk9_resultado_na_mls(this: usize, jogo: usize, estat: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_add_result(this: usize, jogo: usize, estat: u32) -> u32 {
     let marca = *((jogo + 0x42) as *const i8);
     let bloco = cqk9_d(this + 8);
     let esperada = if cqk9_d(this + 0x30) == 1 { 1 } else if marca < 2 { -1 } else { marca };
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I1%%)(this, jogo, estat);
     let (m, b) = (*((jogo + 0x42) as *const i8), cqk9_d(this + 8));
-    PLACAR.registrar(r == 1 && m == esperada && b == bloco, || format!("cqk9_resultado_na_mls({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
+    PLACAR.registrar(r == 1 && m == esperada && b == bloco, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this, jogo, r, m, esperada, b, bloco));
     r
 }
 
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn comparar_cqk9_resultado_na_mls(this: usize, jogo: us
 /// 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380), 0x414 (o Oeste) para Colorado, Dallas, Kansas City, Los Angeles,
 /// San Jose e Chicago (0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c); 0 para clube cuja liga (+0x57) não
 /// é a MLS (chave 0x9cf590); clube da MLS fora dos doze: a caixa "Error" (a original).
-unsafe extern "C" fn cqk9_conferencia_das_estrelas(clube: usize) -> u16 {
+unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
     let nacao = cqk9_d(clube + 0x57);
     if nacao == 0 || cqk9_d(nacao) != cqk9_d(0x9cf590) {
         return 0;
@@ -162,13 +162,13 @@ unsafe extern "C" fn cqk9_conferencia_das_estrelas(clube: usize) -> u16 {
 }
 
 /// Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
-unsafe extern "C" fn comparar_cqk9_conferencia_das_estrelas(clube: usize) -> u16 {
+unsafe extern "C" fn comparar_usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
     let r = orig::<unsafe extern "C" fn(usize) -> u16>(%%I2%%)(clube);
     let nacao = cqk9_d(clube + 0x57);
     if nacao != 0 && cqk9_d(nacao) == cqk9_d(0x9cf590) && r == 0 {
         return r; // o caso de erro (a caixa já saiu na original)
     }
-    let n = cqk9_conferencia_das_estrelas(clube);
-    PLACAR.registrar(r == n, || format!("cqk9_conferencia_das_estrelas({:x}) original={:x} rust={:x}", clube, r, n));
+    let n = usa_mls_get_club_all_star_conference(clube);
+    PLACAR.registrar(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", clube, r, n));
     r
 }

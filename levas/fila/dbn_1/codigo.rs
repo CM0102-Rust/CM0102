@@ -103,7 +103,7 @@ unsafe fn nascimento_extra_dbn1(s: usize) {
 /// escolhida e reputação ≠ 0) ou reputação > 7500, fora os fracos da 0x9cf2e4, ganha um treinador (cargo 5, +0x28 = 5)
 /// sem clube e sem seleção (não vai para a casa). Mais de 23.000: caixa (0x65f, 0x6aa, 0x6f5, 0x734) e 0. Grava "generated
 /// %ld extra non playing staff" em 0xde1f64 e devolve 1. A local do par só é lida quando 0x540a50 devolve parceiro.
-unsafe extern "C" fn gerar_comissao_extra() -> u32 {
+unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let gi = |a: usize| gi_dbn1(a);
@@ -192,7 +192,7 @@ unsafe extern "C" fn gerar_comissao_extra() -> u32 {
 /// novos (nulo o que sai), monta [0xae23fc] (linha nova → id antigo, malloc), compacta a tabela (id = linha nova),
 /// realloc no lugar (outro endereço: caixa 0x4ca e fim) e grava "Club table has %d entries" em 0xde1f64. Sem [0xae23a8]
 /// (caixa) ou sem memória no new: a original; sem memória nos calloc: caixa e fim, como a original.
-unsafe extern "C" fn cortar_tabela_de_clubes(tamanho: u32) {
+unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     if *(0xae23a8 as *const usize) == 0 {
         return orig::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho);
     }
@@ -391,7 +391,7 @@ unsafe extern "C" fn cortar_tabela_de_clubes(tamanho: u32) {
 /// (+0x5d) é nula ou escolhida (+0x11c), copiada para a frente na própria tabela. realloc (0x945667) ao tamanho novo,
 /// que vira [0xae23d4] (sem conferir o endereço); [0xae237c] = linhas; [0xae23dc] (a parte das seleções) = tabela +
 /// (linhas − [0xae2384]) × 26; qsort (0x945333) com 0x540780.
-unsafe extern "C" fn podar_historico_de_competicoes() {
+unsafe extern "C" fn database_prune_comp_history_table() {
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     crate::comparacao::ramo("criação podar o histórico de competições");
@@ -425,7 +425,7 @@ fn diferenca_dbn1(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::Memor
 /// Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
 /// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
 /// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
-unsafe extern "C" fn comparar_gerar_comissao_extra() -> u32 {
+unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32 {
     let o = orig::<unsafe extern "C" fn() -> u32>(%%I0%%);
     if cargo_8_fora_do_clube_dbn1() {
         return o();
@@ -436,11 +436,11 @@ unsafe extern "C" fn comparar_gerar_comissao_extra() -> u32 {
     regioes.push((rd_dbn1(0xae23b4), gi_dbn1(0xae235c).max(0) as usize * 581));
     regioes.push((rd_dbn1(0xae23bc), gi_dbn1(0xae2364).max(0) as usize * 110));
     let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(),
-        || crate::aleatorio::sem_contar(|| gerar_comissao_extra()));
+        || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
     let onde = diferenca_dbn1(&mo, &mr);
     PLACAR.registrar(igual && r == m, || match onde {
-        Some((a, x, y)) => format!("gerar_comissao_extra: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
-        None => format!("gerar_comissao_extra: original={} rust={}", r, m),
+        Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
+        None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
     });
     // ponytail: 29 MB por foto; não voltam às sobras
     mo.0.clear();
@@ -450,12 +450,12 @@ unsafe extern "C" fn comparar_gerar_comissao_extra() -> u32 {
 
 // ponytail: compacta e realoca a tabela de clubes, aloca [0xae23fc] e troca as chaves de clube; não roda duas
 // vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst tem a tabela cortada).
-unsafe extern "C" fn comparar_cortar_tabela_de_clubes(tamanho: u32) {
+unsafe extern "C" fn comparar_database_trim_club_table(tamanho: u32) {
     orig::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho)
 }
 
 // ponytail: compacta e realoca o histórico de competições; não roda duas vezes. Só a original; a cópia é provada
 // pela prova do save (o histórico podado vai para o .qst).
-unsafe extern "C" fn comparar_podar_historico_de_competicoes() {
+unsafe extern "C" fn comparar_database_prune_comp_history_table() {
     orig::<unsafe extern "C" fn()>(%%I2%%)()
 }

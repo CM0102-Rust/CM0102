@@ -47,7 +47,7 @@ fn cqq10_uefa_rodadas(b: i8) -> ([Cql10R; 9], usize) {
 /// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
 /// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `cqq10_uefa_rodadas` e rodadas = as gravadas. Fora da −1,
 /// 0.
-unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -72,10 +72,10 @@ unsafe extern "thiscall" fn cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *
     t
 }
 
-unsafe extern "thiscall" fn comparar_cqq10_uefa_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
+unsafe extern "thiscall" fn comparar_uefa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    cql10_comparar("cqq10_uefa_tabela", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| cqq10_uefa_tabela(this, fase, r, e, s))
+    cql10_comparar("uefa_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
+        |r, e, s| uefa_cup_create_round_table(this, fase, r, e, s))
 }
 
 unsafe fn cqq10_d(a: usize) -> usize {
@@ -142,13 +142,13 @@ unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
     ((k == cqq10_w(this + 0x3e) as i32) as i32, cqq10_w(this + 0x3e) as i32)
 }
 
-unsafe extern "thiscall" fn cqq10_intertoto_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usize) -> i32 {
     cqq10_intertoto(this).0
 }
 
 /// Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
-unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_intertoto_cup_collect_entrants(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_inscritos(this: usize) -> i
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqq10_intertoto_inscritos({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -212,13 +212,13 @@ unsafe fn cqq10_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     k as u16
 }
 
-unsafe extern "thiscall" fn cqq10_intertoto_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
+unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     cqq10_lista(this, saida, ativos)
 }
 
 /// Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
 /// própria, comparada na conta e nos ponteiros, e a libera.
-unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usize, saida: *mut usize, ativos: u32) -> u16 {
+unsafe extern "thiscall" fn comparar_intertoto_cup_collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(%%I2%%);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
@@ -233,6 +233,6 @@ unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usize, saida: *
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(s2);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqq10_intertoto_lista({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("intertoto_cup_collect_club_list({:#x}, {}) devolveu {} x {} lista {}", this, ativos as u8, a, b, lista));
     a
 }

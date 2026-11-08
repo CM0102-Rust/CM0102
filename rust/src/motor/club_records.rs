@@ -172,9 +172,9 @@ pub(crate) unsafe fn cpx12_cadeia(liga0: usize) -> Vec<usize> {
 /// reputação maior (melhor) ou menor (pior), ou a mesma com posição melhor ou pior: grava a posição (+0/+7), a
 /// competição (+1/+8) e o ano (+5/+0xc; 0 na temporada, 0x669950 em sempre). Em sempre (com `sempre`; id acima de
 /// [0xae2378] também é "sem"), a fila da notícia (cpx12_fila_do_recorde). Devolve 1.
-pub(crate) unsafe extern "thiscall" fn recordes_de_posicao_na_liga(this: usize, liga0: usize, sempre: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
     if liga0 == 0 || read_u8(liga0 + 0x44) != 0xff {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_RECORDES_DE_POSICAO_NA_LIGA)(this, liga0, sempre); // as caixas
+        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0, sempre); // as caixas
     }
     let ordenar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let aplica: unsafe extern "stdcall" fn(u32, usize, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_RECORD_TYPE_APPLIES);
@@ -238,8 +238,8 @@ pub(crate) unsafe extern "thiscall" fn recordes_de_posicao_na_liga(this: usize, 
 /// em ensaio (sem ordenar), a partir dos mesmos recordes: os 14 primeiros bytes dos registros da temporada e de sempre
 /// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
 /// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_posicao_na_liga(this: usize, liga0: usize, sempre: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_RECORDES_DE_POSICAO_NA_LIGA);
+pub(crate) unsafe extern "thiscall" fn comparar_update_league_position_records(this: usize, liga0: usize, sempre: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
     if liga0 == 0 || read_u8(liga0 + 0x44) != 0xff {
         return o(this, liga0, sempre); // ponytail: as caixas, só a original
     }
@@ -277,11 +277,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_posicao_na_liga(this
     let mo = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     CPX12_ENSAIO = true;
-    let rr = crate::aleatorio::pausar_rastro(|| recordes_de_posicao_na_liga(this, liga0, sempre));
+    let rr = crate::aleatorio::pausar_rastro(|| update_league_position_records(this, liga0, sempre));
     CPX12_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     mo.escrever();
-    PLACAR.registrar(ro == rr && mo == mr, || format!("recordes_de_posicao_na_liga({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
+    PLACAR.registrar(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0, sempre, ro, mo, rr, mr));
     ro
 }
 
@@ -298,7 +298,7 @@ pub(crate) static mut CPX12_ENSAIO_FILA: bool = false;
 /// 0x4528d0) ou de sempre (0x452710), sem criar; entregue à nação (0x7863f0) da seleção ou ao técnico do clube
 /// (0x7861e0). Fila com capacidade (+0x28) de 100 ou mais: solta (0x9452ca) e zera +0x24/+0x28. A conta (+0x2c) volta
 /// a 0. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn noticias_de_recordes(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
     if read_usize(this + 0x24) == 0 {
         return 1;
     }
@@ -348,18 +348,18 @@ pub(crate) unsafe extern "thiscall" fn noticias_de_recordes(this: usize) -> u32 
 
 /// Comparador: a cópia em ensaio (sem preencher nem entregar, sem soltar) roda antes, enquanto a fila está viva, e a
 /// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_noticias_de_recordes(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_NOTICIAS_DE_RECORDES);
+pub(crate) unsafe extern "thiscall" fn comparar_send_record_news(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEND_RECORD_NEWS);
     let regioes = [(this + 0x24, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX12_ENSAIO_FILA = true;
-    let rr = crate::aleatorio::pausar_rastro(|| noticias_de_recordes(this));
+    let rr = crate::aleatorio::pausar_rastro(|| send_record_news(this));
     CPX12_ENSAIO_FILA = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     let ro = o(this);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(ro == rr && mo == mr, || format!("noticias_de_recordes({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
+    PLACAR.registrar(ro == rr && mo == mr, || format!("send_record_news({:x}) original={} {:x?} rust={} {:x?}", this, ro, mo, rr, mr));
     ro
 }
 
@@ -408,7 +408,7 @@ pub(crate) unsafe fn cpp10_nota_da_torcida(p: usize, clube: usize, st: usize) ->
 /// (_ftol); dos 50 do elenco (+0xd7) jogadores (+0x61, id abaixo de [0xae2364]) do clube (+0x39) com a estatística 6
 /// (0x7c3920 sobre [0xb74350]) de jogos acima de 0 e do mínimo (16 bits com sinal), o de maior nota
 /// (`cpp10_nota_da_torcida`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
-pub(crate) unsafe extern "thiscall" fn jogador_do_ano_da_torcida(this: usize, clube: usize, registro: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
     let jogos_do_clube = || read_u8(read_usize(this + 0x1c).wrapping_add((read_i32(clube) as usize).wrapping_mul(106)) + 0x10) as i8;
     if jogos_do_clube() == 0 && read_i16(clube + club::REPUTATION) < 0xbb8 {
         return 0;
@@ -492,11 +492,11 @@ pub(crate) unsafe fn cpp10_copiar_recorde(a: usize, o: usize, d: usize) {
 /// a data de hoje e o empréstimo (+4 ≠ 0); acima do de sempre, copiado para ele, e se passa de 1000 × (reputação +
 /// 300): o recorde na fila de notícias (0x452cb0, 0x1c, se ainda não está) e o técnico (+0xbf) passa a gostar da pessoa
 /// (0x547a10, forçado). O mesmo para o vendedor no recorde recebido (+0x33c; a fila com 0x1d, sem o gostar). 1.
-pub(crate) unsafe extern "thiscall" fn recordes_de_valor_de_transferencia(this: usize, t: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + 0xc) as usize).wrapping_mul(0x6e));
     let comprador = cpp8_clube(read_i32(t + 8));
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contrato = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contrato = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contrato);
     let vendedor = if contrato != 0 { cpp8_clube(read_i32(contrato + 4)) } else { 0 };
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
@@ -551,10 +551,10 @@ pub(crate) unsafe extern "thiscall" fn recordes_de_valor_de_transferencia(this: 
 }
 
 /// Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_jogador_do_ano_da_torcida(this: usize, clube: usize, registro: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_JOGADOR_DO_ANO_DA_TORCIDA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || jogador_do_ano_da_torcida(this, clube, registro));
-    PLACAR.registrar(igual && r == n, || format!("jogador_do_ano_da_torcida(clube {:x}) original={} {:x?} rust={} {:x?}", read_usize(clube), r, mo, n, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_pick_fans_player_of_year(this: usize, clube: usize, registro: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PICK_FANS_PLAYER_OF_YEAR);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(registro + 0x371, 0x18)], || o(this, clube, registro), || pick_fans_player_of_year(this, clube, registro));
+    PLACAR.registrar(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", read_usize(clube), r, mo, n, mr));
     r
 }
 
@@ -562,16 +562,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_jogador_do_ano_da_torcida(this: 
 /// Comparador: a original põe na fila de notícias (realoca) e o gostar sorteia: o plano antes (os quatro registros
 /// criados na mesma ordem da original, e os recordes pago e recebido esperados); a original roda; pega os registros
 /// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
-pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_valor_de_transferencia(this: usize, t: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RECORDES_DE_VALOR_DE_TRANSFERENCIA);
+pub(crate) unsafe extern "thiscall" fn comparar_update_transfer_fee_records(this: usize, t: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_TRANSFER_FEE_RECORDS);
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + 0xc) as usize).wrapping_mul(0x6e));
     let comprador = cpp8_clube(read_i32(t + 8));
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let contrato = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
+    let contrato = contract_of(read_usize(G_CONTRACT_MANAGER), pessoa);
     let vendedor = if contrato != 0 { cpp8_clube(read_i32(contrato + 4)) } else { 0 };
     if vendedor == 0 {
         let r = o(this, t);
-        PLACAR.registrar(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("recordes_de_valor_de_transferencia sem vendedor: {} [0xae1080]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
+        PLACAR.registrar(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [0xae1080]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
         return r;
     }
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
@@ -609,7 +609,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_valor_de_transferenc
                  (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
     let fila_agora = read_i32(this + 0x2c);
     PLACAR.registrar(r == 1 && agora == plano && fila_agora == fila && read_usize(G_CONTRACT_LOOKUP_RESULT) == contrato, || {
-        format!("recordes_de_valor_de_transferencia(valor {}) plano {:x?} fila {} x {:x?} fila {}", valor, plano, fila, agora, fila_agora)
+        format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", valor, plano, fila, agora, fila_agora)
     });
     r
 }
@@ -638,7 +638,7 @@ pub(crate) unsafe fn cpm6_noticia_na_fila(this: usize, id: usize, tipo: u8) -> b
 /// 1000 e o ano diferente do recorde, a notícia de recorde 0x1f (0x452cb0) se ainda não está na fila. O comprador, o
 /// mesmo pelo gasto (+0x365, ano +0x369, notícia 0x1e), mas o mínimo é conferido com o recorde ANTIGO e sem o ano. Os
 /// registros são criados se faltarem (o segundo argumento 1). Comprador ou vendedor nulo: nada, 1. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn somar_totais_de_transferencia(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
     if comprador == 0 || vendedor == 0 {
         return 1;
     }
@@ -693,7 +693,7 @@ pub(crate) unsafe extern "thiscall" fn somar_totais_de_transferencia(this: usize
 /// e os `jogos` passam o recorde (+0x247; −1 = sem recorde), o recorde = `jogos` e a referência do jogador em +0x249
 /// (0x7e4920); o mesmo com o tipo 0x18 e os `gols` (+0x261, referência +0x263). Devolve 1. Jogador ou clube nulo, ou
 /// sem registro: a caixa "Error" (linhas 0x6fa e 0x702) e 0.
-pub(crate) unsafe extern "thiscall" fn recordes_de_carreira_no_clube(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
     if jogador == 0 || clube == 0 {
         aviso_em(0x98b6a0, 0x6fa);
         return 0;
@@ -730,9 +730,9 @@ pub(crate) unsafe extern "thiscall" fn recordes_de_carreira_no_clube(this: usize
 /// 6.5) e tem a maior média (estatística 0x11) vira o recorde: a nota (+0x1f1, float), os jogos (+0x20d), a referência
 /// (+0x1f5, 0x7e4920) e +0x20e = 0. Devolve 1 se alguém virou recorde. Sem jogos ou sem registro: 0. Clube nulo: a
 /// original (caixa 0x16f2, 0).
-pub(crate) unsafe extern "thiscall" fn recorde_de_nota_da_temporada(this: usize, clube: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usize) -> u32 {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RECORDE_DE_NOTA_DA_TEMPORADA)(this, clube); // caixa: só a original
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_SEASON_RATING_RECORD)(this, clube); // caixa: só a original
     }
     let entrada = read_usize(this + 0x1c).wrapping_add(read_usize(clube).wrapping_mul(0x6a));
     if *((entrada + 0x10) as *const u8) == 0 {
@@ -788,8 +788,8 @@ pub(crate) unsafe extern "thiscall" fn recorde_de_nota_da_temporada(this: usize,
 /// ordem da original (vendedor: temporada, sempre; comprador: temporada, sempre; a segunda vez só acha), e com a fila
 /// de notícias sem folga para duas, só a original. Lado a lado pelos quatro registros (+0x365, 12 bytes), a conta das
 /// notícias e as duas vagas seguintes.
-pub(crate) unsafe extern "thiscall" fn comparar_somar_totais_de_transferencia(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(IDX_SOMAR_TOTAIS_DE_TRANSFERENCIA);
+pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_totals(this: usize, valor: i32, comprador: usize, vendedor: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(IDX_ADD_TRANSFER_TOTALS);
     if comprador == 0 || vendedor == 0 || (read_usize(this + 0x28).wrapping_sub(read_usize(this + 0x2c)) as i32) < 2 {
         return o(this, valor, comprador, vendedor); // ponytail: com realloc da fila, só a original
     }
@@ -800,15 +800,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_somar_totais_de_transferencia(th
     let regs = [temporada(this, vendedor, 1), sempre(this, vendedor, 1), temporada(this, comprador, 1), sempre(this, comprador, 1)];
     let fila = read_usize(this + 0x24).wrapping_add(read_usize(this + 0x2c).wrapping_mul(6));
     let reg = [(regs[0] + 0x365, 12), (regs[1] + 0x365, 12), (regs[2] + 0x365, 12), (regs[3] + 0x365, 12), (this + 0x2c, 4), (fila, 12)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, valor, comprador, vendedor), || somar_totais_de_transferencia(this, valor, comprador, vendedor));
-    PLACAR.registrar(igual && r == n, || format!("somar_totais_de_transferencia({}, {}, {}) {:x?} x {:x?}", valor, read_usize(comprador), read_usize(vendedor), mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, valor, comprador, vendedor), || add_transfer_totals(this, valor, comprador, vendedor));
+    PLACAR.registrar(igual && r == n, || format!("add_transfer_totals({}, {}, {}) {:x?} x {:x?}", valor, read_usize(comprador), read_usize(vendedor), mo, mr));
     r
 }
 
 /// Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
 /// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_carreira_no_clube(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_RECORDES_DE_CARREIRA_NO_CLUBE);
+pub(crate) unsafe extern "thiscall" fn comparar_club_records_update_career_records(this: usize, jogador: usize, clube: usize, jogos: u32, gols: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_CLUB_RECORDS_UPDATE_CAREER_RECORDS);
     if jogador == 0 || clube == 0 {
         return o(this, jogador, clube, jogos, gols);
     }
@@ -817,22 +817,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_carreira_no_clube(th
     if reg == 0 {
         return o(this, jogador, clube, jogos, gols);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || recordes_de_carreira_no_clube(this, jogador, clube, jogos, gols));
-    PLACAR.registrar(igual && r == n, || format!("recordes_de_carreira_no_clube({}, {}, {}, {}) {:x?} x {:x?}", read_usize(jogador), read_usize(clube), jogos as i16, gols as i16, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(reg + 0x247, 0x34)], || o(this, jogador, clube, jogos, gols), || club_records_update_career_records(this, jogador, clube, jogos, gols));
+    PLACAR.registrar(igual && r == n, || format!("club_records_update_career_records({}, {}, {}, {}) {:x?} x {:x?}", read_usize(jogador), read_usize(clube), jogos as i16, gols as i16, mo, mr));
     r
 }
 
 /// Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
-pub(crate) unsafe extern "thiscall" fn comparar_recorde_de_nota_da_temporada(this: usize, clube: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RECORDE_DE_NOTA_DA_TEMPORADA);
+pub(crate) unsafe extern "thiscall" fn comparar_update_season_rating_record(this: usize, clube: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_SEASON_RATING_RECORD);
     if clube == 0 {
         return o(this, clube);
     }
     let temporada: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CLUB_RECORDS_GET_SEASON_RECORD);
     let t = temporada(this, clube, 0);
     let reg: &[(usize, usize)] = if t == 0 { &[] } else { &[(t + 0x1f1, 0x1f)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube), || recorde_de_nota_da_temporada(this, clube));
-    PLACAR.registrar(igual && r == n, || format!("recorde_de_nota_da_temporada({}) original={} rust={} {:x?} x {:x?}", read_usize(clube), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube), || update_season_rating_record(this, clube));
+    PLACAR.registrar(igual && r == n, || format!("update_season_rating_record({}) original={} rust={} {:x?} x {:x?}", read_usize(clube), r, n, mo, mr));
     r
 }
 
@@ -861,9 +861,9 @@ pub(crate) unsafe fn cpk1_sem_memoria(linha: u32) -> ! {
 /// índice (−1) e com `criar`: o índice novo é a conta (+0xc, que sobe), o vetor cresce de 50 em 50 (capacidade +8,
 /// realloc 0x945667; sem memória, caixa 0x1694 e fim) e o registro é reiniciado (0x452fe0). Devolve o registro, ou 0
 /// sem índice. Clube nulo: a original (caixa 0x1680, 0).
-pub(crate) unsafe extern "thiscall" fn recordes_de_sempre(this: usize, clube: usize, criar: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_RECORDES_DE_SEMPRE)(this, clube, criar);
+        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_ALL_TIME_RECORD)(this, clube, criar);
     }
     let e = cpk1_entrada(this, clube);
     if read_usize(e) as i32 == -1 && criar != 0 {
@@ -897,9 +897,9 @@ pub(crate) unsafe extern "thiscall" fn recordes_de_sempre(this: usize, clube: us
 /// [pt] { 0x4528d0 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_season_record(clube, criar)`: o mesmo para os
 /// recordes da temporada: índice +4 da entrada, vetor [this+0x10], capacidade +0x14, conta +0x18 (sem memória, caixa
 /// 0x16c9 e fim). Clube nulo: a original (caixa 0x16b5, 0).
-pub(crate) unsafe extern "thiscall" fn recordes_da_temporada(this: usize, clube: usize, criar: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: u32) -> usize {
     if clube == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_RECORDES_DA_TEMPORADA)(this, clube, criar);
+        return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_SEASON_RECORD)(this, clube, criar);
     }
     let e = cpk1_entrada(this, clube) + 4;
     if read_usize(e) as i32 == -1 && criar != 0 {
@@ -935,7 +935,7 @@ pub(crate) unsafe extern "thiscall" fn recordes_da_temporada(this: usize, clube:
 /// clube +0, tipo do recorde +4; o byte +5 fica como está) ao vetor de 6 bytes [this+0x24] das notícias de recorde,
 /// lidas pela 0x448e30. Cheio (conta +0x2c = capacidade +0x28): cresce de 5 em 5 (realloc 0x945667); sem memória,
 /// caixa 0x174f e devolve 0 (o jogo segue, sem o vetor). Devolve 1.
-pub(crate) unsafe extern "thiscall" fn guardar_noticia_de_recorde(this: usize, id: u32, tipo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
     crate::comparacao::ramo("cpk_1 noticia de recorde");
     if read_usize(this + 0x2c) == read_usize(this + 0x28) {
         let cap = read_usize(this + 0x28).wrapping_add(5);
@@ -977,42 +977,42 @@ pub(crate) unsafe fn cpk1_conferir(nome: &str, clube: usize, e: usize, conta: us
 }
 
 /// Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
-pub(crate) unsafe extern "thiscall" fn comparar_recordes_de_sempre(this: usize, clube: usize, criar: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_RECORDES_DE_SEMPRE);
+pub(crate) unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_ALL_TIME_RECORD);
     if clube == 0 {
         return o(this, clube, criar);
     }
     let e = cpk1_entrada(this, clube);
     let plano = cpk1_plano(e, this + 0xc, criar);
     let r = o(this, clube, criar);
-    cpk1_conferir("recordes_de_sempre", clube, e, this + 0xc, this + 4, plano, r);
+    cpk1_conferir("get_all_time_record", clube, e, this + 0xc, this + 4, plano, r);
     r
 }
 
 /// Comparador: o mesmo pelos recordes da temporada.
-pub(crate) unsafe extern "thiscall" fn comparar_recordes_da_temporada(this: usize, clube: usize, criar: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_RECORDES_DA_TEMPORADA);
+pub(crate) unsafe extern "thiscall" fn comparar_get_season_record(this: usize, clube: usize, criar: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_SEASON_RECORD);
     if clube == 0 {
         return o(this, clube, criar);
     }
     let e = cpk1_entrada(this, clube) + 4;
     let plano = cpk1_plano(e, this + 0x18, criar);
     let r = o(this, clube, criar);
-    cpk1_conferir("recordes_da_temporada", clube, e, this + 0x18, this + 0x10, plano, r);
+    cpk1_conferir("get_season_record", clube, e, this + 0x18, this + 0x10, plano, r);
     r
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_guardar_noticia_de_recorde(this: usize, id: u32, tipo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
     let n = read_usize(this + 0x2c);
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_GUARDAR_NOTICIA_DE_RECORDE)(this, id, tipo);
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_QUEUE_RECORD_NEWS)(this, id, tipo);
     if r == 0 {
         return r; // sem memória: a caixa já saiu
     }
     let item = read_usize(this + 0x24).wrapping_add(n.wrapping_mul(6));
     let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + 4) as *const u8));
     PLACAR.registrar(r == 1 && read_usize(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == tipo as u8, || {
-        format!("guardar_noticia_de_recorde({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, tipo as u8, r, n, read_usize(this + 0x2c), gid, gtipo)
+        format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, tipo as u8, r, n, read_usize(this + 0x2c), gid, gtipo)
     });
     r
 }
@@ -1028,7 +1028,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_guardar_noticia_de_recorde(this:
 /// da oferta (+0x1b) bate o recorde de valor pago do clube comprador (+8; os recordes de sempre pela 0x452710, criando
 /// se preciso)? Tem de ser ao menos 50 × reputação (+0x80) + 500.000; com `exigir`, também ao menos reputação² × a
 /// constante 0x967880 (_ftol); e acima de zero e do recorde (+0x313). Oferta nula: 0.
-pub(crate) unsafe extern "thiscall" fn oferta_bate_o_recorde(this: usize, oferta: usize, exigir: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
     if oferta == 0 {
         return 0;
     }
@@ -1053,10 +1053,10 @@ pub(crate) unsafe extern "thiscall" fn oferta_bate_o_recorde(this: usize, oferta
 
 /// Comparador: a 0x452710 cria os recordes do clube na primeira vez (a original primeiro; a cópia acha os mesmos):
 /// pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_oferta_bate_o_recorde(this: usize, oferta: usize, exigir: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_OFERTA_BATE_O_RECORDE)(this, oferta, exigir);
-    let n = oferta_bate_o_recorde(this, oferta, exigir);
-    PLACAR.registrar(r == n, || format!("oferta_bate_o_recorde({:x}, {}) original={} rust={}", oferta, exigir, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_offer_breaks_fee_record(this: usize, oferta: usize, exigir: u32) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_OFFER_BREAKS_FEE_RECORD)(this, oferta, exigir);
+    let n = offer_breaks_fee_record(this, oferta, exigir);
+    PLACAR.registrar(r == n, || format!("offer_breaks_fee_record({:x}, {}) original={} rust={}", oferta, exigir, r, n));
     r
 }
 
@@ -1070,7 +1070,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oferta_bate_o_recorde(this: usiz
 /// [pt] { 0x4485d0 } (thiscall, club_records.cpp): `transfer_fee_record_construct`: constrói o recorde de maior valor de
 /// transferência pago: as datas em +0x14 e +0x20 (0x54a110). O quadro SEH do original só cobre a 2ª data (a 0x54a110
 /// não falha). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_valor_pago(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn transfer_fee_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 0x14); // a data do valor pago
     cpf2_data_padrao(this + 0x20);
     this
@@ -1081,7 +1081,7 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_de_valor_pago(this: usi
 ///
 /// [pt] { 0x448620 } (thiscall, club_records.cpp): `transfer_fee_record_construct_2`: constrói o recorde de maior valor de
 /// transferência recebido: as datas em +0x14 e +0x20 (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_valor_recebido(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn transfer_fee_record_construct_2(this: usize) -> usize {
     cpf2_data_padrao(this + 0x14);
     cpf2_data_padrao(this + 0x20); // a 2ª data do valor recebido
     this
@@ -1092,30 +1092,30 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_de_valor_recebido(this:
 ///
 /// [pt] { 0x448670 } (thiscall, club_records.cpp): `run_record_construct`: constrói o recorde de sequência: as datas do
 /// começo (+4) e do fim (+0xc) (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_sequencia(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn run_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 4); // o começo da sequência
     cpf2_data_padrao(this + 0xc);
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_valor_pago(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_VALOR_PAGO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || construir_recorde_de_valor_pago(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_valor_pago {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_FEE_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || transfer_fee_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("transfer_fee_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_valor_recebido(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_VALOR_RECEBIDO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || construir_recorde_de_valor_recebido(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_valor_recebido {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_construct_2(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TRANSFER_FEE_RECORD_CONSTRUCT_2);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || transfer_fee_record_construct_2(this));
+    PLACAR.registrar(igual && r == n, || format!("transfer_fee_record_construct_2 {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_sequencia(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_SEQUENCIA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || construir_recorde_de_sequencia(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_sequencia {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_run_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RUN_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || run_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1127,7 +1127,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_sequencia(t
 /// [pt] { 0x450ad0 } (thiscall, club_records.cpp): `won_run_record_construct`: constrói o recorde de vitórias seguidas: as
 /// datas do começo (+4) e do fim (+0xc) (0x54a110). O quadro SEH do original não é preciso (a 0x54a110 não falha).
 /// Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_vitorias_seguidas(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn won_run_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 4); // o começo das vitórias
     cpf2_data_padrao(this + 0xc);
     this
@@ -1138,7 +1138,7 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_de_vitorias_seguidas(th
 ///
 /// [pt] { 0x450b20 } (thiscall, club_records.cpp): `lost_run_record_construct`: constrói o recorde de derrotas seguidas: as
 /// datas do começo (+4) e do fim (+0xc) (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_derrotas_seguidas(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn lost_run_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 4);
     cpf2_data_padrao(this + 0xc); // o fim das derrotas
     this
@@ -1149,30 +1149,30 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_de_derrotas_seguidas(th
 ///
 /// [pt] { 0x450b70 } (thiscall, club_records.cpp): `unbeaten_run_record_construct`: constrói o recorde de jogos sem perder:
 /// as datas do começo (+4) e do fim (+0xc) (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_invencibilidade(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn unbeaten_run_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 4); // o começo da invencibilidade
     cpf2_data_padrao(this + 0xc);
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_vitorias_seguidas(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_VITORIAS_SEGUIDAS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || construir_recorde_de_vitorias_seguidas(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_vitorias_seguidas {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_won_run_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_WON_RUN_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || won_run_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("won_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_derrotas_seguidas(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_DERROTAS_SEGUIDAS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || construir_recorde_de_derrotas_seguidas(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_derrotas_seguidas {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_lost_run_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_LOST_RUN_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || lost_run_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("lost_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_invencibilidade(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_INVENCIBILIDADE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || construir_recorde_de_invencibilidade(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_invencibilidade {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_unbeaten_run_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_UNBEATEN_RUN_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || unbeaten_run_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("unbeaten_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1184,7 +1184,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_invencibili
 /// [pt] { 0x450bc0 } (thiscall, club_records.cpp): `winless_run_record_construct`: constrói o recorde de jogos sem vencer:
 /// as datas do começo (+4) e do fim (+0xc) (0x54a110). O quadro SEH do original não é preciso (a 0x54a110 não falha).
 /// Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_sem_vencer(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn winless_run_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 4);
     cpf2_data_padrao(this + 0xc); // o fim dos jogos sem vencer
     this
@@ -1195,7 +1195,7 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_sem_vencer(this: usize)
 ///
 /// [pt] { 0x450c10 } (thiscall, club_records.cpp): `goals_in_match_record_construct`: constrói o recorde de gols numa
 /// partida: a data do recordista (+0x11) e a da partida (+0x19) (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_gols_na_partida(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn goals_in_match_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 0x11);
     cpf2_data_padrao(this + 0x19); // a data da partida
     this
@@ -1206,31 +1206,31 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_de_gols_na_partida(this
 ///
 /// [pt] { 0x450c70 } (thiscall, club_records.cpp): `youngest_player_record_construct`: constrói o recorde do jogador mais
 /// novo: a idade (+0), a data do recordista (+0x18) e a da partida (+0x20) (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_do_mais_novo(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn youngest_player_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this); // a idade do mais novo
     cpf2_data_padrao(this + 0x18);
     cpf2_data_padrao(this + 0x20);
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_sem_vencer(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_SEM_VENCER);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || construir_recorde_sem_vencer(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_sem_vencer {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_winless_run_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_WINLESS_RUN_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this), || winless_run_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("winless_run_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_gols_na_partida(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_GOLS_NA_PARTIDA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x21)], || o(this), || construir_recorde_de_gols_na_partida(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_gols_na_partida {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_goals_in_match_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GOALS_IN_MATCH_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x21)], || o(this), || goals_in_match_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("goals_in_match_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_do_mais_novo(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DO_MAIS_NOVO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || construir_recorde_do_mais_novo(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_do_mais_novo {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_youngest_player_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_YOUNGEST_PLAYER_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || youngest_player_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("youngest_player_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1243,7 +1243,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_do_mais_novo(t
 /// [pt] { 0x450cd0 } (thiscall, club_records.cpp): `oldest_player_record_construct`: constrói o recorde do jogador mais
 /// velho: a idade (+0), a data do recordista (+0x18) e a da partida (+0x20) (0x54a110). O quadro SEH do original não
 /// é preciso (a 0x54a110 não falha). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_do_mais_velho(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn oldest_player_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this);
     cpf2_data_padrao(this + 0x18); // a data do mais velho
     cpf2_data_padrao(this + 0x20);
@@ -1252,10 +1252,10 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_do_mais_velho(this: usi
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_do_mais_velho(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DO_MAIS_VELHO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || construir_recorde_do_mais_velho(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_do_mais_velho {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_oldest_player_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_OLDEST_PLAYER_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x28)], || o(this), || oldest_player_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("oldest_player_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1274,7 +1274,7 @@ pub(crate) unsafe fn cpf1_recordista(destino: usize, origem: usize) {
 ///
 /// [pt] { 0x448230 } (thiscall, ret 4, club_records.cpp): `rating_record_assign`: copia o recorde de nota (0x1f bytes) de
 /// `origem`: a nota (+0, dupla), o recordista em +4, o byte +0x1c e a palavra +0x1d. Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_nota(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, origem: usize) -> usize {
     core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(origem as *const u32)); // a nota
     cpf1_recordista(this + 4, origem + 4);
     *((this + 0x1c) as *mut u8) = *((origem + 0x1c) as *const u8); // o byte do recorde de nota
@@ -1287,7 +1287,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_nota(this: usize, orige
 ///
 /// [pt] { 0x4484d0 } (thiscall, ret 4, club_records.cpp): `man_of_match_record_assign`: copia o recorde de melhor em campo
 /// (0x1b bytes) de `origem`: as vezes (+0, byte), o recordista em +1 e o ano da temporada (+0x19). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_melhor_em_campo(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, origem: usize) -> usize {
     *(this as *mut u8) = *(origem as *const u8); // as vezes de melhor em campo
     cpf1_recordista(this + 1, origem + 1);
     core::ptr::write_unaligned((this + 0x19) as *mut u16, core::ptr::read_unaligned((origem + 0x19) as *const u16));
@@ -1299,7 +1299,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_melhor_em_campo(this: u
 ///
 /// [pt] { 0x448500 } (thiscall, ret 4, club_records.cpp): `discipline_record_assign`: copia o recorde de disciplina (0x1c
 /// bytes) de `origem`: os amarelos (+0) e vermelhos (+1), o recordista em +2 e o ano da temporada (+0x1a). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_disciplina(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, origem: usize) -> usize {
     *(this as *mut u8) = *(origem as *const u8);
     *((this + 1) as *mut u8) = *((origem + 1) as *const u8); // os vermelhos
     cpf1_recordista(this + 2, origem + 2);
@@ -1307,24 +1307,24 @@ pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_disciplina(this: usize,
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_nota(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DE_NOTA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1f)], || o(this, origem), || copiar_recorde_de_nota(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_nota {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_rating_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RATING_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1f)], || o(this, origem), || rating_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("rating_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_melhor_em_campo(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DE_MELHOR_EM_CAMPO);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1b)], || o(this, origem), || copiar_recorde_de_melhor_em_campo(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_melhor_em_campo {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_man_of_match_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MAN_OF_MATCH_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1b)], || o(this, origem), || man_of_match_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("man_of_match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_disciplina(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DE_DISCIPLINA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1c)], || o(this, origem), || copiar_recorde_de_disciplina(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_disciplina {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_discipline_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_DISCIPLINE_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1c)], || o(this, origem), || discipline_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("discipline_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1335,7 +1335,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_disciplina(thi
 ///
 /// [pt] { 0x448530 } (thiscall, ret 4, club_records.cpp): `count_record_assign`: copia o recorde de contagem (0x1a bytes) de
 /// `origem`: a contagem (+0, palavra) e o recordista em +2 (pela 0x448490, já em Rust). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_contagem(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, origem: usize) -> usize {
     core::ptr::write_unaligned(this as *mut u16, core::ptr::read_unaligned(origem as *const u16)); // a contagem
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
     copiar(this + 2, origem + 2);
@@ -1347,7 +1347,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_contagem(this: usize, o
 ///
 /// [pt] { 0x4485b0 } (thiscall, ret 4, club_records.cpp): `fans_player_record_assign`: copia o recorde de jogador da
 /// torcida (0x1a bytes) de `origem`: o recordista em +0 (pela 0x448490) e o ano da temporada (+0x18). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_do_torcedor(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn fans_player_record_assign(this: usize, origem: usize) -> usize {
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
     copiar(this, origem);
     core::ptr::write_unaligned((this + 0x18) as *mut u16, core::ptr::read_unaligned((origem + 0x18) as *const u16)); // o ano do torcedor
@@ -1365,7 +1365,7 @@ pub(crate) unsafe fn cpf2_data_padrao(a: usize) {
 ///
 /// [pt] { 0x450c60 } (thiscall, club_records.cpp): `tally_record_construct`: constrói o recorde de ocorrências (contagem em
 /// byte + recordista): só a data do recordista em +0x11 (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_ocorrencias(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn tally_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 0x11); // a data das ocorrências
     this
 }
@@ -1375,36 +1375,36 @@ pub(crate) unsafe extern "thiscall" fn construir_recorde_de_ocorrencias(this: us
 ///
 /// [pt] { 0x450d30 } (thiscall, club_records.cpp): `count_record_construct`: constrói o recorde de contagem (palavra +
 /// recordista): só a data do recordista em +0x12 (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recorde_de_contagem(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn count_record_construct(this: usize) -> usize {
     cpf2_data_padrao(this + 0x12); // a data da contagem
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_contagem(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DE_CONTAGEM);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || copiar_recorde_de_contagem(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_contagem {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_count_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COUNT_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || count_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("count_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_do_torcedor(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DO_TORCEDOR);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || copiar_recorde_do_torcedor(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_do_torcedor {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_fans_player_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FANS_PLAYER_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this, origem), || fans_player_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("fans_player_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_ocorrencias(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_OCORRENCIAS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x19)], || o(this), || construir_recorde_de_ocorrencias(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_ocorrencias {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_tally_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_TALLY_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x19)], || o(this), || tally_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("tally_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_contagem(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDE_DE_CONTAGEM);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this), || construir_recorde_de_contagem(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recorde_de_contagem {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_count_record_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_COUNT_RECORD_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1a)], || o(this), || count_record_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("count_record_construct {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1418,7 +1418,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construir_recorde_de_contagem(th
 /// [pt] { 0x448550 } (thiscall, ret 4, club_records.cpp): `transfer_fee_record_assign`: copia o recorde de valor de
 /// transferência (0x29 bytes) de `origem`: cinco duplas (+0..+0x10: o valor, o jogador, o outro clube...), a data em
 /// +0x14, a dupla +0x1c, a data em +0x20 e a marca de troca (+0x28). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_valor(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
     for o in [0, 4, 8, 0xc, 0x10] {
         d(o); // o valor e os ids
@@ -1436,7 +1436,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_valor(this: usize, orig
 /// [pt] { 0x451570 } (thiscall, ret 4, club_records.cpp): `goals_in_match_record_assign`: copia o recorde de gols numa
 /// partida (0x38 bytes) de `origem`: os gols (+0, byte), o recordista em +1 (0x448490) e o registro da partida em +0x19
 /// (0x448110, ambos já em Rust). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_gols_na_partida(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, origem: usize) -> usize {
     let recordista: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_RECORD_HOLDER_ASSIGN);
     let partida: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_MATCH_RECORD_ASSIGN);
     *(this as *mut u8) = *(origem as *const u8); // os gols
@@ -1445,17 +1445,17 @@ pub(crate) unsafe extern "thiscall" fn copiar_recorde_de_gols_na_partida(this: u
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_valor(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DE_VALOR);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x29)], || o(this, origem), || copiar_recorde_de_valor(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_valor {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_transfer_fee_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_TRANSFER_FEE_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x29)], || o(this, origem), || transfer_fee_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("transfer_fee_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recorde_de_gols_na_partida(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDE_DE_GOLS_NA_PARTIDA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x38)], || o(this, origem), || copiar_recorde_de_gols_na_partida(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_gols_na_partida {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_goals_in_match_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GOALS_IN_MATCH_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x38)], || o(this, origem), || goals_in_match_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("goals_in_match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1473,7 +1473,7 @@ pub(crate) unsafe fn copiar_data_do_recorde(destino: usize, origem: usize) {
 ///
 /// [pt] { 0x448490 } (thiscall, ret 4, club_records.cpp): copia o recordista (0x18 bytes) de `origem`:
 /// quatro palavras duplas de identificação (+0..+0xc) e a data em +0x10. Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_recordista(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
     d(0); // identificação
     d(4);
@@ -1489,7 +1489,7 @@ pub(crate) unsafe extern "thiscall" fn copiar_recordista(this: usize, origem: us
 /// [pt] { 0x448110 } (thiscall, ret 4, club_records.cpp): copia o registro de partida (0x1f bytes) de
 /// `origem`: a data em +0, depois +8 (dupla), +0xc e +0xe (palavras), +0x10 (byte), +0x11 e +0x15
 /// (duplas), +0x19 e +0x1a (bytes) e +0x1b (dupla). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_registro_de_partida(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
     let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((origem + o) as *const u16));
     let b = |o: usize| *((this + o) as *mut u8) = *((origem + o) as *const u8);
@@ -1511,31 +1511,31 @@ pub(crate) unsafe extern "thiscall" fn copiar_registro_de_partida(this: usize, o
 ///
 /// [pt] { 0x448170 } (thiscall, ret 4, club_records.cpp): copia o registro de sequência (0x14 bytes) de
 /// `origem`: o número de jogos (+0) e as datas de início (+4) e fim (+0xc). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn copiar_registro_de_sequencia(this: usize, origem: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn run_record_assign(this: usize, origem: usize) -> usize {
     *(this as *mut u32) = *(origem as *const u32); // jogos
     copiar_data_do_recorde(this + 4, origem + 4);
     copiar_data_do_recorde(this + 0xc, origem + 0xc);
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_recordista(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_RECORDISTA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x18)], || o(this, origem), || copiar_recordista(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recordista {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_record_holder_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RECORD_HOLDER_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x18)], || o(this, origem), || record_holder_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("record_holder_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_registro_de_partida(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_REGISTRO_DE_PARTIDA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1f)], || o(this, origem), || copiar_registro_de_partida(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_registro_de_partida {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_match_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1f)], || o(this, origem), || match_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_copiar_registro_de_sequencia(this: usize, origem: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPIAR_REGISTRO_DE_SEQUENCIA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this, origem), || copiar_registro_de_sequencia(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_registro_de_sequencia {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_run_record_assign(this: usize, origem: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_RUN_RECORD_ASSIGN);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this, origem), || run_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("run_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
@@ -1544,9 +1544,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_copiar_registro_de_sequencia(thi
 ///
 /// [pt] { 0x452fe0 } (cdecl, club_records.cpp): reinicia os recordes do clube `r`: −1.0f em +0x1f1 e −1
 /// nos campos de id (dwords, palavras e bytes). Devolve 1. `r` nulo: a original (caixa de erro).
-pub(crate) unsafe extern "C" fn reiniciar_recordes(r: usize) -> u32 {
+pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
     if r == 0 {
-        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_REINICIAR_RECORDES)(r);
+        return orig::<unsafe extern "C" fn(usize) -> u32>(IDX_RESET_RECORDS)(r);
     }
     let d = |o: usize| core::ptr::write_unaligned((r + o) as *mut u32, u32::MAX);
     core::ptr::write_unaligned((r + 0x1f1) as *mut u32, 0xbf800000);
@@ -1568,11 +1568,11 @@ pub(crate) unsafe extern "C" fn reiniciar_recordes(r: usize) -> u32 {
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_reiniciar_recordes(r: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_REINICIAR_RECORDES);
+pub(crate) unsafe extern "C" fn comparar_reset_records(r: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_RESET_RECORDS);
     let reg = if r == 0 { vec![] } else { vec![(r, 0x381)] };
-    let (a, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(r), || reiniciar_recordes(r));
-    PLACAR.registrar(igual && a == v, || format!("reiniciar_recordes({:#x}) original={} {:x?} rust={} {:x?}", r, a, mo, v, mr));
+    let (a, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(r), || reset_records(r));
+    PLACAR.registrar(igual && a == v, || format!("reset_records({:#x}) original={} {:x?} rust={} {:x?}", r, a, mo, v, mr));
     a
 }
 
@@ -1581,15 +1581,15 @@ pub(crate) unsafe extern "C" fn comparar_reiniciar_recordes(r: usize) -> u32 {
 ///
 /// [pt] { 0x450d40 } (thiscall, club_records.cpp): `record_holder_construct`: constrói o recordista: só a data em +0x10
 /// (0x54a110). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_recordista(this: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn record_holder_construct(this: usize) -> usize {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     padrao(this + 0x10); // a data do recordista
     this
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_recordista(this: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_RECORDISTA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x10, 8)], || o(this), || construir_recordista(this));
-    PLACAR.registrar(igual && r == n, || format!("construir_recordista {:x?} x {:x?}", mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_record_holder_construct(this: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_RECORD_HOLDER_CONSTRUCT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x10, 8)], || o(this), || record_holder_construct(this));
+    PLACAR.registrar(igual && r == n, || format!("record_holder_construct {:x?} x {:x?}", mo, mr));
     r
 }

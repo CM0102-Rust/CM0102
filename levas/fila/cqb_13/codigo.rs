@@ -22,7 +22,7 @@ unsafe fn cqb13_w(a: usize) -> i16 {
 /// (0x5aa680); senão sai o novo. O que sai ganha a data nova; com conflito nela (0x5ad780, a lista destruída e
 /// liberada: 0x68d040, 0x944c94), jogo fixo (+0x3a = 1) devolve 0, senão 0x5ab510 acha outra data; entra no calendário
 /// (0x5aa680) com a notícia da remarcação (0x5aac70, causada pelo outro). Devolve 1.
-unsafe extern "thiscall" fn conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
+unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, conflitos: usize) -> u32 {
     // as datas: ecx = a data, sem pushes -> thiscall (0x54a110, 0x54a3f0); 0x549ef0: push [+0x28]; push [+0x2a];
     // 0x417c10: push ret; push &tmp; 0x54a2d0: push &b; push alvo -> thiscall
     let padrao: unsafe extern "thiscall" fn(*mut [u8; 8]) -> usize = core::mem::transmute(0x54a110usize);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn conflito_de_jogos_no_mesmo_dia(this: usize, jogo: us
 /// chamadas do calendário (tirar, juntar, conflitos que alocam a lista, a notícia), que não podem rodar duas vezes.
 /// A cópia roda em ensaio (para na decisão, sem a caixa) e a original depois, a partir do mesmo estado: lado a lado no
 /// cabeçalho da lista (+2 começo, +0xa cursor). Sem o jogo ou o primeiro da lista: só a original (a caixa).
-unsafe extern "thiscall" fn comparar_conflito_de_jogos_no_mesmo_dia(this: usize, jogo: usize, conflitos: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_resolve_same_day_clash(this: usize, jogo: usize, conflitos: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let cabeca = cqb13_d(conflitos + 2);
     if jogo == 0 || cabeca == 0 || cqb13_d(cabeca) == 0 {
@@ -127,20 +127,20 @@ unsafe extern "thiscall" fn comparar_conflito_de_jogos_no_mesmo_dia(this: usize,
     let reg = [(conflitos + 2, 0xc)];
     let antes = crate::comparacao::Memoria::ler(&reg);
     CQB13_ENSAIO = true;
-    conflito_de_jogos_no_mesmo_dia(this, jogo, conflitos);
+    resolve_same_day_clash(this, jogo, conflitos);
     CQB13_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&reg);
     antes.escrever();
     let r = o(this, jogo, conflitos);
     let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr && (r == 0 || r == 1), || format!("conflito_de_jogos_no_mesmo_dia(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", jogo, r, mo, mr));
+    PLACAR.registrar(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", jogo, r, mo, mr));
     r
 }
 
 /// { 0x5aee40 } (thiscall, ret 4, fix_man.cpp; o this não é lido): `FIXTURE_MANAGER::get_club_first_fixture_year(&id)`:
 /// o primeiro ano com jogos do clube `[id]`: 2001, ou 2002 com o bit 0 da palavra dele em [0xae2a5c]. Devolve `ax`
 /// (o chamador da tela compara 16 bits).
-unsafe extern "thiscall" fn primeiro_ano_com_jogos(_this: usize, id: usize) -> u16 {
+unsafe extern "thiscall" fn get_club_first_fixture_year(_this: usize, id: usize) -> u16 {
     let b = *((cqb13_d(0xae2a5c) as isize).wrapping_add((*(id as *const i32) as isize).wrapping_mul(2)) as *const u8);
     0x7d1 + (b & 1) as u16
 }
@@ -148,10 +148,10 @@ unsafe extern "thiscall" fn primeiro_ano_com_jogos(_this: usize, id: usize) -> u
 /// { 0x5aee60 } (thiscall, ret 4, fix_man.cpp; o this não é lido): `FIXTURE_MANAGER::get_club_last_fixture_year(&id)`:
 /// o último ano com jogos do clube: a palavra dele em [0xae2a5c] sem o bit 0 (metade); sem ano, o ano corrente
 /// [0xae2c92]. Devolve `ax` (o chamador da tela guarda 16 bits).
-unsafe extern "thiscall" fn ultimo_ano_com_jogos(_this: usize, id: usize) -> u16 {
+unsafe extern "thiscall" fn get_club_last_fixture_year(_this: usize, id: usize) -> u16 {
     let w = core::ptr::read_unaligned((cqb13_d(0xae2a5c) as isize).wrapping_add((*(id as *const i32) as isize).wrapping_mul(2)) as *const u16);
     if w & 0xfffe != 0 { w >> 1 } else { *(0xae2c92 as *const u16) }
 }
 
-comparar_valor!(comparar_primeiro_ano_com_jogos, primeiro_ano_com_jogos, %%I1%%, (id: usize) -> u16);
-comparar_valor!(comparar_ultimo_ano_com_jogos, ultimo_ano_com_jogos, %%I2%%, (id: usize) -> u16);
+comparar_valor!(comparar_get_club_first_fixture_year, get_club_first_fixture_year, %%I1%%, (id: usize) -> u16);
+comparar_valor!(comparar_get_club_last_fixture_year, get_club_last_fixture_year, %%I2%%, (id: usize) -> u16);

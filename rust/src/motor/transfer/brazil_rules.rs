@@ -27,7 +27,7 @@ pub(crate) const CQK3_BRASIL: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x43f0e0 } (thiscall, ret 0x14, brazil_rules.cpp, `BRAZIL_RULES::BRAZIL_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência do Brasil (regra 4): a base (0x8e84a0), a vtable 0x968838, 1 janela(s) de `CQK3_BRASIL` e o +0x13 = 3 (o padrão da base é 50) [inferência: o limite de estrangeiros contratados]. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_brasil(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_3 brasil");
     cqk3_construir(this, [a1, a2, a3, a4, a5], 0x968838, 1, &CQK3_BRASIL, 0x98b104, 0x50);
     *((this + 0x13) as *mut u8) = 3; // cqk3: o limite do Brasil
@@ -35,11 +35,11 @@ pub(crate) unsafe extern "thiscall" fn regras_brasil(this: usize, a1: u32, a2: u
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_brasil(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_BRASIL);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_BRAZIL_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_brasil", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_brasil(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_brazil_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_brazil_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -58,15 +58,15 @@ pub(crate) const CQK3_ALEMANHA: [[u8; 6]; 4] = [
 ///
 /// [pt] { 0x5dffe0 } (thiscall, ret 0, germany_rules.cpp, `GERMANY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Alemanha (regra 10), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQK3_ALEMANHA`.
-pub(crate) unsafe extern "thiscall" fn janelas_alemanha(this: usize) {
+pub(crate) unsafe extern "thiscall" fn brazil_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqk_3 alemanha");
     cqk1_janelas(this, 2, &CQK3_ALEMANHA, 0x9cd538, 0x4d);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_janelas_alemanha(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_JANELAS_ALEMANHA);
-    cqk1_comparar("janelas_alemanha", this, || o(this), |s| janelas_alemanha(s));
+pub(crate) unsafe extern "thiscall" fn comparar_brazil_rules_init_transfer_windows(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRAZIL_RULES_INIT_TRANSFER_WINDOWS);
+    cqk1_comparar("brazil_rules_init_transfer_windows", this, || o(this), |s| brazil_rules_init_transfer_windows(s));
 }
 
 /// A janela da Escócia: de 30 de maio (andando para o sábado [inferência]) a 30 de março (andando para a quinta-feira [inferência]).

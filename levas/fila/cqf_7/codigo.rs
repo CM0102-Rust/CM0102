@@ -45,7 +45,7 @@ unsafe fn cqf7_chance(f: usize, k: usize) -> i32 {
 /// +0x12 + 21) / 2; 1 (tática, +0x21 e +0x10) (chance + chance + +0x12) / 3; 2 (+0x10) (chance + +0xe + +0x12) / 3;
 /// 3 (+0x10) (chance + +0x12) / 2; 4 (+0x11) a chance (divisões truncadas para zero; a chance 0x544410), o byte com
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
-unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize, tecnico: usize) {
+unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, tecnico: usize) {
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if tecnico == 0 && humano(clube, 1, 1, 0, 0) == 0 {
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn distribuir_os_treinadores(this: usize, clube: usize,
 /// Comparador: lado a lado na comissão do humano (54 bytes) e na marca +0x244 do clube (a 0x53cb80/0x53cc30 pela
 /// 0x540a50 podem zerá-la). Sem humano ou clube de seleção: lado a lado só na marca. Técnico fora dos 16 humanos
 /// (a 0x8b4cd0 mostra a caixa e a original escreveria no nulo): só a original.
-unsafe extern "thiscall" fn comparar_distribuir_os_treinadores(this: usize, clube: usize, tecnico: usize) {
+unsafe extern "thiscall" fn comparar_update_coach_assignments(this: usize, clube: usize, tecnico: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if clube == 0 {
         return o(this, clube, tecnico);
@@ -148,8 +148,8 @@ unsafe extern "thiscall" fn comparar_distribuir_os_treinadores(this: usize, club
         }
         reg.push((this + 0x652d + 54 * cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1) as usize, 54));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, tecnico), || distribuir_os_treinadores(this, clube, tecnico));
-    PLACAR.registrar(igual, || format!("distribuir_os_treinadores(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, tecnico), || update_coach_assignments(this, clube, tecnico));
+    PLACAR.registrar(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", clube, tecnico, mo.0, mr.0));
 }
 
 /// O programa `vaga` (0..9; fora disso o 1) do técnico humano `tec`: this + (vaga + 7 + 10 × ([0xae2364] − id − 1)) ×
@@ -177,7 +177,7 @@ unsafe fn cqf7_entrada(this: usize, f: usize) -> usize {
 /// elenco novo com ficha vai para o dos goleiros (goleiro de 15 para cima e havendo um), senão o geral (havendo), senão
 /// a vaga 1, com a carga do programa (0x8b4f60) na ficha de forma; por fim a comissão (0x8b2880 com o clube novo e o
 /// técnico).
-unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usize, antigo: usize, novo: usize) {
+unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, antigo: usize, novo: usize) {
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let gravar_carga: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x62c660usize);
     let (mut gol, mut geral) = (-1i8, -1i8);
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn trocar_os_programas_do_elenco(this: usize, tec: usiz
 /// Comparador: lado a lado na entrada do treino e na carga de forma de cada jogador dos dois elencos, na comissão do
 /// técnico (a 0x8b2880 do fim) e na marca +0x244 dos clubes (a 0x541f90 pela 0x540a50). Com caixa (jogador sem
 /// ficha no elenco antigo ou técnico fora dos 16 humanos com clube novo): só a original.
-unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, tec: usize, antigo: usize, novo: usize) {
+unsafe extern "thiscall" fn comparar_reassign_squad_schedules(this: usize, tec: usize, antigo: usize, novo: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     let k = if tec == 0 { -1 } else { cqf7_i(0xae2364).wrapping_sub(cqf7_i(tec)).wrapping_sub(1) };
     if novo != 0 && !(0..0x10).contains(&k) {
@@ -271,13 +271,13 @@ unsafe extern "thiscall" fn comparar_trocar_os_programas_do_elenco(this: usize, 
     if novo != 0 {
         reg.push((this + 0x652d + 54 * k as usize, 54));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tec, antigo, novo), || trocar_os_programas_do_elenco(this, tec, antigo, novo));
-    PLACAR.registrar(igual, || format!("trocar_os_programas_do_elenco(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, tec, antigo, novo), || reassign_squad_schedules(this, tec, antigo, novo));
+    PLACAR.registrar(igual, || format!("reassign_squad_schedules(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", tec, antigo, novo, mo.0, mr.0));
 }
 
 /// { 0x8b2230 } (thiscall, ret 0, training_manager.cpp): os nomes padrão dos 167 programas de treino (0x8b50f0 em cada
 /// um, de 0x9b em 0x9b bytes), pela criação dos programas padrão (0x8b3930).
-unsafe extern "thiscall" fn nomes_padrao_dos_programas(this: usize) {
+unsafe extern "thiscall" fn training_manager_cpp_0x8b2230(this: usize) {
     let nome: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8b50f0usize);
     for k in 0..0xa7 {
         nome(this + k * 0x9b);
@@ -285,8 +285,8 @@ unsafe extern "thiscall" fn nomes_padrao_dos_programas(this: usize) {
 }
 
 /// Comparador: lado a lado nos 167 programas (0x9b bytes cada).
-unsafe extern "thiscall" fn comparar_nomes_padrao_dos_programas(this: usize) {
+unsafe extern "thiscall" fn comparar_training_manager_cpp_0x8b2230(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0xa7 * 0x9b)], || o(this), || nomes_padrao_dos_programas(this));
-    PLACAR.registrar(igual, || format!("nomes_padrao_dos_programas({:x})", this));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0xa7 * 0x9b)], || o(this), || training_manager_cpp_0x8b2230(this));
+    PLACAR.registrar(igual, || format!("training_manager_cpp_0x8b2230({:x})", this));
 }

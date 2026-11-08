@@ -39,13 +39,13 @@ unsafe fn cpd1_encerrar(this: usize, passa: impl Fn(usize) -> bool) {
 /// { 0x774f30 } (thiscall, ret 4, national_teams.cpp): `end_duty_for_competition(comp)`: na lista de registros
 /// de convocação [this], os da competição (+4 igual a *comp) terminam amanhã (+0x10). Sem SEH, sem caixa, sem
 /// sorteio; a local é a data que a 0x54c5b0 grava.
-unsafe extern "thiscall" fn encerrar_convocacoes_da_competicao(this: usize, comp: usize) {
+unsafe extern "thiscall" fn end_duty_for_competition(this: usize, comp: usize) {
     cpd1_encerrar(this, |r| cpd1_d(r + 4) == cpd1_d(comp) /* a competição */)
 }
 
 /// { 0x774f90 } (thiscall, ret 8, national_teams.cpp): `end_duty_for_nation_in_competition(nacao, comp)`: como a
 /// 0x774f30, só os registros da competição (+4) e da nação (+0 igual a *nacao).
-unsafe extern "thiscall" fn encerrar_convocacoes_da_nacao(this: usize, nacao: usize, comp: usize) {
+unsafe extern "thiscall" fn end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
     cpd1_encerrar(this, |r| cpd1_d(r + 4) == cpd1_d(comp) && cpd1_d(r) == cpd1_d(nacao) /* a nação */)
 }
 
@@ -60,18 +60,18 @@ unsafe fn cpd1_regioes_encerrar(this: usize) -> Vec<(usize, usize)> {
     reg
 }
 
-unsafe extern "thiscall" fn comparar_encerrar_convocacoes_da_competicao(this: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_end_duty_for_competition(this: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let reg = cpd1_regioes_encerrar(this);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, comp), || encerrar_convocacoes_da_competicao(this, comp));
-    PLACAR.registrar(igual, || format!("encerrar_convocacoes_da_competicao({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, comp), || end_duty_for_competition(this, comp));
+    PLACAR.registrar(igual, || format!("end_duty_for_competition({:x}, {:x}) {:x?} x {:x?}", this, comp, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_encerrar_convocacoes_da_nacao(this: usize, nacao: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_end_duty_for_nation_in_competition(this: usize, nacao: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let reg = cpd1_regioes_encerrar(this);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao, comp), || encerrar_convocacoes_da_nacao(this, nacao, comp));
-    PLACAR.registrar(igual, || format!("encerrar_convocacoes_da_nacao({:x}, {:x}, {:x}) {:x?} x {:x?}", this, nacao, comp, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao, comp), || end_duty_for_nation_in_competition(this, nacao, comp));
+    PLACAR.registrar(igual, || format!("end_duty_for_nation_in_competition({:x}, {:x}, {:x}) {:x?} x {:x?}", this, nacao, comp, mo, mr));
 }
 
 /// O número de registros de convocação por clube da 0x7774b0: [0xae235c] − 2 × [0xae2350].
@@ -84,7 +84,7 @@ unsafe fn cpd1_quantos() -> i32 {
 /// (0x456770: a data delas antes de [0xae2c90]; a rotina supõe que ficam no começo), desce as outras por cima
 /// (0x777590) e diminui a contagem; zerada com vetor, solta o vetor (0x9452ca) e zera +4 e +0. Sem SEH, sem caixa,
 /// sem sorteio; a local (o vencido) é zerada antes de ler.
-unsafe extern "thiscall" fn podar_registros_de_convocacao(this: usize) {
+unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
     let n = cpd1_quantos();
     let mut rec = cpd1_d(this + 0x20);
     if n <= 0 {
@@ -147,7 +147,7 @@ unsafe fn cpd1_soltaria(rec: usize) -> bool {
 
 /// Comparador: os registros (6 bytes cada) e os vetores de entradas. Algum vetor a soltar (0x9452ca; soltar duas
 /// vezes): só a original.
-unsafe extern "thiscall" fn comparar_podar_registros_de_convocacao(this: usize) {
+unsafe extern "thiscall" fn comparar_prune_club_call_up_records(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let n = cpd1_quantos().max(0) as usize;
     let recs = cpd1_d(this + 0x20);
@@ -161,6 +161,6 @@ unsafe extern "thiscall" fn comparar_podar_registros_de_convocacao(this: usize) 
             reg.push((v, 9 * k as usize));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || podar_registros_de_convocacao(this));
-    PLACAR.registrar(igual, || format!("podar_registros_de_convocacao({:x}) {:x?} x {:x?}", this, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || prune_club_call_up_records(this));
+    PLACAR.registrar(igual, || format!("prune_club_call_up_records({:x}) {:x?} x {:x?}", this, mo, mr));
 }

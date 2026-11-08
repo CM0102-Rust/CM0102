@@ -33,7 +33,7 @@ unsafe fn cqj5_em_2001(this: usize) -> bool {
 
 /// As regras comuns às três: 1 ponto pelo empate (+0xc3), categoria 2 nas partidas (+0xc4), clubes nacionais (+0x42
 /// = 1), os desempates 1, 2 e 3 (+0xc5..+0xc7), nenhum play-off (+0xbf = +0xc0 = 0), os bits de regra +0xd9 = 0x83
-/// (a liga tem campeão, as vagas de cima são de acesso e a ordem das rodadas dividida ao meio) e 3 substituições
+/// (a liga tem campeão, as vagas de cima são de acesso e a ordem das rodadas tackle ao meio) e 3 substituições
 /// (+0x4a).
 fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0xbf, 1, 0), (0xc0, 1, 0), (0xd9, 2, 0x83), (0x4a, 1, 3)]
@@ -42,7 +42,7 @@ fn cqj5_comuns() -> Vec<(usize, u8, u32)> {
 /// { 0x5bc410 } (thiscall, ret 0, fra_first.cpp): `FraFirst::set_up_rules()`. A primeira divisão: as comuns, 2
 /// turnos, 3 pontos, +0xab e +0xdb = 0, ninguém sobe (+0xbe = 0), caem 2 em 2001 e 3 depois (+0xc1), 5 reservas
 /// (+0x49), nenhuma liga acima (+0x1c = −1), +0x52 = 2 [sem nome] e a segunda abaixo (+0x20 = [0x9cf5d0]).
-unsafe extern "thiscall" fn regras_da_franca_1(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_first_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da primeira");
     cqj5_regras(this, &cqj5_primeira(this))
 }
@@ -58,7 +58,7 @@ unsafe fn cqj5_primeira(this: usize) -> Vec<(usize, u8, u32)> {
 /// { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
 /// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
-unsafe extern "thiscall" fn regras_da_franca_2(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras da segunda");
     cqj5_regras(this, &cqj5_segunda(this))
 }
@@ -74,7 +74,7 @@ unsafe fn cqj5_segunda(this: usize) -> Vec<(usize, u8, u32)> {
 /// { 0x5c0700 } (thiscall, ret 0, fra_third.cpp): `FraThird::set_up_rules()`. O National: as comuns, 2 turnos, 3
 /// pontos; sobem 4 em 2001 e 3 depois (+0xbe), caem 4 (+0xc1); a segunda acima ([0x9cf5d0]), nenhuma abaixo (+0x20
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
-unsafe extern "thiscall" fn regras_da_franca_3(this: usize) -> u32 {
+unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_5 regras do national");
     cqj5_regras(this, &cqj5_terceira(this))
 }
@@ -114,17 +114,17 @@ unsafe fn cqj5_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
     r
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_franca_1(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_first_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj5_comparar("regras_da_franca_1", this, cqj5_primeira(this), || o(this), || regras_da_franca_1(this))
+    cqj5_comparar("fra_first_set_up_rules", this, cqj5_primeira(this), || o(this), || fra_first_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_franca_2(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqj5_comparar("regras_da_franca_2", this, cqj5_segunda(this), || o(this), || regras_da_franca_2(this))
+    cqj5_comparar("fra_second_set_up_rules", this, cqj5_segunda(this), || o(this), || fra_second_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_franca_3(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj5_comparar("regras_da_franca_3", this, cqj5_terceira(this), || o(this), || regras_da_franca_3(this))
+    cqj5_comparar("fra_third_set_up_rules", this, cqj5_terceira(this), || o(this), || fra_third_set_up_rules(this))
 }

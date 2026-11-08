@@ -28,7 +28,7 @@ unsafe fn cpk2_sem_memoria(linha: u32) -> ! {
 /// ([this+0x1c], conta +0x20, capacidade +0x24; tirada pela 0x7a82b0). O original decide crescer pelo banco de
 /// jogadores livres (conta +0x40 = capacidade +0x44 − 1), não por esta lista: fiel. Cresce 250 (realloc 0x945667;
 /// sem memória, caixa 0x9c4 e fim).
-unsafe extern "thiscall" fn acrescentar_reserva_de_tecnico(this: usize, id: u32, nacao: u32, segunda: u32) {
+unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, id: u32, nacao: u32, segunda: u32) {
     crate::comparacao::ramo("cpk_2 reserva de tecnico");
     if cpk2_d(this + 0x40) == cpk2_d(this + 0x44).wrapping_sub(1) {
         let p = cpk2_realocar(cpk2_d(this + 0x1c), cpk2_d(this + 0x24).wrapping_add(250) << 4);
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn acrescentar_reserva_de_tecnico(this: usize, id: u32,
 /// 26 bytes das aposentadorias pendentes ([this+4], conta +8, capacidade +0xc) os campos +0, +4 (dwords), +0x18
 /// (byte), +8, +0xa, +0x10, +0x12 (palavras) e +0x19 (byte) do registro, nessa ordem (+0xc..+0x10 e +0x14..+0x18
 /// ficam como estão). Conta = capacidade − 1: cresce 250 (realloc 0x945667; sem memória, caixa 0xa53 e fim).
-unsafe extern "thiscall" fn acrescentar_aposentadoria(this: usize, r: usize) {
+unsafe extern "thiscall" fn add_retirement(this: usize, r: usize) {
     crate::comparacao::ramo("cpk_2 aposentadoria");
     let cap = cpk2_d(this + 0xc);
     if cpk2_d(this + 8) == cap.wrapping_sub(1) {
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn acrescentar_aposentadoria(this: usize, r: usize) {
 /// original) e o da pessoa +0xc. Cada lista cresce 250 quando conta = capacidade − 1 (realloc 0x945667; caixas 0xaac,
 /// 0xac5, 0xae9 e fim; na terceira o original confere a conta, não o ponteiro: fiel). Id fora de 0..=[0xae2364]: a
 /// original (caixa 0xa9d).
-unsafe extern "thiscall" fn guardar_vaga_para_regen(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entrada: usize) {
     let id = cpk2_d(entrada) as i32;
     if id < 0 || id > *(0xae2364 as *const i32) {
         return orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, entrada);
@@ -143,13 +143,13 @@ unsafe extern "thiscall" fn guardar_vaga_para_regen(this: usize, entrada: usize)
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta e o item novo.
-unsafe extern "thiscall" fn comparar_acrescentar_reserva_de_tecnico(this: usize, id: u32, nacao: u32, segunda: u32) {
+unsafe extern "thiscall" fn comparar_add_spare_non_player_record(this: usize, id: u32, nacao: u32, segunda: u32) {
     let n = cpk2_d(this + 0x20);
     orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(%%I0%%)(this, id, nacao, segunda);
     let item = cpk2_d(this + 0x1c).wrapping_add(n << 4);
     let g = [cpk2_d(item) as u32, cpk2_d(item + 4) as u32, cpk2_d(item + 8) as u32];
     PLACAR.registrar(cpk2_d(this + 0x20) == n.wrapping_add(1) && g == [id, nacao, segunda], || {
-        format!("acrescentar_reserva_de_tecnico({}, {}, {}) conta {} -> {}, item {:?}", id, nacao, segunda, n, cpk2_d(this + 0x20), g)
+        format!("add_spare_non_player_record({}, {}, {}) conta {} -> {}, item {:?}", id, nacao, segunda, n, cpk2_d(this + 0x20), g)
     });
 }
 
@@ -163,20 +163,20 @@ unsafe fn cpk2_campos_da_aposentadoria(r: usize) -> [u8; 26] {
 }
 
 /// Comparador: o registro copiado antes; a original acrescenta (pode realocar); confere a conta e os campos.
-unsafe extern "thiscall" fn comparar_acrescentar_aposentadoria(this: usize, r: usize) {
+unsafe extern "thiscall" fn comparar_add_retirement(this: usize, r: usize) {
     let n = cpk2_d(this + 8);
     let esperado = cpk2_campos_da_aposentadoria(r);
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, r);
     let item = cpk2_d(this + 4).wrapping_add(n.wrapping_mul(26));
     let g = cpk2_campos_da_aposentadoria(item);
     PLACAR.registrar(cpk2_d(this + 8) == n.wrapping_add(1) && g == esperado, || {
-        format!("acrescentar_aposentadoria conta {} -> {}, item {:x?} (esperava {:x?})", n, cpk2_d(this + 8), g, esperado)
+        format!("add_retirement conta {} -> {}, item {:x?} (esperava {:x?})", n, cpk2_d(this + 8), g, esperado)
     });
 }
 
 /// Comparador: a original sorteia e realoca (não pode rodar duas vezes): o plano antes (o que entra em cada lista);
 /// confere as contas e os itens (a nação sorteada só pela faixa).
-unsafe extern "thiscall" fn comparar_guardar_vaga_para_regen(this: usize, entrada: usize) {
+unsafe extern "thiscall" fn comparar_queue_staff_for_regen(this: usize, entrada: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let id = cpk2_d(entrada) as i32;
     if id < 0 || id > *(0xae2364 as *const i32) {
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn comparar_guardar_vaga_para_regen(this: usize, entrad
         ok &= cpk2_d(i) as u32 == bid && cpk2_d(i + 4) as u32 == bnac && cpk2_d(i + 0xc) as u32 == bp;
     }
     PLACAR.registrar(ok, || {
-        format!("guardar_vaga_para_regen({}) contas {} {} {} -> {} {} {}, reserva {:?}, banco {:?}", id, n1, n2, n3,
+        format!("queue_staff_for_regen({}) contas {} {} {} -> {} {} {}, reserva {:?}, banco {:?}", id, n1, n2, n3,
             cpk2_d(this + 0x14), cpk2_d(this + 0x20), cpk2_d(this + 0x40), reserva, banco)
     });
 }

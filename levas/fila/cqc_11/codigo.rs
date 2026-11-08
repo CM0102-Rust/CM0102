@@ -198,7 +198,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
     let proibido: unsafe extern "thiscall" fn(usize, i32, i32) -> u32 = core::mem::transmute(0x5cc3e0usize);
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize = core::mem::transmute(0x5c6f00usize);
-    let responder: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x5c5f40usize);
+    let respond: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x5c5f40usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     // os sorteios: push n; add esp, 4 -> cdecl; 0x53b3d0: push; add esp, 4 -> cdecl; 0x5cc3e0, 0x5c6f00, 0x5c5f40 e
@@ -290,7 +290,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
                                         let sa = selecao(a);
                                         let m = acrescentar(this, sa, datas + 3, sb, casa);
                                         if m != 0 {
-                                            responder(this, m, 1);
+                                            respond(this, m, 1);
                                             *((usadas.wrapping_add(idb)) as *mut u8) = 1;
                                             *((usadas.wrapping_add(ida)) as *mut u8) = 1; // cqc11: as duas usadas
                                             por(cqc11_lista(this, i as usize), b, 4);
@@ -315,7 +315,7 @@ unsafe fn cqc11_segunda_parte(this: usize, datas: usize, n: u32, usadas: usize, 
 /// hoje + 12 semanas). O vetor das nações usadas ([0xae2350] bytes zerados, 0x945501; sem memória: a caixa, linha
 /// 0x1738, e nada), a primeira parte (as nações com jogo de 4 dias antes a 4 depois) e a segunda (os pares), e o vetor
 /// sai (0x9452ca).
-unsafe extern "thiscall" fn amistosos_entre_selecoes(this: usize, datas: usize, n: u32) {
+unsafe extern "thiscall" fn arrange_international_friendlies(this: usize, datas: usize, n: u32) {
     let zerado: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     // calloc: push 1; push [0xae2350]; add esp, 8 -> cdecl (n, 1); free: push; add esp, 4 -> cdecl
@@ -336,7 +336,7 @@ unsafe extern "thiscall" fn amistosos_entre_selecoes(this: usize, datas: usize, 
 /// do ensaio são os da original, salvo os de dentro das rotinas do amistoso, e a fita acaba junto) e, lista a lista de
 /// nações, que os itens novos da original são os que o ensaio acrescentaria. (Lado a lado pelo estado do sorteador não
 /// servia: a 0x5c6f00 e a 0x5c5f40 sorteiam por dentro na original e o ensaio não as chama.)
-unsafe extern "thiscall" fn comparar_amistosos_entre_selecoes(this: usize, datas: usize, n: u32) {
+unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usize, datas: usize, n: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let nacoes = cqc11_d(0xae2350) as i32;
     let k = nacoes.max(cqc11_d(this + 0x34fe) as i32).max(0) as usize;
@@ -370,7 +370,7 @@ unsafe extern "thiscall" fn comparar_amistosos_entre_selecoes(this: usize, datas
         }
     }
     PLACAR.registrar(igual && dif.is_empty(), || {
-        format!("amistosos_entre_selecoes(datas {:x}, {}) fita de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
+        format!("arrange_international_friendlies(datas {:x}, {}) fita de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
             datas, n as i16, quantos, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
 }
@@ -383,7 +383,7 @@ unsafe extern "thiscall" fn comparar_amistosos_entre_selecoes(this: usize, datas
 /// (0x54c5b0), cancelado (com texto) e 0; o clube livre na data (0x5c6b70 com tipo 0): 1; senão, com texto, "{} ... are
 /// unavailable" (o byte +0x52 duas vezes e o nome +0x38) e 0.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn convite_de_amistoso_valido(this: usize, a: usize, b: usize, clube: usize, dia: u32, ano: u32,
+unsafe extern "thiscall" fn friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32, ano: u32,
     data: usize, texto: usize, tamanho: u32) -> u32 {
     if texto != 0 && (tamanho as i16) < 100 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%)(
@@ -449,7 +449,7 @@ fn cqc11_regioes_do_texto(texto: usize, tamanho: u32) -> Vec<(usize, usize)> {
 /// Comparador: lado a lado pelo texto e a devolução (as listas locais nascem e morrem nas duas); com a caixa, só a
 /// original.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_convite_de_amistoso_valido(this: usize, a: usize, b: usize, clube: usize, dia: u32,
+unsafe extern "thiscall" fn comparar_friendly_check_match_invitation(this: usize, a: usize, b: usize, clube: usize, dia: u32,
     ano: u32, data: usize, texto: usize, tamanho: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, usize, usize, u32) -> u32>(%%I1%%);
     if texto != 0 && (tamanho as i16) < 100 {
@@ -457,8 +457,8 @@ unsafe extern "thiscall" fn comparar_convite_de_amistoso_valido(this: usize, a: 
     }
     let reg = cqc11_regioes_do_texto(texto, tamanho);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, a, b, clube, dia, ano, data, texto, tamanho),
-        || convite_de_amistoso_valido(this, a, b, clube, dia, ano, data, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("convite_de_amistoso_valido(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
+        || friendly_check_match_invitation(this, a, b, clube, dia, ano, data, texto, tamanho));
+    PLACAR.registrar(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
         a, b, clube, data, r, n, mo, mr));
     r
 }
@@ -468,7 +468,7 @@ unsafe extern "thiscall" fn comparar_convite_de_amistoso_valido(this: usize, a: 
 /// original). Sem torneio ou com a data dele (+4) antes de hoje + 2 dias: "This competition has been cancelled" (com
 /// texto) e 0. O clube livre na data (0x5c6b70 com o tipo +0xc): 1; senão, com texto, "{} ... are unavailable for this
 /// competition." e 0.
-unsafe extern "thiscall" fn convite_de_torneio_valido(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
+unsafe extern "thiscall" fn friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
     if texto != 0 && (tamanho as i16) < 100 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%)(this, clube, torneio, texto, tamanho);
     }
@@ -501,15 +501,15 @@ unsafe extern "thiscall" fn convite_de_torneio_valido(this: usize, clube: usize,
 }
 
 /// Comparador: lado a lado pelo texto e a devolução; com a caixa, só a original.
-unsafe extern "thiscall" fn comparar_convite_de_torneio_valido(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_friendly_check_tournament_invitation(this: usize, clube: usize, torneio: usize, texto: usize, tamanho: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> u32>(%%I2%%);
     if texto != 0 && (tamanho as i16) < 100 {
         return o(this, clube, torneio, texto, tamanho);
     }
     let reg = cqc11_regioes_do_texto(texto, tamanho);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, torneio, texto, tamanho),
-        || convite_de_torneio_valido(this, clube, torneio, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("convite_de_torneio_valido(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
+        || friendly_check_tournament_invitation(this, clube, torneio, texto, tamanho));
+    PLACAR.registrar(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
         clube, torneio, r, n, mo, mr));
     r
 }

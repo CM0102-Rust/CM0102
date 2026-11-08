@@ -43,7 +43,7 @@ unsafe fn cpx8_registro(this: usize, k: usize) -> usize {
 /// (0x6db500), pela formação (0x6e0230), pelo dia de jogo (0x6b4360), pela tática do clube (0x896660) e pelas telas. O
 /// bloco de tática (0x1ecd bytes) da vaga ativa (byte com sinal em +0x9a69 do registro) do técnico (nulo: o humano da
 /// vez). Sem técnico ou fora da conta: a original (caixa "Error", 0).
-unsafe extern "thiscall" fn tatica_ativa_do_humano(this: usize, tecnico: usize) -> usize {
+unsafe extern "thiscall" fn get_active_tactic(this: usize, tecnico: usize) -> usize {
     let t = cpx8_tecnico(tecnico);
     let Some(k) = (if t != 0 { cpx8_indice(this, t) } else { None }) else {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%)(this, tecnico); // caixa: só a original
@@ -53,15 +53,15 @@ unsafe extern "thiscall" fn tatica_ativa_do_humano(this: usize, tecnico: usize) 
 }
 
 /// Comparador: a devolução (rotina pura); sem técnico ou fora da conta, só a original (caixa).
-unsafe extern "thiscall" fn comparar_tatica_ativa_do_humano(this: usize, tecnico: usize) -> usize {
+unsafe extern "thiscall" fn comparar_get_active_tactic(this: usize, tecnico: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let t = cpx8_tecnico(tecnico);
     if t == 0 || cpx8_indice(this, t).is_none() {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
-    let n = tatica_ativa_do_humano(this, tecnico);
-    PLACAR.registrar(r == n, || format!("tatica_ativa_do_humano(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
+    let n = get_active_tactic(this, tecnico);
+    PLACAR.registrar(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", tecnico, r, n));
     r
 }
 
@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn comparar_tatica_ativa_do_humano(this: usize, tecnico
 /// pelos mesmos chamadores da 0x5fbd00. Técnico nulo: o humano da vez (sem nenhum, nada); clube nulo: o do técnico
 /// (+0x39). A vaga ativa (+0x9a69 do registro): 4 na segunda seleção (0x5409b0), 3 com `reserva` numa seleção
 /// (0x53b900), 2 numa seleção, 1 com `reserva`, 0 no time principal. Fora da conta: a original (caixa "Error").
-unsafe extern "thiscall" fn escolher_vaga_de_tatica(this: usize, reserva: u32, clube: usize, tecnico: usize) {
+unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
     let t = cpx8_tecnico(tecnico);
     if t == 0 {
         return;
@@ -96,15 +96,15 @@ unsafe extern "thiscall" fn escolher_vaga_de_tatica(this: usize, reserva: u32, c
 
 /// Comparador: lado a lado pelo byte da vaga ativa do registro; sem técnico (nada) ou fora da conta (caixa), só a
 /// original.
-unsafe extern "thiscall" fn comparar_escolher_vaga_de_tatica(this: usize, reserva: u32, clube: usize, tecnico: usize) {
+unsafe extern "thiscall" fn comparar_select_tactic_slot(this: usize, reserva: u32, clube: usize, tecnico: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(%%I1%%);
     let t = cpx8_tecnico(tecnico);
     let Some(k) = (if t != 0 { cpx8_indice(this, t) } else { None }) else {
         return o(this, reserva, clube, tecnico);
     };
     let reg = [(cpx8_registro(this, k) + 0x9a69, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserva, clube, tecnico), || escolher_vaga_de_tatica(this, reserva, clube, tecnico));
-    PLACAR.registrar(igual, || format!("escolher_vaga_de_tatica(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, reserva, clube, tecnico), || select_tactic_slot(this, reserva, clube, tecnico));
+    PLACAR.registrar(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserva, clube, tecnico, mo, mr));
 }
 
 /// { 0x896660 } (thiscall, ret 8, tactics.cpp): `Tactics::get_club_tactic(clube, time)`, pela formação de cada jogo
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn comparar_escolher_vaga_de_tatica(this: usize, reserv
 /// bloco ativo dele (0x5fbd00). Nos outros, o índice (palavra com sinal) na linha do clube (id × 0x91 em [this+0x601]):
 /// abaixo da conta das táticas prontas ([this+0x5fd]) o bloco pronto ([this+0x5f9]), senão o próprio ([this+0x5f1],
 /// índice − conta); blocos de 0x18e3 bytes. Clube nulo: a original (caixa "Error", 0).
-unsafe extern "thiscall" fn tatica_do_clube(this: usize, clube: usize, time: u32) -> usize {
+unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, clube, time); // caixa: só a original
     }
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn tatica_do_clube(this: usize, clube: usize, time: u32
 
 /// Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
 /// grava). Clube nulo (caixa): só a original.
-unsafe extern "thiscall" fn comparar_tatica_do_clube(this: usize, clube: usize, time: u32) -> usize {
+unsafe extern "thiscall" fn comparar_get_club_tactic(this: usize, clube: usize, time: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
     if clube == 0 {
         return o(this, clube, time);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn comparar_tatica_do_clube(this: usize, clube: usize, 
             reg.push((cpx8_registro(gerente, k) + 0x9a69, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, time), || tatica_do_clube(this, clube, time));
-    PLACAR.registrar(igual && r == n, || format!("tatica_do_clube(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, time, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, time), || get_club_tactic(this, clube, time));
+    PLACAR.registrar(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", clube, time, r, mo, n, mr));
     r
 }

@@ -28,7 +28,7 @@ unsafe fn cpj3_entregar(this: usize, noticia: usize, alcance: u8, passa: impl Fn
 /// { 0x786780 } (thiscall, ret 4, news.cpp): `News::send_to_all_managers(noticia)`: alcance de todos (+0xde = 4) e a
 /// entrega (0x785d40) a cada técnico humano ativo. Devolve 1, ou 0 na primeira recusada. Notícia nula: a original
 /// (caixa "Error").
-unsafe extern "thiscall" fn noticia_para_todos_os_tecnicos(this: usize, noticia: usize) -> u32 {
+unsafe extern "thiscall" fn send_to_all_managers(this: usize, noticia: usize) -> u32 {
     if noticia == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, noticia); // caixa: só a original
     }
@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn noticia_para_todos_os_tecnicos(this: usize, noticia:
 /// { 0x7862d0 } (thiscall, ret 8, news.cpp): `News::send_to_division_managers(noticia, divisao)`: alcance da divisão
 /// (+0xde = 1) e a entrega a cada técnico humano ativo com clube (+0x39) na `divisao` (+0x57). Devolve 1, ou 0 na
 /// primeira recusada. Notícia ou divisão nulas: a original (caixa "Error").
-unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_divisao(this: usize, noticia: usize, divisao: usize) -> u32 {
+unsafe extern "thiscall" fn send_to_division_managers(this: usize, noticia: usize, divisao: usize) -> u32 {
     if noticia == 0 || divisao == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, divisao); // caixa: só a original
     }
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_divisao(this: usize, not
 /// { 0x7863f0 } (thiscall, ret 8, news.cpp): `News::send_to_nation_managers(noticia, nacao)`: alcance da nação (+0xde
 /// = 2) e a entrega a cada técnico humano ativo cujo clube (+0x39) ou seleção (+0x24) é da `nacao` (+0x53). Devolve 0.
 /// Notícia ou nação nulas: a original (caixa "Error").
-unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_pais(this: usize, noticia: usize, nacao: usize) -> u32 {
+unsafe extern "thiscall" fn send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
     if noticia == 0 || nacao == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, noticia, nacao); // caixa: só a original
     }
@@ -64,17 +64,17 @@ unsafe extern "thiscall" fn noticia_para_os_tecnicos_do_pais(this: usize, notici
 
 /// Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
-unsafe extern "thiscall" fn comparar_noticia_para_todos_os_tecnicos(this: usize, noticia: usize) -> u32 {
-    crate::comparacao::ramo("noticia_para_todos_os_tecnicos");
+unsafe extern "thiscall" fn comparar_send_to_all_managers(this: usize, noticia: usize) -> u32 {
+    crate::comparacao::ramo("send_to_all_managers");
     orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%)(this, noticia)
 }
 
-unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_da_divisao(this: usize, noticia: usize, divisao: usize) -> u32 {
-    crate::comparacao::ramo("noticia_para_os_tecnicos_da_divisao");
+unsafe extern "thiscall" fn comparar_send_to_division_managers(this: usize, noticia: usize, divisao: usize) -> u32 {
+    crate::comparacao::ramo("send_to_division_managers");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(this, noticia, divisao)
 }
 
-unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_do_pais(this: usize, noticia: usize, nacao: usize) -> u32 {
-    crate::comparacao::ramo("noticia_para_os_tecnicos_do_pais");
+unsafe extern "thiscall" fn comparar_send_to_nation_managers(this: usize, noticia: usize, nacao: usize) -> u32 {
+    crate::comparacao::ramo("send_to_nation_managers");
     orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, noticia, nacao)
 }

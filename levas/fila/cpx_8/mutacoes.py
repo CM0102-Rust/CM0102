@@ -1,8 +1,8 @@
 # Mutacoes (cpx_8), na tatica de cada jogo (0x896660 pela formacao 0x6e0230, todo jogo dos clubes da maquina): o bloco
-# pronto da tatica vizinha (os clubes com tatica pronta jogam com outra formacao e instrucoes), o bloco proprio de outro
+# pronto da tatica vizinha (os clubes com tatica pronta jogam com outra formacao e instructions), o bloco proprio de outro
 # clube (indice/2: os clubes de tatica propria a partir do indice 2 jogam com a de outro) e, no clube humano das ferias,
 # a vaga do time trocada (0 <-> 1, principal e reserva). As duas primeiras mudam o jogo e tudo o que sorteia depois; a
-# terceira pode escapar se o humano das ferias nao passar pelo ramo (contador "cpx_8 tatica do humano") ou se as
+# terceira pode escapar se o humano das ferias nao pass_ball pelo ramo (contador "cpx_8 tatica do humano") ou se as
 # vagas 0 e 1 tiverem o mesmo bloco (o reset do registro poe a pronta 0 em todas). Os contadores "cpx_8 tatica pronta"
 # e "cpx_8 tatica propria" mostram qual ramo da maquina roda.
 MUTACOES = [

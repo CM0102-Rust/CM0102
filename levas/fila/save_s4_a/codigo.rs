@@ -140,12 +140,12 @@ const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
     PassoDaCarga::Objeto(0xa, 0x7da190, 0xb74430, 0x28d9, ArgDaCarga::Idioma),     // 0x2d de novo: PunditList
 ];
 
-/// A busca do CD da carga ("<raiz>cm0102.exe" em cada unidade de CD; ver `montar_estatisticas_da_partida`).
+/// A busca do CD da carga ("<raiz>cm0102.exe" em cada unidade de CD; ver `construct_match_stats`).
 /// `exigir` = a do começo (com os patches sem CD do cm0102-1080 lidos do exe: 0x82aac4 e 0x82ab07):
 /// devolve só quando acha (sem achar, a caixa "Insert CD" e de novo, para sempre). Sem `exigir` = a do fim
 /// (0x82e31d, sem patch nos dois exes): numa unidade de CD sem o exe, a caixa "CD Not Required" e para.
 unsafe fn cd_da_carga(exigir: bool) {
-    let unidades: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
+    let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let tipo: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let procurar: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(0x4c0aa0usize);
@@ -157,9 +157,9 @@ unsafe fn cd_da_carga(exigir: bool) {
     let qualquer_unidade = exigir && *(0x82aac4 as *const u8) == 0x90;
     let sempre_achou = exigir && *(0x82ab07 as *const u8) != 0x85;
     loop {
-        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
+        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de units_digit
         let mut lista = [0u8; 0x100];
-        if unidades(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
+        if units_digit(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
             let mut i = 0usize;
             loop {
                 let raiz = lista.as_ptr() as usize + i;
@@ -183,7 +183,7 @@ unsafe fn cd_da_carga(exigir: bool) {
                     }
                     fechar_busca(ach);
                 }
-                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
+                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 units_digit
                 i += 4;
                 if lista[i] == 0 {
                     break;
@@ -228,7 +228,7 @@ unsafe fn cd_da_carga(exigir: bool) {
 /// Os ramos da original para 0x3e042 ≤ |v| < 0x3e038 (registros de 0xd bytes) e 0x3e042 ≤ |v| <
 /// 0x3e034 (0xc) não são alcançáveis (as comparações estão encadeadas em `jge`): ficam de fora. O laço
 /// de duas voltas da original ([esp+0x24]; a 1ª só põe o total 0x2d) roda o corpo uma vez.
-unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
+unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     let disco: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7a1820usize);
     let memoria: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x7a1710usize);
     let pasta: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(0x90bde0usize);
@@ -565,6 +565,6 @@ unsafe fn tecnicos_de_ferias_desfeitos() {
 
 // ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
-unsafe extern "C" fn comparar_carregar_jogo(caminho: *const u8) -> u32 {
+unsafe extern "C" fn comparar_load_game_data(caminho: *const u8) -> u32 {
     orig::<unsafe extern "C" fn(*const u8) -> u32>(%%I0%%)(caminho)
 }

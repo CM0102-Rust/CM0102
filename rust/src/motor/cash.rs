@@ -42,7 +42,7 @@ pub(crate) unsafe fn cqg8_falhou(quieto: u32, linha: u32, f: usize) -> u32 {
 /// Original: `swap_bytes_16_array` (0x43f2d0, cash.cpp, cdecl).
 ///
 /// [pt] { 0x43f2d0 } (cdecl, cash.cpp): `swap_bytes_16_array(palavras, conta)`: troca os dois bytes de cada palavra.
-pub(crate) unsafe extern "C" fn trocar_bytes_das_palavras(p: usize, conta: u32) {
+pub(crate) unsafe extern "C" fn swap_bytes_16_array(p: usize, conta: u32) {
     for k in 0..conta as usize {
         let a = (p + 2 * k) as *mut u16;
         core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).swap_bytes());
@@ -50,32 +50,32 @@ pub(crate) unsafe extern "C" fn trocar_bytes_das_palavras(p: usize, conta: u32) 
 }
 
 /// Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
-pub(crate) unsafe extern "C" fn comparar_trocar_bytes_das_palavras(p: usize, conta: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(IDX_TROCAR_BYTES_DAS_PALAVRAS);
+pub(crate) unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, u32)>(IDX_SWAP_BYTES_16_ARRAY);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 2 * conta as usize)], || o(p, conta), || trocar_bytes_das_palavras(p, conta));
-    PLACAR.registrar(igual, || format!("trocar_bytes_das_palavras({:x}, {})", p, conta));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 2 * conta as usize)], || o(p, conta), || swap_bytes_16_array(p, conta));
+    PLACAR.registrar(igual, || format!("swap_bytes_16_array({:x}, {})", p, conta));
 }
 
 /// reverses the four bytes of each dword of an array
 /// Original: `swap_bytes_32_array` (0x43f300, cash.cpp, cdecl).
 ///
 /// [pt] { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
-pub(crate) unsafe extern "C" fn trocar_bytes_dos_dwords(p: usize, conta: u32) {
+pub(crate) unsafe extern "C" fn swap_bytes_32_array(p: usize, conta: u32) {
     for k in 0..conta as usize {
         write_u32(p + 4 * k, cqg8_inverter(read_u32(p + 4 * k)));
     }
 }
 
 /// Comparador: lado a lado no vetor.
-pub(crate) unsafe extern "C" fn comparar_trocar_bytes_dos_dwords(p: usize, conta: u32) {
-    let o = orig::<unsafe extern "C" fn(usize, u32)>(IDX_TROCAR_BYTES_DOS_DWORDS);
+pub(crate) unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, conta: u32) {
+    let o = orig::<unsafe extern "C" fn(usize, u32)>(IDX_SWAP_BYTES_32_ARRAY);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 4 * conta as usize)], || o(p, conta), || trocar_bytes_dos_dwords(p, conta));
-    PLACAR.registrar(igual, || format!("trocar_bytes_dos_dwords({:x}, {})", p, conta));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 4 * conta as usize)], || o(p, conta), || swap_bytes_32_array(p, conta));
+    PLACAR.registrar(igual, || format!("swap_bytes_32_array({:x}, {})", p, conta));
 }
 

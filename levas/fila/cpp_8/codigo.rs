@@ -27,8 +27,8 @@ unsafe fn cpp8_clube(i: i32) -> usize {
 }
 
 unsafe fn cpp8_selecao(clube: usize) -> bool {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    e_selecao(clube) != 0
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
+    is_national_team(clube) != 0
 }
 
 /// Um surto (17 bytes, vetor [this+0x1c], capacidade +0x20, conta +0x24): +0 a data (8 bytes), +8 o tipo da doença,
@@ -55,7 +55,7 @@ unsafe fn cpp8_surto_entra(tipo: u8, clube_i: i32) -> bool {
 /// é o byte baixo; se o surto entra (`cpp8_surto_entra`), cresce o vetor de 30 em 30 quando cheio (0x945667, ou
 /// 0x944e46 sem vetor; sem memória, a caixa "Error" da linha 0xd01 e nada), grava o surto no fim (data pela 0x417c10)
 /// e reordena pela data (qsort 0x945333 com 0x778e90).
-unsafe extern "thiscall" fn acrescentar_surto_de_doenca(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
+unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
     let tipo = tipo as u8;
     if !cpp8_surto_entra(tipo, clube_i) {
         return;
@@ -117,9 +117,9 @@ unsafe fn cpp8_depois(limite: &[u8; 8], e: usize) -> bool {
 /// abaixo de [0xae2364]) sem essa doença (+0x1d do registro de 31 bytes em [this]) fica doente (0x62d250: o tipo no
 /// byte baixo da dword do deslocamento do surto, como a original; a partida do surto). No fim, os que saem vão
 /// embora do começo do vetor (os outros descem) e a conta cai.
-unsafe extern "thiscall" fn espalhar_surtos_de_doenca(this: usize) {
+unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
     let cinco = cpp8_cinco_dias_atras();
-    let lesionar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
+    let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
     let mut removidos: i32 = 0;
     let mut k: i32 = 0;
     let mut off: usize = 0;
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn espalhar_surtos_de_doenca(this: usize) {
                             let doenca = cpp8_b(e + 8);
                             let registro = cpp8_d(this).wrapping_add((cpp8_i(p) as usize).wrapping_mul(31));
                             if cpp8_b(registro + 0x1d) != doenca {
-                                lesionar(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, cpp8_i(e + 0xd), 0, 0);
+                                injure(this, (off as u32 & 0xffff_ff00) | doenca as u32, 0, p, 0, 0, cpp8_i(e + 0xd), 0, 0);
                                 quantos = quantos.wrapping_sub(1);
                             }
                         }
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn espalhar_surtos_de_doenca(this: usize) {
 /// 0x76d780 pelo bit 3 do +0x5e) depois de hoje conta como convocado. Sem clube (+0x39), convocado ou clube com +0x1db
 /// ≠ −1: 0. Senão, fora da temporada da nação do clube (0x669bd0 com as duas datas) e faltando menos de 40 dias
 /// (0x54cdb0 de hoje até a segunda data, 16 bits sem sinal): 1; senão 0.
-unsafe extern "stdcall" fn jogador_fora_da_temporada(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn injury_player_in_close_season(pessoa: usize) -> u32 {
     let construir: unsafe extern "thiscall" fn(*mut u32) -> usize = core::mem::transmute(0x54a110usize);
     let mut inicio = [0u32; 2];
     let mut fim = [0u32; 2];
@@ -217,7 +217,7 @@ unsafe extern "stdcall" fn jogador_fora_da_temporada(pessoa: usize) -> u32 {
 /// Comparador: a original sorteia, aloca e reordena: o plano antes (os sorteios e a seleção, com o estado do sorteio
 /// guardado e devolvido); a original roda. Confere o mesmo estado do sorteio e, se o surto entrou, a conta +1 e o surto
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
-unsafe extern "thiscall" fn comparar_acrescentar_surto_de_doenca(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
+unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usize, tipo: u32, clube_i: i32, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(%%I0%%);
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let entra = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| cpp8_surto_entra(tipo as u8, clube_i)));
@@ -240,14 +240,14 @@ unsafe extern "thiscall" fn comparar_acrescentar_surto_de_doenca(this: usize, da
         n == n0
     };
     PLACAR.registrar(ok && mesmo_sorteio, || {
-        format!("acrescentar_surto_de_doenca(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", tipo as u8, clube_i, entra, n0, n, mesmo_sorteio)
+        format!("add_illness_outbreak(tipo {}, clube {}) plano entra={}, conta {} -> {}, mesmo sorteio={}", tipo as u8, clube_i, entra, n0, n, mesmo_sorteio)
     });
 }
 
 /// Comparador: a original sorteia e adoece (0x62d250, que pode acrescentar surtos): roda só ela e confere o plano
 /// feito antes: quantos surtos tinham mais de cinco dias (os que saem) e, depois, nenhum surto com mais de cinco dias e
 /// a conta pelo menos a de antes menos os que saem.
-unsafe extern "thiscall" fn comparar_espalhar_surtos_de_doenca(this: usize) {
+unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let cinco = cpp8_cinco_dias_atras();
     let n0 = cpp8_i(this + 0x24);
@@ -267,14 +267,14 @@ unsafe extern "thiscall" fn comparar_espalhar_surtos_de_doenca(this: usize) {
     let n = cpp8_i(this + 0x24);
     let velho = (0..n.max(0) as usize).find(|&k| cpp8_depois(&cinco, cpp8_d(this + 0x1c) + k * CPP8_SURTO));
     PLACAR.registrar(velho.is_none() && n >= n0 - saem, || {
-        format!("espalhar_surtos_de_doenca: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
+        format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
     });
 }
 
 /// Comparador: pelo valor (datas, a seleção e a temporada só calculam).
-unsafe extern "stdcall" fn comparar_jogador_fora_da_temporada(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_injury_player_in_close_season(pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I2%%)(pessoa);
-    let n = jogador_fora_da_temporada(pessoa);
-    PLACAR.registrar(r == n, || format!("jogador_fora_da_temporada({:x}) original={} rust={}", pessoa, r, n));
+    let n = injury_player_in_close_season(pessoa);
+    PLACAR.registrar(r == n, || format!("injury_player_in_close_season({:x}) original={} rust={}", pessoa, r, n));
     r
 }

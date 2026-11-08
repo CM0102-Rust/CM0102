@@ -57,7 +57,7 @@ unsafe fn cpt6_dezembro(na: usize, h: &mut [f64; 6], marca: &mut u8) {
 /// mês da tabela 0x9cd200 (palavra pelo mês 0x54cfb0): um vetor (malloc de 12 bytes por nação: a nação e a soma
 /// 0,6·c0 + 0,4·b8 + 0,2·b0 + 0,8·c8 + d8 + d0), ordenado (qsort 0x945333 com 0x4afba0) e solto; no dia de dezembro
 /// ([0x9cd216]) cada nação passa também pelo bônus e pelo deslocamento da história (`cpt6_dezembro`).
-unsafe extern "C" fn coeficientes_das_nacoes() {
+unsafe extern "C" fn game_update_nation_coefficients() {
     let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944e46usize);
     let qsort: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(0x945333usize);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -122,7 +122,7 @@ unsafe extern "C" fn coeficientes_das_nacoes() {
 
 /// Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
 /// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
-unsafe extern "C" fn comparar_coeficientes_das_nacoes() {
+unsafe extern "C" fn comparar_game_update_nation_coefficients() {
     let o = orig::<unsafe extern "C" fn()>(%%I0%%);
     let iniciar = cpt6_b(0x9cd218) != 0;
     let hoje = cpt6_d(0xae2c90) as i16;
@@ -158,29 +158,29 @@ unsafe extern "C" fn comparar_coeficientes_das_nacoes() {
     if cpt6_b(0x9cd218) != 0 {
         erro = Some(format!("[0x9cd218] = {}", cpt6_b(0x9cd218)));
     }
-    PLACAR.registrar(erro.is_none(), || format!("coeficientes_das_nacoes(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
+    PLACAR.registrar(erro.is_none(), || format!("game_update_nation_coefficients(dezembro {}): {}", dez, erro.clone().unwrap_or_default()));
 }
 
 /// { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
 /// aposentadorias), senão 0. Pelo laço do dia do jogo (0x5cda97, com a data inteira: o dia é a palavra baixa).
 /// A original só devolve o al (o ah fica com o byte alto do dia).
-unsafe extern "C" fn dia_das_aposentadorias(dia: u32) -> u32 {
+unsafe extern "C" fn is_player_regen_day(dia: u32) -> u32 {
     let d = dia as u16;
     (d == 0 || d == 0x50 || d == 0xad || d == 0xfa) as u32
 }
 
 /// Comparador: pelo al (o único byte que os chamadores leem).
-unsafe extern "C" fn comparar_dia_das_aposentadorias(dia: u32) -> u32 {
+unsafe extern "C" fn comparar_is_player_regen_day(dia: u32) -> u32 {
     let r = orig::<unsafe extern "C" fn(u32) -> u32>(%%I1%%)(dia);
-    let n = dia_das_aposentadorias(dia);
-    PLACAR.registrar(r as u8 == n as u8, || format!("dia_das_aposentadorias({}) {} x {}", dia as u16, r as u8, n as u8));
+    let n = is_player_regen_day(dia);
+    PLACAR.registrar(r as u8 == n as u8, || format!("is_player_regen_day({}) {} x {}", dia as u16, r as u8, n as u8));
     r
 }
 
 /// { 0x5d61d0 } (cdecl, game.cpp): `clamp_char_sum(a, b, min, max)`: a soma dos dois bytes com sinal (16 bits),
 /// presa entre os outros dois. Devolve o ax da original: `min` ou `max` estendidos, ou o byte alto do `max`
 /// estendido com a soma no al (os 26 chamadores, no diário dos jogadores, só gravam o al).
-unsafe extern "C" fn soma_presa(a: u32, b: u32, min: u32, max: u32) -> u32 {
+unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let s = (a as u8 as i8 as i16).wrapping_add(b as u8 as i8 as i16);
     let lo = min as u8 as i8 as i16;
     let hi = max as u8 as i8 as i16;
@@ -194,9 +194,9 @@ unsafe extern "C" fn soma_presa(a: u32, b: u32, min: u32, max: u32) -> u32 {
 }
 
 /// Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
-unsafe extern "C" fn comparar_soma_presa(a: u32, b: u32, min: u32, max: u32) -> u32 {
+unsafe extern "C" fn comparar_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let r = orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(a, b, min, max);
-    let n = soma_presa(a, b, min, max);
-    PLACAR.registrar(r as u16 == n as u16, || format!("soma_presa({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
+    let n = clamp_char_sum(a, b, min, max);
+    PLACAR.registrar(r as u16 == n as u16, || format!("clamp_char_sum({}, {}, {}, {}) {:x} x {:x}", a as u8 as i8, b as u8 as i8, min as u8 as i8, max as u8 as i8, r as u16, n as u16));
     r
 }

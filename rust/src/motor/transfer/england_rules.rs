@@ -67,18 +67,18 @@ pub(crate) const CQK1_INGLATERRA: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x579b30 } (thiscall, ret 0x14, england_rules.cpp, `ENGLAND_RULES::ENGLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Inglaterra (regra 7): a base (0x8e84a0), a vtable 0x969f4c, 1 janela(s) de `CQK1_INGLATERRA`. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_inglaterra(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_1 inglaterra");
     cqk1_construir(this, [a1, a2, a3, a4, a5], 0x969f4c, 1, &CQK1_INGLATERRA, 0x9c4498, 0x4f);
     this
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_inglaterra(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_INGLATERRA);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_england_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_ENGLAND_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_inglaterra", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_inglaterra(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_england_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_england_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -95,7 +95,7 @@ pub(crate) const CQK1_EUA: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x90b940 } (thiscall, ret 0x14, usa_rules.cpp, `USA_RULES::USA_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência dos EUA (regra 25): a base (0x8e84a0), a vtable 0x970a38, 1 janela(s) de `CQK1_EUA` e o +0x13 = 4 (o padrão da base é 50) [inferência: o limite de estrangeiros]. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_eua(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_1 eua");
     cqk1_construir(this, [a1, a2, a3, a4, a5], 0x970a38, 1, &CQK1_EUA, 0xaa211c, 0x54);
     *((this + 0x13) as *mut u8) = 4;
@@ -103,11 +103,11 @@ pub(crate) unsafe extern "thiscall" fn regras_eua(this: usize, a1: u32, a2: u32,
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_eua(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_EUA);
+pub(crate) unsafe extern "thiscall" fn comparar_construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_USA_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_eua", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_eua(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("construct_usa_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        construct_usa_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -124,7 +124,7 @@ pub(crate) const CQK1_AUSTRALIA: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x412c80 } (thiscall, ret 0x14, australia_rules.cpp, `AUSTRALIA_RULES::Australia_rules`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Austrália (regra 2): a base (0x8e84a0), a vtable 0x967830, 1 janela(s) de `CQK1_AUSTRALIA` e o +0x13 = 6 [inferência: o limite de estrangeiros]. Devolve o objeto.
-pub(crate) unsafe extern "thiscall" fn regras_australia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+pub(crate) unsafe extern "thiscall" fn australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_1 australia");
     cqk1_construir(this, [a1, a2, a3, a4, a5], 0x967830, 1, &CQK1_AUSTRALIA, 0x987cfc, 0x51);
     *((this + 0x13) as *mut u8) = 6;
@@ -132,11 +132,11 @@ pub(crate) unsafe extern "thiscall" fn regras_australia(this: usize, a1: u32, a2
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk1_comparar`).
-pub(crate) unsafe extern "thiscall" fn comparar_regras_australia(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_REGRAS_AUSTRALIA);
+pub(crate) unsafe extern "thiscall" fn comparar_australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_AUSTRALIA_RULES);
     let mut r = 0usize;
-    cqk1_comparar("regras_australia", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        regras_australia(s, a1, a2, a3, a4, a5);
+    cqk1_comparar("australia_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
+        australia_rules(s, a1, a2, a3, a4, a5);
     });
     r
 }
@@ -168,7 +168,7 @@ pub(crate) unsafe fn cqe5_conta(clube: usize) -> usize {
 /// contrato): pode. O clube que pede e o dono na mesma divisão inglesa ([0x9cf5bc]): motivo 0x1d. Cinco empréstimos na
 /// temporada (a tabela [[0xde1f54] + 0x91c]): 0x1e. Mais de um jogador de outro clube no elenco (as 50 vagas em +0xd7,
 /// contados só com o id do jogador abaixo de [0xae2364]): 0x26. Fora da janela (0x8e8e50): 9, com o adjetivo da nação.
-pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
     // 0x66f4e0: o texto da mensagem (push ...; push formato; push destino; add esp, 0x14) -> cdecl variádica
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let c = cps5_contrato(jogador);
@@ -259,7 +259,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_pode_emprestar(this: usize, clube: u
 /// [pt] { 0x579fd0 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::record_loan(oferta)`, quando um empréstimo se
 /// conclui (0x8c9390): o clube da oferta (+8, índice em [0xae23b4]) da nação inglesa ([0x9cf2e4]) soma 1 na conta da
 /// temporada.
-pub(crate) unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, oferta: usize) {
+pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, oferta: usize) {
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(oferta + 8).wrapping_mul(0x245));
     let nacao = read_usize(clube + club::NATION);
     if nacao != 0 && read_usize(nacao) == read_usize(KEY_NATION_ENGLAND) {
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn cqe5_registrar_emprestimo(_this: usize, o
 /// [pt] { 0x57a020 } (thiscall, ret 4, england_rules.cpp): `ENGLAND_RULES::daily_update(data)`, pelo dia das regras: em
 /// 20 de junho (só o dia do ano, 0x549f70 com 1998), a conta da temporada de cada clube ([0xae235c] em [0xae23b4]) da
 /// nação destas regras (+0xa) volta a zero.
-pub(crate) unsafe extern "thiscall" fn cqe5_dia_das_regras(this: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, data: usize) {
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
@@ -337,23 +337,23 @@ pub(crate) unsafe fn cqe5_comparar_pode(o: unsafe extern "thiscall" fn(usize, us
     ro
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqe5_pode_emprestar(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    cqe5_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_CQE5_PODE_EMPRESTAR), cqe5_pode_emprestar, "cqe5_pode_emprestar", this, clube, jogador, msg, motivo)
+pub(crate) unsafe extern "thiscall" fn comparar_england_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
+    cqe5_comparar_pode(orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_ENGLAND_RULES_CAN_LOAN_PLAYER), england_rules_can_loan_player, "england_rules_can_loan_player", this, clube, jogador, msg, motivo)
 }
 
 /// Comparador: lado a lado no byte da conta do clube da oferta.
-pub(crate) unsafe extern "thiscall" fn comparar_cqe5_registrar_emprestimo(this: usize, oferta: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CQE5_REGISTRAR_EMPRESTIMO);
+pub(crate) unsafe extern "thiscall" fn comparar_record_loan(this: usize, oferta: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RECORD_LOAN);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(oferta + 8).wrapping_mul(0x245));
     let regioes = [(cqe5_conta(clube), 1usize)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || cqe5_registrar_emprestimo(this, oferta));
-    PLACAR.registrar(igual, || format!("cqe5_registrar_emprestimo(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, oferta), || record_loan(this, oferta));
+    PLACAR.registrar(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", oferta, mo, mr));
 }
 
 /// Comparador: lado a lado na tabela das contas inteira ([0xae235c] clubes × 16 bytes) só no dia em que ela muda (20
 /// de junho); nos outros dias as duas rodam sem gravar nada e só a original fica valendo.
-pub(crate) unsafe extern "thiscall" fn comparar_cqe5_dia_das_regras(this: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CQE5_DIA_DAS_REGRAS);
+pub(crate) unsafe extern "thiscall" fn comparar_england_rules_daily_update(this: usize, data: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ENGLAND_RULES_DAILY_UPDATE);
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     let r = data_de(d.as_mut_ptr() as usize, 0x14, 5, 0x7ce, -1);
@@ -363,8 +363,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqe5_dia_das_regras(this: usize,
     }
     let n = (read_usize(G_CLUB_COUNT) as i32).max(0) as usize;
     let regioes = [(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c), n * 16)];
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this, data), || cqe5_dia_das_regras(this, data));
-    PLACAR.registrar(igual, || format!("cqe5_dia_das_regras(regras {:#x}) tabela diverge", this));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(this, data), || england_rules_daily_update(this, data));
+    PLACAR.registrar(igual, || format!("england_rules_daily_update(regras {:#x}) tabela diverge", this));
 }
 
 /// after 19 June and with the player under 24, the base rule period; otherwise from next month to three months later
@@ -374,7 +374,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqe5_dia_das_regras(this: usize,
 /// início_ano, fim_mês, fim_ano, jogador)`, pelo período do empréstimo (0x8d0590). Depois de 19 de junho (só o dia do
 /// ano, 0x549f70 com 1998) e com o jogador abaixo de 24 anos (+0x18): o período da regra base (0x8e8bd0). Senão começa
 /// no mês seguinte e acaba três meses depois.
-pub(crate) unsafe extern "thiscall" fn cqe6_periodo_inglaterra(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
+pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
     // 0x549f70: push -1; push 0x7ce; push 5; push 0x13; lea ecx, local -> thiscall, ret 0x10
     let data_de: unsafe extern "thiscall" fn(usize, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
@@ -404,9 +404,9 @@ pub(crate) unsafe extern "thiscall" fn cqe6_periodo_inglaterra(this: usize, club
 }
 
 /// Comparador: lado a lado nas quatro saídas e em [0xae1080] (a regra base pode consultar contratos).
-pub(crate) unsafe extern "thiscall" fn comparar_cqe6_periodo_inglaterra(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_CQE6_PERIODO_INGLATERRA);
+pub(crate) unsafe extern "thiscall" fn comparar_england_rules_get_loan_period(this: usize, clube: usize, a2: u32, ini_mes: *mut i8, ini_ano: *mut i16, fim_mes: *mut i8, fim_ano: *mut i16, jogador: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_ENGLAND_RULES_GET_LOAN_PERIOD);
     let regioes = [(ini_mes as usize, 1usize), (ini_ano as usize, 2), (fim_mes as usize, 1), (fim_ano as usize, 2), (0xae1080, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || cqe6_periodo_inglaterra(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
-    PLACAR.registrar(igual, || format!("cqe6_periodo_inglaterra(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, clube, jogador, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador), || england_rules_get_loan_period(this, clube, a2, ini_mes, ini_ano, fim_mes, fim_ano, jogador));
+    PLACAR.registrar(igual, || format!("england_rules_get_loan_period(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, clube, jogador, mo, mr));
 }

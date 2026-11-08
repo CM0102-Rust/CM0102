@@ -11,13 +11,13 @@ unsafe fn cpc1_lista(this: usize, ano: u32, dia: u32, fatia: u32, grupo: u32) ->
     l
 }
 
-/// O próximo item da lista `l` (0x68d1b0, proximo_da_lista), ou 0.
+/// O próximo item da lista `l` (0x68d1b0, next_list_item), ou 0.
 unsafe fn cpc1_proximo(l: usize) -> usize {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     proximo(l)
 }
 
-/// A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa passar: a competição (+0), a fase
+/// A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa pass_ball: a competição (+0), a fase
 /// (+0x34, curto com sinal) e os dois clubes (cada um o mandante +0xc ou o visitante +0x10).
 unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32) -> bool {
     let d = |o: usize| core::ptr::read_unaligned((f + o) as *const i32);
@@ -38,7 +38,7 @@ unsafe fn cpc1_passa(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32)
 /// à 0x5abf10 ano, dia e fatia com a metade alta de locais nunca escritas (lixo), mas ela e o que chama (0x5aa2d0,
 /// 0x5a9cf0, 0x54cfe0) só usam a palavra/o byte: a cópia passa zero. Nos sorteios de copa (Cup.cpp 0x519d90,
 /// 0x51a150, 0x522c70). Sem SEH, sem caixa (a da 0x5abf10 só sem memória).
-unsafe extern "thiscall" fn proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
+unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, _a9: u32, _a10: u32, _a11: u32) -> usize {
     let grupo_de: unsafe extern "C" fn(usize, u32) -> u32 = core::mem::transmute(0x48dd70usize);
     let tabela = *(0xae23d0 as *const usize);
@@ -103,15 +103,15 @@ unsafe extern "thiscall" fn proxima_partida(this: usize, pano: *mut u16, pdia: *
     f
 }
 
-unsafe extern "thiscall" fn comparar_proxima_partida(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
+unsafe extern "thiscall" fn comparar_find_next_fixture(this: usize, pano: *mut u16, pdia: *mut u16, pfatia: *mut u8, adiante: u32,
     comp: i32, fase: i32, clube_a: i32, clube_b: i32, a9: u32, a10: u32, a11: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, *mut u16, *mut u16, *mut u8, u32, i32, i32, i32, i32, u32, u32, u32) -> usize>(%%I0%%);
     let antes = (*pano, *pdia, *pfatia);
     let reg = [(pano as usize, 2), (pdia as usize, 2), (pfatia as usize, 1)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg,
         || o(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11),
-        || proxima_partida(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11));
-    PLACAR.registrar(igual && r == n, || format!("proxima_partida(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+        || find_next_fixture(this, pano, pdia, pfatia, adiante, comp, fase, clube_a, clube_b, a9, a10, a11));
+    PLACAR.registrar(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         antes, adiante, comp, fase, clube_a, clube_b, r, n, mo, mr));
     r
 }
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn comparar_proxima_partida(this: usize, pano: *mut u16
 /// 0x5abf10 no byte baixo do argumento do ano (a original guarda o laço lá: os 3 bytes altos são os do ano). Estádio
 /// nulo: 0. Na marcação dos amistosos (friendly.cpp 0x5c6f00, 0x5c75a0) e em 0x7e6380, 0x7e6720. Sem SEH, sem locais
 /// sem valor.
-unsafe extern "thiscall" fn estadio_em_uso(this: usize, estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32 {
+unsafe extern "thiscall" fn is_stadium_in_use(this: usize, estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32 {
     if estadio == 0 {
         return 0;
     }
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn estadio_em_uso(this: usize, estadio: usize, dia: u32
     0
 }
 
-comparar_valor!(comparar_estadio_em_uso, estadio_em_uso, %%I1%%, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
+comparar_valor!(comparar_is_stadium_in_use, is_stadium_in_use, %%I1%%, (estadio: usize, dia: u32, ano: u32, fatia: u32) -> u32);
 
 /// { 0x5cbdd0 } (thiscall, ret 4, friendly.cpp): `friendly_international_date_resolve(ano)`: a data (+3) da entrada
 /// de data internacional `this` pela 0x54a130 (Date.cpp: dia, mês, ano, dia da semana) com o dia (+1) e o dia da
@@ -169,7 +169,7 @@ comparar_valor!(comparar_estadio_em_uso, estadio_em_uso, %%I1%%, (estadio: usize
 /// ano (metade alta do dia), o eax é o ano também no único chamador (0x5cbc18, `push eax; call`; metade alta do mês e
 /// do dia da semana). O eax devolvido é lixo: o endereço de pilha do temporário que a 0x417c10 copia no fim da 0x54a2d0
 /// (muda com a profundidade da pilha), e o chamador o descarta (0x5cbc1d `mov eax, [esp+14h]`); só a data (+3..+0xb) conta.
-unsafe extern "thiscall" fn data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
+unsafe extern "thiscall" fn friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
     let acertar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x54a130usize);
     let b = |o: usize| *((this + o) as *const i8) as i16 as u16 as u32;
     let alto = ano & 0xffff_0000;
@@ -193,11 +193,11 @@ unsafe fn cpc1_data_original(o: usize, this: usize, ano: u32) -> u32 {
     r
 }
 
-unsafe extern "thiscall" fn comparar_data_do_amistoso_internacional(this: usize, ano: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_friendly_international_date_resolve(this: usize, ano: u32) -> u32 {
     let o = orig::<usize>(%%I2%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 11)], || cpc1_data_original(o, this, ano),
-        || data_do_amistoso_internacional(this, ano));
-    PLACAR.registrar(igual /* o eax é lixo de pilha: só a memória */, || format!("data_do_amistoso_internacional({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+        || friendly_international_date_resolve(this, ano));
+    PLACAR.registrar(igual /* o eax é lixo de pilha: só a memória */, || format!("friendly_international_date_resolve({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         this, ano, r, n, mo, mr));
     r
 }

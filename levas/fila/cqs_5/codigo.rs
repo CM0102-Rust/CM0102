@@ -188,14 +188,14 @@ unsafe fn cqs5_selecao(this: usize) -> u32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
+unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
     cqs5_selecao(this)
 }
 
 /// Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
 /// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
 /// caso em que ela lê a dword sem valor da pilha), só a original.
-unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_select_section_clubs(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let base = cqs5_d(0xae23b4);
     let tem_rebaixado = (0..cqs5_d(0xae235c) as i32).any(|i| {
@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqs5_trofeu_clubes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
 /// thiscall, ret 0x3c: a copa, +0x3e (word), o vetor, as rodadas (word), +4, a tabela, o ano +0x40 (word), 0, 1, o extra
 /// (word), +0x51 (byte), 0, 0, 0, sem sementes; os words e bytes vão com lixo em cima, que o construtor não lê) em
 /// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
-unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
+unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let times = alocar(((cqs5_w(this + 0x3e) as i32) << 2) as u32);
@@ -281,17 +281,17 @@ unsafe extern "thiscall" fn cqs5_trofeu_fase_das_chaves(this: usize) {
 }
 
 /// Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
-unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_das_chaves(this: usize) {
+unsafe extern "thiscall" fn comparar_create_section_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     o(this);
     let f = cqs5_d(cqs5_d(this + 0xc));
-    PLACAR.registrar(f != 0 && cqs5_d(this + 0x30) == 0, || format!("cqs5_trofeu_fase_das_chaves({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
+    PLACAR.registrar(f != 0 && cqs5_d(this + 0x30) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, cqs5_d(this + 0x30) as i32));
 }
 
 /// { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
 /// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
 /// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
-unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let fase = cqs5_d(this + 0x30) as i32;
     if fase >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1) {
         return aviso_em(0x9c4180, 0x314);
@@ -306,11 +306,11 @@ unsafe extern "thiscall" fn cqs5_trofeu_fase_seguinte(this: usize) {
 }
 
 /// Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
-unsafe extern "thiscall" fn comparar_cqs5_trofeu_fase_seguinte(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_auto_cup_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     let antes = cqs5_d(this + 0x30) as i32;
     let ultima = antes >= (cqs5_d(this + 0x2c) as i32).wrapping_sub(1);
     o(this);
     let depois = cqs5_d(this + 0x30) as i32;
-    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("cqs5_trofeu_fase_seguinte({:#x}) fase {} -> {}", this, antes, depois));
+    PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, antes, depois));
 }

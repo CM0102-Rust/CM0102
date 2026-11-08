@@ -127,7 +127,7 @@ unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
 /// do visitante × fator do mandante, 15%)) e o mandante o resto; neutro metade), sem estádio 40 mil e 25 mil; sem
 /// público, 1 a 50 e 1 a 15. Total = mandante + visitante − sorteio(50) (negativo: 45 a 194). Grava em `saida` o
 /// total, o mandante e o visitante e devolve o total.
-unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     if jogo == 0 {
         return cqo2_i(0xa835ac);
     }
@@ -385,7 +385,7 @@ unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mu
 
 /// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
-unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(%%I0%%);
     if jogo == 0 {
         return o(this, jogo, saida);
@@ -397,7 +397,7 @@ unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jogo: usize, s
     if cqo2_d(jogo + 0x18) != 0 {
         reg.push((cqo2_d(jogo + 0x18) + 0x3c, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida), || crate::aleatorio::sem_contar(|| publico_do_jogo(this, jogo, saida)));
-    PLACAR.registrar(igual && r == n, || format!("publico_do_jogo(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", cqo2_d(jogo), cqo2_b(jogo + 0x3a), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida), || crate::aleatorio::sem_contar(|| calculate_match_attendance(this, jogo, saida)));
+    PLACAR.registrar(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", cqo2_d(jogo), cqo2_b(jogo + 0x3a), r, n, mo, mr));
     r
 }

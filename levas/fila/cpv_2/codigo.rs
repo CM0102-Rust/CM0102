@@ -28,8 +28,8 @@ unsafe fn cpv2_pessoa(id: usize) -> usize {
 
 /// O contrato principal da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz depois de cada chamada.
 unsafe fn cpv2_contrato(p: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpv2_d(0xae1050), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpv2_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     c
 }
@@ -76,8 +76,8 @@ unsafe fn cpv2_resolvida(o: usize) -> bool {
 /// liberada), o valor dela (0x4d0c60) passa ao preço (+0x1b), o registro de 8 bytes dela perde uma oferta (+2), a
 /// notícia (sem `silencioso`), e a reação do vendedor do computador (0x8c8090) e do comprador (0x8c0810), parando se a
 /// oferta ficou resolvida. No fim, a oferta segue (0x8c2f50).
-unsafe extern "thiscall" fn recusa_dos_termos(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
-    let clube_humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
+    let human_club: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let limpar_marcas: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     let anotar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(0x843e10usize);
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn recusa_dos_termos(this: usize, pessoa: usize, indice
         let comprador = cpv2_clube(cpv2_d(o + 8));
         let vendedor = cpv2_clube_do_contrato(cpv2_contrato(pessoa), true);
         cpv2_pb(o + 0x2c, 0xf);
-        if silencioso == 0 && clube_humano(comprador, 1, 1, 0, 0) != 0 && cpv2_b(o + 0x1f) != 1 {
+        if silencioso == 0 && human_club(comprador, 1, 1, 0, 0) != 0 && cpv2_b(o + 0x1f) != 1 {
             cpv2_pb(o + 0x2e, cpv2_b(o + 0x2e).wrapping_add(1));
         } else {
             cpv2_pb(o + 0x2e, 3);
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn recusa_dos_termos(this: usize, pessoa: usize, indice
                 limpar_marcas(cpv2_d(this + 0x856), dono, cpv2_pessoa(cpv2_d(y)));
             }
         }
-        if clube_humano(comprador, 0, 1, 0, 0) == 0 {
+        if human_club(comprador, 0, 1, 0, 0) == 0 {
             crate::comparacao::ramo("cpv_2 recusa anotada na lista");
             // a original testa o byte com o eax zerado pela pergunta de antes (em cima, zero)
             anotar(cpv2_d(this + 0x856), pessoa, comprador, 1, (cpv2_b(o + 0x11) != 0xb) as u32); // cpv2: a recusa na lista
@@ -228,13 +228,13 @@ unsafe extern "thiscall" fn recusa_dos_termos(this: usize, pessoa: usize, indice
         noticia(this, pessoa, vendedor, comprador, 4, o, 0, 0, novo_preco as u32);
     }
     core::ptr::write_unaligned((o + 0x1b) as *mut i32, novo_preco);
-    if vendedor != 0 && clube_humano(vendedor, 0, 1, 0, 0) == 0 {
+    if vendedor != 0 && human_club(vendedor, 0, 1, 0, 0) == 0 {
         resposta_do_vendedor(this, vaga(), 1);
         if cpv2_resolvida(o) {
             return;
         }
     }
-    if clube_humano(comprador, 0, 1, 0, 0) != 0 {
+    if human_club(comprador, 0, 1, 0, 0) != 0 {
         return seguir(this, o);
     }
     resposta_do_comprador(cpv2_d(0xde1f54), vaga(), 1);
@@ -256,7 +256,7 @@ unsafe fn cpv2_antes_das_noticias() -> bool {
 /// post_board_confidence_update_news(clube)`: antes da data das notícias, nada. A notícia 0x1772 (local): 0 = o id do
 /// clube, 1 = os dias do técnico (+0xcf) no cargo (desde a data +0x3e, 365 dias por ano) ou 100 sem técnico; pelo
 /// alcance (0x786090) com o clube.
-unsafe extern "thiscall" fn noticia_da_confianca_da_diretoria(_this: usize, clube: usize) {
+unsafe extern "thiscall" fn post_board_confidence_update_news(_this: usize, clube: usize) {
     if cpv2_antes_das_noticias() {
         return;
     }
@@ -281,7 +281,7 @@ unsafe extern "thiscall" fn noticia_da_confianca_da_diretoria(_this: usize, club
 /// { 0x6a4a20 } (thiscall, ret 8, manager_manager.cpp, quadro SEH sem destrutor): `MANAGER_MANAGER::
 /// post_board_expectations_news(clube, expectativas)`: antes da data das notícias, nada. A notícia 0x1771 (local): 0 =
 /// o id do clube, 1 = as expectativas (palavra com sinal); ao técnico do clube (0x7861e0).
-unsafe extern "thiscall" fn noticia_das_expectativas_da_diretoria(_this: usize, clube: usize, expectativas: u32) {
+unsafe extern "thiscall" fn post_board_expectations_news(_this: usize, clube: usize, expectativas: u32) {
     if cpv2_antes_das_noticias() {
         return;
     }
@@ -300,16 +300,16 @@ unsafe extern "thiscall" fn noticia_das_expectativas_da_diretoria(_this: usize, 
 // ponytail: reagenda, mexe nas listas e na reputação, pode liberar a lista da troca e chama a resposta dos clubes e a
 // oferta seguinte (0x8c2f50): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e
 // pelas mutações.
-unsafe extern "thiscall" fn comparar_recusa_dos_termos(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
+unsafe extern "thiscall" fn comparar_handle_player_rejected_terms(this: usize, pessoa: usize, indice: i32, silencioso: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, i32, u32)>(%%I0%%)(this, pessoa, indice, silencioso)
 }
 
 // ponytail: a notícia vai pelo alcance (aloca): só a original. Quente (40 mil chamadas): sem contador.
-unsafe extern "thiscall" fn comparar_noticia_da_confianca_da_diretoria(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_post_board_confidence_update_news(this: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, clube)
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_das_expectativas_da_diretoria(this: usize, clube: usize, expectativas: u32) {
+unsafe extern "thiscall" fn comparar_post_board_expectations_news(this: usize, clube: usize, expectativas: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, clube, expectativas)
 }

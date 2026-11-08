@@ -69,7 +69,7 @@ unsafe fn cqg9_liberar(p: usize) {
 /// com competições pede o maior × a quantidade e, faltando, sorteia os que faltam (0x79c5c0); sem competições e menos de
 /// 5, sorteia até o +0x8e da nação (1..5). Os índices (+0), o primeiro de cada nação e, por nação, as vagas ordenadas
 /// (qsort 0x79d410) com a parte de cada uma; this+4 a conta e this+8 as marcas (calloc).
-unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
+unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let rever: unsafe extern "C" fn() = core::mem::transmute(0x79caa0usize);
     rever();
     cqg9_ordenar(cqg9_d(0xae23e8), cqg9_i(0xae2390) as u32, 0x2b, 0x79d4e0);
@@ -225,10 +225,10 @@ unsafe extern "thiscall" fn montar_os_arbitros(this: usize) {
 
 /// Comparador: só a original (ponytail: aloca, libera e troca a tabela dos árbitros, e as chamadas sorteiam: não pode
 /// rodar duas vezes), com o plano: os blocos por nação (this+0xc), a conta (this+4) igual à da tabela e as marcas (this+8).
-unsafe extern "thiscall" fn comparar_montar_os_arbitros(this: usize) {
+unsafe extern "thiscall" fn comparar_set_up_officials(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     PLACAR.registrar(cqg9_d(this + 0xc) != 0 && cqg9_i(this + 4) == cqg9_i(0xae2390) && cqg9_d(this + 8) != 0,
-        || format!("montar_os_arbitros: blocos {:x}, conta {} x {}", cqg9_d(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
+        || format!("set_up_officials: blocos {:x}, conta {} x {}", cqg9_d(this + 0xc), cqg9_i(this + 4), cqg9_i(0xae2390)));
 }
 
 unsafe fn cqg9v_i(a: usize) -> i32 {
@@ -243,7 +243,7 @@ unsafe fn cqg9v_w(a: usize) -> i16 {
 /// competição de uma nação (qsort da 0x79bf60, entradas de 16 bytes com a competição em +0xc): competição de `a` fora de
 /// 0..[0xae2378]: 1; a de `b` fora: −1; pelo nível (+0x69, palavra, da competição de 0x6b bytes em [0xae23d0]); mesmo
 /// nível: a diferença dos ids.
-unsafe extern "C" fn ordem_das_vagas_de_competicao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let (ca, cb) = (cqg9v_i(a + 0xc), cqg9v_i(b + 0xc));
     let max = cqg9v_i(0xae2378);
     if ca < 0 || ca > max {
@@ -262,9 +262,9 @@ unsafe extern "C" fn ordem_das_vagas_de_competicao(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: a devolução (só lê).
-unsafe extern "C" fn comparar_ordem_das_vagas_de_competicao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_das_vagas_de_competicao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_vagas_de_competicao({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = officials_manager_compare_comp_level(a, b);
+    PLACAR.registrar(r == n, || format!("officials_manager_compare_comp_level({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

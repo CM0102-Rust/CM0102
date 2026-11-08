@@ -35,7 +35,7 @@ fn cpl7_valor(valor: i32) -> i32 {
 /// `valor` até 50.000.000 (+0x11) e a `avaliacao` × 100 truncada (+0x15, _ftol 0x945640); a conta sobe e reordena (qsort
 /// com 0x757ea0). Sem vetor, aloca 20 (0x944e46; sem memória, caixa 0x665d e fim); cheio, cresce 20 (realloc 0x945667;
 /// caixa 0x6668). A data padrão (0x54a110) da chave na pilha, como a original.
-unsafe extern "thiscall" fn acrescentar_interesse_de_transferencia(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
+unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
     let mut data = [0u8; 8];
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     padrao(data.as_mut_ptr() as usize);
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn acrescentar_interesse_de_transferencia(this: usize, 
 
 /// { 0x757ea0 } (cdecl, media.cpp): `compare_id_pair_keys(a, b)` do qsort e do bsearch: nulo antes (`a` nulo −1, `b`
 /// nulo 1); ids +0 diferentes, a diferença; iguais, 0 se um dos +4 é −1 (o coringa), senão a diferença dos +4.
-unsafe extern "C" fn ordem_das_chaves_de_ids(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_id_pair_keys(a: usize, b: usize) -> i32 {
     if a == 0 {
         return -1;
     }
@@ -102,7 +102,7 @@ unsafe extern "C" fn ordem_das_chaves_de_ids(a: usize, b: usize) -> i32 {
 /// { 0x757ee0 } (cdecl, media.cpp): `compare_story_log_records(a, b)` do qsort e do bsearch do registro de histórias:
 /// nulo antes (`a` nulo −1, `b` nulo 1); pelo sujeito a (+8), o sujeito b (+0xc) e o tipo (+0x13), a diferença do
 /// primeiro diferente; iguais, a diferença dos subtipos (palavras +0x11 com sinal).
-unsafe extern "C" fn ordem_das_historias(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_story_log_records(a: usize, b: usize) -> i32 {
     if a == 0 {
         return -1;
     }
@@ -132,7 +132,7 @@ unsafe fn cpl7_interesse(jogador: usize, clube: usize, valor: i32, avaliacao: f6
 
 /// Comparador: a original pode alocar e realocar (não roda duas vezes): o plano antes (já está? o registro novo);
 /// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
-unsafe extern "thiscall" fn comparar_acrescentar_interesse_de_transferencia(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
+unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
     let n = cpl7_d(this + 0x14);
     let ja_esta = cpl7_ja_esta(this, &cpl7_chave(jogador, clube));
     let esperado = if ja_esta { None } else { Some(cpl7_interesse(jogador, clube, valor, avaliacao)) };
@@ -144,21 +144,21 @@ unsafe extern "thiscall" fn comparar_acrescentar_interesse_de_transferencia(this
             core::slice::from_raw_parts(cpl7_d(this + 0xc).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
         }),
     };
-    PLACAR.registrar(ok, || format!("acrescentar_interesse_de_transferencia(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", valor, avaliacao, n, m, esperado));
+    PLACAR.registrar(ok, || format!("add_transfer_interest(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", valor, avaliacao, n, m, esperado));
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_das_chaves_de_ids(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_das_chaves_de_ids(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_chaves_de_ids({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_id_pair_keys(a, b);
+    PLACAR.registrar(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_das_historias(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_das_historias(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_historias({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_story_log_records(a, b);
+    PLACAR.registrar(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

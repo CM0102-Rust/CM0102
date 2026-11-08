@@ -4,7 +4,7 @@
 /// Linha sem competição (+4) vai para o fim (a sem e b com: 1; a com e b sem: −1; as duas sem: 0);
 /// depois pelo id da competição (a − b); na mesma, pela temporada (+8, palavra) da mais nova para a
 /// mais velha (b − a), a não ser que uma delas seja −1 (0).
-unsafe extern "C" fn ordem_do_historico_de_competicao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let ler = |p: usize, d: usize| core::ptr::read_unaligned((p + d) as *const usize);
     let ca = ler(a, 4);
     if ca == 0 {
@@ -44,7 +44,7 @@ const CELULAS_DO_VETOR: [(u8, u8); 54] = [
 /// `CELULAS_DO_VETOR` (posições 0..8, lados 9..11, depois os atributos, peso 2 nos que contam e 1 no
 /// +0x2a); a célula 54 é o byte +0x58 da `pessoa`. Os fins de grupo vão às saídas não nulas:
 /// posições 9, lados 0xc, ponderados 0x20. Devolve o vetor (eax).
-unsafe extern "C" fn vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+unsafe extern "C" fn database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
                                                    fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
     for i in 0..0x3f {
         *((vetor + 3 * i + 2) as *mut u8) = 0;
@@ -65,20 +65,20 @@ unsafe extern "C" fn vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize
 
 /// { 0x5446d0 } (cdecl, Database.cpp): 1 se a `nacao` (não nula) é Inglaterra, Escócia, Irlanda, País
 /// de Gales ou Irlanda do Norte (a regra das nações da casa).
-unsafe extern "C" fn nacao_britanica_ou_irlanda(nacao: usize) -> u32 {
+unsafe extern "C" fn nation_is_uk_or_ireland(nacao: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     let id = g(nacao);
     (id == g(0x9cf2e4) || id == g(0x9cf45c) || id == g(0x9cf2dc) || id == g(0x9cf510) || id == g(0x9cf3e4)) as u32
 }
 
-unsafe extern "C" fn comparar_ordem_do_historico_de_competicao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%)(a, b);
-    let n = ordem_do_historico_de_competicao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_do_historico_de_competicao({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = database_compare_comp_history_rows(a, b);
+    PLACAR.registrar(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_vetor_de_atributos_do_jogador(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
+unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
                                                             fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(%%I1%%);
     let mut regioes = vec![(vetor, 0x3f * 3)];
@@ -89,14 +89,14 @@ unsafe extern "C" fn comparar_vetor_de_atributos_do_jogador(jogador: usize, pess
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes,
         || o(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados),
-        || vetor_de_atributos_do_jogador(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
-    PLACAR.registrar(igual && r == n, || format!("vetor_de_atributos_do_jogador({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
+        || database_player_to_attribute_vector(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
+    PLACAR.registrar(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_nacao_britanica_ou_irlanda(nacao: usize) -> u32 {
+unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(nacao);
-    let n = nacao_britanica_ou_irlanda(nacao);
-    PLACAR.registrar(r == n, || format!("nacao_britanica_ou_irlanda({:x}) original={} rust={}", nacao, r, n));
+    let n = nation_is_uk_or_ireland(nacao);
+    PLACAR.registrar(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
     r
 }

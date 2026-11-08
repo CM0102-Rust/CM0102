@@ -46,7 +46,7 @@ unsafe fn cqq6_marcador(vtabela: usize, g: usize) -> usize {
 /// 0x83) e encerra. Por fim, as duas ligas de fundo: a CFA (operator new de 0xee; FraCfa::FraCfa 0x5b91c0: push ano;
 /// mov ecx -> thiscall, ret 4) e a divisão de baixo (0x5bd600, o mesmo), que deixam os seus jogos no calendário do jogo,
 /// e são destruídas (a virtual 0 com 1: push 1; mov ecx -> thiscall, ret 4). Devolve this.
-unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_fra_first(this: usize, ano: u32, registro: usize) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5bc410usize);
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, ano: u32, r
 /// Sorteia (as ligas de fundo), aloca e mexe nos clubes: só a original, conferindo a devolução, a vtable, o ano, o
 /// registro, a disciplina e os dois marcadores (vtable e registro) e, na liga nova, os campos do começo e as
 /// estatísticas.
-unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_fra_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
     let r = o(this, ano, registro);
     let marcador = |m: usize, vt: usize, g: usize| m == 0 || (cqq6_d(m) == vt && cqq6_d(m + 4) == cqq6_registro(g) && *((m + 0x50) as *const u8) == 0xff);
@@ -148,6 +148,6 @@ unsafe extern "thiscall" fn comparar_construir_primeira_francesa(this: usize, an
     if *((this + 0x44) as *const u8) == 0xff && cqq6_d(this + 8) != 0 {
         ok = ok && cqq6_d(this + 0x2c) == 0 && cqq6_d(this + 0xc) == 0;
     }
-    PLACAR.registrar(ok, || format!("construir_primeira_francesa({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
+    PLACAR.registrar(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this, r, cqq6_d(this), cqq6_d(this + 0xee), cqq6_d(this + 0xf2), cqq6_d(this + 8)));
     r
 }

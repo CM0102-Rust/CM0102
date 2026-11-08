@@ -31,7 +31,7 @@ unsafe fn cpx6_fechar(f: usize) {
 /// não for zero, essa quantidade de u32 de [+0x43b], e os 50 registros fixos de 0xc bytes de +0x440. Erro ao abrir ou
 /// gravar: a caixa "Error" (uefa_seeding.cpp 0x64f, 0x657, 0x660, 0x668, 0x66f, 0x679, 0x682), sem fechar o arquivo
 /// (como a original).
-unsafe extern "thiscall" fn gravar_sementes_da_uefa(this: usize) {
+unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;
     crate::comparacao::ramo("cpx_6 gravar sementes da uefa");
     let f = cpx6_abrir(0xaa1a50);
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn gravar_sementes_da_uefa(this: usize) {
 }
 
 /// Comparador da 0x905510: só a original.
-unsafe extern "thiscall" fn comparar_gravar_sementes_da_uefa(this: usize) {
+unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     // (o .tmp vai no .qst pelo zadd_matching_files)
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn comparar_gravar_sementes_da_uefa(this: usize) {
 /// { 0x4c6b70 } (thiscall, ret 0, conmebol_seeding.cpp): `ConmebolSeeding::save_to_temp_file`: grava
 /// `CM3_TEMP\conmebol_seeding.tmp`: a quantidade de países (+0x6e, i8), os registros de 0xa bytes de +0, +0x6f (u16) e
 /// +0x71 (u32). Erro: a caixa "Error" (conmebol_seeding.cpp 0x2ee, 0x2f6, 0x2ff, 0x307, 0x30f), sem fechar o arquivo.
-unsafe extern "thiscall" fn gravar_sementes_da_conmebol(this: usize) {
+unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0x9a7ed8;
     crate::comparacao::ramo("cpx_6 gravar sementes da conmebol");
     let f = cpx6_abrir(0x9a7f10);
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn gravar_sementes_da_conmebol(this: usize) {
 }
 
 /// Comparador da 0x4c6b70: só a original.
-unsafe extern "thiscall" fn comparar_gravar_sementes_da_conmebol(this: usize) {
+unsafe extern "thiscall" fn comparar_conmebol_seeding_save_to_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn comparar_gravar_sementes_da_conmebol(this: usize) {
 /// { 0x5fb320 } (thiscall, ret 0, host_country.cpp): `HostCountry::save_temp_file`: grava `CM3_TEMP\HostCountry.tmp`:
 /// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
 /// "Error" (host_country.cpp 0x475).
-unsafe extern "thiscall" fn gravar_paises_anfitrioes(this: usize) {
+unsafe extern "thiscall" fn save_temp_file(this: usize) {
     crate::comparacao::ramo("cpx_6 gravar paises anfitrioes");
     let f = cpx6_abrir(0x9cf10c);
     if f == 0 {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn gravar_paises_anfitrioes(this: usize) {
 }
 
 /// Comparador da 0x5fb320: só a original.
-unsafe extern "thiscall" fn comparar_gravar_paises_anfitrioes(this: usize) {
+unsafe extern "thiscall" fn comparar_save_temp_file(this: usize) {
     // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
     orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%)(this)
 }

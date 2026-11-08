@@ -46,7 +46,7 @@ unsafe fn cps12_situacao(this: usize, clube: usize, data: usize) -> u8 {
 /// com A, B e C válidos e B e C livres na data (0x5c75a0 = 1), cria o amistoso (0x5c6f00: A contra C em casa se A = B;
 /// senão A contra B fora) e manda o pedido (0x5c5570). Plano acabado: libera o vetor (0x9452ca) e zera +0x34d8, +0x34e0 e
 /// +0x34e4.
-unsafe extern "thiscall" fn criar_amistosos_planejados(this: usize) {
+unsafe extern "thiscall" fn create_due_planned_friendlies(this: usize) {
     let semanas: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c770usize);
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize = core::mem::transmute(0x5c6f00usize);
     let pedir: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5c5570usize);
@@ -123,7 +123,7 @@ unsafe fn cps12_casa_ocupada(clube: usize, data: usize, adversario: usize, em_ca
 /// (+0x10) e o visitante (+0x14). Sem a lista dos amistosos (+0x34c8), cria (0x68d020; sem memória: a caixa, linha
 /// 0xe9f, libera o amistoso e 0). O reaproveitado volta; o novo vai em cópia para a lista (0x68d0d0; falhou: a caixa,
 /// linha 0xeac, e 0), é liberado (0x944c94) e a cópia volta.
-unsafe extern "thiscall" fn acrescentar_amistoso(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
+unsafe extern "thiscall" fn add_friendly_match(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
     let achar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x5c88f0usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let mut reaproveitado = false;
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn acrescentar_amistoso(this: usize, clube: usize, data
 /// original zera antes. Sem achado: 0. Achado: o amistoso entra (0x5c4b60), a data vai para as listas de datas dos dois
 /// (+0x12, criadas se faltam; 8 bytes), cada um entra na lista de adversários do outro (+0xa; os 4 primeiros bytes do
 /// candidato) e as contas (+4) sobem. Devolve 1.
-unsafe extern "thiscall" fn planejar_amistoso_em_data_livre(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
+unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
     let mut ini = *((casa + 0xe) as *const i16);
     let mut fim = *((casa + 0x10) as *const i16);
     let fini = *((fora + 0xe) as *const i16);
@@ -254,14 +254,14 @@ unsafe extern "thiscall" fn planejar_amistoso_em_data_livre(this: usize, anfitri
 
 // ponytail: cria amistosos (aloca), manda os pedidos e libera o plano: não roda duas vezes. Só a original; a cópia leva o
 // ramo (pré-temporada da IA, 515 chamadas até 2002-06-01).
-unsafe extern "thiscall" fn comparar_criar_amistosos_planejados(this: usize) {
+unsafe extern "thiscall" fn comparar_create_due_planned_friendlies(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
 /// Comparador: aloca e acrescenta à lista (não roda duas vezes): a original faz e a cópia confere o resultado com o
 /// estádio de quem joga em casa visto antes (0x5ae870, só lê): ocupado → 0; senão o amistoso devolvido tem a data,
 /// +0xc o clube, +8 = 0, +0x18 = 1 e o mandante e o visitante pelo `em_casa`.
-unsafe extern "thiscall" fn comparar_acrescentar_amistoso(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
+unsafe extern "thiscall" fn comparar_add_friendly_match(this: usize, clube: usize, data: usize, adversario: usize, em_casa: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize>(%%I1%%);
     let ocupada = cps12_casa_ocupada(clube, data, adversario, em_casa);
     let (dia, ano) = (cps12_w(data), cps12_w(data + 2));
@@ -274,12 +274,12 @@ unsafe extern "thiscall" fn comparar_acrescentar_amistoso(this: usize, clube: us
         r == 0 || (cps12_w(r) == dia && cps12_w(r + 2) == ano && cps12_d(r + 0xc) == clube && cps12_d(r + 8) == 0
             && *((r + 0x18) as *const u8) == 1 && cps12_d(r + 0x10) == casa && cps12_d(r + 0x14) == fora)
     };
-    PLACAR.registrar(igual, || format!("acrescentar_amistoso(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
+    PLACAR.registrar(igual, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
         clube, dia, ano, adversario, em_casa, ocupada, r));
     r
 }
 
 // ponytail: sorteia a data e acrescenta às listas: não roda duas vezes. Só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_planejar_amistoso_em_data_livre(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_plan_friendly_on_free_date(this: usize, anfitriao: usize, casa: usize, fora: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(this, anfitriao, casa, fora)
 }

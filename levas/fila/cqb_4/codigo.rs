@@ -53,7 +53,7 @@ unsafe fn cqb4_depois_de_hoje(a: usize) -> bool {
 /// amistoso em data livre (0x5c4380: 3 pushes; ecx = this -> thiscall) com o de faixa (+5) maior como anfitrião e
 /// mandante; sem adversário ou com o amistoso marcado, a faixa × 0,8 (no mínimo 1). No fim, o qsort do plano pela data
 /// (0x945333: 4 pushes; add esp, 0x10 -> cdecl, pela 0x778e90).
-unsafe extern "thiscall" fn amistosos_dos_clubes(this: usize, entradas: usize, ordenados: usize, conta: u32) {
+unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, conta: u32) {
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     if cqb4_d(this + 0x34d8) != 0 {
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn amistosos_dos_clubes(this: usize, entradas: usize, o
 /// Comparador da 0x5c4770: só a original (ponytail: ela libera e aloca o plano, e a 0x5c4380 aloca as listas de datas e
 /// de adversários dos candidatos; não roda duas vezes), conferindo o plano que ela deixa: o plano alocado, a capacidade
 /// (+0x34e4) não menor que a conta (+0x34e0), o +0x34dc zerado e o plano em ordem de data (a 0x778e90 entre vizinhos).
-unsafe extern "thiscall" fn comparar_amistosos_dos_clubes(this: usize, entradas: usize, ordenados: usize, conta: u32) {
+unsafe extern "thiscall" fn comparar_plan_club_friendlies(this: usize, entradas: usize, ordenados: usize, conta: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%)(this, entradas, ordenados, conta);
     let (p, n, cap, z) = (cqb4_d(this + 0x34d8), cqb4_i(this + 0x34e0), cqb4_i(this + 0x34e4), cqb4_i(this + 0x34dc));
     if p == 0 {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn comparar_amistosos_dos_clubes(this: usize, entradas:
     }
     let ordem: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x778e90usize);
     let ordenado = (1..n.max(0) as usize).all(|i| ordem(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
-    PLACAR.registrar(n >= 0 && cap >= n && z == 0 && ordenado, || format!("amistosos_dos_clubes: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
+    PLACAR.registrar(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
 }
 
 /// O torneio livre: o primeiro dos 127 (0x69 bytes a partir de +0xb1) sem anfitrião (+0), ou 0.
@@ -178,7 +178,7 @@ unsafe fn cqb4_torneio_livre(this: usize) -> usize {
 /// livre: 0) ganha o anfitrião (+0), o tipo (+0xc), os bytes a e b (+0xd, +0xe), a data de início (+4, pela 0x417c10:
 /// lea ecx, [t + 4]; 2 pushes; sem add esp -> thiscall), as palavras c, d, e (+0xf, +0x11, +0x13), +0x29, +0x2d e
 /// +0x65 zerados, o nome (+0x31, com o zero) e os 4 convidados (+0x15, dwords) com as marcas +0x25..+0x28 em 1.
-unsafe extern "thiscall" fn acrescentar_torneio(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
+unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
     let t = cqb4_torneio_livre(this);
     if t == 0 {
         return 0;
@@ -213,8 +213,8 @@ unsafe extern "thiscall" fn acrescentar_torneio(this: usize, anfitriao: usize, t
     t
 }
 
-/// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
-unsafe extern "thiscall" fn comparar_acrescentar_torneio(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
+/// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido pass_ball) e a devolução.
+unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(%%I1%%);
     let t = cqb4_torneio_livre(this);
     let mut tam = 0usize;
@@ -222,8 +222,8 @@ unsafe extern "thiscall" fn comparar_acrescentar_torneio(this: usize, anfitriao:
         tam += 1;
     }
     let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + tam + 1))] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome), || acrescentar_torneio(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome));
-    PLACAR.registrar(igual && r == n, || format!("acrescentar_torneio(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome), || add_tournament(this, anfitriao, tipo, inicio, a, b, c, d, e, convidados, nome));
+    PLACAR.registrar(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", anfitriao, r, mo, n, mr));
     r
 }
 
@@ -231,7 +231,7 @@ unsafe extern "thiscall" fn comparar_acrescentar_torneio(this: usize, anfitriao:
 /// amistosos. Com a lista de amistosos (+0x34c8) e o clube (+0x39) do técnico humano da vez ([0xb74c26 + 0x300 ×
 /// [0xb77c7a]]): o cursor da lista (+0xa) volta ao começo (+2) e o primeiro amistoso desse clube (+0xc) ainda sem
 /// data (+8 ≠ 0) pelo próximo da lista (0x68d1b0: ecx = a lista; sem push -> thiscall); senão 0.
-unsafe extern "thiscall" fn convite_aberto_do_clube_humano(this: usize) -> usize {
+unsafe extern "thiscall" fn find_human_club_open_invitation(this: usize) -> usize {
     let lista = cqb4_d(this + 0x34c8);
     if lista == 0 {
         return 0;
@@ -258,11 +258,11 @@ unsafe extern "thiscall" fn convite_aberto_do_clube_humano(this: usize) -> usize
 }
 
 /// Comparador da 0x5c68b0: lado a lado no cursor da lista (+0xa) e a devolução.
-unsafe extern "thiscall" fn comparar_convite_aberto_do_clube_humano(this: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_human_club_open_invitation(this: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I2%%);
     let lista = cqb4_d(this + 0x34c8);
     let reg = if lista != 0 { vec![(lista + 0xa, 4)] } else { Vec::new() };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || convite_aberto_do_clube_humano(this));
-    PLACAR.registrar(igual && r == n, || format!("convite_aberto_do_clube_humano original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || find_human_club_open_invitation(this));
+    PLACAR.registrar(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
     r
 }

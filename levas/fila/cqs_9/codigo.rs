@@ -127,13 +127,13 @@ unsafe fn cqs9_inscritos(this: usize) -> i32 {
     1
 }
 
-unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
     cqs9_inscritos(this)
 }
 
 /// Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
 /// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
-unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_build_entrants(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
     let (a0, t0) = (cqs9_d(this + 0xa7), cqs9_d(this + 0x14));
     let base = cqs9_d(0xae23b4);
@@ -164,6 +164,6 @@ unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
     if tr != 0 && tr != to && tr != t0 {
         soltar(tr);
     }
-    PLACAR.registrar(igual && a == b && listas, || format!("cqs9_uefa_inscritos({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
+    PLACAR.registrar(igual && a == b && listas, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this, a, b, igual, listas));
     a
 }

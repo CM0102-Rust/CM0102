@@ -96,7 +96,7 @@ unsafe fn cpv13_premio(this: usize, p: usize, clube: usize, premio: usize, a4: u
 /// transferências, contrato de mais de 300 dias e o jogador na lista do clube (0x849ce0), a renovação (0x4cda70); depois,
 /// sem a marca +0x45 do contrato, com +0x59 acima de 15 e +0x5b acima de 10, sorteio(+0x59) acima de 5: a notícia do
 /// agradecimento ao técnico (0x58a070). Sem pessoa ou sem prêmio: a original (caixa "Error").
-unsafe extern "thiscall" fn registrar_premio_do_mes(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
+unsafe extern "thiscall" fn add_month_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
     if p == 0 || premio == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(%%I0%%)(this, p, clube, premio, a4, a5);
     }
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn registrar_premio_do_mes(this: usize, p: usize, clube
 
 /// { 0x5c52d0 } (stdcall, ret 4, friendly.cpp): `friendly_club_reputation_tier(clube)`: a faixa da reputação (+0x80):
 /// 5 a partir de 8000, 4 de 6000, 3 de 4000, 2 de 2000, senão 1 (só o al vale).
-unsafe extern "stdcall" fn faixa_de_reputacao_do_amistoso(clube: usize) -> u8 {
+unsafe extern "stdcall" fn friendly_club_reputation_tier(clube: usize) -> u8 {
     let r = core::ptr::read_unaligned((clube + 0x80) as *const i16);
     if r >= 0x1f40 {
         5
@@ -120,7 +120,7 @@ unsafe extern "stdcall" fn faixa_de_reputacao_do_amistoso(clube: usize) -> u8 {
 
 /// { 0x5c74d0 } (stdcall, ret 4, friendly.cpp): `friendly_get_rest_days_for_kind(tipo)`: a folga em volta do amistoso:
 /// 2 nos tipos 1 e 10, 3 no 2, 1 nos 0, 3, 4 e 11. Os tipos 5..9 e fora de 0..11: a original (caixa "Error" e 1).
-unsafe extern "stdcall" fn folga_do_amistoso(tipo: u32) -> u8 {
+unsafe extern "stdcall" fn friendly_get_rest_days_for_kind(tipo: u32) -> u8 {
     match tipo as u8 as i8 {
         1 | 10 => 2,
         2 => 3,
@@ -132,14 +132,14 @@ unsafe extern "stdcall" fn folga_do_amistoso(tipo: u32) -> u8 {
 /// Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
 /// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
 /// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-unsafe extern "thiscall" fn comparar_registrar_premio_do_mes(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
+unsafe extern "thiscall" fn comparar_add_month_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(%%I0%%);
     if p == 0 || premio == 0 {
         return o(this, p, clube, premio, a4, a5);
     }
     let (t3d, t28) = (cpv13_b(p + 0x3d), cpv13_b(p + 0x28));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("registrar_premio_do_mes jogador");
+        crate::comparacao::ramo("add_month_award_record jogador");
         return o(this, p, clube, premio, a4, a5);
     }
     let r = cpq4_registro(this, p);
@@ -148,24 +148,24 @@ unsafe extern "thiscall" fn comparar_registrar_premio_do_mes(this: usize, p: usi
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5),
         || cpv13_premio(this, p, clube, premio, a4, a5, false));
-    PLACAR.registrar(igual, || format!("registrar_premio_do_mes({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpv13_d(premio), mo, mr));
+    PLACAR.registrar(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, cpv13_d(premio), mo, mr));
 }
 
 /// Comparador: pura.
-unsafe extern "stdcall" fn comparar_faixa_de_reputacao_do_amistoso(clube: usize) -> u8 {
+unsafe extern "stdcall" fn comparar_friendly_club_reputation_tier(clube: usize) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u8>(%%I1%%)(clube);
-    let n = faixa_de_reputacao_do_amistoso(clube);
-    PLACAR.registrar(r == n, || format!("faixa_de_reputacao_do_amistoso({:x}) original={} rust={}", clube, r, n));
+    let n = friendly_club_reputation_tier(clube);
+    PLACAR.registrar(r == n, || format!("friendly_club_reputation_tier({:x}) original={} rust={}", clube, r, n));
     r
 }
 
 /// Comparador: pura; os tipos da caixa, só a original.
-unsafe extern "stdcall" fn comparar_folga_do_amistoso(tipo: u32) -> u8 {
+unsafe extern "stdcall" fn comparar_friendly_get_rest_days_for_kind(tipo: u32) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(u32) -> u8>(%%I2%%)(tipo);
     if !matches!(tipo as u8 as i8, 0..=4 | 10 | 11) {
         return r;
     }
-    let n = folga_do_amistoso(tipo);
-    PLACAR.registrar(r == n, || format!("folga_do_amistoso({}) original={} rust={}", tipo as u8 as i8, r, n));
+    let n = friendly_get_rest_days_for_kind(tipo);
+    PLACAR.registrar(r == n, || format!("friendly_get_rest_days_for_kind({}) original={} rust={}", tipo as u8 as i8, r, n));
     r
 }

@@ -102,7 +102,7 @@ unsafe fn cqd1_desmarcar(this: usize, o: usize) {
 /// ([[+0x39]+0x53]) numa nação ([+0x71]) de id [0x9cfa10] e sem ser comunitária lá (0x53d740: push clube; push pessoa;
 /// add esp, 8 -> cdecl): +0x1e (a segunda nacionalidade) = a nação do clube (clube +0x53), se ela é [0x9cf488] ou [0x9cf434]; se a data é
 /// antes da de 5 anos e ela não é [0x9cf360], [0x9cf2fc] ou [0x9cf448]; ou se a data é antes da de 10 anos.
-unsafe extern "thiscall" fn dia_das_transferencias(this: usize, hoje: usize, fatia: u32) {
+unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize, hoje: usize, fatia: u32) {
     let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let mes: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x54cfb0usize);
@@ -258,7 +258,7 @@ unsafe fn cqd1_naturaliza(s: usize, p2: usize, p5: usize, p10: usize, comunitari
 /// base vira amanhã, +0x855 volta a 0 e +0x84c sobe (de 49 a 0); nas outras +0x855 sobe 1; e no dia 100 da fatia 2
 /// cada pessoa que cumpre a condição (o laço é o último passo, então o estado de depois é o dele) fica com +0x1e (a
 /// segunda nacionalidade) = a nação do clube: a naturalização do dia 100.
-unsafe extern "thiscall" fn comparar_dia_das_transferencias(this: usize, hoje: usize, fatia: u32) {
+unsafe extern "thiscall" fn comparar_transfer_manager_daily_update(this: usize, hoje: usize, fatia: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let f = fatia as u8;
     let sem_base = cqd1_w(this + 0x84f) == 0;
@@ -305,7 +305,7 @@ unsafe extern "thiscall" fn comparar_dia_das_transferencias(this: usize, hoje: u
         }
         ok = ok && erradas == 0;
     }
-    PLACAR.registrar(ok, || format!("dia_das_transferencias(dia {}, fatia {}): +0x855 {} -> {}, +0x84c {} -> {}, pessoas sem a nação do clube em +0x1e {}",
+    PLACAR.registrar(ok, || format!("transfer_manager_daily_update(dia {}, fatia {}): +0x855 {} -> {}, +0x84c {} -> {}, pessoas sem a nação do clube em +0x1e {}",
         cqd1_w(hoje), f, f855, cqd1_b(this + 0x855), j84c, cqd1_b(this + 0x84c), erradas));
 }
 
@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn comparar_dia_das_transferencias(this: usize, hoje: u
 ///   (0x8d3090: push oferta, ret 4) e 28 dias; senão o valor da oferta (0x8e7b50: mov ecx, oferta -> thiscall(oferta, 0,
 ///   0, 0, 0, 1), ret 0x14) e a previsão do vendedor (vendedor, alvo, valor, comprador, −1, 0): 0 aceita (0x8c0080),
 ///   1 ou 2 recusa (0x8bf680: push 0; push 0; push vaga, ret 0xc).
-unsafe extern "thiscall" fn processar_oferta_vencida(this: usize, vaga: usize) {
+unsafe extern "thiscall" fn process_due_offer(this: usize, vaga: usize) {
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let mut l1 = [0u8; 0x10];
@@ -346,7 +346,7 @@ unsafe extern "thiscall" fn processar_oferta_vencida(this: usize, vaga: usize) {
 
 unsafe fn cqd1_processar(this: usize, vaga: usize) {
     let aceitar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c0080usize);
-    let responder: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c8090usize);
+    let respond: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c8090usize);
     let prever: unsafe extern "stdcall" fn(usize, usize, i64, usize, i64, u32) -> u8 = core::mem::transmute(0x84af00usize);
     let recusar_emprestimo: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x8bfa30usize);
     let recusar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x8bf680usize);
@@ -360,7 +360,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x8c1e40usize);
     let permissoes: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8c7690usize);
     let concluir: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8c34e0usize);
-    let passar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c2f50usize);
+    let pass_ball: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c2f50usize);
     let tecnico_humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let noticia_feita: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8d3090usize);
     let valor: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7b50usize);
@@ -382,7 +382,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
         }
         if cqd1_b(cqd1_d(vaga) + 0x1f) != 1 {
             crate::comparacao::ramo("cqd_1 resposta da IA");
-            responder(this, vaga, 0); // cqd1: a resposta da IA ao lance
+            respond(this, vaga, 0); // cqd1: a resposta da IA ao lance
             return;
         }
         if prever(vendedor, alvo, 0, comprador, -1, 1) != 0 {
@@ -495,7 +495,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
     }
     cqd1_pb(o + 0x2c, 0);
     if cqd1_b(o + 0x10) != 0 {
-        passar(this, o);
+        pass_ball(this, o);
         return;
     }
     let clube = cqd1_clube_do_contrato(cqd1_pessoa(cqd1_d(o + 0xc)), false);
@@ -514,7 +514,7 @@ unsafe fn cqd1_processar(this: usize, vaga: usize) {
 }
 
 /// Comparador da 0x8c63a0: só a original (cada ramo muda o status, reagenda, aloca notícias, conclui ou tira a oferta).
-unsafe extern "thiscall" fn comparar_processar_oferta_vencida(this: usize, vaga: usize) {
+unsafe extern "thiscall" fn comparar_process_due_offer(this: usize, vaga: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, vaga) // ponytail: só a original
 }
 
@@ -536,7 +536,7 @@ unsafe extern "thiscall" fn comparar_processar_oferta_vencida(this: usize, vaga:
 /// - Decide o vendedor: sem vaga no elenco dele dá 1. Motivo 0. Com troca (+4) ou tipo 11..15: a regra da nação do
 ///   decide ([this+0x8ac], a de +0xa igual a [decide+0x53]): o virtual +0xc (push motivo; push 0xae2c90; push decide;
 ///   push oferta; mov ecx, regra) diferente de 0 dá 0; motivo 9 com +0x30 & 0xf = 5 dá 0; senão 2. Sem regra: 0.
-unsafe extern "thiscall" fn restricoes_da_oferta(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
+unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let conclusao: unsafe extern "thiscall" fn(usize, usize, usize) -> u16 = core::mem::transmute(0x8cee70usize);
     let tipo: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
@@ -651,6 +651,6 @@ unsafe extern "thiscall" fn restricoes_da_oferta(this: usize, o: usize, decide: 
 
 /// Comparador da 0x8cfc90: só a original (a vaga no elenco, 0x8cd450, pode liberar o jogador mais barato, e a lista de
 /// observação aloca nós).
-unsafe extern "thiscall" fn comparar_restricoes_da_oferta(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_check_offer_restrictions(this: usize, o: usize, decide: usize, motivo: *mut u16, sem_elenco: u32) -> u8 {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u16, u32) -> u8>(%%I2%%)(this, o, decide, motivo, sem_elenco) // ponytail: só a original
 }

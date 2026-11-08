@@ -150,7 +150,7 @@ unsafe fn cqd13_notas(t: usize, clube: usize, id_comp: usize) -> (i32, i32) {
 /// 6,5) acima do limiar dá o histórico, moral +20 (0x544710) e +100 no contrato (0x4cf5f0) com a renovação; senão moral
 /// +10 e +50 no contrato. O histórico do clube (tipo 5); com a mídia ([0xb6b7c8]) e peso acima de 3, o elogio (0x75c390
 /// com 1) e, acima de 12, com 3.
-unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
+unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usize, comp: usize) {
     if clube == 0 || comp == 0 {
         return aviso_em(0xa83b78, 0x21c);
     }
@@ -252,11 +252,11 @@ unsafe extern "thiscall" fn campeao_da_liga_nos_registros(this: usize, clube: us
 /// do clube na partida (+0x188/+0x18a/+0x18c, lado 0x625 × visitante; peso × 400, × k1, × k2); o histórico do técnico
 /// (tipo 0: o clube e a competição de +0x14 do jogo); o registro dele (0x86f5b0 com criar): +1 em +0x8a e ftol(peso^4 ×
 /// 0,5) (pow da CRT 0x945ff0) em +0xb6, +0xca e, na seleção (0x53b900), +0xbe, senão +0xba. O presidente (+0xbf) e os
-/// 20 da escalação. Os 50 do elenco enquanto a reputação não passar de peso × 400: com ficha, válidos e fora o técnico,
+/// 20 da escalação. Os 50 do elenco enquanto a reputação não pass_ball de peso × 400: com ficha, válidos e fora o técnico,
 /// moral +15 (0x544710) e +100 no contrato; com a situação do contrato (+0x4f >> 4) 1-3 ou 5, a renovação. As
 /// convocações da competição guardada (0x76d940) acabam (0x774f30); o histórico do clube (tipo 0); com a mídia e peso
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
-unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {
         return aviso_em(0xa83b78, 0x51e);
     }
@@ -286,7 +286,7 @@ unsafe extern "thiscall" fn campeao_da_copa_nos_registros(this: usize, clube: us
             let v = ftol(pow_do_jogo(cqd13_w(comp + 0x69) as f64, f64_em(0x968938)) * f64_em(0x968968)); // cqd13: o peso do título
             cqd13_pi(r + 0xb6, cqd13_i(r + 0xb6).wrapping_add(v));
             cqd13_pi(r + 0xca, cqd13_i(r + 0xca).wrapping_add(v));
-            if e_selecao(clube) != 0 {
+            if is_national_team(clube) != 0 {
                 cqd13_pi(r + 0xbe, cqd13_i(r + 0xbe).wrapping_add(v));
             } else {
                 cqd13_pi(r + 0xba, cqd13_i(r + 0xba).wrapping_add(v));
@@ -416,32 +416,32 @@ unsafe fn cqd13_comparar(nome: &str, this: usize, clube: usize, notas: (usize, u
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_campeao_da_liga_nos_registros(this: usize, clube: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_add_league_champions_record(this: usize, clube: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if clube == 0 || comp == 0 || cqd13_d(cqd13_d(0xadadfc).wrapping_add(4 * cqd13_d(comp))) == 0 {
         return o(this, clube, comp);
     }
     let t = cqd13_d(clube + 0xcf);
     let notas = if t != 0 && cqd13_d(t + 0x69) != 0 { (cqd13_d(t + 0x69) + 8, 6) } else { (clube + 0x80, 2) };
-    cqd13_comparar("campeao_da_liga_nos_registros", this, clube, notas, true, || o(this, clube, comp),
-        || campeao_da_liga_nos_registros(this, clube, comp));
+    cqd13_comparar("add_league_champions_record", this, clube, notas, true, || o(this, clube, comp),
+        || add_league_champions_record(this, clube, comp));
 }
 
-unsafe extern "thiscall" fn comparar_campeao_da_copa_nos_registros(this: usize, clube: usize, jogo: usize, partida: usize) {
+unsafe extern "thiscall" fn comparar_add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(%%I1%%);
     if clube == 0 || jogo == 0 || partida == 0 {
         return o(this, clube, jogo, partida);
     }
     let notas = (partida + 0x188 + 0x625 * (cqd13_d(jogo + 0x20) == clube) as usize, 6);
-    cqd13_comparar("campeao_da_copa_nos_registros", this, clube, notas, false, || o(this, clube, jogo, partida),
-        || campeao_da_copa_nos_registros(this, clube, jogo, partida));
+    cqd13_comparar("add_cup_winners_record", this, clube, notas, false, || o(this, clube, jogo, partida),
+        || add_cup_winners_record(this, clube, jogo, partida));
 }
 
 /// { 0x86fc70 } (thiscall, ret 4, staff_records.cpp): `Staff_Records::clear_human_manager_record(pessoa)`, pela
 /// aposentadoria do técnico humano (0x6b2b40) e pelo setup (0x82b9xx). Pessoa entre os 16 humanos (id de [0xae2364] − 16
 /// até [0xae2364]): o registro dele no vetor +8 (vaga id − [0xae2364] + [0xae2368] + 16, 0xd2 bytes); senão, como a
 /// original, a própria pessoa. Zera os 0xd2 bytes e põe −1 em +0x86, +0xc2, +0xc6, +0x4a, +0x5e e +0x72.
-unsafe extern "thiscall" fn limpar_registro_do_humano(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn clear_human_manager_record(this: usize, pessoa: usize) {
     let id = cqd13_i(pessoa);
     let lim = cqd13_i(0xae2364);
     let r = if id >= lim.wrapping_sub(0x10) && id < lim {
@@ -457,7 +457,7 @@ unsafe extern "thiscall" fn limpar_registro_do_humano(this: usize, pessoa: usize
 }
 
 /// Comparador: lado a lado pelo registro (os 0xd2 bytes que a rotina zera).
-unsafe extern "thiscall" fn comparar_limpar_registro_do_humano(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let id = cqd13_i(pessoa);
     let lim = cqd13_i(0xae2364);
@@ -468,6 +468,6 @@ unsafe extern "thiscall" fn comparar_limpar_registro_do_humano(this: usize, pess
         pessoa
     };
     let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, pessoa),
-        || limpar_registro_do_humano(this, pessoa));
-    PLACAR.registrar(igual, || format!("limpar_registro_do_humano(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
+        || clear_human_manager_record(this, pessoa));
+    PLACAR.registrar(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
 }

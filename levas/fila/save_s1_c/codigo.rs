@@ -40,7 +40,7 @@ unsafe fn zf_proximo_byte(z: usize) -> u8 {
 /// posição lógica. Tipo 3: `fread` direto de `pedido / tam` itens. Tipo 4: decodifica o RLE; uma
 /// repetição pode atravessar chamadas (+0x10 de +0x14). Devolve `pedido / tam` (divisão com sinal,
 /// como a original: `tam` 0 derruba as duas).
-unsafe extern "C" fn ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
+unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let ler: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(0x945bfeusize);
     if z == 0 || zf_u(z, 4) != 0 {
         return 0;
@@ -113,7 +113,7 @@ unsafe extern "C" fn ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: u
 
 // ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
-unsafe extern "C" fn comparar_ler_do_conteiner(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
+unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
     orig::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(%%I0%%)(buf, tam, quantos, z)
 }
 
@@ -139,7 +139,7 @@ unsafe fn zf_soltar(z: usize, b: u8) {
 /// Tipo 3: `fwrite` direto (devolve o que ele devolver). Tipo 4: codifica o RLE byte a byte,
 /// guardando a repetição em +0x18/+0x14 entre as chamadas; byte diferente fecha a repetição (1 com
 /// byte <= 0x80 sai literal, senão o par 0x80 + n, byte); a 0x7f sai o par e recomeça. Devolve `quantos`.
-unsafe extern "C" fn gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
+unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     let escrever: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(0x945ce6usize);
     if z == 0 || zf_u(z, 4) != 1 {
         return 0;
@@ -185,7 +185,7 @@ unsafe extern "C" fn gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32,
 
 // ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
-unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
+unsafe extern "C" fn comparar_zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
     orig::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(%%I1%%)(buf, tam, quantos, z)
 }
 
@@ -193,7 +193,7 @@ unsafe extern "C" fn comparar_gravar_no_conteiner(buf: *const u8, tam: i32, quan
 /// tem tamanho, no tipo 4 fecha a repetição pendente direto no arquivo (literal ou par, como no
 /// zwrite) e regrava cabeçalho + índice inteiros (0x416ec bytes) no começo (`fseek` 0). Lendo: zera
 /// os cursores de leitura. Fecha o FILE, libera o ZFILE e zera o ponteiro.
-unsafe extern "C" fn fechar_conteiner(zz: *mut usize) {
+unsafe extern "C" fn zclose(zz: *mut usize) {
     let escrever: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(0x945ce6usize);
     let buscar: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(0x946a22usize);
     let fechar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
@@ -235,6 +235,6 @@ unsafe extern "C" fn fechar_conteiner(zz: *mut usize) {
 }
 
 // ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
-unsafe extern "C" fn comparar_fechar_conteiner(zz: *mut usize) {
+unsafe extern "C" fn comparar_zclose(zz: *mut usize) {
     orig::<unsafe extern "C" fn(*mut usize)>(%%I2%%)(zz)
 }

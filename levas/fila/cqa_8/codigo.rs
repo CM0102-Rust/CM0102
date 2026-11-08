@@ -79,19 +79,19 @@ unsafe fn cqa8_bonus(jogo: usize, contrato: usize, vaga: usize, palavra: i16) ->
 }
 
 /// { 0x4ca6d0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::update_after_match(jogo, resumo)`, pelo
-/// fechamento da partida do dia (0x6b5f00). Com +0x40 e +0x41 do jogo, o vencedor pelo placar (+0x47/+0x48; com +0x47 =
+/// match_wrap_up da partida do dia (0x6b5f00). Com +0x40 e +0x41 do jogo, o vencedor pelo placar (+0x47/+0x48; com +0x47 =
 /// −1, +0x43/+0x44) e uma cópia dos 50 do elenco (+0xd7) de cada clube. Primeiro, por lado (clube B do parceiro
 /// 0x540a50 e o lado pulado pela reputação ficam de fora), as 20 vagas do resumo (+0x190 + lado × 0x625, 0x49 bytes):
-/// fora das seleções, o contrato com o clube (0x4cf5f0) paga os bônus (cqa8_bonus); os minutos (+0x30 dos titulares,
+/// fora das seleções, o contrato com o clube (0x4cf5f0) paga os bônus (cqa8_bonus); os minutos (+0x30 dos starters,
 /// 90 sem valor; 90 − +0x32 dos reservas) mudam a felicidade (+0x3d, minutos × 10 / 90, presa em 50 abaixo de 50) ou,
-/// nas seleções, o +9 do registro de 79 bytes; fora das seleções e dos amistosos, os reservas e os titulares de pouco
+/// nas seleções, o +9 do registro de 79 bytes; fora das seleções e dos amistosos, os reservas e os starters de pouco
 /// jogo sorteiam (2 × sorteio(30)) contra os minutos: a felicidade cai 4, +0x3e conta e a moral cai (0x4cb250); senão
 /// +0x3f conta (com 5 ou mais, fora do clube humano, a marca de elenco 1 em 0x540980) e a moral sobe (0x4cb0a0). O
 /// vencedor (e o perdedor) sorteia(21 − +0x57) abaixo de 4 para +3 (−3) na moral +0x44; a pessoa sai da cópia do
 /// elenco. Depois, quem ficou na cópia (com ficha, contrato, sem suspensão 0x55d270, lesão 0x62c400, seleção 0x7757d0
 /// nem empréstimo) evolui (0x6d26b0 com a nota média [0xb74350] − 1), +0x3e conta e, a partir de 8 (14 com parceiro),
 /// fora do humano e do parceiro, sai do principal (0x4cbb60 2 ou 4 → 0x4cbd20); a felicidade cai 8 e a moral cai.
-unsafe extern "thiscall" fn contratos_depois_do_jogo(this: usize, jogo: usize, resumo: usize) {
+unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo: usize) {
     if cqa8_b(jogo + 0x40) == 0 || cqa8_b(jogo + 0x41) == 0 {
         return;
     }
@@ -280,7 +280,7 @@ unsafe extern "thiscall" fn contratos_depois_do_jogo(this: usize, jogo: usize, r
 /// elenco (0x4cbd20) sorteiam e alocam (não podem rodar duas vezes): só a original roda. Confere o que a rotina garante
 /// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
 /// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
-unsafe extern "thiscall" fn comparar_contratos_depois_do_jogo(this: usize, jogo: usize, resumo: usize) {
+unsafe extern "thiscall" fn comparar_update_after_match(this: usize, jogo: usize, resumo: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     if cqa8_b(jogo + 0x40) == 0 || cqa8_b(jogo + 0x41) == 0 {
         return o(this, jogo, resumo);
@@ -317,21 +317,21 @@ unsafe extern "thiscall" fn comparar_contratos_depois_do_jogo(this: usize, jogo:
     for &(fin, antes, total) in &plano {
         if fin != 0 {
             let pago = cqa8_i(fin + 0x138).wrapping_sub(antes);
-            PLACAR.registrar(pago == total, || format!("contratos_depois_do_jogo(jogo {:x}) bônus de fin {:x}: original {} previsto {}", jogo, fin, pago, total));
+            PLACAR.registrar(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", jogo, fin, pago, total));
         }
     }
 }
 
 /// { 0x4cc2d0 } (stdcall, ret 4, contract_manager.cpp): `contract_manager_get_player_morale(pessoa)`: o byte +0x45 da
 /// ficha (+0x61), pelas telas. O eax leva os bytes altos da pessoa, como na original.
-unsafe extern "stdcall" fn moral_da_ficha(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn contract_manager_get_player_morale(pessoa: usize) -> u32 {
     (pessoa as u32 & 0xffff_ff00) | *((cqa8_d(pessoa + 0x61) + 0x45) as *const u8) as u32
 }
 
-unsafe extern "stdcall" fn comparar_moral_da_ficha(pessoa: usize) -> u32 {
+unsafe extern "stdcall" fn comparar_contract_manager_get_player_morale(pessoa: usize) -> u32 {
     let r = orig::<unsafe extern "stdcall" fn(usize) -> u32>(%%I1%%)(pessoa);
-    let n = moral_da_ficha(pessoa);
-    PLACAR.registrar(r == n, || format!("moral_da_ficha({:x}) original={:#x} rust={:#x}", pessoa, r, n));
+    let n = contract_manager_get_player_morale(pessoa);
+    PLACAR.registrar(r == n, || format!("contract_manager_get_player_morale({:x}) original={:#x} rust={:#x}", pessoa, r, n));
     r
 }
 
@@ -344,7 +344,7 @@ unsafe fn cqa8_texto(a: usize) -> Vec<u8> {
 /// { 0x4cc2e0 } (stdcall, ret 0xc, contract_manager.cpp): `contract_manager_write_morale_text(pessoa, saída, _)`: a
 /// palavra da moral (+0x45 da ficha: abaixo de 4 "Very Low", 8 "Low", 12 "Ok", 15 "Good", 18 "Very Good", senão
 /// "Superb") na saída (0x66f4e0 com 0xad9c64), pelas telas.
-unsafe extern "stdcall" fn texto_da_moral(pessoa: usize, saida: usize, _x: u32) {
+unsafe extern "stdcall" fn contract_manager_write_morale_text(pessoa: usize, saida: usize, _x: u32) {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let m = cqa8_b(cqa8_d(pessoa + 0x61) + 0x45);
     let f = if m < 4 {
@@ -365,12 +365,12 @@ unsafe extern "stdcall" fn texto_da_moral(pessoa: usize, saida: usize, _x: u32) 
 
 /// Comparador: a original escreve a palavra; a cópia escreve de novo (o texto se sobrescreve) e as duas têm de bater;
 /// fica o texto da original.
-unsafe extern "stdcall" fn comparar_texto_da_moral(pessoa: usize, saida: usize, x: u32) {
+unsafe extern "stdcall" fn comparar_contract_manager_write_morale_text(pessoa: usize, saida: usize, x: u32) {
     orig::<unsafe extern "stdcall" fn(usize, usize, u32)>(%%I2%%)(pessoa, saida, x);
     let r = cqa8_texto(saida);
-    texto_da_moral(pessoa, saida, x);
+    contract_manager_write_morale_text(pessoa, saida, x);
     let n = cqa8_texto(saida);
     core::ptr::copy_nonoverlapping(r.as_ptr(), saida as *mut u8, r.len());
     *((saida + r.len()) as *mut u8) = 0;
-    PLACAR.registrar(r == n, || format!("texto_da_moral({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
+    PLACAR.registrar(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", pessoa, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
 }

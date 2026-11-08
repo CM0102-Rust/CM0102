@@ -104,7 +104,7 @@ unsafe fn cpv6_desgaste_do_centro(clube: usize) {
 /// centro e sobe o aperto 3. Depois, liga ativa ([0xadadfc]) e aperto acima de 50: tira o aquecimento (+0x4d, 0x59ffb0)
 /// do clube de reputação abaixo de 4250, ou fecha 10% dos lugares (+0x3c para +0x44, 0x59f900, aperto 20); o centro de
 /// treino cai pelo sorteio.
-unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: usize, semana: u32) {
+unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usize, semana: u32) {
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana);
     }
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
                 let noticia: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x59fc60usize);
                 let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
                 let reunir: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
-                let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+                let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
                 let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
                 let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(0x4d0c60usize);
                 noticia(this, clube);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
                         continue;
                     }
                     let g = cpv6_d(0xae1050);
-                    let k = contrato_de(g, j);
+                    let k = contract_of(g, j);
                     *(0xae1080 as *mut usize) = k;
                     let dono = if k != 0 { cpv6_d(0xae23b4).wrapping_add(cpv6_d(k + 4).wrapping_mul(0x245)) } else { 0 };
                     let ct = contrato(cpv6_d(0xae1050), j, dono);
@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn eventos_financeiros_da_semana(this: usize, clube: us
 }
 
 // ponytail: chama originais que sorteiam, alocam notícias e mexem nos contratos: só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_eventos_financeiros_da_semana(this: usize, clube: usize, semana: u32) {
+unsafe extern "thiscall" fn comparar_process_club_finance_events(this: usize, clube: usize, semana: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, semana)
 }
 
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn comparar_eventos_financeiros_da_semana(this: usize, 
 /// zero; sorteio(nível +0x20 do estádio do clube de +0xbf, ou 10) não zero. A diretoria paga 450 × reputação (abaixo de
 /// 1250 com saldo abaixo de −450 × reputação), 300 × (saldo abaixo de −300 × reputação) ou 150 ×: em +0x154, +0xb4 e no
 /// saldo; a notícia (0x59f300, tipo 4); devolve 1.
-unsafe extern "thiscall" fn diretoria_paga_a_divida(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
     let rep = cpv6_w(clube + 0x80) as i32;
     let div = match cpv6_faixa(fin) {
         -2 => 2.0f64,
@@ -370,9 +370,9 @@ unsafe fn cpv6_comparar(nome: &str, fin: usize, original: impl FnOnce() -> u32, 
     r
 }
 
-unsafe extern "thiscall" fn comparar_diretoria_paga_a_divida(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usize, clube: usize, fin: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
-    cpv6_comparar("diretoria_paga_a_divida", fin, || o(this, clube, fin), || diretoria_paga_a_divida(this, clube, fin))
+    cpv6_comparar("try_board_debt_payment", fin, || o(this, clube, fin), || try_board_debt_payment(this, clube, fin))
 }
 
 /// { 0x59e5a0 } (thiscall, ret 8, finance.cpp): `FinanceTable::try_cash_injection(clube, finanças)`, pelo passe dos
@@ -380,9 +380,9 @@ unsafe extern "thiscall" fn comparar_diretoria_paga_a_divida(this: usize, clube:
 /// faixa (−2: 0,25; −1: 0,1; outras: 0,001). Com o estádio do clube de +0xbf: sorteio(30 / divisor) abaixo do nível
 /// (+0xf) e o nível +0x20 acima de sorteio(5) + 10: (20 × nível + 150) × reputação + 750000; sem ele: sorteio(4 /
 /// divisor) zero: (5 × reputação + 15000) × 50. Dívida acima de 10 × o valor: 10% da dívida. Teto: reputação² + 1,5
-/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor passar de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
+/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor pass_ball de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
 /// notícia (0x59f300, tipo 3, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
-unsafe extern "thiscall" fn injecao_de_dinheiro(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
     if cpv6_w(clube + 0x80) < 0x128e { // cpv6: o filtro da injeção
         return 0;
     }
@@ -451,7 +451,7 @@ unsafe extern "thiscall" fn injecao_de_dinheiro(this: usize, clube: usize, fin: 
     1
 }
 
-unsafe extern "thiscall" fn comparar_injecao_de_dinheiro(this: usize, clube: usize, fin: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%);
-    cpv6_comparar("injecao_de_dinheiro", fin, || o(this, clube, fin), || injecao_de_dinheiro(this, clube, fin))
+    cpv6_comparar("try_cash_injection", fin, || o(this, clube, fin), || try_cash_injection(this, clube, fin))
 }

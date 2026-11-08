@@ -40,6 +40,6 @@ MUTACOES = [
     ('cqc13_sem_sortear', '                let q = sortear(10) as i8; // cqc13: o observador sorteado', '                let q = (0..10usize).find(|&x| read_usize(marcas + x * 4) == 0).unwrap_or(0) as i8; // mutacao: sem sortear', 'cqc_13 olheiros do humano'),
     ('cqc13_aceita_repetido', '                if read_usize(marcas.wrapping_add((q as isize * 4) as usize)) == 0 {', '                if true { // mutacao: aceita o repetido', 'cqc_13 olheiros do humano'),
     ('cqd1_oferta_noutra_fatia', '&& read_u8(o + 0x1a) == f { // cqd1: a oferta desta fatia', '&& read_u8(o + 0x1a) != f { // mutacao: a oferta noutra fatia', 'cqd_1 oferta do dia'),
-    ('cqd1_lance_sem_resposta', 'responder(this, vaga, 0); // cqd1: a resposta da IA ao lance', 'let _ = responder; // mutacao: o lance sem a resposta da IA', 'cqd_1 resposta da IA'),
+    ('cqd1_lance_sem_resposta', 'respond(this, vaga, 0); // cqd1: a resposta da IA ao lance', 'let _ = respond; // mutacao: o lance sem a resposta da IA', 'cqd_1 resposta da IA'),
     ('cqd1_orcamento_pela_metade', 'if t as f64 > v as f64 * 1.1 { // cqd1: acima do orçamento', 'if t as f64 > v as f64 * 0.5 { // mutacao: o orcamento pela metade', 'cqd_1 orçamento'),
 ]

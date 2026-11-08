@@ -100,7 +100,7 @@ const CQQ8_VIRADAS: [usize; 14] = [0x9cf9e0, 0x9cf9ac, 0x9cf9c0, 0x9cf998, 0x9cf
 /// (League::limit_club_division_tier 0x68a980, thiscall(liga, 1, 3, −3, 1), ret 0x10); a Série A refeita (o corpo comum,
 /// a tabela 0x42a480, caixas nas linhas 0x223, 0x22a, 0x230 e 0x237); as viradas das outras catorze (a virtual +8);
 /// as expectativas e os árbitros.
-unsafe extern "thiscall" fn cqq8_virada_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(cqq8_d(cqq8_d(this) + 0xb0));
     cadeia(this, 1);
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn cqq8_virada_da_serie_a(this: usize) -> u32 {
 /// (league_promote_and_relegate 0x689c80, thiscall(this, de cima, de baixo, 1, 1, −1, −1), ret 0x18: a original põe
 /// o ecx da Série A e a rotina o guarda) entre A e B, entre B e C e entre a B e cada uma das sete fases da C. Devolve o
 /// eax da última.
-unsafe extern "thiscall" fn cqq8_acesso_e_rebaixamento(this: usize, _pares: u32) -> u32 {
+unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(this: usize, _pares: u32) -> u32 {
     let (a, b, c) = (0x9cf9ec, 0x9cf9e0, 0x9cf9ac);
     cqq8_virtual(cqq8_comp(a), 0xa4);
     cqq8_virtual(cqq8_comp(b), 0xa4);
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn cqq8_acesso_e_rebaixamento(this: usize, _pares: u32)
 /// { 0x42cc10 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::start_new_season()`, a virada da Série B (da
 /// virada da Série A): +0x4c = 0, o corpo comum (a tabela 0x42ca70, caixas nas linhas 0x20c, 0x213, 0x219 e 0x220), as
 /// expectativas e os árbitros.
-unsafe extern "thiscall" fn cqq8_virada_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     if !cqq8_refazer(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
         return 0;
@@ -169,18 +169,18 @@ unsafe fn cqq8_comparar_virada(nome: &str, this: usize, original: impl FnOnce() 
     r
 }
 
-unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqq8_comparar_virada("cqq8_virada_da_serie_a", this, || o(this))
+    cqq8_comparar_virada("bra_nat_first_start_new_season", this, || o(this))
 }
 
 /// Comparador do acesso e rebaixamento: só a original (ponytail: move clubes entre as listas das ligas, que realocam).
 /// A cópia roda no modo Rust (contador "cqq_8 acesso e rebaixamento") e é provada pelas mutações e pelas carreiras.
-unsafe extern "thiscall" fn comparar_cqq8_acesso_e_rebaixamento(this: usize, pares: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_relegation_chain(this: usize, pares: u32) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(%%I1%%)(this, pares)
 }
 
-unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqq8_comparar_virada("cqq8_virada_da_serie_b", this, || o(this))
+    cqq8_comparar_virada("bra_nat_first_start_new_season_42cc10", this, || o(this))
 }

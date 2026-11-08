@@ -83,7 +83,7 @@ unsafe fn cqc9_selecao(c: usize) -> u32 {
 /// (0x6a4a20). Confianças abaixo de 6500 sobem a (5x + 27500 ou 25000) / 10; a riqueza em +1; a ficha do técnico (+0xa,
 /// +0xc) sobe para a reputação do clube; o técnico novo (dos 16 últimos) ganha 1 em +0x59 até 20; zera +2, +3, +4, +5,
 /// +0x12..+0x16, +0x28 e +0x40 & 7; as multas (0x5a5930 em [0xae2a3c]).
-unsafe extern "thiscall" fn expectativas_da_temporada(this: usize, clube: usize, noticia: u32) {
+unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, noticia: u32) {
     let ln = || cqc9_linha(this, clube);
     cqc9_pw(ln() + 0xe, 0);
     cqc9_pd(ln() + 0x2c, 0);
@@ -431,7 +431,7 @@ unsafe fn cqc9_fim(this: usize, clube: usize) {
 
 // ponytail: acrescenta na lista das saídas (0x68d0d0, aloca), posta as notícias (0x6a44a0, 0x6a4a20) e sorteia: não roda
 // duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_expectativas_da_temporada(this: usize, clube: usize, noticia: u32) {
+unsafe extern "thiscall" fn comparar_set_season_expectations(this: usize, clube: usize, noticia: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, noticia)
 }
 
@@ -508,7 +508,7 @@ impl Cqc9Vaga {
 /// saiu é humano; 10 a 14 com a notícia da oferta 0x6a0540 ao clube humano do escolhido), às vezes mais 0 a 19; a
 /// virada do ano. O item vai para a lista [this+8] (0x68d0d0, o cursor guardado); os humanos (0x5fd210, 0x5fea50) de
 /// clube menor se candidatam (0x69ca00).
-unsafe extern "thiscall" fn vaga_de_tecnico(this: usize, clube: usize, saiu: usize) {
+unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usize) {
     // ponytail: a nota anterior (+0x12) fica sem valor na original quando o escolhido é o auxiliar ou o de +0x19f (sobra de
     // pilha); aqui 0, um valor que o jogo também produz
     let mut v = Cqc9Vaga([0; 0x28]);
@@ -792,7 +792,7 @@ unsafe extern "thiscall" fn vaga_de_tecnico(this: usize, clube: usize, saiu: usi
 // ponytail: acrescenta a vaga na lista [this+8] (0x68d0d0, aloca), sorteia, posta a notícia da oferta e chama as
 // candidaturas (0x69ca00): não roda duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas
 // mutações.
-unsafe extern "thiscall" fn comparar_vaga_de_tecnico(this: usize, clube: usize, saiu: usize) {
+unsafe extern "thiscall" fn comparar_add_job_vacancy(this: usize, clube: usize, saiu: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, clube, saiu)
 }
 
@@ -800,7 +800,7 @@ unsafe extern "thiscall" fn comparar_vaga_de_tecnico(this: usize, clube: usize, 
 /// `MANAGER_MANAGER::post_job_offer_news(pessoa, clube)`: com a pessoa empregada (+0x39) e o clube, a partir do começo
 /// do jogo ([0xdd6ec8]), a notícia 0x1775 (0x77bbe0) com o id da pessoa, os três nomes (+0x33 de +4, +8, +0xc), o id do
 /// clube onde ela está, o do clube que oferece e o cargo (+0x3d), ao técnico do clube dela (0x7861e0).
-unsafe extern "thiscall" fn noticia_da_oferta_de_emprego(_this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn post_job_offer_news(_this: usize, pessoa: usize, clube: usize) {
     if pessoa == 0 || cqc9_d(pessoa + 0x39) == 0 || clube == 0 {
         return;
     }
@@ -828,6 +828,6 @@ unsafe extern "thiscall" fn noticia_da_oferta_de_emprego(_this: usize, pessoa: u
 }
 
 // ponytail: a notícia vai ao técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_da_oferta_de_emprego(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_post_job_offer_news(this: usize, pessoa: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, pessoa, clube)
 }

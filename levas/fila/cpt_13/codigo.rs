@@ -32,7 +32,7 @@ unsafe fn cpt13_ordenar_com(v: *mut u32, k: *mut i32, n: i32) {
 /// { 0x4c08f0 } (cdecl, comp_util.cpp): `comp_util_sort_clubs_by_strength(clubes, n)`: ordena o vetor de `n` clubes
 /// pela força (0x4c0720), a maior primeiro, com as chaves num vetor temporário (0x944e46 / 0x9452ca; a original o
 /// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
-unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
+unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let k = alocar((n as u32).wrapping_mul(4));
@@ -49,7 +49,7 @@ unsafe extern "C" fn ordenar_clubes_pela_forca(v: usize, n: i32) {
 /// { 0x4a2540 } (thiscall, ret 8, comp_stats.cpp): `Comp_Stats::set_club_final_position(clube, posição)`: acha
 /// (0x4a4850) ou acrescenta (0x4aceb0) o registro do clube na estatística da competição e grava a posição (byte) em
 /// +0x72; devolve o registro. Clube nulo: a caixa (linha 0x680).
-unsafe extern "thiscall" fn gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
+unsafe extern "thiscall" fn set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
     if clube == 0 {
         aviso_em(0x99ca94, 0x680);
         return 0; // ponytail: a original devolve o eax da caixa; quem chama não lê
@@ -118,7 +118,7 @@ unsafe fn cpt13_posicoes(this: usize, v: *const u32, gravar: usize) -> Vec<(usiz
 /// bytes, +0x3e deles) para um vetor (0x944e46), ordena pela força (0x4c08f0) e dá a cada um a posição prevista pela
 /// rodada em que sai (0x4a2540 na estatística [+8]); libera o vetor (0x9452ca). Sem estatística: a caixa (linha
 /// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
-unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
+unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
     if cpt13_d(this + 8) == 0 {
         return aviso_em(0x9b55ac, 0x1827);
     }
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
 /// Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
 /// de ter em +0x72 a última posição dele.
-unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
+unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cpt13_w(this + 0x3e) as i32;
     if cpt13_d(this + 8) == 0 || n <= 0 {
@@ -165,12 +165,12 @@ unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("posicoes_previstas_da_copa({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
+    PLACAR.registrar(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
 }
 
 /// Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
 /// Vec) antes da original; depois, o vetor tem de ser igual.
-unsafe extern "C" fn comparar_ordenar_clubes_pela_forca(v: usize, n: i32) {
+unsafe extern "C" fn comparar_comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let o = orig::<unsafe extern "C" fn(usize, i32)>(%%I1%%);
     if v == 0 || n <= 1 {
         return o(v, n);
@@ -180,12 +180,12 @@ unsafe extern "C" fn comparar_ordenar_clubes_pela_forca(v: usize, n: i32) {
     cpt13_ordenar_com(esperado.as_mut_ptr(), k.as_mut_ptr(), n);
     o(v, n);
     let obtido = core::slice::from_raw_parts(v as *const u32, n as usize);
-    PLACAR.registrar(obtido == &esperado[..], || format!("ordenar_clubes_pela_forca(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
+    PLACAR.registrar(obtido == &esperado[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, esperado));
 }
 
 /// Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
 /// devolvido, com a posição em +0x72.
-unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: usize, clube: usize, pos: u32) -> usize {
+unsafe extern "thiscall" fn comparar_set_club_final_position(this: usize, clube: usize, pos: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I2%%);
     if clube == 0 {
         return o(this, clube, pos); // ponytail: a caixa, só a original
@@ -194,6 +194,6 @@ unsafe extern "thiscall" fn comparar_gravar_posicao_do_clube(this: usize, clube:
     let antes = buscar(this, clube);
     let r = o(this, clube, pos);
     let igual = r != 0 && (antes == 0 || r == antes) && *((r + 0x72) as *const u8) == pos as u8;
-    PLACAR.registrar(igual, || format!("gravar_posicao_do_clube(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, antes, r));
+    PLACAR.registrar(igual, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", clube, pos as u8, antes, r));
     r
 }

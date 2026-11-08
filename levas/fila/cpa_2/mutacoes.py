@@ -4,8 +4,8 @@
 # carreira): as financas nao entram na impressao do banco; acusa se o dinheiro mudar alguma decisao (contratos,
 # transferencias, diretoria) ate junho, e PODE ESCAPAR (o comparando acusa no primeiro pagamento).
 MUTACOES = [
-    ('cpa_tv_valor', '            somar_tv(financas_do_clube(*(0xae2a38 as *const usize), clube), valor); // o dinheiro da TV',
-     '            somar_tv(financas_do_clube(*(0xae2a38 as *const usize), clube), valor.wrapping_mul(2)); // mutacao: o dobro'),
+    ('cpa_tv_valor', '            somar_tv(get_club_finance(*(0xae2a38 as *const usize), clube), valor); // o dinheiro da TV',
+     '            somar_tv(get_club_finance(*(0xae2a38 as *const usize), clube), valor.wrapping_mul(2)); // mutacao: o dobro'),
     ('cpa_honras_ordem', '    registrar(liga, campeao, vice, terceiro, destaque) // campeão, vice, terceiro',
      '    registrar(liga, campeao, terceiro, vice, destaque) // mutacao: vice e terceiro trocados'),
     ('cpa_historico_ano', '    core::ptr::write_unaligned((r + 8) as *mut u16, *(0xae2c92 as *const u16)); // o ano',

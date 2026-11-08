@@ -12,7 +12,7 @@ unsafe fn cpp11_i(a: usize) -> i32 {
 /// (vetor de 8 bytes em +0x3502, conta em byte com sinal em +0x3506) e devolve 1 quando (a, b), (a, −1) ou (−1, b) está
 /// lá. Senão 0: o resto da original (Austrália, Nova Zelândia e Oceania, 0x9cf224/0x9cf3f4/0x9cfa18, pela tabela das
 /// nações) só lê e cai sempre no `xor eax, eax`.
-unsafe extern "thiscall" fn par_de_nacoes_sem_amistoso(this: usize, a: i32, b: i32) -> u32 {
+unsafe extern "thiscall" fn is_banned_nation_pair(this: usize, a: i32, b: i32) -> u32 {
     let n = *((this + 0x3506) as *const i8);
     let mut k: i8 = 0;
     while k < n {
@@ -30,7 +30,7 @@ unsafe extern "thiscall" fn par_de_nacoes_sem_amistoso(this: usize, a: i32, b: i
 
 /// { 0x5cc5f0 } (cdecl, friendly.cpp): `compare_nations_by_reputation_desc(a, b)`: o qsort das listas de nações
 /// (ponteiros) pela reputação (+0x8e, palavra com sinal), a maior primeiro. Quente (qsort): sem contador.
-unsafe extern "C" fn ordem_das_nacoes_pela_reputacao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_nations_by_reputation_desc(a: usize, b: usize) -> i32 {
     let ra = *((cpp11_d(a) + 0x8e) as *const i16) as i32;
     let rb = *((cpp11_d(b) + 0x8e) as *const i16) as i32;
     rb - ra // a maior reputação primeiro
@@ -39,7 +39,7 @@ unsafe extern "C" fn ordem_das_nacoes_pela_reputacao(a: usize, b: usize) -> i32 
 /// { 0x5cc610 } (cdecl, friendly.cpp): `compare_fixture_records_by_date(a, b)`: o qsort dos registros de 20 bytes dos
 /// amistosos pela data em +3: −1 se a de `a` é antes (0x456770), 1 se é depois (0x456740), senão 0. Quente (qsort):
 /// sem contador.
-unsafe extern "C" fn ordem_dos_amistosos_pela_data(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_fixture_records_by_date(a: usize, b: usize) -> i32 {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let (d0, d1) = (cpp11_d(b + 3) as u32, cpp11_d(b + 7) as u32);
@@ -48,25 +48,25 @@ unsafe extern "C" fn ordem_dos_amistosos_pela_data(a: usize, b: usize) -> i32 {
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "thiscall" fn comparar_par_de_nacoes_sem_amistoso(this: usize, a: i32, b: i32) -> u32 {
+unsafe extern "thiscall" fn comparar_is_banned_nation_pair(this: usize, a: i32, b: i32) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(%%I0%%)(this, a, b);
-    let n = par_de_nacoes_sem_amistoso(this, a, b);
-    PLACAR.registrar(r == n, || format!("par_de_nacoes_sem_amistoso({}, {}) original={} rust={}", a, b, r, n));
+    let n = is_banned_nation_pair(this, a, b);
+    PLACAR.registrar(r == n, || format!("is_banned_nation_pair({}, {}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_das_nacoes_pela_reputacao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_nations_by_reputation_desc(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_das_nacoes_pela_reputacao(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_nacoes_pela_reputacao({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_nations_by_reputation_desc(a, b);
+    PLACAR.registrar(r == n, || format!("compare_nations_by_reputation_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-unsafe extern "C" fn comparar_ordem_dos_amistosos_pela_data(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_fixture_records_by_date(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_dos_amistosos_pela_data(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_amistosos_pela_data({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = compare_fixture_records_by_date(a, b);
+    PLACAR.registrar(r == n, || format!("compare_fixture_records_by_date({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

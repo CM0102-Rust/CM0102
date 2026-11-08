@@ -54,7 +54,7 @@ static mut CPX2_CHEGOU: bool = false;
 /// 0x80 (0x867700); jogador de 5250, idade 19 a 31, n < −8000, com o critério (0x866f60), sem a marca +1 do registro
 /// +0x86e e presente (0x418f60): some (0x419840) e, com +0x44 − sorteio(200) + sorteio(400) < −150, rejeita o clube
 /// (0x547e70). x acima de 10, n < −5000 ou o menor abaixo de 0,75 × o ponderado: antipatia ao técnico (0x547af0).
-unsafe extern "thiscall" fn desassossegar_pelo_lance(this: usize, o: usize) {
+unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     let p = cpx2_pessoa(cpx2_d(o + 0xc));
     let c = cpx2_contrato(p);
     let do_contrato = if c == 0 { 0 } else { cpx2_clube(cpx2_d(c + 4)) };
@@ -150,14 +150,14 @@ unsafe extern "thiscall" fn desassossegar_pelo_lance(this: usize, o: usize) {
 /// O comparador: a cópia em ensaio e a original a partir do mesmo estado (a oferta, [0xae1080] e o sorteio). Sem chegar
 /// à queixa (quase sempre), tudo igual; chegando, só a original (a queixa, a fuga e as antipatias não podem rodar duas
 /// vezes e a original sorteia mais).
-unsafe extern "thiscall" fn comparar_desassossegar_pelo_lance(this: usize, o: usize) {
+unsafe extern "thiscall" fn comparar_unsettle_player_after_bid(this: usize, o: usize) {
     let orig_f = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let mut regioes = vec![(o, 0x30usize), (0xae1080, 4)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPX2_ENSAIO = true;
     CPX2_CHEGOU = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| desassossegar_pelo_lance(this, o)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| unsettle_player_after_bid(this, o)));
     CPX2_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_desassossegar_pelo_lance(this: usize, o: us
         return;
     }
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("desassossegar_pelo_lance(oferta {:#x}) original={:x?} rust={:x?}", o, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("unsettle_player_after_bid(oferta {:#x}) original={:x?} rust={:x?}", o, mo, mr));
 }
 
 /// { 0x8de790 } (thiscall, ret 0xc, transfer_manager.cpp, quadro SEH da notícia local): `TRANSFER_MANAGER::
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_desassossegar_pelo_lance(this: usize, o: us
 /// (0x8c44e0), pelas permissões de trabalho (0x8c7690) e por 0x8c4950. Os clubes humanos que recebem (0x8d1130 com 0x2f,
 /// até 30); sem nenhum, nada. A notícia 0xfb0: o clube do contrato (sem contrato de tipo 5), o comprador, a pessoa (o id
 /// e as três chaves), o clube, o motivo e +0x1f; a cada destinatário, menos o próprio clube no motivo 0xb.
-unsafe extern "thiscall" fn noticia_oferta_desfeita(this: usize, o: usize, clube: usize, motivo: u32) {
+unsafe extern "thiscall" fn post_offer_collapsed_news(this: usize, o: usize, clube: usize, motivo: u32) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn noticia_oferta_desfeita(this: usize, o: usize, clube
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_oferta_desfeita(this: usize, o: usize, clube: usize, motivo: u32) {
+unsafe extern "thiscall" fn comparar_post_offer_collapsed_news(this: usize, o: usize, clube: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I1%%)(this, o, clube, motivo)
 }
 
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn comparar_noticia_oferta_desfeita(this: usize, o: usi
 /// post_appearance_money_news(cláusula, valor, tipo, calado)`, pelo prêmio por jogos (0x8cb340). Calado, sem contrato ou
 /// sem o clube dele: nada. Senão a notícia 0xfa6: a pessoa da cláusula (+0: o id e as três chaves), +4, o valor, o
 /// clube que paga (+9), o tipo e o clube do contrato; ao clube que paga e ao clube do contrato.
-unsafe extern "thiscall" fn noticia_premio_por_jogos(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
+unsafe extern "thiscall" fn post_appearance_money_news(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
     let _ = this;
     if calado != 0 {
         return;
@@ -255,6 +255,6 @@ unsafe extern "thiscall" fn noticia_premio_por_jogos(this: usize, clausula: usiz
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_premio_por_jogos(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
+unsafe extern "thiscall" fn comparar_post_appearance_money_news(this: usize, clausula: usize, valor: u32, tipo: u32, calado: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I2%%)(this, clausula, valor, tipo, calado)
 }

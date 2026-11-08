@@ -4,7 +4,7 @@
 /// do time parceiro A/B (0x540a50 com nulo e 1, que zera a marca +0x244 do clube quando recusa o parceiro); nenhum: 0.
 /// Clube nulo: a original (caixa "Error" e 0). Na carreira, pela distribuição dos treinadores (0x8b2880, nas
 /// contratações e transferências), pela regeneração (0x7a65d0) e pelas telas.
-unsafe extern "C" fn auxiliar_do_clube(clube: usize) -> usize {
+unsafe extern "C" fn database_get_club_assistant(clube: usize) -> usize {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%)(clube);
     }
@@ -21,14 +21,14 @@ unsafe extern "C" fn auxiliar_do_clube(clube: usize) -> usize {
     rd(p + 0xd3) // o auxiliar do parceiro
 }
 
-unsafe extern "C" fn comparar_auxiliar_do_clube(clube: usize) -> usize {
+unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I0%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
     // a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube), || auxiliar_do_clube(clube));
-    PLACAR.registrar(igual && r == n, || format!("auxiliar_do_clube({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube), || database_get_club_assistant(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -37,7 +37,7 @@ unsafe extern "C" fn comparar_auxiliar_do_clube(clube: usize) -> usize {
 /// depois os do parceiro até 5; o resto zerado só quando os dois juntos não enchem as 5. Contador de 8 bits na
 /// original (no máximo 5). Devolve 1. Clube nulo: a original (caixa "Error" e 0). Na carreira, pela distribuição dos
 /// treinadores (0x8b2880).
-unsafe extern "C" fn treinadores_do_clube(clube: usize, vetor: *mut usize) -> u32 {
+unsafe extern "C" fn database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%)(clube, vetor);
     }
@@ -74,15 +74,15 @@ unsafe extern "C" fn treinadores_do_clube(clube: usize, vetor: *mut usize) -> u3
     1
 }
 
-unsafe extern "C" fn comparar_treinadores_do_clube(clube: usize, vetor: *mut usize) -> u32 {
+unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, *mut usize) -> u32>(%%I1%%);
     if clube == 0 {
         return o(clube, vetor); // caixa: só a original
     }
     // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 20), (clube + 0x244, 1)],
-        || o(clube, vetor), || treinadores_do_clube(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("treinadores_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || o(clube, vetor), || database_get_club_coaches(clube, vetor));
+    PLACAR.registrar(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }
 
@@ -90,7 +90,7 @@ unsafe extern "C" fn comparar_treinadores_do_clube(clube: usize, vetor: *mut usi
 /// clube são pessoas válidas (não nulas, id (+0) < [0xae2364], com sinal) mais os do time parceiro A/B (0x540a50 com
 /// nulo e 1, sempre chamada). Só `al` (o resto do eax é o do parceiro). Clube nulo: a original (caixa "Error" e 0).
 /// Na carreira, pela fila da regeneração (PLAYER_REGEN::process_regen_queue 0x7a65d0).
-unsafe extern "C" fn contar_treinadores_do_clube(clube: usize) -> u8 {
+unsafe extern "C" fn database_count_club_coaches(clube: usize) -> u8 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%)(clube);
     }
@@ -110,12 +110,12 @@ unsafe extern "C" fn contar_treinadores_do_clube(clube: usize) -> u8 {
     n
 }
 
-unsafe extern "C" fn comparar_contar_treinadores_do_clube(clube: usize) -> u8 {
+unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
     let o = orig::<unsafe extern "C" fn(usize) -> u8>(%%I2%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube), || contar_treinadores_do_clube(clube));
-    PLACAR.registrar(igual && r == n, || format!("contar_treinadores_do_clube({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube), || database_count_club_coaches(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

@@ -35,7 +35,7 @@ unsafe fn dbu2_juntar(destino: usize, origem: usize) {
 /// (3), "Under 21 Squad"/"Under 23 Squad" (4). Os formatos vão ao 0x66f4e0 com (gênero, gênero, nome). Devolve 1.
 /// Tamanho < 0x47 ou clube nulo (com forma 1..4): a original (caixa). Nas telas do clube, da seleção, do técnico, na
 /// escalação da partida (0x725f70, em Rust), no hall da fama, nas impressões e no Setup.
-unsafe extern "C" fn nome_da_selecao(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+unsafe extern "C" fn club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
         return orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%)(clube, variante, texto, tamanho, forma, aspas);
@@ -89,7 +89,7 @@ unsafe extern "C" fn nome_da_selecao(clube: usize, variante: u32, texto: usize, 
     1
 }
 
-unsafe extern "C" fn comparar_nome_da_selecao(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
+unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(%%I0%%);
     let f = forma as u8 as i8;
     if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
@@ -97,8 +97,8 @@ unsafe extern "C" fn comparar_nome_da_selecao(clube: usize, variante: u32, texto
     }
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(clube, variante, texto, tamanho, forma, aspas),
-        || nome_da_selecao(clube, variante, texto, tamanho, forma, aspas));
-    PLACAR.registrar(igual && r == x, || format!("nome_da_selecao({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
+        || club_get_national_team_name(clube, variante, texto, tamanho, forma, aspas));
+    PLACAR.registrar(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
     r
 }
 
@@ -143,7 +143,7 @@ const DBU2_ATRIBUTOS: [(usize, bool, usize, bool); 31] = [
 /// nome traduzido (0x66f4e0) do atributo de jogador (1..0x1f, byte com sinal), abreviado (`abreviado` não nulo) ou
 /// inteiro; devolve 1. Atributo fora da faixa, texto nulo ou tamanho (curto com sinal) < 100: a original (caixa e 0).
 /// Nas telas do clube, de busca, da pessoa e de treino.
-unsafe extern "C" fn nome_do_atributo_do_jogador(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+unsafe extern "C" fn database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
         return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%)(atributo, texto, tamanho, abreviado);
@@ -160,7 +160,7 @@ unsafe extern "C" fn nome_do_atributo_do_jogador(atributo: u32, texto: usize, ta
     1
 }
 
-unsafe extern "C" fn comparar_nome_do_atributo_do_jogador(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I1%%);
     let x = atributo as u8 as i8;
     if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
@@ -168,8 +168,8 @@ unsafe extern "C" fn comparar_nome_do_atributo_do_jogador(atributo: u32, texto: 
     }
     // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(atributo, texto, tamanho, abreviado),
-        || nome_do_atributo_do_jogador(atributo, texto, tamanho, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("nome_do_atributo_do_jogador({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
+        || database_get_player_attribute_name(atributo, texto, tamanho, abreviado));
+    PLACAR.registrar(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
     r
 }
 
@@ -226,7 +226,7 @@ const DBU2_AVANTE: (usize, usize, bool, usize) = (0x9b74b4, 0x9b7484, true, 0x9b
 /// Devolve 1. Os textos traduzidos passam pelo global [0xde1f64] (o mesmo uso da original). Texto ou jogador nulos ou
 /// tamanho (curto com sinal) < 30: a original (caixa). As locais (linha e lados, 2 KB cada) são gravadas antes de lidas.
 /// Nas telas do clube, de busca, da pessoa, de tática e de treino e nas impressões.
-unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
         return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%)(jogador, texto, tamanho, forma);
     }
@@ -331,7 +331,7 @@ unsafe extern "C" fn texto_das_posicoes(jogador: usize, texto: usize, tamanho: u
     1
 }
 
-unsafe extern "C" fn comparar_texto_das_posicoes(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn comparar_database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I2%%);
     if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
         return o(jogador, texto, tamanho, forma); // caixa: só a original
@@ -340,7 +340,7 @@ unsafe extern "C" fn comparar_texto_das_posicoes(jogador: usize, texto: usize, t
     let n = (tamanho as u16 as usize).min(128);
     let reg = [(texto, n), (jogador + 0xf, 12), (0xde1f64, 64)];
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(jogador, texto, tamanho, forma),
-        || texto_das_posicoes(jogador, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("texto_das_posicoes({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
+        || database_format_player_positions(jogador, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
     r
 }

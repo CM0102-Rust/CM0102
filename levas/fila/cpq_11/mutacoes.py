@@ -1,7 +1,7 @@
 # Mutacoes da copa (cpq_11). O lado sorteado ao contrario quando as duas vagas estao livres (o mesmo numero de
 # sorteios; os mandantes das copas inglesas mudam: renda e resultado). Qualquer par de clubes com estadio conta como
 # estadio compartilhado (sem a igualdade: quase todo confronto seguinte da rodada se inverte; o comparando acusa na
-# primeira rodada sorteada, a carreira pelos mandantes). A escala pela rodada dividida pelas rodadas em vez de
+# primeira rodada sorteada, a carreira pelos mandantes). A escala pela rodada tackle pelas rodadas em vez de
 # rodadas - 1 (os registros do jogador da EngAutoCup, 0x86bdd0/0x86c000; PODE ESCAPAR da carreira se a EngAutoCup nao
 # chamar ate 2002-06-01: o ramo diz).
 MUTACOES = [

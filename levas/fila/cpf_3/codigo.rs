@@ -10,7 +10,7 @@ unsafe fn cpf3_data(destino: usize, origem: usize) {
 /// { 0x448550 } (thiscall, ret 4, club_records.cpp): `transfer_fee_record_assign`: copia o recorde de valor de
 /// transferência (0x29 bytes) de `origem`: cinco duplas (+0..+0x10: o valor, o jogador, o outro clube...), a data em
 /// +0x14, a dupla +0x1c, a data em +0x20 e a marca de troca (+0x28). Devolve `this`.
-unsafe extern "thiscall" fn copiar_recorde_de_valor(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
     for o in [0, 4, 8, 0xc, 0x10] {
         d(o); // o valor e os ids
@@ -25,7 +25,7 @@ unsafe extern "thiscall" fn copiar_recorde_de_valor(this: usize, origem: usize) 
 /// { 0x451570 } (thiscall, ret 4, club_records.cpp): `goals_in_match_record_assign`: copia o recorde de gols numa
 /// partida (0x38 bytes) de `origem`: os gols (+0, byte), o recordista em +1 (0x448490) e o registro da partida em +0x19
 /// (0x448110, ambos já em Rust). Devolve `this`.
-unsafe extern "thiscall" fn copiar_recorde_de_gols_na_partida(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, origem: usize) -> usize {
     let recordista: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x448490usize);
     let partida: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x448110usize);
     *(this as *mut u8) = *(origem as *const u8); // os gols
@@ -34,16 +34,16 @@ unsafe extern "thiscall" fn copiar_recorde_de_gols_na_partida(this: usize, orige
     this
 }
 
-unsafe extern "thiscall" fn comparar_copiar_recorde_de_valor(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn comparar_transfer_fee_record_assign(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x29)], || o(this, origem), || copiar_recorde_de_valor(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_valor {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x29)], || o(this, origem), || transfer_fee_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("transfer_fee_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_copiar_recorde_de_gols_na_partida(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn comparar_goals_in_match_record_assign(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x38)], || o(this, origem), || copiar_recorde_de_gols_na_partida(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recorde_de_gols_na_partida {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x38)], || o(this, origem), || goals_in_match_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("goals_in_match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }

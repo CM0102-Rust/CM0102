@@ -20,11 +20,11 @@ unsafe fn id_do_item(item: i16) -> u16 {
 }
 
 /// { 0x718aa0 } (cdecl, match_screens.cpp): abre a tela da partida `partida` na vaga `vaga` (0x7fe4a0
-/// com a montagem 0x718e90, a resposta 0x71a240 e o fechamento 0x71b120) e grava os parâmetros dela
+/// com a montagem 0x718e90, a resposta 0x71a240 e o match_wrap_up 0x71b120) e grava os parâmetros dela
 /// (0x7ff130; o 0xe é [partida+0x63]); marca o humano da vez como espectador ([[partida+0x5b]+0xc5+4h],
 /// contando em +0x108) e, sem confirmação ([partida+0x57]), confirma pela rede (0x6b5260) e, se
 /// confirmou, grava 2 no parâmetro 1. Vaga ou partida nula: a original (caixa de erro).
-unsafe extern "C" fn abrir_tela_da_partida(vaga: u32, partida: usize) {
+unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
     if vaga == 0 || partida == 0 {
         return orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida);
     }
@@ -66,8 +66,8 @@ unsafe extern "C" fn abrir_tela_da_partida(vaga: u32, partida: usize) {
 /// o 0x13, se não estiver parado pelo 0x12) e, sem [0xb6b7b0], redesenha o painel (0x724520) e liga
 /// [0xb6b7a8]. Itens: 5 troca a competição (0xe) e volta à página 1, 6 e 8 a página anterior e a
 /// seguinte (em círculo), 7 para ou solta a troca automática; cada um liga [0xb6b7b0]. Devolve 0.
-unsafe extern "C" fn responder_ultimos_placares_da_partida(item: u32) -> i32 {
-    crate::comparacao::ramo("telas responder ao painel dos placares");
+unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
+    crate::comparacao::ramo("telas respond ao painel dos placares");
     let pagina = parametro_da_tela(0x11) as u8 as i8;
     let parado = parametro_da_tela(0x12);
     let paginas = parametro_da_tela(0x13) as u8 as i8;
@@ -116,8 +116,8 @@ unsafe extern "C" fn responder_ultimos_placares_da_partida(item: u32) -> i32 {
 /// dados novos ([0xb6b7ac]) e a marca 4 do menu da partida ([[parâmetro 0]+0x5b]), sem [0xb6b7b0],
 /// redesenha o painel (0x721cd0 com 0 e −1) e liga [0xb6b7a8]; os itens 9 e 0xa descem e sobem a
 /// linha do parâmetro 0x1c e ligam [0xb6b7b0]. Devolve 0.
-unsafe extern "C" fn responder_estatisticas_do_time(item: u32) -> i32 {
-    crate::comparacao::ramo("telas responder as estatisticas do time");
+unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
+    crate::comparacao::ramo("telas respond as estatisticas do time");
     let p0 = parametro_da_tela(0);
     let linha = parametro_da_tela(0x1c) as u8 as i8;
     if *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0 && *(0xb6b7b0 as *const u32) == 0 {
@@ -141,7 +141,7 @@ unsafe extern "C" fn responder_estatisticas_do_time(item: u32) -> i32 {
 }
 
 // ponytail: abrir a tela mexe em telas e na rede (não roda duas vezes): no modo comparação só a original
-unsafe extern "C" fn comparar_abrir_tela_da_partida(vaga: u32, partida: usize) {
+unsafe extern "C" fn comparar_open_match_screen(vaga: u32, partida: usize) {
     orig::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, partida)
 }
 
@@ -158,15 +158,15 @@ unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) 
     ro
 }
 
-unsafe extern "C" fn comparar_responder_ultimos_placares_da_partida(item: u32) -> i32 {
+unsafe extern "C" fn comparar_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
     let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
     // folga de 1 s: a hora pode virar entre os dois lados
     let redesenha = agora().wrapping_add(1000) >= (parametro_da_tela(0x14) as u32).wrapping_add(5000);
-    comparar_resposta("responder_ultimos_placares_da_partida", item, orig(%%I1%%), responder_ultimos_placares_da_partida, redesenha)
+    comparar_resposta("match_screens_handle_latest_scores_cycle", item, orig(%%I1%%), match_screens_handle_latest_scores_cycle, redesenha)
 }
 
-unsafe extern "C" fn comparar_responder_estatisticas_do_time(item: u32) -> i32 {
+unsafe extern "C" fn comparar_handle_team_stats_input(item: u32) -> i32 {
     let p0 = parametro_da_tela(0);
     let redesenha = *(0xb6b7ac as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0;
-    comparar_resposta("responder_estatisticas_do_time", item, orig(%%I2%%), responder_estatisticas_do_time, redesenha)
+    comparar_resposta("handle_team_stats_input", item, orig(%%I2%%), handle_team_stats_input, redesenha)
 }

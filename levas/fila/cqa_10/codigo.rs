@@ -32,7 +32,7 @@ unsafe fn cqa10_diretoria(this: usize, clube: usize) -> usize {
 /// vão em `ids` e a confiança da diretoria (+6) sobe (preferidos) ou cai (rejeitados) 10 × o +0x57 do técnico. Devolve
 /// a soma das duas contas (o chamador não lê).
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn jogadores_que_a_diretoria_cita(this: usize, jogo: usize, clube: usize, ids: *mut i32, partida: u32, elogio: *const u8,
+unsafe extern "thiscall" fn board_named_players_after_match(this: usize, jogo: usize, clube: usize, ids: *mut i32, partida: u32, elogio: *const u8,
                                                          a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn jogadores_que_a_diretoria_cita(this: usize, jogo: us
     let mut m = [0usize; 53];
     let mut n: i8 = 0;
     let (mut da, mut d9) = (0i8, 0i8);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let veredito: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x6ab670usize);
     let preferidos = *elogio != 0;
     if preferidos {
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn jogadores_que_a_diretoria_cita(this: usize, jogo: us
         if p == 0 || cqa10_d(p + 0x61) == 0 || cqa10_b(p + 0x3d) != 0xb {
             continue;
         }
-        let c = contrato_de(cqa10_d(0xae1050), p);
+        let c = contract_of(cqa10_d(0xae1050), p);
         *(0xae1080 as *mut usize) = c;
         if c == 0 {
             continue;
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn jogadores_que_a_diretoria_cita(this: usize, jogo: us
 /// 3 ids e das 5 saídas; a devolução também (a lista do técnico, a tabela da liga e o registro da partida só leem). A
 /// cópia sem contar os sorteios.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_jogadores_que_a_diretoria_cita(this: usize, jogo: usize, clube: usize, ids: *mut i32, partida: u32, elogio: *const u8,
+unsafe extern "thiscall" fn comparar_board_named_players_after_match(this: usize, jogo: usize, clube: usize, ids: *mut i32, partida: u32, elogio: *const u8,
                                                                   a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
     type F = unsafe extern "thiscall" fn(usize, usize, usize, *mut i32, u32, *const u8, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8) -> u8;
     let o = orig::<F>(%%I0%%);
@@ -159,8 +159,8 @@ unsafe extern "thiscall" fn comparar_jogadores_que_a_diretoria_cita(this: usize,
         regioes.push((s as usize, 1));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10),
-        || crate::aleatorio::sem_contar(|| jogadores_que_a_diretoria_cita(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
-    PLACAR.registrar(igual && r == n, || format!("jogadores_que_a_diretoria_cita(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
+        || crate::aleatorio::sem_contar(|| board_named_players_after_match(this, jogo, clube, ids, partida, elogio, a6, a7, a8, a9, a10)));
+    PLACAR.registrar(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", clube, *elogio, r, n, mo, mr));
     r
 }
 
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn comparar_jogadores_que_a_diretoria_cita(this: usize,
 /// pessoa, partida)`: lê o registro da partida (0x729600 em [0xb6b7c0], com os dois lados de 0x625 bytes construídos e
 /// destruídos pelos iteradores 0x9463af/0x9462bb) e acha a pessoa entre os 11 primeiros de cada lado (ids em +0x71, 0x49
 /// bytes): a nota (+0x35) abaixo de 7 dá −1, acima de 7 dá 1, 7 dá 0; não achada (ou sem pessoa), 0. O ecx não conta.
-unsafe extern "thiscall" fn veredito_da_nota_na_partida(_this: usize, pessoa: usize, partida: u32) -> u8 {
+unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: usize, pessoa: usize, partida: u32) -> u8 {
     let construir: unsafe extern "stdcall" fn(usize, usize, u32, usize, usize) = core::mem::transmute(0x9463afusize);
     let destruir: unsafe extern "stdcall" fn(usize, usize, u32, usize) = core::mem::transmute(0x9462bbusize);
     let ler: unsafe extern "thiscall" fn(usize, u32, usize) -> u32 = core::mem::transmute(0x729600usize);
@@ -195,10 +195,10 @@ unsafe extern "thiscall" fn veredito_da_nota_na_partida(_this: usize, pessoa: us
 }
 
 /// Comparador: pelo valor (o registro é lido do arquivo temporário e o vetor local se constrói e destrói nos dois).
-unsafe extern "thiscall" fn comparar_veredito_da_nota_na_partida(this: usize, pessoa: usize, partida: u32) -> u8 {
+unsafe extern "thiscall" fn comparar_get_player_match_rating_verdict(this: usize, pessoa: usize, partida: u32) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(%%I1%%)(this, pessoa, partida);
-    let n = veredito_da_nota_na_partida(this, pessoa, partida);
-    PLACAR.registrar(r == n, || format!("veredito_da_nota_na_partida({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
+    let n = get_player_match_rating_verdict(this, pessoa, partida);
+    PLACAR.registrar(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", pessoa, partida as i32, r as i8, n as i8));
     r
 }
 
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn comparar_veredito_da_nota_na_partida(this: usize, pe
 /// três elogios pela variante (0, 1, outra); depois, como nenhum jogador conta na derrota, a saída fica vazia (a original
 /// zera o primeiro byte). Derrota: a saída vazia e, com o primeiro, uma das quatro culpas pela variante (0, 1, 2,
 /// outra), com 100 e o nome. Sem ids, nada.
-unsafe extern "stdcall" fn texto_da_diretoria_sobre_os_jogadores(ids: *const i32, vitoria: u32, saida: usize, variante: u32) {
+unsafe extern "stdcall" fn build_board_player_performance_text(ids: *const i32, vitoria: u32, saida: usize, variante: u32) {
     if ids.is_null() {
         return;
     }
@@ -249,13 +249,13 @@ unsafe extern "stdcall" fn texto_da_diretoria_sobre_os_jogadores(ids: *const i32
 }
 
 /// Comparador: lado a lado nos primeiros 0x200 bytes da saída (o único chamador, 0x6a69c0, passa um texto de 1500).
-unsafe extern "stdcall" fn comparar_texto_da_diretoria_sobre_os_jogadores(ids: *const i32, vitoria: u32, saida: usize, variante: u32) {
+unsafe extern "stdcall" fn comparar_build_board_player_performance_text(ids: *const i32, vitoria: u32, saida: usize, variante: u32) {
     let o = orig::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(%%I2%%);
     if ids.is_null() || (*ids == -1 && (*ids.add(1) != -1 || *ids.add(2) != -1)) {
         return o(ids, vitoria, saida, variante);
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida, 0x200)], || o(ids, vitoria, saida, variante),
-        || texto_da_diretoria_sobre_os_jogadores(ids, vitoria, saida, variante));
-    PLACAR.registrar(igual, || format!("texto_da_diretoria_sobre_os_jogadores(vitória {}, variante {}) {:?} x {:?}", vitoria as u8, variante,
+        || build_board_player_performance_text(ids, vitoria, saida, variante));
+    PLACAR.registrar(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", vitoria as u8, variante,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }

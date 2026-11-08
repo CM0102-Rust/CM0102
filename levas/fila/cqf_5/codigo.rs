@@ -32,7 +32,7 @@ unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
 /// a linha vai no cl e a original deixa lixo nos bytes altos do ecx, que a 0x687430 não lê: a cópia passa o byte
 /// limpo), até 4 linhas ou o fim das 32 entradas; depois a notícia dos grupos (0x684230 mov ecx, this -> thiscall).
 /// Devolve 1.
-unsafe extern "thiscall" fn mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
+unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, lista: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let linha_da_tabela: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(0x687430usize);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684230usize);
@@ -69,14 +69,14 @@ unsafe fn cqf5_do_grupo(lista: usize, g: i32) -> Vec<usize> {
 
 /// Só a original (aloca a tabela e manda a notícia dos grupos), conferindo o plano feito antes: devolve 1, +0x3e = 4 e
 /// as linhas da tabela (0x3b bytes, +0 o clube) com os clubes do grupo 1 da lista, na ordem.
-unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lista: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_world_cup_create_group_table(this: usize, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I0%%);
     let plano = cqf5_do_grupo(lista, 1);
     let r = o(this, lista);
     if r == 1 {
         let t = cqf5_d(this + 0xb1);
         let ok = cqf5_w(this + 0x3e) == 4 && plano.iter().enumerate().all(|(k, &c)| cqf5_d(t + k * 0x3b) == c);
-        PLACAR.registrar(ok, || format!("mundial_tabela_do_grupo_um: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
+        PLACAR.registrar(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plano));
     }
     r
 }
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn comparar_mundial_tabela_do_grupo_um(this: usize, lis
 /// altos, que o construtor não lê: a cópia passa os valores limpos) guardada em [+0xc][g]; o vetor e a tabela das
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x380 e 0. Com ela: +0x30 = g e a notícia do grupo
 /// (0x684230 na fase). Devolve 1.
-unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
+unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, lista: usize) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn mundial_fase_do_grupo(this: usize, g: i32, lista: us
 /// fase com os times (+0x3e) da Copa, o ano dela e, na tabela da fase (+0xb1, linhas de 0x3b bytes), os clubes do
 /// grupo g+2 da lista (em qualquer ordem: na comparação de 02/11 as linhas da fase não
 /// saíram na ordem da lista [inferência: a fase ordena ou sorteia a tabela dela]).
-unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, lista: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_world_cup_create_group_stage(this: usize, g: i32, lista: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I1%%);
     let plano = cqf5_do_grupo(lista, g + 2);
     let r = o(this, g, lista);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, 
                 b.sort_unstable();
                 a == b
             });
-        PLACAR.registrar(ok, || format!("mundial_fase_do_grupo({}): a fase não bate com o plano ({:x?})", g, plano));
+        PLACAR.registrar(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plano));
     }
     r
 }
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn comparar_mundial_fase_do_grupo(this: usize, g: i32, 
 /// ret 8): 1, 2, 3, 4, quatro 5, oito 9, oito 17 e oito 25 (as faixas das fases finais); depois a competição atual
 /// da nação de cada clube (+0x53) vira a Copa (0x775220 push [+4]; push nação; mov ecx, [0xb74318] -> thiscall, ret 8)
 /// e o vetor é liberado (0x9452ca).
-unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
+unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
@@ -240,7 +240,7 @@ unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
 /// Só a original (acrescenta registros à estatística e avisa o gerenciador dos técnicos), conferindo o plano feito
 /// antes: o vetor ordenado como ela ordena (a mesma qsort, numa cópia) e, depois, a posição prevista (+0x72 do registro
 /// achado por 0x4a4850) de cada um dos 32 primeiros.
-unsafe extern "thiscall" fn comparar_mundial_posicoes_previstas(this: usize) {
+unsafe extern "thiscall" fn comparar_world_cup_set_predicted_positions(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqf5_d(this + 8) == 0 || cqf5_w(this + 0x36) < 0x20 || cqf5_d(this + 0x14) == 0 {
         return o(this);
@@ -256,5 +256,5 @@ unsafe extern "thiscall" fn comparar_mundial_posicoes_previstas(this: usize) {
         let e = if v[k] != 0 { achar(cqf5_d(this + 8), v[k]) } else { 0 };
         e == 0 || cqf5_b(e + 0x72) != FAIXAS[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("mundial_posicoes_previstas: a posição prevista da vaga {:?} não bate", errado));
+    PLACAR.registrar(errado.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }

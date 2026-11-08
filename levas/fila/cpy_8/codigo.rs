@@ -38,7 +38,7 @@ unsafe fn cpy8_nacao_do_clube(clube: usize) -> Option<i32> {
 /// que bater, ou o bloco inteiro. Conta 1: o primeiro; senão primeiro + sorteio(conta − 1). Ocupado (o byte do id do
 /// árbitro em [this+8]): o seguinte da faixa, dando a volta; todos ocupados, o sorteado. Grava o índice (palavra) e
 /// devolve 1 no al (o resto do eax com o índice, como a original).
-unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
     if cpy8_i(jogo) == -2 {
         return 0xffff_ff00;
     }
@@ -157,20 +157,20 @@ unsafe extern "thiscall" fn escolher_arbitro_da_partida(this: usize, jogo: usize
 }
 
 /// Comparador: lado a lado pela palavra de saída e pelo estado do sorteio, e pela devolução.
-unsafe extern "thiscall" fn comparar_escolher_arbitro_da_partida(this: usize, jogo: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_choose_match_official(this: usize, jogo: usize, saida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((saida, 2));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida),
-        || crate::aleatorio::sem_contar(|| escolher_arbitro_da_partida(this, jogo, saida)));
-    PLACAR.registrar(igual && r == n, || format!("escolher_arbitro_da_partida(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
+        || crate::aleatorio::sem_contar(|| choose_match_official(this, jogo, saida)));
+    PLACAR.registrar(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", jogo, r, mo, n, mr));
     r
 }
 
 /// { 0x79bf40 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::clear_busy_flags`, no laço do dia
 /// (0x5cccd0) e na corrida até a data de início (0x5cc850): zera os [this+4] bytes de ocupado em [this+8] (a conta e o
 /// vetor relidos a cada passo). Devolve a conta (0 se não positiva), como o eax da original.
-unsafe extern "thiscall" fn limpar_arbitros_ocupados(this: usize) -> u32 {
+unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
     let mut i = 0i32;
     while i < cpy8_i(this + 4) {
         *(cpy8_d(this + 8).wrapping_add(i as usize) as *mut u8) = 0;
@@ -180,12 +180,12 @@ unsafe extern "thiscall" fn limpar_arbitros_ocupados(this: usize) -> u32 {
 }
 
 /// Comparador: lado a lado pelos bytes de ocupado e pela devolução.
-unsafe extern "thiscall" fn comparar_limpar_arbitros_ocupados(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_clear_busy_flags(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let n = cpy8_i(this + 4);
     let reg = if n > 0 && cpy8_d(this + 8) != 0 { vec![(cpy8_d(this + 8), n as usize)] } else { Vec::new() };
-    let (r, m, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || limpar_arbitros_ocupados(this));
-    PLACAR.registrar(igual && r == m, || format!("limpar_arbitros_ocupados(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
+    let (r, m, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || clear_busy_flags(this));
+    PLACAR.registrar(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
     r
 }
 
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn comparar_limpar_arbitros_ocupados(this: usize) -> u3
 /// ano (+0xe) ano do jogo − 27 + sorteio(5) e o dia (+0xc) sorteio(340). Depois zera a linha de estatísticas (17 bytes
 /// em [this]) do primeiro da faixa (+4, +8, +0xa, +0xc, +0xf; a original repete a mesma linha `conta` vezes). Devolve
 /// 1 (só o al vale).
-unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
+unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
     if comp == 0 {
         return 0;
     }
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn renovar_arbitros(this: usize, comp: usize) -> u8 {
 /// Comparador: lado a lado pelas fichas de todos os árbitros ([0xae2390] × 0x2b), pelas linhas de estatísticas
 /// ([0xae2390] × 17), pelo estado do sorteio e por [0xb67a34], e pela devolução. Sem tabela de árbitros (a caixa a cada
 /// ficha): só a original.
-unsafe extern "thiscall" fn comparar_renovar_arbitros(this: usize, comp: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_renew_officials(this: usize, comp: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I2%%);
     let total = cpy8_i(0xae2390).max(0) as usize;
     if cpy8_d(0xae23e8) == 0 || cpy8_d(this) == 0 {
@@ -274,11 +274,11 @@ unsafe extern "thiscall" fn comparar_renovar_arbitros(this: usize, comp: usize) 
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(cpy8_d(0xae23e8), total * 0x2b), (cpy8_d(this), total * 0x11), (0xb67a34, 4)]);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, comp),
-        || crate::aleatorio::sem_contar(|| renovar_arbitros(this, comp)));
+        || crate::aleatorio::sem_contar(|| renew_officials(this, comp)));
     PLACAR.registrar(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("renovar_arbitros(comp {:#x}) original={} rust={}, diferencas em {:x?}", comp, r, n, dif)
+        format!("renew_officials(comp {:#x}) original={} rust={}, diferencas em {:x?}", comp, r, n, dif)
     });
     r
 }

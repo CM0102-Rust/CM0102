@@ -1,4 +1,4 @@
-# Mutacoes do fechamento do motor (1). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
+# Mutacoes do match_wrap_up do motor (1). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
 MUTACOES = [
     ('b_baixo', "        if (10..=11).contains(&linha) {", "        if (9..=11).contains(&linha) {"),
     ('b_coluna', "    if (2..=6).contains(&coluna) {", "    if (2..=7).contains(&coluna) {"),

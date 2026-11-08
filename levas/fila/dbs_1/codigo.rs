@@ -15,7 +15,7 @@ unsafe fn dbs1_cheio(t: usize) -> bool {
 /// humano deu apelido à pessoa ([0xae23bc] + 110 × pessoa; 0x600740) e ela confere com os nomes (0x53e990), o apelido
 /// (0x6005e0) no lugar do nome comum. Texto nulo ou tamanho (palavra) < 0x69: a original (caixa). As locais de 0x200
 /// bytes só servem à mensagem da caixa. As chamadas pelo endereço do jogo. ~126 chamadores (notícias, telas, contratos).
-unsafe extern "C" fn nome_por_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
+unsafe extern "C" fn database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
     if texto == 0 || (tamanho as i16) < 0x69 {
         return orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%)(nome, sobrenome, comum, texto, tamanho, forma, pessoa);
     }
@@ -37,7 +37,7 @@ unsafe extern "C" fn nome_por_ids(nome: i32, sobrenome: i32, comum: i32, texto: 
     formatar(n, s, c, texto, tamanho, forma, -1)
 }
 
-unsafe extern "C" fn comparar_nome_por_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
+unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
     let o = orig::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(%%I0%%);
     if texto == 0 || (tamanho as i16) < 0x69 {
         return o(nome, sobrenome, comum, texto, tamanho, forma, pessoa); // caixa: só a original
@@ -45,8 +45,8 @@ unsafe extern "C" fn comparar_nome_por_ids(nome: i32, sobrenome: i32, comum: i32
     // o texto produzido (até o tamanho dado, no máximo 128 bytes)
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma, pessoa),
-        || nome_por_ids(nome, sobrenome, comum, texto, tamanho, forma, pessoa));
-    PLACAR.registrar(igual && r == x, || format!("nome_por_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
+        || database_format_name_from_ids(nome, sobrenome, comum, texto, tamanho, forma, pessoa));
+    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
     r
 }
 
@@ -56,7 +56,7 @@ unsafe extern "C" fn comparar_nome_por_ids(nome: i32, sobrenome: i32, comum: i32
 /// na forma 6, a inicial que houver. Oficial da nação +0x16 com id igual a [0x9cf488]: só o sobrenome, em qualquer
 /// forma. Devolve 1. Oficial ou texto nulos, tamanho (palavra) < 0x69 ou forma fora de 1..6: a original (caixa). Nos
 /// eventos e no painel da partida (0x6d8d10, 0x6d7b00, 0x71c270).
-unsafe extern "C" fn nome_oficial(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma);
@@ -113,15 +113,15 @@ unsafe extern "C" fn nome_oficial(oficial: usize, texto: usize, tamanho: u32, fo
     1
 }
 
-unsafe extern "C" fn comparar_nome_oficial(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(%%I1%%);
     if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
         return o(oficial, texto, tamanho, forma); // caixa: só a original
     }
     let n = (tamanho as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(oficial, texto, tamanho, forma),
-        || nome_oficial(oficial, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("nome_oficial({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
+        || database_format_official_name(oficial, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
     r
 }
 
@@ -129,10 +129,10 @@ unsafe extern "C" fn comparar_nome_oficial(oficial: usize, texto: usize, tamanho
 /// máscara (0x66f4e0 com o texto 0xad9c64; a forma com maiúscula se o byte `maiuscula` não é 0), na ordem: goleiro
 /// (1), jogador de apoio (0x260/0x160/0x460), atacante (0x40 com 0x700), ala (0x88/0x808), ponta esquerda (0x90/0xa0),
 /// ponta direita (0x810/0x820), meia central e meia-atacante (0x100/0x200/0x400 com 0x18 ou 0x20), zagueiro central
-/// (0x204/0x104/0x404), lateral esquerdo (0x84), lateral direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
+/// (0x204/0x104/0x404), throw_in esquerdo (0x84), throw_in direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
 /// byte do gênero pelo idioma (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4, os outros 0 (reserva: sempre 0). Texto
 /// nulo: 0. Na mídia (0x72d270) e na tela da pessoa (0x87dd80).
-unsafe extern "C" fn texto_da_mascara_da_posicao(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
+unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
     if texto == 0 {
         return 0;
     }
@@ -170,7 +170,7 @@ unsafe extern "C" fn texto_da_mascara_da_posicao(mascara: u32, texto: usize, mai
     } else if m == 0 {
         ((0x9b81f4, 0x9b81c8), 0, 0) // substitute (o gênero fica 0)
     } else {
-        ((0x9b819c, 0x9b8170), 2, 1) // defender
+        ((0x9b819c, 0x9b8170), 2, 1) // save_shot
     };
     formatar(texto, if maiuscula as u8 != 0 { t.1 } else { t.0 }, 0xad9c64);
     if m == 0 {
@@ -184,14 +184,14 @@ unsafe extern "C" fn texto_da_mascara_da_posicao(mascara: u32, texto: usize, mai
     }
 }
 
-unsafe extern "C" fn comparar_texto_da_mascara_da_posicao(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
+unsafe extern "C" fn comparar_position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
     let o = orig::<unsafe extern "C" fn(u32, usize, u32) -> u8>(%%I2%%);
     if texto == 0 {
         return o(mascara, texto, maiuscula);
     }
     // sem tamanho: os nomes traduzidos cabem em 128
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 128)], || o(mascara, texto, maiuscula),
-        || texto_da_mascara_da_posicao(mascara, texto, maiuscula));
-    PLACAR.registrar(igual && r == x, || format!("texto_da_mascara_da_posicao({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
+        || position_mask_get_text(mascara, texto, maiuscula));
+    PLACAR.registrar(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
     r
 }

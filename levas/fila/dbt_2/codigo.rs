@@ -8,7 +8,7 @@
 /// divisível por 4 (conhecimento 1) ou por 2 (conhecimento 2), ou o seguinte (m = 0) / o mesmo (m ≠ 0) divisível
 /// por 3. Outro conhecimento: 0. Só `al`. A 0x5b02f0 guarda o último clube achado em [0xae1080] (o mesmo valor
 /// nas duas). Nas telas de busca e filtros (search_screens, SearchFilters 0x807450), da pessoa e do clube.
-unsafe extern "C" fn atributo_visivel(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let tabela = *(0xae2a60 as *const usize);
     if quem_ve == 0 || pessoa == 0 || tabela == 0 || *(0x9cc270 as *const u8) == 0 {
         return 1;
@@ -41,10 +41,10 @@ unsafe extern "C" fn atributo_visivel(quem_ve: usize, pessoa: usize, atributo: u
     (a % divisor == 0 || b % 3 == 0) as u8
 }
 
-unsafe extern "C" fn comparar_atributo_visivel(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I0%%)(quem_ve, pessoa, atributo);
-    let n = atributo_visivel(quem_ve, pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_visivel({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
+    let n = staff_is_player_attribute_visible(quem_ve, pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
     r
 }
 
@@ -54,7 +54,7 @@ unsafe extern "C" fn comparar_atributo_visivel(quem_ve: usize, pessoa: usize, at
 /// "desconhecido"); senão o valor de staff_compute_player_attribute (0x543540). Só `al`. Pessoa nula ou atributo fora
 /// da faixa: a original (caixa e 0xff). Na comparação de jogadores e no perfil da pessoa (staff_screens 0x877470,
 /// 0x879ac0, 0x87a754).
-unsafe extern "C" fn atributo_para_quem_ve(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
         return orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
@@ -71,14 +71,14 @@ unsafe extern "C" fn atributo_para_quem_ve(quem_ve: usize, pessoa: usize, atribu
     calcular(pessoa, jogador, atributo) as u8
 }
 
-unsafe extern "C" fn comparar_atributo_para_quem_ve(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
+unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
     let r = orig::<unsafe extern "C" fn(usize, usize, u32) -> u8>(%%I1%%)(quem_ve, pessoa, atributo);
     let x = atributo as u8 as i8;
     if pessoa == 0 || !(1..=0x1f).contains(&x) {
         return r; // caixa: só a original
     }
-    let n = atributo_para_quem_ve(quem_ve, pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("atributo_para_quem_ve({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
+    let n = staff_get_player_attribute_for_viewer(quem_ve, pessoa, atributo);
+    PLACAR.registrar(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
     r
 }
 
@@ -104,7 +104,7 @@ const DBT2_NOMES: [(usize, usize); 12] = [
 /// traduzido do Langlib (0x66f4e0, pelo endereço do jogo); devolve 1. Atributo fora da faixa, texto nulo ou tamanho
 /// (curto com sinal) abaixo de 100: a original (caixa e 0). Nas telas de busca (search_screens) e no perfil da
 /// pessoa (staff_screens 0x87ad97).
-unsafe extern "C" fn nome_do_atributo_de_tecnico(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+unsafe extern "C" fn database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
         return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%)(atributo, texto, tamanho, abreviado);
@@ -122,7 +122,7 @@ unsafe extern "C" fn nome_do_atributo_de_tecnico(atributo: u32, texto: usize, ta
     1
 }
 
-unsafe extern "C" fn comparar_nome_do_atributo_de_tecnico(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
+unsafe extern "C" fn comparar_database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(%%I2%%);
     let x = atributo as u8 as i8;
     if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
@@ -131,7 +131,7 @@ unsafe extern "C" fn comparar_nome_do_atributo_de_tecnico(atributo: u32, texto: 
     // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
     let reg = [(texto, 100)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(atributo, texto, tamanho, abreviado),
-        || nome_do_atributo_de_tecnico(atributo, texto, tamanho, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("nome_do_atributo_de_tecnico({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
+        || database_get_non_player_attribute_name(atributo, texto, tamanho, abreviado));
+    PLACAR.registrar(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
     r
 }

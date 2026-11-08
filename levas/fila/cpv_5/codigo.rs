@@ -41,7 +41,7 @@ unsafe fn cpv5_financas(this: usize, clube: usize) -> usize {
 /// (+0x69), o nível (+0xf) × 25 + a reputação (+0x80), × 0,65 truncado se o byte +0x6d for zero, escolhe o fator por
 /// 5500 e 4000; sem eles, a reputação escolhe por 5250 e 3750 (um degrau acima na nação do Japão 0x9cf36c). Público
 /// (+0x73) × reputação × fator, truncado; × (sorteio(11) + 95) × 0,01, truncado, soma em +0xbc, +0x15c e no saldo.
-unsafe extern "thiscall" fn receita_do_merchandising(this: usize, clube: usize) {
+unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, clube: usize) {
     let outro = cpv5_d(clube + 0xbf);
     let est = if outro != 0 { cpv5_d(outro + 0x69) } else { 0 };
     let rep = cpv5_w(clube + 0x80) as i32;
@@ -82,12 +82,12 @@ unsafe extern "thiscall" fn receita_do_merchandising(this: usize, clube: usize) 
 }
 
 /// Comparador: lado a lado no registro de finanças do clube e no estado do sorteio.
-unsafe extern "thiscall" fn comparar_receita_do_merchandising(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_add_weekly_merchandising_income(this: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%);
     let mut regioes = vec![(cpv5_financas(this, clube), 0x167)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || crate::aleatorio::sem_contar(|| receita_do_merchandising(this, clube)));
-    PLACAR.registrar(igual, || format!("receita_do_merchandising(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || crate::aleatorio::sem_contar(|| add_weekly_merchandising_income(this, clube)));
+    PLACAR.registrar(igual, || format!("add_weekly_merchandising_income(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
 }
 
 /// { 0x599a20 } (thiscall, ret 4, finance.cpp): `Finance::sell_season_tickets(aplicar)`, pelo passe diário das finanças
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn comparar_receita_do_merchandising(this: usize, clube
 /// 95) / 100 = os novos; a razão vendidos/lugares vai a +0x160 (f32, até 0,875). A receita (preço pela reputação × novos;
 /// /4 ou /10 pelo tipo da nação +0x7e; × 1,25 na série A, Chelsea 1,5, Arsenal e Tottenham 1,3, Everton 0,75, Liverpool
 /// 0,9, Alemanha 1,2) entra só com `aplicar`; depois (sorteio(rep) + sorteio(rep) + 1) × 0,001 + 1, × novos, em +0x15c.
-unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
+unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
     let id = cpv5_d(this + 8);
     let clube = cpv5_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245));
     if clube == 0 {
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn ingressos_da_temporada(this: usize, aplicar: i32) {
 
 /// Comparador: lado a lado no registro de finanças (this), nos lugares do estádio (+0x3c) e no estado do sorteio
 /// (clube nulo: só a original).
-unsafe extern "thiscall" fn comparar_ingressos_da_temporada(this: usize, aplicar: i32) {
+unsafe extern "thiscall" fn comparar_sell_season_tickets(this: usize, aplicar: i32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32)>(%%I1%%);
     let clube = cpv5_d(0xae23b4).wrapping_add(cpv5_d(this + 8).wrapping_mul(0x245));
     if clube == 0 {
@@ -214,8 +214,8 @@ unsafe extern "thiscall" fn comparar_ingressos_da_temporada(this: usize, aplicar
         regioes.push((est + 0x3c, 4));
     }
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, aplicar), || crate::aleatorio::sem_contar(|| ingressos_da_temporada(this, aplicar)));
-    PLACAR.registrar(igual, || format!("ingressos_da_temporada(fin {:#x}, {}) original={:x?} rust={:x?}", this, aplicar, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, aplicar), || crate::aleatorio::sem_contar(|| sell_season_tickets(this, aplicar)));
+    PLACAR.registrar(igual, || format!("sell_season_tickets(fin {:#x}, {}) original={:x?} rust={:x?}", this, aplicar, mo, mr));
 }
 
 /// O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
@@ -232,7 +232,7 @@ unsafe fn cpv5_cobrar_obra(this: usize, clube: usize, custo: i32) {
 /// (22 − nível) × 250000 (mínimo 2 milhões); abaixo de 14 com reputação acima de 5250, sobe 4 (mínimo 16) e cobra 3,5
 /// milhões − nível × 150000 (mínimo 1 milhão); abaixo de 16 com reputação acima de 4250, ou abaixo de 20 com reputação
 /// acima de 7250: acima de 7250 vai a 20, senão sobe 2 (mínimo 12), e cobra o novo nível × 50000 + 75000. Teto 20.
-unsafe extern "thiscall" fn melhorar_o_centro_de_treino(this: usize, clube: usize) {
+unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, clube: usize) {
     let nivel = (clube + 0x7f) as *mut i8;
     let custo = (*nivel as i32).wrapping_mul(50000).wrapping_add(75000);
     *nivel = if *nivel < 0x13 { (*nivel).wrapping_add(2) } else { (*nivel).wrapping_add(1) };
@@ -271,9 +271,9 @@ unsafe extern "thiscall" fn melhorar_o_centro_de_treino(this: usize, clube: usiz
 }
 
 /// Comparador: lado a lado no nível do centro de treino (+0x7f) e no registro de finanças do clube.
-unsafe extern "thiscall" fn comparar_melhorar_o_centro_de_treino(this: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_upgrade_training_facilities(this: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%);
     let regioes = [(clube + 0x7f, 1), (cpv5_financas(this, clube), 0x167)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || melhorar_o_centro_de_treino(this, clube));
-    PLACAR.registrar(igual, || format!("melhorar_o_centro_de_treino(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, clube), || upgrade_training_facilities(this, clube));
+    PLACAR.registrar(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", clube, mo, mr));
 }

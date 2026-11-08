@@ -85,7 +85,7 @@ unsafe fn cpm5_plano(this: usize, registro: usize, lesao: *const u8) -> Cpm5Reco
 /// (`cpm5_plano`); tratar: a lesão nova da pessoa (0x62d250 com 0x4e, 0x4f ou 0x4d pelo tipo recorrente do registro
 /// dela, 0xff fora das pessoas ou sem jogador; o tipo vai no byte baixo do argumento `registro`, como a original);
 /// limpar: o registro escolhido sem recorrente (+0x12 = 0xff, +0x13 = 0).
-unsafe extern "thiscall" fn sortear_lesao_recorrente(this: usize, registro: usize, lesao: *const u8) {
+unsafe extern "thiscall" fn roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
     match cpm5_plano(this, registro, lesao) {
         Cpm5Recorrente::Tratar(p) => {
             let id = cpm5_d(p) as i32;
@@ -99,8 +99,8 @@ unsafe extern "thiscall" fn sortear_lesao_recorrente(this: usize, registro: usiz
                 0x0c | 0x0d | 0x12 | 0x14 | 0x19..=0x1c | 0x1f | 0x24 | 0x25 | 0x2c | 0x2d | 0x3b => 0x4f,
                 _ => 0x4d,
             };
-            let lesionar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
-            lesionar(this, (registro as u32 & 0xffff_ff00) | nova as u32, 0, p, 0, 1, -1, 0, 0);
+            let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
+            injure(this, (registro as u32 & 0xffff_ff00) | nova as u32, 0, p, 0, 1, -1, 0, 0);
         }
         Cpm5Recorrente::Limpar(r) => {
             *((r + 0x12) as *mut u8) = 0xff;
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn sortear_lesao_recorrente(this: usize, registro: usiz
 /// { 0x631f90 } (thiscall, ret 4, injury.cpp): `Injury::reset_player_history(pessoa)`: o histórico de lesões da pessoa
 /// (registro de 31 bytes do id em [this]) fica sem o último (0x58f110 sobre [this+0xc]: +0x18 = −1). Devolve o que a
 /// 0x58f110 devolve. Pessoa nula: a original (caixa fatal).
-unsafe extern "thiscall" fn recomecar_historico_de_lesoes(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn reset_player_history(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%)(this, pessoa); // caixa fatal: só a original
     }
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn recomecar_historico_de_lesoes(this: usize, pessoa: u
 /// recomeça o histórico (0x631f90); o registro de 31 bytes recomeça: data de hoje (0x417c10 de [0xae2c90]), condição
 /// e forma 10000 (+8, +0xa), desgaste 0 (+0xc), sem lesão (+0xe −1), sem recorrente (+0x12 0xff), histórico −1 (+0x14,
 /// +0x18), +0x1d 0xff. O bit 0 do +0xc do registro de 79 bytes ([0xae2d0c]) cai. Devolve o endereço desse byte.
-unsafe extern "thiscall" fn reiniciar_fisico_do_jogador(this: usize, id: u32) -> usize {
+unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
     crate::comparacao::ramo("cpm_5 reiniciar jogador");
     if cpm5_d(this + 0x28) != 0 {
         let l = cpm5_d(this + 0x28);
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn reiniciar_fisico_do_jogador(this: usize, id: u32) ->
 /// Comparador: a 0x62d250 (tratar) não pode rodar duas vezes: o plano antes, com o estado do sorteio guardado (sem
 /// contar nem rastrear) e as marcas do registro devolvidas; a original roda. Confere as marcas do registro e do
 /// escolhido e, fora do tratar, o estado do sorteio igual ao do plano (os mesmos sorteios).
-unsafe extern "thiscall" fn comparar_sortear_lesao_recorrente(this: usize, registro: usize, lesao: *const u8) {
+unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     let marcas = (cpm5_b(registro + 0x12), cpm5_b(registro + 0x13));
     let plano = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| cpm5_plano(this, registro, lesao)));
@@ -190,25 +190,25 @@ unsafe extern "thiscall" fn comparar_sortear_lesao_recorrente(this: usize, regis
         Cpm5Recorrente::Tratar(_) => true, // a 0x62d250 sorteia e grava o resto
     };
     PLACAR.registrar(ok, || {
-        format!("sortear_lesao_recorrente(tipo {}) plano {:x?}, marcas {:?} -> {:?}, mesmo sorteio={}", tipo, plano, marcas, agora, mesmo_sorteio)
+        format!("roll_recurring_injury(tipo {}) plano {:x?}, marcas {:?} -> {:?}, mesmo sorteio={}", tipo, plano, marcas, agora, mesmo_sorteio)
     });
 }
 
 /// Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
-unsafe extern "thiscall" fn comparar_recomecar_historico_de_lesoes(this: usize, pessoa: usize) -> usize {
+unsafe extern "thiscall" fn comparar_reset_player_history(this: usize, pessoa: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if pessoa == 0 {
         return o(this, pessoa);
     }
     let r = cpm5_registro(this, cpm5_d(pessoa));
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || recomecar_historico_de_lesoes(this, pessoa));
-    PLACAR.registrar(igual && a == b, || format!("recomecar_historico_de_lesoes({}) {:x?} x {:x?}", cpm5_d(pessoa), mo, mr));
+    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 0x14, 8)], || o(this, pessoa), || reset_player_history(this, pessoa));
+    PLACAR.registrar(igual && a == b, || format!("reset_player_history({}) {:x?} x {:x?}", cpm5_d(pessoa), mo, mr));
     a
 }
 
 /// Comparador: a 0x68d1f0 libera o item tirado e a 0x62e700 grava o histórico no arquivo: o plano antes (os itens
 /// que ficam, o byte do registro de 79 bytes, os bytes do registro que não mudam); a original roda; confere.
-unsafe extern "thiscall" fn comparar_reiniciar_fisico_do_jogador(this: usize, id: u32) -> usize {
+unsafe extern "thiscall" fn comparar_injury_reset_player(this: usize, id: u32) -> usize {
     let l = cpm5_d(this + 0x28);
     let esperado: Vec<usize> = if l != 0 { cpd1_itens(l).into_iter().filter(|&e| cpm5_d(e) as u32 != id).collect() } else { Vec::new() };
     let r = cpm5_registro(this, id as usize);
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_reiniciar_fisico_do_jogador(this: usize, id
         && cpm5_b(r + 0x13) == nivel && dd(0x14) == -1 && dd(0x18) == -1 && cpm5_b(r + 0x1c) == b1c && cpm5_b(r + 0x1d) == 0xff;
     PLACAR.registrar(ok, || {
         let v: Vec<u8> = (0..31).map(|o| cpm5_b(r + o)).collect();
-        format!("reiniciar_fisico_do_jogador({}) itens {} (esperava {}), byte {:#x} (esperava {:#x}), registro {:02x?}", id, itens.len(), esperado.len(), cpm5_b(g), byte, v)
+        format!("injury_reset_player({}) itens {} (esperava {}), byte {:#x} (esperava {:#x}), registro {:02x?}", id, itens.len(), esperado.len(), cpm5_b(g), byte, v)
     });
     ret
 }

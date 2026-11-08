@@ -55,7 +55,7 @@ unsafe fn cqg8_falhou(quieto: u32, linha: u32, f: usize) -> u32 {
 /// 0x5b3560 com a fase 0 e a faixa 0); o nome (+0) é o do arquivo (_splitpath 0x944cff); o mapa das casas (0x5b7160);
 /// +0x187f = 1, +0x1883 = senha não vazia, +0x1887 = 1. Fecha e devolve 1. Os arquivos não nativos trocam a ordem dos
 /// bytes (0x43f2d0 palavras, 0x43f300 dwords, 0x43f350 qwords).
-unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
+unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
     if caminho == 0 {
         if quieto == 0 {
             cqg8_erro(0x8d8);
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
             cqg8_pd(this + 0x188b + 8 * k, *x);
             cqg8_pd(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
         }
-        crate::comparacao::ramo("cqg_8 instrucoes antigas");
+        crate::comparacao::ramo("cqg_8 instructions antigas");
     } else if cqg8_ler(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
             let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f350usize);
@@ -222,23 +222,23 @@ unsafe extern "thiscall" fn ler_formacao_do_disco(this: usize, caminho: usize, q
 
 /// Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
 /// devolução; o arquivo é aberto e lido pelas duas (só leitura).
-unsafe extern "thiscall" fn comparar_ler_formacao_do_disco(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_load_from_disk(this: usize, caminho: usize, quieto: u32, ofuscado: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(%%I0%%);
     if this == 0 {
         return o(this, caminho, quieto, ofuscado);
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x18e3)], || o(this, caminho, quieto, ofuscado),
-        || ler_formacao_do_disco(this, caminho, quieto, ofuscado));
+        || load_from_disk(this, caminho, quieto, ofuscado));
     PLACAR.registrar(igual && r == n, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&k| a[k] != b[k]).take(8).collect();
-        format!("ler_formacao_do_disco(this {:x}) original={} rust={}, bytes diferentes {:x?}", this, r, n, dif)
+        format!("load_from_disk(this {:x}) original={} rust={}, bytes diferentes {:x?}", this, r, n, dif)
     });
     r
 }
 
 /// { 0x43f2d0 } (cdecl, cash.cpp): `swap_bytes_16_array(palavras, conta)`: troca os dois bytes de cada palavra.
-unsafe extern "C" fn trocar_bytes_das_palavras(p: usize, conta: u32) {
+unsafe extern "C" fn swap_bytes_16_array(p: usize, conta: u32) {
     for k in 0..conta as usize {
         let a = (p + 2 * k) as *mut u16;
         core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).swap_bytes());
@@ -246,28 +246,28 @@ unsafe extern "C" fn trocar_bytes_das_palavras(p: usize, conta: u32) {
 }
 
 /// Comparador: lado a lado no vetor (até 0x420 palavras conferidas).
-unsafe extern "C" fn comparar_trocar_bytes_das_palavras(p: usize, conta: u32) {
+unsafe extern "C" fn comparar_swap_bytes_16_array(p: usize, conta: u32) {
     let o = orig::<unsafe extern "C" fn(usize, u32)>(%%I1%%);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 2 * conta as usize)], || o(p, conta), || trocar_bytes_das_palavras(p, conta));
-    PLACAR.registrar(igual, || format!("trocar_bytes_das_palavras({:x}, {})", p, conta));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 2 * conta as usize)], || o(p, conta), || swap_bytes_16_array(p, conta));
+    PLACAR.registrar(igual, || format!("swap_bytes_16_array({:x}, {})", p, conta));
 }
 
 /// { 0x43f300 } (cdecl, cash.cpp): `swap_bytes_32_array(dwords, conta)`: inverte os quatro bytes de cada dword.
-unsafe extern "C" fn trocar_bytes_dos_dwords(p: usize, conta: u32) {
+unsafe extern "C" fn swap_bytes_32_array(p: usize, conta: u32) {
     for k in 0..conta as usize {
         cqg8_pd(p + 4 * k, cqg8_inverter(cqg8_d(p + 4 * k)));
     }
 }
 
 /// Comparador: lado a lado no vetor.
-unsafe extern "C" fn comparar_trocar_bytes_dos_dwords(p: usize, conta: u32) {
+unsafe extern "C" fn comparar_swap_bytes_32_array(p: usize, conta: u32) {
     let o = orig::<unsafe extern "C" fn(usize, u32)>(%%I2%%);
     if p == 0 || conta == 0 || conta > 0x1000 {
         return o(p, conta);
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 4 * conta as usize)], || o(p, conta), || trocar_bytes_dos_dwords(p, conta));
-    PLACAR.registrar(igual, || format!("trocar_bytes_dos_dwords({:x}, {})", p, conta));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(p, 4 * conta as usize)], || o(p, conta), || swap_bytes_32_array(p, conta));
+    PLACAR.registrar(igual, || format!("swap_bytes_32_array({:x}, {})", p, conta));
 }

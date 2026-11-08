@@ -53,7 +53,7 @@ unsafe fn cqi10_vencedores(this: usize, uefa: usize) -> ([usize; 3], usize) {
 /// +0x36 sobe); depois as posições previstas da UEFA (virtual +0x5c: mov ecx, uefa -> thiscall, ret 0), +0xb2 = 1 e de
 /// novo as posições previstas (a original relê a UEFA). Sempre, no fim, a atualização da copa (0x51f890: push fase;
 /// push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
-unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     if cqi10_d(this + 0xb2) == 0 {
         let acabou: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(cqi10_d(cqi10_d(this) + 0x10));
         if acabou(this, 0, 1) as u8 != 0 {
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn cqi10_intertoto_dia(this: usize, hoje: usize, fase: 
 // ponytail: a atualização da copa (0x51f890) joga e sorteia: não roda duas vezes. Só a original roda; o plano, feito
 // antes: se +0xb2 passa de 0 a 1 com a Copa da UEFA, o livro dela (+0x14) ganha os vencedores (cqi10_vencedores), em
 // ordem e com a situação 4, e +0x36 sobe tanto quanto; senão o livro não cresce.
-unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_intertoto_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I0%%);
     let uefa = cqi10_uefa();
     if uefa == 0 || cqi10_d(this + 0xb2) != 0 {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize, hoje: usiz
             igual &= cqi10_d(l) == c && cqi10_b(l + 4) == 4;
         }
     }
-    PLACAR.registrar(igual, || format!("cqi10_intertoto_dia({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, cqi10_w(uefa + 0x36), previsto, &v[..k]));
+    PLACAR.registrar(igual, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passou, n36, cqi10_w(uefa + 0x36), previsto, &v[..k]));
     r
 }
 
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_dia(this: usize, hoje: usiz
 ///   byte de baixo sobe: inc al).
 /// - 0xff ou 2 (caiu): a eliminação (0x86c000) no Intertoto, fase 0, rodada +0x30 do jogo, peso(0x14, 0x50), e o clube
 ///   sai da competição europeia (+0x1db = −1).
-unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     match desfecho as u8 {
         1 => {
             let peso = cpz4_escala(0x3c, 0x64, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, clube: usize,
 
 // ponytail: os registros vão para o histórico das pessoas (reputação, moral): não rodam duas vezes. Só a original roda;
 // o plano confere o +0x1db do clube: [0x9cf6f0] para o vencedor, −1 para quem cai, intacto nos outros.
-unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_intertoto_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I1%%);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: usize, club
     };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
     let depois = cqi10_d(clube + 0x1db);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_intertoto_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
+    PLACAR.registrar(r == 0 && depois == previsto, || format!("intertoto_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, desfecho as u8, antes, depois, previsto, r));
     r
 }
 
@@ -200,7 +200,7 @@ unsafe extern "thiscall" fn comparar_cqi10_intertoto_registros(this: usize, club
 /// update_staff_records_for_status(clube, desfecho, a3, a4, jogo, a6)`: com o desfecho (byte) 1, 2 ou 0xff (campeão,
 /// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
 /// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
-unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let d = desfecho as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn cqi10_uefa_registros(this: usize, clube: usize, desf
 
 // ponytail: a base grava os registros (histórico, reputação, moral) e pode dar a vaga da UEFA ao campeão: não roda duas
 // vezes. Só a original roda; o plano confere o +0x1db do clube (−1 nos desfechos 1, 2 e 0xff, intacto nos outros).
-unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_uefa_cup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(%%I2%%);
     if clube == 0 {
         return o(this, clube, desfecho, a3, a4, jogo, a6);
@@ -224,6 +224,6 @@ unsafe extern "thiscall" fn comparar_cqi10_uefa_registros(this: usize, clube: us
     let previsto = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { antes };
     let r = o(this, clube, desfecho, a3, a4, jogo, a6);
     let depois = cqi10_d(clube + 0x1db);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("cqi10_uefa_registros({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
+    PLACAR.registrar(r == 0 && depois == previsto, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", clube, d, antes, depois, previsto, r));
     r
 }

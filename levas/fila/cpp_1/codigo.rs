@@ -17,7 +17,7 @@ unsafe fn cpp1_data(f: usize, a: usize, b: usize) -> u32 {
 /// { 0x4dc910 } (cdecl, contract_manager.cpp): `compare_decision_dates(a, b)`: a ordem do qsort das datas de decisão
 /// (entradas de 14 bytes: +0 pessoa, +4 data, +0xc fatia do dia, +0xd tipo): a data de `a` antes (0x456770): −1;
 /// depois (0x456740): 1; no mesmo dia, a fatia de `a` menos a de `b` (com sinal). Quente (o qsort): sem contador.
-unsafe extern "C" fn comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn compare_decision_dates(a: usize, b: usize) -> i32 {
     if cpp1_data(0x456770, a + 4, b + 4) != 0 {
         return -1; // a antes de b
     }
@@ -27,11 +27,11 @@ unsafe extern "C" fn comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
     cpp1_b(a + 0xc) as i8 as i32 - cpp1_b(b + 0xc) as i8 as i32
 }
 
-unsafe extern "C" fn comparar_comparar_datas_de_decisao(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_compare_decision_dates(a: usize, b: usize) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I0%%);
     let r = o(a, b);
-    let n = comparar_datas_de_decisao(a, b);
-    PLACAR.registrar(r == n, || format!("comparar_datas_de_decisao original={} rust={}", r, n));
+    let n = compare_decision_dates(a, b);
+    PLACAR.registrar(r == n, || format!("compare_decision_dates original={} rust={}", r, n));
     r
 }
 
@@ -40,7 +40,7 @@ unsafe extern "C" fn comparar_comparar_datas_de_decisao(a: usize, b: usize) -> i
 /// 0x4dc910): para na primeira data depois de `data` (0x456740) ou, no mesmo dia (0x4a7f20), com a fatia da entrada
 /// maior que `fatia`. Cada entrada vencida com pessoa (+0 ≠ −1) fica com −1 e, sendo do tipo 3 (+0xd), a pessoa decide
 /// as ofertas de contrato (0x4ce4e0). O índice +0x18 sobe a cada entrada (relido depois da decisão).
-unsafe extern "thiscall" fn decidir_as_datas_vencidas(this: usize, data: usize, fatia: u32) {
+unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize, fatia: u32) {
     let n = |c: usize| cpp1_d(c) as i32;
     if n(this + 0x18) >= n(this + 0x14) {
         return;
@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn decidir_as_datas_vencidas(this: usize, data: usize, 
 /// Comparador: a decisão das ofertas (0x4ce4e0) mexe nos contratos, nas ofertas e no próprio vetor: o plano (as datas
 /// lidas antes, sem rodar nada) diz se alguma entrada do tipo 3 com pessoa vence; com ela, só a original. Sem ela (o
 /// caso de todo dia), lado a lado pelo índice +0x18 e pelas entradas que vencem (ficam com −1).
-unsafe extern "thiscall" fn comparar_decidir_as_datas_vencidas(this: usize, data: usize, fatia: u32) {
+unsafe extern "thiscall" fn comparar_process_due_decision_dates(this: usize, data: usize, fatia: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I1%%);
     let (i0, n) = (cpp1_d(this + 0x18) as i32, cpp1_d(this + 0x14) as i32);
     let mut i = i0;
@@ -95,8 +95,8 @@ unsafe extern "thiscall" fn comparar_decidir_as_datas_vencidas(this: usize, data
     if i > i0 {
         reg.push(((cpp1_d(this + 0xc) as usize).wrapping_add((i0 as usize).wrapping_mul(14)), ((i - i0) as usize) * 14));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, data, fatia), || decidir_as_datas_vencidas(this, data, fatia));
-    PLACAR.registrar(igual, || format!("decidir_as_datas_vencidas(fatia {}) {:x?} x {:x?}", fatia as u8 as i8, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, data, fatia), || process_due_decision_dates(this, data, fatia));
+    PLACAR.registrar(igual, || format!("process_due_decision_dates(fatia {}) {:x?} x {:x?}", fatia as u8 as i8, mo, mr));
 }
 
 /// { 0x4ca300 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::get_current_contract_offers(clube, saida)`:
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn comparar_decidir_as_datas_vencidas(this: usize, data
 /// com a capacidade em byte com sinal). Grava o vetor em `saida` e devolve quantas (byte). A original confere a lista
 /// (+0x34), não o vetor, depois do realloc: só com a lista nula vai à caixa "cannot allocate memory" (linha 0x64c) e
 /// devolve 0 com a saída nula. Quem a chama (0x598a06, o orçamento de transferências) libera o vetor.
-unsafe extern "thiscall" fn ofertas_de_contrato_do_clube(this: usize, clube: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn get_current_contract_offers(this: usize, clube: usize, saida: usize) -> u8 {
     let mut n: i8 = 0;
     let mut cap: i8 = 0;
     let mut vetor: usize = 0;
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn ofertas_de_contrato_do_clube(this: usize, clube: usi
 
 /// Comparador: a original aloca o vetor que quem chama libera: roda só ela e confere o plano feito antes (as ofertas
 /// do clube lidas da lista, sem alocar): a conta e os 111 bytes de cada uma, na ordem.
-unsafe extern "thiscall" fn comparar_ofertas_de_contrato_do_clube(this: usize, clube: usize, saida: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_current_contract_offers(this: usize, clube: usize, saida: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(%%I2%%);
     let lista = cpp1_d(this + 0x34) as usize;
     if lista == 0 || clube == 0 || saida == 0 {
@@ -161,6 +161,6 @@ unsafe extern "thiscall" fn comparar_ofertas_de_contrato_do_clube(this: usize, c
     let vetor = cpp1_d(saida) as usize;
     let k = plano.len() / 111;
     let ok = r as usize == k && (k == 0 || core::slice::from_raw_parts(vetor as *const u8, k * 111) == &plano[..]);
-    PLACAR.registrar(ok, || format!("ofertas_de_contrato_do_clube(clube {:x}) original {} ofertas, plano {}", clube, r, k));
+    PLACAR.registrar(ok, || format!("get_current_contract_offers(clube {:x}) original {} ofertas, plano {}", clube, r, k));
     r
 }

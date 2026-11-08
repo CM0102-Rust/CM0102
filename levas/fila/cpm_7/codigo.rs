@@ -18,7 +18,7 @@ unsafe fn cpm7_data(a: usize) -> (i16, u16) {
 /// id − byte +0xaf), +0xb1 ocupada, +0xb5 a data): 1 se a `data` está depois da data da vaga − 7 dias (0x54c8e0) e
 /// antes dela + 7 (0x54c5b0), pelo ano (sem sinal) e depois o dia (com sinal); vaga vazia: 0. O quadro SEH só guarda
 /// as datas locais (os destrutores são vazios).
-unsafe extern "thiscall" fn competicao_na_data_do_amistoso(this: usize, comp: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
     if comp != cpm7_d(this + 4) && (cpm7_d(comp) as i32) < (cpm7_d(0xae2378) as i32).wrapping_sub(0x7f) {
         return 1;
     }
@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn competicao_na_data_do_amistoso(this: usize, comp: us
 /// 1 se a lista de amistosos planejados do candidato (+0x12; itens com dia +0 e ano +2) tem a `data`, o dia antes
 /// (0x54c8e0) ou o dia depois (0x54c5b0). Percorre do começo (o cursor +0xa = a cabeça +2; 0x68d1b0). Sem lista: 0. As
 /// datas locais vêm antes (como a original); o quadro SEH é delas (destrutores vazios).
-unsafe extern "thiscall" fn amistoso_perto_da_data(_this: usize, clube: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, clube: usize, data: usize) -> u32 {
     let menos: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let (mut antes, mut depois) = ([0u8; 8], [0u8; 8]);
@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn amistoso_perto_da_data(_this: usize, clube: usize, d
 /// data)`: acrescenta ao vetor de 0x14 bytes [this+0x34d8] (conta +0x34e0, capacidade +0x34e4; cheio: cresce de 100
 /// em 100, realloc 0x945667; sem memória, a caixa "Error" 0x797 e volta) o amistoso: a data em +0 (0x417c10, a cópia
 /// devolvida fica na pilha) e os ids (o dword apontado por cada argumento) em +8, +0xc e +0x10; a conta sobe.
-unsafe extern "thiscall" fn acrescentar_amistoso_planejado(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
+unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
     if cpm7_d(this + 0x34e0) == cpm7_d(this + 0x34e4) {
         crate::comparacao::ramo("cpm_7 amistosos crescem");
         let cap = cpm7_d(this + 0x34e4).wrapping_add(100);
@@ -108,26 +108,26 @@ unsafe extern "thiscall" fn acrescentar_amistoso_planejado(this: usize, anfitria
 }
 
 /// Comparador: pelo valor (as datas e a vaga só são lidas). Chamada pelas copas e ligas a cada data: sem contador.
-unsafe extern "thiscall" fn comparar_competicao_na_data_do_amistoso(this: usize, comp: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I0%%)(this, comp, data);
-    let n = competicao_na_data_do_amistoso(this, comp, data);
-    PLACAR.registrar(r == n, || format!("competicao_na_data_do_amistoso({}, {:?}) original={} rust={}", cpm7_d(comp), cpm7_data(data), r, n));
+    let n = is_comp_current_on_date(this, comp, data);
+    PLACAR.registrar(r == n, || format!("is_comp_current_on_date({}, {:?}) original={} rust={}", cpm7_d(comp), cpm7_data(data), r, n));
     r
 }
 
 /// Comparador: lado a lado pelo cursor da lista (+0xa) e o valor.
-unsafe extern "thiscall" fn comparar_amistoso_perto_da_data(this: usize, clube: usize, data: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_candidate_has_nearby_date(this: usize, clube: usize, data: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     let l = cpm7_d(clube + 0x12);
     let reg: &[(usize, usize)] = if l == 0 { &[] } else { &[(l + 0xa, 4)] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube, data), || amistoso_perto_da_data(this, clube, data));
-    PLACAR.registrar(igual && r == n, || format!("amistoso_perto_da_data({:?}) original={} rust={} {:x?} x {:x?}", cpm7_data(data), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(this, clube, data), || candidate_has_nearby_date(this, clube, data));
+    PLACAR.registrar(igual && r == n, || format!("candidate_has_nearby_date({:?}) original={} rust={} {:x?} x {:x?}", cpm7_data(data), r, n, mo, mr));
     r
 }
 
 /// Comparador: a original acrescenta (pode realocar, não roda duas vezes): o plano antes (a conta, os ids e a data),
 /// a original roda, confere o item novo e a conta.
-unsafe extern "thiscall" fn comparar_acrescentar_amistoso_planejado(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
+unsafe extern "thiscall" fn comparar_add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
     let n = cpm7_d(this + 0x34e0);
     let esperado = [cpm7_d(data), cpm7_d(data + 4), 0, cpm7_d(anfitriao), cpm7_d(mandante), cpm7_d(visitante)];
     orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(%%I2%%)(this, anfitriao, mandante, visitante, data);
@@ -138,6 +138,6 @@ unsafe extern "thiscall" fn comparar_acrescentar_amistoso_planejado(this: usize,
     let item = v.wrapping_add(n.wrapping_mul(0x14));
     let feito = [cpm7_d(item), cpm7_d(item + 4), 0, cpm7_d(item + 8), cpm7_d(item + 0xc), cpm7_d(item + 0x10)];
     PLACAR.registrar(feito == esperado && cpm7_d(this + 0x34e0) == n.wrapping_add(1), || {
-        format!("acrescentar_amistoso_planejado conta {} -> {}, item {:x?} (esperava {:x?})", n, cpm7_d(this + 0x34e0), feito, esperado)
+        format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, cpm7_d(this + 0x34e0), feito, esperado)
     });
 }

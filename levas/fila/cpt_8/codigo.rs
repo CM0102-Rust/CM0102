@@ -20,9 +20,9 @@ fn cpt8_divisor(n: i8) -> f64 {
 /// valor entra como (fator − 100) / 5 no peso do sorteio do progresso). Clube nulo: 0. Sem técnico (+0xcf) ou com técnico
 /// do computador (id abaixo de [0xae2364] − 16): 100 (o eax leva os 16 bits altos do ponteiro do técnico, como na
 /// original). Técnico humano: a comissão dele (0x8b4cd0, seis vagas de 9 bytes: id −1 é vaga vazia, a nota da categoria
-/// em +4 + categoria); com n treinadores de nota, a soma (16 bits) dividida pelo n-ésimo divisor e truncada (_ftol
+/// em +4 + categoria); com n treinadores de nota, a soma (16 bits) tackle pelo n-ésimo divisor e truncada (_ftol
 /// 0x945640), × 40/7 (0x970400) e truncada; abaixo de 50, 50. Quente no ramo do computador: sem contador ali.
-unsafe extern "thiscall" fn fator_do_treinador(this: usize, clube: usize, categoria: i8) -> u32 {
+unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categoria: i8) -> u32 {
     let _ = this;
     if clube == 0 {
         return 0;
@@ -61,17 +61,17 @@ unsafe extern "thiscall" fn fator_do_treinador(this: usize, clube: usize, catego
 }
 
 /// Comparador: a devolução inteira (a consulta só lê; a comissão do humano é lida pelas duas).
-unsafe extern "thiscall" fn comparar_fator_do_treinador(this: usize, clube: usize, categoria: i8) -> u32 {
+unsafe extern "thiscall" fn comparar_get_coaching_factor(this: usize, clube: usize, categoria: i8) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> u32>(%%I0%%)(this, clube, categoria);
-    let n = fator_do_treinador(this, clube, categoria);
-    PLACAR.registrar(r == n, || format!("fator_do_treinador(clube {:x}, categoria {}) original={:x} rust={:x}", clube, categoria, r, n));
+    let n = get_coaching_factor(this, clube, categoria);
+    PLACAR.registrar(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", clube, categoria, r, n));
     r
 }
 
 /// { 0x8b4cd0 } (thiscall, ret 4, training_manager.cpp): `TRAINING_MANAGER::get_coach_assignments(tecnico)`: a comissão
 /// de treino (seis vagas de 9 bytes) de um dos 16 técnicos humanos, em this + 0x652d + 54 × ([0xae2364] − id − 1).
 /// Técnico nulo: a caixa "Error" (linha 0xa20) e 0; fora dos 16 humanos: a caixa (linha 0xa2a) e 0.
-unsafe extern "thiscall" fn comissao_do_humano(this: usize, tecnico: usize) -> usize {
+unsafe extern "thiscall" fn get_coach_assignments(this: usize, tecnico: usize) -> usize {
     if tecnico == 0 {
         aviso_em(0xa8ccd0, 0xa20);
         return 0;
@@ -85,14 +85,14 @@ unsafe extern "thiscall" fn comissao_do_humano(this: usize, tecnico: usize) -> u
 }
 
 /// Comparador: a devolução, sem os casos de erro (só a original).
-unsafe extern "thiscall" fn comparar_comissao_do_humano(this: usize, tecnico: usize) -> usize {
+unsafe extern "thiscall" fn comparar_get_coach_assignments(this: usize, tecnico: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     if tecnico == 0 || !(0..0x10).contains(&cpt8_i(0xae2364).wrapping_sub(cpt8_i(tecnico)).wrapping_sub(1)) {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
-    let n = comissao_do_humano(this, tecnico);
-    PLACAR.registrar(r == n, || format!("comissao_do_humano(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
+    let n = get_coach_assignments(this, tecnico);
+    PLACAR.registrar(r == n, || format!("get_coach_assignments(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
     r
 }
 
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn comparar_comissao_do_humano(this: usize, tecnico: us
 /// trunc(+6 × −0,5) − trunc(+5 × −0,5) (constantes 0x968968, 0x96f878, 0x969540; _ftol 0x945640), em 16 bits; de 100
 /// para cima, 100. Pela update_player_training (0x8b1750, o jogador do clube humano), pela set_player_schedule
 /// (0x8b2250) e pela reassign_squad_schedules (0x8b2470); vai para a ficha de forma (Injury::set_training_load 0x62c660).
-unsafe extern "thiscall" fn carga_do_programa(this: usize) -> i32 {
+unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
     let nivel = |k: usize| *((this + k) as *const i8) as f64;
     let a = ftol(nivel(4) * f64_em(0x96f878)) as i16;
     let mut s = ftol(nivel(8) * f64_em(0x968968)) as i16;
@@ -116,9 +116,9 @@ unsafe extern "thiscall" fn carga_do_programa(this: usize) -> i32 {
 }
 
 /// Comparador: a devolução.
-unsafe extern "thiscall" fn comparar_carga_do_programa(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_get_training_load(this: usize) -> i32 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%)(this);
-    let n = carga_do_programa(this);
-    PLACAR.registrar(r == n, || format!("carga_do_programa({:x}) original={} rust={}", this, r, n));
+    let n = get_training_load(this);
+    PLACAR.registrar(r == n, || format!("get_training_load({:x}) original={} rust={}", this, r, n));
     r
 }

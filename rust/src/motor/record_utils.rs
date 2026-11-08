@@ -15,7 +15,7 @@ use super::*;
 /// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
 /// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
-pub(crate) unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
     if jogo == 0 {
         aviso_em(0xa7a088, 0x29);
         return 0;
@@ -68,13 +68,13 @@ pub(crate) unsafe extern "C" fn registro_da_partida_pelo_clube(jogo: usize, club
 
 /// Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
 /// só a original.
-pub(crate) unsafe extern "C" fn comparar_registro_da_partida_pelo_clube(jogo: usize, clube: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_REGISTRO_DA_PARTIDA_PELO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_FILL_MATCH_RECORD_FROM_FIXTURE);
     if jogo == 0 || clube == 0 || saida == 0 {
         return o(jogo, clube, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x1f)], || o(jogo, clube, saida), || registro_da_partida_pelo_clube(jogo, clube, saida));
-    PLACAR.registrar(igual && r == n, || format!("registro_da_partida_pelo_clube(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x1f)], || o(jogo, clube, saida), || fill_match_record_from_fixture(jogo, clube, saida));
+    PLACAR.registrar(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
     r
 }
 
@@ -90,7 +90,7 @@ pub(crate) unsafe fn cpz7_nome(p: u32) -> u32 {
 /// da notícia da suspensão, do prêmio e da busca de jogadores. Pessoa ou saída nulas: a caixa (linhas 0x80, 0x88) e 0.
 /// Senão +0, +4, +8 os ids dos nomes (+4, +8, +0xc da pessoa; −1 sem nome), +0xc o id da pessoa e +0x10 a data de
 /// nascimento (+0x10, 0x417c10); devolve 1.
-pub(crate) unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
     if pessoa == 0 {
         aviso_em(0xa7a088, 0x80);
         return 0;
@@ -110,13 +110,13 @@ pub(crate) unsafe extern "C" fn referencia_ao_nome(pessoa: usize, saida: usize) 
 }
 
 /// Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
-pub(crate) unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REFERENCIA_AO_NOME);
+pub(crate) unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FILL_STAFF_NAME_REF);
     if pessoa == 0 || saida == 0 {
         return o(pessoa, saida);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x18)], || o(pessoa, saida), || referencia_ao_nome(pessoa, saida));
-    PLACAR.registrar(igual && r == n, || format!("referencia_ao_nome(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x18)], || o(pessoa, saida), || fill_staff_name_ref(pessoa, saida));
+    PLACAR.registrar(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
     r
 }
 
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "C" fn comparar_referencia_ao_nome(pessoa: usize, saida
 /// [pt] { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
 /// (0x49f570, a cada partida). Registro nulo: a caixa (linha 0x25a) e 0. Pró (+0x19) > contra (+0x1a), com sinal: 3;
 /// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
-pub(crate) unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
+pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 {
     if registro == 0 {
         aviso_em(0xa7a088, 0x25a);
         return 0;
@@ -144,14 +144,14 @@ pub(crate) unsafe extern "C" fn codigo_do_resultado(registro: usize) -> u8 {
 }
 
 /// Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
-pub(crate) unsafe extern "C" fn comparar_codigo_do_resultado(registro: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_CODIGO_DO_RESULTADO);
+pub(crate) unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_MATCH_RECORD_RESULT_CODE);
     if registro == 0 {
         return o(registro);
     }
     let r = o(registro);
-    let n = codigo_do_resultado(registro);
-    PLACAR.registrar(r == n, || format!("codigo_do_resultado(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
+    let n = match_record_result_code(registro);
+    PLACAR.registrar(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
     r
 }
 
@@ -239,9 +239,9 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
 /// [pt] { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930) e pelos da competição (0x49fb93): 1 se `a` é vitória (gols +0x19 > +0x1a, bytes com sinal) por
 /// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
-pub(crate) unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_VITORIA_MAIOR)(a, b);
+        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
     }
     let (fa, sa, fb, sb) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
     if fa <= sa {
@@ -252,13 +252,13 @@ pub(crate) unsafe extern "C" fn vitoria_maior(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-pub(crate) unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_VITORIA_MAIOR)(a, b);
+pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
-    let n = vitoria_maior(a, b);
-    PLACAR.registrar(r == n, || format!("vitoria_maior({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = match_record_is_bigger_win(a, b);
+    PLACAR.registrar(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -268,9 +268,9 @@ pub(crate) unsafe extern "C" fn comparar_vitoria_maior(a: usize, b: usize) -> u3
 /// [pt] { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
 /// jogo (0x444930): 1 se `a` é derrota (+0x19 < +0x1a) por diferença maior que a de `b`, ou igual com mais gols
 /// sofridos. Registro nulo: a original (caixa "Error", 0).
-pub(crate) unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
+pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
-        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DERROTA_MAIOR)(a, b);
+        return orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
     }
     let (fa, sa, fb, sb) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
     if fa >= sa {
@@ -281,13 +281,13 @@ pub(crate) unsafe extern "C" fn derrota_maior(a: usize, b: usize) -> u32 {
 }
 
 /// Comparador: pura; registro nulo (a caixa), só a original.
-pub(crate) unsafe extern "C" fn comparar_derrota_maior(a: usize, b: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DERROTA_MAIOR)(a, b);
+pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
     if a == 0 || b == 0 {
         return r;
     }
-    let n = derrota_maior(a, b);
-    PLACAR.registrar(r == n, || format!("derrota_maior({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = match_record_is_bigger_defeat(a, b);
+    PLACAR.registrar(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 

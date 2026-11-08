@@ -104,7 +104,7 @@ const CQO3_TABELA: [(u16, u8, u32); 281] = [
 /// +0x1e a escolhida, +0x1f o dia da decisão, +0x21 o intervalo entre edições), pelas gravações de `CQO3_TABELA`;
 /// depois o dia da decisão de cada entrada anda um sorteio de −35 a +34 (0x90cfc0(70)); a entrada que não é padrão
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
-unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
+unsafe extern "thiscall" fn init_default_table(this: usize) {
     let definir: unsafe extern "thiscall" fn(*mut crate::data::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(0x54a130usize);
     let mut d = crate::data::Data { dia: 40, ano: 1972, bissexto: 1 };
     for &(off, t, v) in CQO3_TABELA.iter() {
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn tabela_das_sedes(this: usize) {
 
 /// Lado a lado (a cópia sem contar os sorteios) pela tabela (conta +4 × 0x22 bytes), pelo estado do sorteador e por
 /// [0xb67a34].
-unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
+unsafe extern "thiscall" fn comparar_init_default_table(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let n = cqo3_w(this + 4) as i16;
     if cqo3_d(this) == 0 || n <= 0 {
@@ -162,8 +162,8 @@ unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(cqo3_d(this), n as usize * 0x22), (0xb67a34, 4)]);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| tabela_das_sedes(this)));
-    PLACAR.registrar(igual, || format!("tabela_das_sedes: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| init_default_table(this)));
+    PLACAR.registrar(igual, || format!("init_default_table: {:x?} x {:x?}", mo, mr).chars().take(4000).collect());
 }
 
 /// { 0x5faec0 } (thiscall, ret 4, host_country.cpp, `HostCountry::post_host_news(lista)`; pelo calendário das sedes
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn comparar_tabela_das_sedes(this: usize) {
 /// notícia 4 (as candidaturas: competição, ano e as seis nações); senão a notícia 5 (a escolhida: competição, ano e as
 /// duas sedes dela, a primeira na padrão fixa), montadas por 0x77bbe0/0x785790 e entregues aos técnicos do continente
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
-unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: usize) {
+unsafe extern "thiscall" fn post_host_news(_this: usize, lista: usize) {
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let dado: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x785790usize);
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: usize) {
 }
 
 // ponytail: entrega notícias (aloca); só a original. A cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize) {
+unsafe extern "thiscall" fn comparar_post_host_news(this: usize, lista: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, lista)
 }
 
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn comparar_noticia_das_sedes(this: usize, lista: usize
 /// HostCountry.tmp da pasta CM3_TEMP (0x90bde0, fopen 0x945b00 "rb"): a conta (word, +4) e as entradas de 0x22 bytes
 /// num bloco novo ([this], 0x944e46); falhando a leitura, a caixa (linhas 0x448/0x452/0x45c), fecha (0x945a09) e, com
 /// o bloco, o solta (0x9452ca). Devolve 1 com tudo lido, 0 sem o arquivo ou com erro.
-unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
+unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
@@ -269,6 +269,6 @@ unsafe extern "thiscall" fn carregar_sedes(this: usize) -> u32 {
 }
 
 // ponytail: abre o arquivo e aloca; só a original. A cópia leva os ramos.
-unsafe extern "thiscall" fn comparar_carregar_sedes(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_load_temp_file(this: usize) -> u32 {
     orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

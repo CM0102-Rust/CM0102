@@ -17,7 +17,7 @@ unsafe fn cpu11_pw(a: usize, v: u16) {
 /// ganha a marca +0x143 e as outras casas com a mesma posição a perdem). A posição extra (+0x14e) sai da lista da
 /// outra fase: a mesma posição, ou a de mesmo lado (0x5b73a0), ou a primeira, ou com duas o meio dos bits das duas.
 /// Zera +0x187f. Argumentos fora da faixa: a original (caixa e 0). Devolve 1.
-unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
+unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
     let (s, f) = (casa as u8 as i8, fase as u8 as i8);
     let (zx, zy) = (faixa as u16 as i16, (faixa >> 16) as u16 as i16);
     let (cx, cy) = (coord as u16 as i16, (coord >> 16) as u16 as i16);
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn coordenada_da_casa(this: usize, casa: u32, fase: u32
 /// { 0x5b3460 } (thiscall, ret 8, formation.cpp): `Formation::check_duplicate_position(casa, *saida)`: zera a saída;
 /// a primeira outra casa com a mesma posição geral (+0x12d) decide: com marca (+0x143, byte com sinal) menor que a da
 /// casa, saída 1 e devolve 1; senão devolve 0. Sem repetida, 1. Casa fora de 0..10: a original (caixa e 0).
-unsafe extern "thiscall" fn posicao_repetida_na_formacao(this: usize, casa: u32, saida: *mut u32) -> u32 {
+unsafe extern "thiscall" fn check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
     let s = casa as u8 as i8;
     if !(0..=10).contains(&s) {
         return orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%)(this, casa, saida);
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn posicao_repetida_na_formacao(this: usize, casa: u32,
 /// { 0x5b57d0 } (thiscall, ret 8, formation.cpp): `Formation::set_marking_type(casa, marca)`: as marcas 1, 2 e 4
 /// trocam os bits 0..2 do byte +0x5b4 da casa; 8 e 0x10, os bits 3..4; zera +0x187f e devolve 1. Outra marca: a
 /// original (caixa e 0). A casa não é conferida.
-unsafe extern "thiscall" fn tipo_de_marcacao(this: usize, casa: u32, marca: u32) -> u32 {
+unsafe extern "thiscall" fn set_marking_type(this: usize, casa: u32, marca: u32) -> u32 {
     let m = marca as u8;
     let limpa = match m {
         1 | 2 | 4 => 0xf8u8,
@@ -209,37 +209,37 @@ fn cpu11_regioes(this: usize) -> [(usize, usize); 3] {
 }
 
 /// Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
-unsafe extern "thiscall" fn comparar_coordenada_da_casa(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
     let reg = cpu11_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, faixa, coord), || coordenada_da_casa(this, casa, fase, faixa, coord));
-    PLACAR.registrar(igual && r == n, || format!("coordenada_da_casa({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, faixa, coord, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, faixa, coord), || set_slot_coordinate(this, casa, fase, faixa, coord));
+    PLACAR.registrar(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, faixa, coord, r, n, mo, mr));
     r
 }
 
 /// Comparador: pura (grava só a saída): as duas sobre saídas próprias.
-unsafe extern "thiscall" fn comparar_posicao_repetida_na_formacao(this: usize, casa: u32, saida: *mut u32) -> u32 {
+unsafe extern "thiscall" fn comparar_check_duplicate_position(this: usize, casa: u32, saida: *mut u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(%%I1%%);
     if !(0..=10).contains(&(casa as u8 as i8)) {
         return o(this, casa, saida); // ponytail: a caixa, só a original
     }
     let (mut so, mut sr) = (0xdead_u32, 0xbeef_u32);
     let r = o(this, casa, &mut so);
-    let n = posicao_repetida_na_formacao(this, casa, &mut sr);
-    PLACAR.registrar(r == n && so == sr, || format!("posicao_repetida_na_formacao({:x}, {}) {}/{} saída {}/{}", this, casa as u8 as i8, r, n, so, sr));
+    let n = check_duplicate_position(this, casa, &mut sr);
+    PLACAR.registrar(r == n && so == sr, || format!("check_duplicate_position({:x}, {}) {}/{} saída {}/{}", this, casa as u8 as i8, r, n, so, sr));
     *saida = so;
     r
 }
 
 /// Comparador: grava um byte e +0x187f: lado a lado.
-unsafe extern "thiscall" fn comparar_tipo_de_marcacao(this: usize, casa: u32, marca: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_marking_type(this: usize, casa: u32, marca: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%);
     if !matches!(marca as u8, 1 | 2 | 4 | 8 | 0x10) {
         return o(this, casa, marca); // ponytail: a caixa, só a original
     }
     let reg = [(this as isize + casa as u8 as i8 as isize + 0x5b4) as usize, 1usize];
     let reg = [(reg[0], reg[1]), (this + 0x187f, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, marca), || tipo_de_marcacao(this, casa, marca));
-    PLACAR.registrar(igual && r == n, || format!("tipo_de_marcacao({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, marca), || set_marking_type(this, casa, marca));
+    PLACAR.registrar(igual && r == n, || format!("set_marking_type({:x}, {}, {}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, marca as u8, r, n, mo, mr));
     r
 }

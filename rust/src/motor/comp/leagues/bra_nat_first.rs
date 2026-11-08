@@ -76,7 +76,7 @@ pub(crate) unsafe fn cqq7_fase_seguinte(this: usize, arquivo: usize, linha: u32,
 ///
 /// [pt] { 0x42a950 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::advance_stage()`, a fase seguinte da Série A: no fim
 /// dos pontos corridos, o play-off (0x42a9e0); a caixa da linha 0x264.
-pub(crate) unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_advance_stage(this: usize) {
     cqq7_fase_seguinte(this, 0x98aa30, 0x264, 0x42a9e0);
 }
 
@@ -86,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_a(this: usize
 ///
 /// [pt] { 0x42a9e0 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_play_off_stage()`, o play-off da Série A:
 /// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x286 (sem lista) e 0x29d (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqq7_play_off_da_serie_a(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98aa30, 0x286, 0x29d, "cqq_7 serie a"); // cqq7: 1º × 4º, 2º × 3º Série A
 }
 
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn cqq7_play_off_da_serie_a(this: usize) {
 ///
 /// [pt] { 0x42cdd0 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::advance_stage()`, a fase seguinte da Série B: no fim
 /// dos pontos corridos, o play-off (0x42ce60); a caixa da linha 0x23d.
-pub(crate) unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_b(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_advance_stage_42cdd0(this: usize) {
     cqq7_fase_seguinte(this, 0x98ab64, 0x23d, 0x42ce60);
 }
 
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_b(this: usize
 ///
 /// [pt] { 0x42ce60 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_play_off_stage()`, o play-off da Série B:
 /// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x25f (sem lista) e 0x276 (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqq7_play_off_da_serie_b(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage_42ce60(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98ab64, 0x25f, 0x276, "cqq_7 serie b"); // cqq7: 1º × 4º, 2º × 3º Série B
 }
 
@@ -132,24 +132,24 @@ pub(crate) unsafe fn cqq7_comparar_play_off(nome: &str, this: usize, linhas: &[u
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQQ7_FASE_SEGUINTE_DA_SERIE_A);
-    cqp7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_a", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_nat_first_advance_stage", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_a(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQQ7_PLAY_OFF_DA_SERIE_A);
-    cqq7_comparar_play_off("cqq7_play_off_da_serie_a", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE);
+    cqq7_comparar_play_off("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQQ7_FASE_SEGUINTE_DA_SERIE_B);
-    cqp7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_b", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage_42cdd0(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_ADVANCE_STAGE_42CDD0);
+    cqp7_comparar_fase_seguinte("bra_nat_first_advance_stage_42cdd0", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_b(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQQ7_PLAY_OFF_DA_SERIE_B);
-    cqq7_comparar_play_off("cqq7_play_off_da_serie_b", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage_42ce60(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_FIRST_CREATE_PLAY_OFF_STAGE_42CE60);
+    cqq7_comparar_play_off("bra_nat_first_create_play_off_stage_42ce60", this, &[0, 3, 1, 2], || o(this))
 }
 
 // ---------- 280a leva: a virada do futebol brasileiro: a Série A, o acesso e o rebaixamento em cadeia e a Série B (bra_nat_first.cpp, bra_nat_second.cpp) ----------
@@ -259,7 +259,7 @@ pub(crate) const CQQ8_VIRADAS: [usize; 14] = [KEY_CLUB_COMP_BRAZILIAN_NATIONAL_S
 /// (League::limit_club_division_tier 0x68a980, thiscall(liga, 1, 3, −3, 1), ret 0x10); a Série A refeita (o corpo comum,
 /// a tabela 0x42a480, caixas nas linhas 0x223, 0x22a, 0x230 e 0x237); as viradas das outras catorze (a virtual +8);
 /// as expectativas e os árbitros.
-pub(crate) unsafe extern "thiscall" fn cqq8_virada_da_serie_a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn cqq8_virada_da_serie_a(this: usize) -> u3
 /// (league_promote_and_relegate 0x689c80, thiscall(this, de cima, de baixo, 1, 1, −1, −1), ret 0x18: a original põe
 /// o ecx da Série A e a rotina o guarda) entre A e B, entre B e C e entre a B e cada uma das sete fases da C. Devolve o
 /// eax da última.
-pub(crate) unsafe extern "thiscall" fn cqq8_acesso_e_rebaixamento(this: usize, _pares: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(this: usize, _pares: u32) -> u32 {
     let (a, b, c) = (KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION);
     cqq8_virtual(cqq8_comp(a), 0xa4);
     cqq8_virtual(cqq8_comp(b), 0xa4);
@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn cqq8_acesso_e_rebaixamento(this: usize, _
 /// [pt] { 0x42cc10 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::start_new_season()`, a virada da Série B (da
 /// virada da Série A): +0x4c = 0, o corpo comum (a tabela 0x42ca70, caixas nas linhas 0x20c, 0x213, 0x219 e 0x220), as
 /// expectativas e os árbitros.
-pub(crate) unsafe extern "thiscall" fn cqq8_virada_da_serie_b(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
     core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
     if !cqq8_refazer(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
         return 0;
@@ -329,20 +329,20 @@ pub(crate) unsafe extern "thiscall" fn cqq8_virada_da_serie_b(this: usize) -> u3
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQQ8_VIRADA_DA_SERIE_A);
-    cqp7_comparar_virada("cqq8_virada_da_serie_a", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_nat_first_start_new_season", this, || o(this))
 }
 
 /// Comparador do acesso e rebaixamento: só a original (ponytail: move clubes entre as listas das ligas, que realocam).
 /// A cópia roda no modo Rust (contador "cqq_8 acesso e rebaixamento") e é provada pelas mutações e pelas carreiras.
-pub(crate) unsafe extern "thiscall" fn comparar_cqq8_acesso_e_rebaixamento(this: usize, pares: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_CQQ8_ACESSO_E_REBAIXAMENTO)(this, pares)
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_process_promotion_relegation_chain(this: usize, pares: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_BRA_NAT_FIRST_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pares)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqq8_virada_da_serie_b(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQQ8_VIRADA_DA_SERIE_B);
-    cqp7_comparar_virada("cqq8_virada_da_serie_b", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_START_NEW_SEASON_42CC10);
+    cqp7_comparar_virada("bra_nat_first_start_new_season_42cc10", this, || o(this))
 }
 
 // ---------- 277a leva: a tabela das três divisões nacionais do Brasil: os 28 clubes da Série A (e o dinheiro da TV), os 28 da Série B e o sorteio dos 56 da Série C (bra_nat_first.cpp, bra_nat_second.cpp, bra_nat_third.cpp) ----------
@@ -403,7 +403,7 @@ pub(crate) unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 /// divisão nacional +0x57 = [0x9cf9ec]); cheia, a TV paga 150.000 a cada clube (League::pay_tv_rights 0x683010:
 /// push 0; push 0x249f0; mov ecx, edi -> thiscall(liga, valor, filtro), ret 8; manda a notícia da TV) e devolve 1.
 /// Fonte 0x98aa30, linha 0x1a1.
-pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table(this: usize) -> u32 {
     if cql7_tabela(this, 0x1c, 0x98aa30, 0x1a1, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, 0, "cql_7 serie a cheia") == 0 {
         return 0;
     }
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_a(this: usize) -> u3
 ///
 /// [pt] { 0x42ca70 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_table()`: a Série B tem 28 clubes (+0x57 =
 /// [0x9cf9e0]), sem dinheiro da TV. Fonte 0x98ab64, linha 0x1aa.
-pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_b(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_table_42ca70(this: usize) -> u32 {
     cql7_tabela(this, 0x1c, 0x98ab64, 0x1aa, 0x57, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, 0, "cql_7 serie b cheia")
 }
 
@@ -454,14 +454,14 @@ pub(crate) unsafe fn cql7_comparar(nome: &str, this: usize, n: i16, g: usize, or
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_a(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL7_TABELA_DA_SERIE_A);
-    cql7_comparar("cql7_tabela_da_serie_a", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE);
+    cql7_comparar("bra_nat_first_create_table", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_b(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL7_TABELA_DA_SERIE_B);
-    cql7_comparar("cql7_tabela_da_serie_b", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_create_table_42ca70(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_CREATE_TABLE_42CA70);
+    cql7_comparar("bra_nat_first_create_table_42ca70", this, 0x1c, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, || o(this))
 }
 
 
@@ -561,7 +561,7 @@ pub(crate) unsafe fn cqi7_regras_serie_c(o: usize) {
 ///
 /// [pt] { 0x42a5a0 } (thiscall, bra_nat_first.cpp): `BraNatFirst::set_up_rules` (slot 36), as regras da Série A e o
 /// calendário da fase principal; devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi7_regras_da_serie_a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -> u32 {
     cqi7_regras_serie_a(this);
     crate::comparacao::ramo("cqi_7 regras da serie a");
     cqi7_calendario(this);
@@ -570,13 +570,13 @@ pub(crate) unsafe extern "thiscall" fn cqi7_regras_da_serie_a(this: usize) -> u3
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto inteiro
 /// menos as saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_a(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI7_REGRAS_DA_SERIE_A)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES)(this), || {
         cqi7_regras_serie_a(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_a({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_nat_first_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -586,7 +586,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_a(this: usi
 /// Original: `BraNatSecond::set_up_rules` (0x42cb70, bra_nat_second.cpp, thiscall).
 ///
 /// [pt] { 0x42cb70 } (thiscall, bra_nat_second.cpp): `BraNatSecond::set_up_rules`, as regras da Série B e o calendário.
-pub(crate) unsafe extern "thiscall" fn cqi7_regras_da_serie_b(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
     cqi7_regras_serie_b(this);
     crate::comparacao::ramo("cqi_7 regras da serie b");
     cqi7_calendario(this);
@@ -594,13 +594,13 @@ pub(crate) unsafe extern "thiscall" fn cqi7_regras_da_serie_b(this: usize) -> u3
 }
 
 /// Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_b(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI7_REGRAS_DA_SERIE_B)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_FIRST_SET_UP_RULES_42CB70)(this), || {
         cqi7_regras_serie_b(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_b({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_nat_first_set_up_rules_42cb70({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
@@ -814,18 +814,18 @@ pub(crate) unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase:
 /// na fase de pontos corridos, os 8 classificados (situação 6) ganham o registro de classificação e os rebaixados (3) o
 /// de rebaixamento; no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5, os eliminados (2 ou
 /// -1) o destino -2. Devolve 0.
-pub(crate) unsafe extern "thiscall" fn cqj9_destino_na_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
     cqj9_serie_a(this, clube, situacao, fase, true).0
 }
 
 /// Comparador: só a original (ponytail: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
 /// com o plano do ensaio (a cópia sem os registros nem a gravação): a devolução e o destino gravado na linha.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_na_serie_a(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_first_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = cqj9_serie_a(this, clube, situacao, fase, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_CQJ9_DESTINO_NA_SERIE_A)(this, clube, situacao, fase, a4, a5, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_FIRST_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, a5, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("cqj9_destino_na_serie_a({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.registrar(r == n && gravado == dest, || format!("bra_nat_first_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }
 

@@ -67,20 +67,20 @@ unsafe fn cpz1_mata_mata(this: usize, linhas: [usize; 4], arquivo: usize, linha_
 /// { 0x573080 } (thiscall, ret 0, eng_first.cpp): `EngFirst::create_playoff_stage()`, da fase seguinte da First
 /// (0x572ff0, quando a fase passa de −1 a 0). As chaves: o 6º contra o 3º e o 5º contra o 4º (linhas 5, 2, 4 e 3);
 /// +0x3a da fase = 0xa0. Fonte 0x9c4374, linhas 0x2f0 (sem lista) e 0x306 (sem fase).
-unsafe extern "thiscall" fn mata_mata_da_first(this: usize) {
+unsafe extern "thiscall" fn eng_first_create_playoff_stage(this: usize) {
     cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c4374, 0x2f0, 0x306, Some(0xa0), "cpz_1 mata-mata da first"); // cpz1: 6º × 3º e 5º × 4º da First
 }
 
 /// { 0x576a70 } (thiscall, ret 0, eng_second.cpp): `EngSecond::create_play_off_stage()` (de 0x5769e0). As chaves da
 /// First (linhas 5, 2, 4 e 3); +0x3a da fase = o extra da virtual +0x3c. Fonte 0x9c43e8, linhas 0x2b6 e 0x2cc.
-unsafe extern "thiscall" fn mata_mata_da_second(this: usize) {
+unsafe extern "thiscall" fn eng_second_create_play_off_stage(this: usize) {
     cpz1_mata_mata(this, [5, 2, 4, 3], 0x9c43e8, 0x2b6, 0x2cc, None, "cpz_1 mata-mata da second"); // cpz1: 6º × 3º e 5º × 4º da Second
 }
 
 /// { 0x5783c0 } (thiscall, ret 0, eng_third.cpp): `EngThird::create_play_off_stage()` (de 0x578330). As chaves: o 7º
 /// contra o 4º e o 6º contra o 5º (linhas 6, 3, 5 e 4); +0x3a = o extra da virtual. Fonte 0x9c4424, linhas 0x2be e
 /// 0x2d5.
-unsafe extern "thiscall" fn mata_mata_da_third(this: usize) {
+unsafe extern "thiscall" fn eng_first_create_play_off_stage(this: usize) {
     cpz1_mata_mata(this, [6, 3, 5, 4], 0x9c4424, 0x2be, 0x2d5, None, "cpz_1 mata-mata da third"); // cpz1: 7º × 4º e 6º × 5º da Third
 }
 
@@ -112,17 +112,17 @@ unsafe fn cpz1_comparar(nome: &str, this: usize, linhas: [usize; 4], original: i
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", nome, this, plano, fase, achou, cpz1_w(fase + 0x3e), n));
 }
 
-unsafe extern "thiscall" fn comparar_mata_mata_da_first(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_first_create_playoff_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cpz1_comparar("mata_mata_da_first", this, [5, 2, 4, 3], || o(this))
+    cpz1_comparar("eng_first_create_playoff_stage", this, [5, 2, 4, 3], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_mata_mata_da_second(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_second_create_play_off_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cpz1_comparar("mata_mata_da_second", this, [5, 2, 4, 3], || o(this))
+    cpz1_comparar("eng_second_create_play_off_stage", this, [5, 2, 4, 3], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_mata_mata_da_third(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_first_create_play_off_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cpz1_comparar("mata_mata_da_third", this, [6, 3, 5, 4], || o(this))
+    cpz1_comparar("eng_first_create_play_off_stage", this, [6, 3, 5, 4], || o(this))
 }

@@ -98,7 +98,7 @@ unsafe fn cqd2_soltar_troca_vazia(o: usize) {
 /// - Técnico humano: a notícia da conversa de contrato (0x8d7cd0); a oferta reagendada para a fatia seguinte (0x8c6220:
 ///   push 1; push 0); com troca e vendedor da IA, a entrada de cada jogador da troca na lista do vendedor (0x849ce0 com
 ///   0, 0) recebe o índice +0x20 da oferta em +0x17.
-unsafe extern "thiscall" fn aceitar_lance(this: usize, vaga: usize, marcar: u32) {
+unsafe extern "thiscall" fn accept_transfer_bid(this: usize, vaga: usize, marcar: u32) {
     let novo_contrato: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x85e410usize);
     let sob_oferta: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x84b580usize);
     let tecnico_humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn aceitar_lance(this: usize, vaga: usize, marcar: u32)
 
 /// Comparador da 0x8c0080: só a original (muda o status, reagenda, solta a troca, aloca notícias e chama a resposta da
 /// IA).
-unsafe extern "thiscall" fn comparar_aceitar_lance(this: usize, vaga: usize, marcar: u32) {
+unsafe extern "thiscall" fn comparar_accept_transfer_bid(this: usize, vaga: usize, marcar: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, vaga, marcar) // ponytail: só a original
 }
 
@@ -276,13 +276,13 @@ unsafe extern "thiscall" fn comparar_aceitar_lance(this: usize, vaga: usize, mar
 /// próximo índice livre recebe o +0x11. A notícia a cada destinatário (0x7861e0: push clube; push &notícia; mov ecx,
 /// [0xb7431c] -> thiscall, ret 8). Com +0x2f: +0x30 & 0xf = 5, a janela fixa (0x8d0bb0, stdcall(&data, 0): o ecx não é
 /// lido) dá 0x12 = 0 se hoje é a data, senão 5, e a data em 0xc/0xd; senão 0x12 = 3.
-unsafe extern "thiscall" fn noticia_da_oferta_feita(this: usize, o: usize) {
+unsafe extern "thiscall" fn post_offer_made_news(this: usize, o: usize) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u8 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(0x8e7a70usize);
     let tipo: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(0x53b620usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let segunda: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5409b0usize);
     let recorde: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x4486c0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -313,7 +313,7 @@ unsafe extern "thiscall" fn noticia_da_oferta_feita(this: usize, o: usize) {
     g(0xb, cqd2_b(o + 0x2f) as i8 as i32 as u32);
     g(0xe, (cqd2_d(o + 0x31) & 0xf) as u32);
     if cqd2_b(o + 0x2f) != 0 && vendedor != 0 && tipo(cqd2_b(alvo + 0x3d) as i8) != 0 {
-        let c = contrato_de(cqd2_d(0xae1050), alvo);
+        let c = contract_of(cqd2_d(0xae1050), alvo);
         if c != 0 {
             let (ha, ca) = (cqd2_w(0xae2c92) as u16, cqd2_w(c + 0x2f) as u16);
             if ha < ca || (ha == ca && cqd2_w(0xae2c90) < cqd2_w(c + 0x2d)) {
@@ -386,7 +386,7 @@ unsafe extern "thiscall" fn noticia_da_oferta_feita(this: usize, o: usize) {
 }
 
 /// Comparador da 0x8d3090: só a original (a notícia vai aos técnicos e não tem outro efeito).
-unsafe extern "thiscall" fn comparar_noticia_da_oferta_feita(this: usize, o: usize) {
+unsafe extern "thiscall" fn comparar_post_offer_made_news(this: usize, o: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, o) // ponytail: só a notícia
 }
 
@@ -416,9 +416,9 @@ unsafe fn cqd2_regra_24(r: usize) -> unsafe extern "thiscall" fn(usize, usize, u
 /// ecx, this -> thiscall, ret 0x1c): início igual ao fim dá 1. Senão a data (dia do mês, início; 0x54a130: push −1;
 /// push ano; push mês; push dia; lea ecx, data -> thiscall, ret 0x10) e o virtual +0x24 (push 1; push &data; push 0;
 /// push jogador; push clube atual; mov ecx, regra) diferente de 0 dá 1; avança um mês (0x549f70: push −1; push fim_ano;
-/// push fim_mês; push dia; lea ecx, local -> thiscall, ret 0x10) enquanto a data do fim passar da data, de novo a 0x54a130
+/// push fim_mês; push dia; lea ecx, local -> thiscall, ret 0x10) enquanto a data do fim pass_ball da data, de novo a 0x54a130
 /// e o virtual (diferente de 0 dá 1); passou: 0, com "This loan deal cannot go ahead" na mensagem.
-unsafe extern "thiscall" fn pode_emprestar(this: usize, clube: usize, jogador: usize, msg: usize) -> u32 {
+unsafe extern "thiscall" fn transfer_manager_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize) -> u32 {
     let padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let dia_do_mes: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x54cf70usize);
     let ficha: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
@@ -566,7 +566,7 @@ unsafe extern "thiscall" fn pode_emprestar(this: usize, clube: usize, jogador: u
 /// Comparador da 0x8d0040: lado a lado, com [0xae1080], o texto em [0xde1f64] e a mensagem (0x100 bytes), e o byte do
 /// registro de 8 bytes do jogador em [[0xde1f54]+0x86e] (o único que ela pode apagar); a devolução também. As regras,
 /// o período e as datas não sorteiam nem gravam fora das locais.
-unsafe extern "thiscall" fn comparar_pode_emprestar(this: usize, clube: usize, jogador: usize, msg: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_transfer_manager_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%);
     let mut regioes = [(0xae1080usize, 4usize), (0xde1f64, 0x100), (0, 0), (0, 0)];
     let mut k = 2;
@@ -580,8 +580,8 @@ unsafe extern "thiscall" fn comparar_pode_emprestar(this: usize, clube: usize, j
         k += 1;
     }
     let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&regioes[..k], || o(this, clube, jogador, msg),
-        || crate::aleatorio::sem_contar(|| pode_emprestar(this, clube, jogador, msg)));
-    PLACAR.registrar(igual && r == n, || format!("pode_emprestar(clube {:#x}, jogador {:#x}): original {} rust {}, memória {}",
+        || crate::aleatorio::sem_contar(|| transfer_manager_can_loan_player(this, clube, jogador, msg)));
+    PLACAR.registrar(igual && r == n, || format!("transfer_manager_can_loan_player(clube {:#x}, jogador {:#x}): original {} rust {}, memória {}",
         clube, jogador, r, n, if igual { "igual" } else { "diferente" }));
     r
 }

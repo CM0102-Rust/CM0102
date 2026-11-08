@@ -1,4 +1,4 @@
-# Mutacoes (cqw_11), na eliminatoria da Oceania que o jogo de 2001 monta ja no comeco: a Nova Caledonia na disputa
+# Mutacoes (cqw_11), na eliminatoria da Oceania que o jogo de 2001 monta ja no comeco: a Nova Caledonia na contest
 # (outra selecao nos grupos); as dez sem a ordem pela reputacao (os grupos pares e impares mudam); a final com o
 # campeao do segundo grupo mandando primeiro.
 MUTACOES = [

@@ -60,7 +60,7 @@ const CQJ12_EUROPA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x4a, 1, 3), (0x3c,
 /// `WcEuropeLeague::set_up_rules()`: os grupos europeus em dois turnos, 3 pontos a vitória e 1 o empate, a categoria
 /// 0xa (seleções), os desempates (1, 2, 4, 5), um classificado direto por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
-unsafe extern "thiscall" fn cqj12_eliminatoria_europa_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da europa");
     cqj12_campos(this, &CQJ12_EUROPA);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
@@ -71,9 +71,9 @@ unsafe extern "thiscall" fn cqj12_eliminatoria_europa_regras(this: usize) -> u32
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_europa_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqj12_confere("cqj12_eliminatoria_europa_regras", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
+    cqj12_confere("wc_europe_league_set_up_rules", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
 }
 
 const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
@@ -84,7 +84,7 @@ const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1,
 /// as nações isentas por serem a campeã]; a liga única sul-americana em dois turnos, 3/1 pontos, a categoria 0xa, os
 /// desempates (1, 2, 3), vagas diretas 4 − +0xef − +0xee (as isentas saem das quatro), uma de repescagem, seleções, 7 no
 /// banco e 3 substituições, +0xa7 = −1, +0xab = +0xdb = 0, começo em 25 do mês 0 num dia da semana 5.
-unsafe extern "thiscall" fn cqj12_eliminatoria_sul_americana_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
     let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
     if lista != 0 {
         let o = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(0x9cf76c as *const usize).wrapping_mul(4)) as *const usize);
@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn cqj12_eliminatoria_sul_americana_regras(this: usize)
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
 // as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
-unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_sul_americana_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
     let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
     let mut ef = *((this + 0xef) as *const u8);
@@ -114,9 +114,9 @@ unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_sul_americana_regras(thi
         }
     }
     let vagas = 4u8.wrapping_sub(ef).wrapping_sub(*((this + 0xee) as *const u8));
-    let r = cqj12_confere("cqj12_eliminatoria_sul_americana_regras", this, &CQJ12_SUL, (0x19, 0, 5), 0, || o(this));
+    let r = cqj12_confere("wc_europe_league_set_up_rules_921040", this, &CQJ12_SUL, (0x19, 0, 5), 0, || o(this));
     let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + 0xbe) as *const u8));
-    PLACAR.registrar(lido_ef == ef && lido_be == vagas, || format!("cqj12_eliminatoria_sul_americana_regras({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, vagas));
+    PLACAR.registrar(lido_ef == ef && lido_be == vagas, || format!("wc_europe_league_set_up_rules_921040({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, vagas));
     r
 }
 
@@ -126,7 +126,7 @@ const CQJ12_ASIA: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2
 /// { 0x912eb0 } (thiscall, ret 0, wc_asia_league.cpp; a virtual +0x8c; quadro SEH só da data local):
 /// `WcAsiaLeague::set_up_rules()`: os grupos asiáticos em dois turnos, 3/1 pontos, a categoria 0xa, os desempates (1, 2,
 /// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
-unsafe extern "thiscall" fn cqj12_eliminatoria_asia_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da asia");
     cqj12_campos(this, &CQJ12_ASIA);
     let dia = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn cqj12_eliminatoria_asia_regras(this: usize) -> u32 {
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_asia_regras(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqj12_confere("cqj12_eliminatoria_asia_regras", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))
+    cqj12_confere("wc_europe_league_set_up_rules_912eb0", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))
 }

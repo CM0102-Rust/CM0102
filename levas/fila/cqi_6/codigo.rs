@@ -39,7 +39,7 @@ unsafe fn cqi6_comuns(this: usize) -> Vec<(usize, u8, u32)> {
 /// pontos, os desempates 3º = 4 e 4º = 0 (+0xc7, +0xc8), ninguém sobe, nenhum play-off, 4 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1), a Série B abaixo (+0x20 = [0x9cf574]), +0x52 = 2 [sem nome] e +0xe6 = 1 (o
 /// empate em pontos na fronteira de uma vaga não se decide pelos critérios: vai ao jogo-desempate, ver 0x642880).
-unsafe extern "thiscall" fn regras_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da serie a");
     cqi6_regras(this, &cqi6_serie_a(this))
 }
@@ -54,7 +54,7 @@ unsafe fn cqi6_serie_a(this: usize) -> Vec<(usize, u8, u32)> {
 
 /// { 0x6468a0 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::set_up_rules()`. A Série B: como a A, mas 4 sobem
 /// direto (+0xbe) e 4 caem (+0xc1); a A acima ([0x9cf570]) e a C1/A abaixo ([0x9cf578]).
-unsafe extern "thiscall" fn regras_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_set_up_rules_6468a0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da serie b");
     cqi6_regras(this, &cqi6_serie_b(this))
 }
@@ -70,7 +70,7 @@ unsafe fn cqi6_serie_b(this: usize) -> Vec<(usize, u8, u32)> {
 /// pontos, os desempates 3º = 0 (+0xc7), o campeão sobe direto (+0xbe = 1), do 2º ao 5º vão ao play-off de acesso
 /// (+0xbf = 4), do 14º ao 17º ao play-out de permanência (+0xc0 = 4), o último cai (+0xc1 = 1), a Série B acima
 /// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
-unsafe extern "thiscall" fn regras_da_c1a(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_c1a_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da c1a");
     cqi6_regras(this, &cqi6_c1a(this))
 }
@@ -85,7 +85,7 @@ unsafe fn cqi6_c1a(this: usize) -> Vec<(usize, u8, u32)> {
 /// { 0x64f920 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::set_up_rules()`. A C1/B: como a C1/A; acima o id de
 /// [0x9cf578] e abaixo a C2/A ([0x9cf580]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da
 /// nação [inferência]), senão −1.
-unsafe extern "thiscall" fn regras_da_c1b(this: usize) -> u32 {
+unsafe extern "thiscall" fn ita_ser_a_set_up_rules_64f920(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_6 regras da c1b");
     cqi6_regras(this, &cqi6_c1b(this))
 }
@@ -126,22 +126,22 @@ unsafe fn cqi6_comparar(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>
     r
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqi6_comparar("regras_da_serie_a", this, cqi6_serie_a(this), || o(this), || regras_da_serie_a(this))
+    cqi6_comparar("ita_ser_a_set_up_rules", this, cqi6_serie_a(this), || o(this), || ita_ser_a_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules_6468a0(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqi6_comparar("regras_da_serie_b", this, cqi6_serie_b(this), || o(this), || regras_da_serie_b(this))
+    cqi6_comparar("ita_ser_a_set_up_rules_6468a0", this, cqi6_serie_b(this), || o(this), || ita_ser_a_set_up_rules_6468a0(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_c1a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_rules(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqi6_comparar("regras_da_c1a", this, cqi6_c1a(this), || o(this), || regras_da_c1a(this))
+    cqi6_comparar("ita_ser_c1a_set_up_rules", this, cqi6_c1a(this), || o(this), || ita_ser_c1a_set_up_rules(this))
 }
 
-unsafe extern "thiscall" fn comparar_regras_da_c1b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_rules_64f920(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I3%%);
-    cqi6_comparar("regras_da_c1b", this, cqi6_c1b(this), || o(this), || regras_da_c1b(this))
+    cqi6_comparar("ita_ser_a_set_up_rules_64f920", this, cqi6_c1b(this), || o(this), || ita_ser_a_set_up_rules_64f920(this))
 }

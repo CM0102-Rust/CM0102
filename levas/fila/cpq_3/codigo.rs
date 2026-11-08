@@ -216,7 +216,7 @@ unsafe fn cpq3_acesso(this: usize, clube: usize, comp: usize, peso: u32, gravar:
 /// × peso × 25), o moral +15 de cada jogador do elenco (0x544710), o vínculo do contrato (+0x44) +75 (−100..100) e a
 /// renovação (0x4cda70) dos contratos dos tipos 1, 2, 3 e 5 que vencem; por fim o histórico do clube (tipo 8). Clube ou
 /// competição nulos: a caixa "Error" (linha 0x301).
-unsafe extern "thiscall" fn registrar_o_acesso(this: usize, clube: usize, comp: usize, peso: u32) {
+unsafe extern "thiscall" fn add_promotion_record(this: usize, clube: usize, comp: usize, peso: u32) {
     crate::comparacao::ramo("cpq_3 acesso");
     cpq3_acesso(this, clube, comp, peso, true)
 }
@@ -259,7 +259,7 @@ unsafe fn cpq3_regioes(this: usize, clube: usize, acesso: bool) -> Option<Vec<(u
 
 /// Comparador: lado a lado pelas regiões (a cópia sem os históricos em arquivo, que a original já gravou, e sem contar
 /// os sorteios); com renovação de contrato ou clube/competição nulos, só a original.
-unsafe extern "thiscall" fn comparar_registrar_o_acesso(this: usize, clube: usize, comp: usize, peso: u32) {
+unsafe extern "thiscall" fn comparar_add_promotion_record(this: usize, clube: usize, comp: usize, peso: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(%%I0%%);
     let reg = if clube != 0 && comp != 0 { cpq3_regioes(this, clube, true) } else { None };
     let reg = match reg {
@@ -268,7 +268,7 @@ unsafe extern "thiscall" fn comparar_registrar_o_acesso(this: usize, clube: usiz
     };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, comp, peso),
         || crate::aleatorio::sem_contar(|| cpq3_acesso(this, clube, comp, peso, false)));
-    PLACAR.registrar(igual, || format!("registrar_o_acesso(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
+    PLACAR.registrar(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
 }
 
 /// A nota do não jogador em `a` soma `v` (16 bits) e fica presa a 1..10000.
@@ -346,13 +346,13 @@ unsafe fn cpq3_rebaixamento(this: usize, clube: usize, comp: usize, gravar: bool
 /// técnico e do presidente (tipo 9). Cada jogador do elenco: moral −15 (0x544710) e, pelo tipo do contrato (+0x4f >> 4):
 /// 1 e 2, reputações × 0,9 e a renovação (0x4cda70) se vence; 3 a 5, reputações × 0,95. Por fim o histórico do clube
 /// (tipo 9). Clube ou competição nulos: a caixa "Error" (linha 0x476).
-unsafe extern "thiscall" fn registrar_o_rebaixamento(this: usize, clube: usize, comp: usize) {
+unsafe extern "thiscall" fn add_relegation_record(this: usize, clube: usize, comp: usize) {
     crate::comparacao::ramo("cpq_3 rebaixamento");
     cpq3_rebaixamento(this, clube, comp, true)
 }
 
 /// Comparador: como o do acesso (sem o registro de pontos, que o rebaixamento não usa).
-unsafe extern "thiscall" fn comparar_registrar_o_rebaixamento(this: usize, clube: usize, comp: usize) {
+unsafe extern "thiscall" fn comparar_add_relegation_record(this: usize, clube: usize, comp: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%);
     let reg = if clube != 0 && comp != 0 { cpq3_regioes(this, clube, false) } else { None };
     let reg = match reg {
@@ -361,7 +361,7 @@ unsafe extern "thiscall" fn comparar_registrar_o_rebaixamento(this: usize, clube
     };
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, comp),
         || crate::aleatorio::sem_contar(|| cpq3_rebaixamento(this, clube, comp, false)));
-    PLACAR.registrar(igual, || format!("registrar_o_rebaixamento(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
+    PLACAR.registrar(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
 }
 
 unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32, gravar: bool) {
@@ -401,13 +401,13 @@ unsafe fn cpq3_classificacao(this: usize, clube: usize, comp: usize, fase: u32, 
 /// clube, comp, fase, rodada, peso)`: com técnico (+0xcf), o histórico dele (tipo 3: clube, competição ou −1, a fase com
 /// sinal e a rodada base 0x4b0870) e os pontos (0x86f5b0): importância² × peso somados em +0xb6, +0xca e, na seleção
 /// (0x53b900), +0xbe, ou no clube +0xba. Clube nulo: a caixa "Error" (linha 0x703).
-unsafe extern "thiscall" fn registrar_a_classificacao_na_fase(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+unsafe extern "thiscall" fn add_qualified_for_round_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     cpq3_classificacao(this, clube, comp, fase, rodada, peso, true)
 }
 
 /// Comparador: lado a lado pelo registro de pontos do técnico (criado antes, como a original faria), a cópia sem o
 /// histórico em arquivo; sem clube ou sem técnico, só a original.
-unsafe extern "thiscall" fn comparar_registrar_a_classificacao_na_fase(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
+unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(%%I2%%);
     if clube == 0 || cpq3_d(clube + 0xcf) == 0 {
         return o(this, clube, comp, fase, rodada, peso);
@@ -419,5 +419,5 @@ unsafe extern "thiscall" fn comparar_registrar_a_classificacao_na_fase(this: usi
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, clube, comp, fase, rodada, peso),
         || cpq3_classificacao(this, clube, comp, fase, rodada, peso, false));
-    PLACAR.registrar(igual, || format!("registrar_a_classificacao_na_fase(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
+    PLACAR.registrar(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
 }

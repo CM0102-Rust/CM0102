@@ -18,7 +18,7 @@ unsafe fn cpu3_w(a: usize) -> i16 {
 /// o registro 4 ou 5 a original lê locais sem valor (a cópia usa zero; o comparador deixa esses casos com a original).
 /// Pela escolha da escalação 0x6e2f20, pelo MATCH_PLAYER::setup 0x6eaea0, pela reputação do clube 0x545e90, pela força
 /// do jogador 0x546ab0, pelo dia da comissão 0x5ce2d0 e por outras. Quente: sem contador.
-unsafe extern "thiscall" fn estatistica_da_categoria(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
+unsafe extern "thiscall" fn get_stat(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
     if jogador == 0 {
         aviso_em(0xa78310, 0x659);
         return 0.0;
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn estatistica_da_categoria(this: usize, jogador: usize
     }
 }
 
-unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
+unsafe extern "thiscall" fn comparar_get_stat(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(%%I0%%);
     if jogador == 0 || (cpu3_d(jogador) as i32) >= cpu3_d(0xae236c) as i32 {
         return o(this, jogador, categoria, qual, padrao);
@@ -93,9 +93,9 @@ unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: usize, jogad
         return o(this, jogador, categoria, qual, padrao);
     }
     let r = o(this, jogador, categoria, qual, padrao);
-    let n = estatistica_da_categoria(this, jogador, categoria, qual, padrao);
+    let n = get_stat(this, jogador, categoria, qual, padrao);
     PLACAR.registrar(r.to_bits() == n.to_bits(), || {
-        format!("estatistica_da_categoria(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", cpu3_d(jogador) as i32, c, qual as u8, padrao, r, n)
+        format!("get_stat(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", cpu3_d(jogador) as i32, c, qual as u8, padrao, r, n)
     });
     r
 }
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: usize, jogad
 /// idiomas, registros de 6 bytes {id, idioma, fluência}): a nulo, −1; b nulo, 1; ids (+0) diferentes, a diferença;
 /// idioma 0xff em qualquer um, 0; senão a diferença dos idiomas (+4, com sinal). Pela fluência no idioma 0x7c6830 e pelos
 /// idiomas acrescentados, tirados e melhorados.
-unsafe extern "C" fn ordem_dos_idiomas(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
     if a == 0 {
         return -1;
     }
@@ -122,17 +122,17 @@ unsafe extern "C" fn ordem_dos_idiomas(a: usize, b: usize) -> i32 {
     la as i8 as i32 - lb as i8 as i32
 }
 
-unsafe extern "C" fn comparar_ordem_dos_idiomas(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_player_stats_compare_language_entries(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I1%%)(a, b);
-    let n = ordem_dos_idiomas(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_idiomas({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = player_stats_compare_language_entries(a, b);
+    PLACAR.registrar(r == n, || format!("player_stats_compare_language_entries({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// { 0x7c6d90 } (cdecl, player_stats.cpp): `player_stats_compare_history_by_club(a, b)` (o qsort da história na carga
 /// das estatísticas 0x7bfd50): a nula, 1; b nula, −1; pelo dword +0xa e depois pelo +4, sem sinal: maior 1, menor −1,
 /// iguais 0.
-unsafe extern "C" fn ordem_da_historia_por_clube(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
     if a == 0 {
         return 1;
     }
@@ -153,9 +153,9 @@ unsafe extern "C" fn ordem_da_historia_por_clube(a: usize, b: usize) -> i32 {
     }
 }
 
-unsafe extern "C" fn comparar_ordem_da_historia_por_clube(a: usize, b: usize) -> i32 {
+unsafe extern "C" fn comparar_player_stats_compare_history_by_club(a: usize, b: usize) -> i32 {
     let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(%%I2%%)(a, b);
-    let n = ordem_da_historia_por_clube(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_da_historia_por_clube({:x}, {:x}) original={} rust={}", a, b, r, n));
+    let n = player_stats_compare_history_by_club(a, b);
+    PLACAR.registrar(r == n, || format!("player_stats_compare_history_by_club({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }

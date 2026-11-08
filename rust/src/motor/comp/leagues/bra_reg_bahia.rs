@@ -131,15 +131,15 @@ pub(crate) const CQT1_GAUCHO: Cqt1Estadual = Cqt1Estadual {
 /// Original: `BraRegBahia::BraRegBahia` (0x42f2d0, bra_reg_bahia.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x42f2d0 } (thiscall, ret 8, bra_reg_bahia.cpp): `BraRegBahia::BraRegBahia(ano, registro)`: o Baiano (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
     cqt1_construir(this, ano, registro, &CQT1_BAIANO, 7, true, "cqt_1 baiano novo") // cqt1: a disciplina e as posições previstas do Baiano
 }
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt1_construir_baiano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT1_CONSTRUIR_BAIANO);
-    cqt1_comparar("cqt1_construir_baiano", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_bahia(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_BAHIA);
+    cqt1_comparar("construct_bra_reg_bahia", this, ano, registro, &CQT1_BAIANO, || o(this, ano, registro))
 }
 
 
@@ -259,7 +259,7 @@ pub(crate) unsafe fn cqp7_comparar_fase_seguinte(nome: &str, this: usize, origin
 ///
 /// [pt] { 0x42fe10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::start_new_season()`, a virada da temporada do Baiano (a tabela:
 /// 0x42fd10; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-pub(crate) unsafe extern "thiscall" fn cqp7_virada_do_baiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_start_new_season(this: usize) -> u32 {
     cqp7_virada(this, 0x42fd10, 0x98acac, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_7 virada do baiano") // cqp7: o ano seguinte do Baiano
 }
 
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn cqp7_virada_do_baiano(this: usize) -> u32
 ///
 /// [pt] { 0x42ffc0 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::advance_stage()`, a fase seguinte do Baiano: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x430050); a caixa da linha 0x1f8.
-pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_baiano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_advance_stage(this: usize) {
     cqp7_fase_seguinte(this, 0x98acac, 0x1f8, 0x430050);
 }
 
@@ -277,14 +277,14 @@ pub(crate) unsafe extern "thiscall" fn cqp7_fase_seguinte_do_baiano(this: usize)
 
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp7_virada_do_baiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP7_VIRADA_DO_BAIANO);
-    cqp7_comparar_virada("cqp7_virada_do_baiano", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_BAHIA_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_reg_bahia_start_new_season", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp7_fase_seguinte_do_baiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP7_FASE_SEGUINTE_DO_BAIANO);
-    cqp7_comparar_fase_seguinte("cqp7_fase_seguinte_do_baiano", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_reg_bahia_advance_stage", this, || o(this))
 }
 
 
@@ -347,7 +347,7 @@ pub(crate) unsafe fn cql8_tabela(this: usize, n: i16, arquivo: usize, linha: u32
 ///
 /// [pt] { 0x42fd10 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_table()`: o Baiano tem 10 clubes (divisão reserva +0x60 = [0x9cf9c0]).
 /// Fonte 0x98acac, linha 0x167.
-pub(crate) unsafe extern "thiscall" fn cql8_tabela_do_baiano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -> u32 {
     cql8_tabela(this, 0xa, 0x98acac, 0x167, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, 0, "cql_8 baiano cheio")
 }
 
@@ -379,9 +379,9 @@ pub(crate) unsafe fn cql8_comparar(nome: &str, this: usize, n: i16, g: usize, or
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cql8_tabela_do_baiano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQL8_TABELA_DO_BAIANO);
-    cql8_comparar("cql8_tabela_do_baiano", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_BAHIA_CREATE_TABLE);
+    cql8_comparar("bra_reg_bahia_create_table", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_BAHIA_STATE_CHAMPIONSHIP, || o(this))
 }
 
 
@@ -454,7 +454,7 @@ pub(crate) unsafe fn cqn7_mata_mata(this: usize, linhas: &[usize], sementes: &[u
 ///
 /// [pt] { 0x430050 } (thiscall, ret 0, bra_reg_bahia.cpp): `BraRegBahia::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98acac, linhas 0x21b (sem lista) e 0x22f (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn7_mata_mata_do_baiano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage(this: usize) {
     cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98acac, 0x21b, 0x22f, "cqn_7 baiano"); // cqn7: 1º × 4º, 2º × 3º Baiano
 }
 
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "thiscall" fn cqn7_mata_mata_do_baiano(this: usize) {
 ///
 /// [pt] { 0x4360c0 } (thiscall, ret 0, bra_reg_north.cpp): `BraRegNorth::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98af14, linhas 0x21b (sem lista) e 0x22f (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn7_mata_mata_do_norte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
     cqn7_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af14, 0x21b, 0x22f, "cqn_7 norte"); // cqn7: 1º × 4º, 2º × 3º Norte
 }
 
@@ -490,14 +490,14 @@ pub(crate) unsafe fn cqn7_comparar(nome: &str, this: usize, linhas: &[usize], or
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_baiano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN7_MATA_MATA_DO_BAIANO);
-    cqn7_comparar("cqn7_mata_mata_do_baiano", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_CREATE_SEMI_FINAL_STAGE);
+    cqn7_comparar("bra_reg_bahia_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_norte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN7_MATA_MATA_DO_NORTE);
-    cqn7_comparar("cqn7_mata_mata_do_norte", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_create_semi_final_stage_4360c0(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_BAHIA_CREATE_SEMI_FINAL_STAGE_4360C0);
+    cqn7_comparar("bra_reg_bahia_create_semi_final_stage_4360c0", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// Bahia, Gaucho, North, Northeast, Pernambuco, Santa Catarina and Paulista: at the end of the round robin, the clubs
@@ -511,16 +511,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn7_mata_mata_do_norte(this: us
 /// classificados (6) ganham o registro de classificação (rodada 0x82, peso 0x32) e os rebaixados (3) o de rebaixamento;
 /// no mata-mata (fase 0), o campeão (1) ganha o registro de campeão e o destino 5; os eliminados (2 ou -1), o registro
 /// de eliminação com o peso da rodada (0x4bf850: de 30 a 50 pela rodada do jogo) e o destino -2. Devolve 0.
-pub(crate) unsafe extern "thiscall" fn cqj9_destino_no_baiano(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
     cqj9_baiano(this, clube, situacao, fase, jogo, true).0
 }
 
 /// Comparador: como o da Série A.
-pub(crate) unsafe extern "thiscall" fn comparar_cqj9_destino_no_baiano(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_bahia_update_staff_records_for_status(this: usize, clube: usize, situacao: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
     let (n, l, dest) = cqj9_baiano(this, clube, situacao, fase, jogo, false);
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQJ9_DESTINO_NO_BAIANO)(this, clube, situacao, fase, a4, jogo, a6);
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_BAHIA_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, situacao, fase, a4, jogo, a6);
     let gravado = if l == 0 { dest } else { *((l + 0x37) as *const u8) };
-    PLACAR.registrar(r == n && gravado == dest, || format!("cqj9_destino_no_baiano({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
+    PLACAR.registrar(r == n && gravado == dest, || format!("bra_reg_bahia_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, clube, situacao as u8 as i8, fase as u8 as i8, r as i32, n as i32, gravado as i8, dest as i8));
     r
 }

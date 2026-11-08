@@ -112,18 +112,18 @@ unsafe fn cpy4_amistosos(this: usize, ensaio: bool) -> Option<(usize, u32)> {
 /// update_international_friendlies()`, pelo dia dos amistosos (0x5c2460, já em Rust). No primeiro dia do ano: as listas
 /// de nações ([+0x34f6], [0xae2350] delas) se esvaziam (0x68d080), a lista em +0x34fa (conta +0x34fe) se ordena pela
 /// reputação (0x5cc5f0) e cada data internacional (+0x34ec, 20 bytes, conta +0x34f0) ganha o ano pelo ciclo da Copa
-/// (ano − 2 múltiplo de 4, mais o deslocamento +0xb, menos 4 se passar de 3 anos à frente; 0x5cbdd0), reordenadas pela
+/// (ano − 2 múltiplo de 4, mais o deslocamento +0xb, menos 4 se pass_ball de 3 anos à frente; 0x5cbdd0), reordenadas pela
 /// data (0x5cc610). Depois, se a data de 0xdd6ec8 não passa de hoje + 12 semanas (0x54c770) e o dia não foi feito
 /// (+0x34f4), as entradas com a data de hoje + 12 semanas (bsearch e as vizinhas iguais) vão à 0x5cbdf0 e o dia fica
 /// marcado.
-unsafe extern "thiscall" fn amistosos_internacionais_do_dia(this: usize) {
+unsafe extern "thiscall" fn update_international_friendlies(this: usize) {
     cpy4_amistosos(this, false);
 }
 
 /// Comparador: no primeiro dia do ano (as listas se esvaziam, liberando) e quando há amistosos a marcar (a 0x5cbdf0
 /// cria jogos e sorteia), só a original, conferindo o plano: o dia marcado em +0x34f4. Nos outros dias, lado a lado
 /// pelo dia marcado e pelas datas estáticas.
-unsafe extern "thiscall" fn comparar_amistosos_internacionais_do_dia(this: usize) {
+unsafe extern "thiscall" fn comparar_update_international_friendlies(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpy4_w(0xae2c90) == 0 {
         return o(this);
@@ -131,13 +131,13 @@ unsafe extern "thiscall" fn comparar_amistosos_internacionais_do_dia(this: usize
     if let Some((primeira, quantas)) = cpy4_amistosos(this, true) {
         o(this);
         let dia = cpy4_w(this + 0x34f4);
-        PLACAR.registrar(dia == cpy4_w(0xae2c90), || format!("amistosos_internacionais_do_dia(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, cpy4_w(0xae2c90)));
+        PLACAR.registrar(dia == cpy4_w(0xae2c90), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, cpy4_w(0xae2c90)));
         return;
     }
     let mut reg = CPY4_ESTATICAS.to_vec();
     reg.push((this + 0x34f4, 2));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || amistosos_internacionais_do_dia(this));
-    PLACAR.registrar(igual, || format!("amistosos_internacionais_do_dia(sem amistosos) {:x?} x {:x?}", mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || update_international_friendlies(this));
+    PLACAR.registrar(igual, || format!("update_international_friendlies(sem amistosos) {:x?} x {:x?}", mo, mr));
 }
 
 /// O técnico (nulo: o humano da vez, [0xb74c26 + 0x300 × [0xb77c7a]]) e o índice dele entre os 16 humanos (id −
@@ -161,7 +161,7 @@ unsafe fn cpy4_indice(tecnico: usize) -> Option<usize> {
 /// { 0x7f6e30 } (thiscall, ret 4, scout_manager.cpp): `SCOUT_MANAGER::get_selected_list(tecnico)`, pelas telas de
 /// busca (0x804248). A lista escolhida pelo técnico humano (byte em +0x4c + índice). Sem técnico ou fora de 0..15: a
 /// original (caixa "Error", 0xff).
-unsafe extern "thiscall" fn lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
+unsafe extern "thiscall" fn get_selected_list(this: usize, tecnico: usize) -> u8 {
     let Some(i) = cpy4_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%)(this, tecnico); // caixa: só a original
     };
@@ -169,21 +169,21 @@ unsafe extern "thiscall" fn lista_escolhida_do_tecnico(this: usize, tecnico: usi
 }
 
 /// Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
-unsafe extern "thiscall" fn comparar_lista_escolhida_do_tecnico(this: usize, tecnico: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, tecnico: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%);
     if cpy4_indice(tecnico).is_none() {
         return o(this, tecnico);
     }
     let r = o(this, tecnico);
-    let n = lista_escolhida_do_tecnico(this, tecnico);
-    PLACAR.registrar(r == n, || format!("lista_escolhida_do_tecnico(tecnico {:x}) original={} rust={}", tecnico, r, n));
+    let n = get_selected_list(this, tecnico);
+    PLACAR.registrar(r == n, || format!("get_selected_list(tecnico {:x}) original={} rust={}", tecnico, r, n));
     r
 }
 
 /// { 0x7f6f20 } (thiscall, ret 8, scout_manager.cpp): `SCOUT_MANAGER::set_selected_list(lista, tecnico)`, pelas telas
 /// de busca (0x804460). Grava a lista escolhida (byte) em +0x4c + índice do técnico humano e devolve 1. Sem técnico ou
 /// fora de 0..15: a original (caixa "Error", 0).
-unsafe extern "thiscall" fn escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
     let Some(i) = cpy4_indice(tecnico) else {
         return orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%)(this, lista, tecnico); // caixa: só a original
     };
@@ -192,13 +192,13 @@ unsafe extern "thiscall" fn escolher_lista_do_tecnico(this: usize, lista: u32, t
 }
 
 /// Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
-unsafe extern "thiscall" fn comparar_escolher_lista_do_tecnico(this: usize, lista: u32, tecnico: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(%%I2%%);
     if cpy4_indice(tecnico).is_none() {
         return o(this, lista, tecnico);
     }
     let reg = [(this + 0x4c, 0x10)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, tecnico), || escolher_lista_do_tecnico(this, lista, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("escolher_lista_do_tecnico(lista {}, tecnico {:x}) original={} rust={} {:x?} x {:x?}", lista as u8, tecnico, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, tecnico), || set_selected_list(this, lista, tecnico));
+    PLACAR.registrar(igual && r == n, || format!("set_selected_list(lista {}, tecnico {:x}) original={} rust={} {:x?} x {:x?}", lista as u8, tecnico, r, n, mo, mr));
     r
 }

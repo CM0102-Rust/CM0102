@@ -10,7 +10,7 @@ use super::*;
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
 /// 0x4cb250, pelas aposentadorias 0x7a7310, pelo amistoso livre 0x5c6b70, pelos prêmios do dia das nações e pelas vagas
 /// da UEFA. Chamada a cada jogador: sem contador.
-pub(crate) unsafe extern "C" fn linha_da_nacao(nacao: usize) -> u8 {
+pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
     for k in 0..0x23usize {
         if read_usize(G_LEAGUE_TABLE + 72 * k) == nacao {
             return k as u8; // cpu1: a linha da nacao dada
@@ -19,10 +19,10 @@ pub(crate) unsafe extern "C" fn linha_da_nacao(nacao: usize) -> u8 {
     4
 }
 
-pub(crate) unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_LINHA_DA_NACAO)(nacao);
-    let n = linha_da_nacao(nacao);
-    PLACAR.registrar(r == n, || format!("linha_da_nacao(nação {:x}) original={} rust={}", nacao, r, n));
+pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_nation(nacao: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_NATION)(nacao);
+    let n = key_nation_index_of_nation(nacao);
+    PLACAR.registrar(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nacao, r, n));
     r
 }
 
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "C" fn comparar_linha_da_nacao(nacao: usize) -> u8 {
 /// 0. Senão (a original chama 0x53b900 de novo): seleção, 1; a primeira linha cujo continente (+4) é o da nação do clube
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
-pub(crate) unsafe extern "C" fn linha_da_nacao_do_clube(clube: usize) -> u8 {
+pub(crate) unsafe extern "C" fn key_nation_index_of_club(clube: usize) -> u8 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if selecao(clube) == 0 {
         let nacao = read_usize(clube + club::NATION);
@@ -70,14 +70,14 @@ pub(crate) unsafe fn cpu1_caixa(clube: usize) -> bool {
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao)
 }
 
-pub(crate) unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -> u8 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_LINHA_DA_NACAO_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_club(clube: usize) -> u8 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_CLUB);
     if cpu1_caixa(clube) {
         return o(clube);
     }
     let r = o(clube);
-    let n = linha_da_nacao_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("linha_da_nacao_do_clube(clube {:x}) original={} rust={}", clube, r, n));
+    let n = key_nation_index_of_club(clube);
+    PLACAR.registrar(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "C" fn comparar_linha_da_nacao_do_clube(clube: usize) -
 /// (+0x15, sem sinal) abaixo de 60, e o dia de hoje ([0xae2c90], com sinal) antes do dia de início, o ano anterior. A
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
-pub(crate) unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
+pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(clube: usize) -> u16 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let linha: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let ano = *(G_CURRENT_DATE_YEAR as *const u16);
@@ -104,14 +104,14 @@ pub(crate) unsafe extern "C" fn ano_da_temporada_do_clube(clube: usize) -> u16 {
     ano
 }
 
-pub(crate) unsafe extern "C" fn comparar_ano_da_temporada_do_clube(clube: usize) -> u16 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u16>(IDX_ANO_DA_TEMPORADA_DO_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_key_nation_get_club_season_year(clube: usize) -> u16 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u16>(IDX_KEY_NATION_GET_CLUB_SEASON_YEAR);
     if clube != 0 && cpu1_caixa(clube) {
         return o(clube);
     }
     let r = o(clube);
-    let n = ano_da_temporada_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("ano_da_temporada_do_clube(clube {:x}) original={} rust={}", clube, r, n));
+    let n = key_nation_get_club_season_year(clube);
+    PLACAR.registrar(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", clube, r, n));
     r
 }
 
@@ -144,7 +144,7 @@ pub(crate) unsafe fn cpu2_data(dst: usize, dia: i16, ano: u16) {
 /// datas vão para `início` e `fim` quando não nulos. Pelo clube na temporada 0x547770, pela forma física 0x62a920,
 /// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. Chamada a cada
 /// jogador: sem contador.
-pub(crate) unsafe extern "C" fn clube_na_temporada(clube: usize, inicio: usize, fim: usize) -> u32 {
+pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
     let mut linha = 0xb63e38usize;
     let mut c: i16 = 0x28;
     let nacao = read_usize(clube + club::NATION);
@@ -189,10 +189,10 @@ pub(crate) unsafe extern "C" fn clube_na_temporada(clube: usize, inicio: usize, 
     1 // cpu2: entre o inicio e o fim do ano
 }
 
-pub(crate) unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio: usize, fim: usize) -> u32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_CLUBE_NA_TEMPORADA)(clube, inicio, fim);
+pub(crate) unsafe extern "C" fn comparar_key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_KEY_NATION_CLUB_IN_SEASON)(clube, inicio, fim);
     let (mut i, mut f) = ([0u8; 8], [0u8; 8]);
-    let n = clube_na_temporada(
+    let n = key_nation_club_in_season(
         clube,
         if inicio != 0 { i.as_mut_ptr() as usize } else { 0 },
         if fim != 0 { f.as_mut_ptr() as usize } else { 0 },
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio
     let (oi, of) = (ler(inicio), ler(fim));
     let ok = r == n && (inicio == 0 || oi == i) && (fim == 0 || of == f);
     PLACAR.registrar(ok, || {
-        format!("clube_na_temporada(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
+        format!("key_nation_club_in_season(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", clube, r, oi, of, n, i, f)
     });
     r
 }
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "C" fn comparar_clube_na_temporada(clube: usize, inicio
 ///
 /// [pt] { 0x6695c0 } (cdecl, key_nation.cpp): `key_nation_get_main_continent()`: o continente (+0x71) da nação do humano
 /// ([0xae2d08]); sem ela ou sem continente, o da primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
-pub(crate) unsafe extern "C" fn continente_principal() -> usize {
+pub(crate) unsafe extern "C" fn key_nation_get_main_continent() -> usize {
     let h = read_usize(G_MAIN_NATION);
     if h != 0 && read_usize(h + 0x71) != 0 {
         return read_usize(h + 0x71);
@@ -225,10 +225,10 @@ pub(crate) unsafe extern "C" fn continente_principal() -> usize {
     0
 }
 
-pub(crate) unsafe extern "C" fn comparar_continente_principal() -> usize {
-    let r = orig::<unsafe extern "C" fn() -> usize>(IDX_CONTINENTE_PRINCIPAL)();
-    let n = continente_principal();
-    PLACAR.registrar(r == n, || format!("continente_principal() original={:x} rust={:x}", r, n));
+pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_continent() -> usize {
+    let r = orig::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_CONTINENT)();
+    let n = key_nation_get_main_continent();
+    PLACAR.registrar(r == n, || format!("key_nation_get_main_continent() original={:x} rust={:x}", r, n));
     r
 }
 
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "C" fn comparar_continente_principal() -> usize {
 ///
 /// [pt] { 0x669600 } (cdecl, key_nation.cpp): `key_nation_get_main_nation()`: a nação do humano ([0xae2d08]); sem ela, a
 /// primeira nação da tabela com o bit 2 de +0x11c, ou 0. Pelo menu do jogo.
-pub(crate) unsafe extern "C" fn nacao_principal() -> usize {
+pub(crate) unsafe extern "C" fn key_nation_get_main_nation() -> usize {
     let h = read_usize(G_MAIN_NATION);
     if h != 0 {
         return h;
@@ -251,10 +251,10 @@ pub(crate) unsafe extern "C" fn nacao_principal() -> usize {
     0
 }
 
-pub(crate) unsafe extern "C" fn comparar_nacao_principal() -> usize {
-    let r = orig::<unsafe extern "C" fn() -> usize>(IDX_NACAO_PRINCIPAL)();
-    let n = nacao_principal();
-    PLACAR.registrar(r == n, || format!("nacao_principal() original={:x} rust={:x}", r, n));
+pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
+    let r = orig::<unsafe extern "C" fn() -> usize>(IDX_KEY_NATION_GET_MAIN_NATION)();
+    let n = key_nation_get_main_nation();
+    PLACAR.registrar(r == n, || format!("key_nation_get_main_nation() original={:x} rust={:x}", r, n));
     r
 }
 
@@ -276,7 +276,7 @@ pub(crate) const CPT3_INTERNACIONAIS: [usize; 10] = [KEY_CLUB_COMP_FOOTBALL_TOUR
 ///
 /// [pt] { 0x669a10 } (cdecl, key_nation.cpp): `key_nation_is_world_cup_comp(competição)`: o id (+0) é a Copa do Mundo ou uma
 /// das eliminatórias, 1; senão 0. Competição nula: a caixa "Error" (linha 0x3d7) e 0.
-pub(crate) unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
+pub(crate) unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32 {
     if comp == 0 {
         aviso_em(0x9eaff4, 0x3d7);
         return 0;
@@ -285,14 +285,14 @@ pub(crate) unsafe extern "C" fn e_copa_do_mundo(comp: usize) -> u32 {
     CPT3_COPA.iter().any(|&g| read_usize(g) == id) as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_E_COPA_DO_MUNDO);
+pub(crate) unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_KEY_NATION_IS_WORLD_CUP_COMP);
     if comp == 0 {
         return o(comp);
     }
     let r = o(comp);
-    let n = e_copa_do_mundo(comp);
-    PLACAR.registrar(r == n, || format!("e_copa_do_mundo(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    let n = key_nation_is_world_cup_comp(comp);
+    PLACAR.registrar(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -301,7 +301,7 @@ pub(crate) unsafe extern "C" fn comparar_e_copa_do_mundo(comp: usize) -> u32 {
 ///
 /// [pt] { 0x669ae0 } (cdecl, key_nation.cpp): `key_nation_is_international_comp(competição)`: o id é um dos dez torneios de
 /// seleções fora da Copa do Mundo, 1; senão 0. Competição nula: a caixa (linha 0x3ef) e 0.
-pub(crate) unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
+pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) -> u32 {
     if comp == 0 {
         aviso_em(0x9eaff4, 0x3ef);
         return 0;
@@ -310,14 +310,14 @@ pub(crate) unsafe extern "C" fn e_torneio_internacional(comp: usize) -> u32 {
     CPT3_INTERNACIONAIS.iter().any(|&g| read_usize(g) == id) as u32
 }
 
-pub(crate) unsafe extern "C" fn comparar_e_torneio_internacional(comp: usize) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_E_TORNEIO_INTERNACIONAL);
+pub(crate) unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize) -> u32>(IDX_KEY_NATION_IS_INTERNATIONAL_COMP);
     if comp == 0 {
         return o(comp);
     }
     let r = o(comp);
-    let n = e_torneio_internacional(comp);
-    PLACAR.registrar(r == n, || format!("e_torneio_internacional(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    let n = key_nation_is_international_comp(comp);
+    PLACAR.registrar(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "C" fn comparar_e_torneio_internacional(comp: usize) ->
 /// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
 /// conferir a competição nula (o caso de erro nunca chega à caixa). Chamada a cada partida: sem contador.
-pub(crate) unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
+pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {
         let linha = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nacao); // cpt4: a busca da nacao
@@ -361,9 +361,9 @@ pub(crate) unsafe extern "C" fn indice_da_nacao_chave(comp: usize) -> u8 {
     3
 }
 
-pub(crate) unsafe extern "C" fn comparar_indice_da_nacao_chave(comp: usize) -> u8 {
-    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_INDICE_DA_NACAO_CHAVE)(comp);
-    let n = indice_da_nacao_chave(comp);
-    PLACAR.registrar(r == n, || format!("indice_da_nacao_chave(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+pub(crate) unsafe extern "C" fn comparar_key_nation_index_of_comp(comp: usize) -> u8 {
+    let r = orig::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_COMP)(comp);
+    let n = key_nation_index_of_comp(comp);
+    PLACAR.registrar(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }

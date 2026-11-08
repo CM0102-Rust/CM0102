@@ -3,7 +3,7 @@
 # - a serie final com o segundo ao setimo da tabela (o primeiro fora, o setimo dentro): outros jogos na serie final;
 # - a serie final com os seis na ordem inversa: outra ordem da tabela da fase e outros jogos por rodada;
 # - a serie final com o setimo no lugar do sexto: outro clube na serie final.
-# (As mutacoes na grande final escaparam na prova do agente: a final e montada no fim de maio e jogada depois de
+# (As mutacoes na grande final escaparam na prova do agente: a final e montada no fim de maio e play depois de
 # 2002-06-01; trocadas, 06/11.)
 MUTACOES = [
     ('cqr3_serie_final_sem_o_primeiro',

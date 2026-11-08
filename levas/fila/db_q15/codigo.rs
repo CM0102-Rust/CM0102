@@ -22,7 +22,7 @@ unsafe fn ocupar_casa_do_clube(clube: usize, d: usize, n: usize, pessoa: usize) 
 /// com o +0xcf já gravado); 13 +0xd3 e o elenco (sem elenco fica 6); 15 +0x19f e o elenco (sem elenco
 /// fica 8); 0 nenhuma; 14 e fora: 0. Com `gravar`: clube e cargo na pessoa (+0x24/+0x28 seleção,
 /// +0x39/+0x3d clube). Devolve 1. Clube ou pessoa nulos: a original (caixa "Error" e 0).
-unsafe extern "C" fn incluir_pessoa_no_clube(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
+unsafe extern "C" fn database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
     if clube == 0 || pessoa == 0 {
         return orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(%%I0%%)(clube, pessoa, cargo, data, gravar, reduzir);
     }
@@ -109,7 +109,7 @@ unsafe extern "C" fn incluir_pessoa_no_clube(clube: usize, pessoa: usize, cargo:
     1
 }
 
-unsafe extern "C" fn comparar_incluir_pessoa_no_clube(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
+unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(%%I0%%);
     if clube == 0 || pessoa == 0 {
         return o(clube, pessoa, cargo, data, gravar, reduzir); // caixa: só a original
@@ -117,8 +117,8 @@ unsafe extern "C" fn comparar_incluir_pessoa_no_clube(clube: usize, pessoa: usiz
     // grava só no clube (581 bytes) e na pessoa (110); 0x600a50 só consulta
     let regioes = [(clube, 0x245), (pessoa, 0x6e)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, cargo, data, gravar, reduzir),
-        || incluir_pessoa_no_clube(clube, pessoa, cargo, data, gravar, reduzir));
-    PLACAR.registrar(igual && r == n, || format!("incluir_pessoa_no_clube({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
+        || database_add_staff_to_club(clube, pessoa, cargo, data, gravar, reduzir));
+    PLACAR.registrar(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         clube, pessoa, cargo as u8, data, gravar, reduzir, r, n, mo, mr));
     r
 }

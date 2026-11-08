@@ -24,7 +24,7 @@ fn cqg10_baixa(d: usize, a: i16) -> u32 {
 /// se marcado, é cancelado (0x5c8260 com 0). Amistoso desta competição com a lista de vagas (+0x34cc): a vaga do jogo
 /// (0x5c6740) fica livre (+0x10 = 0, +0x18 = 0). Jogo sem rodada (+0x43 = 0xff): o de seleção vai pela 0x5cb9e0, o de
 /// clube só sai do calendário (0x5abc30).
-unsafe extern "thiscall" fn cqg10_amistoso_cancelado(this: usize, jogo: usize, quem: usize) {
+unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize, jogo: usize, quem: usize) {
     let comp = cqg10_d(jogo + 0x14);
     if comp == cqg10_d(this + 4) {
         crate::comparacao::ramo("cqg_10 noticia do amistoso cancelado");
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn cqg10_amistoso_cancelado(this: usize, jogo: usize, q
 /// Comparador da 0x5c6570: a original entrega notícias, cancela torneios e tira jogos do calendário (libera): só ela
 /// roda. Antes, a cópia acha a vaga do amistoso (0x5c6740, só leitura); depois a vaga tem de estar livre (+0x10 = 0 e
 /// +0x18 = 0).
-unsafe extern "thiscall" fn comparar_cqg10_amistoso_cancelado(this: usize, jogo: usize, quem: usize) {
+unsafe extern "thiscall" fn comparar_on_friendly_fixture_cancelled(this: usize, jogo: usize, quem: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let mut vaga = 0usize;
     if cqg10_d(jogo + 0x14) == cqg10_d(this + 4) && cqg10_d(this + 0x34cc) != 0 {
@@ -98,14 +98,14 @@ unsafe extern "thiscall" fn comparar_cqg10_amistoso_cancelado(this: usize, jogo:
     }
     o(this, jogo, quem);
     let livre = vaga == 0 || (cqg10_d(vaga + 0x10) == 0 && cqg10_b(vaga + 0x18) == 0);
-    PLACAR.registrar(livre, || format!("cqg10_amistoso_cancelado(jogo {:#x}) a vaga {:#x} não ficou livre", jogo, vaga));
+    PLACAR.registrar(livre, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", jogo, vaga));
 }
 
 /// { 0x5cb9e0 } (thiscall, ret 4, friendly.cpp, quadro SEH da lista local e das datas): o amistoso de seleção cancelado
 /// (0x5c6570). Pela marca do jogo (+0x4d & 0x300): 0x100 a seleção é o mandante (+0x1c), 0x200 a seleção principal da
 /// nação dele (0x53b4f0); com id válido, o jogo dela na véspera (0x549ef0, 0x54c8e0 com 1, 0x417c10; 0x5acbe0 com a
 /// véspera nas duas pontas) sai do calendário (0x5abc30). Depois o próprio jogo sai.
-unsafe extern "thiscall" fn cqg10_jogo_da_selecao_cancelado(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: usize, jogo: usize) {
     let _ = this;
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn cqg10_jogo_da_selecao_cancelado(this: usize, jogo: u
 
 /// Comparador da 0x5cb9e0: a original tira jogos do calendário (libera): só ela roda (ponytail: a cópia não tem o que
 /// conferir sem refazer a busca no calendário já mudado; a contagem do ramo prova no modo Rust).
-unsafe extern "thiscall" fn comparar_cqg10_jogo_da_selecao_cancelado(this: usize, jogo: usize) {
+unsafe extern "thiscall" fn comparar_friendly_cancel_national_fixture(this: usize, jogo: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, jogo);
 }
 
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn comparar_cqg10_jogo_da_selecao_cancelado(this: usize
 /// +0x42 = 0xff, +0x14 = a competição de amistosos, +0 = [0x9cf668]); os outros saem do calendário (0x5abc30) e, com
 /// rodada, voltam como amistosos (0x5ab230). A competição é destruída (virtual +0 com 1) e +0x65 = 0. A vaga da tabela
 /// de competições (+0xaf + o byte +0x64) e o dono (+0) zeram.
-unsafe extern "thiscall" fn cqg10_torneio_cancelado(this: usize, torneio: usize, sem_o_dono: u32) {
+unsafe extern "thiscall" fn cancel_tournament(this: usize, torneio: usize, sem_o_dono: u32) {
     if torneio == 0 {
         aviso_em(0x9cd0a0, 0x10ad);
         return;
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn cqg10_torneio_cancelado(this: usize, torneio: usize,
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let soltar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    let tirar_da_lista: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x68d1f0usize);
+    let manager_manager_remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x68d1f0usize);
     // 0x54c8e0 / 0x54c5b0: push n; push &saída; mov ecx, data -> thiscall, ret 8; 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx
     // (ou mov ecx, lista) -> thiscall; 0x68d1f0: push item; mov ecx, [this+0x34d0] -> thiscall, ret 4
     let mut d7 = [0u32; 2];
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn cqg10_torneio_cancelado(this: usize, torneio: usize,
         let mut item = proximo(cqg10_d(this + 0x34d0));
         while item != 0 {
             if torneio == cqg10_d(item) {
-                tirar_da_lista(cqg10_d(this + 0x34d0), item);
+                manager_manager_remove(cqg10_d(this + 0x34d0), item);
                 let p = cqg10_d(this + 0x34d0);
                 core::ptr::write_unaligned((p + 0xa) as *mut usize, cqg10_d(p + 2));
             }
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn cqg10_torneio_cancelado(this: usize, torneio: usize,
 /// Comparador da 0x5c8260: a original entrega notícias, tira jogos do calendário e destrói a competição: só ela roda,
 /// com o plano conferido depois: o dono (+0) e a competição (+0x65) zerados, a vaga da tabela de competições zerada e
 /// o torneio fora da lista dos pendentes.
-unsafe extern "thiscall" fn comparar_cqg10_torneio_cancelado(this: usize, torneio: usize, sem_o_dono: u32) {
+unsafe extern "thiscall" fn comparar_cancel_tournament(this: usize, torneio: usize, sem_o_dono: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%);
     if torneio == 0 {
         o(this, torneio, sem_o_dono);
@@ -296,20 +296,20 @@ unsafe extern "thiscall" fn comparar_cqg10_torneio_cancelado(this: usize, tornei
     let k = (cqg10_w(this + 0xaf) as i32 + cqg10_b(torneio + 0x64) as i8 as i32) as usize;
     let vaga = cqg10_d(0xadadfc).wrapping_add(k.wrapping_mul(4));
     o(this, torneio, sem_o_dono);
-    let mut na_lista = false;
+    let mut in_list = false;
     let p = cqg10_d(this + 0x34d0);
     if p != 0 {
         let mut no = cqg10_d(p + 2);
         let mut n = 0;
         while no != 0 && n < 0x10000 {
             if cqg10_d(cqg10_d(no)) == torneio {
-                na_lista = true;
+                in_list = true;
             }
             no = cqg10_d(no + 6);
             n += 1;
         }
     }
-    let ok = cqg10_d(torneio) == 0 && cqg10_d(torneio + 0x65) == 0 && cqg10_d(vaga) == 0 && !na_lista;
-    PLACAR.registrar(ok, || format!("cqg10_torneio_cancelado(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
-        torneio, cqg10_d(torneio), cqg10_d(torneio + 0x65), cqg10_d(vaga), na_lista));
+    let ok = cqg10_d(torneio) == 0 && cqg10_d(torneio + 0x65) == 0 && cqg10_d(vaga) == 0 && !in_list;
+    PLACAR.registrar(ok, || format!("cancel_tournament(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
+        torneio, cqg10_d(torneio), cqg10_d(torneio + 0x65), cqg10_d(vaga), in_list));
 }

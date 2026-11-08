@@ -53,7 +53,7 @@ const CQF4_SORTEIO_2002: [usize; 32] = [
 ///    nações da Copa ([+0x14], 6 bytes: +0 o clube, +4 a situação) recebe os clubes com a situação 6, a França (detentora)
 ///    2, a Coreia e o Japão (sedes) 1; +0x36 (quantas) = 32.
 /// Devolve a lista.
-unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
+unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> usize {
 /// Lado a lado: a original e a cópia (sem contar os sorteios) a partir do mesmo estado do sorteador, das vagas
 /// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
 /// listas alocadas têm de ser iguais byte a byte (a da cópia é liberada, 0x9452ca).
-unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usize {
+unsafe extern "thiscall" fn comparar_draw_groups(this: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(%%I0%%);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usiz
     if cqf4_w(this + 0x40) == 0x7d2 && cqf4_d(this + 0x14) != 0 {
         reg.push((cqf4_d(this + 0x14), 0xc0));
     }
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| mundial_sortear_grupos(this)));
+    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| draw_groups(this)));
     let mesma = if a != 0 && b != 0 {
         core::slice::from_raw_parts(a as *const u8, 0xa0) == core::slice::from_raw_parts(b as *const u8, 0xa0)
     } else {
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usiz
     if b != 0 {
         soltar(b);
     }
-    PLACAR.registrar(igual && mesma, || format!("mundial_sortear_grupos: memória igual={} lista igual={}", igual, mesma));
+    PLACAR.registrar(igual && mesma, || format!("draw_groups: memória igual={} lista igual={}", igual, mesma));
     a
 }
 
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_mundial_sortear_grupos(this: usize) -> usiz
 /// a lista liberada (0x9452ca push; add esp -> cdecl), as posições previstas (método +0x5c, 0x92f680) e os cartões
 /// zerados no órgão da competição (0x7e9180 push 0; ecx = [[0xae28f0] + 4 × (char)+0x50] -> thiscall, ret 4).
 /// Num erro a lista não é liberada (como a original).
-unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
+unsafe extern "thiscall" fn run_group_draw(this: usize) {
     let sortear: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x92e940usize);
     let grupo_um: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x92d0f0usize);
     let criar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x6835c0usize);
@@ -194,12 +194,12 @@ unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
 
 /// Só a original (o sorteio, os jogos, as notícias e as previsões não rodam duas vezes), conferindo o que ela garante:
 /// terminada (+0x45 = 1), as sete fases dos grupos 2..8 existem e a fase atual (+0x30) é a última delas (6).
-unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
+unsafe extern "thiscall" fn comparar_run_group_draw(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
     if cqf4_d(this + 0x45) == 1 {
         let fases = cqf4_d(this + 0xc);
         let ok = fases != 0 && (0..7).all(|g| cqf4_d(fases + g * 4) != 0) && cqf4_d(this + 0x30) == 6;
-        PLACAR.registrar(ok, || format!("mundial_sorteio_dos_grupos: fases dos grupos ou +0x30 ({}) fora do esperado", cqf4_d(this + 0x30) as i32));
+        PLACAR.registrar(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", cqf4_d(this + 0x30) as i32));
     }
 }
 
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn comparar_mundial_sorteio_dos_grupos(this: usize) {
 /// thiscall, ret 0); na data do sorteio (+0xb6, +0xb8: 27/12 do ano anterior), com `completo` e sem tabela ainda (+0xb1
 /// = 0), o sorteio (0x92e7f0 mov ecx -> thiscall, ret 0). Depois o dia de liga (0x6847c0 push completo; push hoje; mov
 /// ecx -> thiscall, ret 8), cuja devolução (eax) ela repassa. A data: +0 o dia do ano, +2 o ano (sem sinal).
-unsafe extern "thiscall" fn mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let semear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x92f230usize);
     let sortear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x92e7f0usize);
     let liga: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x6847c0usize);
@@ -228,14 +228,14 @@ unsafe extern "thiscall" fn mundial_dia(this: usize, hoje: usize, completo: u32)
 
 /// Só a original (a semeadura, o sorteio e o dia da liga não rodam duas vezes), conferindo o que ela garante: no dia do
 /// sorteio (a condição da cópia), a Copa sai com a tabela do grupo 1 (+0xb1) e +0x45 = 1.
-unsafe extern "thiscall" fn comparar_mundial_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_world_cup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(%%I2%%);
     let ano = core::ptr::read_unaligned((hoje + 2) as *const u16) as i32;
     let dia = core::ptr::read_unaligned(hoje as *const u16);
     let sorteia = cqf4_w(this + 0xb6) as u16 == dia && cqf4_w(this + 0xb8) as i32 + cqf4_w(this + 0x40) as i32 == ano && completo != 0 && cqf4_d(this + 0xb1) == 0;
     let r = o(this, hoje, completo);
     if sorteia {
-        PLACAR.registrar(cqf4_d(this + 0xb1) != 0 && cqf4_d(this + 0x45) == 1, || format!("mundial_dia: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", cqf4_d(this + 0xb1), cqf4_d(this + 0x45)));
+        PLACAR.registrar(cqf4_d(this + 0xb1) != 0 && cqf4_d(this + 0x45) == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", cqf4_d(this + 0xb1), cqf4_d(this + 0x45)));
     }
     r
 }

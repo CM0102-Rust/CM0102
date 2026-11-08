@@ -1,5 +1,5 @@
 # Mutacoes (cpy_3), na reparticao da verba (0x83b6e0, 17425 chamadas ate 2002-06-01 na cobertura de 17/10, pela
-# atualizacao da lista do clube 0x83a730). A verba da vaga de titular aberta dividida por abertas x 3 em vez de x 2 muda
+# atualizacao da lista do clube 0x83a730). A verba da vaga de titular aberta tackle por abertas x 3 em vez de x 2 muda
 # o +7 da vaga, que a busca do alvo (0x83f3a0) usa como teto do preco: outros alvos e outros lances. Sem a reducao pela
 # sobra, a vaga leva mais verba e a busca acha alvos mais caros. Sem preencher a vaga (0x83f3a0), o clube do computador
 # fica sem alvo nela: os lances e as transferencias da carreira mudam.

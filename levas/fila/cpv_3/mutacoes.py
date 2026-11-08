@@ -1,4 +1,4 @@
-# Mutacoes (com o ramo de cada uma). Todas nas ofertas em espera no fechamento da janela (0x8c4e10, 37 chamadas ate
+# Mutacoes (com o ramo de cada uma). Todas nas ofertas em espera no match_wrap_up da janela (0x8c4e10, 37 chamadas ate
 # 2002-06-01 na cobertura de 17/10: uma por janela que fecha); as noticias so vao as caixas dos humanos. Sem a
 # retirada, a oferta do computador pela nacao que fechou a janela continua viva (sai depois ou fecha a transferencia).
 # Com o status 1 (e nao 3), a oferta reagendada volta pelo outro caminho da fila. De volta em 3 dias (e nao no dia

@@ -4,24 +4,24 @@
 /// dos jogos salvos: 1 se o contêiner tem o id 0x16 (`.sav`, 0x9331c0), senão 2. A original só
 /// acerta `ax`: os 16 bits altos de `eax` ficam os da resposta do id, como aqui. Caminho nulo é o
 /// erro de Setup.cpp 0x3a1b (caixa "Error"): a cópia chama a original.
-unsafe extern "C" fn filtro_do_jogo_salvo(caminho: usize) -> u32 {
+unsafe extern "C" fn check_saved_game_file(caminho: usize) -> u32 {
     if caminho == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
     }
-    let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
-    let id = id_do_conteiner(caminho);
+    let zget_archive_id: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
+    let id = zget_archive_id(caminho);
     (id & 0xffff0000) | if id != 0x16 { 2 } else { 1 }
 }
 
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
-unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
+unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize) -> u32>(%%I0%%)(caminho);
     if caminho == 0 {
         return r;
     }
-    let n = filtro_do_jogo_salvo(caminho);
-    PLACAR.registrar(r == n, || format!("filtro_do_jogo_salvo {:#x} x {:#x}", r, n));
+    let n = check_saved_game_file(caminho);
+    PLACAR.registrar(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
     r
 }
 
@@ -29,14 +29,14 @@ unsafe extern "C" fn comparar_filtro_do_jogo_salvo(caminho: usize) -> u32 {
 /// do início rápido: 1 se o contêiner tem o id 0x17 (`.qst`) e a versão gravada é a do exe
 /// (0x838eb0), senão 2. Os 16 bits altos de `eax` são os da última chamada (o id, ou a versão).
 /// Caminho nulo: erro de Setup.cpp 0x3a6d, a cópia chama a original.
-unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
+unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
     if caminho == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho);
     }
-    let id_do_conteiner: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
+    let zget_archive_id: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
     let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x838eb0usize);
     crate::comparacao::ramo("save filtro do inicio rapido");
-    let id = id_do_conteiner(caminho);
+    let id = zget_archive_id(caminho);
     if id != 0x17 {
         return (id & 0xffff0000) | 2;
     }
@@ -47,7 +47,7 @@ unsafe extern "C" fn filtro_do_inicio_rapido(caminho: usize) -> u32 {
 // ponytail: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
-unsafe extern "C" fn comparar_filtro_do_inicio_rapido(caminho: usize) -> u32 {
+unsafe extern "C" fn comparar_check_quick_start_file(caminho: usize) -> u32 {
     orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%)(caminho)
 }
 
@@ -79,7 +79,7 @@ unsafe fn erro_de_carga_do_setup(linha: u32, motivo: usize) {
 /// Error" (Setup.cpp 0x3a36, 0x3a3d, 0x3a48, 0x3a55) e 0. Como a original, quando dá certo o item
 /// NÃO é fechado (o ZFILE e o arquivo ficam abertos). O quadro SEH da original só protege a data
 /// local (0x54a110, sem destrutor), que cai dentro do resumo (+0xf64) e é sobrescrita pela leitura.
-unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
+unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 {
     let data_padrao: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
@@ -120,6 +120,6 @@ unsafe extern "C" fn versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
 // ponytail: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
-unsafe extern "C" fn comparar_versao_do_jogo_salvo_valida(caminho: usize) -> u32 {
+unsafe extern "C" fn comparar_valid_saved_game_version(caminho: usize) -> u32 {
     orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(caminho)
 }

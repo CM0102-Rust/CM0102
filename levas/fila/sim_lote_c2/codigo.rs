@@ -9,7 +9,7 @@ unsafe fn copiar_data_do_recorde(destino: usize, origem: usize) {
 
 /// { 0x448490 } (thiscall, ret 4, club_records.cpp): copia o recordista (0x18 bytes) de `origem`:
 /// quatro palavras duplas de identificação (+0..+0xc) e a data em +0x10. Devolve `this`.
-unsafe extern "thiscall" fn copiar_recordista(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn record_holder_assign(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
     d(0); // identificação
     d(4);
@@ -22,7 +22,7 @@ unsafe extern "thiscall" fn copiar_recordista(this: usize, origem: usize) -> usi
 /// { 0x448110 } (thiscall, ret 4, club_records.cpp): copia o registro de partida (0x1f bytes) de
 /// `origem`: a data em +0, depois +8 (dupla), +0xc e +0xe (palavras), +0x10 (byte), +0x11 e +0x15
 /// (duplas), +0x19 e +0x1a (bytes) e +0x1b (dupla). Devolve `this`.
-unsafe extern "thiscall" fn copiar_registro_de_partida(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn match_record_assign(this: usize, origem: usize) -> usize {
     let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((origem + o) as *const u32));
     let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((origem + o) as *const u16));
     let b = |o: usize| *((this + o) as *mut u8) = *((origem + o) as *const u8);
@@ -41,30 +41,30 @@ unsafe extern "thiscall" fn copiar_registro_de_partida(this: usize, origem: usiz
 
 /// { 0x448170 } (thiscall, ret 4, club_records.cpp): copia o registro de sequência (0x14 bytes) de
 /// `origem`: o número de jogos (+0) e as datas de início (+4) e fim (+0xc). Devolve `this`.
-unsafe extern "thiscall" fn copiar_registro_de_sequencia(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn run_record_assign(this: usize, origem: usize) -> usize {
     *(this as *mut u32) = *(origem as *const u32); // jogos
     copiar_data_do_recorde(this + 4, origem + 4);
     copiar_data_do_recorde(this + 0xc, origem + 0xc);
     this
 }
 
-unsafe extern "thiscall" fn comparar_copiar_recordista(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn comparar_record_holder_assign(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I0%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x18)], || o(this, origem), || copiar_recordista(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_recordista {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x18)], || o(this, origem), || record_holder_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("record_holder_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_copiar_registro_de_partida(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn comparar_match_record_assign(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1f)], || o(this, origem), || copiar_registro_de_partida(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_registro_de_partida {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x1f)], || o(this, origem), || match_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("match_record_assign {:x?} x {:x?}", mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_copiar_registro_de_sequencia(this: usize, origem: usize) -> usize {
+unsafe extern "thiscall" fn comparar_run_record_assign(this: usize, origem: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this, origem), || copiar_registro_de_sequencia(this, origem));
-    PLACAR.registrar(igual && r == n, || format!("copiar_registro_de_sequencia {:x?} x {:x?}", mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x14)], || o(this, origem), || run_record_assign(this, origem));
+    PLACAR.registrar(igual && r == n, || format!("run_record_assign {:x?} x {:x?}", mo, mr));
     r
 }

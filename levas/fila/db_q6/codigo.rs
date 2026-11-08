@@ -3,15 +3,15 @@
 /// { 0x544600 } (cdecl, Database.cpp): 1 se o vínculo (0x4cf5f0) da `pessoa` com o `clube` está na
 /// lista de transferências a pedido (vínculo +0x4e, bit 8). Sem clube, o do contrato (0x4cf5a0,
 /// guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
-unsafe extern "C" fn pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+unsafe extern "C" fn staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let vinculo: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     if pessoa == 0 {
         return 0;
     }
     let mut clube = clube;
     if clube == 0 {
-        let c = contrato_de(*(0xae1050 as *const usize), pessoa);
+        let c = contract_of(*(0xae1050 as *const usize), pessoa);
         *(0xae1080 as *mut usize) = c;
         if c == 0 {
             return 0;
@@ -28,7 +28,7 @@ unsafe extern "C" fn pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32
 
 /// { 0x544380 } (cdecl, Database.cpp): a nota de 1 a 20 (`nota_do_atributo`) de 2 × `valor` (byte com
 /// sinal) + habilidade atual (+5) do `jogador`. Termina no `_ftol` (eax inteiro, 1..20).
-unsafe extern "C" fn nota_relativa_do_atributo(jogador: usize, valor: u32) -> u32 {
+unsafe extern "C" fn player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let habilidade = core::ptr::read_unaligned((jogador + 5) as *const i16) as i32;
     nota_do_atributo((habilidade + 2 * (valor as u8 as i8 as i32)) as f64) as u32
 }
@@ -38,7 +38,7 @@ unsafe extern "C" fn nota_relativa_do_atributo(jogador: usize, valor: u32) -> u3
 /// seleções (id ≥ [0xae235c] − 2 × [0xae2350]), nação Espanha, Noruega, [0x9cf360], Brasil ou
 /// Argentina ou continente (+0x71) [0x9cfa18] ou [0x9cfa08]; nos demais, nação Espanha, Alemanha ou
 /// Portugal. Clube nulo: caixa "Error" e 0 (a original).
-unsafe extern "C" fn clube_pode_ter_reservas(clube: usize) -> u32 {
+unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) -> u32 {
     if clube == 0 {
         return orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%)(clube);
     }
@@ -73,30 +73,30 @@ unsafe extern "C" fn clube_pode_ter_reservas(clube: usize) -> u32 {
     1 // pode
 }
 
-unsafe extern "C" fn comparar_pessoa_listada_a_pedido(pessoa: usize, clube: usize) -> u32 {
+unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
     // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
     let o = orig::<unsafe extern "C" fn(usize, usize) -> u32>(%%I0%%);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae1080, 4)], || o(pessoa, clube),
-        || pessoa_listada_a_pedido(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("pessoa_listada_a_pedido({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
+        || staff_is_listed_by_request(pessoa, clube));
+    PLACAR.registrar(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
     r
 }
 
-unsafe extern "C" fn comparar_nota_relativa_do_atributo(jogador: usize, valor: u32) -> u32 {
+unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
     let r = orig::<unsafe extern "C" fn(usize, u32) -> u32>(%%I1%%)(jogador, valor);
-    let n = nota_relativa_do_atributo(jogador, valor);
-    PLACAR.registrar(r == n, || format!("nota_relativa_do_atributo({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
+    let n = player_attribute_rating(jogador, valor);
+    PLACAR.registrar(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
     r
 }
 
-unsafe extern "C" fn comparar_clube_pode_ter_reservas(clube: usize) -> u32 {
+unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
     if clube == 0 {
         return o(clube); // caixa: só a original
     }
     // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro: a região volta entre os lados
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + 0x244, 1)], || o(clube),
-        || clube_pode_ter_reservas(clube));
-    PLACAR.registrar(igual && r == n, || format!("clube_pode_ter_reservas({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
+        || database_club_has_reserve_squad(clube));
+    PLACAR.registrar(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
     r
 }

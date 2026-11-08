@@ -27,7 +27,7 @@ unsafe fn cqs6_vivo(l: usize, n: i32, s: u8) -> Option<usize> {
 /// (word), 1, 1, o extra (word), 0x14, 0, 0, 0, sem sementes) em [+0xc][1]; a tabela das rodadas liberada (0x9452ca). Sem
 /// fase, a caixa da linha 0x35a (o vetor fica, como na original). Com ela, o sorteio da rodada (Cup::draw_round 0x51c410:
 /// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
-unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
+unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let l = alocar(8);
@@ -68,11 +68,11 @@ unsafe extern "thiscall" fn cqs6_trofeu_final(this: usize) {
 
 /// Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
-unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_auto_cup_create_final_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     o(this);
     let f = cqs6_d(cqs6_d(this + 0xc) + 4);
-    PLACAR.registrar(f != 0, || format!("cqs6_trofeu_final({:#x}) sem a fase da final", this));
+    PLACAR.registrar(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
 }
 
 /// { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn comparar_cqs6_trofeu_final(this: usize) {
 /// da última rodada (+0x3c − 1) para a primeira, tantos clubes (os seguintes da metade, a partir do 2º) quantos a rodada
 /// tem em +0x1a da tabela das rodadas (+0xa3, 0x68 bytes por rodada), com as posições 3, 5, 7... (a original empurra o
 /// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
-unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
+unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     if cqs6_d(this + 8) == 0 {
         return aviso_em(0x9c4180, 0x3bb);
     }
@@ -144,6 +144,6 @@ unsafe extern "thiscall" fn cqs6_trofeu_classificacao(this: usize) {
 }
 
 // ponytail: grava nas estatísticas da copa (Comp_Stats, que acha ou acrescenta a entrada do clube: aloca); só a original
-unsafe extern "thiscall" fn comparar_cqs6_trofeu_classificacao(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_auto_cup_rank_teams(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this)
 }

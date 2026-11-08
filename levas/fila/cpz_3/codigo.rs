@@ -70,7 +70,7 @@ unsafe fn cpz3_maximo(liga: usize, l: usize) -> i32 {
 /// vagas da nação (UefaSeeding::get_nation_places 0x905c60, thiscall([0xde1f58], nação, &cl, &uefa), ret 0xc) dão a
 /// Liga dos Campeões ([0x9cf6e8]) ou a Copa da UEFA ([0x9cf6f0]). Por fim a virtual +0x68 (a situação nas
 /// estatísticas: clube, +0x44, posição, melhor, pior) e o free (0x9452ca) do mapa.
-unsafe extern "thiscall" fn posicoes_e_situacao_na_liga(this: usize) {
+unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
     let n0 = cpz3_w(this + 0x3e);
     if cpz3_w(this + 0xa7) == -1 && n0 > 0 && cpz3_d(this + 0x45) != 0 {
         *((this + 0xa7) as *mut i16) = (n0 - 1).wrapping_mul(cpz3_w(this + 0x3c));
@@ -358,7 +358,7 @@ unsafe fn cpz3_regioes(this: usize) -> Vec<(usize, usize)> {
 /// as cláusulas (que mandam notícia, gravam registros e sorteiam o moral); a memória volta e a original roda inteira.
 /// As duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
 /// iguais (as virtuais e as cláusulas não gravam nelas). Sem linhas ou com +0xdd: só a original.
-unsafe extern "thiscall" fn comparar_posicoes_e_situacao_na_liga(this: usize) {
+unsafe extern "thiscall" fn comparar_update_positions_and_status(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpz3_d(this + 0xdd) != 0 || cpz3_w(this + 0x3e) <= 0 || cpz3_d(this + 0xb1) == 0 {
         return o(this);
@@ -366,13 +366,13 @@ unsafe extern "thiscall" fn comparar_posicoes_e_situacao_na_liga(this: usize) {
     let regioes = cpz3_regioes(this);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPZ3_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| posicoes_e_situacao_na_liga(this));
+    crate::aleatorio::pausar_rastro(|| update_positions_and_status(this));
     CPZ3_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(this);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("posicoes_e_situacao_na_liga({:#x}) original={:x?} rust={:x?}", this, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("update_positions_and_status({:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 
 /// A fase seguinte das ligas com mata-mata (o corpo de 0x572ff0 e 0x5769e0): na última fase (+0x30 ≥ +0x2c − 1, com
@@ -393,13 +393,13 @@ unsafe fn cpz3_fase_seguinte(this: usize, arquivo: usize, linha: u32, mata_mata:
 
 /// { 0x572ff0 } (thiscall, ret 0, eng_first.cpp): `EngFirst::advance_stage()` (a virtual +0x28): fonte 0x9c4374,
 /// linha 0x2ce; o mata-mata 0x573080.
-unsafe extern "thiscall" fn fase_seguinte_da_first(this: usize) {
+unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
     cpz3_fase_seguinte(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
 }
 
 /// { 0x5769e0 } (thiscall, ret 0, eng_second.cpp): `EngSecond::advance_stage()` (a virtual +0x28): fonte 0x9c43e8,
 /// linha 0x294; o mata-mata 0x576a70.
-unsafe extern "thiscall" fn fase_seguinte_da_second(this: usize) {
+unsafe extern "thiscall" fn eng_second_advance_stage(this: usize) {
     cpz3_fase_seguinte(this, 0x9c43e8, 0x294, 0x576a70, "cpz_3 mata-mata da second")
 }
 
@@ -414,12 +414,12 @@ unsafe fn cpz3_comparar_fase(nome: &str, this: usize, original: impl FnOnce(), c
     PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_fase_seguinte_da_first(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cpz3_comparar_fase("fase_seguinte_da_first", this, || o(this), || fase_seguinte_da_first(this))
+    cpz3_comparar_fase("eng_first_advance_stage", this, || o(this), || eng_first_advance_stage(this))
 }
 
-unsafe extern "thiscall" fn comparar_fase_seguinte_da_second(this: usize) {
+unsafe extern "thiscall" fn comparar_eng_second_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cpz3_comparar_fase("fase_seguinte_da_second", this, || o(this), || fase_seguinte_da_second(this))
+    cpz3_comparar_fase("eng_second_advance_stage", this, || o(this), || eng_second_advance_stage(this))
 }

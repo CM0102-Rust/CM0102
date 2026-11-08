@@ -53,7 +53,7 @@ unsafe fn cpy6_noticia(this: usize, clube: usize, valor: u32, jogo: usize) {
 /// pontos no coeficiente da sua nação (+0x53; 0x9058b0), o empate 1 para cada. Na fase de grupos (+0x42 de 0 a 11):
 /// 200 mil ao vencedor ou 100 mil a cada um no empate (0x5a0590 + 0x5999a0), com a notícia do prêmio (0x48e3e0;
 /// no empate, as duas somas antes das duas notícias). Depois a base da copa (0x51a150 com o jogo e `arg`).
-unsafe extern "thiscall" fn processar_jogo_da_liga_dos_campeoes(this: usize, jogo: usize, arg: u32) {
+unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) {
     let (ga, gb) = if cpy6_b(jogo + 0x47) != 0xff {
         (cpy6_b(jogo + 0x47) as i8, cpy6_b(jogo + 0x48) as i8)
     } else {
@@ -115,7 +115,7 @@ unsafe fn cpy6_casa_do_coeficiente(clube: usize) -> usize {
 /// 0x585ab0: o coeficiente dos classificados), que só roda quando a fase (+0x30) anda: aí, sem comparação. As
 /// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
 /// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
-unsafe extern "thiscall" fn comparar_processar_jogo_da_liga_dos_campeoes(this: usize, jogo: usize, arg: u32) {
+unsafe extern "thiscall" fn comparar_process_fixture(this: usize, jogo: usize, arg: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%);
     let (a, b) = if jogo != 0 { (cpy6_d(jogo + 0x1c), cpy6_d(jogo + 0x20)) } else { (0, 0) };
     if a == 0 || b == 0 {
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_processar_jogo_da_liga_dos_campeoes(this: u
     let antes = crate::comparacao::Memoria::ler(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
     let fase = cpy6_i(this + 0x30);
     CPY6_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| processar_jogo_da_liga_dos_campeoes(this, jogo, arg)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_fixture(this, jogo, arg)));
     CPY6_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&conferir);
     antes.escrever();
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn comparar_processar_jogo_da_liga_dos_campeoes(this: u
         return; // ponytail: a fase andou na base e o sorteio somou coeficiente: sem comparação
     }
     let mo = crate::comparacao::Memoria::ler(&conferir);
-    PLACAR.registrar(mo == mr, || format!("processar_jogo_da_liga_dos_campeoes(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
+    PLACAR.registrar(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", jogo, mo, mr));
 }
 
 /// { 0x586c00 } (thiscall, ret 0x14, european_cup.cpp): `EuropeanCup::set_club_progress(clube, fase, p1, p2, p3)` (a
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn comparar_processar_jogo_da_liga_dos_campeoes(this: u
 /// +0x75 ← p3. Fase −1 (a qualificação): 1 → 0x19 (p2: 1), 17 → 0x21, 33 → 0x31, 47 → 0x3f; fase abaixo de 8 (com
 /// sinal): 1 e 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; abaixo de 12: 1 e 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; os outros
 /// códigos e as fases de 12 em diante passam como estão.
-unsafe extern "thiscall" fn progresso_do_clube_na_liga_dos_campeoes(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
+unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = buscar(cpy6_d(this + 8), clube);
     let (fase, p1, p2, p3) = (fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn progresso_do_clube_na_liga_dos_campeoes(this: usize,
 
 /// Comparador da 0x586c00: lado a lado nos três bytes do registro do clube (+0x73..+0x75); sem registro (a original
 /// cai), só a original.
-unsafe extern "thiscall" fn comparar_progresso_do_clube_na_liga_dos_campeoes(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
+unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize, clube: usize, fase: u32, p1: u32, p2: u32, p3: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(%%I1%%);
     let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
     let e = buscar(cpy6_d(this + 8), clube);
@@ -197,22 +197,22 @@ unsafe extern "thiscall" fn comparar_progresso_do_clube_na_liga_dos_campeoes(thi
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &[(e + 0x73, 3)],
         || o(this, clube, fase, p1, p2, p3),
-        || progresso_do_clube_na_liga_dos_campeoes(this, clube, fase, p1, p2, p3),
+        || european_cup_set_club_progress(this, clube, fase, p1, p2, p3),
     );
-    PLACAR.registrar(igual, || format!("progresso_do_clube_na_liga_dos_campeoes(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
+    PLACAR.registrar(igual, || format!("european_cup_set_club_progress(fase {} {} {} {}) original={:x?} rust={:x?}", fase as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
 }
 
 /// { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
-/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
+/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das units_digit (0x4b0850) da rodada (+0x30, com sinal)
 /// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
-unsafe extern "thiscall" fn conta_para_conflito_de_datas(_this: usize, jogo: usize, _outro: usize) -> u32 {
-    let unidades: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
-    (unidades(cpy6_w(jogo + 0x30) as i32) == 0) as u32
+unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, _outro: usize) -> u32 {
+    let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);
+    (units_digit(cpy6_w(jogo + 0x30) as i32) == 0) as u32
 }
 
-unsafe extern "thiscall" fn comparar_conta_para_conflito_de_datas(this: usize, jogo: usize, outro: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: usize, jogo: usize, outro: usize) -> u32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I2%%)(this, jogo, outro);
-    let n = conta_para_conflito_de_datas(this, jogo, outro);
-    PLACAR.registrar(r == n, || format!("conta_para_conflito_de_datas(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
+    let n = counts_for_fixture_clash(this, jogo, outro);
+    PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", cpy6_w(jogo + 0x30), r, n));
     r
 }

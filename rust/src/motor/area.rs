@@ -41,13 +41,13 @@ pub(crate) unsafe fn area_gravar_i32(area: usize, desl: isize, v: i32) {
 /// cima e embaixo, 2 com a marca 0x10 ou uma linha só, 8 nas outras), liga a barra de rolagem (0x403600)
 /// quando os itens passam das linhas e reparte a largura e a altura pelos pesos. Mais de 30 colunas
 /// ou linhas: a original (caixa de erro, Area.cpp 497 e 507).
-pub(crate) unsafe extern "thiscall" fn organizar_area(area: usize) {
+pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let marcas = *((area + 0x18) as *const u32);
     let colunas = *((area + 0xbab) as *const u8);
     let linhas = *((area + 0xbac) as *const u8);
     if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
         // ponytail: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
-        return orig::<unsafe extern "thiscall" fn(usize)>(IDX_ORGANIZAR_AREA)(area);
+        return orig::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
     crate::comparacao::ramo("telas organizar a area");
     let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
@@ -124,8 +124,8 @@ pub(crate) unsafe extern "thiscall" fn organizar_area(area: usize) {
 
 /// A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
 /// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
-pub(crate) unsafe extern "thiscall" fn comparar_organizar_area(area: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_ORGANIZAR_AREA);
+pub(crate) unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT);
     let marcas = *((area + 0x18) as *const u32);
     let colunas = *((area + 0xbab) as *const u8);
     let linhas = *((area + 0xbac) as *const u8);
@@ -137,8 +137,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_organizar_area(area: usize) {
     if dono != -1 {
         reg.push((area_item(*((area + 0x208) as *const usize), dono) + 0x7c, 2));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(area), || organizar_area(area));
-    PLACAR.registrar(igual, || format!("organizar_area {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(area), || area_layout(area));
+    PLACAR.registrar(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
 }
 
 /// initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights; the
@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_organizar_area(area: usize) {
 /// de rolagem e, fora das áreas só de grade (0x80000), copia os pesos (com 1..29 colunas/linhas e
 /// ponteiro) ou enche de 1 (inclusive com 30 ou mais: aí a original passa do vetor de 30, como aqui).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn iniciar_area(
+pub(crate) unsafe extern "thiscall" fn init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
     pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
 ) {
@@ -239,18 +239,18 @@ pub(crate) fn travar_linhas(linhas: u32) -> u32 {
     }
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_iniciar_area(
+pub(crate) unsafe extern "thiscall" fn comparar_init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
     pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
 ) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(IDX_INICIAR_AREA);
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(IDX_INIT);
     let reg = [(area, 0xbcb + 0xff)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &reg,
         || o(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, travar_linhas(linhas), pesos_linhas, marcas, cor, dono),
-        || iniciar_area(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, linhas, pesos_linhas, marcas, cor, dono),
+        || init(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, linhas, pesos_linhas, marcas, cor, dono),
     );
-    PLACAR.registrar(igual, || format!("iniciar_area {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
+    PLACAR.registrar(igual, || format!("init {:#x}: diferencas em {:?}", area, diferencas_da_tela(&mo, &mr)));
 }
 
 /// draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar
@@ -260,12 +260,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_iniciar_area(
 /// (0x5e42b0); área que abre por cima guarda o fundo (0x5e3dd0); desenha o painel (0x5e5df0). Área só
 /// de grade (0x80000): as linhas da grade (0x5e3730, cor [0xae317e]) e fim. Nas outras: guarda o fundo
 /// da barra de rolagem, põe cada item à mostra na sua célula (as grades +0x1c/+0x10c e +0x94/+0x184,
-/// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até passar da última
+/// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até pass_ball da última
 /// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
 /// erro Area.cpp 245 e a organização 0x403350).
-pub(crate) unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u32) {
+pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
-        return orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DESENHAR_AREA)(area, redesenhar);
+        return orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redesenhar);
     }
     crate::comparacao::ramo("telas desenhar a area");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_GUI_FREE_IMAGE);
@@ -351,7 +351,7 @@ pub(crate) unsafe fn area_posicionar_item(area: usize, item: usize, d: i32) {
 // ponytail: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
 // duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
 // (contador "telas desenhar a area" no ddraw.log)
-pub(crate) unsafe extern "thiscall" fn comparar_desenhar_area(area: usize, redesenhar: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DESENHAR_AREA)(area, redesenhar)
+pub(crate) unsafe extern "thiscall" fn comparar_draw(area: usize, redesenhar: u32) {
+    orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redesenhar)
 }
 

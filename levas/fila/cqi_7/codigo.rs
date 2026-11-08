@@ -96,7 +96,7 @@ unsafe fn cqi7_regras_serie_c(o: usize) {
 
 /// { 0x42a5a0 } (thiscall, bra_nat_first.cpp): `BraNatFirst::set_up_rules` (slot 36), as regras da Série A e o
 /// calendário da fase principal; devolve 1.
-unsafe extern "thiscall" fn cqi7_regras_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -> u32 {
     cqi7_regras_serie_a(this);
     crate::comparacao::ramo("cqi_7 regras da serie a");
     cqi7_calendario(this);
@@ -105,18 +105,18 @@ unsafe extern "thiscall" fn cqi7_regras_da_serie_a(this: usize) -> u32 {
 
 /// Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto inteiro
 /// menos as saídas do calendário; a devolução.
-unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_a(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%)(this), || {
         cqi7_regras_serie_a(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_a({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_nat_first_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x42cb70 } (thiscall, bra_nat_second.cpp): `BraNatSecond::set_up_rules`, as regras da Série B e o calendário.
-unsafe extern "thiscall" fn cqi7_regras_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
     cqi7_regras_serie_b(this);
     crate::comparacao::ramo("cqi_7 regras da serie b");
     cqi7_calendario(this);
@@ -124,18 +124,18 @@ unsafe extern "thiscall" fn cqi7_regras_da_serie_b(this: usize) -> u32 {
 }
 
 /// Comparador: como o da Série A.
-unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_b(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_first_set_up_rules_42cb70(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this), || {
         cqi7_regras_serie_b(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_b({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_nat_first_set_up_rules_42cb70({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }
 
 /// { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
-unsafe extern "thiscall" fn cqi7_regras_da_serie_c(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -> u32 {
     cqi7_regras_serie_c(this);
     crate::comparacao::ramo("cqi_7 regras da serie c");
     cqi7_calendario(this);
@@ -143,12 +143,12 @@ unsafe extern "thiscall" fn cqi7_regras_da_serie_c(this: usize) -> u32 {
 }
 
 /// Comparador: como o da Série A.
-unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_c(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_third_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this), || {
         cqi7_regras_serie_c(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi7_regras_da_serie_c({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_nat_third_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

@@ -36,7 +36,7 @@ unsafe fn cpw1_valor(contrato: usize, pessoa: usize, oferta: usize) -> i32 {
 /// do contrato, −1, a situação e 0xb) e a razão 100 × valor do contrato atual (0x866830, em f32) / valor do desejado
 /// (valor zero: razão 0). Contratado há menos de 15 × adaptabilidade (+0x59) + 100 dias (de +0x25, teto 500): razão +
 /// 50 + 7,5 × adaptabilidade − dias / 2. Razão abaixo de 50: 1; abaixo de 80: 3; senão 2.
-unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
     if pessoa == 0 {
         return 1;
     }
@@ -87,17 +87,17 @@ unsafe extern "thiscall" fn satisfacao_com_o_contrato(this: usize, pessoa: usize
 
 /// Comparador: a original e a cópia a partir do mesmo estado (o sorteio, o último contrato pedido [0xae1080] que a
 /// 0x85fc50 grava e o contrato); a devolução e a memória.
-unsafe extern "thiscall" fn comparar_satisfacao_com_o_contrato(this: usize, pessoa: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_contract_satisfaction(this: usize, pessoa: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize), (this, 0x50)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regioes,
         || o(this, pessoa),
-        || crate::aleatorio::sem_contar(|| satisfacao_com_o_contrato(this, pessoa)),
+        || crate::aleatorio::sem_contar(|| get_contract_satisfaction(this, pessoa)),
     );
     PLACAR.registrar(igual && r == n, || {
-        format!("satisfacao_com_o_contrato(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if pessoa != 0 { cpw1_d(pessoa) } else { 0 }, r, mo, n, mr)
+        format!("get_contract_satisfaction(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if pessoa != 0 { cpw1_d(pessoa) } else { 0 }, r, mo, n, mr)
     });
     r
 }
@@ -116,13 +116,13 @@ unsafe fn cpw1_dados_da_pessoa(n: usize, p: usize) {
 /// (linha 0x2d91). Pessoa na lista de transferências (0x8c1870), com ofertas (0x8c5cf0) ou oferecida em troca (0x8c5e40):
 /// nada. Senão a notícia 0xbc2 ao técnico do clube do contrato (0x7861e0): o clube, a pessoa, a situação no elenco (+0x4f
 /// >> 4), 0, o fim do contrato (+0x2d dia com sinal, +0x2f ano), o salário (+0xc) e, na vaga 11, 1 se a adaptabilidade
-/// (+0x59) for menor que 10, a +0x5b menor que 5 e a reputação da ficha (+0xd) passar de 4750.
-unsafe extern "thiscall" fn noticia_quer_contrato_novo(this: usize, contrato: usize) {
+/// (+0x59) for menor que 10, a +0x5b menor que 5 e a reputação da ficha (+0xd) pass_ball de 4750.
+unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: usize) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2d91);
     }
-    let na_lista: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8c1870usize);
+    let in_list: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8c1870usize);
     let ofertas: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c5cf0usize);
     let trocas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x8c5e40usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn noticia_quer_contrato_novo(this: usize, contrato: us
     let clube = cpw1_clube(cpw1_d(contrato + 4));
     let p = cpw1_pessoa(cpw1_d(contrato));
     let tm = cpw1_d(0xde1f54);
-    if na_lista(tm, p) != 0 || ofertas(tm, p, 0, 0) != 0 || trocas(tm, p, 0) != 0 {
+    if in_list(tm, p) != 0 || ofertas(tm, p, 0, 0) != 0 || trocas(tm, p, 0) != 0 {
         return;
     }
     crate::comparacao::ramo("cpw_1 noticia do contrato novo");
@@ -152,15 +152,15 @@ unsafe extern "thiscall" fn noticia_quer_contrato_novo(this: usize, contrato: us
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_quer_contrato_novo(this: usize, contrato: usize) {
+unsafe extern "thiscall" fn comparar_post_wants_new_contract_news(this: usize, contrato: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, contrato)
 }
 
 /// { 0x4d9460 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da notícia local): `CONTRACT_MANAGER::
 /// post_transfer_request_withdrawn_news(contrato, motivo)`. Sem contrato: a caixa "Error" (linha 0x2ba6). Senão a
 /// notícia 0xbc0 ao técnico do clube do contrato (0x7861e0): o clube, a pessoa, o motivo e, na vaga 7, 1 se +0x3f do
-/// contrato passar de 1.
-unsafe extern "thiscall" fn noticia_pedido_de_transferencia_retirado(this: usize, contrato: usize, motivo: u32) {
+/// contrato pass_ball de 1.
+unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
     let _ = this;
     if contrato == 0 {
         return aviso_em(0x9a8190, 0x2ba6);
@@ -182,6 +182,6 @@ unsafe extern "thiscall" fn noticia_pedido_de_transferencia_retirado(this: usize
 }
 
 // ponytail: a notícia vai à caixa do técnico (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_pedido_de_transferencia_retirado(this: usize, contrato: usize, motivo: u32) {
+unsafe extern "thiscall" fn comparar_post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I2%%)(this, contrato, motivo)
 }

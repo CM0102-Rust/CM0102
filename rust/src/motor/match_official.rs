@@ -4,7 +4,7 @@ use super::*;
 
 /// { 0x6e9470 }: inicia o objeto (motor, pessoa, valor): sem pessoa, 5000; senao o primeiro de
 /// 7750, 7250, 6750, 6250, 5750 cuja palavra 0x1e da pessoa passa de sorteio(350, 300, ...), ou 5250.
-pub(crate) unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pessoa: usize) {
+pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, motor: u32, pessoa: usize) {
     *(this as *mut u32) = motor;
     *((this + 4) as *mut u32) = pessoa as u32;
     let v = (this + 8) as *mut u16;
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn iniciar_rigor(this: usize, motor: u32, pe
 /// [pt] { 0x6bab90 } (match_eng.cpp): o lance registrado continua valendo? 0 sem lance; com o dono da
 /// bola (0xf582) do outro lado que o jogador do lance, a bola passando a linha do lance (0x475c)
 /// encerra o lance (limpa e da 0); nos demais casos, 1.
-pub(crate) unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
     let p = *((this + 0x4761) as *const usize);
     if byte(this, 0x475a) == 0 || p == 0 {
         return 0;
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
     }
     let (y, linha) = (byte(this, 0x8ea8), byte(this, 0x475c));
     if (y > linha && l == 1) || (y < linha && l == 0) {
-        limpar_lance(this);
+        clear_move(this);
         return 0;
     }
     1
@@ -50,15 +50,15 @@ pub(crate) unsafe extern "thiscall" fn lance_valendo(this: usize) -> u8 {
 /// com papel 1 na area; a pessoa (0x4) pode anular (sorteio(0x28 + 15) == 0, -250 no valor 0x8);
 /// na area, 3 em 4 anula; senao +175 e, pelo codigo (0x25: 1 em 20; outros: 1 em 155 com 0x8ea9 > 1),
 /// grava 4 e sorteio(0x14 do jogador) + 1 nas saidas.
-pub(crate) unsafe extern "thiscall" fn decidir_falta(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn decide_foul(this: usize, j: usize, codigo: u16, tipo: *mut u8, valor: *mut u8) -> u8 {
     let motor = *(this as *const usize);
     let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
     if valendo(motor) != 0 {
         return 0;
     }
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_CM3_MATCH_ENGINE_GET_PLAYER_POSITION);
-    let na_area: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
-    if tabela(motor, j) & 1 != 0 && na_area(j, lado(j) as u8) as u8 != 0 {
+    let in_the_box: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
+    if tabela(motor, j) & 1 != 0 && in_the_box(j, lado(j) as u8) as u8 != 0 {
         return 0;
     }
     let pessoa = *((this + 4) as *const usize);
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn decidir_falta(this: usize, j: usize, codi
         *v = (*v).wrapping_add(0xff06);
         return 0;
     }
-    if na_area(j, lado(j) as u8) as u8 != 0 && sortear(4) != 0 {
+    if in_the_box(j, lado(j) as u8) as u8 != 0 && sortear(4) != 0 {
         return 0;
     }
     *v = (*v).wrapping_add(0xaf);
@@ -122,7 +122,7 @@ pub(crate) unsafe fn na_area_do_jogador(j: usize) -> bool {
 /// { 0x6e9630 }: punicao da falta (tipo 1): vermelho direto (-1000, tipo 4), amarelo pela
 /// severidade contra sorteios, ou so -25; com `flag` (ou papel 1), sorteio(3000): acima de 475
 /// vermelho (-750, tipo 6, 9 no registro), acima de 50 (ou na area) amarelo com -375.
-pub(crate) unsafe extern "thiscall" fn punir_falta(this: usize, j: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32) {
+pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32) {
     *peso = 1.5;
     let motor = *(this as *const usize);
     contar_falta(motor, j);
@@ -160,11 +160,11 @@ pub(crate) unsafe extern "thiscall" fn punir_falta(this: usize, j: usize, tipo: 
     amarelo(j, tipo, x, peso);
 }
 
-/// { 0x6ea4e0 }: como `punir_falta`, para outro tipo de lance: inativo, peso 10; tipo 7, peso
+/// { 0x6ea4e0 }: como `punish_foul`, para outro tipo de lance: inativo, peso 10; tipo 7, peso
 /// 1,25; com `flag`, sorteio(3000) acima de 375 e vermelho (tipo 5), senao amarelo com desconto
 /// (acima de 50, ou na area); sem `flag`, vermelho pela severidade (marca 0x16 com `expulsar`),
 /// amarelo contra sorteio(6) ou -25. Conta a falta no jogador e 0x15 no outro.
-pub(crate) unsafe extern "thiscall" fn punir_lance(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32, expulsar: u8) {
+pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, outro: usize, tipo: *mut u8, x: i8, severidade: i8, flag: u8, peso: *mut f32, expulsar: u8) {
     *peso = 1.5;
     if byte(j, 0x19) < 0 {
         *peso = 10.0;
@@ -217,9 +217,9 @@ pub(crate) unsafe extern "thiscall" fn punir_lance(this: usize, j: usize, outro:
 /// casa de `y` (linha do passe em `linha`). Devolve o jogador (ajustando o valor do arbitro em 0x8)
 /// ou 0. Sem lance valendo; `y` alem da linha e nao atras da ultima linha defensiva (0x8eaf para o
 /// lado 0, 0x8eb0 para o 1); com `passador`, ele na area do outro lado e jogadores alem da linha.
-/// A pessoa do arbitro pode deixar passar (sorteio(0x29 + 25) == 0, -75). Por jogador, conforme a
+/// A pessoa do arbitro pode deixar pass_ball (sorteio(0x29 + 25) == 0, -75). Por jogador, conforme a
 /// distancia a linha (2, 1, 0 casas ou alem), sorteios contra o byte 0x107.
-pub(crate) unsafe extern "thiscall" fn procurar_impedimento(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
     let motor = *(this as *const usize);
     let valendo: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_CM3_MATCH_ENGINE_IS_FOUL_PENDING);
     if valendo(motor) != 0 {
@@ -243,14 +243,14 @@ pub(crate) unsafe extern "thiscall" fn procurar_impedimento(this: usize, lado_b:
         *v = (*v).wrapping_add(-75);
         return 0;
     }
-    let na_area: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
+    let in_the_box: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
     for k in 0..20 {
         let p = jogador_do_bloco(motor, lado_b, k);
         if byte(p, 0x19) < 0 || p == passador {
             continue;
         }
         if passador != 0 {
-            if na_area(passador, (lado_b == 0) as u8) as u8 == 0 {
+            if in_the_box(passador, (lado_b == 0) as u8) as u8 == 0 {
                 continue;
             }
             let dist = f6f09b0(p, 4, y);
@@ -283,8 +283,8 @@ pub(crate) unsafe extern "thiscall" fn procurar_impedimento(this: usize, lado_b:
     0
 }
 
-/// { 0x6cfd70 } (match_eng.cpp): `procurar_impedimento` do arbitro do motor (this + 0xf5b2).
-pub(crate) unsafe extern "thiscall" fn motor_procurar_impedimento(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
+/// { 0x6cfd70 } (match_eng.cpp): `look_for_offside` do arbitro do motor (this + 0xf5b2).
+pub(crate) unsafe extern "thiscall" fn engine_look_for_offside(this: usize, lado_b: i8, linha: i8, y: i8, passador: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize = core::mem::transmute(FN_MATCH_OFFICIAL_FIND_OFFSIDE_PLAYER);
     f(this + 0xf5b2, lado_b, linha, y, passador)
 }
@@ -307,7 +307,7 @@ pub(crate) unsafe fn registrar_cartao(j: usize, codigo: u8, ate_um: bool) {
 /// 0x24; vermelho (-1000, tipo 4) contra sorteio(15) + 7; senao amarelo (desconto, tipo 2/3) contra
 /// sorteio(3 x 0x24 + 5) + 2, ou so tipo 9. O codigo do registro fica no lugar do argumento `j`
 /// (sem gravidade conhecida, o byte baixo do ponteiro).
-pub(crate) unsafe extern "thiscall" fn cartao_pela_gravidade(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
+pub(crate) unsafe extern "thiscall" fn card_by_severity(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
     let mut nota = sortear(byte(j, 0x14) as u8 as i32) as u8;
     let pessoa = *((this + 4) as *const usize);
     if pessoa != 0 {
@@ -359,8 +359,8 @@ pub(crate) unsafe extern "thiscall" fn cartao_pela_gravidade(this: usize, j: usi
     }
 }
 
-/// { 0x6cfd40 } (match_eng.cpp): `cartao_pela_gravidade` do arbitro do motor (this + 0xf5b2).
-pub(crate) unsafe extern "thiscall" fn motor_cartao_pela_gravidade(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
+/// { 0x6cfd40 } (match_eng.cpp): `card_by_severity` do arbitro do motor (this + 0xf5b2).
+pub(crate) unsafe extern "thiscall" fn engine_card_by_severity(this: usize, j: usize, tipo: *mut u8, gravidade: u8, flag: u8) {
     let f: unsafe extern "thiscall" fn(usize, usize, *mut u8, u8, u8) = core::mem::transmute(FN_MATCH_OFFICIAL_DECIDE_CARD);
     f(this + 0xf5b2, j, tipo, gravidade, flag)
 }
@@ -376,7 +376,7 @@ pub(crate) unsafe extern "thiscall" fn motor_cartao_pela_gravidade(this: usize, 
 /// jogador (+0x14) e cai pelo minuto (0x8ed0 / 11). Com 0x6cb650, aplica a gravidade em `outro`
 /// (0x716450, 0x7164b0) e guarda `j` em +0x1a6 dele.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn decisao_da_falta(
+pub(crate) unsafe extern "thiscall" fn foul_decision(
     this: usize,
     j: usize,
     outro: usize,
@@ -655,15 +655,15 @@ pub(crate) unsafe extern "thiscall" fn decisao_da_falta(
 ///
 /// [pt] { 0x6e9460 } (thiscall, match_official.cpp): o construtor do árbitro: zera o motor (+0) e o oficial
 /// (+4). Devolve `this`.
-pub(crate) unsafe extern "thiscall" fn construir_arbitro(a: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_referee(a: usize) -> usize {
     core::ptr::write_unaligned(a as *mut u32, 0);
     core::ptr::write_unaligned((a + 4) as *mut u32, 0);
     a
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_construir_arbitro(a: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUIR_ARBITRO);
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(a, 8)], || o(a), || construir_arbitro(a));
-    PLACAR.registrar(igual && r == v, || format!("construir_arbitro({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_construct_referee(a: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_CONSTRUCT_REFEREE);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(a, 8)], || o(a), || construct_referee(a));
+    PLACAR.registrar(igual && r == v, || format!("construct_referee({:#x}) original={:#x} {:x?} rust={:#x} {:x?}", a, r, mo, v, mr));
     r
 }

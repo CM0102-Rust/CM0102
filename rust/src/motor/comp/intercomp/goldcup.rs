@@ -99,14 +99,14 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
 /// outros anos as sedes na frente, depois as sul-americanas e as convidadas (o Japão em 1999 [inferência: a nação de
 /// 0x9cf36c], nos outros anos a de 0x9cf280, e o México sempre), sem repetir as sedes, até 12, ordenadas pela
 /// reputação; sem 12, erro
-pub(crate) unsafe extern "thiscall" fn cqs12_copa_america_selecoes(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn set_up_team_list(this: usize) -> u32 {
     cqs12_selecoes(this)
 }
 
 /// Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
 /// cópia faz a sua, comparada nas 12 vagas e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQS12_COPA_AMERICA_SELECOES);
+pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SET_UP_TEAM_LIST);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let reg = [(this + 0xf2, 4usize), (0xb67a34, 4)];
@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs12_copa_america_selecoes(this
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqs12_copa_america_selecoes({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }
 
@@ -145,7 +145,7 @@ pub(crate) const CQS12_PREVISTAS: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0
 /// volta), ordenada pela reputação (qsort 0x945333 com 0x4b07d0, +0xf2 itens), e a posição prevista de cada uma na
 /// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
 /// ret 8): 1, 2, 3, 3, quatro 5, 9 e três 10 (as 12 primeiras da cópia); a cópia liberada (0x9452ca).
-pub(crate) unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize) {
+pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
@@ -170,8 +170,8 @@ pub(crate) unsafe extern "thiscall" fn cqs12_copa_america_previstas(this: usize)
 // ponytail: a estatística acha ou cria a entrada de cada seleção (aloca): não roda duas vezes. Só a original; o plano:
 // a lista ordenada pela reputação antes, e depois a posição (+0x72 da entrada, 0x4a4850 Comp_Stats::find_club_entry) de
 // cada uma das 12 igual à da faixa.
-pub(crate) unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS12_COPA_AMERICA_PREVISTAS);
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_SET_PREDICTED_POSITIONS);
     if read_u32_as_usize(this + 8) == 0 || read_u32_as_usize(this + 0xee) == 0 || read_u32_as_usize(this + 0xf2) != 0xc {
         return o(this);
     }
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(thi
         let e = if v[k] != 0 { achar(read_u32_as_usize(this + 8), v[k]) } else { 0 };
         e == 0 || *((e + 0x72) as *const u8) as u32 != CQS12_PREVISTAS[k]
     });
-    PLACAR.registrar(errado.is_none(), || format!("cqs12_copa_america_previstas: a posição prevista da vaga {:?} não bate", errado));
+    PLACAR.registrar(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }
 
 /// rule: the Copa América is every 2 years: when it ends, the table and stages are undone, the season goes to the
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs12_copa_america_previstas(thi
 /// Comp_Stats::archive_season_and_reset: push 1; mov ecx, [+8] -> thiscall, ret 4), as fases 0..+0x30 destruídas (a
 /// virtual 0 de cada uma com 1: o destrutor que libera), o ano +0x40 sobe 2, +0x45 = 0, +0x30 = −1 e as regras de novo
 /// (a virtual +0x8c, thiscall, ret 0; 0: a caixa da linha 0x28b).
-pub(crate) unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: usize) {
+pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     let soltar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
@@ -237,12 +237,12 @@ pub(crate) unsafe extern "thiscall" fn cqs12_copa_america_temporada_nova(this: u
 // ponytail: libera as tabelas e destrói as fases: não roda duas vezes. Só a original; o plano: o ano sobe 2, +0x45 = 0,
 // +0x30 = −1, +0xba = 0 e +0x4c = 0 (as regras gravam a tabela das rodadas de novo em +0xba: conferida só que existe
 // quando havia antes).
-pub(crate) unsafe extern "thiscall" fn comparar_cqs12_copa_america_temporada_nova(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS12_COPA_AMERICA_TEMPORADA_NOVA);
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_start_new_season(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_START_NEW_SEASON);
     let ano = read_i16(this + 0x40);
     o(this);
     let ok = read_i16(this + 0x40) == ano.wrapping_add(2) && read_u32_as_usize(this + 0x45) == 0 && read_u32_as_usize(this + 0x30) as i32 == -1 && read_u32_as_usize(this + 0x4c) == 0;
-    PLACAR.registrar(ok, || format!("cqs12_copa_america_temporada_nova({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, read_i16(this + 0x40), read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+    PLACAR.registrar(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this, ano, read_i16(this + 0x40), read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
 }
 
 // ---------- 282a leva: a Copa América: o dia do sorteio, a tabela do primeiro grupo e as fases dos outros dois grupos (goldcup.cpp) ----------
@@ -274,7 +274,7 @@ pub(crate) unsafe fn cqr13_sorteado(this: usize, k: usize) -> usize {
 /// push g; mov ecx -> thiscall, ret 4), a lista +0xee liberada (0x9452ca: push; add esp, 4 -> cdecl) e zerada, +0xf2 = 0
 /// e +0x45 = 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja
 /// devolução ela repassa.
-pub(crate) unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje: usize, completo: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
     let selecoes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_GOLDCUP_SET_UP_TEAM_LIST);
     let primeiro: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_GOLDCUP_CREATE_GROUP_TABLE);
     let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
@@ -322,8 +322,8 @@ pub(crate) unsafe extern "thiscall" fn cqr13_copa_america_dia(this: usize, hoje:
 // ponytail: a lista, as previsões, as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano no
 // dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee e +0xf2 zeradas, a tabela do primeiro grupo e as duas
 // fases criadas e a fase atual (+0x30) a última delas (1).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_dia(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CQR13_COPA_AMERICA_DIA);
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
     let sorteia = read_u32_as_usize(this + 0x45) == 0
         && completo == 0
         && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
@@ -338,7 +338,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_dia(this: usi
             && fases != 0
             && (0..2).all(|g| read_u32_as_usize(fases + g * 4) != 0)
             && read_u32_as_usize(this + 0x30) == 1;
-        PLACAR.registrar(ok, || format!("cqr13_copa_america_dia({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
+        PLACAR.registrar(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
     }
     r
 }
@@ -352,7 +352,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_dia(this: usi
 /// caixa da linha 0x1d4 e devolve 0), cada linha i com o sorteado 3i (+0xee: os grupos intercalados) (0x687430
 /// League::init_table_row: push 0; push 0; push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do
 /// sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0) e devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqr13_copa_america_primeiro_grupo(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let linha: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
@@ -376,8 +376,8 @@ pub(crate) unsafe extern "thiscall" fn cqr13_copa_america_primeiro_grupo(this: u
 
 // ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado 3i com a posição i (+4).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_primeiro_grupo(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQR13_COPA_AMERICA_PRIMEIRO_GRUPO);
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_CREATE_GROUP_TABLE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 {
         return o(this);
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_primeiro_grup
         }
     }
     let igual = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("cqr13_copa_america_primeiro_grupo({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
+    PLACAR.registrar(igual, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
     r
 }
 
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_primeiro_grup
 /// original empurra os words e bytes com lixo nos bytes altos, que o construtor não lê: a cópia passa os valores limpos)
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2d6 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
-pub(crate) unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: i32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u32 {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -477,8 +477,8 @@ pub(crate) unsafe extern "thiscall" fn cqr13_copa_america_grupo(this: usize, g: 
 // ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com 4 times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados g + 1, g + 4, g + 7 e g + 10 (em qualquer ordem: o construtor ordena a tabela).
-pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_grupo(this: usize, g: i32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CQR13_COPA_AMERICA_GRUPO);
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this: usize, g: i32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_GOLDCUP_CREATE_GROUP_STAGE);
     let lista = read_u32_as_usize(this + 0xee);
     if lista == 0 || !(0..2).contains(&g) {
         return o(this, g);
@@ -492,7 +492,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr13_copa_america_grupo(this: u
         a.sort_unstable();
         plano.sort_unstable();
         let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("cqr13_copa_america_grupo({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
+        PLACAR.registrar(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
     }
     r
 }
@@ -781,14 +781,14 @@ pub(crate) fn cqp12_copa_america_fase(fase: u32) -> Option<Cqp12Fase> {
 ///
 /// [pt] { 0x5e0900 } (thiscall, ret 0x10, goldcup.cpp; a virtual +0x3c da Copa América): `GoldCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `cqp12_copa_america_fase`.
-pub(crate) unsafe extern "thiscall" fn cqp12_copa_america_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp12_tabela(this, cqp12_copa_america_fase(fase), rodadas, extra, liga, 0x9cd640)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp12_copa_america_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP12_COPA_AMERICA_TABELA);
-    cqp12_comparar("cqp12_copa_america_tabela", fase, cqp12_copa_america_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqp12_copa_america_tabela(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE);
+    cqp12_comparar("goldcup_create_schedule", fase, cqp12_copa_america_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| goldcup_create_schedule(this, fase, r, e, l))
 }
 
 /// A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
@@ -842,14 +842,14 @@ pub(crate) fn cqp12_confed_fase(fase: u32) -> Option<Cqp12Fase> {
 ///
 /// [pt] { 0x58b560 } (thiscall, ret 0x10, fifa_confed.cpp; a virtual +0x3c da Copa das Confederações): `FifaConfed::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `cqp12_confed_fase`.
-pub(crate) unsafe extern "thiscall" fn cqp12_confed_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     cqp12_tabela(this, cqp12_confed_fase(fase), rodadas, extra, liga, 0x9c7474)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp12_confed_tabela(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CQP12_CONFED_TABELA);
-    cqp12_comparar("cqp12_confed_tabela", fase, cqp12_confed_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqp12_confed_tabela(this, fase, r, e, l))
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule_58b560(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_GOLDCUP_CREATE_SCHEDULE_58B560);
+    cqp12_comparar("goldcup_create_schedule_58b560", fase, cqp12_confed_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
+        |r, e, l| goldcup_create_schedule_58b560(this, fase, r, e, l))
 }
 
 // ---------- 274a leva: as regras dos torneios de seleções: a Copa América, a Copa Africana de Nações e a eliminatória da Oceania (goldcup.cpp, african_nations.cpp, wc_oceania_league.cpp) ----------
@@ -910,7 +910,7 @@ pub(crate) const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 /// `GoldCup::set_up_rules()`: os grupos da Copa América em turno único, 3 pontos a vitória e 1 o empate, a categoria 0xa
 /// (seleções), os desempates (1, 2, 3, 0), dois classificados por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 20 do mês 2 do ano da competição num dia da semana 5; depois a tabela das rodadas.
-pub(crate) unsafe extern "thiscall" fn cqk10_copa_america_regras(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa america");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa América
     cqk10_campos(this, &CQK10_COPA_AMERICA, vitoria);
@@ -920,9 +920,9 @@ pub(crate) unsafe extern "thiscall" fn cqk10_copa_america_regras(this: usize) ->
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-pub(crate) unsafe extern "thiscall" fn comparar_cqk10_copa_america_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQK10_COPA_AMERICA_REGRAS);
-    cqk10_confere("cqk10_copa_america_regras", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
+    cqk10_confere("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
 }
 
 pub(crate) const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
@@ -942,7 +942,7 @@ pub(crate) const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1
 /// `WcOceaniaLeague::set_up_rules()`: os grupos da eliminatória da Oceania em turno único, 3/1 pontos, a categoria 0xa,
 /// os desempates (1, 2, 3), um classificado por grupo, seleções, 7 no banco e 3 substituições, começo em 15 do mês 0
 /// do ano da competição num dia da semana 5.
-pub(crate) unsafe extern "thiscall" fn cqk10_eliminatoria_oceania_regras(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da oceania");
     cqk10_campos(this, &CQK10_OCEANIA, 3);
     let dia = 0xf; // cqk10: o dia do começo na Oceania
@@ -951,9 +951,9 @@ pub(crate) unsafe extern "thiscall" fn cqk10_eliminatoria_oceania_regras(this: u
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-pub(crate) unsafe extern "thiscall" fn comparar_cqk10_eliminatoria_oceania_regras(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQK10_ELIMINATORIA_OCEANIA_REGRAS);
-    cqk10_confere("cqk10_eliminatoria_oceania_regras", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES_91ECF0);
+    cqk10_confere("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
 }
 
 /// rule: the Copa América moves on one stage when the current one ends; after the 2 group stages (on reaching 2) it
@@ -962,13 +962,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk10_eliminatoria_oceania_regra
 ///
 /// [pt] { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
-pub(crate) unsafe extern "thiscall" fn cqs11_copa_america_fase_seguinte(this: usize) {
+pub(crate) unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
     cqs11_fase_seguinte(this, 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQS11_COPA_AMERICA_FASE_SEGUINTE);
-    cqs11_comparar_fase_seguinte("cqs11_copa_america_fase_seguinte", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_GOLDCUP_ADVANCE_STAGE);
+    cqs11_comparar_fase_seguinte("goldcup_advance_stage", this, || o(this))
 }
 
 /// rule: the Copa America follows the African Nations Cup rule with two group stages (the knockout at stage 2)
@@ -977,12 +977,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs11_copa_america_fase_seguinte
 /// [pt] { 0x5e13b0 } (thiscall, ret 0x18, goldcup.cpp; a virtual +0x44 da Copa América): `GoldCup::
 /// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: cqj10_selecao com 2 fases de grupos (o
 /// mata-mata na fase 2).
-pub(crate) unsafe extern "thiscall" fn cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn goldcup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, _a4: u32, jogo: usize, a6: u32) -> u32 {
     cqj10_selecao(1, this, clube, desfecho, fase, jogo, a6, 2)
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_america_registros(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CQJ10_COPA_AMERICA_REGISTROS)(this, clube, desfecho, fase, a4, jogo, a6);
-    PLACAR.registrar(r == 0, || format!("cqj10_copa_america_registros({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
+pub(crate) unsafe extern "thiscall" fn comparar_goldcup_update_staff_records_for_status(this: usize, clube: usize, desfecho: u32, fase: u32, a4: u32, jogo: usize, a6: u32) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, clube, desfecho, fase, a4, jogo, a6);
+    PLACAR.registrar(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", clube, desfecho as u8, fase as u8, r));
     r
 }

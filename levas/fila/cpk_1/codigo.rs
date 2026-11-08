@@ -25,7 +25,7 @@ unsafe fn cpk1_sem_memoria(linha: u32) -> ! {
 /// índice (−1) e com `criar`: o índice novo é a conta (+0xc, que sobe), o vetor cresce de 50 em 50 (capacidade +8,
 /// realloc 0x945667; sem memória, caixa 0x1694 e fim) e o registro é reiniciado (0x452fe0). Devolve o registro, ou 0
 /// sem índice. Clube nulo: a original (caixa 0x1680, 0).
-unsafe extern "thiscall" fn recordes_de_sempre(this: usize, clube: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%)(this, clube, criar);
     }
@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn recordes_de_sempre(this: usize, clube: usize, criar:
 /// { 0x4528d0 } (thiscall, ret 8, club_records.cpp): `Club_Records::get_season_record(clube, criar)`: o mesmo para os
 /// recordes da temporada: índice +4 da entrada, vetor [this+0x10], capacidade +0x14, conta +0x18 (sem memória, caixa
 /// 0x16c9 e fim). Clube nulo: a original (caixa 0x16b5, 0).
-unsafe extern "thiscall" fn recordes_da_temporada(this: usize, clube: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: u32) -> usize {
     if clube == 0 {
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%)(this, clube, criar);
     }
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn recordes_da_temporada(this: usize, clube: usize, cri
 /// clube +0, tipo do recorde +4; o byte +5 fica como está) ao vetor de 6 bytes [this+0x24] das notícias de recorde,
 /// lidas pela 0x448e30. Cheio (conta +0x2c = capacidade +0x28): cresce de 5 em 5 (realloc 0x945667); sem memória,
 /// caixa 0x174f e devolve 0 (o jogo segue, sem o vetor). Devolve 1.
-unsafe extern "thiscall" fn guardar_noticia_de_recorde(this: usize, id: u32, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
     crate::comparacao::ramo("cpk_1 noticia de recorde");
     if cpk1_d(this + 0x2c) == cpk1_d(this + 0x28) {
         let cap = cpk1_d(this + 0x28).wrapping_add(5);
@@ -134,7 +134,7 @@ unsafe fn cpk1_conferir(nome: &str, clube: usize, e: usize, conta: usize, vetor:
 }
 
 /// Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
-unsafe extern "thiscall" fn comparar_recordes_de_sempre(this: usize, clube: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn comparar_get_all_time_record(this: usize, clube: usize, criar: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I0%%);
     if clube == 0 {
         return o(this, clube, criar);
@@ -142,12 +142,12 @@ unsafe extern "thiscall" fn comparar_recordes_de_sempre(this: usize, clube: usiz
     let e = cpk1_entrada(this, clube);
     let plano = cpk1_plano(e, this + 0xc, criar);
     let r = o(this, clube, criar);
-    cpk1_conferir("recordes_de_sempre", clube, e, this + 0xc, this + 4, plano, r);
+    cpk1_conferir("get_all_time_record", clube, e, this + 0xc, this + 4, plano, r);
     r
 }
 
 /// Comparador: o mesmo pelos recordes da temporada.
-unsafe extern "thiscall" fn comparar_recordes_da_temporada(this: usize, clube: usize, criar: u32) -> usize {
+unsafe extern "thiscall" fn comparar_get_season_record(this: usize, clube: usize, criar: u32) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(%%I1%%);
     if clube == 0 {
         return o(this, clube, criar);
@@ -155,12 +155,12 @@ unsafe extern "thiscall" fn comparar_recordes_da_temporada(this: usize, clube: u
     let e = cpk1_entrada(this, clube) + 4;
     let plano = cpk1_plano(e, this + 0x18, criar);
     let r = o(this, clube, criar);
-    cpk1_conferir("recordes_da_temporada", clube, e, this + 0x18, this + 0x10, plano, r);
+    cpk1_conferir("get_season_record", clube, e, this + 0x18, this + 0x10, plano, r);
     r
 }
 
 /// Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
-unsafe extern "thiscall" fn comparar_guardar_noticia_de_recorde(this: usize, id: u32, tipo: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
     let n = cpk1_d(this + 0x2c);
     let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(%%I2%%)(this, id, tipo);
     if r == 0 {
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn comparar_guardar_noticia_de_recorde(this: usize, id:
     let item = cpk1_d(this + 0x24).wrapping_add(n.wrapping_mul(6));
     let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + 4) as *const u8));
     PLACAR.registrar(r == 1 && cpk1_d(this + 0x2c) == n.wrapping_add(1) && gid == id && gtipo == tipo as u8, || {
-        format!("guardar_noticia_de_recorde({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, tipo as u8, r, n, cpk1_d(this + 0x2c), gid, gtipo)
+        format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, tipo as u8, r, n, cpk1_d(this + 0x2c), gid, gtipo)
     });
     r
 }

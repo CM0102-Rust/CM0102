@@ -58,7 +58,7 @@ pub(crate) unsafe fn cqc5_ao_calendario(p: usize) {
 /// mãos, com a copa ainda em [0xadadfc]: a volta +0x22 dias depois (0x549ef0, 0x54c5b0, 0x417c10), o código +4, a
 /// fatia pelo dia da semana (0x54a3f0: sábado ou domingo 1, senão 2), mando invertido, o estádio e o calendário.
 /// Devolve 1.
-pub(crate) unsafe extern "thiscall" fn copa_criar_jogos_do_confronto(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
     let id = read_u32_as_usize(read_u32_as_usize(this + 4));
     let ri = rodada as i16 as i32;
     let (mut k, mut adiar) = (confronto, adiar);
@@ -257,8 +257,8 @@ pub(crate) unsafe fn cqc5_jogos(clube: u32, comp: u32, (ano, dia): (i32, i32)) -
 /// técnicos). O plano, feito antes: o confronto escolhido (o −1 procura a marca 1 ou 2), a devolução, a marca (2 ao
 /// adiar, 3 ao criar) e, criando com os dois times, os jogos do mandante na competição sobem 1 (2 na de duas mãos com a
 /// copa ainda ativa).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_COPA_CRIAR_JOGOS_DO_CONFRONTO);
+pub(crate) unsafe extern "thiscall" fn comparar_create_tie_fixtures(this: usize, rodada: u32, confronto: u32, adiar: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_CREATE_TIE_FIXTURES);
     let ri = rodada as i16 as i32;
     let id = read_u32_as_usize(read_u32_as_usize(this + 4)) as u32;
     let (mut k, mut ad) = (confronto as i16 as i32, adiar);
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(th
         }
         if k == -1 {
             let r = o(this, rodada, confronto, adiar);
-            PLACAR.registrar(r == 0, || format!("copa_criar_jogos_do_confronto(rodada {}) sem confronto marcado: {}", ri, r));
+            PLACAR.registrar(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
             return r;
         }
     }
@@ -310,7 +310,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(th
         depois = cqc5_jogos(ic, id, fim);
         ok = ok && depois == antes + esperado;
     }
-    PLACAR.registrar(ok, || format!("copa_criar_jogos_do_confronto(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
+    PLACAR.registrar(ok, || format!("create_tie_fixtures(rodada {}, confronto {}, adiar {}) devolveu {} marca {} jogos {} -> {} (esperado +{})",
         ri, k, ad, r, marca, antes, depois, esperado));
     r
 }
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_criar_jogos_do_confronto(th
 /// clube dele (+0xa7, 6 bytes). A notícia 0x26: 0 = o id da copa, 1 = +0x3a, 2 = o código da rodada (+7), 3/4 = o
 /// mandante e −1 ou os dois possíveis, 5/6 = o visitante e −1 ou os dois possíveis; aos técnicos de cada clube dela
 /// (0x7861e0: push clube; push &notícia; mov ecx, [0xb7431c] -> thiscall, ret 8; os possíveis só se não nulos).
-pub(crate) unsafe extern "thiscall" fn copa_noticia_do_confronto_pendente(this: usize, rodada: u32, confronto: u32) {
+pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: u32) {
     let ri = rodada as i16 as i32;
     let t = cpq11_confronto(this, ri, confronto as i16 as i32);
     let (mut a1, mut a2, mut b1, mut b2, mut casa) = (0usize, 0usize, 0usize, 0usize, 0usize);
@@ -417,8 +417,8 @@ pub(crate) unsafe extern "thiscall" fn copa_noticia_do_confronto_pendente(this: 
 }
 
 /// Comparador da 0x522950: só a original (a notícia vai aos técnicos e não tem outro efeito).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_noticia_do_confronto_pendente(this: usize, rodada: u32, confronto: u32) {
-    orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_COPA_NOTICIA_DO_CONFRONTO_PENDENTE)(this, rodada, confronto) // ponytail: só a notícia
+pub(crate) unsafe extern "thiscall" fn comparar_post_draw_news(this: usize, rodada: u32, confronto: u32) {
+    orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_POST_DRAW_NEWS)(this, rodada, confronto) // ponytail: só a notícia
 }
 
 
@@ -520,7 +520,7 @@ pub(crate) unsafe fn cqb11_passo(copa: usize, r: i32, cur: &mut i32, inicio: i16
 /// regra 4 da rodada (+0xb) o mandante livre não serve quando o visitante do confronto é da mesma nação, e o
 /// visitante livre não serve quando o mandante é; dando a volta inteira de novo, cai a regra das nações (também para
 /// as entradas seguintes) e, sem ela, a caixa da linha 0xcff e sai. Libera o vetor (0x9452ca).
-pub(crate) unsafe extern "thiscall" fn copa_sortear_pela_semente(copa: usize, rodada: u32) {
+pub(crate) unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -590,16 +590,16 @@ pub(crate) unsafe extern "thiscall" fn copa_sortear_pela_semente(copa: usize, ro
 
 /// Comparador: sorteia (0x90cfc0) e só usa vetores temporários: lado a lado pelo estado do sorteador e pelos
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_pela_semente(copa: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_COPA_SORTEAR_PELA_SEMENTE);
+pub(crate) unsafe extern "thiscall" fn comparar_sort_round_teams(copa: usize, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SORT_ROUND_TEAMS);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend(cpq11_confrontos(copa));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| copa_sortear_pela_semente(copa, rodada)));
+        || crate::aleatorio::sem_contar(|| sort_round_teams(copa, rodada)));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("copa_sortear_pela_semente(rodada {}) diferencas em {:x?}", rodada as i16, dif)
+        format!("sort_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
     });
 }
 
@@ -618,7 +618,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_pela_semente(copa: 
 /// (a marca fica), qualquer vaga livre, menos (enquanto valer a regra, que volta a valer a cada entrada) um confronto
 /// com um time da mesma nação do clube da entrada; dando a volta inteira de novo, cai a regra e, sem ela, a caixa da
 /// linha 0xe5c e sai. Libera o vetor.
-pub(crate) unsafe extern "thiscall" fn copa_sortear_separando_nacoes(copa: usize, rodada: u32) {
+pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
     let zerado: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -731,16 +731,16 @@ pub(crate) unsafe extern "thiscall" fn copa_sortear_separando_nacoes(copa: usize
 }
 
 /// Comparador: como o da 0x51d2d0 (sorteia; as contas e o vetor são temporários).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_separando_nacoes(copa: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_COPA_SORTEAR_SEPARANDO_NACOES);
+pub(crate) unsafe extern "thiscall" fn comparar_check_round_teams_for_nation(copa: usize, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_ROUND_TEAMS_FOR_NATION);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend(cpq11_confrontos(copa));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| copa_sortear_separando_nacoes(copa, rodada)));
+        || crate::aleatorio::sem_contar(|| check_round_teams_for_nation(copa, rodada)));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("copa_sortear_separando_nacoes(rodada {}) diferencas em {:x?}", rodada as i16, dif)
+        format!("check_round_teams_for_nation(rodada {}) diferencas em {:x?}", rodada as i16, dif)
     });
 }
 
@@ -749,16 +749,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_separando_nacoes(co
 ///
 /// [pt] { 0x518780 } (thiscall, ret 0, Cup.cpp): `Cup::start_new_season()` da classe base: só zera o byte +0xb1 da copa
 /// (as copas derivadas liberam as tabelas delas).
-pub(crate) unsafe extern "thiscall" fn copa_comeco_da_temporada(copa: usize) {
+pub(crate) unsafe extern "thiscall" fn cup_start_new_season(copa: usize) {
     *((copa + 0xb1) as *mut u8) = 0;
 }
 
 /// Comparador: lado a lado no byte +0xb1.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_comeco_da_temporada(copa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_COPA_COMECO_DA_TEMPORADA);
+pub(crate) unsafe extern "thiscall" fn comparar_cup_start_new_season(copa: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_START_NEW_SEASON);
     let reg = [(copa + 0xb1, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa), || copa_comeco_da_temporada(copa));
-    PLACAR.registrar(igual, || format!("copa_comeco_da_temporada({:#x}) {:x?} x {:x?}", copa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa), || cup_start_new_season(copa));
+    PLACAR.registrar(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", copa, mo, mr));
 }
 
 // ---------- 263a leva: a rodada da copa: o prêmio da rodada, os mandantes da rodada e o progresso do time (Cup.cpp) ----------
@@ -839,11 +839,11 @@ pub(crate) unsafe fn cqa1_premios(copa: usize, r: i32, contar: bool) -> Option<(
 /// desfecho +5 do time, 3 se era 1 na partida 0x136, e a rodada seguinte: a palavra +7 dela se não é a última nem
 /// 0x8c, sobre os 16 bits altos do ponteiro da rodada, como a original deixa no ebp) e o dinheiro (0x5999a0 nas
 /// finanças 0x5a0590); o perdedor só o dinheiro; o fundo perde os dois.
-pub(crate) unsafe extern "thiscall" fn copa_premio_da_rodada(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
     let r = rodada as i16 as i32;
     let (ao_vencedor, ao_perdedor) = match cqa1_premios(copa, r, true) {
         Some(p) => p,
-        None => return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_COPA_PREMIO_DA_RODADA)(copa, vencedor, perdedor, rodada, partida), // ponytail: a original cai na divisão; que caia nela
+        None => return orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY)(copa, vencedor, perdedor, rodada, partida), // ponytail: a original cai na divisão; que caia nela
     };
     let mut desfecho = read_u8(vencedor + 5);
     if read_i16(partida + 0x30) == 0x136 && desfecho == 1 {
@@ -872,8 +872,8 @@ pub(crate) unsafe extern "thiscall" fn copa_premio_da_rodada(copa: usize, venced
 /// Comparador da 0x522240, em ensaio: a cópia sem a notícia e a original inteira, a partir do mesmo estado (o fundo e
 /// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
 /// sem finanças ou com a divisão que cai: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_premio_da_rodada(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_COPA_PREMIO_DA_RODADA);
+pub(crate) unsafe extern "thiscall" fn comparar_pay_round_prize_money(copa: usize, vencedor: usize, perdedor: usize, rodada: u32, partida: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY);
     let (cv, cp) = (read_usize(vencedor), read_usize(perdedor));
     if cv == 0 || cp == 0 || cv == cp || cqa1_premios(copa, rodada as i16 as i32, false).is_none() {
         return o(copa, vencedor, perdedor, rodada, partida); // ponytail: sem clube ou com a divisão que cai, só a original
@@ -885,13 +885,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_premio_da_rodada(copa: usiz
     let regioes = [(copa + 0x28, 4), (fv, 0x167), (fp, 0x167)];
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CQA1_ENSAIO = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| copa_premio_da_rodada(copa, vencedor, perdedor, rodada, partida)));
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| pay_round_prize_money(copa, vencedor, perdedor, rodada, partida)));
     CQA1_ENSAIO = false;
     let mr = crate::comparacao::Memoria::ler(&regioes);
     antes.escrever();
     o(copa, vencedor, perdedor, rodada, partida);
     let mo = crate::comparacao::Memoria::ler(&regioes);
-    PLACAR.registrar(mo == mr, || format!("copa_premio_da_rodada(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
+    PLACAR.registrar(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", rodada as i16, cv, cp));
 }
 
 /// Os confrontos [início, fim) que a 0x51e870 percorre: um só (`laco`; o fim é a palavra baixa de laco + 1, como o
@@ -922,7 +922,7 @@ pub(crate) unsafe fn cqa1_inverter(t: usize) {
 /// (byte baixo de +0xb): bit 1, se a virtual +0x90 (club_in_higher_division(clube a, clube b)) devolve o clube b;
 /// senão bit 8, se o nível (+4 do time, com sinal) de a é menor que o de b; senão, com o estádio da copa (+0x24) ≠
 /// −1, se o clube b existe, tem estádio (+0x69) e o id dele (+0) é o da copa.
-pub(crate) unsafe extern "thiscall" fn copa_mandantes_da_rodada(copa: usize, rodada: u32, laco: u32) {
+pub(crate) unsafe extern "thiscall" fn set_home_teams_for_round(copa: usize, rodada: u32, laco: u32) {
     let r = rodada as i16 as i32;
     let (ini, fim) = cqa1_faixa(copa, rodada, laco);
     let regra = read_u8(cqa1_rodada(copa, r) + 0xb);
@@ -957,15 +957,15 @@ pub(crate) unsafe extern "thiscall" fn copa_mandantes_da_rodada(copa: usize, rod
 }
 
 /// Comparador da 0x51e870: lado a lado nos confrontos percorridos (a virtual +0x90 só consulta e roda nos dois lados).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_mandantes_da_rodada(copa: usize, rodada: u32, laco: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_COPA_MANDANTES_DA_RODADA);
+pub(crate) unsafe extern "thiscall" fn comparar_set_home_teams_for_round(copa: usize, rodada: u32, laco: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_SET_HOME_TEAMS_FOR_ROUND);
     let (ini, fim) = cqa1_faixa(copa, rodada, laco);
     let mut reg = Vec::new();
     if ini < fim {
         reg.push((cqa1_confronto(copa, rodada as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada, laco), || copa_mandantes_da_rodada(copa, rodada, laco));
-    PLACAR.registrar(igual, || format!("copa_mandantes_da_rodada(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada, laco), || set_home_teams_for_round(copa, rodada, laco));
+    PLACAR.registrar(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", rodada as i16, laco as i16, mo, mr));
 }
 
 /// Os argumentos da virtual +0x68 que a 0x521b30 chama para o time `t` na rodada `r`: (p1, p2, p3) ou None.
@@ -1032,7 +1032,7 @@ pub(crate) unsafe fn cqa1_progresso(copa: usize, t: i32, r: i32) -> Option<(u8, 
 /// da rodada seguinte. Sem ela: na final, 1 → (1, 1, 1), 2 → os confrontos (+0x1a) da final + 1 três vezes; noutra,
 /// desfecho ≠ 0 → o +0x5b três vezes; 0 → (x, 1, x) com os confrontos + 1 da final antes dela, senão o +0x5b da
 /// seguinte. Os desfechos fora desses não chamam nada.
-pub(crate) unsafe extern "thiscall" fn copa_progresso_do_time(copa: usize, time: u32, rodada: u32) {
+pub(crate) unsafe extern "thiscall" fn record_team_progress(copa: usize, time: u32, rodada: u32) {
     let (t, r) = (time as i16 as i32, rodada as i16 as i32);
     if let Some((p1, p2, p3)) = cqa1_progresso(copa, t, r) {
         // a virtual +0x68: 5 pushes; ecx = a copa; sem add esp -> thiscall(copa, clube, comp, p1, p2, p3), ret 0x14
@@ -1048,8 +1048,8 @@ pub(crate) unsafe extern "thiscall" fn copa_progresso_do_time(copa: usize, time:
 /// copa (+8, achado pela 0x4a4850: push clube; ecx = as estatísticas; thiscall, ret 4), que a +0x68 grava; as versões
 /// que repassam a outra competição gravam fora da região (aí a comparação só confere que nada mudou nela). Sem
 /// estatísticas, sem clube ou sem registro: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_progresso_do_time(copa: usize, time: u32, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_COPA_PROGRESSO_DO_TIME);
+pub(crate) unsafe extern "thiscall" fn comparar_record_team_progress(copa: usize, time: u32, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_RECORD_TEAM_PROGRESS);
     let stats = read_usize(copa + 8);
     let clube = read_usize(cqa1_time(copa, time as i16 as i32));
     let busca: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_COMP_STATS_FIND_CLUB_ENTRY);
@@ -1057,8 +1057,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_progresso_do_time(copa: usi
     if reg == 0 {
         return o(copa, time, rodada); // ponytail: sem registro para olhar, só a original
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(copa, time, rodada), || copa_progresso_do_time(copa, time, rodada));
-    PLACAR.registrar(igual, || format!("copa_progresso_do_time(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg + 0x73, 3)], || o(copa, time, rodada), || record_team_progress(copa, time, rodada));
+    PLACAR.registrar(igual, || format!("record_team_progress(time {}, rodada {}) original={:x?} rust={:x?}", time as i16, rodada as i16, mo, mr));
 }
 
 // ---------- 263a leva: o sorteio da rodada da copa, o nome da fase e da rodada e o clube da divisão mais alta (Cup.cpp, comp_util.cpp) ----------
@@ -1153,7 +1153,7 @@ pub(crate) unsafe fn cqa3_sem_noticia(copa: usize, r: u32) -> bool {
 /// terceiro lugar (+7 ≠ 0x8c) soma 1 em +0xac; a notícia 0x27 (a competição, +0x3a, o tipo, +0x44, a rodada, 0, e 1
 /// se +0xab + 1 < +0xac) vai a cada um dos times ainda vivos (desfecho 0) entre os primeiros (soma das entradas +0x1c
 /// das rodadas até esta) que é de técnico humano, com o id dele no dado 3.
-pub(crate) unsafe extern "thiscall" fn copa_sortear_rodada(copa: usize, rodada: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
     if read_usize(copa + 0x45) == 0 || read_u8(cqa3_confrontos(copa, rodada) + 0x34) != 0 {
         return 1;
     }
@@ -1251,8 +1251,8 @@ pub(crate) unsafe extern "thiscall" fn copa_sortear_rodada(copa: usize, rodada: 
 /// (sem +0x45 ou já sorteada), nada muda nos confrontos nem nas datas; com time em aberto, as datas previstas das
 /// rodadas (a desta mais 1 dia, as seguintes no mínimo essa); sorteada, todos os confrontos com +0x34 = 1 e +0xac com
 /// a soma prevista (as consultas da notícia não mudam com o sorteio).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize, rodada: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_COPA_SORTEAR_RODADA);
+pub(crate) unsafe extern "thiscall" fn comparar_draw_round(copa: usize, rodada: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_DRAW_ROUND);
     if read_usize(copa + 0x45) == 0 || read_u8(cqa3_confrontos(copa, rodada) + 0x34) != 0 {
         return o(copa, rodada); // ponytail: nada a sortear, a original não faz nada
     }
@@ -1283,7 +1283,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize,
         }
         let r = o(copa, rodada);
         let ok = plano.iter().all(|&(rk, d, y)| read_i16(rk) == d && read_u8(rk + 2) == y);
-        PLACAR.registrar(ok, || format!("copa_sortear_rodada(rodada {}) as datas adiadas diferem do plano", rodada as i32));
+        PLACAR.registrar(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", rodada as i32));
         return r;
     }
     let antes_ac = read_u8(copa + 0xac);
@@ -1295,7 +1295,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_rodada(copa: usize,
     }
     let soma = if !cqa3_sem_noticia(copa, rodada) && read_i16(reg + 7) != 0x8c { 1 } else { 0 };
     ok &= read_u8(copa + 0xac) == antes_ac.wrapping_add(soma);
-    PLACAR.registrar(ok, || format!("copa_sortear_rodada(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, read_u8(copa + 0xac)));
+    PLACAR.registrar(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", rodada as i32, antes_ac, read_u8(copa + 0xac)));
     r
 }
 
@@ -1316,7 +1316,7 @@ pub(crate) unsafe fn cqa3_nivel(clube: usize) -> i16 {
 ///
 /// [pt] { 0x522360 } (thiscall, ret 8, Cup.cpp; o this não é lido; a virtual +0x90 da copa base):
 /// `Cup::club_in_higher_division(a, b)`: o clube de nível menor (+0x57 → +0x69, com sinal; 0 sem divisão); empate, 0.
-pub(crate) unsafe extern "thiscall" fn clube_da_divisao_mais_alta(_this: usize, a: usize, b: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn club_in_higher_division(_this: usize, a: usize, b: usize) -> usize {
     let (na, nb) = (cqa3_nivel(a), cqa3_nivel(b));
     if na < nb {
         a
@@ -1328,10 +1328,10 @@ pub(crate) unsafe extern "thiscall" fn clube_da_divisao_mais_alta(_this: usize, 
 }
 
 /// Comparador da 0x522360: pelo valor (só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_clube_da_divisao_mais_alta(this: usize, a: usize, b: usize) -> usize {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_CLUBE_DA_DIVISAO_MAIS_ALTA)(this, a, b);
-    let n = clube_da_divisao_mais_alta(this, a, b);
-    PLACAR.registrar(r == n, || format!("clube_da_divisao_mais_alta({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_CLUB_IN_HIGHER_DIVISION)(this, a, b);
+    let n = club_in_higher_division(this, a, b);
+    PLACAR.registrar(r == n, || format!("club_in_higher_division({:x}, {:x}) original={:x} rust={:x}", a, b, r, n));
     r
 }
 
@@ -1369,7 +1369,7 @@ pub(crate) unsafe fn cqa4_copa_principal(comp: usize) -> bool {
     read_usize(0xb63d7e_usize.wrapping_add((cqa4_indice(comp) as i8 as isize * 72) as usize)) == comp
 }
 
-/// A vaga na Copa da UEFA que o campeão da copa (`copa_registros_pelo_desfecho`, desfecho 1) ganha: a Copa da Liga
+/// A vaga na Copa da UEFA que o campeão da copa (`cup_update_staff_records_for_status`, desfecho 1) ganha: a Copa da Liga
 /// inglesa ([0x9cf750]) sempre; senão, a copa principal de uma nação europeia ([0x9cfa10] o continente, pela nação
 /// +0x5d e o continente +0x71), não amistosa, com o clube ainda sem competição europeia (−1) e a nação com índice.
 pub(crate) unsafe fn cqa4_vaga_na_uefa(comp: usize, clube: usize) -> bool {
@@ -1408,7 +1408,7 @@ pub(crate) unsafe fn cqa4_registro_de_final(f: usize, clube: usize, jogo: usize,
 /// e não é a do terceiro lugar (+7 ≠ 0x8c), a classificação (0x86bdd0) com o peso rodada × 99 / (rodadas − 1) + 1;
 /// 0xff: a eliminação (0x86c000) com o peso rodada × 99 / rodadas + 1. Os registros de fase levam os dwords que a
 /// original empurra: a palavra do jogo (+0x32, +0x30) ou da rodada (+7) sobre os 16 bits altos do registrador.
-pub(crate) unsafe extern "thiscall" fn copa_registros_pelo_desfecho(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
     if read_u8(jogo + 0x3a) == 1 || read_usize(copa + 0x2c) != 0 || read_u8(copa + 0x44) != 0xff {
         return 0;
     }
@@ -1439,7 +1439,7 @@ pub(crate) unsafe extern "thiscall" fn copa_registros_pelo_desfecho(copa: usize,
             }
             let div = n as i32 - 1;
             if div == 0 {
-                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_COPA_REGISTROS_PELO_DESFECHO)(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: a original cai na divisão
+                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: a original cai na divisão
             }
             let q = (r as i32 * 99) / div;
             let peso = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
@@ -1453,7 +1453,7 @@ pub(crate) unsafe extern "thiscall" fn copa_registros_pelo_desfecho(copa: usize,
             let r = read_i16(jogo + 0x34) as i32;
             let n = read_i16(copa + 0x3c) as i32;
             if n == 0 {
-                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_COPA_REGISTROS_PELO_DESFECHO)(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: a original cai na divisão
+                return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: a original cai na divisão
             }
             let (q, resto) = ((r * 99) / n, (r * 99) % n);
             let peso = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32;
@@ -1471,8 +1471,8 @@ pub(crate) unsafe extern "thiscall" fn copa_registros_pelo_desfecho(copa: usize,
 /// Comparador da 0x519890: só a original (os registros vão ao histórico das pessoas e mexem nas reputações e no moral,
 /// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
 /// UEFA quando o campeão ganha a vaga; senão não muda. Sem clube: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_registros_pelo_desfecho(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_COPA_REGISTROS_PELO_DESFECHO);
+pub(crate) unsafe extern "thiscall" fn comparar_cup_update_staff_records_for_status(copa: usize, clube: usize, desfecho: u32, a3: u32, a4: u32, jogo: usize, final_: u32) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if clube == 0 || jogo == 0 {
         return o(copa, clube, desfecho, a3, a4, jogo, final_); // ponytail: sem clube ou jogo, só a original
     }
@@ -1482,7 +1482,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_registros_pelo_desfecho(cop
         && cqa4_vaga_na_uefa(read_usize(copa + 4), clube) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { antes };
     let r = o(copa, clube, desfecho, a3, a4, jogo, final_);
     let depois = read_i32(estado);
-    PLACAR.registrar(r == 0 && depois == previsto, || format!("copa_registros_pelo_desfecho(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
+    PLACAR.registrar(r == 0 && depois == previsto, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", desfecho as u8, antes, depois, previsto, r));
     r
 }
 
@@ -1552,7 +1552,7 @@ pub(crate) unsafe fn cqa4_honras(copa: usize) -> (usize, usize, usize, usize) {
 /// a linha do histórico (0x4afce0: 5 pushes; add esp, 0x14 -> cdecl(copa, campeão, vice, terceiro, anfitriã)) com os
 /// quatro de cqa4_honras; fora da competição amistosa, na copa principal da nação (cqa4_copa_principal), os
 /// semifinalistas para a UEFA (0x519fc0: ecx = a copa -> thiscall, ret 0).
-pub(crate) unsafe extern "thiscall" fn copa_honras_da_temporada(copa: usize) {
+pub(crate) unsafe extern "thiscall" fn cup_record_season_honours(copa: usize) {
     let (campeao, vice, terceiro, anfitria) = cqa4_honras(copa);
     let historico: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_COMP_UTIL_ADD_HISTORY_RECORD);
     historico(copa, campeao, vice, terceiro, anfitria);
@@ -1566,8 +1566,8 @@ pub(crate) unsafe extern "thiscall" fn copa_honras_da_temporada(copa: usize) {
 /// Comparador da 0x519a90: só a original (a 0x4afce0 pode crescer o histórico e a 0x519fc0 tem o seu comparador). O
 /// plano, feito antes: a linha livre do histórico (cpa2_linha_livre) recebe a competição (+4), o ano [0xae2c92] e os
 /// quatro de cqa4_honras. Sem linha livre (o histórico cresce) ou sem a competição: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_honras_da_temporada(copa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_COPA_HONRAS_DA_TEMPORADA);
+pub(crate) unsafe extern "thiscall" fn comparar_cup_record_season_honours(copa: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RECORD_SEASON_HONOURS);
     let linha = cpa2_linha_livre();
     if linha == 0 || read_usize(copa + 4) == 0 {
         return o(copa); // ponytail: o histórico cresce (realloc) ou não há competição: só a original
@@ -1577,7 +1577,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_honras_da_temporada(copa: u
     o(copa);
     let lido = (read_usize(linha + 4), core::ptr::read_unaligned((linha + 8) as *const u16), read_usize(linha + 0xa), read_usize(linha + 0xe), read_usize(linha + 0x12), read_usize(linha + 0x16));
     let previsto = (read_usize(copa + 4), ano, campeao, vice, terceiro, anfitria);
-    PLACAR.registrar(lido == previsto, || format!("copa_honras_da_temporada: linha {:x?} prevista {:x?}", lido, previsto));
+    PLACAR.registrar(lido == previsto, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, previsto));
 }
 
 /// Os dois clubes (ids) que a 0x519fc0 manda à semeadura da UEFA, ou None quando ela sai sem mandar: a rodada 0x82
@@ -1639,7 +1639,7 @@ pub(crate) unsafe fn cqa4_semifinalistas(copa: usize) -> Option<(i32, i32)> {
 /// [pt] { 0x519fc0 } (thiscall, ret 0, Cup.cpp): `Cup::register_semi_final_losers_for_uefa()`: os semifinalistas fora da
 /// final (cqa4_semifinalistas) vão à semeadura da UEFA (0x905790: push b; push a; push id da competição; ecx =
 /// [0xde1f58]; sem add esp -> thiscall, ret 0xc).
-pub(crate) unsafe extern "thiscall" fn copa_semifinalistas_para_a_uefa(copa: usize) {
+pub(crate) unsafe extern "thiscall" fn register_semi_final_losers_for_uefa(copa: usize) {
     if let Some((a, b)) = cqa4_semifinalistas(copa) {
         let f: unsafe extern "thiscall" fn(usize, i32, i32, i32) = core::mem::transmute(FN_UEFASEEDING_RECORD_CUP_SEMI_FINAL_LOSERS);
         f(read_usize(G_UEFA_SEEDING), read_i32(read_usize(copa + 4)), a, b);
@@ -1648,14 +1648,14 @@ pub(crate) unsafe extern "thiscall" fn copa_semifinalistas_para_a_uefa(copa: usi
 
 /// Comparador da 0x519fc0: lado a lado na tabela da semeadura (+0x440, 50 vagas de 12 bytes, onde a 0x905790 grava; ela
 /// não aloca: acha a vaga da competição ou a primeira livre). Sem a semeadura: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_semifinalistas_para_a_uefa(copa: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_COPA_SEMIFINALISTAS_PARA_A_UEFA);
+pub(crate) unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_uefa(copa: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_REGISTER_SEMI_FINAL_LOSERS_FOR_UEFA);
     let s = read_usize(G_UEFA_SEEDING);
     if s == 0 {
         return o(copa); // ponytail: sem a semeadura, só a original
     }
-    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(s + 0x440, 50 * 12)], || o(copa), || copa_semifinalistas_para_a_uefa(copa));
-    PLACAR.registrar(igual, || format!("copa_semifinalistas_para_a_uefa(copa {:x}) a semeadura difere ({:?})", copa, cqa4_semifinalistas(copa)));
+    let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&[(s + 0x440, 50 * 12)], || o(copa), || register_semi_final_losers_for_uefa(copa));
+    PLACAR.registrar(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", copa, cqa4_semifinalistas(copa)));
 }
 
 // ---------- 257a leva: a ordem dos clubes da liga para a tabela de jogos e os clubes possíveis de cada lado de um jogo da copa (league.cpp, Cup.cpp) ----------
@@ -1719,9 +1719,9 @@ pub(crate) unsafe fn cpu12_coletar(this: usize, rodada: i32, jogo: i32, saida: *
 /// [pt] { 0x5219b0 } (thiscall, ret 0x10, Cup.cpp): `Cup::collect_possible_teams(rodada, jogo, saida, *conta)`: acrescenta
 /// a `saida` os clubes que ainda podem jogar esse jogo, descendo pelos jogos de onde vêm os lados vazios. Saída ou
 /// conta nula: a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn clubes_possiveis_do_jogo(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn collect_possible_teams(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
     if saida.is_null() || conta.is_null() {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(IDX_CLUBES_POSSIVEIS_DO_JOGO)(this, rodada, jogo, saida, conta);
+        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(IDX_COLLECT_POSSIBLE_TEAMS)(this, rodada, jogo, saida, conta);
     }
     cpu12_coletar(this, rodada, jogo, saida, conta, true)
 }
@@ -1733,9 +1733,9 @@ pub(crate) unsafe extern "thiscall" fn clubes_possiveis_do_jogo(this: usize, rod
 /// lado do jogo (lado ≠ 0: +0; 0: +2) ou, vazio, os clubes que podem chegar a ele (0x5219b0 com a conta no global
 /// 0xae1880). Devolve a conta (a caixa se nenhum). Rodada fora de 0..+0x3c, copa sem clubes (+0xa7) ou jogo −1: a
 /// original (a caixa e 0).
-pub(crate) unsafe extern "thiscall" fn clubes_do_lado_do_jogo(this: usize, rodada: i32, jogo: i32, lado: u32, saida: *mut i16) -> i32 {
+pub(crate) unsafe extern "thiscall" fn get_fixture_side_teams(this: usize, rodada: i32, jogo: i32, lado: u32, saida: *mut i16) -> i32 {
     if rodada < 0 || rodada > read_i16(this + 0x3c) as i32 || read_u32_as_usize(this + 0xa7) == 0 || jogo == -1 {
-        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_CLUBES_DO_LADO_DO_JOGO)(this, rodada, jogo, lado, saida);
+        return orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_GET_FIXTURE_SIDE_TEAMS)(this, rodada, jogo, lado, saida);
     }
     let coletar: unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32 = core::mem::transmute(FN_CUP_COLLECT_POSSIBLE_TEAMS);
     let conta = G_CUP_POSSIBLE_TEAM_COUNT as *mut i32;
@@ -1757,8 +1757,8 @@ pub(crate) unsafe extern "thiscall" fn clubes_do_lado_do_jogo(this: usize, rodad
 
 /// Comparador: o esperado sai do núcleo sobre uma conta própria e uma saída própria antes da original; depois, a
 /// devolução, a conta global e a saída têm de bater.
-pub(crate) unsafe extern "thiscall" fn comparar_clubes_do_lado_do_jogo(this: usize, rodada: i32, jogo: i32, lado: u32, saida: *mut i16) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_CLUBES_DO_LADO_DO_JOGO);
+pub(crate) unsafe extern "thiscall" fn comparar_get_fixture_side_teams(this: usize, rodada: i32, jogo: i32, lado: u32, saida: *mut i16) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_GET_FIXTURE_SIDE_TEAMS);
     if saida.is_null() || rodada < 0 || rodada > read_i16(this + 0x3c) as i32 || read_u32_as_usize(this + 0xa7) == 0 || jogo == -1 {
         return o(this, rodada, jogo, lado, saida); // ponytail: a caixa, só a original
     }
@@ -1775,14 +1775,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_clubes_do_lado_do_jogo(this: usi
     let res = o(this, rodada, jogo, lado, saida);
     let obtido = core::slice::from_raw_parts(saida, res.clamp(0, 0x100) as usize);
     let global = *(G_CUP_POSSIBLE_TEAM_COUNT as *const i32);
-    PLACAR.registrar(res == n && global == n && obtido == &esperado[..n.clamp(0, 0x100) as usize], || format!("clubes_do_lado_do_jogo({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, rodada, jogo, lado as u8, res, n, global, obtido, &esperado[..n.clamp(0, 0x100) as usize]));
+    PLACAR.registrar(res == n && global == n && obtido == &esperado[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, rodada, jogo, lado as u8, res, n, global, obtido, &esperado[..n.clamp(0, 0x100) as usize]));
     res
 }
 
 /// Comparador: o esperado sai do núcleo sobre uma cópia da conta e uma saída própria antes da original; depois, a
 /// devolução, a conta e os clubes acrescentados têm de bater.
-pub(crate) unsafe extern "thiscall" fn comparar_clubes_possiveis_do_jogo(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(IDX_CLUBES_POSSIVEIS_DO_JOGO);
+pub(crate) unsafe extern "thiscall" fn comparar_collect_possible_teams(this: usize, rodada: i32, jogo: i32, saida: *mut i16, conta: *mut i32) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(IDX_COLLECT_POSSIBLE_TEAMS);
     if saida.is_null() || conta.is_null() || rodada < 0 || jogo == -1 || !(0..0x100).contains(&*conta) {
         return o(this, rodada, jogo, saida, conta); // ponytail: a caixa ou conta fora do esperado, só a original
     }
@@ -1794,7 +1794,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_clubes_possiveis_do_jogo(this: u
     let fim = (*conta).clamp(c0, 0x200);
     let obtido = core::slice::from_raw_parts(saida.offset(c0 as isize), (fim - c0) as usize);
     let ok = res == n && *conta == n && obtido == &esperado[c0 as usize..n.clamp(c0, 0x200) as usize];
-    PLACAR.registrar(ok, || format!("clubes_possiveis_do_jogo({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, rodada, jogo, res, n, *conta, obtido, &esperado[c0 as usize..n.clamp(c0, 0x200) as usize]));
+    PLACAR.registrar(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, rodada, jogo, res, n, *conta, obtido, &esperado[c0 as usize..n.clamp(c0, 0x200) as usize]));
     res
 }
 
@@ -1852,7 +1852,7 @@ pub(crate) unsafe fn cps13_fase(this: usize, i: usize) -> usize {
 /// (+7 = 0x8c) sorteia na data dela (0x51c410); sem +0xb1, sorteia as rodadas a partir de +0xac cuja data chegou, até
 /// não avançar ou acabar. Fase ≠ 0 (com +0x45): o mesmo com a montagem das rodadas (0x51c800) a partir de +0xab, que
 /// também monta na data pendente da rodada (+0x34 da fase da rodada). Devolve 0.
-pub(crate) unsafe extern "thiscall" fn atualizar_copa_no_dia(this: usize, hoje: usize, fase: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
     let sortear: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_DRAW_ROUND);
     let montar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     if read_u8(this + 0x44) == 0xff {
@@ -1981,7 +1981,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_copa_no_dia(this: usize, hoje: 
 /// confronto marcado (+0x34 = 1 adiado, 2 já: 0x51cb90; depois do 2, sem a copa em [0xadadfc][id]: 1), leva os jogos às
 /// datas da rodada (data +3/+5 num bloco de 8 bytes, 0x51ebe0, liberado depois) e, com a copa em [0xadadfc][id], passa à
 /// rodada seguinte (fora da final 0x8c) e leva +0xac junto. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn montar_rodada_da_copa(this: usize, rodada: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
     let id = read_u32_as_usize(read_u32_as_usize(this + 4));
     let ativa = || read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + id * 4) != 0;
     if read_u32_as_usize(this + 0x45) == 0 {
@@ -2107,13 +2107,13 @@ pub(crate) unsafe fn cps13_doenca(f: usize, id: usize, nacao: usize, alto_dia: u
 
 // ponytail: sorteia e monta rodadas (aloca jogos): não roda duas vezes. Só a original; a cópia leva os ramos (sorteio e
 // montagem; a atualização é diária em cada copa, 29.934 chamadas até 2002-06-01: sem ramo no caminho comum).
-pub(crate) unsafe extern "thiscall" fn comparar_atualizar_copa_no_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ATUALIZAR_COPA_NO_DIA)(this, hoje, fase)
+pub(crate) unsafe extern "thiscall" fn comparar_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CUP_UPDATE_FOR_DATE)(this, hoje, fase)
 }
 
 // ponytail: sorteia, cria os jogos e passa a rodada: não roda duas vezes. Só a original; a cópia leva os ramos.
-pub(crate) unsafe extern "thiscall" fn comparar_montar_rodada_da_copa(this: usize, rodada: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_MONTAR_RODADA_DA_COPA)(this, rodada)
+pub(crate) unsafe extern "thiscall" fn comparar_set_up_round(this: usize, rodada: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_SET_UP_ROUND)(this, rodada)
 }
 
 // ponytail: acrescenta o risco de doença (não roda duas vezes; o caminho comum não faz nada). Só a original; a cópia leva
@@ -2201,7 +2201,7 @@ pub(crate) unsafe fn cpq11_sem_memoria(linha: u32, texto: usize) -> ! {
 ///    vínculo, o confronto da rodada seguinte ganha a rodada (+0x12), o confronto sorteado (+6) e o lado (+8: 1
 ///    mandante, 0 visitante).
 /// Libera o vetor (0x9452ca).
-pub(crate) unsafe extern "thiscall" fn copa_sortear_times_da_rodada(copa: usize, rodada: u32) {
+pub(crate) unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
@@ -2307,16 +2307,16 @@ pub(crate) unsafe extern "thiscall" fn copa_sortear_times_da_rodada(copa: usize,
 
 /// Comparador: sorteia (0x90cfc0) e só usa um vetor temporário: lado a lado pelo estado do sorteador e pelos
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_sortear_times_da_rodada(copa: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_COPA_SORTEAR_TIMES_DA_RODADA);
+pub(crate) unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_RANDOMIZE_ROUND_TEAMS);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend(cpq11_confrontos(copa));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| copa_sortear_times_da_rodada(copa, rodada)));
+        || crate::aleatorio::sem_contar(|| randomize_round_teams(copa, rodada)));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("copa_sortear_times_da_rodada(rodada {}) diferencas em {:x?}", rodada as i16, dif)
+        format!("randomize_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
     });
 }
 
@@ -2338,7 +2338,7 @@ pub(crate) unsafe fn cpq11_inverter(t: usize) {
 /// nulo) com o mandante (ou o visitante) de `i`; achando, inverte o confronto `j` (mandante e visitante, +0xa/+0xc e
 /// +0xe/+0x10) e acerta o lado (+8) dos confrontos ligados na rodada seguinte: o de +0xe/+0xa fica 1 (mandante), o de
 /// +0x10/+0xc fica 0. Os dois jogos no mesmo estádio deixam de cair no mesmo lado.
-pub(crate) unsafe extern "thiscall" fn copa_separar_estadio_compartilhado(copa: usize, rodada: u32) {
+pub(crate) unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
     let estadio = |t: i16| read_u32(cpq11_us(cpq11_time(copa, t)) as usize + 0x69);
     let mut n = read_i16(cpq11_rodada(copa, r) + 0x1a);
@@ -2382,14 +2382,14 @@ pub(crate) unsafe extern "thiscall" fn copa_separar_estadio_compartilhado(copa: 
 }
 
 /// Comparador: só grava confrontos (da rodada e das seguintes): lado a lado pelos confrontos de todas as rodadas.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_separar_estadio_compartilhado(copa: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_COPA_SEPARAR_ESTADIO_COMPARTILHADO);
+pub(crate) unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SEPARATE_SHARED_STADIUM_TIES);
     let reg = cpq11_confrontos(copa);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada), || copa_separar_estadio_compartilhado(copa, rodada));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("copa_separar_estadio_compartilhado(rodada {}) diferencas em {:x?}", rodada as i16, dif)
+        format!("separate_shared_stadium_ties(rodada {}) diferencas em {:x?}", rodada as i16, dif)
     });
 }
 
@@ -2428,7 +2428,7 @@ pub(crate) unsafe fn cpp13_reputacao(e: usize) -> i32 {
 /// [pt] { 0x522190 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_desc(a, b)`: o qsort das entradas das copas (sorteios da
 /// Copa da UEFA, Intertoto, copas do Japão e da Escócia) pelo nível, o maior primeiro; no empate pela reputação do
 /// clube, a menor primeiro. Quente (qsort): sem contador.
-pub(crate) unsafe extern "C" fn ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = cpp13_nivel(b) - cpp13_nivel(a); // o maior nível primeiro
     if r != 0 {
         return r;
@@ -2442,7 +2442,7 @@ pub(crate) unsafe extern "C" fn ordem_dos_cabecas_de_chave_decrescente(a: usize,
 /// [pt] { 0x5221c0 } (cdecl, Cup.cpp): `cup_compare_entries_by_level_asc(a, b)`: o qsort das entradas da copa da liga
 /// inglesa (0x56ccc0) pelo nível, o menor primeiro; no empate pela reputação do clube, a menor primeiro. Quente
 /// (qsort): sem contador.
-pub(crate) unsafe extern "C" fn ordem_dos_cabecas_de_chave_crescente(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = cpp13_nivel(a) - cpp13_nivel(b); // o menor nível primeiro
     if r != 0 {
         return r;
@@ -2463,18 +2463,18 @@ pub(crate) unsafe fn cpp13_ajustar(clube: usize, valor: i8, baixar: u32) {
 
 
 /// Comparador: pelo valor (só lê).
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave_decrescente(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CABECAS_DE_CHAVE_DECRESCENTE)(a, b);
-    let n = ordem_dos_cabecas_de_chave_decrescente(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_cabecas_de_chave_decrescente({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_ENTRIES_BY_LEVEL_DESC)(a, b);
+    let n = cup_compare_entries_by_level_desc(a, b);
+    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
 /// Comparador: pelo valor (só lê).
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave_crescente(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CABECAS_DE_CHAVE_CRESCENTE)(a, b);
-    let n = ordem_dos_cabecas_de_chave_crescente(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_cabecas_de_chave_crescente({:x}, {:x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_ENTRIES_BY_LEVEL_ASC)(a, b);
+    let n = cup_compare_entries_by_level_asc(a, b);
+    PLACAR.registrar(r == n, || format!("cup_compare_entries_by_level_asc({:x}, {:x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -2542,7 +2542,7 @@ pub(crate) unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
     if fl & 0x21 != 0 {
         let (p1, p2) = (read_i8(f + 0x49), read_i8(f + 0x4a));
         // o código dos pênaltis: 4, ou 5 sem o bit 1 da regra (not al; and al, 1; or al, 4)
-        let penaltis = ((!(fl as u8)) & 1 | 4) as i8;
+        let penalties = ((!(fl as u8)) & 1 | 4) as i8;
         if p1 > p2 {
             let c = read_i8(f + 0x3d);
             if c == 1 {
@@ -2550,7 +2550,7 @@ pub(crate) unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
             } else if fl & 0x2000 != 0 {
                 write_i8(f + 0x3d, c.wrapping_sub(3));
             } else {
-                write_i8(f + 0x3d, penaltis);
+                write_i8(f + 0x3d, penalties);
             }
             return Some(1);
         }
@@ -2561,7 +2561,7 @@ pub(crate) unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
             } else if fl & 0x2000 != 0 {
                 write_i8(f + 0x3e, c.wrapping_sub(3));
             } else {
-                write_i8(f + 0x3e, penaltis);
+                write_i8(f + 0x3e, penalties);
             }
             return Some(2);
         }
@@ -2617,13 +2617,13 @@ pub(crate) unsafe fn cpm1_jogo(this: usize, f: usize) -> Option<u32> {
 /// pênaltis (bits 0x21, +0x49/+0x4a), o W.O. (0x800/0x1000) e os pontos (0x2000: os códigos −1 e o cabeça de chave),
 /// gravando o código de cada lado (+0x3d/+0x3e: 2 venceu, 3 na prorrogação, 4/5 nos pênaltis, 8 W.O.; −3 com 0x2000).
 /// Jogo nulo ou empate nos pênaltis: a original (caixa "Error").
-pub(crate) unsafe extern "thiscall" fn decidir_jogo_da_copa(this: usize, jogo: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn decide_fixture_winner(this: usize, jogo: usize) -> u32 {
     if jogo != 0 {
         if let Some(r) = cpm1_jogo(this, jogo) {
             return r;
         }
     }
-    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_DECIDIR_JOGO_DA_COPA)(this, jogo)
+    orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_DECIDE_FIXTURE_WINNER)(this, jogo)
 }
 
 /// O corpo da 0x51f2f0: `None` no empate nos pênaltis com a regra deles (a original mostra a caixa "Error" com a linha
@@ -2782,10 +2782,10 @@ pub(crate) unsafe fn cpm1_confronto(conf: usize, j: usize) -> Option<u32> {
 /// diferença da prorrogação, código 3), os gols fora (sem 4 nem 0x4000, código 6) e os pênaltis (0x21, +0x24/+0x25:
 /// código 4 com o bit 1, senão 5); nada decidido: 4. Pontos (0x10) e regra 0x2000 têm os ramos próprios. Empate nos
 /// pênaltis: a original (caixa "Error", 4).
-pub(crate) unsafe extern "thiscall" fn decidir_confronto_da_copa(this: usize, confronto: usize, jogo: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
     match cpm1_confronto(confronto, jogo) {
         Some(r) => r,
-        None => orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDIR_CONFRONTO_DA_COPA)(this, confronto, jogo),
+        None => orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDE_TIE_WINNER)(this, confronto, jogo),
     }
 }
 
@@ -2794,15 +2794,15 @@ pub(crate) unsafe extern "thiscall" fn decidir_confronto_da_copa(this: usize, co
 ///
 /// [pt] { 0x51ebc0 } (cdecl, Cup.cpp): `cup_compare_draw_entries_by_seed(a, b)`: a comparação do qsort das entradas de 7
 /// bytes do sorteio (0x51d2d0 e 0x51d9f0): o cabeça de chave (byte com sinal +6) de `b` menos o de `a` (maior primeiro).
-pub(crate) unsafe extern "C" fn ordem_dos_cabecas_de_chave(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     crate::comparacao::ramo("cpm_1 ordem dos cabecas de chave");
     read_i8(b + 6) as i32 - read_i8(a + 6) as i32 // o maior primeiro
 }
 
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; jogo nulo ou empate nos pênaltis (a
 /// caixa): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_decidir_jogo_da_copa(this: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_DECIDIR_JOGO_DA_COPA);
+pub(crate) unsafe extern "thiscall" fn comparar_decide_fixture_winner(this: usize, jogo: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_DECIDE_FIXTURE_WINNER);
     if jogo == 0 {
         return o(this, jogo);
     }
@@ -2810,30 +2810,30 @@ pub(crate) unsafe extern "thiscall" fn comparar_decidir_jogo_da_copa(this: usize
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, jogo)), || cpm1_jogo(this, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.registrar(igual && r == n, || format!("decidir_jogo_da_copa(regra {:x}) original={} rust={} {:x?} x {:x?}", read_i16(jogo + 0x38) as u16, r, n, mo, mr));
+        PLACAR.registrar(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", read_i16(jogo + 0x38) as u16, r, n, mo, mr));
     }
     r
 }
 
 /// Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; empate nos pênaltis (a caixa): só a
 /// original.
-pub(crate) unsafe extern "thiscall" fn comparar_decidir_confronto_da_copa(this: usize, confronto: usize, jogo: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDIR_CONFRONTO_DA_COPA);
+pub(crate) unsafe extern "thiscall" fn comparar_decide_tie_winner(this: usize, confronto: usize, jogo: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDE_TIE_WINNER);
     let reg = [(jogo + 0x3d, 2)];
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || Some(o(this, confronto, jogo)), || cpm1_confronto(confronto, jogo));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        PLACAR.registrar(igual && r == n, || format!("decidir_confronto_da_copa(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
+        PLACAR.registrar(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
             read_i16(jogo + 0x38) as u16, read_i8(confronto + 0x33), r, n, mo, mr));
     }
     r
 }
 
 /// Comparador: pelo valor.
-pub(crate) unsafe extern "C" fn comparar_ordem_dos_cabecas_de_chave(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DOS_CABECAS_DE_CHAVE)(a, b);
-    let n = ordem_dos_cabecas_de_chave(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_dos_cabecas_de_chave({}, {}) original={} rust={}", read_i8(a + 6), read_i8(b + 6), r, n));
+pub(crate) unsafe extern "C" fn comparar_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_DRAW_ENTRIES_BY_SEED)(a, b);
+    let n = cup_compare_draw_entries_by_seed(a, b);
+    PLACAR.registrar(r == n, || format!("cup_compare_draw_entries_by_seed({}, {}) original={} rust={}", read_i8(a + 6), read_i8(b + 6), r, n));
     r
 }
 
@@ -2858,7 +2858,7 @@ pub(crate) fn registro_da_rodada(rodadas: usize, rodada: u32) -> usize {
 ///
 /// [pt] { 0x521e60 } (cdecl, Cup.cpp): a data do sorteio da rodada: dia do ano na palavra +0 e ano − ano-base
 /// (byte) em +2, da data de `dia`/`mes`/ano-base + `anos` levada ao dia da semana. Devolve o registro.
-pub(crate) unsafe extern "C" fn data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
+pub(crate) unsafe extern "C" fn cup_set_round_draw_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
     let (d, a) = data_da_rodada(dia, mes, base.wrapping_add(anos), semana);
     let r = registro_da_rodada(rodadas, rodada);
     core::ptr::write_unaligned(r as *mut u16, d);
@@ -2871,7 +2871,7 @@ pub(crate) unsafe extern "C" fn data_do_sorteio_da_rodada(rodadas: usize, rodada
 ///
 /// [pt] { 0x521eb0 } (cdecl, Cup.cpp): a data do jogo da rodada, como a do sorteio, em +3 (dia) e +5 (ano −
 /// ano-base); o horário (byte) em +6 e as marcas do mando em +0x13. Devolve o registro.
-pub(crate) unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
+pub(crate) unsafe extern "C" fn cup_set_round_match_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
     let (d, a) = data_da_rodada(dia, mes, base.wrapping_add(anos), semana);
     let r = registro_da_rodada(rodadas, rodada);
     core::ptr::write_unaligned((r + 3) as *mut u16, d); // dia do jogo
@@ -2882,21 +2882,21 @@ pub(crate) unsafe extern "C" fn data_do_jogo_da_rodada(rodadas: usize, rodada: u
 }
 
 
-pub(crate) unsafe extern "C" fn comparar_data_do_sorteio_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize>(IDX_DATA_DO_SORTEIO_DA_RODADA);
+pub(crate) unsafe extern "C" fn comparar_cup_set_round_draw_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, base: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize>(IDX_CUP_SET_ROUND_DRAW_DATE);
     let r = registro_da_rodada(rodadas, rodada);
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r, 3)], || o(rodadas, rodada, dia, mes, anos, semana, base),
-        || data_do_sorteio_da_rodada(rodadas, rodada, dia, mes, anos, semana, base));
-    PLACAR.registrar(igual && a == b, || format!("data_do_sorteio_da_rodada({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+        || cup_set_round_draw_date(rodadas, rodada, dia, mes, anos, semana, base));
+    PLACAR.registrar(igual && a == b, || format!("cup_set_round_draw_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
-pub(crate) unsafe extern "C" fn comparar_data_do_jogo_da_rodada(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
-    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(IDX_DATA_DO_JOGO_DA_RODADA);
+pub(crate) unsafe extern "C" fn comparar_cup_set_round_match_date(rodadas: usize, rodada: u32, dia: u32, mes: u32, anos: u32, semana: u32, hora: u32, base: u32, mando: u32) -> usize {
+    let o = orig::<unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize>(IDX_CUP_SET_ROUND_MATCH_DATE);
     let r = registro_da_rodada(rodadas, rodada);
     let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(r + 3, 0x14)], || o(rodadas, rodada, dia, mes, anos, semana, hora, base, mando),
-        || data_do_jogo_da_rodada(rodadas, rodada, dia, mes, anos, semana, hora, base, mando));
-    PLACAR.registrar(igual && a == b, || format!("data_do_jogo_da_rodada({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
+        || cup_set_round_match_date(rodadas, rodada, dia, mes, anos, semana, hora, base, mando));
+    PLACAR.registrar(igual && a == b, || format!("cup_set_round_match_date({}, {}/{} +{}) {:x?} x {:x?}", rodada as i16, dia, mes, anos, mo, mr));
     a
 }
 
@@ -2925,7 +2925,7 @@ pub(crate) unsafe fn vaga_da_copa(copa: usize, v: i16) -> usize {
 /// [jogo+0x34]) para as marcas do jogo (+0x38, OU). Com a marca 0x800 (decide quem passa no empate), o
 /// nível (byte +4 da vaga, com sinal) dos dois lados da chave `chave` decide: mandante menor tira 0x800 e
 /// põe 0x1000; maior mantém 0x800; igual tira 0x800 e põe 1.
-pub(crate) unsafe extern "thiscall" fn regras_da_rodada_no_jogo(copa: usize, jogo: usize, chave: i32) {
+pub(crate) unsafe extern "thiscall" fn apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
     let r = *((jogo + 0x34) as *const i16) as i32;
     let marcas = (jogo + 0x38) as *mut u16;
     let m = core::ptr::read_unaligned(marcas) | core::ptr::read_unaligned((rodada_da_copa(copa, r) + 0xf) as *const u16);
@@ -2946,9 +2946,9 @@ pub(crate) unsafe extern "thiscall" fn regras_da_rodada_no_jogo(copa: usize, jog
 /// [pt] { 0x519c90 } (thiscall, ret 4, Cup.cpp): a chave da rodada do jogo (+0x34) em que está o clube
 /// mandante do jogo (+0xc), olhando os dois lados de cada chave (53 bytes; vaga negativa é vazia); -1 se
 /// nenhuma. O número de chaves é a palavra +0x1a da rodada. Jogo nulo: a original (caixa de erro).
-pub(crate) unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
     if jogo == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_CHAVE_DO_JOGO_NA_COPA)(copa, jogo);
+        return orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_FIND_TREE_SLOT_FOR_FIXTURE)(copa, jogo);
     }
     let r = *((jogo + 0x34) as *const i16) as i32;
     let n = core::ptr::read_unaligned((rodada_da_copa(copa, r) + 0x1a) as *const i16) as i32;
@@ -2966,20 +2966,20 @@ pub(crate) unsafe extern "thiscall" fn chave_do_jogo_na_copa(copa: usize, jogo: 
 }
 
 
-pub(crate) unsafe extern "thiscall" fn comparar_regras_da_rodada_no_jogo(copa: usize, jogo: usize, chave: i32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_REGRAS_DA_RODADA_NO_JOGO);
+pub(crate) unsafe extern "thiscall" fn comparar_apply_round_rules_to_match(copa: usize, jogo: usize, chave: i32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_APPLY_ROUND_RULES_TO_MATCH);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(jogo + 0x38, 2)], || o(copa, jogo, chave),
-        || regras_da_rodada_no_jogo(copa, jogo, chave));
-    PLACAR.registrar(igual, || format!("regras_da_rodada_no_jogo(chave {}) {:x?} x {:x?}", chave, mo, mr));
+        || apply_round_rules_to_match(copa, jogo, chave));
+    PLACAR.registrar(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", chave, mo, mr));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_chave_do_jogo_na_copa(copa: usize, jogo: usize) -> i32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_CHAVE_DO_JOGO_NA_COPA)(copa, jogo);
+pub(crate) unsafe extern "thiscall" fn comparar_find_tree_slot_for_fixture(copa: usize, jogo: usize) -> i32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_FIND_TREE_SLOT_FOR_FIXTURE)(copa, jogo);
     if jogo == 0 {
         return r;
     }
-    let n = chave_do_jogo_na_copa(copa, jogo);
-    PLACAR.registrar(r == n, || format!("chave_do_jogo_na_copa original={} rust={}", r, n));
+    let n = find_tree_slot_for_fixture(copa, jogo);
+    PLACAR.registrar(r == n, || format!("find_tree_slot_for_fixture original={} rust={}", r, n));
     r
 }
 
@@ -2989,7 +2989,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_chave_do_jogo_na_copa(copa: usiz
 /// [pt] { 0x5221f0 } (thiscall, ret 0xc, Cup.cpp): a importância da partida da copa (a fase +0x34 da
 /// partida menos +0x3c mais +0x51 da copa, pelo menos 1) e em `margem` a diferença do placar da ida
 /// (+0x4b/+0x4c, 0xff sem ida) para o lado `segundo`, mais 1 (0xff abaixo de 1). Devolve só `al`.
-pub(crate) unsafe extern "thiscall" fn importancia_da_partida(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn cup_match_importance(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
     let b = |p: usize, o: usize| *((p + o) as *const u8);
     let mut al = b(partida, 0x34).wrapping_sub(b(copa, 0x3c)).wrapping_add(b(copa, 0x51));
     if (al as i8) < 1 {
@@ -3006,10 +3006,10 @@ pub(crate) unsafe extern "thiscall" fn importancia_da_partida(copa: usize, parti
     al
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_importancia_da_partida(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(IDX_IMPORTANCIA_DA_PARTIDA);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(margem as usize, 1)], || o(copa, partida, segundo, margem), || importancia_da_partida(copa, partida, segundo, margem));
-    PLACAR.registrar(igual && r == n, || format!("importancia_da_partida(lado {}) original={} rust={} {:x?} x {:x?}", segundo, r, n, mo, mr));
+pub(crate) unsafe extern "thiscall" fn comparar_cup_match_importance(copa: usize, partida: usize, segundo: u8, margem: *mut u8) -> u8 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(IDX_CUP_MATCH_IMPORTANCE);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(margem as usize, 1)], || o(copa, partida, segundo, margem), || cup_match_importance(copa, partida, segundo, margem));
+    PLACAR.registrar(igual && r == n, || format!("cup_match_importance(lado {}) original={} rust={} {:x?} x {:x?}", segundo, r, n, mo, mr));
     r
 }
 
@@ -3025,12 +3025,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_importancia_da_partida(copa: usi
 /// dado 5 (0x4afeb0, que avança o cursor) e no cursor a rodada seguinte (+7 da rodada +0x34 + 1, até +0x3c − 1; 0x8c
 /// ou fora: −1). Saída ≠ 0xff: a entrega pelo alcance (0x786090). Desfecho 1 na rodada 0x96 ou 3 na 0x8c (+0x30): à
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
-pub(crate) unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let categoria: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS);
-    let gravar_jogo: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
+    let save_game_data: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(FN_COMP_UTIL_WRITE_FIXTURE_TO_NEWS_SLOTS);
     let ao_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
     let a_regiao: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_COMP_REGION);
     let pelo_alcance: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_SEND_BY_SCOPE);
@@ -3056,7 +3056,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, 
     gravar(n, 4, r as u32);
     // ponytail: o cursor é um dword da pilha com 5 no byte baixo (o resto é sobra); só o byte baixo conta
     let mut cursor = [5u8, 0, 0, 0];
-    gravar_jogo(p, n, cursor.as_mut_ptr());
+    save_game_data(p, n, cursor.as_mut_ptr());
     let k = read_i16(p + 0x34) as i32;
     let proxima = if k < read_i16(copa + 0x3c) as i32 - 1 {
         let v = read_i16(read_usize(copa + 0xa3).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
@@ -3081,8 +3081,8 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_desfecho_na_copa(copa: usize, 
     1
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_noticia_do_desfecho_na_copa(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(IDX_NOTICIA_DO_DESFECHO_NA_COPA)(copa, clube, desfecho, a3, p, a5)
+pub(crate) unsafe extern "thiscall" fn comparar_add_team_result_news(copa: usize, clube: usize, desfecho: u32, a3: u32, p: usize, a5: u32) -> u32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32) -> u32>(IDX_ADD_TEAM_RESULT_NEWS)(copa, clube, desfecho, a3, p, a5)
 }
 
 /// the cup started (+0xb1) and, asking for the stages with no stage set (+0x44), all up to the current complete and the
@@ -3092,7 +3092,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_do_desfecho_na_copa(copa
 /// [pt] { 0x521e00 } (thiscall, ret 8, Cup.cpp): `Cup::check_complete(fases, _)`: 0 se a copa não começou (+0xb1). Com
 /// `fases` = 1 e sem fase marcada (+0x44 = 0xff): cada fase de 0 até a atual (+0x30, vetor +0xc) tem de estar completa
 /// (método +0x10 com 0, 1) e a atual tem de ser a última (+0x2c − 1); senão 0. Fora isso, 1.
-pub(crate) unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x: u32) -> u8 {
+pub(crate) unsafe extern "thiscall" fn cup_check_complete(this: usize, fases: u32, _x: u32) -> u8 {
     if *((this + 0xb1) as *const u8) == 0 {
         return 0;
     }
@@ -3112,10 +3112,10 @@ pub(crate) unsafe extern "thiscall" fn copa_completa(this: usize, fases: u32, _x
 }
 
 /// Comparador: pelo valor (o método das fases só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_completa(this: usize, fases: u32, x: u32) -> u8 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_COPA_COMPLETA)(this, fases, x);
-    let n = copa_completa(this, fases, x);
-    PLACAR.registrar(r == n, || format!("copa_completa({:x}, {}) original={} rust={}", this, fases, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_cup_check_complete(this: usize, fases: u32, x: u32) -> u8 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CUP_CHECK_COMPLETE)(this, fases, x);
+    let n = cup_check_complete(this, fases, x);
+    PLACAR.registrar(r == n, || format!("cup_check_complete({:x}, {}) original={} rust={}", this, fases, r, n));
     r
 }
 
@@ -3134,7 +3134,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_completa(this: usize, fases
 /// o tipo da vaga, o estádio (0x85c260) e volta (0x5aa680); sem a copa ainda em [0xadadfc], para; senão a vaga fica
 /// 0xff. Com ou sem a mudança, a notícia 0x14 vai aos clubes se um é de técnico humano. Sem vaga (fim das vagas ou
 /// vaga vazia): só a notícia, com os dados do jogo.
-pub(crate) unsafe extern "thiscall" fn copa_levar_jogos_as_datas(this: usize, data: usize, rodada: u32) {
+pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_NEWSITEM_NEWSITEM);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
@@ -3256,8 +3256,8 @@ pub(crate) unsafe extern "thiscall" fn copa_levar_jogos_as_datas(this: usize, da
 /// ordem da lista; cada um do tipo da liga ocupa a vaga seguinte (de 7 em 7 bytes, até 0x38 e até a primeira 0xff), e
 /// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
 /// conferir.
-pub(crate) unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: usize, data: usize, rodada: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_COPA_LEVAR_JOGOS_AS_DATAS);
+pub(crate) unsafe extern "thiscall" fn comparar_move_round_fixtures_to_set_dates(this: usize, data: usize, rodada: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_MOVE_ROUND_FIXTURES_TO_SET_DATES);
     let e = cqc7_rodada(this, rodada);
     if read_i16(e + 0xd) as u16 & 0x100 == 0 || read_u8(e + 0x29) == 0xff {
         return o(this, data, rodada);
@@ -3294,7 +3294,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: 
     }
     let e = cqc7_rodada(this, rodada);
     let depois: [u8; 8] = core::array::from_fn(|k| read_u8(e + k * 7 + 0x29));
-    PLACAR.registrar(depois == esperado, || format!("copa_levar_jogos_as_datas(rodada {}) vagas {:02x?} (esperado {:02x?})",
+    PLACAR.registrar(depois == esperado, || format!("move_round_fixtures_to_set_dates(rodada {}) vagas {:02x?} (esperado {:02x?})",
         rodada, depois, esperado));
 }
 
@@ -3317,7 +3317,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_levar_jogos_as_datas(this: 
 /// o primeiro pelo par ou sorteado (0x400: o primeiro todo livre), o lado pela moeda, e numa vaga ocupada o time da
 /// nação +0x24 vira mandante (sem vaga, a caixa da linha 0x1c2 ou 0x222 e -1). Sem confrontos na primeira rodada, +0xb1
 /// = 1. Por fim o número do primeiro confronto de cada rodada (+0x5b), de trás para a frente. Devolve 1.
-pub(crate) unsafe extern "thiscall" fn copa_arvore_dos_confrontos(this: usize) -> i32 {
+pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
     let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
@@ -3617,8 +3617,8 @@ pub(crate) unsafe extern "thiscall" fn copa_arvore_dos_confrontos(this: usize) -
 /// roda duas vezes). Confere o que ela garante quando devolve 1 com clubes: cada confronto das rodadas mapeadas aponta
 /// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
 /// +0xc/+0x10 visitante).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_arvore_dos_confrontos(this: usize) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_COPA_ARVORE_DOS_CONFRONTOS);
+pub(crate) unsafe extern "thiscall" fn comparar_map_fixture_tree(this: usize) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_MAP_FIXTURE_TREE);
     let r = o(this);
     if r != 1 || read_u32_as_usize(this + 0x45) == 0 {
         return r;
@@ -3641,7 +3641,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_arvore_dos_confrontos(this:
             }
         }
     }
-    PLACAR.registrar(erro.is_none(), || format!("copa_arvore_dos_confrontos: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
+    PLACAR.registrar(erro.is_none(), || format!("map_fixture_tree: o confronto (rodada, índice) {:?} sem a vaga de volta", erro));
     r
 }
 
@@ -3653,7 +3653,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_copa_arvore_dos_confrontos(this:
 /// bytes, +0x3e deles) para um vetor (0x944e46), ordena pela força (0x4c08f0) e dá a cada um a posição prevista pela
 /// rodada em que sai (0x4a2540 na estatística [+8]); libera o vetor (0x9452ca). Sem estatística: a caixa (linha
 /// 0x1827); sem memória: a original (a caixa da falta de memória e o fim do jogo).
-pub(crate) unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
+pub(crate) unsafe extern "thiscall" fn cup_rank_teams(this: usize) {
     if read_u32_as_usize(this + 8) == 0 {
         return aviso_em(0x9b55ac, 0x1827);
     }
@@ -3663,7 +3663,7 @@ pub(crate) unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
     let n = read_i16(this + 0x3e) as i32;
     let v = alocar((n << 2) as u32);
     if v == 0 {
-        return orig::<unsafe extern "thiscall" fn(usize)>(IDX_POSICOES_PREVISTAS_DA_COPA)(this);
+        return orig::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RANK_TEAMS)(this);
     }
     for i in 0..n.max(0) as usize {
         *((v + i * 4) as *mut u32) = read_u32_as_usize(read_u32_as_usize(this + 0xa7) + i * 6) as u32;
@@ -3676,8 +3676,8 @@ pub(crate) unsafe extern "thiscall" fn posicoes_previstas_da_copa(this: usize) {
 /// Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
 /// de ter em +0x72 a última posição dele.
-pub(crate) unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_POSICOES_PREVISTAS_DA_COPA);
+pub(crate) unsafe extern "thiscall" fn comparar_cup_rank_teams(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RANK_TEAMS);
     let n = read_i16(this + 0x3e) as i32;
     if read_u32_as_usize(this + 8) == 0 || n <= 0 {
         return o(this); // ponytail: a caixa ou nada a ordenar, só a original
@@ -3700,7 +3700,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this:
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + 0x72) as *const u8) as i32 }));
         }
     }
-    PLACAR.registrar(erros.is_empty(), || format!("posicoes_previstas_da_copa({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
+    PLACAR.registrar(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plano.len(), erros.join("; ")));
 }
 
 /// stores one of the eight cup round match days: the venue flags, the weekday, the time slot and the code
@@ -3709,9 +3709,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_posicoes_previstas_da_copa(this:
 /// [pt] { 0x521f10 } (cdecl, Cup.cpp): o dia `vaga` (0 a 7) da rodada `rodada` (registros de 104 bytes):
 /// em 7 bytes a partir de +0x23, o mando (4 bytes), o dia da semana (−1 a 6), o horário (−1 a 2) e o
 /// código (−1 a 3). Fora da faixa: a original (caixa de erro e fim do jogo). Devolve o mando.
-pub(crate) unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+pub(crate) unsafe extern "C" fn cup_set_round_match_day(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
     if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
-        return orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_DIA_DA_RODADA_DA_COPA)(rodadas, rodada, vaga, semana, hora, codigo, mando);
+        return orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_CUP_SET_ROUND_MATCH_DAY)(rodadas, rodada, vaga, semana, hora, codigo, mando);
     }
     let e = rodadas.wrapping_add((rodada as isize * 104 + vaga as isize * 7) as usize);
     *((e + 0x27) as *mut u8) = semana as u8; // dia da semana
@@ -3721,15 +3721,15 @@ pub(crate) unsafe extern "C" fn dia_da_rodada_da_copa(rodadas: usize, rodada: i1
     mando
 }
 
-pub(crate) unsafe extern "C" fn comparar_dia_da_rodada_da_copa(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_DIA_DA_RODADA_DA_COPA);
+pub(crate) unsafe extern "C" fn comparar_cup_set_round_match_day(rodadas: usize, rodada: i16, vaga: i16, semana: i16, hora: i8, codigo: i8, mando: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_CUP_SET_ROUND_MATCH_DAY);
     if !(0..8).contains(&vaga) || !(-1..=6).contains(&semana) || !(-1..3).contains(&hora) || !(-1..=3).contains(&codigo) {
         return o(rodadas, rodada, vaga, semana, hora, codigo, mando);
     }
     let e = rodadas.wrapping_add((rodada as isize * 104 + vaga as isize * 7) as usize);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(e + 0x23, 7)], || o(rodadas, rodada, vaga, semana, hora, codigo, mando),
-        || dia_da_rodada_da_copa(rodadas, rodada, vaga, semana, hora, codigo, mando));
-    PLACAR.registrar(igual && r == n, || format!("dia_da_rodada_da_copa({}, {}) {:x?} x {:x?}", rodada, vaga, mo, mr));
+        || cup_set_round_match_day(rodadas, rodada, vaga, semana, hora, codigo, mando));
+    PLACAR.registrar(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", rodada, vaga, mo, mr));
     r
 }
 
@@ -3739,7 +3739,7 @@ pub(crate) unsafe extern "C" fn comparar_dia_da_rodada_da_copa(rodadas: usize, r
 /// [pt] { 0x522910 } (thiscall, ret 4, Cup.cpp; virtual +0x80 das copas, chamada pela 0x4ae300 da projeção da diretoria):
 /// `Cup::has_club(clube)`: 1 se o clube está na tabela de times da copa (+0xa7, 6 bytes por time, +0 o clube; conta
 /// +0x3e); senão 0.
-pub(crate) unsafe extern "thiscall" fn copa_tem_o_clube(this: usize, clube: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn has_club(this: usize, clube: u32) -> u32 {
     let n = *((this + 0x3e) as *const i16);
     let times = read_u32(this + 0xa7) as usize;
     for i in 0..n.max(0) as usize {
@@ -3752,9 +3752,9 @@ pub(crate) unsafe extern "thiscall" fn copa_tem_o_clube(this: usize, clube: u32)
 }
 
 /// Comparador: pelo valor (só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_copa_tem_o_clube(this: usize, clube: u32) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_COPA_TEM_O_CLUBE)(this, clube);
-    let n = copa_tem_o_clube(this, clube);
-    PLACAR.registrar(r == n, || format!("copa_tem_o_clube(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_has_club(this: usize, clube: u32) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_HAS_CLUB)(this, clube);
+    let n = has_club(this, clube);
+    PLACAR.registrar(r == n, || format!("has_club(copa {:x}, clube {:x}) original={} rust={}", this, clube, r, n));
     r
 }

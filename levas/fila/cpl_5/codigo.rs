@@ -43,7 +43,7 @@ unsafe fn cpl5_zerar_moral(this: usize, pessoa: usize, clube: usize) {
 /// { 0x866ee0 } (thiscall, ret 8, staff_contracts.cpp): `STAFF_CONTRACT::reset_morale_state(pessoa, clube)`: o
 /// `cpl5_zerar_moral`. Pela assinatura do contrato (CONTRACT_MANAGER::sign_contract 0x4cf720, nos termos que
 /// depois são copiados para o contrato guardado).
-unsafe extern "thiscall" fn zerar_moral_do_contrato(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn reset_morale_state(this: usize, pessoa: usize, clube: usize) {
     cpl5_zerar_moral(this, pessoa, clube);
 }
 
@@ -55,9 +55,9 @@ unsafe extern "thiscall" fn zerar_moral_do_contrato(this: usize, pessoa: usize, 
 /// +0x3b (16 bits), +0x1c..=+0x20 e +0x21, −1 em +0x10/+0x14/+0x18 e as cláusulas: +0x1c sem acesso, +0x1d multa
 /// mínima. As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn contrato_pelo_atual(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpl5_d(0xae1050), pessoa);
+unsafe extern "thiscall" fn init_from_current_contract(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpl5_d(0xae1050), pessoa);
     if c == 0 {
         aviso_em(0xa8360c, 0xf5);
         return;
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn contrato_pelo_atual(this: usize, pessoa: usize, club
 /// intervalos entre 0xae1040/0xae1060/0xae1010/0xae1058/0xae1030 dão os pares 1-2, 3-4, 5-6, 7-8, 9-10 (o ímpar no dia
 /// exato do limite de cima: 0x4a7f20) e, antes de 0xae1030, 11 no dia, 13 no dia de 0xae1048, senão 12. "Depois"
 /// pela 0x456740. Chamada a cada contrato no passe diário (0x4c7ac0): sem contador.
-unsafe extern "thiscall" fn faixa_do_vencimento(this: usize) -> u8 {
+unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let mesmo_dia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x4a7f20usize);
     let fim = this + 0x2d;
@@ -146,34 +146,34 @@ unsafe fn cpl5_regioes(this: usize, id: usize) -> Vec<(usize, usize)> {
 }
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa (o idioma 0x7c6830 só lê).
-unsafe extern "thiscall" fn comparar_zerar_moral_do_contrato(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_reset_morale_state(this: usize, pessoa: usize, clube: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I0%%);
     let regioes = cpl5_regioes(this, cpl5_d(this));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa, clube), || zerar_moral_do_contrato(this, pessoa, clube));
-    PLACAR.registrar(igual, || format!("zerar_moral_do_contrato(pessoa {}) {:x?} x {:x?}", cpl5_d(pessoa), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, pessoa, clube), || reset_morale_state(this, pessoa, clube));
+    PLACAR.registrar(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", cpl5_d(pessoa), mo, mr));
 }
 
 /// Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "thiscall" fn comparar_contrato_pelo_atual(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
+unsafe extern "thiscall" fn comparar_init_from_current_contract(this: usize, pessoa: usize, clube: usize, fim: usize, percentual: u32, sem_acesso: u32, multa: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(%%I1%%);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    if contrato_de(cpl5_d(0xae1050), pessoa) == 0 {
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    if contract_of(cpl5_d(0xae1050), pessoa) == 0 {
         return o(this, pessoa, clube, fim, percentual, sem_acesso, multa);
     }
     let regioes = cpl5_regioes(this, cpl5_d(pessoa));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
         || o(this, pessoa, clube, fim, percentual, sem_acesso, multa),
-        || contrato_pelo_atual(this, pessoa, clube, fim, percentual, sem_acesso, multa));
+        || init_from_current_contract(this, pessoa, clube, fim, percentual, sem_acesso, multa));
     PLACAR.registrar(igual, || {
-        format!("contrato_pelo_atual(pessoa {}, percentual {}, {}, {}) {:x?} x {:x?}", cpl5_d(pessoa), percentual as u8 as i8, sem_acesso as u8, multa as u8, mo, mr)
+        format!("init_from_current_contract(pessoa {}, percentual {}, {}, {}) {:x?} x {:x?}", cpl5_d(pessoa), percentual as u8 as i8, sem_acesso as u8, multa as u8, mo, mr)
     });
 }
 
 /// Comparador: só lê; compara a faixa.
-unsafe extern "thiscall" fn comparar_faixa_do_vencimento(this: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_get_expiry_band(this: usize) -> u8 {
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u8>(%%I2%%)(this);
-    let n = faixa_do_vencimento(this);
-    PLACAR.registrar(r == n, || format!("faixa_do_vencimento(pessoa {}) original={} rust={}", cpl5_d(this), r, n));
+    let n = get_expiry_band(this);
+    PLACAR.registrar(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", cpl5_d(this), r, n));
     r
 }

@@ -65,15 +65,15 @@ const CQK2_ESPANHA: [[u8; 6]; 4] = [
 
 /// { 0x859470 } (thiscall, ret 0, spain_rules.cpp, `SPAIN_RULES::init_transfer_windows`; chamada pelo construtor das regras da Espanha (regra 22), depois da base e da vtable): as
 /// 2 janelas de transferência de `CQK2_ESPANHA`.
-unsafe extern "thiscall" fn janelas_espanha(this: usize) {
+unsafe extern "thiscall" fn spain_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqk_2 espanha");
     cqk2_janelas(this, 2, &CQK2_ESPANHA, 0xa82ac8, 0x54);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk2_comparar`).
-unsafe extern "thiscall" fn comparar_janelas_espanha(this: usize) {
+unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqk2_comparar("janelas_espanha", this, || o(this), |s| janelas_espanha(s));
+    cqk2_comparar("spain_rules_init_transfer_windows", this, || o(this), |s| spain_rules_init_transfer_windows(s));
 }
 
 /// As janelas da Itália: de 1º de julho a 27 de setembro (andando para a quinta-feira [inferência]), de 2 a 31 de janeiro, e a terceira, de 1º de julho a 30 de abril [inferência: a dos jogadores sem contrato].
@@ -88,15 +88,15 @@ const CQK2_ITALIA: [[u8; 6]; 6] = [
 
 /// { 0x6613f0 } (thiscall, ret 0, italy_rules.cpp, `ITALY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Itália (regra 14), depois da base e da vtable): as
 /// 3 janelas de transferência de `CQK2_ITALIA`.
-unsafe extern "thiscall" fn janelas_italia(this: usize) {
+unsafe extern "thiscall" fn spain_rules_init_transfer_windows_6613f0(this: usize) {
     crate::comparacao::ramo("cqk_2 italia");
     cqk2_janelas(this, 3, &CQK2_ITALIA, 0x9ea9a4, 0x52);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk2_comparar`).
-unsafe extern "thiscall" fn comparar_janelas_italia(this: usize) {
+unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_6613f0(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqk2_comparar("janelas_italia", this, || o(this), |s| janelas_italia(s));
+    cqk2_comparar("spain_rules_init_transfer_windows_6613f0", this, || o(this), |s| spain_rules_init_transfer_windows_6613f0(s));
 }
 
 /// As janelas da França: de 30 de maio a 31 de agosto, de 1º de setembro a 20 de dezembro e de 21 de dezembro a 10 de janeiro (com os dias da semana para os quais as datas andam [inferência]).
@@ -111,13 +111,13 @@ const CQK2_FRANCA: [[u8; 6]; 6] = [
 
 /// { 0x5c15e0 } (thiscall, ret 0, france_rules.cpp, `FRANCE_RULES::init_transfer_windows`; chamada pelo construtor das regras da França (regra 9), depois da base e da vtable): as
 /// 3 janelas de transferência de `CQK2_FRANCA`.
-unsafe extern "thiscall" fn janelas_franca(this: usize) {
+unsafe extern "thiscall" fn spain_rules_init_transfer_windows_5c15e0(this: usize) {
     crate::comparacao::ramo("cqk_2 franca");
     cqk2_janelas(this, 3, &CQK2_FRANCA, 0x9cccf4, 0x4f);
 }
 
 /// A original no objeto de quem chama, a cópia num rascunho (ver `cqk2_comparar`).
-unsafe extern "thiscall" fn comparar_janelas_franca(this: usize) {
+unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_5c15e0(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqk2_comparar("janelas_franca", this, || o(this), |s| janelas_franca(s));
+    cqk2_comparar("spain_rules_init_transfer_windows_5c15e0", this, || o(this), |s| spain_rules_init_transfer_windows_5c15e0(s));
 }

@@ -10,7 +10,7 @@ const COMPETICAO_V1: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33, 1), (0x38,
 /// própria pilha, já usado) vira u16 sem conta. A primeira leitura que não vem dá 0 (o que já veio fica); tudo,
 /// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
-unsafe extern "C" fn ler_competicoes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler competições v1");
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
@@ -36,7 +36,7 @@ unsafe extern "C" fn ler_competicoes_v1(stream: usize, use_zip: i32, registros: 
 /// Comparador: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à posição do `ftell`
 /// 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo parou.
 // ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
-unsafe extern "C" fn comparar_ler_competicoes_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
+unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     let o = orig::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(%%I0%%);
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
@@ -53,13 +53,13 @@ unsafe extern "C" fn comparar_ler_competicoes_v1(stream: usize, use_zip: i32, re
         },
         || {
             fseek(stream, pos, 0);
-            let r = ler_competicoes_v1(stream, use_zip, registros, n);
+            let r = db_files_read_comps_v1(stream, use_zip, registros, n);
             fim_r = ftell(stream);
             r
         });
     PLACAR.registrar(igual && r == x && fim_o == fim_r, || {
         let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
-        format!("ler_competicoes_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
+        format!("db_files_read_comps_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
     });
     r
 }
@@ -67,7 +67,7 @@ unsafe extern "C" fn comparar_ler_competicoes_v1(stream: usize, use_zip: i32, re
 /// { 0x5453f0 } (cdecl, Database.cpp): `nation_get_english_name(nação)`: idioma ([0x9b5984]) 0 ou 1: o próprio
 /// nome (+4). Senão a tabela do eng.lng ([0xae2408]): nações em linhas de 109 bytes a partir de +0x2c, pelo id
 /// (sem conferir a quantidade).
-unsafe extern "C" fn nome_ingles_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn nation_get_english_name(nacao: usize) -> usize {
     let idioma = *(0x9b5984 as *const u32);
     if idioma == 0 || idioma == 1 {
         return nacao.wrapping_add(4); // idioma 0 ou 1 (nação)
@@ -81,15 +81,15 @@ unsafe extern "C" fn nome_ingles_da_nacao(nacao: usize) -> usize {
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109))
 }
 
-unsafe extern "C" fn comparar_nome_ingles_da_nacao(nacao: usize) -> usize {
+unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I1%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(nacao); // primeiro uso (aloca e carrega): só a original
     }
     let r = o(nacao);
-    let n = nome_ingles_da_nacao(nacao);
-    PLACAR.registrar(r == n, || format!("nome_ingles_da_nacao({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
+    let n = nation_get_english_name(nacao);
+    PLACAR.registrar(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
     r
 }
 
@@ -97,7 +97,7 @@ unsafe extern "C" fn comparar_nome_ingles_da_nacao(nacao: usize) -> usize {
 /// próprio nome curto (+0x38). Senão a tabela do eng.lng ([0xae2408], linhas de 79 bytes a partir de +0x20, o
 /// nome curto em +0x34 da linha): pelo mapa de ids [0xae23fc] se houver, senão pelo id se < quantos (+0),
 /// senão 0.
-unsafe extern "C" fn nome_curto_ingles_do_clube(clube: usize) -> usize {
+unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usize {
     let idioma = *(0x9b5984 as *const u32);
     if idioma == 0 || idioma == 1 {
         return clube.wrapping_add(0x38);
@@ -120,15 +120,15 @@ unsafe extern "C" fn nome_curto_ingles_do_clube(clube: usize) -> usize {
     linhas.wrapping_add((i as usize).wrapping_mul(79)).wrapping_add(0x34) // nome curto na linha
 }
 
-unsafe extern "C" fn comparar_nome_curto_ingles_do_clube(clube: usize) -> usize {
+unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize) -> usize>(%%I2%%);
     let idioma = *(0x9b5984 as *const u32);
     if idioma != 0 && idioma != 1 && *(0xae2408 as *const usize) == 0 {
         return o(clube); // primeiro uso (aloca e carrega): só a original
     }
     let r = o(clube);
-    let n = nome_curto_ingles_do_clube(clube);
-    PLACAR.registrar(r == n, || format!("nome_curto_ingles_do_clube({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
+    let n = club_get_english_short_name(clube);
+    PLACAR.registrar(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
     r
 }
 
@@ -159,7 +159,7 @@ pub unsafe fn autoteste_dbj_2() {
             continue;
         }
         let mut buf: Vec<u8> = (0..n * 107).map(|_| s.proximo() as u8).collect();
-        comparar_ler_competicoes_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
+        comparar_db_files_read_comps_v1(f, 0, buf.as_mut_ptr() as usize, n as u32);
         fclose(f);
     }
     let _ = std::fs::remove_file(ARQ);
@@ -182,8 +182,8 @@ pub unsafe fn autoteste_dbj_2() {
         *(0xae23fc as *mut usize) = if com_mapa { mapa.as_ptr() as usize } else { 0 };
         let id = if com_mapa { ((z >> 52) % 8) as i32 } else { ((z >> 52) % 14) as i32 - 2 };
         *(registro.as_mut_ptr() as *mut i32) = id;
-        comparar_nome_ingles_da_nacao(registro.as_ptr() as usize);
-        comparar_nome_curto_ingles_do_clube(registro.as_ptr() as usize);
+        comparar_nation_get_english_name(registro.as_ptr() as usize);
+        comparar_club_get_english_short_name(registro.as_ptr() as usize);
     }
     for (i, &a) in globais.iter().enumerate() {
         *(a as *mut usize) = antes[i];

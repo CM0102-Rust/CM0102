@@ -95,7 +95,7 @@ unsafe fn cqn12_copa_da_liga(this: usize) -> (i32, i32) {
     ((n == cqn12_w(this + 0x3e) as i32) as i32, n)
 }
 
-unsafe extern "thiscall" fn cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn jap_j_cup_collect_entrants(this: usize) -> i32 {
     cqn12_copa_da_liga(this).0
 }
 
@@ -134,9 +134,9 @@ unsafe fn cqn12_comparar(nome: &str, this: usize, o: impl FnOnce() -> i32, c: im
     a
 }
 
-unsafe extern "thiscall" fn comparar_cqn12_copa_da_liga_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqn12_comparar("cqn12_copa_da_liga_inscritos", this, || o(this), || cqn12_copa_da_liga(this))
+    cqn12_comparar("jap_j_cup_collect_entrants", this, || o(this), || cqn12_copa_da_liga(this))
 }
 
 /// { 0x90b530 } (thiscall, ret 0, usa_open_cup.cpp): `UsaOpenCup::collect_entrants()`: +0x3e = 32. Os clubes cuja
@@ -196,13 +196,13 @@ unsafe fn cqn12_copa_dos_eua(this: usize) -> (i32, i32) {
     (1, k as i32)
 }
 
-unsafe extern "thiscall" fn cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn jap_j_cup_collect_entrants_90b530(this: usize) -> i32 {
     cqn12_copa_dos_eua(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqn12_copa_dos_eua_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_90b530(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqn12_comparar("cqn12_copa_dos_eua_inscritos", this, || o(this), || cqn12_copa_dos_eua(this))
+    cqn12_comparar("jap_j_cup_collect_entrants_90b530", this, || o(this), || cqn12_copa_dos_eua(this))
 }
 
 /// { 0x6624f0 } (thiscall, ret 0, jap_emp_cup.cpp): `JapEmpCup::collect_entrants()`: +0x3e = 80; a lista (0x944e46 de
@@ -306,11 +306,11 @@ unsafe fn cqn12_copa_do_imperador(this: usize) -> (i32, i32) {
     ((n == cqn12_w(this + 0x3e) as i32) as i32, n)
 }
 
-unsafe extern "thiscall" fn cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn jap_j_cup_collect_entrants_6624f0(this: usize) -> i32 {
     cqn12_copa_do_imperador(this).0
 }
 
-unsafe extern "thiscall" fn comparar_cqn12_copa_do_imperador_inscritos(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_6624f0(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I2%%);
-    cqn12_comparar("cqn12_copa_do_imperador_inscritos", this, || o(this), || cqn12_copa_do_imperador(this))
+    cqn12_comparar("jap_j_cup_collect_entrants_6624f0", this, || o(this), || cqn12_copa_do_imperador(this))
 }

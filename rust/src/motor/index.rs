@@ -19,7 +19,7 @@ include!("../adjetivos_nacao.rs");
 /// texto: em cada cadeia a primeira chave igual ao id (+0) copia a fonte da forma (0..4, as outras pela 6ª coluna; 0
 /// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
 /// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
-pub(crate) unsafe extern "C" fn adjetivo_da_nacao(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
     core::ptr::write_volatile(texto as *mut u8, 0); // antes dos testes, como a original (texto nulo: a mesma falha)
     if nacao == 0 || texto == 0 || (tamanho as u16 as i16) < 50 {
         return 0;
@@ -50,16 +50,16 @@ pub(crate) unsafe extern "C" fn adjetivo_da_nacao(nacao: usize, texto: usize, ta
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_adjetivo_da_nacao(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_ADJETIVO_DA_NACAO);
+pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
     if texto == 0 {
         return o(nacao, texto, tamanho, genero);
     }
     // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
     let n = ((tamanho as u16 as i16).max(1) as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nacao, texto, tamanho, genero),
-        || adjetivo_da_nacao(nacao, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("adjetivo_da_nacao({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
+        || nation_get_nationality_adjective(nacao, texto, tamanho, genero));
+    PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
         nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
     r
 }
@@ -256,7 +256,7 @@ pub(crate) unsafe fn menos_um_das_chaves_1080_dbw() {
 /// [pt] { 0x601a40 } (cdecl, index.cpp, set_key_ids): na carga da base (0x528540), as chaves fixas do jogo (cores,
 /// continentes, nações, competições, prêmios, clubes) recebem a linha da base pelo nome; as que ficam sem valor vão ao
 /// relato. A entrada do cm0102.exe: o -1 nas 1.282 globais de MENOS_UM_DAS_CHAVES e o miolo `chaves_fixas`. Devolve 1.
-pub(crate) unsafe extern "C" fn definir_chaves_fixas() -> u32 {
+pub(crate) unsafe extern "C" fn set_key_ids() -> u32 {
     menos_um_das_chaves_dbw();
     chaves_fixas(u32::MAX, true)
 }
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "C" fn definir_chaves_fixas() -> u32 {
 /// { 0x603834 } (cdecl, só no cm0102-1080.exe): a mesma rotina pela entrada do 1080 (a chamada de 0x52d8fa vai para
 /// ela): o -1 nas faixas inteiras 0x9cf178..0x9d0527 e 0xb63c9c..0xb63d03 (também as 4 globais que a original não toca)
 /// e o mesmo miolo. Devolve 1.
-pub(crate) unsafe extern "C" fn definir_chaves_fixas_1080() -> u32 {
+pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
     menos_um_das_chaves_1080_dbw();
     chaves_fixas(MARCA_DAS_CHAVES_1080, true)
 }
@@ -272,23 +272,23 @@ pub(crate) unsafe extern "C" fn definir_chaves_fixas_1080() -> u32 {
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 pub(crate) const REGIOES_DAS_CHAVES_DBW: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
-pub(crate) unsafe extern "C" fn comparar_definir_chaves_fixas() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_DEFINIR_CHAVES_FIXAS);
+pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
+    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
         menos_um_das_chaves_dbw();
         chaves_fixas(u32::MAX, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("definir_chaves_fixas() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_definir_chaves_fixas_1080() -> u32 {
-    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_DEFINIR_CHAVES_FIXAS_1080);
+pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
+    let o = orig::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
         menos_um_das_chaves_1080_dbw();
         chaves_fixas(MARCA_DAS_CHAVES_1080, false)
     });
-    PLACAR.registrar(igual && r == n, || format!("definir_chaves_fixas_1080() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, chaves_diferentes(&mo, &mr)));
     r
 }
 
@@ -328,10 +328,10 @@ pub(crate) const DBU3_REGIOES: [(usize, usize); 14] = [
 /// 0xff) ou de regionalidade, com o vazio 0xad9c64. Devolve 1. Texto nulo, região fora da faixa ou tamanho (curto
 /// com sinal) < 100: a original (caixa). Na ordem das regiões (0x545dc0, em Rust), na busca de jogadores
 /// (player_search, search_screens) e em telas sem módulo (0x7db360, 0x7e13d0, 0x7e29e0).
-pub(crate) unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
-        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DA_REGIAO)(regiao, texto, tamanho, forma);
+        return orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME)(regiao, texto, tamanho, forma);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
@@ -373,16 +373,16 @@ pub(crate) unsafe extern "C" fn nome_da_regiao(regiao: u32, texto: usize, tamanh
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_nome_da_regiao(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_NOME_DA_REGIAO);
+pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
     let r = regiao as u8 as i8;
     if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
         return o(regiao, texto, tamanho, forma); // caixa: só a original
     }
     // os 100 primeiros bytes (o tamanho mínimo aceito)
     let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
-        || nome_da_regiao(regiao, texto, tamanho, forma));
-    PLACAR.registrar(igual && x == n, || format!("nome_da_regiao({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
+        || get_region_name(regiao, texto, tamanho, forma));
+    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
     x
 }
 
@@ -424,9 +424,9 @@ pub(crate) const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
 /// +0 comparado às chaves [0x9cfa08..0x9cfa18], nessa ordem) e pela forma do adjetivo (0x545a60, já em Rust, pelo
 /// endereço do jogo). Devolve 1. Continente ou texto nulos ou tamanho (curto com sinal) < 50: a original (0). Na
 /// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
-pub(crate) unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+pub(crate) unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
-        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_ADJETIVO_DO_CONTINENTE)(continente, texto, tamanho, forma);
+        return orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE)(continente, texto, tamanho, forma);
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
@@ -455,15 +455,15 @@ pub(crate) unsafe extern "C" fn adjetivo_do_continente(continente: usize, texto:
     1
 }
 
-pub(crate) unsafe extern "C" fn comparar_adjetivo_do_continente(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_ADJETIVO_DO_CONTINENTE);
+pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
     if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
         return o(continente, texto, tamanho, forma);
     }
     // os 50 primeiros bytes (o tamanho mínimo aceito)
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
-        || adjetivo_do_continente(continente, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == n, || format!("adjetivo_do_continente({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
+        || get_continent_adjective(continente, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
     r
 }
 
@@ -1410,7 +1410,7 @@ pub(crate) static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CHAVES_DE_CLUBE.iter() {
@@ -1431,7 +1431,7 @@ pub(crate) unsafe extern "C" fn casar_chave_de_clube(nome: usize, linha: u32) ->
 /// [pt] { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
 /// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CHAVES_DE_CLUBE_NA_TROCA) que
 /// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
-pub(crate) unsafe extern "C" fn remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
+pub(crate) unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32 {
     for &g in CHAVES_DE_CLUBE_NA_TROCA.iter() {
         if *(g as *const u32) == antigo {
             *(g as *mut u32) = novo; // chave remapeada
@@ -1449,7 +1449,7 @@ pub(crate) unsafe extern "C" fn remapear_chave_de_clube(antigo: u32, novo: u32) 
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn casar_chave_de_nacao(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CHAVES_DE_NACAO.iter() {
@@ -1478,32 +1478,32 @@ pub(crate) fn chaves_diferentes(mo: &crate::comparacao::Memoria, mr: &crate::com
     s
 }
 
-pub(crate) unsafe extern "C" fn comparar_casar_chave_de_clube(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_clube(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_clube(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
+        format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_remapear_chave_de_clube(antigo: u32, novo: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAPEAR_CHAVE_DE_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
     let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remapear_chave_de_clube(antigo, novo));
-    PLACAR.registrar(igual && r == n, || format!("remapear_chave_de_clube({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, chaves_diferentes(&mo, &mr)));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
+    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, chaves_diferentes(&mo, &mr)));
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_casar_chave_de_nacao(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_NACAO);
+pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_nacao(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_nacao(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
+        format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }
@@ -2346,7 +2346,7 @@ pub(crate) static CHAVES_DE_COMPETICAO_DE_PESSOA: &[&[(u32, u32)]] = &[
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn casar_chave_de_competicao_de_clube(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CHAVES_DE_COMPETICAO_DE_CLUBE.iter() {
@@ -2380,7 +2380,7 @@ pub(crate) unsafe extern "C" fn casar_chave_de_competicao_de_clube(nome: usize, 
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
-pub(crate) unsafe extern "C" fn casar_chave_de_competicao_de_pessoa(nome: usize, linha: u32) -> u32 {
+pub(crate) unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
     for cadeia in CHAVES_DE_COMPETICAO_DE_PESSOA.iter() {
@@ -2396,24 +2396,24 @@ pub(crate) unsafe extern "C" fn casar_chave_de_competicao_de_pessoa(nome: usize,
 }
 
 
-pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_clube(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_COMPETICAO_DE_CLUBE);
+pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION, 0x4c0)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_competicao_de_clube(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_comp_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_competicao_de_clube(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
+        format!("match_club_comp_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }
 
-pub(crate) unsafe extern "C" fn comparar_casar_chave_de_competicao_de_pessoa(nome: usize, linha: u32) -> u32 {
-    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_CASAR_CHAVE_DE_COMPETICAO_DE_PESSOA);
+pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
+    let o = orig::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_STAFF_COMP_KEY_ID);
     let reg: [(usize, usize); 1] = [(KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR, 0x684)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || casar_chave_de_competicao_de_pessoa(nome, linha));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_staff_comp_key_id(nome, linha));
     PLACAR.registrar(igual && r == n, || {
         let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("casar_chave_de_competicao_de_pessoa(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
+        format!("match_staff_comp_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, chaves_diferentes(&mo, &mr))
     });
     r
 }

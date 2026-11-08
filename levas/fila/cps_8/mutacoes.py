@@ -1,4 +1,4 @@
-# Mutacoes. Sem pedidos de observacao, o jogo passa a ter jogador observado (a partida_sem_humano 0x6b66a0 devolve 0:
+# Mutacoes. Sem pedidos de observacao, o jogo passa a ter jogador observado (a match_without_human 0x6b66a0 devolve 0:
 # a partida deixa de ser simulada sem o humano e o motor sorteia outra coisa). A competicao negativa tambem passa a ter
 # observado (so pega se a carreira tiver partida com competicao negativa; senao o ramo nao roda e fica lacuna). Na
 # lista do olheiro, todo jogador passa a estar na lista do humano de ferias: os clubes interessados (0x842180) ganham

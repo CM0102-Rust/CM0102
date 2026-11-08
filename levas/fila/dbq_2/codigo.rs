@@ -19,7 +19,7 @@ unsafe fn dbq2_regioes(base: usize) -> Vec<(usize, usize)> {
 /// rejeitados, como a original); sem vaga, com `forcar`, a vaga sorteada (0x90cfc0, 3). Pessoa, preferências ou clube
 /// nulos: nada. No diário das pessoas (game_daily_staff_update 0x5ce2d0, duas chamadas), 0x5a5980, MANAGER_MANAGER
 /// (0x69c030) e outras.
-unsafe extern "C" fn acrescentar_clube_rejeitado(pessoa: usize, clube: usize, forcar: u32) {
+unsafe extern "C" fn staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
     if pessoa == 0 {
         return;
     }
@@ -48,20 +48,20 @@ unsafe extern "C" fn acrescentar_clube_rejeitado(pessoa: usize, clube: usize, fo
     }
 }
 
-unsafe extern "C" fn comparar_acrescentar_clube_rejeitado(pessoa: usize, clube: usize, forcar: u32) {
+unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
     let o = orig::<unsafe extern "C" fn(usize, usize, u32)>(%%I0%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 4 } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, clube, forcar),
-        || crate::aleatorio::sem_contar(|| acrescentar_clube_rejeitado(pessoa, clube, forcar)));
-    PLACAR.registrar(igual, || format!("acrescentar_clube_rejeitado({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_add_disliked_club(pessoa, clube, forcar)));
+    PLACAR.registrar(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
 }
 
 /// { 0x547f90 } (cdecl, Database.cpp): `staff_fade_staff_relationships(pessoa)`: cada uma das três pessoas favoritas
 /// (preferências +0x1c..+0x24) presente sai com o sorteio (0x90cfc0) de (+0x59 da pessoa, com sinal) + 15 dando 0;
 /// cada uma das três rejeitadas (+0x28..+0x30), com o de 35 − (+0x5d). Um sorteio por vaga ocupada, na ordem.
 /// Pessoa ou preferências nulas: nada. No diário das pessoas (game_daily_staff_update 0x5ce2d0).
-unsafe extern "C" fn esmaecer_relacoes(pessoa: usize) {
+unsafe extern "C" fn staff_fade_staff_relationships(pessoa: usize) {
     if pessoa == 0 || dbq2_u32(pessoa + 0x65) == 0 {
         return;
     }
@@ -80,13 +80,13 @@ unsafe extern "C" fn esmaecer_relacoes(pessoa: usize) {
     }
 }
 
-unsafe extern "C" fn comparar_esmaecer_relacoes(pessoa: usize) {
+unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
     let o = orig::<unsafe extern "C" fn(usize)>(%%I1%%);
     let pref = if pessoa != 0 { dbq2_u32(pessoa + 0x65) } else { 0 };
     let reg = dbq2_regioes(if pref != 0 { pref + 0x1c } else { 0 });
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa),
-        || crate::aleatorio::sem_contar(|| esmaecer_relacoes(pessoa)));
-    PLACAR.registrar(igual, || format!("esmaecer_relacoes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_fade_staff_relationships(pessoa)));
+    PLACAR.registrar(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// { 0x5480f0 } (cdecl, Database.cpp): `staff_get_disliked_staff(pessoa, saida, n)`: zera o byte `*n` (sempre, antes
@@ -94,7 +94,7 @@ unsafe extern "C" fn comparar_esmaecer_relacoes(pessoa: usize) {
 /// ordem, contando em `*n`. Pessoa, preferências ou saída nulas: só o zero. Devolve `n` (o eax da original); os
 /// chamadores leem só o byte. No diário das pessoas (0x5ce2d0, duas chamadas), MANAGER_MANAGER (0x693850), mídia e
 /// telas de pessoas.
-unsafe extern "C" fn pessoas_rejeitadas(pessoa: usize, saida: usize, n: usize) -> usize {
+unsafe extern "C" fn staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
     let cont = n as *mut i8;
     *cont = 0;
     if pessoa == 0 || dbq2_u32(pessoa + 0x65) == 0 || saida == 0 {
@@ -111,13 +111,13 @@ unsafe extern "C" fn pessoas_rejeitadas(pessoa: usize, saida: usize, n: usize) -
     n
 }
 
-unsafe extern "C" fn comparar_pessoas_rejeitadas(pessoa: usize, saida: usize, n: usize) -> usize {
+unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> usize>(%%I2%%);
     let mut reg = vec![(n, 1)];
     if saida != 0 {
         reg.push((saida, 12));
     }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida, n), || pessoas_rejeitadas(pessoa, saida, n));
-    PLACAR.registrar(igual && r == m, || format!("pessoas_rejeitadas({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida, n), || staff_get_disliked_staff(pessoa, saida, n));
+    PLACAR.registrar(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
     r
 }

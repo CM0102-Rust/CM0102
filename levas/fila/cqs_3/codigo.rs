@@ -63,7 +63,7 @@ unsafe fn cqs3_grupo(this: usize, g: u32, pv: usize) {
 }
 
 /// { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
-unsafe extern "thiscall" fn cqs3_grupo_da_serie_c(this: usize, g: u32) {
+unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: usize, g: u32) {
     cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
 
@@ -82,7 +82,7 @@ const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5,
 ///    0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 16, a lista, as rodadas, +4, a
 ///    tabela, o ano, 7, 1, o extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][7]. Sem fase: a caixa da
 ///    linha 0x31b e volta. Com ela: a tabela e a lista liberadas (free 0x9452ca) e +0x30 = 7.
-unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn cqs3_segunda_fase_da_serie_c(this: usize) {
 /// vagas de cima), o ano, 8 ou 9, o extra (word), 0x14, 1, 0, 2 (os bits de regra), −1, 0, 2) em [+0xc][8] ou [9];
 /// sem fase: a caixa da linha 0x353 ou 0x363 e volta; com ela, a tabela liberada (free 0x9452ca). Depois do segundo,
 /// +0x30 = 9. [inferência] Os dois primeiros de cada grupo sobem à Série B; os campeões dos grupos fazem a final.
-unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let embaralhar: unsafe extern "C" fn(*mut usize, u32) = core::mem::transmute(0x4afb40usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn cqs3_terceira_fase_da_serie_c(this: usize) {
 /// O comparador de um grupo: só a original (aloca o vetor, a tabela das rodadas e a fase), com o plano feito antes: os
 /// sete clubes das vagas 7(g + 1).. da lista dos 56. Depois, a fase na vaga g com +0x3e = 7, os sete na tabela dela
 /// (como conjunto) e +0x30 = g.
-unsafe extern "thiscall" fn comparar_cqs3_grupo_da_serie_c(this: usize, g: u32) {
+unsafe extern "thiscall" fn comparar_bra_nat_third_create_group_stage(this: usize, g: u32) {
     let k = g as u8 as i8 as i32;
     let mut plano = [0usize; 7];
     for (j, c) in plano.iter_mut().enumerate() {
@@ -214,13 +214,13 @@ unsafe extern "thiscall" fn comparar_cqs3_grupo_da_serie_c(this: usize, g: u32) 
         nela.sort_unstable();
         a == nela
     };
-    PLACAR.registrar(igual, || format!("cqs3_grupo_da_serie_c({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
+    PLACAR.registrar(igual, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this, k, fase, plano));
 }
 
 /// O comparador da segunda fase: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
 /// antes pela mesma escolha numa cópia dos registros: a fase da vaga 7 existe, com +0x3e = 16 e os dezesseis na ordem
 /// das vagas na lista dela (+0xa7, 6 bytes), e +0x30 = 7.
-unsafe extern "thiscall" fn comparar_cqs3_segunda_fase_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
         let t = cqs3_d(if g == -1 { this } else { cqs3_d(cqs3_d(this + 0xc) + 4 * g as usize) } + 0xb1);
@@ -252,12 +252,12 @@ unsafe extern "thiscall" fn comparar_cqs3_segunda_fase_da_serie_c(this: usize) {
         b.sort_unstable();
         a == b
     };
-    PLACAR.registrar(igual, || format!("cqs3_segunda_fase_da_serie_c({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
+    PLACAR.registrar(igual, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this, fase, plano));
 }
 
 /// O comparador da terceira fase: só a original (embaralha: sorteia; aloca as tabelas e as fases), com o plano: os
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
-unsafe extern "thiscall" fn comparar_cqs3_terceira_fase_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn comparar_create_third_round_groups(this: usize) {
     let segunda = cqs3_d(cqs3_d(this + 0xc) + 0x1c);
     let mut plano = [0usize; 8];
     let mut n = 0usize;
@@ -283,5 +283,5 @@ unsafe extern "thiscall" fn comparar_cqs3_terceira_fase_da_serie_c(this: usize) 
         nela.sort_unstable();
         p == nela
     };
-    PLACAR.registrar(igual, || format!("cqs3_terceira_fase_da_serie_c({:#x}) n={} plano={:x?}", this, n, plano));
+    PLACAR.registrar(igual, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this, n, plano));
 }

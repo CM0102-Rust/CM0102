@@ -68,19 +68,19 @@ unsafe fn cqn9_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
 
 /// { 0x4325b0 } (thiscall, ret 0, bra_reg_gaucho.cpp): `BraRegGaucho::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98ae50, linhas 0x217 (sem lista) e 0x22b (sem fase).
-unsafe extern "thiscall" fn cqn9_mata_mata_do_gaucho(this: usize) {
+unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this: usize) {
     cqn9_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98ae50, 0x217, 0x22b, "cqn_9 gaucho"); // cqn9: 1º × 4º, 2º × 3º Gaúcho
 }
 
 /// { 0x4312d0 } (thiscall, ret 0, bra_reg_central.cpp): `BraRegCentral::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae10, linhas 0x21c (sem lista) e 0x234 (sem fase).
-unsafe extern "thiscall" fn cqn9_mata_mata_do_centro_oeste(this: usize) {
+unsafe extern "thiscall" fn bra_reg_central_create_knockout_stage(this: usize) {
     cqn9_mata_mata(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae10, 0x21c, 0x234, "cqn_9 centro_oeste"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Centro-Oeste
 }
 
 /// { 0x433930 } (thiscall, ret 0, bra_reg_goias.cpp): `BraRegGoias::create_knockout_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As quartas de final: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º (linhas 0, 7, 2, 5, 6, 1, 4, 3). Fonte 0x98ae90, linhas 0x214 (sem lista) e 0x22c (sem fase).
-unsafe extern "thiscall" fn cqn9_mata_mata_do_goiano(this: usize) {
+unsafe extern "thiscall" fn bra_reg_goias_create_knockout_stage(this: usize) {
     cqn9_mata_mata(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae90, 0x214, 0x22c, "cqn_9 goiano"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Goiano
 }
 
@@ -105,17 +105,17 @@ unsafe fn cqn9_comparar(nome: &str, this: usize, linhas: &[usize], original: imp
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn9_w(fase + 0x3e)));
 }
 
-unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_gaucho(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_gaucho_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn9_comparar("cqn9_mata_mata_do_gaucho", this, &[0, 3, 1, 2], || o(this))
+    cqn9_comparar("bra_reg_gaucho_create_knockout_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_centro_oeste(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_central_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn9_comparar("cqn9_mata_mata_do_centro_oeste", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
+    cqn9_comparar("bra_reg_central_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqn9_mata_mata_do_goiano(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_goias_create_knockout_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqn9_comparar("cqn9_mata_mata_do_goiano", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
+    cqn9_comparar("bra_reg_goias_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
 }

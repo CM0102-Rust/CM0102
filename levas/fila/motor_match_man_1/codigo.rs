@@ -1,22 +1,22 @@
-// ---------- %%LEVA%%a leva: o fechamento do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
+// ---------- %%LEVA%%a leva: o match_wrap_up do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
 
 /// { 0x6e8910 } (cdecl, match_man.cpp): cumpre a `regra` do elenco (byte 0: 1 estrangeiro de fora da
 /// comunidade, 2 estrangeiro, 3 acima da idade em +1; +2 máximo em campo, +3 máximo no banco, +4 e +5
 /// o permitido e o atual) na escalação do `clube` (nação +0x53; 0x53d980/0x53d740): tira os restritos
 /// da lista de reserva (`reserva`, `nr`); se há mais restritos em campo que o máximo (+2), escolhe entre
-/// os titulares restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
+/// os starters restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
 /// um, o de menor perda na nota (0x6e2f20), refazendo o banco (0x6e2000) se um titular saiu dele;
 /// depois faz o mesmo no banco (`saida` + `nt`) com o máximo +3 (ou +4 − +5).
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn cumprir_regra_do_elenco(
-    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, titulares: usize, banco: usize, reserva: usize,
+unsafe extern "C" fn apply_squad_rule(
+    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, starters: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
     let r = |k: usize| *((regra + k) as *const i8);
     if r(0) == 0 || r(5) >= r(4) {
         return;
     }
-    let escalar: Escalar = core::mem::transmute(0x6e2000usize);
+    let pick: Escalar = core::mem::transmute(0x6e2000usize);
     let nota: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
         core::mem::transmute(0x6e2f20usize);
     let restrito = |p: usize| -> bool {
@@ -95,7 +95,7 @@ unsafe extern "C" fn cumprir_regra_do_elenco(
             let mut nv = 0i8;
             let mut k = 0i8;
             while k < nt {
-                if restrito(*((titulares + 4 * k as usize) as *const usize)) {
+                if restrito(*((starters + 4 * k as usize) as *const usize)) {
                     let i = nv as usize;
                     vaga[i] = k;
                     cod[i] = w(codigos, k as i32);
@@ -129,7 +129,7 @@ unsafe extern "C" fn cumprir_regra_do_elenco(
                 }
             }
             if nc != 0 {
-                escalar(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
+                pick(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
                     tecnico as u32, 0, m8.as_ptr() as usize, b1.as_ptr() as usize, marca, cod2.as_ptr() as usize);
                 let mut melhor = 0i32;
                 let mut saiu_do_banco = false;
@@ -190,7 +190,7 @@ unsafe extern "C" fn cumprir_regra_do_elenco(
                         }
                     }
                     if n != 0 {
-                        escalar(escolha.as_ptr() as usize, n as u8 as u32, codigos + 2 * nt as isize as usize, nb as u8 as u32, 0, sai(nt as i32) as usize, modo,
+                        pick(escolha.as_ptr() as usize, n as u8 as u32, codigos + 2 * nt as isize as usize, nb as u8 as u32, 0, sai(nt as i32) as usize, modo,
                             clube, lado, tecnico as u32, 0, 0, 0, 0, curtos.wrapping_add(2 * nt as isize as usize));
                     }
                 }
@@ -233,7 +233,7 @@ unsafe extern "C" fn cumprir_regra_do_elenco(
             }
         }
         if nc != 0 {
-            escalar(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
+            pick(cand.as_ptr() as usize, nc as u8 as u32, cod.as_ptr() as usize, nv as u8 as u32, 0, escolha.as_mut_ptr() as usize, modo, clube, lado,
                 tecnico as u32, 0, 0, 0, 0, cod2.as_ptr() as usize);
             let mut melhor = 0i32;
             loop {
@@ -274,13 +274,13 @@ unsafe extern "C" fn cumprir_regra_do_elenco(
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn comparar_cumprir_regra_do_elenco(
-    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, titulares: usize, banco: usize, reserva: usize,
+unsafe extern "C" fn comparar_apply_squad_rule(
+    clube: usize, tecnico: usize, regra: usize, modo: u32, nt: u32, nb: u32, nr: u32, starters: usize, banco: usize, reserva: usize,
     saida: usize, codigos: usize, curtos: usize, marcas: usize, bytes: usize, lado: usize,
 ) {
     let o = orig::<unsafe extern "C" fn(usize, usize, usize, u32, u32, u32, u32, usize, usize, usize, usize, usize, usize, usize, usize, usize)>(%%I0%%);
     if gravando_no_topo() {
-        return o(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
+        return o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado);
     }
     let n = |v: u32| (v as u8 as i8).max(0) as usize;
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -293,10 +293,10 @@ unsafe extern "C" fn comparar_cumprir_regra_do_elenco(
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &reg,
-        || o(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado),
-        || crate::aleatorio::sem_contar(|| cumprir_regra_do_elenco(clube, tecnico, regra, modo, nt, nb, nr, titulares, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
+        || o(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado),
+        || crate::aleatorio::sem_contar(|| apply_squad_rule(clube, tecnico, regra, modo, nt, nb, nr, starters, banco, reserva, saida, codigos, curtos, marcas, bytes, lado)),
     );
-    PLACAR.registrar(igual, || format!("cumprir_regra_do_elenco(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
+    PLACAR.registrar(igual, || format!("apply_squad_rule(regra {:x?}) {:x?} x {:x?}", core::slice::from_raw_parts(regra as *const u8, 6), mo, mr));
 }
 // ---- as notas do jogador do match_man.cpp (0x6e6340 fora da partida, 0x6e2f20 para uma vaga): partes comuns ----
 
@@ -336,7 +336,7 @@ unsafe fn nota_externa(f: usize, k: u32, c: u32, x: f32) -> f64 {
 }
 
 /// A nota da posição (máscara `m`) pelos atributos da ficha `f` na tabela `tab` (0xa15d50 ou
-/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de lateral
+/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de throw_in
 /// (0x800/0x80) na faixa 0x10; a secundária da 0x6e2f20 não.
 unsafe fn nota_da_posicao(f: usize, m: u32, masc: u32, tab: usize, principal: bool) -> i32 {
     let fb = |k: usize| sb(f, k);
@@ -766,8 +766,8 @@ unsafe fn na_lista_de_transferencias(p: usize) -> Option<i8> {
     if x == 0 {
         return None;
     }
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(*(0xae1050 as *const usize), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(*(0xae1050 as *const usize), p);
     *(0xae1080 as *mut usize) = c;
     let dono = if c == 0 { 0 } else { *(0xae23b4 as *const usize) + *((c + 4) as *const usize) * 0x245 };
     let pode: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
@@ -902,7 +902,7 @@ fn combinar_nota(flags: u32, l40: i32, l4c: i32) -> i32 {
 /// observador `o`: a nota da posição (tabela 0xa15d50) vezes o ajuste da reputação, forma,
 /// habilidade vista, idade, contrato e conhecimento do observador. -10000 sem ficha (+0x61) ou
 /// abaixo do limite.
-unsafe extern "C" fn nota_fora_da_partida(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
+unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
     if p == 0 {
         return -10000;
     }
@@ -1081,8 +1081,8 @@ unsafe extern "C" fn nota_fora_da_partida(p: usize, pos: u32, flags: u32, clube:
 /// O valor para a habilidade potencial (flag 0x100): no clube do contrato (0x4cf5a0, que fica em
 /// [0xae1080]) a média x 25 mais o potencial (+7) x 25 (em 16 bits); fora dele, a média x 50.
 unsafe fn do_contrato_ou_media(p: usize, f: usize, clube: usize, soma: i32, cont: i8) -> i32 {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(*(0xae1050 as *const usize), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(*(0xae1050 as *const usize), p);
     *(0xae1080 as *mut usize) = c;
     let dono = if c == 0 { 0 } else { *(0xae23b4 as *const usize) + *((c + 4) as *const usize) * 0x245 };
     if dono == clube {
@@ -1126,7 +1126,7 @@ unsafe fn fora_da_nacao(p: usize, clube: usize, flags: u32, l4c: i32) -> i32 {
 /// 0x6e6340 (tabela 0xa15cfc), mais a condição na partida (`reg`, o jogador da partida), a tática,
 /// a idade dos veteranos e o bônus das férias. -10000 sem pessoa ou ficha; -1000000 vetado.
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn nota_para_a_vaga(
+unsafe extern "C" fn lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, _marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
@@ -1552,20 +1552,20 @@ unsafe fn bonus_das_ferias(p: usize, clube: usize, ferias: usize, pos: u32, base
     l4c
 }
 
-unsafe extern "C" fn comparar_nota_fora_da_partida(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
+unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
     let f = orig::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(%%I1%%);
     if gravando_no_topo() {
         return f(p, pos, flags, clube, limite, o);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(p, pos, flags, clube, limite, o), || crate::aleatorio::sem_contar(|| nota_fora_da_partida(p, pos, flags, clube, limite, o)));
-    PLACAR.registrar(igual && r == n, || format!("nota_fora_da_partida({:#x}, pos {:#x}, flags {:#x}, limite {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limite, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(p, pos, flags, clube, limite, o), || crate::aleatorio::sem_contar(|| off_match_score(p, pos, flags, clube, limite, o)));
+    PLACAR.registrar(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limite {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limite, r, n, mo, mr));
     r
 }
 
 #[allow(clippy::too_many_arguments)]
-unsafe extern "C" fn comparar_nota_para_a_vaga(
+unsafe extern "C" fn comparar_lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
@@ -1578,8 +1578,8 @@ unsafe extern "C" fn comparar_nota_para_a_vaga(
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regioes,
         || o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias),
-        || crate::aleatorio::sem_contar(|| nota_para_a_vaga(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias)),
+        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias)),
     );
-    PLACAR.registrar(igual && r == n, || format!("nota_para_a_vaga({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
     r
 }

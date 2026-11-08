@@ -100,7 +100,7 @@ unsafe fn cqa7_jovem(this: usize, clube: usize, p: usize, saida: *mut i32, minim
 /// teto pelo tipo da vaga, pela reputação, pela ficha (+0xd) e pela idade; acima de 1,5 milhão, a habilidade potencial
 /// vista (0x6e86d0 com 2) abaixo de 145 puxa para 1,5 milhão; o limite da divisão do clube (+0x57, +0x69 < 16); a nação
 /// do clube (+0x53) [0x9cf434] ou [0x9cf300]; com `teto`, no máximo +7 da vaga (pelo menos 1). Devolve o preço (_ftol).
-unsafe extern "thiscall" fn valor_do_jogador_para_o_clube(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
+unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let escopo: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x5408c0usize);
     let conhecer: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(0x544410usize);
@@ -153,10 +153,10 @@ unsafe extern "thiscall" fn valor_do_jogador_para_o_clube(this: usize, clube: us
     };
     if humano(clube, 1, 1, 0, 0) != 0 {
         let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53ca90usize);
-        let na_lista: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
+        let in_list: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f7490usize);
         let substituto: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x600e90usize);
         let m = tecnico(clube);
-        if na_lista(cqa7_d(0xb74448), p, m) != 0 {
+        if in_list(cqa7_d(0xb74448), p, m) != 0 {
             let s = substituto(clube);
             let r = nota(p, pos, flags, clube, -1, s);
             *saida = r;
@@ -426,15 +426,15 @@ unsafe extern "thiscall" fn valor_do_jogador_para_o_clube(this: usize, clube: us
 
 /// Comparador da 0x840d80: lado a lado na nota de saída e na devolução (o resto ela só lê). O técnico do clube sem a
 /// ficha +0x69 (a original sorteia uma): só a original.
-unsafe extern "thiscall" fn comparar_valor_do_jogador_para_o_clube(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
+unsafe extern "thiscall" fn comparar_value_player_for_club(this: usize, clube: usize, p: usize, vaga: usize, saida: *mut i32, minimo: i32, teto: u32) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(%%I0%%);
     let obs = cqa7_d(clube + 0xcf);
     if obs != 0 && cqa7_d(obs + 0x69) == 0 {
         return o(this, clube, p, vaga, saida, minimo, teto);
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, 4)], || o(this, clube, p, vaga, saida, minimo, teto), || valor_do_jogador_para_o_clube(this, clube, p, vaga, saida, minimo, teto));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(saida as usize, 4)], || o(this, clube, p, vaga, saida, minimo, teto), || value_player_for_club(this, clube, p, vaga, saida, minimo, teto));
     PLACAR.registrar(igual && r == n, || {
-        format!("valor_do_jogador_para_o_clube(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", clube, p, vaga, minimo, teto, r, n, mo, mr)
+        format!("value_player_for_club(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", clube, p, vaga, minimo, teto, r, n, mo, mr)
     });
     r
 }
@@ -444,7 +444,7 @@ unsafe extern "thiscall" fn comparar_valor_do_jogador_para_o_clube(this: usize, 
 /// A vaga do humano (byte +0 − byte de [0xae2364] + 16, 0..15; fora, a caixa da linha 0x4b5 e 0). A primeira das 10
 /// buscas (0x7f6cd0) com o clube observado (+0x190) igual ao da pessoa e o registro dele (+0x170) dá a vaga da pessoa
 /// nele (0x7bd700 sem reservar); nenhuma, 0.
-unsafe extern "thiscall" fn entrada_do_jogador_na_busca_do_clube(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: usize) -> usize {
     let m = cps8_gerente_da_vez();
     if m == 0 || cqa7_d(p + 0x39) == 0 {
         return 0;
@@ -468,11 +468,11 @@ unsafe extern "thiscall" fn entrada_do_jogador_na_busca_do_clube(this: usize, p:
 }
 
 /// Comparador da 0x7f8610: pela devolução (só lê).
-unsafe extern "thiscall" fn comparar_entrada_do_jogador_na_busca_do_clube(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I1%%);
     let r = o(this, p);
-    let n = entrada_do_jogador_na_busca_do_clube(this, p);
-    PLACAR.registrar(r == n, || format!("entrada_do_jogador_na_busca_do_clube(pessoa {:x}) original={:x} rust={:x}", p, r, n));
+    let n = find_club_search_entry(this, p);
+    PLACAR.registrar(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
     r
 }
 
@@ -480,7 +480,7 @@ unsafe extern "thiscall" fn comparar_entrada_do_jogador_na_busca_do_clube(this: 
 /// das telas da pessoa (0x884ea2): sem a marca 4 da pessoa ([this+0x86e] + id × 8), 0. A busca binária (0x946464:
 /// cdecl(chave, vetor [this+0x898], conta [this+0x8a0], 0xd, 0x8b4e00)) pela chave com o id da pessoa em +0, o único
 /// campo que a comparação lê; achada, o registro; senão a marca 4 sai e 0.
-unsafe extern "thiscall" fn premio_de_jogos_na_selecao_achado(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn find_international_appearance_money(this: usize, p: usize) -> usize {
     let m = (cqa7_d(this + 0x86e).wrapping_add(cqa7_d(p).wrapping_mul(8))) as *mut u8;
     if *m & 4 == 0 {
         return 0;
@@ -496,10 +496,10 @@ unsafe extern "thiscall" fn premio_de_jogos_na_selecao_achado(this: usize, p: us
 }
 
 /// Comparador da 0x8d0f00: lado a lado na marca da pessoa e na devolução.
-unsafe extern "thiscall" fn comparar_premio_de_jogos_na_selecao_achado(this: usize, p: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_international_appearance_money(this: usize, p: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> usize>(%%I2%%);
     let m = cqa7_d(this + 0x86e).wrapping_add(cqa7_d(p).wrapping_mul(8));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, p), || premio_de_jogos_na_selecao_achado(this, p));
-    PLACAR.registrar(igual && r == n, || format!("premio_de_jogos_na_selecao_achado(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(m, 1)], || o(this, p), || find_international_appearance_money(this, p));
+    PLACAR.registrar(igual && r == n, || format!("find_international_appearance_money(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p, r, n, mo, mr));
     r
 }

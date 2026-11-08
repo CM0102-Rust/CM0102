@@ -11,9 +11,9 @@ unsafe fn gravar_parametro_da_tela(k: u32, v: usize) {
 }
 
 /// { 0x71b4a0 } (cdecl, match_screens.cpp): abre a tela de detalhes da partida `partida` (0x7fe600 com a
-/// montagem 0x71b630, a resposta 0x71bdc0 e o fechamento 0x71c170) e grava os parâmetros dela (a
+/// montagem 0x71b630, a resposta 0x71bdc0 e o match_wrap_up 0x71c170) e grava os parâmetros dela (a
 /// partida em 0x1e; a aba 2 começa em 6).
-unsafe extern "C" fn abrir_detalhes_da_partida(partida: usize) {
+unsafe extern "C" fn open_match_details(partida: usize) {
     crate::comparacao::ramo("telas abrir os detalhes");
     let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe600usize);
     if abrir(0xb74450, 0x71b630, 0x71bdc0, 0, 0x71c170, 0) == 0 {
@@ -35,8 +35,8 @@ unsafe extern "C" fn abrir_detalhes_da_partida(partida: usize) {
 /// zonas de ação (0x720320; e um item de id 4 troca a ação do parâmetro 0xa), 4 relatório, 5 e 7 as
 /// estatísticas do time (0x722dc0), 6 as notas (0x723350); os redesenhos só com a marca 4 do menu da
 /// partida ([[parâmetro 0]+0x5b]) e [0xb6b7ac]. Por fim −11, o redesenho (0x802d00) e a barra de menu.
-unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
-    crate::comparacao::ramo("telas responder aos detalhes");
+unsafe extern "C" fn match_details_input(item: u32) -> i32 {
+    crate::comparacao::ramo("telas respond aos detalhes");
     let g = |a: usize| *(a as *const u32);
     let item16 = item as u16 as i16;
     let display_do_humano = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
@@ -157,7 +157,7 @@ unsafe extern "C" fn responder_detalhes_da_partida(item: u32) -> i32 {
 
 /// { 0x71c170 } (cdecl, match_screens.cpp): fecha a tela de detalhes: os parâmetros 0x2d (0x5a8f60),
 /// 0x1d e 0x20 (0x453bc0) são destruídos e liberados, o 0x1f só liberado (0x944c94), e todos zerados.
-unsafe extern "C" fn fechar_detalhes_da_partida() {
+unsafe extern "C" fn close_match_details() {
     crate::comparacao::ramo("telas fechar os detalhes");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     for (k, destrutor) in [(0x2du32, Some(0x5a8f60usize)), (0x1d, Some(0x453bc0)), (0x1f, None), (0x20, Some(0x453bc0))] {
@@ -181,14 +181,14 @@ unsafe extern "C" fn fechar_detalhes_da_partida() {
 
 // ponytail: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-unsafe extern "C" fn comparar_abrir_detalhes_da_partida(partida: usize) {
+unsafe extern "C" fn comparar_open_match_details(partida: usize) {
     orig::<unsafe extern "C" fn(usize)>(%%I0%%)(partida)
 }
 
-unsafe extern "C" fn comparar_responder_detalhes_da_partida(item: u32) -> i32 {
+unsafe extern "C" fn comparar_match_details_input(item: u32) -> i32 {
     orig::<unsafe extern "C" fn(u32) -> i32>(%%I1%%)(item)
 }
 
-unsafe extern "C" fn comparar_fechar_detalhes_da_partida() {
+unsafe extern "C" fn comparar_close_match_details() {
     orig::<unsafe extern "C" fn()>(%%I2%%)()
 }

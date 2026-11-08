@@ -14,12 +14,12 @@ unsafe fn dbs2_i16(a: usize) -> i32 {
 
 /// { 0x5461b0 } (cdecl, Database.cpp): `write_position_name(mascara, texto, tamanho)`: o nome da posição (0x66f4e0;
 /// cada um escreve por cima do anterior) contando as posições: 1 goleiro, 2 líbero, 4 zagueiro central (com 0x200 sem
-/// 0x80/0x800), defensor (com 0x200) ou lateral, 8 lateral ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
+/// 0x80/0x800), defensor (com 0x200) ou throw_in, 8 throw_in ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
 /// 0x20 sem nenhuma antes (conta 1) meia-atacante (0x200), ponta (0x80 e 0x800), ponta esquerda (0x80) ou direita, 0x40
 /// com 0x200 atacante; mais de 3: "utility player"; nenhuma: "player". Devolve o byte do gênero do último pelo idioma
 /// (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4; os outros não mudam (começa em 0). Tamanho < 30: a original (caixa).
 /// Na mídia, nos contratos, na busca de jogadores, nos olheiros e nas transferências (0x8dc370).
-unsafe extern "C" fn nome_da_posicao(mascara: u32, texto: usize, tamanho: i32) -> u8 {
+unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
     if tamanho < 0x1e {
         return orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%)(mascara, texto, tamanho);
     }
@@ -51,9 +51,9 @@ unsafe extern "C" fn nome_da_posicao(mascara: u32, texto: usize, tamanho: i32) -
         n += 1;
         if m & 0x200 != 0 {
             if m & 0x80 == 0 && m & 0x800 == 0 {
-                escrever(0x9b7d40, 2, 1); // central defender
+                escrever(0x9b7d40, 2, 1); // central save_shot
             } else {
-                escrever(0x9b7d28, 2, 1); // defender
+                escrever(0x9b7d28, 2, 1); // save_shot
             }
         } else {
             escrever(0x9b7d34, 5, 1); // full back
@@ -94,15 +94,15 @@ unsafe extern "C" fn nome_da_posicao(mascara: u32, texto: usize, tamanho: i32) -
     g
 }
 
-unsafe extern "C" fn comparar_nome_da_posicao(mascara: u32, texto: usize, tamanho: i32) -> u8 {
+unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
     let o = orig::<unsafe extern "C" fn(u32, usize, i32) -> u8>(%%I0%%);
     if tamanho < 0x1e {
         return o(mascara, texto, tamanho); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(mascara, texto, tamanho),
-        || nome_da_posicao(mascara, texto, tamanho));
-    PLACAR.registrar(igual && r == x, || format!("nome_da_posicao({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
+        || write_position_name(mascara, texto, tamanho));
+    PLACAR.registrar(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
     r
 }
 
@@ -111,12 +111,12 @@ unsafe extern "C" fn comparar_nome_da_posicao(mascara: u32, texto: usize, tamanh
 /// (qualidades 0x40): matador letal, matador ou goleador veloz (pela soma índice + qualidades % 3), oportunista,
 /// matador ou artilheiro (% 4), atacante dinâmico, de força, forte, criativo, empolgante, habilidoso. Meia (posição
 /// 0x10): com 0x40000 "inspirational" e por cima "free-scoring" (devolve 0); armador, ladrão de bola, dinâmico,
-/// esforçado, confiável, veloz. Qualidades 2 (sem 4): lateral veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
+/// esforçado, confiável, veloz. Qualidades 2 (sem 4): throw_in veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
 /// pela idade (+0x18 da pessoa [0xae23bc] + 110 × índice): veterano acima de índice % 3 + 33 (sem a qualidade 1),
 /// revelação abaixo de índice % 3 + 18 com +0x22 nulo e a soma % 3 = 0. Devolve o gênero: com o idioma 4, 1, 3 ou 4
 /// conforme o texto; senão o byte `genero` (1 com o idioma 5, que a original grava também no próprio argumento; a
 /// cópia não grava). Tamanho < 30: a original (caixa).
-unsafe extern "C" fn descricao_do_jogador(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
+unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
     if tamanho < 0x1e {
         return orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%)(pessoa, posicao, qualidades, texto, tamanho, genero);
     }
@@ -187,10 +187,10 @@ unsafe extern "C" fn descricao_do_jogador(pessoa: i32, posicao: u32, qualidades:
     }
     if q & 4 != 0 {
         if tem(0x200000) {
-            return escrever(0x9b7d8c, 1); // pacey defender
+            return escrever(0x9b7d8c, 1); // pacey save_shot
         }
         if tem(0x1200) {
-            return escrever(0x9b7d78, 1); // cultured defender
+            return escrever(0x9b7d78, 1); // cultured save_shot
         }
         return g;
     }
@@ -211,15 +211,15 @@ unsafe extern "C" fn descricao_do_jogador(pessoa: i32, posicao: u32, qualidades:
     g
 }
 
-unsafe extern "C" fn comparar_descricao_do_jogador(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
+unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
     let o = orig::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(%%I1%%);
     if tamanho < 0x1e {
         return o(pessoa, posicao, qualidades, texto, tamanho, genero); // caixa: só a original
     }
     let n = (tamanho as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(pessoa, posicao, qualidades, texto, tamanho, genero),
-        || descricao_do_jogador(pessoa, posicao, qualidades, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("descricao_do_jogador({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
+        || write_player_description(pessoa, posicao, qualidades, texto, tamanho, genero));
+    PLACAR.registrar(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
     r
 }
 
@@ -227,7 +227,7 @@ unsafe extern "C" fn comparar_descricao_do_jogador(pessoa: i32, posicao: u32, qu
 /// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
 unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
     let idade: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(0x54cdb0usize);
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let fora: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x8cca10usize);
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(0x7c1e30usize);
     if dbs2_u32(o + 0x61) == 0 {
@@ -242,7 +242,7 @@ unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
     if pref != 0 && (0..3).any(|j| dbs2_u32(pref + 0x28 + 4 * j) == o) {
         return None; // rejeitado pela pessoa
     }
-    let contrato = contrato_de(dbs2_u32(0xae1050), o, clube);
+    let contrato = contract_of(dbs2_u32(0xae1050), o, clube);
     if contrato == 0 {
         return None;
     }
@@ -310,7 +310,7 @@ unsafe fn dbs2_nota(pessoa: usize, clube: usize, o: usize) -> Option<i32> {
 /// elenco do clube (+0xd7) tem nota estritamente maior; 0 se não. Antes, os da pessoa: [0xb74350], id % 6 = r: +0x59 ≥
 /// r + 6, +0x57 ≤ 15 − r, idade (0x54cdb0) ≥ id % 28 + 14. A original guarda a nota do candidato no próprio argumento
 /// `pessoa` e um float no `candidato` (gravados antes de lidos); a cópia não. Só `al`. Na mídia (0x758200).
-unsafe extern "C" fn melhor_candidato_a_favorito(pessoa: usize, clube: usize, candidato: usize) -> u8 {
+unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
     if pessoa == 0 || clube == 0 || candidato == 0 || dbs2_u32(0xb74350) == 0 {
         return 0;
     }
@@ -341,12 +341,12 @@ unsafe extern "C" fn melhor_candidato_a_favorito(pessoa: usize, clube: usize, ca
     1
 }
 
-unsafe extern "C" fn comparar_melhor_candidato_a_favorito(pessoa: usize, clube: usize, candidato: usize) -> u8 {
+unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
     // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
     // cópia não conta, se alguma delas sortear
     let o = orig::<unsafe extern "C" fn(usize, usize, usize) -> u8>(%%I2%%);
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube, candidato),
-        || crate::aleatorio::sem_contar(|| melhor_candidato_a_favorito(pessoa, clube, candidato)));
-    PLACAR.registrar(igual && r == x, || format!("melhor_candidato_a_favorito({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
+        || crate::aleatorio::sem_contar(|| staff_is_best_favoured_candidate(pessoa, clube, candidato)));
+    PLACAR.registrar(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
     r
 }

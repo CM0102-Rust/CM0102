@@ -136,25 +136,25 @@ const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
 
 /// { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
 /// (a Division 2), disciplina 0xc, só a liga.
-unsafe extern "thiscall" fn construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_FRANCA_2)
 }
 
 /// { 0x5bfb40 } (thiscall, ret 8, fra_third.cpp): `FraThird::FraThird(ano, registro)`: a terceira divisão francesa (o
 /// National), disciplina 0xc, só a liga.
-unsafe extern "thiscall" fn construir_franca_3(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_FRANCA_3)
 }
 
 /// { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
 /// disciplina 0x1a, só a liga.
-unsafe extern "thiscall" fn construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_SEGUNDA)
 }
 
 /// { 0x84e130 } (thiscall, ret 8, spa_first.cpp, 606 bytes): `SpaFirst::SpaFirst(ano, registro)`: a Primera,
 /// disciplina 0x1a, só a liga, e a divisão de baixo espanhola em +0xee.
-unsafe extern "thiscall" fn construir_primera(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn construct_spa_first(this: usize, ano: u32, registro: usize) -> usize {
     cqm5_construir(this, ano, registro, &CQM5_PRIMERA)
 }
 
@@ -177,22 +177,22 @@ unsafe fn cqm5_comparar(nome: &str, this: usize, ano: u32, registro: usize, p: &
     r
 }
 
-unsafe extern "thiscall" fn comparar_construir_franca_2(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqm5_comparar("construir_franca_2", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
+    cqm5_comparar("construct_fra_second", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_franca_3(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqm5_comparar("construir_franca_3", this, ano, registro, &CQM5_FRANCA_3, || o(this, ano, registro))
+    cqm5_comparar("construct_fra_third", this, ano, registro, &CQM5_FRANCA_3, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_segunda(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cqm5_comparar("construir_segunda", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
+    cqm5_comparar("construct_spa_second", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
 }
 
-unsafe extern "thiscall" fn comparar_construir_primera(this: usize, ano: u32, registro: usize) -> usize {
+unsafe extern "thiscall" fn comparar_construct_spa_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
-    cqm5_comparar("construir_primera", this, ano, registro, &CQM5_PRIMERA, || o(this, ano, registro))
+    cqm5_comparar("construct_spa_first", this, ano, registro, &CQM5_PRIMERA, || o(this, ano, registro))
 }

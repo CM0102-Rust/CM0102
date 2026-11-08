@@ -22,7 +22,7 @@ unsafe fn cqs4_primeiro(this: usize, k: i32) -> usize {
 /// extra, 0x14, 0, 0, 0, sementes nulas; words limpas) em [+0xc][10]. Sem fase: a caixa da linha 0x392 e volta (sem
 /// liberar a tabela). Com ela: a tabela liberada (free 0x9452ca) e +0x30 = 10. [inferência] A final decide o campeão
 /// da Série C, em ida e volta.
-unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: usize) {
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     #[allow(clippy::type_complexity)]
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn cqs4_final_da_serie_c(this: usize) {
 /// grupos da primeira fase (0x42ee80(g), thiscall, ret 4, g de 0 a 6), as posições previstas (virtual +0x5c) e a lista
 /// dos 56 (+0xee) liberada (se houver) e zerada. Com caixa, a cópia devolve 0 (a original devolve o eax da caixa, que
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
-unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u32 {
+unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x687970usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -153,7 +153,7 @@ fn cqs4_lugar(k: usize) -> u8 {
 /// fim) e cada clube, na ordem, ganha a posição prevista de `cqs4_lugar` (Comp_Stats::set_club_final_position 0x4a2540,
 /// thiscall(+8, clube, posição), ret 8; a original empurra a faixa dos quarenta num dword com o byte da faixa e lixo
 /// da pilha em cima; a 0x4a2540 só lê o byte: a cópia passa o byte limpo).
-unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
     if cqs4_d(this + 8) == 0 {
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn cqs4_posicoes_previstas_da_serie_c(this: usize) {
 /// O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os
 /// campeões dos grupos da terceira fase. Depois, a fase da vaga 10 existe, com +0x3e = 2, os dois na lista dela (como
 /// conjunto) e +0x30 = 10.
-unsafe extern "thiscall" fn comparar_cqs4_final_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_nat_third_create_final_stage(this: usize) {
     let (a, b) = (cqs4_primeiro(this, 8), cqs4_primeiro(this, 9));
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     let fase = cqs4_d(cqs4_d(this + 0xc) + 0x28);
@@ -178,25 +178,25 @@ unsafe extern "thiscall" fn comparar_cqs4_final_da_serie_c(this: usize) {
         let (x, y) = (cqs4_d(l), cqs4_d(l + 6));
         cqs4_w(fase + 0x3e) == 2 && cqs4_d(this + 0x30) == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    PLACAR.registrar(igual, || format!("cqs4_final_da_serie_c({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, fase));
+    PLACAR.registrar(igual, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this, a, b, fase));
 }
 
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia jogos, árbitros e
 /// grupos; não pode rodar duas vezes), conferindo o que só ela garante: o ano + 1, os sete grupos nas vagas 0 a 6 e a
 /// lista dos 56 zerada.
-unsafe extern "thiscall" fn comparar_cqs4_virada_da_serie_c(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_bra_nat_third_start_new_season(this: usize) -> u32 {
     let antes = cqs4_w(this + 0x40);
     let r = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%)(this);
     let depois = cqs4_w(this + 0x40);
     let igual = depois == antes.wrapping_add(1) && cqs4_d(this + 0xee) == 0 && (0..7).all(|g| cqs4_d(cqs4_d(this + 0xc) + 4 * g) != 0);
-    PLACAR.registrar(igual, || format!("cqs4_virada_da_serie_c({:#x}) ano antes={} depois={} +0xee={:#x}", this, antes, depois, cqs4_d(this + 0xee)));
+    PLACAR.registrar(igual, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this, antes, depois, cqs4_d(this + 0xee)));
     r
 }
 
 /// O comparador das posições previstas: só a original (a 0x4a2540 acrescenta o registro de um clube que não tem; não
 /// pode rodar duas vezes), com o plano feito antes: a lista dos 56 ordenada pela mesma qsort numa cópia; depois, a
 /// lista da liga na mesma ordem e a posição (+0x72 do registro achado por 0x4a4850) de cada clube.
-unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_positions(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
     if cqs4_d(this + 8) == 0 || cqs4_d(this + 0xee) == 0 {
         return o(this);
@@ -213,5 +213,5 @@ unsafe extern "thiscall" fn comparar_cqs4_posicoes_previstas_da_serie_c(this: us
         let e = if v[k] != 0 { achar(cqs4_d(this + 8), v[k]) } else { 0 };
         cqs4_d(cqs4_d(this + 0xee) + 4 * k) != v[k] || e == 0 || *((e + 0x72) as *const u8) != cqs4_lugar(k)
     });
-    PLACAR.registrar(errado.is_none(), || format!("cqs4_posicoes_previstas_da_serie_c({:#x}): a vaga {:?} não bate", this, errado));
+    PLACAR.registrar(errado.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, errado));
 }

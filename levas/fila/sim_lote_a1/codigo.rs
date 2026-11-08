@@ -14,7 +14,7 @@ unsafe fn regras_de_transferencia_da_nacao(gerente: usize, nacao: usize) -> usiz
 /// motivo (palavra) vai para `saida` (zerada antes). Recusado com `a5`, clube humano (0x600a50) e motivo
 /// de estrangeiros (0x11, 0x14, 0x15, 0x1f): pergunta de novo com a nação do jogador (+0x1a) trocada pela
 /// do clube (e devolvida depois); aceito assim, 1.
-unsafe extern "thiscall" fn pode_contratar_jogador(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
+unsafe extern "thiscall" fn can_sign_player(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
     let regras = regras_de_transferencia_da_nacao(gerente, core::ptr::read_unaligned((clube + 0x53) as *const usize));
     if !saida.is_null() {
         *saida = 0;
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn pode_contratar_jogador(gerente: usize, clube: usize,
 /// (+0x20) em `saida` (0x68d0d0) se houver. Ofertas no estado (+0x2c) 2, 3, 4, 0x10, 0x14 ou 0xf com
 /// +0x2e ≥ 3 não contam. Para ao chegar ao número de trocas marcado ([+0x86e] + 8 × id + 2); marcado 0
 /// ou id fora da faixa, 0.
-unsafe extern "thiscall" fn trocas_oferecendo_o_jogador(gerente: usize, jogador: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn get_exchange_offers_for_player(gerente: usize, jogador: usize, saida: usize) -> u32 {
     if jogador != 0 && *(jogador as *const i32) >= *(0xae2364 as *const i32) {
         return 0;
     }
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn trocas_oferecendo_o_jogador(gerente: usize, jogador:
 }
 
 
-unsafe extern "thiscall" fn comparar_pode_contratar_jogador(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
+unsafe extern "thiscall" fn comparar_can_sign_player(gerente: usize, clube: usize, a2: u32, jogador: usize, a4: u32, a5: u32, saida: *mut u16) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, *mut u16) -> u32>(%%I0%%);
     let mut regioes = vec![];
     if !saida.is_null() {
@@ -124,12 +124,12 @@ unsafe extern "thiscall" fn comparar_pode_contratar_jogador(gerente: usize, club
         regioes.push((jogador + 0x1a, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(gerente, clube, a2, jogador, a4, a5, saida),
-        || pode_contratar_jogador(gerente, clube, a2, jogador, a4, a5, saida));
-    PLACAR.registrar(igual && r == n, || format!("pode_contratar_jogador(a5 {}) original={} rust={} {:x?} x {:x?}", a5, r, n, mo, mr));
+        || can_sign_player(gerente, clube, a2, jogador, a4, a5, saida));
+    PLACAR.registrar(igual && r == n, || format!("can_sign_player(a5 {}) original={} rust={} {:x?} x {:x?}", a5, r, n, mo, mr));
     r
 }
 
-unsafe extern "thiscall" fn comparar_trocas_oferecendo_o_jogador(gerente: usize, jogador: usize, saida: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_get_exchange_offers_for_player(gerente: usize, jogador: usize, saida: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%);
     if saida != 0 {
         // ponytail: com lista de saída a original anexa (aloca); só a original
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn comparar_trocas_oferecendo_o_jogador(gerente: usize,
         }
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(gerente, jogador, saida),
-        || trocas_oferecendo_o_jogador(gerente, jogador, saida));
-    PLACAR.registrar(igual && r == n, || format!("trocas_oferecendo_o_jogador original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+        || get_exchange_offers_for_player(gerente, jogador, saida));
+    PLACAR.registrar(igual && r == n, || format!("get_exchange_offers_for_player original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

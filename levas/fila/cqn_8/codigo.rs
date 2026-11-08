@@ -68,19 +68,19 @@ unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u8], arquivo
 
 /// { 0x439710 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98afd8, linhas 0x21b (sem lista) e 0x22f (sem fase).
-unsafe extern "thiscall" fn cqn8_mata_mata_do_pernambucano(this: usize) {
+unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
 }
 
 /// { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b050, linhas 0x21b (sem lista) e 0x22f (sem fase).
-unsafe extern "thiscall" fn cqn8_mata_mata_do_catarinense(this: usize) {
+unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
 }
 
 /// { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b090, linhas 0x20d (sem lista) e 0x221 (sem fase).
-unsafe extern "thiscall" fn cqn8_mata_mata_do_paulista(this: usize) {
+unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista
 }
 
@@ -105,17 +105,17 @@ unsafe fn cqn8_comparar(nome: &str, this: usize, linhas: &[usize], original: imp
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqn8_w(fase + 0x3e)));
 }
 
-unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_pernambucano(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqn8_comparar("cqn8_mata_mata_do_pernambucano", this, &[0, 3, 1, 2], || o(this))
+    cqn8_comparar("bra_reg_pern_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_catarinense(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqn8_comparar("cqn8_mata_mata_do_catarinense", this, &[0, 3, 1, 2], || o(this))
+    cqn8_comparar("bra_reg_pern_create_semi_final_stage_43bf50", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_paulista(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqn8_comparar("cqn8_mata_mata_do_paulista", this, &[0, 3, 1, 2], || o(this))
+    cqn8_comparar("bra_reg_pern_create_semi_final_stage_43cf80", this, &[0, 3, 1, 2], || o(this))
 }

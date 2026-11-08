@@ -6,7 +6,7 @@
 # 2) a faixa da liga ignorada (o bloco inteiro da nacao): os jogos das ligas inglesas com arbitros de fora da faixa da
 #    divisao (contador "cpy_8 faixa da liga");
 # 3) nas competicoes dos tipos 2 e 4 o comeco do bloco em vez do quarto de cima (contador "cpy_8 arbitro neutro");
-#    pode escapar se nenhuma competicao desses tipos for jogada ate 2002-06-01 (o contador mostra).
+#    pode escapar se nenhuma competicao desses tipos for play ate 2002-06-01 (o contador mostra).
 MUTACOES = [
     ('cpy8_sorteio_conta_inteira', '        ini.wrapping_add(sortear(n.wrapping_sub(1))) // cpy8: o sorteio na faixa',
      '        ini.wrapping_add(sortear(n)) // mutacao: a conta inteira',

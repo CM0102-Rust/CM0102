@@ -24,8 +24,8 @@ unsafe fn cpv1_pessoa(id: usize) -> usize {
 
 /// O contrato principal da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz depois de cada chamada.
 unsafe fn cpv1_contrato(p: usize) -> usize {
-    let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let c = contrato_de(cpv1_d(0xae1050), p);
+    let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
+    let c = contract_of(cpv1_d(0xae1050), p);
     *(0xae1080 as *mut usize) = c;
     c
 }
@@ -70,7 +70,7 @@ unsafe fn cpv1_dados_da_pessoa(n: usize, k: i8, p: usize) {
 /// com restrição (0x8cfc90) recusa (0x8c36b0, +0x2e < 3) ou retira (0x8bfcb0, que pode trocar a oferta); senão
 /// confirma (0x8c3310). Depois o vendedor: com +0x2f ou sem vendedor confirma direto; do computador, recusa com
 /// restrição ou confirma.
-unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: usize) {
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     let limpar_marcas: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
     // thiscall (ecx = this, o gerente de transferências; corrigido em 31/10/2026: antes stdcall, o this ia com o ecx da vez e às vezes 0)
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usiz
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let noticia_da_transferencia: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8da5e0usize);
-    let clube_humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
+    let human_club: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let restricoes: unsafe extern "thiscall" fn(usize, usize, usize, *mut u32, u32) -> u32 = core::mem::transmute(0x8cfc90usize);
     let recusar: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x8c36b0usize);
     let retirar: unsafe extern "thiscall" fn(usize, *mut usize, u32, u32) -> u32 = core::mem::transmute(0x8bfcb0usize);
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usiz
     // ponytail: a original passa um short* para um dword local sem valor e empurra o dword inteiro; os chamados leem a
     // palavra. A cópia começa em zero.
     let mut motivo: u32 = 0;
-    if clube_humano(comprador, 0, 1, 0, 0) == 0 {
+    if human_club(comprador, 0, 1, 0, 0) == 0 {
         if restricoes(this, oferta, comprador, &mut motivo, 1) as u8 == 1 {
             if cpv1_b(oferta + 0x2e) < 3 {
                 recusar(this, oferta, comprador, motivo);
@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usiz
     if cpv1_b(o + 0x2f) != 0 || vendedor == 0 {
         return confirmar(this, o, vendedor);
     }
-    if clube_humano(vendedor, 0, 1, 0, 0) != 0 {
+    if human_club(vendedor, 0, 1, 0, 0) != 0 {
         return;
     }
     if restricoes(this, vaga, vendedor, &mut motivo, 1) as u8 == 1 {
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn passar_a_oferta_aos_clubes(this: usize, oferta: usiz
 /// post_offer_accepted_news(oferta)`: o dono do jogador (+0xc; contrato 0x4cf5a0, nenhum no tipo 5), os destinatários
 /// (0x8d1130 com 0x2d, até 30), a notícia 0xfa3 (local): 0..3 o jogador, 4 = o id do dono (ou −1), 5 = +8 (comprador),
 /// 6 = +4, 7 = +0x20, 8 = +0x24, 9 = +0x1f; entregue a cada destinatário (0x7861e0).
-unsafe extern "thiscall" fn noticia_da_oferta_aceita(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn post_offer_accepted_news(this: usize, oferta: usize) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u32 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -217,7 +217,7 @@ unsafe extern "thiscall" fn noticia_da_oferta_aceita(this: usize, oferta: usize)
 /// 0xfb5 (local): 0..3 o jogador (+0xc), 4 = +8, 5 = o id do clube do contrato (nenhum no tipo 5: a original lê o
 /// endereço 0), 6 = +0x20, 7 = +0x24, 8 = termos +0xc, 9 = +0x2c, 10 = termos +0x2d (palavra com sinal), 11 = termos
 /// +0x2f (palavra); sem contrato, a caixa "Error" (0x5e4c) e nada; senão 12 = contrato +0xc e a entrega a cada um.
-unsafe extern "thiscall" fn noticia_do_emprestimo_oferecido(this: usize, oferta: usize, termos: usize) {
+unsafe extern "thiscall" fn post_loan_offer_news(this: usize, oferta: usize, termos: usize) {
     let destinatarios: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u32 = core::mem::transmute(0x8d1130usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
@@ -255,16 +255,16 @@ unsafe extern "thiscall" fn noticia_do_emprestimo_oferecido(this: usize, oferta:
 
 // ponytail: reagenda, cancela rivais, sorteia e decide pelos clubes (as chamadas mexem nas ofertas e alocam): não roda
 // duas vezes. Só a original; a cópia leva os ramos e se prova pela carreira e pelas mutações.
-unsafe extern "thiscall" fn comparar_passar_a_oferta_aos_clubes(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_advance_offer_to_club_approval(this: usize, oferta: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I0%%)(this, oferta)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_da_oferta_aceita(this: usize, oferta: usize) {
+unsafe extern "thiscall" fn comparar_post_offer_accepted_news(this: usize, oferta: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, oferta)
 }
 
 // ponytail: a notícia vai às caixas dos técnicos (aloca): só a original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_noticia_do_emprestimo_oferecido(this: usize, oferta: usize, termos: usize) {
+unsafe extern "thiscall" fn comparar_post_loan_offer_news(this: usize, oferta: usize, termos: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I2%%)(this, oferta, termos)
 }

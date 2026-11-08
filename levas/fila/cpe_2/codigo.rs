@@ -26,7 +26,7 @@ const CPE2_LINHA: usize = 0x3b;
 /// ([0xadadfc], +0x43) ou da própria liga, lida a cada chamada. Refaz os totais das duas linhas e devolve os pontos
 /// (+0x19) em `pts_casa`/`pts_fora` (0 sem a linha). Com confrontos na primeira linha (+5), acha o adversário em cada
 /// uma e soma o confronto (0x6869a0). Sem SEH, sem sorteio, sem caixa, locais todas gravadas antes de lidas.
-unsafe extern "thiscall" fn aplicar_resultado_na_tabela(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
+unsafe extern "thiscall" fn apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
     let mut pontuador = liga;
     let id = cpe2_d(liga + 4);
     if id != 0 && cpe2_d(0xadadfc) != 0 {
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn aplicar_resultado_na_tabela(liga: usize, p: usize, t
     };
     let (gc, gf) = (pb(0x43), pb(0x44));
     let flags = core::ptr::read_unaligned((p + 0x38) as *const u16);
-    let penaltis = if *((p + 0x38) as *const u8) & 0x20 != 0 { 5u8 } else { 4 };
+    let penalties = if *((p + 0x38) as *const u8) & 0x20 != 0 { 5u8 } else { 4 };
     if gc > gf {
         vence_casa(0x20);
     } else if gc < gf {
@@ -116,12 +116,12 @@ unsafe extern "thiscall" fn aplicar_resultado_na_tabela(liga: usize, p: usize, t
     } else if flags & 0x21 != 0 && pb(0x49) > pb(0x4a) {
         vence_casa(0x21);
         if marcar != 0 {
-            *((p + 0x3d) as *mut u8) = penaltis;
+            *((p + 0x3d) as *mut u8) = penalties;
         }
     } else if flags & 0x21 != 0 && pb(0x49) < pb(0x4a) {
         vence_fora(0x2f);
         if marcar != 0 {
-            *((p + 0x3e) as *mut u8) = penaltis;
+            *((p + 0x3e) as *mut u8) = penalties;
         }
     } else if flags & 0x21 == 0 {
         let empate = *((liga + 0xc3) as *const i8) as i16; // o empate puro
@@ -205,12 +205,12 @@ unsafe fn cpe2_regioes(p: usize, tab: usize, n: u32, pts_casa: *mut i16, pts_for
     reg
 }
 
-unsafe extern "thiscall" fn comparar_aplicar_resultado_na_tabela(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
+unsafe extern "thiscall" fn comparar_apply_result_to_table(liga: usize, p: usize, tab: usize, n: u32, marcar: u32, pts_casa: *mut i16, pts_fora: *mut i16) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(%%I0%%);
     let reg = cpe2_regioes(p, tab, n, pts_casa, pts_fora);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(liga, p, tab, n, marcar, pts_casa, pts_fora),
-        || aplicar_resultado_na_tabela(liga, p, tab, n, marcar, pts_casa, pts_fora));
-    PLACAR.registrar(igual, || format!("aplicar_resultado_na_tabela({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
+        || apply_result_to_table(liga, p, tab, n, marcar, pts_casa, pts_fora));
+    PLACAR.registrar(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
         liga, p, tab, n as i16, marcar, mo, mr));
 }
 
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn comparar_aplicar_resultado_na_tabela(liga: usize, p:
 /// (+0xc2) se o clube venceu (mandante +0x1c com +0x43 > +0x44, visitante +0x20 com menos), senão 0; empatado: pela
 /// prorrogação (+0xab bit 2, +0x47/+0x48, os de vitória), pelos pênaltis (bits 0x21, +0x49/+0x4a: os de empate +0xc3
 /// a quem venceu, 0 a quem perdeu) ou os de empate. Só o al é escrito: os 3 bytes altos do eax são os da partida.
-unsafe extern "thiscall" fn pontos_do_resultado(liga: usize, clube: usize, p: usize) -> u32 {
+unsafe extern "thiscall" fn points_for_result(liga: usize, clube: usize, p: usize) -> u32 {
     let pb = |o: usize| *((p + o) as *const i8);
     let (casa, fora) = (cpe2_d(p + 0x1c), cpe2_d(p + 0x20));
     let venceu = |a: i8, b: i8| (clube == casa && a > b) || (clube == fora && a < b);
@@ -236,4 +236,4 @@ unsafe extern "thiscall" fn pontos_do_resultado(liga: usize, clube: usize, p: us
     (p as u32 & 0xffff_ff00) | v as u32
 }
 
-comparar_valor!(comparar_pontos_do_resultado, pontos_do_resultado, %%I1%%, (clube: usize, p: usize) -> u32);
+comparar_valor!(comparar_points_for_result, points_for_result, %%I1%%, (clube: usize, p: usize) -> u32);

@@ -80,25 +80,25 @@ unsafe fn cqq7_fase_seguinte(this: usize, arquivo: usize, linha: u32, play_off: 
 
 /// { 0x42a950 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::advance_stage()`, a fase seguinte da Série A: no fim
 /// dos pontos corridos, o play-off (0x42a9e0); a caixa da linha 0x264.
-unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_a(this: usize) {
+unsafe extern "thiscall" fn bra_nat_first_advance_stage(this: usize) {
     cqq7_fase_seguinte(this, 0x98aa30, 0x264, 0x42a9e0);
 }
 
 /// { 0x42a9e0 } (thiscall, ret 0, bra_nat_first.cpp): `BraNatFirst::create_play_off_stage()`, o play-off da Série A:
 /// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x286 (sem lista) e 0x29d (sem fase).
-unsafe extern "thiscall" fn cqq7_play_off_da_serie_a(this: usize) {
+unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98aa30, 0x286, 0x29d, "cqq_7 serie a"); // cqq7: 1º × 4º, 2º × 3º Série A
 }
 
 /// { 0x42cdd0 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::advance_stage()`, a fase seguinte da Série B: no fim
 /// dos pontos corridos, o play-off (0x42ce60); a caixa da linha 0x23d.
-unsafe extern "thiscall" fn cqq7_fase_seguinte_da_serie_b(this: usize) {
+unsafe extern "thiscall" fn bra_nat_first_advance_stage_42cdd0(this: usize) {
     cqq7_fase_seguinte(this, 0x98ab64, 0x23d, 0x42ce60);
 }
 
 /// { 0x42ce60 } (thiscall, ret 0, bra_nat_second.cpp): `BraNatSecond::create_play_off_stage()`, o play-off da Série B:
 /// 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2); caixas nas linhas 0x25f (sem lista) e 0x276 (sem fase).
-unsafe extern "thiscall" fn cqq7_play_off_da_serie_b(this: usize) {
+unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage_42ce60(this: usize) {
     cqq7_play_off(this, &[0, 3, 1, 2], 0x98ab64, 0x25f, 0x276, "cqq_7 serie b"); // cqq7: 1º × 4º, 2º × 3º Série B
 }
 
@@ -133,22 +133,22 @@ unsafe fn cqq7_comparar_play_off(nome: &str, this: usize, linhas: &[usize; 4], o
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, cqq7_w(fase + 0x3e)));
 }
 
-unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_a(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cqq7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_a", this, || o(this))
+    cqq7_comparar_fase_seguinte("bra_nat_first_advance_stage", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_a(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqq7_comparar_play_off("cqq7_play_off_da_serie_a", this, &[0, 3, 1, 2], || o(this))
+    cqq7_comparar_play_off("bra_nat_first_create_play_off_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqq7_fase_seguinte_da_serie_b(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_nat_first_advance_stage_42cdd0(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqq7_comparar_fase_seguinte("cqq7_fase_seguinte_da_serie_b", this, || o(this))
+    cqq7_comparar_fase_seguinte("bra_nat_first_advance_stage_42cdd0", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_b(this: usize) {
+unsafe extern "thiscall" fn comparar_bra_nat_first_create_play_off_stage_42ce60(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
-    cqq7_comparar_play_off("cqq7_play_off_da_serie_b", this, &[0, 3, 1, 2], || o(this))
+    cqq7_comparar_play_off("bra_nat_first_create_play_off_stage_42ce60", this, &[0, 3, 1, 2], || o(this))
 }

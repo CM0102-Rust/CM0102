@@ -47,7 +47,7 @@ pub(crate) unsafe fn cqo1_cmp(f: usize, a: usize, b: usize) -> i32 {
 /// clube cuja posição (contada) módulo 9 é a da marca (0x40 → 0, 0x80 → 1, 0x100 → 2 ... 0x4000 → 8), livre na data
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
-pub(crate) unsafe extern "thiscall" fn estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let estado = (this + 0x18) as *mut u8;
@@ -223,16 +223,16 @@ pub(crate) unsafe fn cqo1_regioes(this: usize, extra: Option<(usize, usize)>) ->
 }
 
 /// Lado a lado (a cópia sem contar os sorteios) pelas regiões de `cqo1_regioes` e pela devolução; com reserva que pode alocar, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_ESTADIO_NEUTRO);
+pub(crate) unsafe extern "thiscall" fn comparar_find_available_venue(this: usize, marcas: u32, cont: usize, nacao: usize, data: usize, casa: usize, fora: usize, partida: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
     let Some((r, m)) = cqo1_regioes(this, None) else {
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, cont, nacao, data, casa, fora, partida);
     };
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, cont, nacao, data, casa, fora, partida), || {
-        crate::aleatorio::sem_contar(|| estadio_neutro(this, marcas, cont, nacao, data, casa, fora, partida))
+        crate::aleatorio::sem_contar(|| find_available_venue(this, marcas, cont, nacao, data, casa, fora, partida))
     });
-    PLACAR.registrar(igual && ro == rr, || format!("estadio_neutro(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
+    PLACAR.registrar(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marcas, nacao, cont, ro, rr, mo, mr));
     ro
 }
 
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadio_neutro(this: usize, marc
 ///   sem nenhuma, a nação da competição (+0x5d). Com 0x20, a seleção joga no próprio país. Com 4, o estádio nacional
 ///   da nação (reservado); sem ele, 0x20 (seleção) ou 0x40. Depois a busca do estádio neutro (0x85c800) na nação e, sem
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
-pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
+pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
     if partida == 0 {
         return aviso_em(0xa835b0, 0x1f0);
     }
@@ -447,8 +447,8 @@ pub(crate) unsafe extern "thiscall" fn estadio_da_partida(this: usize, marcas: u
 
 /// Lado a lado pela partida (0x44 bytes) e pelas regiões de `cqo1_regioes`; partida nula ou reserva que pode alocar:
 /// só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, marcas: u32, partida: usize, estadio: u32) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_ESTADIO_DA_PARTIDA);
+pub(crate) unsafe extern "thiscall" fn comparar_set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_SET_FIXTURE_VENUE);
     if partida == 0 {
         return o(this, marcas, partida, estadio);
     }
@@ -456,8 +456,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadio_da_partida(this: usize, 
         // ponytail: a reserva pode alocar a lista; só a original
         return o(this, marcas, partida, estadio);
     };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, partida, estadio), || crate::aleatorio::sem_contar(|| estadio_da_partida(this, marcas, partida, estadio)));
-    PLACAR.registrar(igual, || format!("estadio_da_partida(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, read_u32_as_usize(partida), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&r[..m], || o(this, marcas, partida, estadio), || crate::aleatorio::sem_contar(|| set_fixture_venue(this, marcas, partida, estadio)));
+    PLACAR.registrar(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marcas, read_u32_as_usize(partida), mo, mr));
 }
 
 // ---------- 279a leva: o público de um jogo (stadium.cpp) ----------
@@ -587,7 +587,7 @@ pub(crate) unsafe fn cqo2_piso(jogo: usize, lado: u8, f: &mut [f64; 2]) {
 /// do visitante × fator do mandante, 15%)) e o mandante o resto; neutro metade), sem estádio 40 mil e 25 mil; sem
 /// público, 1 a 50 e 1 a 15. Total = mandante + visitante − sorteio(50) (negativo: 45 a 194). Grava em `saida` o
 /// total, o mandante e o visitante e devolve o total.
-pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
     if jogo == 0 {
         return read_i32(0xa835ac);
     }
@@ -845,8 +845,8 @@ pub(crate) unsafe extern "thiscall" fn publico_do_jogo(this: usize, jogo: usize,
 
 /// Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jogo: usize, saida: *mut i32) -> i32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_PUBLICO_DO_JOGO);
+pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this: usize, jogo: usize, saida: *mut i32) -> i32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_CALCULATE_MATCH_ATTENDANCE);
     if jogo == 0 {
         return o(this, jogo, saida);
     }
@@ -857,8 +857,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_publico_do_jogo(this: usize, jog
     if read_u32_as_usize(jogo + 0x18) != 0 {
         reg.push((read_u32_as_usize(jogo + 0x18) + 0x3c, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida), || crate::aleatorio::sem_contar(|| publico_do_jogo(this, jogo, saida)));
-    PLACAR.registrar(igual && r == n, || format!("publico_do_jogo(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_u32_as_usize(jogo), read_u8(jogo + 0x3a), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, jogo, saida), || crate::aleatorio::sem_contar(|| calculate_match_attendance(this, jogo, saida)));
+    PLACAR.registrar(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_u32_as_usize(jogo), read_u8(jogo + 0x3a), r, n, mo, mr));
     r
 }
 
@@ -891,8 +891,8 @@ pub(crate) unsafe fn cpt7_distancia(a: usize, b: usize) -> i32 {
 ///   de 1,5× dele: / ((lugares − 1,5·esperado)·8,33e-5 + 1); abaixo de 0,3/0,5/0,7/0,9 dele: × 0,1/0,3/0,7/0,9;
 /// - senão, com marcas & 4: a nota é sorteio(lugares).
 /// No fim, nota × (sorteio(100) × 0,004 + 0,8), truncada.
-pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
-    let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
+pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
+    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(0x122));
     if est == read_usize(inglaterra + 0x80) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
         return 0;
@@ -934,7 +934,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est:
     if m & 0x20 != 0 {
         let mut esperado: i32 = 0x2710;
         if jogo != 0 {
-            if e_selecao(read_usize(jogo + 0x1c)) != 0 {
+            if is_national_team(read_usize(jogo + 0x1c)) != 0 {
                 esperado = 0xea60;
             } else {
                 let a = read_i32(read_usize(jogo + 0x20) + 0x73);
@@ -981,8 +981,8 @@ pub(crate) unsafe extern "thiscall" fn nota_do_estadio_neutro(_this: usize, est:
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
-pub(crate) unsafe extern "thiscall" fn comparar_nota_do_estadio_neutro(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
-    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_NOTA_DO_ESTADIO_NEUTRO)(this, est, marcas, casa, fora, jogo)
+pub(crate) unsafe extern "thiscall" fn comparar_score_venue_for_fixture(this: usize, est: usize, marcas: u32, casa: usize, fora: usize, jogo: usize) -> i32 {
+    orig::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, usize) -> i32>(IDX_SCORE_VENUE_FOR_FIXTURE)(this, est, marcas, casa, fora, jogo)
 }
 
 /// 1 − distance × k (squared without +0x3c), divided by (reputation + 1)² when far and with reputation; with minimums
@@ -995,7 +995,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_nota_do_estadio_neutro(this: usi
 /// reputação R (byte +0x7e da nação +0x53 do clube de fora +0x20) acima de [0x9689a0]: F / (R + 1)². Com base acima de
 /// [0x969558], o mínimo 1 − ([0x968ea8] − base)·[0x968f20]; com +0x3a = 10, o mínimo 0,2; com os dois clubes da mesma
 /// nação, 0,05; e sempre [0x96d2c8]. Devolve o double no st0.
-pub(crate) unsafe extern "thiscall" fn fator_da_distancia(_this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
+pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
     let nacao = read_usize(read_usize(jogo + 0x20) + 0x53);
     let r = *((nacao + nation::STATE_OF_DEVELOPMENT) as *const i8) as i32 as f64;
     let dy = read_f64(cid_est + 0x2b) - read_f64(cid_clube + 0x2b);
@@ -1032,10 +1032,10 @@ pub(crate) unsafe extern "thiscall" fn fator_da_distancia(_this: usize, jogo: us
 }
 
 /// Comparador: pelo valor (os bits do double).
-pub(crate) unsafe extern "thiscall" fn comparar_fator_da_distancia(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_FATOR_DA_DISTANCIA)(this, jogo, cid_est, cid_clube, base);
-    let n = fator_da_distancia(this, jogo, cid_est, cid_clube, base);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("fator_da_distancia(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_get_travel_distance_factor(this: usize, jogo: usize, cid_est: usize, cid_clube: usize, base: f64) -> f64 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, jogo, cid_est, cid_clube, base);
+    let n = get_travel_distance_factor(this, jogo, cid_est, cid_clube, base);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", jogo, base, r, n));
     r
 }
 
@@ -1080,7 +1080,7 @@ pub(crate) unsafe fn cps7_ordenar(lista: usize, n: u32) {
 /// +4, 12 bytes: id e data) antes de hoje saem: a original conta as k primeiras (ano sem sinal, dia com sinal), copia
 /// por cima delas, para a frente, as k que começam em n − k − 1 (não em n − k) e reordena as n − k (0x945333 com
 /// 0x85e380).
-pub(crate) unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize) {
+pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: usize) {
     if read_u16(hoje) == 0 {
         let refazer: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_STADIUM_BUILD_VENUE_LIST);
         refazer(this);
@@ -1152,8 +1152,8 @@ pub(crate) unsafe extern "thiscall" fn estadios_do_dia(this: usize, hoje: usize)
 /// Comparador: no dia 0 do ano (refaz a lista dos estádios, aloca) só a original. Nos outros, lado a lado pelo cabeçalho
 /// (0x1c bytes), pelas reservas, por [0xa835a4], pelo estádio nacional da Inglaterra, pela casa da seleção e pelos
 /// lugares do estádio fechado.
-pub(crate) unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoje: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ESTADIOS_DO_DIA);
+pub(crate) unsafe extern "thiscall" fn comparar_stadium_daily_update(this: usize, hoje: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STADIUM_DAILY_UPDATE);
     if read_u16(hoje) == 0 {
         return o(this, hoje);
     }
@@ -1180,8 +1180,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoj
         regioes[m] = (cps7_estadio(read_usize(G_STADIUM_STASHED_VENUE_ID)) + 0x3c, 8);
         m += 1;
     }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes[..m], || o(this, hoje), || estadios_do_dia(this, hoje));
-    PLACAR.registrar(igual, || format!("estadios_do_dia(dia {}, ano {}) {:x?} x {:x?}", read_u16(hoje) as i16, read_u16(hoje + 2), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes[..m], || o(this, hoje), || stadium_daily_update(this, hoje));
+    PLACAR.registrar(igual, || format!("stadium_daily_update(dia {}, ano {}) {:x?} x {:x?}", read_u16(hoje) as i16, read_u16(hoje + 2), mo, mr));
 }
 
 /// appends the booking (stadium id and date) to the list, which grows 30 at a time, and re-sorts by date and id
@@ -1191,7 +1191,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadios_do_dia(this: usize, hoj
 /// estádio, cópia da data por 0x417c10) à lista (+0; conta +4, capacidade +8), que nasce com 30 (0x944e46, 0x168
 /// bytes) e cresce de 30 em 30 (0x945667), e reordena (0x945333 com 0x85e380). Estádio ou data nulos, ou sem memória: a
 /// caixa "Error" (linhas 0x810, 0x81b, 0x82b). Pela escolha do estádio (0x85c260, 0x85c800).
-pub(crate) unsafe extern "thiscall" fn reservar_estadio(this: usize, estadio: usize, data: usize) {
+pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, estadio: usize, data: usize) {
     if estadio == 0 || data == 0 {
         return aviso_em(0xa835b0, 0x810);
     }
@@ -1224,15 +1224,15 @@ pub(crate) unsafe extern "thiscall" fn reservar_estadio(this: usize, estadio: us
 
 /// Comparador: com lista e vaga (não aloca), lado a lado pelo cabeçalho (0xc bytes) e pelas reservas com a nova; senão
 /// (aloca, realoca ou a caixa) só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_reservar_estadio(this: usize, estadio: usize, data: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESERVAR_ESTADIO);
+pub(crate) unsafe extern "thiscall" fn comparar_add_booking(this: usize, estadio: usize, data: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_BOOKING);
     let n = read_usize(this + 4);
     if estadio == 0 || data == 0 || read_usize(this) == 0 || n == read_usize(this + 8) {
         return o(this, estadio, data);
     }
     let regioes = [(this, 0xc), (read_usize(this), (n + 1) * 12)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, estadio, data), || reservar_estadio(this, estadio, data));
-    PLACAR.registrar(igual, || format!("reservar_estadio(estadio {:x}, reservas {}) {:x?} x {:x?}", estadio, n, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, estadio, data), || add_booking(this, estadio, data));
+    PLACAR.registrar(igual, || format!("add_booking(estadio {:x}, reservas {}) {:x?} x {:x?}", estadio, n, mo, mr));
 }
 
 /// 1 when there is no booking of the stadium on the date (binary search in the list; no list, 1)
@@ -1241,7 +1241,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_reservar_estadio(this: usize, es
 /// [pt] { 0x85ddb0 } (thiscall, ret 8, stadium.cpp): `Stadium::is_stadium_free_on_date(estadio, data)`: 1 sem lista de
 /// reservas; senão 1 se a busca binária (0x946464 com 0x85e380) não acha a reserva (id do estádio, data copiada por
 /// 0x417c10). Pela escolha do estádio neutro (0x85c800).
-pub(crate) unsafe extern "thiscall" fn estadio_livre_na_data(this: usize, estadio: usize, data: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
     if read_usize(this) == 0 {
         return 1;
     }
@@ -1257,10 +1257,10 @@ pub(crate) unsafe extern "thiscall" fn estadio_livre_na_data(this: usize, estadi
 }
 
 /// Comparador: a original e a cópia (as duas só leem), pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_estadio_livre_na_data(this: usize, estadio: usize, data: usize) -> u32 {
-    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_ESTADIO_LIVRE_NA_DATA)(this, estadio, data);
-    let n = estadio_livre_na_data(this, estadio, data);
-    PLACAR.registrar(r == n, || format!("estadio_livre_na_data(estadio {:x}) original={} rust={}", estadio, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_is_stadium_free_on_date(this: usize, estadio: usize, data: usize) -> u32 {
+    let r = orig::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_STADIUM_FREE_ON_DATE)(this, estadio, data);
+    let n = is_stadium_free_on_date(this, estadio, data);
+    PLACAR.registrar(r == n, || format!("is_stadium_free_on_date(estadio {:x}) original={} rust={}", estadio, r, n));
     r
 }
 
@@ -1270,7 +1270,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_estadio_livre_na_data(this: usiz
 /// [pt] { 0x85e380 } (cdecl, stadium.cpp): `stadium_compare_bookings(a, b)`, a ordem das reservas do estádio (qsort em
 /// 0x85ba1b, 0x85c4ba, 0x85ddf3, 0x85df26): pela data (+4, Date::operator< 0x456770 e > 0x456740), depois pelo id do
 /// estádio (+0).
-pub(crate) unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3C);
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let (d0, d1) = (read_usize(b + 4) as u32, read_usize(b + 8) as u32);
@@ -1284,10 +1284,10 @@ pub(crate) unsafe extern "C" fn ordem_das_reservas_do_estadio(a: usize, b: usize
 }
 
 /// Comparador: pelo valor.
-pub(crate) unsafe extern "C" fn comparar_ordem_das_reservas_do_estadio(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_DAS_RESERVAS_DO_ESTADIO)(a, b);
-    let n = ordem_das_reservas_do_estadio(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_das_reservas_do_estadio({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_stadium_compare_bookings(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_BOOKINGS)(a, b);
+    let n = stadium_compare_bookings(a, b);
+    PLACAR.registrar(r == n, || format!("stadium_compare_bookings({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }
 
@@ -1306,7 +1306,7 @@ pub(crate) unsafe extern "C" fn comparar_ordem_das_reservas_do_estadio(a: usize,
 /// continente, +8 se é o estádio nacional (+0x80 da nação), +0xc o estádio. A lista cresce de 30 em 30 (0x944e46,
 /// realloc 0x945667; sem memória, as caixas das linhas 0x89c e 0x8ac, e para). No fim é ordenada (qsort com a
 /// 0x85e2f0) e +0x18 = 1.
-pub(crate) unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
+pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
@@ -1378,8 +1378,8 @@ pub(crate) unsafe extern "thiscall" fn lista_de_estadios_neutros(this: usize) {
 /// Lado a lado à mão: a original no objeto de quem chama, a cópia num rascunho com os mesmos 0x20 bytes de antes e a
 /// lista velha zerada (a original já a soltou); iguais os campos (fora o ponteiro +0xc) e as listas (a do rascunho é
 /// solta). Sem o HostCountry (a caixa), só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_LISTA_DE_ESTADIOS_NEUTROS);
+pub(crate) unsafe extern "thiscall" fn comparar_build_venue_list(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_VENUE_LIST);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     if read_u32(G_HOST_COUNTRY) == 0 {
         return o(this);
@@ -1389,7 +1389,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: 
     s[0xc..0x18].fill(0);
     o(this);
     let r = s.as_mut_ptr() as usize;
-    lista_de_estadios_neutros(r);
+    build_venue_list(r);
     let a = core::slice::from_raw_parts(this as *const u8, 0x20);
     let campos = a[..0xc] == s[..0xc] && a[0x10..0x20] == s[0x10..0x20];
     let (la, lb) = (read_u32(this + 0xc) as usize, read_u32(r + 0xc) as usize);
@@ -1402,7 +1402,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: 
     if lb != 0 {
         soltar(lb);
     }
-    PLACAR.registrar(campos && listas, || format!("lista_de_estadios_neutros: campos {} listas {} (contas {} e {})", campos, listas, read_u32(this + 0x10) as i32, read_u32(r + 0x10) as i32));
+    PLACAR.registrar(campos && listas, || format!("build_venue_list: campos {} listas {} (contas {} e {})", campos, listas, read_u32(this + 0x10) as i32, read_u32(r + 0x10) as i32));
 }
 
 /// venue qsort: places (+0x3c) of the stadium (+0xc), largest first; without a stadium, 0
@@ -1410,7 +1410,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_lista_de_estadios_neutros(this: 
 ///
 /// [pt] { 0x85e350 } (cdecl, stadium.cpp): `stadium_compare_venues_by_capacity(a, b)`, o qsort dos locais na busca do
 /// estádio neutro (0x85c8de): pelos lugares (+0x3c) do estádio (+0xc), do maior para o menor; sem um dos estádios, 0.
-pub(crate) unsafe extern "C" fn ordem_pela_capacidade(a: usize, b: usize) -> i32 {
+pub(crate) unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
     let ea = core::ptr::read_unaligned((a + 0xc) as *const usize);
     if ea == 0 {
         return 0;
@@ -1423,9 +1423,9 @@ pub(crate) unsafe extern "C" fn ordem_pela_capacidade(a: usize, b: usize) -> i32
 }
 
 /// Comparador: pelo valor.
-pub(crate) unsafe extern "C" fn comparar_ordem_pela_capacidade(a: usize, b: usize) -> i32 {
-    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ORDEM_PELA_CAPACIDADE)(a, b);
-    let n = ordem_pela_capacidade(a, b);
-    PLACAR.registrar(r == n, || format!("ordem_pela_capacidade({:#x}, {:#x}) original={} rust={}", a, b, r, n));
+pub(crate) unsafe extern "C" fn comparar_stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
+    let r = orig::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STADIUM_COMPARE_VENUES_BY_CAPACITY)(a, b);
+    let n = stadium_compare_venues_by_capacity(a, b);
+    PLACAR.registrar(r == n, || format!("stadium_compare_venues_by_capacity({:#x}, {:#x}) original={} rust={}", a, b, r, n));
     r
 }

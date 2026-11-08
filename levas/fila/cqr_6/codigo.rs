@@ -94,37 +94,37 @@ unsafe fn cqr6_comparar(nome: &str, this: usize, original: impl FnOnce() -> u32)
 /// { 0x6664e0 } (thiscall, ret 0, jap_super.cpp; a virtual +0x08 da Supercopa japonesa): `JapSuper::start_new_season()`,
 /// a virada (`cqr6_virada`) com os dois clubes de JapSuper::select_teams (0x666160) e as caixas do jap_super.cpp nas
 /// linhas 0x14b, 0x152 e 0x159.
-unsafe extern "thiscall" fn cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
+unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season(this: usize) -> u32 {
     cqr6_virada(this, 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
 }
 
-unsafe extern "thiscall" fn comparar_cqr6_virada_supercopa_japonesa(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqr6_comparar("cqr6_virada_supercopa_japonesa", this, || o(this))
+    cqr6_comparar("usa_mls_all_stars_start_new_season", this, || o(this))
 }
 
 /// { 0x90b790 } (thiscall, ret 0, usa_open_cup.cpp; a virtual +0x08 da Copa dos EUA): `UsaOpenCup::start_new_season()`,
 /// a virada (`cqr6_virada`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
 /// nas linhas 0x198, 0x19f e 0x1a6.
-unsafe extern "thiscall" fn cqr6_virada_copa_dos_eua(this: usize) -> u32 {
+unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90b790(this: usize) -> u32 {
     cqr6_virada(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: a Copa dos EUA
 }
 
-unsafe extern "thiscall" fn comparar_cqr6_virada_copa_dos_eua(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90b790(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqr6_comparar("cqr6_virada_copa_dos_eua", this, || o(this))
+    cqr6_comparar("usa_mls_all_stars_start_new_season_90b790", this, || o(this))
 }
 
 /// { 0x90a760 } (thiscall, ret 0, usa_mls_all_stars.cpp; a virtual +0x08 do Jogo das Estrelas): `UsaMlsAllStars::
 /// start_new_season()`, a virada (`cqr6_virada`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
 /// do usa_mls_all_stars.cpp nas linhas 0x133, 0x13a e 0x141, sem as posições previstas.
-unsafe extern "thiscall" fn cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
+unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
     cqr6_virada(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: o Jogo das Estrelas
 }
 
-unsafe extern "thiscall" fn comparar_cqr6_virada_jogo_das_estrelas(this: usize) -> u32 {
+unsafe extern "thiscall" fn comparar_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqr6_comparar("cqr6_virada_jogo_das_estrelas", this, || o(this))
+    cqr6_comparar("usa_mls_all_stars_start_new_season_90a760", this, || o(this))
 }
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
@@ -189,14 +189,14 @@ unsafe fn cqr6_times(this: usize) -> i32 {
     1
 }
 
-unsafe extern "thiscall" fn cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
+unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
     cqr6_times(this)
 }
 
 /// Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
 /// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
 /// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
-unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(this: usize) -> i32 {
+unsafe extern "thiscall" fn comparar_set_up_teams(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(%%I3%%);
     let antes = cqr6_d(this + 0xa7);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
@@ -224,6 +224,6 @@ unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(this: usize
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         soltar(lr);
     }
-    PLACAR.registrar(igual && a == b && lista, || format!("cqr6_times_do_jogo_das_estrelas({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
+    PLACAR.registrar(igual && a == b && lista, || format!("set_up_teams({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, lista));
     a
 }

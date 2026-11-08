@@ -82,7 +82,7 @@ unsafe fn cqe2_nota(pessoa: usize, posicao: u16, marcas: u32, vendedor: usize) -
 /// atração sobe 20 (nota maior) ou 5, entre 0 e 100; fora da troca (+4, criada se faltar), ele entra (0x68d0d0 com 7
 /// bytes: id, 0, estatuto), o valor dele (0x840d80 com −1, 1) sai do teto e de +0x1b (no mínimo 0), e a vaga acaba.
 /// Devolve 1.
-unsafe extern "thiscall" fn opcao_de_troca(this: usize, comprador: usize, alvo: usize, oferta: usize, saida: *mut usize, atracao: *mut i8, valor: i32) -> u32 {
+unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, alvo: usize, oferta: usize, saida: *mut usize, atracao: *mut i8, valor: i32) -> u32 {
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir_lista: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let contrato_com: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
@@ -305,7 +305,7 @@ unsafe fn cqe2_foto(o: usize) -> Vec<u8> {
 /// Comparador da 0x8c8860: lado a lado a partir do mesmo estado de [0xae1080], *saida, *atracao e do sorteador (a
 /// 0x8e78f0 sorteia); a cópia roda sem contar sorteios. Confere a devolução, a atração, [0xae1080] e a foto da oferta
 /// nova de cada lado; a da cópia é destruída (0x8e5710) e liberada (0x944c94) e fica tudo como a original deixou.
-unsafe extern "thiscall" fn comparar_opcao_de_troca(this: usize, comprador: usize, alvo: usize, oferta: usize, saida: *mut usize, atracao: *mut i8, valor: i32) -> u32 {
+unsafe extern "thiscall" fn comparar_make_exchange_option(this: usize, comprador: usize, alvo: usize, oferta: usize, saida: *mut usize, atracao: *mut i8, valor: i32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut usize, *mut i8, i32) -> u32>(%%I0%%);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn comparar_opcao_de_troca(this: usize, comprador: usiz
     let (ao, fo) = (*atracao, if r != 0 && *saida != 0 { cqe2_foto(*saida) } else { Vec::new() });
     let e_o = cqe2_d(0xae1080);
     antes.escrever();
-    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| opcao_de_troca(this, comprador, alvo, oferta, saida, atracao, valor)));
+    let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| make_exchange_option(this, comprador, alvo, oferta, saida, atracao, valor)));
     let (an, fn_) = (*atracao, if n != 0 && *saida != 0 { cqe2_foto(*saida) } else { Vec::new() });
     let e_n = cqe2_d(0xae1080);
     if n != 0 && *saida != 0 {
@@ -327,7 +327,7 @@ unsafe extern "thiscall" fn comparar_opcao_de_troca(this: usize, comprador: usiz
     }
     depois.escrever();
     PLACAR.registrar(r == n && ao == an && e_o == e_n && fo == fn_, || format!(
-        "opcao_de_troca(comprador {:#x}, alvo {:#x}, valor {}): original {} rust {}, atração {} x {}, [0xae1080] {:#x} x {:#x}, oferta {:x?} x {:x?}",
+        "make_exchange_option(comprador {:#x}, alvo {:#x}, valor {}): original {} rust {}, atração {} x {}, [0xae1080] {:#x} x {:#x}, oferta {:x?} x {:x?}",
         comprador, alvo, valor, r, n, ao, an, e_o, e_n, fo, fn_));
     r
 }
@@ -364,7 +364,7 @@ unsafe fn cqe2_contrato(pessoa: usize, campo: usize, vetor: usize) -> usize {
 /// `clube`, o clube da pessoa (+0x39) com técnico humano (0x7875e0, stdcall: o ecx = [0xb7431c] não é lido); de outro,
 /// o clube do contrato atual (lido de novo duas vezes) com técnico humano: a volta (0x4db0b0: push clube; push pessoa;
 /// mov ecx, this).
-unsafe extern "thiscall" fn agendar_fim_do_emprestimo(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn schedule_loan_end(this: usize, pessoa: usize, clube: usize) {
     let mais: unsafe extern "thiscall" fn(usize, *mut [u32; 2], u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let copia: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let tecnico_humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
@@ -404,6 +404,6 @@ unsafe extern "thiscall" fn agendar_fim_do_emprestimo(this: usize, pessoa: usize
 }
 
 /// Comparador da 0x4ccca0: só a original (a volta do empréstimo entrega notícias e mexe no elenco).
-unsafe extern "thiscall" fn comparar_agendar_fim_do_emprestimo(this: usize, pessoa: usize, clube: usize) {
+unsafe extern "thiscall" fn comparar_schedule_loan_end(this: usize, pessoa: usize, clube: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(%%I1%%)(this, pessoa, clube) // ponytail: só a original
 }

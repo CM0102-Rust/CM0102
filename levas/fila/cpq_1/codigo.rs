@@ -88,8 +88,8 @@ unsafe fn cpq1_trocar_pelo_melhor(this: usize, clube: usize) -> bool {
     }
     let l = cpq1_linha(this, clube);
     if cpq1_dias(cpq1_d(l + 0x18), cpq1_d(l + 0x1c)) > 0x1e {
-        let pressao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a0e70usize);
-        pressao(this, clube, 1);
+        let pressure: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a0e70usize);
+        pressure(this, clube, 1);
     }
     true
 }
@@ -108,7 +108,7 @@ unsafe fn cpq1_trocar_pelo_melhor(this: usize, clube: usize) -> bool {
 /// ≠ 0 tenta trocar pelo melhor candidato; senão a notícia da pressão (0x6a0e70 com 2) depois de 14 dias, e só. Sem
 /// presidente: sorteio(3) = 0 tenta a troca. Sem troca, a confiança do não jogador cai 250 (mínimo 1500 com presidente,
 /// 1 sem) e o técnico é demitido (saída 1).
-unsafe extern "thiscall" fn pensar_em_demitir_o_tecnico(this: usize, clube: usize, conferir: u32) {
+unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, conferir: u32) {
     let antes: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456770usize);
     if antes(0xae2c90, cpq1_d(0xdd6ec8) as u32, cpq1_d(0xdd6ecc) as u32) != 0 {
         return;
@@ -255,8 +255,8 @@ unsafe extern "thiscall" fn pensar_em_demitir_o_tecnico(this: usize, clube: usiz
         } else {
             let l = cpq1_linha(this, clube);
             if cpq1_dias(cpq1_d(l + 0x18), cpq1_d(l + 0x1c)) > 0xe {
-                let pressao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a0e70usize);
-                pressao(this, clube, 2);
+                let pressure: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a0e70usize);
+                pressure(this, clube, 2);
             }
             return;
         }
@@ -278,7 +278,7 @@ unsafe extern "thiscall" fn pensar_em_demitir_o_tecnico(this: usize, clube: usiz
 
 // ponytail: sorteia e, conforme o sorteio, aloca (a saída na lista, o ultimato, a notícia): o caminho só se sabe
 // rodando. Só a original; a cópia leva os ramos e a carreira a prova (as demissões mudam tudo).
-unsafe extern "thiscall" fn comparar_pensar_em_demitir_o_tecnico(this: usize, clube: usize, conferir: u32) {
+unsafe extern "thiscall" fn comparar_consider_sacking_manager(this: usize, clube: usize, conferir: u32) {
     orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(%%I0%%)(this, clube, conferir)
 }
 
@@ -335,7 +335,7 @@ unsafe fn cpq1_ultimato(this: usize, clube: usize, l: usize) -> u8 {
 /// clube com técnico (+0xcf) e divisão (+0x57): a lista local (LLIST 0x68d020, solta pela 0x68d040) recebe os jogos
 /// das próximas 8 semanas; o primeiro que vale dá a notícia do ultimato e põe o clube na lista dos ultimatos
 /// [this+0x10]: devolve 1. Senão 0.
-unsafe extern "thiscall" fn dar_o_ultimato_da_diretoria(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn issue_board_ultimatum(this: usize, clube: usize) -> u8 {
     let mut lista = [0u8; 16];
     let l = lista.as_mut_ptr() as usize;
     let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
@@ -348,7 +348,7 @@ unsafe extern "thiscall" fn dar_o_ultimato_da_diretoria(this: usize, clube: usiz
 
 // ponytail: aloca a lista dos jogos, a notícia e o item da lista dos ultimatos: só a original, conferida pelo plano:
 // a lista dos ultimatos [this+0x10] cresce de 1 quando devolve 1 e fica igual com 0.
-unsafe extern "thiscall" fn comparar_dar_o_ultimato_da_diretoria(this: usize, clube: usize) -> u8 {
+unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usize, clube: usize) -> u8 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u8>(%%I1%%);
     if cpq1_d(this + 0x10) == 0 {
         return o(this, clube);
@@ -357,7 +357,7 @@ unsafe extern "thiscall" fn comparar_dar_o_ultimato_da_diretoria(this: usize, cl
     let r = o(this, clube);
     let depois = cpq1_w(cpq1_d(this + 0x10)) as i32;
     PLACAR.registrar(depois == antes + (r != 0) as i32, || {
-        format!("dar_o_ultimato_da_diretoria(clube {:x}) devolveu {}, ultimatos {} -> {}", clube, r, antes, depois)
+        format!("issue_board_ultimatum(clube {:x}) devolveu {}, ultimatos {} -> {}", clube, r, antes, depois)
     });
     r
 }
@@ -390,7 +390,7 @@ unsafe fn cpq1_tecnico_no_cargo(clube: usize) -> Option<(usize, u8)> {
 /// com 2 para os cargos de técnico, 3 para os outros); sem `manter` a confiança (+6 da linha) vai a 3500. O registro
 /// da troca (0x869aa0, com 0 no tipo 2 e 2 nos outros), as multas do clube (0x5a5960) e, fora da seleção, as queixas e
 /// marcas de cada jogador do elenco com contrato (0x4cf5a0) saem.
-unsafe extern "thiscall" fn tirar_o_tecnico_do_cargo(this: usize, clube: usize, tipo: u32, motivo: u32, manter: u32) {
+unsafe extern "thiscall" fn remove_club_manager(this: usize, clube: usize, tipo: u32, motivo: u32, manter: u32) {
     let (tec, cargo) = match cpq1_tecnico_no_cargo(clube) {
         Some(t) => t,
         None => return,
@@ -398,8 +398,8 @@ unsafe extern "thiscall" fn tirar_o_tecnico_do_cargo(this: usize, clube: usize, 
     crate::comparacao::ramo("cpq_1 tirar o tecnico");
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     if humano(clube, 1, 1, 0, 0) != 0 {
-        let responder: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7874b0usize);
-        responder(cpq1_d(0xb7431c), tec, clube);
+        let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7874b0usize);
+        respond(cpq1_d(0xb7431c), tec, clube);
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     let copia: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -461,7 +461,7 @@ unsafe extern "thiscall" fn tirar_o_tecnico_do_cargo(this: usize, clube: usize, 
 
 // ponytail: tira o contrato, solta a notícia e grava o histórico em arquivo (não roda duas vezes): só a original,
 // conferida depois: sem `manter` a confiança em 3500 e, fora da seleção, nenhum contrato do elenco com as marcas.
-unsafe extern "thiscall" fn comparar_tirar_o_tecnico_do_cargo(this: usize, clube: usize, tipo: u32, motivo: u32, manter: u32) {
+unsafe extern "thiscall" fn comparar_remove_club_manager(this: usize, clube: usize, tipo: u32, motivo: u32, manter: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(%%I2%%);
     let tira = cpq1_tecnico_no_cargo(clube).is_some();
     o(this, clube, tipo, motivo, manter);
@@ -487,6 +487,6 @@ unsafe extern "thiscall" fn comparar_tirar_o_tecnico_do_cargo(this: usize, clube
     }
     let conf = cpq1_w(cpq1_linha(this, clube) + 6);
     PLACAR.registrar(sobra == 0 && (manter != 0 || conf == 0xdac), || {
-        format!("tirar_o_tecnico_do_cargo(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, tipo as u8, manter, sobra, conf)
+        format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", clube, tipo as u8, manter, sobra, conf)
     });
 }

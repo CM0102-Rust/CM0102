@@ -33,19 +33,19 @@ unsafe fn cql5_passar_de_fase(this: usize, arquivo: usize, linha: u32, criar: us
 
 /// { 0x64b9e0 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::advance_stage()`; cria o play-off e o play-out pela
 /// 0x64ba70. Fonte 0x9ea474, linha 0x250.
-unsafe extern "thiscall" fn fase_seguinte_da_c1a(this: usize) {
+unsafe extern "thiscall" fn ita_ser_c1a_advance_stage(this: usize) {
     cql5_passar_de_fase(this, 0x9ea474, 0x250, 0x64ba70)
 }
 
 /// { 0x64fba0 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::advance_stage()`; pela 0x64fc30. Fonte 0x9ea558, linha
 /// 0x255.
-unsafe extern "thiscall" fn fase_seguinte_da_c1b(this: usize) {
+unsafe extern "thiscall" fn ita_ser_c1a_advance_stage_64fba0(this: usize) {
     cql5_passar_de_fase(this, 0x9ea558, 0x255, 0x64fc30)
 }
 
 /// { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela
 /// 0x5783c0 (já em Rust). Fonte 0x9c4424, linha 0x29c.
-unsafe extern "thiscall" fn fase_seguinte_da_third(this: usize) {
+unsafe extern "thiscall" fn ita_ser_c1a_advance_stage_578330(this: usize) {
     cql5_passar_de_fase(this, 0x9c4424, 0x29c, 0x5783c0)
 }
 
@@ -60,19 +60,19 @@ unsafe fn cql5_comparar_passagem(nome: &str, this: usize, original: impl FnOnce(
     PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
-unsafe extern "thiscall" fn comparar_fase_seguinte_da_c1a(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    cql5_comparar_passagem("fase_seguinte_da_c1a", this, || o(this), || fase_seguinte_da_c1a(this))
+    cql5_comparar_passagem("ita_ser_c1a_advance_stage", this, || o(this), || ita_ser_c1a_advance_stage(this))
 }
 
-unsafe extern "thiscall" fn comparar_fase_seguinte_da_c1b(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_64fba0(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cql5_comparar_passagem("fase_seguinte_da_c1b", this, || o(this), || fase_seguinte_da_c1b(this))
+    cql5_comparar_passagem("ita_ser_c1a_advance_stage_64fba0", this, || o(this), || ita_ser_c1a_advance_stage_64fba0(this))
 }
 
-unsafe extern "thiscall" fn comparar_fase_seguinte_da_third(this: usize) {
+unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_578330(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I4%%);
-    cql5_comparar_passagem("fase_seguinte_da_third", this, || o(this), || fase_seguinte_da_third(this))
+    cql5_comparar_passagem("ita_ser_c1a_advance_stage_578330", this, || o(this), || ita_ser_c1a_advance_stage_578330(this))
 }
 
 /// As linhas dos 4 clubes do play-off de acesso (2º contra 5º, 3º contra 4º: a lista é 5º, 2º, 4º, 3º) e do play-out
@@ -172,13 +172,13 @@ unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32; 3], lista_
 /// A regra da C1/A: o campeão sobe direto (e vai à Supercopa da C1); do 2º ao 5º, um play-off de acesso (2º × 5º,
 /// 3º × 4º) dá a segunda vaga; do 14º ao 17º, um play-out (14º × 17º, 15º × 16º) decide quem cai junto com o 18º
 /// [inferência pelas faixas da cqk_6 e pelos nomes do mapa]. Fonte 0x9ea474, linhas 0x27c, 0x290, 0x2b3.
-unsafe extern "thiscall" fn fases_do_fim_da_c1a(this: usize) {
+unsafe extern "thiscall" fn create_playoff_stages(this: usize) {
     cql5_criar_fases(this, 0x9ea474, [0x27c, 0x290, 0x2b3], true)
 }
 
 /// { 0x64fc30 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::create_play_off_stages()`, a mesma regra na C1/B.
 /// Fonte 0x9ea558, linhas 0x281, 0x295, 0x2b8; no fim solta o gabarito antes da lista.
-unsafe extern "thiscall" fn fases_do_fim_da_c1b(this: usize) {
+unsafe extern "thiscall" fn create_play_off_stages(this: usize) {
     cql5_criar_fases(this, 0x9ea558, [0x281, 0x295, 0x2b8], false)
 }
 
@@ -195,12 +195,12 @@ unsafe fn cql5_comparar_fases(nome: &str, this: usize, original: impl FnOnce()) 
     PLACAR.registrar(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", nome, this, cql5_d(vaga), campeao, fases, cql5_d(this + 0x30) as i32));
 }
 
-unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1a(this: usize) {
+unsafe extern "thiscall" fn comparar_create_playoff_stages(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cql5_comparar_fases("fases_do_fim_da_c1a", this, || o(this))
+    cql5_comparar_fases("create_playoff_stages", this, || o(this))
 }
 
-unsafe extern "thiscall" fn comparar_fases_do_fim_da_c1b(this: usize) {
+unsafe extern "thiscall" fn comparar_create_play_off_stages(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I3%%);
-    cql5_comparar_fases("fases_do_fim_da_c1b", this, || o(this))
+    cql5_comparar_fases("create_play_off_stages", this, || o(this))
 }

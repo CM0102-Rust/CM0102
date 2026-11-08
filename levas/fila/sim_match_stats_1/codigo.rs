@@ -3,7 +3,7 @@
 /// { 0x7c47b0 } (thiscall, ret 8, player_stats.cpp): a estatística de liga do jogador no clube, como
 /// float (fild): campo 1 as partidas (palavra +0x20) e campo 2 os gols (palavra +0x22) do registro de
 /// 39 bytes em [this+0x30] + id × 39. Jogador nulo ou outro campo: a original (caixa de erro).
-unsafe extern "thiscall" fn estatistica_da_liga_do_jogador(estat: usize, jogador: usize, campo: i8) -> f32 {
+unsafe extern "thiscall" fn get_club_league_stat(estat: usize, jogador: usize, campo: i8) -> f32 {
     if jogador == 0 || !(1..=2).contains(&campo) {
         return orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(%%I0%%)(estat, jogador, campo);
     }
@@ -15,7 +15,7 @@ unsafe extern "thiscall" fn estatistica_da_liga_do_jogador(estat: usize, jogador
 /// { 0x729500 } (thiscall, ret 0x14, match_stats.cpp): a entrada `k` (12 bytes em [this]) tem os dois
 /// clubes em qualquer ordem (+0/+4) e as datas (+8/+0xa, palavras) dadas? Índice −1: não; abaixo de −1
 /// ou além de [this+0x1c]: a original (caixa de erro).
-unsafe extern "thiscall" fn entrada_do_jogo_bate(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
+unsafe extern "thiscall" fn fixture_entry_matches(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     if k < -1 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) {
         return orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(%%I1%%)(estat, k, a, b, data_a, data_b);
     }
@@ -34,7 +34,7 @@ unsafe extern "thiscall" fn entrada_do_jogo_bate(estat: usize, k: i32, a: i32, b
 /// registro tem +0x4c e [0xa5a390]; sem +0x40, 3 se o tipo (+0x3a) é 1, senão 2; com +0x40 e clube de
 /// seleção (0x53b900): 0 se a palavra +0x80 do clube passa de 4999 ou de 0x157b, senão 2; senão pelo tipo
 /// (tabela de saltos em 0x729d38) e as tabelas de bytes do exe em 0x729d64 e 0x729d94.
-unsafe extern "stdcall" fn balde_do_registro(jogo: usize, registro: usize) -> u8 {
+unsafe extern "stdcall" fn match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
     let limite = *(0xae2364 as *const i32);
     for o in [0x1c, 0x20] {
         let p = core::ptr::read_unaligned((*((jogo + o) as *const usize) + 0xcf) as *const usize);
@@ -90,30 +90,30 @@ unsafe extern "stdcall" fn balde_do_registro(jogo: usize, registro: usize) -> u8
     }
 }
 
-unsafe extern "thiscall" fn comparar_estatistica_da_liga_do_jogador(estat: usize, jogador: usize, campo: i8) -> f32 {
+unsafe extern "thiscall" fn comparar_get_club_league_stat(estat: usize, jogador: usize, campo: i8) -> f32 {
     let r = orig::<unsafe extern "thiscall" fn(usize, usize, i8) -> f32>(%%I0%%)(estat, jogador, campo);
     if jogador == 0 || !(1..=2).contains(&campo) {
         return r;
     }
-    let n = estatistica_da_liga_do_jogador(estat, jogador, campo);
-    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("estatistica_da_liga_do_jogador({}) original={} rust={}", campo, r, n));
+    let n = get_club_league_stat(estat, jogador, campo);
+    PLACAR.registrar(r.to_bits() == n.to_bits(), || format!("get_club_league_stat({}) original={} rust={}", campo, r, n));
     r
 }
 
-unsafe extern "thiscall" fn comparar_entrada_do_jogo_bate(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
+unsafe extern "thiscall" fn comparar_fixture_entry_matches(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(%%I1%%);
     if k < -1 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) {
         return o(estat, k, a, b, data_a, data_b);
     }
     let r = o(estat, k, a, b, data_a, data_b);
-    let n = entrada_do_jogo_bate(estat, k, a, b, data_a, data_b);
-    PLACAR.registrar(r == n, || format!("entrada_do_jogo_bate({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
+    let n = fixture_entry_matches(estat, k, a, b, data_a, data_b);
+    PLACAR.registrar(r == n, || format!("fixture_entry_matches({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
     r
 }
 
-unsafe extern "stdcall" fn comparar_balde_do_registro(jogo: usize, registro: usize) -> u8 {
+unsafe extern "stdcall" fn comparar_match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
     let r = orig::<unsafe extern "stdcall" fn(usize, usize) -> u8>(%%I2%%)(jogo, registro);
-    let n = balde_do_registro(jogo, registro);
-    PLACAR.registrar(r == n, || format!("balde_do_registro original={} rust={}", r, n));
+    let n = match_stats_get_record_bucket(jogo, registro);
+    PLACAR.registrar(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));
     r
 }

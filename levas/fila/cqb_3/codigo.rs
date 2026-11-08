@@ -139,7 +139,7 @@ const CQB3_DATAS: [(u8, u8, u8, u8, usize, usize); 110] = [
 /// sem add esp -> thiscall, ret 0x18); com a conta abaixo de 110 (nunca: é a 0xc8 de cima) a caixa da linha 0x15d8;
 /// conta 110, a tabela reduzida a 0x898 bytes (realloc 0x945667: 2 pushes; add esp, 8 -> cdecl), as datas no ciclo
 /// da Copa (0x5cc510: mov ecx, esi; sem push -> thiscall) e o último dia feito (+0x34f4) = 400.
-unsafe extern "thiscall" fn tabela_das_datas_internacionais(this: usize) {
+unsafe extern "thiscall" fn build_international_date_table(this: usize) {
     *((this + 0x34f0) as *mut i32) = 0xc8;
     let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let t = malloc(0xfa0);
@@ -181,10 +181,10 @@ unsafe extern "thiscall" fn tabela_das_datas_internacionais(this: usize) {
 /// Comparador da 0x5ca4f0: a cópia primeiro (aloca a tabela dela, que sai copiada e liberada: free 0x9452ca, cdecl),
 /// depois a original a partir dos mesmos +0x34ec..+0x34f5; confere a conta, o último dia feito e as 110 datas. Roda
 /// uma vez, no construtor dos amistosos.
-unsafe extern "thiscall" fn comparar_tabela_das_datas_internacionais(this: usize) {
+unsafe extern "thiscall" fn comparar_build_international_date_table(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     let campos = crate::comparacao::Memoria::ler(&[(this + 0x34ec, 10)]);
-    tabela_das_datas_internacionais(this);
+    build_international_date_table(this);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     if t == 0 || n != 0x6e {
         campos.escrever();
@@ -197,19 +197,19 @@ unsafe extern "thiscall" fn comparar_tabela_das_datas_internacionais(this: usize
     o(this);
     let t = cqb3_d(this + 0x34ec);
     if t == 0 {
-        return PLACAR.registrar(false, || "tabela_das_datas_internacionais: a original ficou sem tabela".to_string());
+        return PLACAR.registrar(false, || "build_international_date_table: a original ficou sem tabela".to_string());
     }
     let mo = crate::comparacao::Memoria::ler(&[(t, 0x898), (this + 0x34f0, 6)]);
-    PLACAR.registrar(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("tabela_das_datas_internacionais original={:x?} rust={:x?}", mo, mr));
+    PLACAR.registrar(mo.0[0].1 == mr.0[0].1 && mo.0[1].1 == mr.0[1].1, || format!("build_international_date_table original={:x?} rust={:x?}", mo, mr));
 }
 
 /// { 0x5cc510 } (thiscall, ret 0, friendly.cpp): `Friendly::resolve_international_dates()`, pela tabela (0x5ca4f0). O
 /// ano da Copa: o primeiro a partir do de hoje ([0xae2c92]) com (ano − 2) múltiplo de 4. Cada data (+0x34ec, conta
 /// +0x34f0) ganha a data em +3 pela 0x54a130 (lea ecx, entrada + 3; 4 pushes; sem add esp -> thiscall(data, dia, mês,
 /// ano, dia da semana), ret 0x10) com o dia (+1) e o dia da semana (+0) em byte com sinal, o mês (+2) e o ano da Copa
-/// mais o +0xb (com sinal), menos 4 se passar de 3 anos à frente de hoje (palavras). Depois o qsort pela data (0x945333:
+/// mais o +0xb (com sinal), menos 4 se pass_ball de 3 anos à frente de hoje (palavras). Depois o qsort pela data (0x945333:
 /// 4 pushes; add esp, 0x10 -> cdecl(tabela, conta, 0x14, 0x5cc610)).
-unsafe extern "thiscall" fn resolver_datas_internacionais(this: usize) {
+unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
     let hoje = cqb3_w(0xae2c92);
     let mut ciclo = hoje as u32;
     while ((ciclo & 0xffff) as i32 - 2) % 4 != 0 {
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn resolver_datas_internacionais(this: usize) {
         let mut ano = (cqb3_b(e + 0xb) as i8 as i16 as u16).wrapping_add(ciclo as u16);
         if ano as i32 - hoje as i32 > 3 {
             crate::comparacao::ramo("cqb_3 ano para tras");
-            ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente
+            ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se pass_ball de 3 anos à frente
         }
         let com_sinal = |o: usize| cqb3_b(e + o) as i8 as i16 as u16 as u32;
         // ponytail: o dia e o dia da semana vão sobre o edx de metade alta zerada (como a original); o mês e o ano vão
@@ -236,18 +236,18 @@ unsafe extern "thiscall" fn resolver_datas_internacionais(this: usize) {
 }
 
 /// Comparador da 0x5cc510: lado a lado nas datas da tabela (só grava nelas; o qsort e a 0x54a130 não sorteiam).
-unsafe extern "thiscall" fn comparar_resolver_datas_internacionais(this: usize) {
+unsafe extern "thiscall" fn comparar_resolve_international_dates(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
     let (t, n) = (cqb3_d(this + 0x34ec), cqb3_i(this + 0x34f0));
     let reg = if t != 0 && n > 0 { vec![(t, n as usize * 0x14)] } else { Vec::new() };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || resolver_datas_internacionais(this));
-    PLACAR.registrar(igual, || format!("resolver_datas_internacionais(conta {}) original={:x?} rust={:x?}", n, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || resolve_international_dates(this));
+    PLACAR.registrar(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
 }
 
 /// { 0x5c6830 } (thiscall, ret 0, friendly.cpp): `Friendly::find_human_club_tournament()`, pelas telas dos amistosos. O
 /// clube (+0x39) do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]]); entre os 127 torneios (0x69 bytes a partir
 /// de +0xb1), o primeiro com esse anfitrião (+0) e em uso (+0x29 ≠ 0): o ponteiro dele; senão 0.
-unsafe extern "thiscall" fn torneio_do_clube_humano(this: usize) -> usize {
+unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -> usize {
     let tecnico = cqb3_d(0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as i32 as usize).wrapping_mul(0x300)));
     if tecnico == 0 {
         return 0;
@@ -266,4 +266,4 @@ unsafe extern "thiscall" fn torneio_do_clube_humano(this: usize) -> usize {
     0
 }
 
-comparar_valor!(comparar_torneio_do_clube_humano, torneio_do_clube_humano, %%I2%%, () -> usize);
+comparar_valor!(comparar_find_human_club_tournament, find_human_club_tournament, %%I2%%, () -> usize);

@@ -19,7 +19,7 @@ unsafe fn cpr9_zerar(a: usize) {
 /// 0x30 do +0xb do registro de 79 bytes ([0xae2d0c]); quem já está na lista ([this+4], 26 bytes, conta +8); contrato
 /// (0x4cf5a0) com +0x49. Os outros: aposentadoria pela idade (0x7a7310) ou, sem ela, do desempregado (0x7a8050); quem
 /// se aposenta entra na lista (0x7a8510). No fim o qsort da lista (0x7ae2a0).
-unsafe extern "thiscall" fn novas_aposentadorias(this: usize) {
+unsafe extern "thiscall" fn find_new_retirements(this: usize) {
     // ponytail: a original constrói as duas datas da entrada (0x54a110) e deixa o resto como estava na pilha; as duas
     // decisões gravam tudo o que a 0x7a8510 copia antes de devolver 1 (a terceira data local nunca é lida: fica de fora)
     let mut e = [0u8; 0x1a];
@@ -140,7 +140,7 @@ unsafe fn cpr9_sair_da_vaga(pessoa: usize, c: usize, cargo: i8, campo: usize) {
 /// { 0x7aaeb0 } (stdcall, ret 4, player_regen.cpp): `player_regen_retire_from_non_playing_staff(pessoa)` (pela
 /// 0x7a59e0, na aposentadoria): sai da vaga do cargo (+0x3d) no clube (+0x39) e da do cargo na seleção (+0x28) na
 /// seleção (+0x24) (cpr9_sair_da_vaga); clube e seleção zerados, e os dois tipos de cargo.
-unsafe extern "stdcall" fn sair_dos_cargos(pessoa: usize) {
+unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff(pessoa: usize) {
     let c = cpr9_d(pessoa + 0x39);
     if c != 0 {
         cpr9_sair_da_vaga(pessoa, c, cpr9_b(pessoa + 0x3d), 0x39);
@@ -160,7 +160,7 @@ unsafe extern "stdcall" fn sair_dos_cargos(pessoa: usize) {
 /// (registro de 0x245 bytes pelo +4). Com técnico no clube (+0xcf), o histórico dele (tipo 0x68: o clube, a pessoa e os
 /// três ids +0x33 de +4, +8 e +0xc dela); depois o da pessoa (tipo 0x67: o clube ou −1), no arquivo (0x58e340).
 /// Pessoa nula: a caixa "Error" (linha 0x1010).
-unsafe extern "thiscall" fn registrar_a_liberacao(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn add_free_release_records(this: usize, pessoa: usize) {
     crate::comparacao::ramo("cpr_9 liberado");
     let mut e = cpq4_entrada();
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn registrar_a_liberacao(this: usize, pessoa: usize) {
 
 // ponytail: a busca acrescenta (realloc) e sorteia em cada teste: não roda duas vezes. Só a original; o modo Rust e a
 // carreira provam a cópia.
-unsafe extern "thiscall" fn comparar_novas_aposentadorias(this: usize) {
+unsafe extern "thiscall" fn comparar_find_new_retirements(this: usize) {
     orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this)
 }
 
@@ -210,15 +210,15 @@ unsafe fn cpr9_so_memoria(pessoa: usize) -> bool {
 
 /// Comparador: sem rotinas com efeito (cpr9_so_memoria), lado a lado pela pessoa (0x6e bytes) e pelos dois clubes
 /// (0x245 bytes cada); senão (vaga do técnico, cancelamento de ofertas, listas do humano) só a original.
-unsafe extern "stdcall" fn comparar_sair_dos_cargos(pessoa: usize) {
+unsafe extern "stdcall" fn comparar_player_regen_retire_from_non_playing_staff(pessoa: usize) {
     let o = orig::<unsafe extern "stdcall" fn(usize)>(%%I1%%);
     if !cpr9_so_memoria(pessoa) {
         return o(pessoa);
     }
     let mut reg = cpr9_regioes(pessoa);
     reg.retain(|r| r.0 != 0);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || sair_dos_cargos(pessoa));
-    PLACAR.registrar(igual, || format!("sair_dos_cargos(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(pessoa), || player_regen_retire_from_non_playing_staff(pessoa));
+    PLACAR.registrar(igual, || format!("player_regen_retire_from_non_playing_staff(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 unsafe fn cpr9_regioes(pessoa: usize) -> Vec<(usize, usize)> {
@@ -227,6 +227,6 @@ unsafe fn cpr9_regioes(pessoa: usize) -> Vec<(usize, usize)> {
 
 // ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia sem ele só grava [0xae1080]: só a
 // original; a cópia leva o ramo.
-unsafe extern "thiscall" fn comparar_registrar_a_liberacao(this: usize, pessoa: usize) {
+unsafe extern "thiscall" fn comparar_add_free_release_records(this: usize, pessoa: usize) {
     orig::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, pessoa)
 }

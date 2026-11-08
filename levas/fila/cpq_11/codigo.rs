@@ -85,7 +85,7 @@ unsafe fn cpq11_sem_memoria(linha: u32, texto: usize) -> ! {
 ///    vínculo, o confronto da rodada seguinte ganha a rodada (+0x12), o confronto sorteado (+6) e o lado (+8: 1
 ///    mandante, 0 visitante).
 /// Libera o vetor (0x9452ca).
-unsafe extern "thiscall" fn copa_sortear_times_da_rodada(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -191,16 +191,16 @@ unsafe extern "thiscall" fn copa_sortear_times_da_rodada(copa: usize, rodada: u3
 
 /// Comparador: sorteia (0x90cfc0) e só usa um vetor temporário: lado a lado pelo estado do sorteador e pelos
 /// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
-unsafe extern "thiscall" fn comparar_copa_sortear_times_da_rodada(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn comparar_randomize_round_teams(copa: usize, rodada: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend(cpq11_confrontos(copa));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada),
-        || crate::aleatorio::sem_contar(|| copa_sortear_times_da_rodada(copa, rodada)));
+        || crate::aleatorio::sem_contar(|| randomize_round_teams(copa, rodada)));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("copa_sortear_times_da_rodada(rodada {}) diferencas em {:x?}", rodada as i16, dif)
+        format!("randomize_round_teams(rodada {}) diferencas em {:x?}", rodada as i16, dif)
     });
 }
 
@@ -218,7 +218,7 @@ unsafe fn cpq11_inverter(t: usize) {
 /// nulo) com o mandante (ou o visitante) de `i`; achando, inverte o confronto `j` (mandante e visitante, +0xa/+0xc e
 /// +0xe/+0x10) e acerta o lado (+8) dos confrontos ligados na rodada seguinte: o de +0xe/+0xa fica 1 (mandante), o de
 /// +0x10/+0xc fica 0. Os dois jogos no mesmo estádio deixam de cair no mesmo lado.
-unsafe extern "thiscall" fn copa_separar_estadio_compartilhado(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u32) {
     let r = rodada as i16 as i32;
     let estadio = |t: i16| cpq11_d(cpq11_us(cpq11_time(copa, t)) as usize + 0x69);
     let mut n = cpq11_w(cpq11_rodada(copa, r) + 0x1a);
@@ -262,14 +262,14 @@ unsafe extern "thiscall" fn copa_separar_estadio_compartilhado(copa: usize, roda
 }
 
 /// Comparador: só grava confrontos (da rodada e das seguintes): lado a lado pelos confrontos de todas as rodadas.
-unsafe extern "thiscall" fn comparar_copa_separar_estadio_compartilhado(copa: usize, rodada: u32) {
+unsafe extern "thiscall" fn comparar_separate_shared_stadium_ties(copa: usize, rodada: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32)>(%%I1%%);
     let reg = cpq11_confrontos(copa);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada), || copa_separar_estadio_compartilhado(copa, rodada));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(copa, rodada), || separate_shared_stadium_ties(copa, rodada));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("copa_separar_estadio_compartilhado(rodada {}) diferencas em {:x?}", rodada as i16, dif)
+        format!("separate_shared_stadium_ties(rodada {}) diferencas em {:x?}", rodada as i16, dif)
     });
 }
 
@@ -294,7 +294,7 @@ fn cpq11_escala(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> (u32, i8) {
 /// (baixo + alto) / 2; senão (alto − baixo) × rodada / (rodadas − 1). Fora de 0..=100: a original (caixa da linha
 /// 0x256e, devolve 0 ou 100). Devolve o eax inteiro da original (quem chama empurra o registrador todo para
 /// 0x86bdd0/0x86c000): o byte em al sobre a soma (rodada única) ou o quociente.
-unsafe extern "C" fn escala_pela_rodada(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
+unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
     let (eax, v) = cpq11_escala(baixo, alto, rodada, rodadas);
     if !(0..=100).contains(&v) {
         return orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(baixo, alto, rodada, rodadas);
@@ -306,14 +306,14 @@ unsafe extern "C" fn escala_pela_rodada(baixo: u32, alto: u32, rodada: u32, roda
 }
 
 /// Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
-unsafe extern "C" fn comparar_escala_pela_rodada(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
+unsafe extern "C" fn comparar_comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32, rodadas: u32) -> u32 {
     let o = orig::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%);
     if !(0..=100).contains(&cpq11_escala(baixo, alto, rodada, rodadas).1) {
         return o(baixo, alto, rodada, rodadas);
     }
     let r = o(baixo, alto, rodada, rodadas);
-    let n = escala_pela_rodada(baixo, alto, rodada, rodadas);
-    PLACAR.registrar(r == n, || format!("escala_pela_rodada({}, {}, {}, {}) original={:x} rust={:x}",
+    let n = comp_util_scale_by_round(baixo, alto, rodada, rodadas);
+    PLACAR.registrar(r == n, || format!("comp_util_scale_by_round({}, {}, {}, {}) original={:x} rust={:x}",
         baixo as u8 as i8, alto as u8 as i8, rodada as u16 as i16, rodadas as u16 as i16, r, n));
     r
 }

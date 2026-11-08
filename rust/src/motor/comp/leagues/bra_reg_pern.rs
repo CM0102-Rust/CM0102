@@ -14,7 +14,7 @@ use super::*;
 ///
 /// [pt] { 0x4394d0 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::start_new_season()`, a virada da temporada do Pernambucano (a tabela:
 /// 0x439330; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-pub(crate) unsafe extern "thiscall" fn cqp9_virada_do_pernambucano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_start_new_season(this: usize) -> u32 {
     cqp7_virada(this, 0x439330, 0x98afd8, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do pernambucano") // cqp9: o ano seguinte do Pernambucano
 }
 
@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn cqp9_virada_do_pernambucano(this: usize) 
 ///
 /// [pt] { 0x439680 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::advance_stage()`, a fase seguinte do Pernambucano: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x439710); a caixa da linha 0x1f8.
-pub(crate) unsafe extern "thiscall" fn cqp9_fase_seguinte_do_pernambucano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage(this: usize) {
     cqp7_fase_seguinte(this, 0x98afd8, 0x1f8, 0x439710);
 }
 
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn cqp9_fase_seguinte_do_pernambucano(this: 
 ///
 /// [pt] { 0x43bd10 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::start_new_season()`, a virada da temporada do Catarinense (a tabela:
 /// 0x43bb70; caixas nas linhas 0x1ca, 0x1d1, 0x1d7 e 0x1de).
-pub(crate) unsafe extern "thiscall" fn cqp9_virada_do_catarinense(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_start_new_season_43bd10(this: usize) -> u32 {
     cqp7_virada(this, 0x43bb70, 0x98b050, [0x1ca, 0x1d1, 0x1d7, 0x1de], 1, "cqp_9 virada do catarinense") // cqp9: o ano seguinte do Catarinense
 }
 
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn cqp9_virada_do_catarinense(this: usize) -
 ///
 /// [pt] { 0x43bec0 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::advance_stage()`, a fase seguinte do Catarinense: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x43bf50); a caixa da linha 0x1f8.
-pub(crate) unsafe extern "thiscall" fn cqp9_fase_seguinte_do_catarinense(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43bec0(this: usize) {
     cqp7_fase_seguinte(this, 0x98b050, 0x1f8, 0x43bf50);
 }
 
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn cqp9_fase_seguinte_do_catarinense(this: u
 ///
 /// [pt] { 0x43cd40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::start_new_season()`, a virada da temporada do Paulista (a tabela:
 /// 0x43cc40; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
-pub(crate) unsafe extern "thiscall" fn cqp9_virada_do_paulista(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_start_new_season_43cd40(this: usize) -> u32 {
     cqp7_virada(this, 0x43cc40, 0x98b090, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_9 virada do paulista") // cqp9: o ano seguinte do Paulista
 }
 
@@ -66,38 +66,38 @@ pub(crate) unsafe extern "thiscall" fn cqp9_virada_do_paulista(this: usize) -> u
 ///
 /// [pt] { 0x43cef0 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::advance_stage()`, a fase seguinte do Paulista: no fim dos pontos corridos,
 /// o mata-mata de 4 (0x43cf80); a caixa da linha 0x1ea.
-pub(crate) unsafe extern "thiscall" fn cqp9_fase_seguinte_do_paulista(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43cef0(this: usize) {
     cqp7_fase_seguinte(this, 0x98b090, 0x1ea, 0x43cf80);
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp9_virada_do_pernambucano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP9_VIRADA_DO_PERNAMBUCANO);
-    cqp7_comparar_virada("cqp9_virada_do_pernambucano", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_START_NEW_SEASON);
+    cqp7_comparar_virada("bra_reg_pern_start_new_season", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_pernambucano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP9_FASE_SEGUINTE_DO_PERNAMBUCANO);
-    cqp7_comparar_fase_seguinte("cqp9_fase_seguinte_do_pernambucano", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_ADVANCE_STAGE);
+    cqp7_comparar_fase_seguinte("bra_reg_pern_advance_stage", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp9_virada_do_catarinense(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP9_VIRADA_DO_CATARINENSE);
-    cqp7_comparar_virada("cqp9_virada_do_catarinense", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season_43bd10(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_START_NEW_SEASON_43BD10);
+    cqp7_comparar_virada("bra_reg_pern_start_new_season_43bd10", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_catarinense(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP9_FASE_SEGUINTE_DO_CATARINENSE);
-    cqp7_comparar_fase_seguinte("cqp9_fase_seguinte_do_catarinense", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage_43bec0(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_ADVANCE_STAGE_43BEC0);
+    cqp7_comparar_fase_seguinte("bra_reg_pern_advance_stage_43bec0", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp9_virada_do_paulista(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQP9_VIRADA_DO_PAULISTA);
-    cqp7_comparar_virada("cqp9_virada_do_paulista", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season_43cd40(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_START_NEW_SEASON_43CD40);
+    cqp7_comparar_virada("bra_reg_pern_start_new_season_43cd40", this, || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqp9_fase_seguinte_do_paulista(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQP9_FASE_SEGUINTE_DO_PAULISTA);
-    cqp7_comparar_fase_seguinte("cqp9_fase_seguinte_do_paulista", this, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage_43cef0(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_ADVANCE_STAGE_43CEF0);
+    cqp7_comparar_fase_seguinte("bra_reg_pern_advance_stage_43cef0", this, || o(this))
 }
 
 // ---------- 277a leva: as semifinais dos estaduais e regionais: Pernambucano, Catarinense e Paulista (bra_reg_pern.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
@@ -164,7 +164,7 @@ pub(crate) unsafe fn cqn8_mata_mata(this: usize, linhas: &[usize], sementes: &[u
 ///
 /// [pt] { 0x439710 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98afd8, linhas 0x21b (sem lista) e 0x22f (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn8_mata_mata_do_pernambucano(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98afd8, 0x21b, 0x22f, "cqn_8 pernambucano"); // cqn8: 1º × 4º, 2º × 3º Pernambucano
 }
 
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn cqn8_mata_mata_do_pernambucano(this: usiz
 ///
 /// [pt] { 0x43bf50 } (thiscall, ret 0, bra_reg_santa.cpp): `BraRegSanta::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b050, linhas 0x21b (sem lista) e 0x22f (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn8_mata_mata_do_catarinense(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b050, 0x21b, 0x22f, "cqn_8 catarinense"); // cqn8: 1º × 4º, 2º × 3º Catarinense
 }
 
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn cqn8_mata_mata_do_catarinense(this: usize
 ///
 /// [pt] { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
 /// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b090, linhas 0x20d (sem lista) e 0x221 (sem fase).
-pub(crate) unsafe extern "thiscall" fn cqn8_mata_mata_do_paulista(this: usize) {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
     cqn8_mata_mata(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista
 }
 
@@ -209,19 +209,19 @@ pub(crate) unsafe fn cqn8_comparar(nome: &str, this: usize, linhas: &[usize], or
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_pernambucano(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN8_MATA_MATA_DO_PERNAMBUCANO);
-    cqn8_comparar("cqn8_mata_mata_do_pernambucano", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_CREATE_SEMI_FINAL_STAGE);
+    cqn8_comparar("bra_reg_pern_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_catarinense(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN8_MATA_MATA_DO_CATARINENSE);
-    cqn8_comparar("cqn8_mata_mata_do_catarinense", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_CREATE_SEMI_FINAL_STAGE_43BF50);
+    cqn8_comparar("bra_reg_pern_create_semi_final_stage_43bf50", this, &[0, 3, 1, 2], || o(this))
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_paulista(this: usize) {
-    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_CQN8_MATA_MATA_DO_PAULISTA);
-    cqn8_comparar("cqn8_mata_mata_do_paulista", this, &[0, 3, 1, 2], || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
+    let o = orig::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_CREATE_SEMI_FINAL_STAGE_43CF80);
+    cqn8_comparar("bra_reg_pern_create_semi_final_stage_43cf80", this, &[0, 3, 1, 2], || o(this))
 }
 
 /// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with
@@ -230,13 +230,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqn8_mata_mata_do_paulista(this:
 /// Original: `BraRegPern::BraRegPern` (0x4388f0, bra_reg_pern.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
-pub(crate) unsafe extern "thiscall" fn cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, ano: u32, registro: usize) -> usize {
     cqt3_construir(this, ano, registro, &CQT3_PERNAMBUCANO, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this: usize, ano: u32, registro: usize) -> usize {
-    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CQT3_CONSTRUIR_PERNAMBUCANO);
-    cqt3_comparar("cqt3_construir_pernambucano", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
+pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_pern(this: usize, ano: u32, registro: usize) -> usize {
+    let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PERN);
+    cqt3_comparar("construct_bra_reg_pern", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
 }
 
 /// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds
@@ -245,13 +245,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqt3_construir_pernambucano(this
 ///
 /// [pt] { 0x439330 } (thiscall, ret 0, bra_reg_pern.cpp): `BraRegPern::create_table()`: o Pernambucano tem 10 clubes (divisão reserva +0x60 = [0x9cf9bc]).
 /// Fonte 0x98afd8, linha 0x167.
-pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_pernambucano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) -> u32 {
     cqm7_tabela(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_pernambucano(this: usize) -> u32 {
-    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQM7_TABELA_DO_PERNAMBUCANO);
-    cqm7_comparar("cqm7_tabela_do_pernambucano", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, || o(this))
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_table(this: usize) -> u32 {
+    let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_CREATE_TABLE);
+    cqm7_comparar("bra_reg_pern_create_table", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, || o(this))
 }
 
 /// North and Pernambuco (the same routine in the two vtables): 4 top places (the final stage of 4); 2 relegated; double
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqm7_tabela_do_pernambucano(this
 ///
 /// [pt] { 0x439430 } (thiscall, bra_reg_pern.cpp): `BraRegPern::set_up_rules`, nas vtables do Norte (0x968338) e do
 /// Pernambucano (0x968554); devolve 1.
-pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) -> u32 {
     cqi9_regras_pernambucano(this);
     crate::comparacao::ramo("cqi_9 regras do pernambucano");
     cqi7_calendario(this);
@@ -271,12 +271,12 @@ pub(crate) unsafe extern "thiscall" fn cqi9_regras_do_pernambucano(this: usize) 
 }
 
 /// Comparador: como o do Paranaense.
-pub(crate) unsafe extern "thiscall" fn comparar_cqi9_regras_do_pernambucano(this: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_set_up_rules(this: usize) -> u32 {
     let reg = cqi7_regioes(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CQI9_REGRAS_DO_PERNAMBUCANO)(this), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || orig::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_SET_UP_RULES)(this), || {
         cqi9_regras_pernambucano(this);
         1
     });
-    PLACAR.registrar(igual && r == n, || format!("cqi9_regras_do_pernambucano({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
+    PLACAR.registrar(igual && r == n, || format!("bra_reg_pern_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
     r
 }

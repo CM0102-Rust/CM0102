@@ -92,7 +92,7 @@ unsafe fn cpw10_cargo_no_clube(s: usize) {
 /// troca de +0x10/+0x11 da nota 20, a normalização (0x539490), o cargo no clube da máquina e as três notas (+0xa, +8, +0xc)
 /// pela reputação, +9 e +0xd da ficha (faixa acima de 7500, ou sorteio(+0x57) e as outras duas); não jogador: sorteio(1500)
 /// e sorteio(500). A reserva sai (0x7a82b0).
-unsafe extern "thiscall" fn fila_de_regens(this: usize) {
+unsafe extern "thiscall" fn process_regen_queue(this: usize) {
     let regen: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x7abac0usize);
     let copiar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x7a8b70usize);
     let c0 = cpw10_i(this + 0x14);
@@ -185,7 +185,7 @@ unsafe extern "thiscall" fn fila_de_regens(this: usize) {
 /// achadas pelo caminho: só a original, conferindo o plano da fila. Sem entrada vencida e sem reservas a refazer, os dois
 /// lado a lado no cabeçalho (nada muda); com vencidas, as k primeiras saem: as seguintes sobem k casas, as k últimas
 /// ficam com id −1 e as palavras +4/+6 zeradas, a conta cai k. Com reservas (mais de 2) ou id inválido: só a original.
-unsafe extern "thiscall" fn comparar_fila_de_regens(this: usize) {
+unsafe extern "thiscall" fn comparar_process_regen_queue(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpw10_i(this + 0x20) > 2 {
         crate::comparacao::ramo("cpw_10 reservas so na original");
@@ -208,8 +208,8 @@ unsafe extern "thiscall" fn comparar_fila_de_regens(this: usize) {
         }
     }
     if k == 0 {
-        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x44)], || o(this), || fila_de_regens(this));
-        PLACAR.registrar(igual, || format!("fila_de_regens({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
+        let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this, 0x44)], || o(this), || process_regen_queue(this));
+        PLACAR.registrar(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
         return;
     }
     let antes = core::slice::from_raw_parts(base as *const u8, c0 as usize * 0xc).to_vec();
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn comparar_fila_de_regens(this: usize) {
             igual &= cpw10_i(e) == -1 && cpw10_w(e + 4) == 0 && cpw10_w(e + 6) == 0;
         }
     }
-    PLACAR.registrar(igual, || format!("fila_de_regens({:x}) {} vencidas de {}: conta {} base {:x}/{:x}", this, k, c0, n, base, b2));
+    PLACAR.registrar(igual, || format!("process_regen_queue({:x}) {} vencidas de {}: conta {} base {:x}/{:x}", this, k, c0, n, base, b2));
 }
 
 /// O veículo pelo sorteio(100) dos grandes (0x757f30/0x757fa0): 0 → 6; até 7 → 3; até 14 → 5; até 39 → 2; até 59 → 0;
@@ -257,7 +257,7 @@ unsafe fn cpw10_veiculo_menor() -> u32 {
 /// { 0x757f30 } (cdecl, media.cpp): `media_pick_outlet_type_for_club(clube)`: reputação (+0x80) acima de 6250: o
 /// veículo dos grandes pelo sorteio(100); senão o dos menores (sorteio(4)). Pelas notícias do troféu (0x75c390) e da venda
 /// (0x75cfc0).
-unsafe extern "C" fn veiculo_pelo_clube(clube: usize) -> u32 {
+unsafe extern "C" fn media_pick_outlet_type_for_club(clube: usize) -> u32 {
     if cpw10_w(clube + 0x80) > 0x186a {
         cpw10_veiculo_grande(cpw10_sortear(100) as u8 as i8)
     } else {
@@ -265,17 +265,17 @@ unsafe extern "C" fn veiculo_pelo_clube(clube: usize) -> u32 {
     }
 }
 
-unsafe extern "C" fn comparar_veiculo_pelo_clube(clube: usize) -> u32 {
+unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I1%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(clube), || crate::aleatorio::sem_contar(|| veiculo_pelo_clube(clube)));
-    PLACAR.registrar(igual && r == n, || format!("veiculo_pelo_clube({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(clube), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_club(clube)));
+    PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
     r
 }
 
 /// { 0x757fa0 } (cdecl, media.cpp): `media_pick_outlet_type_for_person(pessoa)`: como o do clube, pela reputação do
 /// jogador (+0xb da ficha +0x61). Pelas histórias do jogador (0x72c1f0), do desabafo, do elogio, de querer jogar e da
 /// comemoração da contratação (0x75b6e0, nas transferências).
-unsafe extern "C" fn veiculo_pela_pessoa(pessoa: usize) -> u32 {
+unsafe extern "C" fn media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     if cpw10_w(cpw10_d(pessoa + 0x61) + 0xb) > 0x186a {
         cpw10_veiculo_grande(cpw10_sortear(100) as u8 as i8)
     } else {
@@ -283,9 +283,9 @@ unsafe extern "C" fn veiculo_pela_pessoa(pessoa: usize) -> u32 {
     }
 }
 
-unsafe extern "C" fn comparar_veiculo_pela_pessoa(pessoa: usize) -> u32 {
+unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
     let o = orig::<unsafe extern "C" fn(usize) -> u32>(%%I2%%);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa), || crate::aleatorio::sem_contar(|| veiculo_pela_pessoa(pessoa)));
-    PLACAR.registrar(igual && r == n, || format!("veiculo_pela_pessoa({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_person(pessoa)));
+    PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
     r
 }
