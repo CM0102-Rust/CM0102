@@ -15,7 +15,7 @@ pub(crate) unsafe extern "C" fn chance_de_conhecer(pessoa: usize, nivel: i8) -> 
 /// vai a 3. Com ele e nivel abaixo de 3: c = 0x544410(observador, byte +0x17), sorteio(c) (byte);
 /// c < 15 e sorteio 0: nivel + 1; senao nivel 0 e sorteio < 6: 2; senao 3.
 pub(crate) unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usize, fonte: usize) {
-    if pessoa == 0 || *(pessoa as *const i32) >= *(0xae2364 as *const i32) {
+    if pessoa == 0 || *(pessoa as *const i32) >= *(G_STAFF_COUNT as *const i32) {
         return;
     }
     let reg = (*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9));
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn conhecer_pessoa(this: usize, pessoa: usiz
 pub(crate) unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: usize) {
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let conhecer: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_FOG_OF_WAR_MAP_RAISE_KNOWLEDGE);
-    let n = || *(0xae2364 as *const i32);
+    let n = || *(G_STAFF_COUNT as *const i32);
     for lado in 0..2usize {
         let clube = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
         if humano(clube, 0, 1, 0, 0) == 0 {
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: 
             continue;
         }
         let k = n().wrapping_sub(*(q as *const i32)) as usize;
-        let obj = *((*(0xae2a60 as *const usize)).wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize);
+        let obj = *((*(G_FOG_OF_WAR as *const usize)).wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize);
         if obj == 0 {
             continue;
         }
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "stdcall" fn nevoa_apos_partida(partida: usize, dados: 
             if i == -1 || *((e + 4) as *const i32) == -1 || (vaga > 10 && *((e + 0x32) as *const u8) == 0xff) {
                 continue;
             }
-            let p = (*(0xae23bc as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
+            let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
             if p == 0 || *(p as *const i32) < n() {
                 conhecer(obj, p, 0);
             }

@@ -41,8 +41,8 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
         aviso_em(0x9c4180, 0x24c);
         return 0;
     }
-    let base = read_u32_as_usize(0xae23b4);
-    let n = read_u32_as_usize(0xae235c) as i32;
+    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
     let cheia = |k: i32| k == read_u32_as_usize(this + 0xb6) as i32;
     let mut k = 0i32;
     // 1) a segunda e a terceira divisões
@@ -139,7 +139,7 @@ pub(crate) unsafe fn cqs5_selecao(this: usize) -> u32 {
             }
         }
         if (m as i32) < read_u32_as_usize(this + 0xb6) as i32 - k {
-            let lim = n.wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
+            let lim = n.wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
             let mut j: i16 = 0;
             if lim > 0 {
                 loop {
@@ -202,8 +202,8 @@ pub(crate) unsafe extern "thiscall" fn cqs5_trofeu_clubes(this: usize) -> u32 {
 /// caso em que ela lê a dword sem valor da pilha), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_cqs5_trofeu_clubes(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(2030);
-    let base = read_u32_as_usize(0xae23b4);
-    let tem_rebaixado = (0..read_u32_as_usize(0xae235c) as i32).any(|i| {
+    let base = read_u32_as_usize(G_CLUB_TABLE);
+    let tem_rebaixado = (0..read_u32_as_usize(G_CLUB_COUNT) as i32).any(|i| {
         let c = base + i as usize * 0x245;
         let antes = read_u32_as_usize(c + 0x5b);
         cqs5_na(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && antes != 0 && read_u32_as_usize(antes) == read_u32_as_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION)

@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr6_virada_jogo_das_estrelas(th
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn cqr6_clube(i: usize) -> usize {
-    read_u32_as_usize(0xae23b4).wrapping_add(i.wrapping_mul(0x245))
+    read_u32_as_usize(G_CLUB_TABLE).wrapping_add(i.wrapping_mul(0x245))
 }
 
 /// { 0x90a540 } (thiscall, ret 0, usa_mls_all_stars.cpp): `UsaMlsAllStars::set_up_teams()`, os dois times do Jogo das
@@ -156,7 +156,7 @@ pub(crate) unsafe fn cqr6_times(this: usize) -> i32 {
         aviso_em(0xaa20a0, 0xc6);
         return -1;
     }
-    let (a, b) = (read_u32_as_usize(0x9d00a4), read_u32_as_usize(0x9d00a8));
+    let (a, b) = (read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST), read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST));
     let conferencia = if read_i16(this + 0x40) % 2 != 0 {
         write_u32_from_usize(l, cqr6_clube(a));
         write_u32_from_usize(read_u32_as_usize(this + 0xa7) + 6, cqr6_clube(b));
@@ -170,7 +170,7 @@ pub(crate) unsafe fn cqr6_times(this: usize) -> i32 {
     let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
     let divisao: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
     let mut i = 0usize;
-    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqr6_clube(i);
         let liga = read_u32_as_usize(c + 0x57);
         if liga != 0 && read_u32_as_usize(liga) == read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && divisao(c) as i32 == conferencia {
@@ -185,7 +185,7 @@ pub(crate) unsafe fn cqr6_times(this: usize) -> i32 {
         }
         i += 1;
     }
-    let nacao = read_u32_as_usize(0xae23a8).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(0x122));
+    let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add(read_u32_as_usize(KEY_NATION_UNITED_STATES).wrapping_mul(0x122));
     let l = read_u32_as_usize(this + 0xa7);
     write_u32_from_usize(read_u32_as_usize(l + 6) + 0x53, nacao);
     write_u32_from_usize(read_u32_as_usize(l) + 0x53, read_u32_as_usize(read_u32_as_usize(l + 6) + 0x53));
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqr6_times_do_jogo_das_estrelas(
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2005);
     let antes = read_u32_as_usize(this + 0xa7);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(read_u32_as_usize(0x9d00a4)), 0x245), (cqr6_clube(read_u32_as_usize(0x9d00a8)), 0x245)]);
+    reg.extend([(this + 0x3e, 2usize), (0xb67a34, 4), (cqr6_clube(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST)), 0x245), (cqr6_clube(read_u32_as_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST)), 0x245)]);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {

@@ -332,8 +332,8 @@ pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_nsl(this: usize) -> u32 {
     }
     let mut k: u32 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if (k as i16) >= read_i16(this + 0x3e) {
             break;
         }

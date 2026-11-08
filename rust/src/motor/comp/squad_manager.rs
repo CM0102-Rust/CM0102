@@ -39,10 +39,10 @@ pub(crate) unsafe extern "thiscall" fn inscricao_europeia(this: usize, etapa: u3
     let noticia: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SEND_EURO_REGISTRATION_NEWS);
     let inscrever: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u8 = core::mem::transmute(FN_SQUAD_MANAGER_SELECT_EURO_REGISTERED_PLAYERS);
     if etapa as u8 == 1 {
-        *(this as *mut u16) = *(0xae2c92 as *const u16);
+        *(this as *mut u16) = *(G_CURRENT_DATE_YEAR as *const u16);
         let mut i = 0i32;
-        while i < read_u32(0xae2364) as i32 {
-            let m = (read_u32(0xae23bc) as usize + 0x6e * i as usize + 0x6d) as *mut u8;
+        while i < read_u32(G_STAFF_COUNT) as i32 {
+            let m = (read_u32(G_STAFF_TABLE) as usize + 0x6e * i as usize + 0x6d) as *mut u8;
             if *m != 0 {
                 *m = 0;
             }
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn inscricao_europeia(this: usize, etapa: u3
     }
     for &chave in CQN3_COPAS.iter() {
         let id = read_u32(chave);
-        let comp = read_u32(read_u32(0xadadfc) as usize + 4 * id as usize) as usize;
+        let comp = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * id as usize) as usize;
         if comp == 0 {
             continue;
         }
@@ -59,11 +59,11 @@ pub(crate) unsafe extern "thiscall" fn inscricao_europeia(this: usize, etapa: u3
             if c == 0 || read_u32(c + 0x1db) != id {
                 return;
             }
-            if humano(read_u32(0xb7431c) as usize, c) != 0 {
+            if humano(read_u32(G_NEWS) as usize, c) != 0 {
                 noticia(this, c, id, etapa);
             } else {
                 crate::comparacao::ramo("cqn_3 inscreve o clube");
-                inscrever(read_u32(0xdd7ef0) as usize, c, etapa, 0); // cqn3: inscreve o clube
+                inscrever(read_u32(G_SQUAD_MANAGER) as usize, c, etapa, 0); // cqn3: inscreve o clube
             }
         });
     }
@@ -78,10 +78,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, 
     let mut tem_humano = false;
     for &chave in CQN3_COPAS.iter() {
         let id = read_u32(chave);
-        let comp = read_u32(read_u32(0xadadfc) as usize + 4 * id as usize) as usize;
+        let comp = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * id as usize) as usize;
         if comp != 0 {
             cqn3_clubes(comp, etapa, |c| {
-                if c != 0 && read_u32(c + 0x1db) == id && humano(read_u32(0xb7431c) as usize, c) != 0 {
+                if c != 0 && read_u32(c + 0x1db) == id && humano(read_u32(G_NEWS) as usize, c) != 0 {
                     tem_humano = true;
                 }
             });
@@ -90,11 +90,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_inscricao_europeia(this: usize, 
     if tem_humano {
         return o(this, etapa);
     }
-    let n = (read_u32(0xae2364) as i32).max(0) as usize;
-    let reg = [(this, 2usize), (read_u32(0xae23bc) as usize, n * 0x6e), (0xae1080, 4)];
+    let n = (read_u32(G_STAFF_COUNT) as i32).max(0) as usize;
+    let reg = [(this, 2usize), (read_u32(G_STAFF_TABLE) as usize, n * 0x6e), (0xae1080, 4)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, etapa), || inscricao_europeia(this, etapa));
     PLACAR.registrar(igual, || {
-        let base = read_u32(0xae23bc) as usize;
+        let base = read_u32(G_STAFF_TABLE) as usize;
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| {
             let a0 = a.0;
             a.1.iter().zip(b.1.iter()).enumerate().filter(|(_, (x, y))| x != y).map(move |(i, (x, y))| (a0 + i, *x, *y))
@@ -120,7 +120,7 @@ pub(crate) unsafe fn cql1_vale_no_clube(k: usize, c: usize) -> bool {
     }
     let p = parceiro(c, 0, 1);
     let id = read_u32(k + 4) as usize;
-    (read_u32(0xae23b4) as usize).wrapping_add(id.wrapping_mul(0x245)) == p
+    (read_u32(G_CLUB_TABLE) as usize).wrapping_add(id.wrapping_mul(0x245)) == p
 }
 
 /// the rule: the squad number lives in the contract (+0x3a), positive at human-managed clubs and negative elsewhere;
@@ -141,15 +141,15 @@ pub(crate) unsafe extern "thiscall" fn numero_de_camisa(_this: usize, p: usize, 
     if p == 0 || c == 0 {
         return 0;
     }
-    if read_u32(p) as i32 >= read_u32(0xae2364) as i32 {
+    if read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
         return *((read_u32(p + 0x61) as usize + 4) as *const i8);
     }
-    let k = contrato(read_u32(0xae1050) as usize, p);
+    let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && jogador(*((p + 0x3d) as *const i8)) != 0 && cql1_vale_no_clube(k, c) {
         crate::comparacao::ramo("cql_1 numero do contrato");
         return *((k + 0x3a) as *const i8); // cql1: o número do contrato
     }
-    let k = emprestimo(read_u32(0xae1050) as usize, p);
+    let k = emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && cql1_vale_no_clube(k, c) {
         return *((k + 0x3a) as *const i8);
     }
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn clube_usa_numeros(_this: usize, c: usize,
     if div == 0 {
         return 0;
     }
-    let tabela = read_u32(0xadadfc) as usize;
+    let tabela = read_u32(G_COMP_OBJECT_TABLE) as usize;
     let comp = read_u32(tabela + read_u32(div) as usize * 4) as usize;
     if comp == 0 {
         return 0;
@@ -230,13 +230,13 @@ pub(crate) unsafe extern "thiscall" fn gravar_numero_de_camisa(_this: usize, p: 
         aviso_em(0xa82b88, 0x332);
         return;
     }
-    let k = contrato(read_u32(0xae1050) as usize, p);
+    let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && cql1_vale_no_clube(k, c) {
         crate::comparacao::ramo("cql_1 grava no contrato");
         *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
         return;
     }
-    let k = emprestimo(read_u32(0xae1050) as usize, p);
+    let k = emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && cql1_vale_no_clube(k, c) {
         *((k + 0x3a) as *mut i8) = n;
     }
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_numero_de_camisa(this: us
         return o(this, p, c, n);
     }
     let mut reg = Vec::new();
-    for k in [contrato(read_u32(0xae1050) as usize, p), emprestimo(read_u32(0xae1050) as usize, p)] {
+    for k in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
         if k != 0 {
             reg.push((k + 0x3a, 1));
         }
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_numero_de_camisa(this: us
 
 /// A pessoa `p` está na tabela das pessoas com contrato (id < [0xae2364], com sinal).
 pub(crate) unsafe fn cql2_com_contrato(p: usize) -> bool {
-    (read_u32(p) as i32) < read_u32(0xae2364) as i32
+    (read_u32(p) as i32) < read_u32(G_STAFF_COUNT) as i32
 }
 
 /// Os números preferidos (índice = número − 1) pela posição da ficha de jogador `f` (as notas de posição de 1 a 20,
@@ -399,7 +399,7 @@ pub(crate) unsafe fn cql2_regioes(ps: &[usize]) -> Vec<(usize, usize)> {
         if p == 0 {
             continue;
         }
-        for k in [contrato(read_u32(0xae1050) as usize, p), emprestimo(read_u32(0xae1050) as usize, p)] {
+        for k in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
             if k != 0 && !reg.contains(&(k + 0x3a, 1)) {
                 reg.push((k + 0x3a, 1));
             }
@@ -506,7 +506,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_elenco(this: usize, c: usize, man
             continue;
         }
         if vez < -21 {
-            let ct = do_clube(read_u32(0xae1050) as usize, x, c);
+            let ct = do_clube(read_u32(G_CONTRACT_MANAGER) as usize, x, c);
             let t = if ct != 0 { *((ct + 0x4f) as *const u8) & 0xf0 } else { 0 };
             if ct == 0 || t == 0x60 || t == 0x70 {
                 gravar(this, x, c, 0);
@@ -542,7 +542,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_elenco(this: usize, c: usize, man
         if x == 0 {
             continue;
         }
-        let ct = do_clube(read_u32(0xae1050) as usize, x, c);
+        let ct = do_clube(read_u32(G_CONTRACT_MANAGER) as usize, x, c);
         if ct == 0 {
             continue;
         }
@@ -602,8 +602,8 @@ pub(crate) static mut CQL3_PLANO: Option<Vec<usize>> = None;
 pub(crate) unsafe fn cql3_ligas_a_numerar(mut cada: impl FnMut(usize)) {
     let divisao: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
     let mut i = 0i32;
-    while i < read_u32(0xadadf8) as i32 {
-        let c = read_u32(read_u32(0xadadfc) as usize + 4 * i as usize) as usize;
+    while i < read_u32(G_COMP_OBJECT_COUNT) as i32 {
+        let c = read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * i as usize) as usize;
         if c != 0 && divisao(read_u32(read_u32(c + 4) as usize) as i32) != 0 && *((c + 0x52) as *const u8) & 2 != 0 {
             crate::comparacao::ramo("cql_3 numera a liga");
             cada(c); // cql3: numera a liga
@@ -659,7 +659,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_liga(this: usize, liga: usize, mu
     let gravar: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_SQUAD_MANAGER_SET_SQUAD_NUMBER);
     let numerar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SQUAD_MANAGER_ASSIGN_CLUB_SQUAD_NUMBERS);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    if *(0xae2c92 as *const u16) == 0x7ce {
+    if *(G_CURRENT_DATE_YEAR as *const u16) == 0x7ce {
         inicial = 1;
     }
     let clubes: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(liga) as usize + 0x58) as usize);
@@ -673,7 +673,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_liga(this: usize, liga: usize, mu
         }
         let mut sq = [0usize; 50];
         elenco(c, sq.as_mut_ptr(), 0);
-        if humano(read_u32(0xb7431c) as usize, c) != 0 && automatico == 0 {
+        if humano(read_u32(G_NEWS) as usize, c) != 0 && automatico == 0 {
             for &p in sq.iter() {
                 if p != 0 && numero(this, p, c) < 0 {
                     gravar(this, p, c, (numero(this, p, c) as u8).wrapping_neg() as u32);
@@ -684,7 +684,7 @@ pub(crate) unsafe extern "thiscall" fn numerar_liga(this: usize, liga: usize, mu
         }
         if inicial != 0 {
             for &p in sq.iter() {
-                if p == 0 || read_u32(p) as i32 >= read_u32(0xae2364) as i32 {
+                if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
                     continue;
                 }
                 let f = read_u32(p + 0x61) as usize;
@@ -724,7 +724,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_numerar_liga(this: usize, liga: 
     if lista != 0 {
         soltar(lista);
     }
-    if automatico == 0 && cs.iter().any(|&c| humano(read_u32(0xb7431c) as usize, c) != 0) {
+    if automatico == 0 && cs.iter().any(|&c| humano(read_u32(G_NEWS) as usize, c) != 0) {
         return o(this, liga, inicial, automatico);
     }
     let mut reg = vec![(0xb67a34usize, 4usize)];
@@ -739,7 +739,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_numerar_liga(this: usize, liga: 
                 if p == 0 {
                     continue;
                 }
-                for ct in [contrato(read_u32(0xae1050) as usize, p), emprestimo(read_u32(0xae1050) as usize, p)] {
+                for ct in [contrato(read_u32(G_CONTRACT_MANAGER) as usize, p), emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
                     if ct != 0 && !reg.contains(&(ct + 0x3a, 1)) {
                         reg.push((ct + 0x3a, 1));
                     }
@@ -793,15 +793,15 @@ pub(crate) unsafe extern "thiscall" fn inscrever_na_europa(_this: usize, c: usiz
     let mut tirados = 0i8;
     let m6d = |p: usize| (p + 0x6d) as *mut u8;
     for &p in sq.iter() {
-        if p == 0 || read_u32(p) as i32 >= read_u32(0xae2364) as i32 {
+        if p == 0 || read_u32(p) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             continue;
         }
-        let k = contrato(read_u32(0xae1050) as usize, p);
-        *(0xae1080 as *mut u32) = k as u32;
+        let k = contrato(read_u32(G_CONTRACT_MANAGER) as usize, p);
+        *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = k as u32;
         if k != 0 && *((k + 0x35) as *const u8) & 0x3f == 5 {
             continue;
         }
-        if emprestimo(read_u32(0xae1050) as usize, p) != 0 || *m6d(p) & 0x18 != 0 {
+        if emprestimo(read_u32(G_CONTRACT_MANAGER) as usize, p) != 0 || *m6d(p) & 0x18 != 0 {
             continue;
         }
         cand[n as i8 as usize] = p;

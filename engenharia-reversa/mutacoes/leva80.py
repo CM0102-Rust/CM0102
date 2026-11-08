@@ -1,7 +1,7 @@
 # Mutacoes da leva80 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva80.py
 MUTACOES = [
     ('e_ativo', "        if q != 0 && *((q + 4) as *const u32) != 0 && valida() {", "        if q != 0 && valida() {"),
-    ('e_nevoa', "    let valida = || *(pessoa as *const i32) < *(0xae2364 as *const i32) && *(0x9cc270 as *const u8) != 0;", "    let valida = || *(pessoa as *const i32) < *(0xae2364 as *const i32);"),
+    ('e_nevoa', "    let valida = || *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;", "    let valida = || *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32);"),
     ('e_16', "    for k in 0..16usize {\n        let q = *((this + 4 * k) as *const usize);\n        if q != 0 && *((q + 4)", "    for k in 0..15usize {\n        let q = *((this + 4 * k) as *const usize);\n        if q != 0 && *((q + 4)"),
     ('t_menos4', "    *(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize)", "    *(this.wrapping_add(k.wrapping_mul(4)) as *const usize)"),
     ('s_200', "casa(k) & setor != 0 && casa(k) & 0x200 != 0", "casa(k) & setor != 0"),

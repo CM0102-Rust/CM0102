@@ -456,7 +456,7 @@ pub(crate) unsafe extern "thiscall" fn decisao_da_falta(
     let partida = *((m + 0x4792) as *const usize);
     if partida != 0 {
         let comp = *((partida + 0x14) as *const usize);
-        let amistoso = *(0xae2c74 as *const usize);
+        let amistoso = *(G_FRIENDLY as *const usize);
         if comp != 0 && amistoso != 0 {
             let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
             if f(amistoso, comp) != 0 {

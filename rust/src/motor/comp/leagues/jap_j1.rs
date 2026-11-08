@@ -163,12 +163,12 @@ pub(crate) unsafe extern "thiscall" fn cqq9_virada_da_j1(this: usize) -> u32 {
         aviso_em(0x9eabc8, erro);
         return 0;
     }
-    virtual_(read_usize(read_usize(0xadadfc) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
+    virtual_(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
     virtual_(this, 0x5c);
     let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(0xb74340), read_usize(this + 4))
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
 /// O comparador da fase seguinte: só a original (ponytail: ao chegar a 2 monta a final, que aloca e sorteia), com o
@@ -243,8 +243,8 @@ pub(crate) unsafe fn cqm9_linha(this: usize, k: u8, n: i16, girar: u8, clube: us
 pub(crate) unsafe fn cqm9_japao(this: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if cqm9_da_divisao(clube, g) {
             if (k as i8 as i16) < read_i16(this + 0x3e) {
                 cqm9_linha(this, k, read_i16(this + 0x3e), girar, clube);
@@ -309,8 +309,8 @@ pub(crate) unsafe extern "thiscall" fn cqm9_tabela_da_j2(this: usize) -> u32 {
 pub(crate) unsafe fn cqm9_comparar(nome: &str, this: usize, n: i16, g: usize, limpar: bool, cota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         if cqm9_da_divisao(clube, g) {
             plano.push(clube);
         }

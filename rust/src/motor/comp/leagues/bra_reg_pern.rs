@@ -69,7 +69,7 @@ pub(crate) unsafe fn cqp9_virada(this: usize, tabela: usize, arquivo: usize, lin
     let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     previstas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(0xb74340), read_usize(this + 4))
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
 /// A fase seguinte de um estadual (`advance_stage`, slot 11, +0x28): na última fase (+0x30 ≥ +0x2c − 1, com sinal), a

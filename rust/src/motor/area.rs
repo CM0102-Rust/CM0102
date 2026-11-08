@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u3
             let y1 = area_i32(area, 4);
             let y = area_i32(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbac) as *const u8) as i32;
             let y = y.wrapping_add(y1);
-            linha(area_i32(area, 0), y, area_i32(area, 8), y, 2, *(0xae317e as *const u16) as u32);
+            linha(area_i32(area, 0), y, area_i32(area, 8), y, 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
             k = k.wrapping_add(1);
         }
         let mut k: i16 = 1;
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn desenhar_area(area: usize, redesenhar: u3
             let x1 = area_i32(area, 0);
             let x = area_i32(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbab) as *const u8) as i32;
             let x = x.wrapping_add(x1);
-            linha(x, area_i32(area, 4), x, area_i32(area, 0xc), 2, *(0xae317e as *const u16) as u32);
+            linha(x, area_i32(area, 4), x, area_i32(area, 0xc), 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
             k = k.wrapping_add(1);
         }
         return;

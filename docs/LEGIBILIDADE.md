@@ -13,7 +13,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
-| linhas | 189066 |
+| linhas | 189477 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
@@ -21,7 +21,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 |---|---:|---:|---:|---:|---:|---:|
 | `motor/transfer_manager.rs` | 1485 | 16 | 0 | 0 | 0 | 11801 |
 | `motor/manager_manager.rs` | 882 | 1 | 0 | 0 | 0 | 5550 |
-| `motor.rs` | 818 | 0 | 0 | 0 | 0 | 12261 |
+| `motor.rs` | 818 | 0 | 0 | 0 | 0 | 12264 |
 | `motor/comp/league.rs` | 731 | 10 | 0 | 0 | 0 | 4465 |
 | `motor/contract_manager.rs` | 671 | 9 | 0 | 0 | 0 | 4773 |
 | `motor/match_screens.rs` | 667 | 2 | 0 | 0 | 0 | 6375 |

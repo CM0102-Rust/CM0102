@@ -361,7 +361,7 @@ pub(crate) unsafe fn cql4_faixas_da_serie_a(liga: usize) -> [u8; 64] {
     let mut z = [0u8; 64];
     z[0] = 1;
     let (mut cl, mut uefa) = (0i8, 0i8);
-    vagas(read_u32_as_usize(0xde1f58), read_u32_as_usize(read_u32_as_usize(liga + 4) + 0x5d), &mut cl, &mut uefa);
+    vagas(read_u32_as_usize(G_UEFA_SEEDING), read_u32_as_usize(read_u32_as_usize(liga + 4) + 0x5d), &mut cl, &mut uefa);
     // ponytail: as contas da nação ficam de 1 a 16 no jogo; a cópia ignora as faixas que cairiam fora do registro.
     let cl = cl as i32;
     let uefa = uefa as i32;
@@ -1848,8 +1848,8 @@ pub(crate) unsafe fn cqj4_encher(this: usize, n: i16, arquivo: usize, linha: u32
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqj4: a linha k recebe o k-ésimo clube da divisão
@@ -1925,8 +1925,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_c1b(this: usize) -> u32 {
 pub(crate) unsafe fn cqj4_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);

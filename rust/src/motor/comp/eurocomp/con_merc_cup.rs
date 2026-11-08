@@ -204,7 +204,7 @@ pub(crate) unsafe fn cqs11_convidados(this: usize) -> u32 {
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     write_u32_from_usize(this + 0xf2, 0x10);
-    let americana = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
+    let americana = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
     let lista = alocar(0x40);
     write_u32_from_usize(this + 0xee, lista);
     if lista == 0 {
@@ -215,8 +215,8 @@ pub(crate) unsafe fn cqs11_convidados(this: usize) -> u32 {
     let mut mls = [0usize; 12];
     let mut n_mls = 0i8;
     let mut i = 0i32;
-    let mut c = read_u32_as_usize(0xae23b4);
-    while i < read_u32_as_usize(0xae235c) as i32 {
+    let mut c = read_u32_as_usize(G_CLUB_TABLE);
+    while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         if selecao(c) != 0 {
             break;
         }
@@ -265,7 +265,7 @@ pub(crate) unsafe fn cqs11_convidados(this: usize) -> u32 {
         vaga(0, mls[0]);
         vaga(1, mls[1]);
     } else {
-        let registro = read_u32_as_usize(0xae23d0) + read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
+        let registro = read_u32_as_usize(G_CLUB_COMP_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
         crate::comparacao::ramo("cqs_11 campeao da liga americana");
         vaga(0, colocado(registro, 0)); // cqs11: o campeão da liga americana
         vaga(1, colocado(read_u32_as_usize(americana + 4), 0));

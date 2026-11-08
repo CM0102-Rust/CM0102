@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn cqs4_virada_da_serie_c(this: usize) -> u3
     let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(0xb74340), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C
     let grupo: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_BRANATTHIRD_CREATE_GROUP_STAGE);
     for g in 0..7 {
         grupo(this, g);
@@ -556,8 +556,8 @@ pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_c(this: usize) -> u3
     }
     let mut k: u8 = 0;
     let mut i: i32 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while i < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while i < read_usize(G_CLUB_COUNT) as i32 {
         if (k as i8) >= 0x38 {
             break;
         }
@@ -583,8 +583,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql7_tabela_da_serie_c(this: usi
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1827);
     let mut plano = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && plano.len() < 0x38 {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && plano.len() < 0x38 {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         if read_usize(clube + 0x57) == read_usize(this + 4) {
             plano.push(clube);
         }

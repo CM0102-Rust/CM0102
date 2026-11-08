@@ -7,7 +7,7 @@ use super::*;
 /// lugar; push competição do banco [0xae23d0] + 0x6b × id; add esp, 8 -> cdecl).
 pub(crate) unsafe fn cqm12_colocado(id: usize, lugar: u32) -> usize {
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
+    colocado(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
 /// O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.

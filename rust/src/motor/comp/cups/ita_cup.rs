@@ -684,11 +684,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqo10_supercopa_c1_tabela(this: 
 /// Os clubes da tabela de clubes ([0xae23b4], 0x245 bytes) que a passada olha: [0xae235c] − 2 × [0xae2350] (sem as
 /// seleções [inferência]).
 pub(crate) unsafe fn cqo11_clubes() -> i32 {
-    (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2))
+    (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2))
 }
 
 pub(crate) unsafe fn cqo11_clube(i: i32) -> usize {
-    read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize)
+    read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
 }
 
 /// O id da competição apontada por `c + o` (+0x57 a divisão, +0x5b a da temporada anterior [inferência]), ou None.

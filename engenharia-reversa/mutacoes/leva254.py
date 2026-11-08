@@ -20,7 +20,7 @@ MUTACOES = [
     ('cpr8_fim_de_temporada_31', 'let d2 = (sortear(30) as u16).wrapping_add(cpr8_u(t + 0x15)); // o fim de temporada da nação', 'let d2 = (sortear(31) as u16).wrapping_add(cpr8_u(t + 0x15)); // mutacao: sorteio(31)', 'cpr_8 datas pela nacao'),
     ('cpr9_sem_desempregado', '} else if desempregado(p, e.as_mut_ptr()) != 0 {', '} else if false && desempregado(p, e.as_mut_ptr()) != 0 { // mutacao: sem o desempregado', 'cpr_9 desempregado'),
     ('cpr9_treinador_fica', 'limpar(0x19f, 5); // cpr9: as vagas de treinador', '// mutacao: as vagas de treinador ficam', 'cpr_9 treinador'),
-    ('cpr9_vaga_nao_abre', 'abrir(read_u32_as_usize(0xb67a44), c, pessoa); // cpr9: a vaga do técnico abre', 'let _ = abrir; // mutacao: a vaga nao abre', 'cpr_9 tecnico'),
+    ('cpr9_vaga_nao_abre', 'abrir(read_u32_as_usize(G_MANAGER_MANAGER), c, pessoa); // cpr9: a vaga do técnico abre', 'let _ = abrir; // mutacao: a vaga nao abre', 'cpr_9 tecnico'),
     ('cpr10_lesionado_como_recuperando', 'return 2; // cpr10: lesionado', 'return 1; // mutacao: lesionado como recuperando'),
     ('cpr10_recuperando_como_pronto', '(dias < read_i16(l + 0x28) as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),
     ('cpr10_decisao_mais_tarde', 'cpr10_mais(0xae2c90, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias', 'cpr10_mais(0xae2c90, (sortear(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias', 'cpr_10 nova decisao'),

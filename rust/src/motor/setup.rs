@@ -32,7 +32,7 @@ pub(crate) unsafe fn erro_na_carga(linha: u32, texto: usize, z: &mut usize) -> u
 /// de +0xc do antigo. Os 5 pares (+0x12 + 5j = 0, +0xe + 5j = −1) e os dwords +0x27/+0x2b/+0x2f/
 /// +0x33/+0x37 (+0x14j, j = 0, 1) = −1.
 pub(crate) unsafe fn converter_dados_das_pessoas(fonte: usize, tam: usize, n: i32) {
-    let d = || *(0xae2d0c as *const usize);
+    let d = || *(G_STAFF_STATE_TABLE as *const usize);
     let b = |o: usize| *((fonte + o) as *const u8);
     let mesclar = |base: u8, outro: u8, m: u8| base ^ ((base ^ outro) & m);
     for i in 0..n.max(0) as usize {
@@ -262,17 +262,17 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
     crate::comparacao::ramo("save carregar jogo");
     let u = |a: usize| *(a as *const u32);
-    let sem_memoria = |minimo: i32| u(0x9cd1fc) != 0 && memoria() < minimo;
+    let sem_memoria = |minimo: i32| u(G_MEMORY_CHECK_ENABLED) != 0 && memoria() < minimo;
     // as duas datas locais da original (a 2ª não é usada); o destrutor delas é vazio
     let (mut data_do_jogo, mut outra_data) = ([0u8; 8], [0u8; 8]);
     data_padrao(data_do_jogo.as_mut_ptr());
     data_padrao(outra_data.as_mut_ptr());
     if disco(0) < 0x19 {
-        *(0xdd7134 as *mut u32) = 1;
+        *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
         return 0;
     }
     if sem_memoria(0x32) {
-        *(0xdd7138 as *mut u32) = 1;
+        *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
         return 0;
     }
     let mut temporaria = [0u8; 0x104];
@@ -282,18 +282,18 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
         aviso_do_setup(0x233b);
         return 0;
     }
-    if u(0xae23a8) != 0 {
+    if u(G_NATION_TABLE) != 0 {
         liberar_tabelas();
     }
     carregar_banco(caminho, 1);
     // disco e memória entre os passos: liga a marca e devolve 0
     let falta_espaco = |minimo_disco: i32| {
         if disco(0) < minimo_disco {
-            *(0xdd7134 as *mut u32) = 1;
+            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
             return true;
         }
         if sem_memoria(0x19) {
-            *(0xdd7138 as *mut u32) = 1;
+            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
             return true;
         }
         false
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
     if ler(&mut versao as *mut i32 as usize, 4, 1, z) != 1 {
         return erro_na_carga(0x239e, 0xa816e0, &mut z);
     }
-    *(0xdd7110 as *mut i32) = versao;
+    *(G_GAME_DATA_VERSION as *mut i32) = versao;
     let v = versao.wrapping_abs();
     let mut resumo = [0u8; 0xf74];
     if v >= 0x3e023 {
@@ -341,11 +341,11 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
             if ler(resumo.as_mut_ptr() as usize, 0xf74, 1, z) != 1 {
                 return erro_na_carga(0x23bf, 0xa816a4, &mut z);
             }
-            *(0xdd7140 as *mut u32) = core::ptr::read_unaligned(resumo.as_ptr().add(0xf6c) as *const u32);
+            *(G_GAME_PLAY_TIME_TOTAL as *mut u32) = core::ptr::read_unaligned(resumo.as_ptr().add(0xf6c) as *const u32);
         }
     }
     let mut agora = 0i32;
-    *(0xdd7144 as *mut i32) = relogio(&mut agora);
+    *(G_GAME_PLAY_TIME_LAST_STAMP as *mut i32) = relogio(&mut agora);
     let mut nacao = 0i32;
     let campos: [(usize, u32, u32, usize); 10] = [
         (0xdd7120, 4, 0x23cf, 0xa8166c),
@@ -364,64 +364,64 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
             return erro_na_carga(linha, msg, &mut z);
         }
     }
-    *(0xae2d08 as *mut usize) = if nacao > -1 { (u(0xae23a8) as usize).wrapping_add((nacao as usize).wrapping_mul(0x122)) } else { 0 };
+    *(G_MAIN_NATION as *mut usize) = if nacao > -1 { (u(G_NATION_TABLE) as usize).wrapping_add((nacao as usize).wrapping_mul(0x122)) } else { 0 };
     if ler(0xae2d10, 4, 1, z) != 1 {
         return erro_na_carga(0x2420, 0xa81450, &mut z);
     }
-    let pessoas = reservar(u(0xae2d10).wrapping_mul(0x4f));
-    *(0xae2d0c as *mut usize) = pessoas;
+    let pessoas = reservar(u(G_STAFF_STATE_COUNT).wrapping_mul(0x4f));
+    *(G_STAFF_STATE_TABLE as *mut usize) = pessoas;
     if pessoas == 0 {
         fatal_da_carga(0x2427);
     }
     if v < 0x3e045 {
         // os saves antigos: registros de 0x26 (|v| < 0x3e042) ou 0x27 bytes, convertidos
         let (tam, linha_mem, linha_ler) = if v < 0x3e042 { (0x26u32, 0x242f, 0x2434) } else { (0x27, 0x24bd, 0x24c2) };
-        let antigos = reservar(u(0xae2d10).wrapping_mul(tam));
+        let antigos = reservar(u(G_STAFF_STATE_COUNT).wrapping_mul(tam));
         if antigos == 0 {
             fatal_da_carga(linha_mem);
         }
-        if ler(antigos, tam, u(0xae2d10), z) != u(0xae2d10) as i32 {
+        if ler(antigos, tam, u(G_STAFF_STATE_COUNT), z) != u(G_STAFF_STATE_COUNT) as i32 {
             return erro_na_carga(linha_ler, 0xa81418, &mut z);
         }
-        converter_dados_das_pessoas(antigos, tam as usize, u(0xae2d10) as i32);
+        converter_dados_das_pessoas(antigos, tam as usize, u(G_STAFF_STATE_COUNT) as i32);
         soltar(antigos);
-    } else if ler(pessoas, 0x4f, u(0xae2d10), z) != u(0xae2d10) as i32 {
+    } else if ler(pessoas, 0x4f, u(G_STAFF_STATE_COUNT), z) != u(G_STAFF_STATE_COUNT) as i32 {
         return erro_na_carga(0x24f0, 0xa81418, &mut z);
     }
     if v < 0x3e018 {
-        for i in 0..u(0xae2364) as i32 {
-            *((u(0xae2d0c) as usize + 0x4f * i as usize + 0xb) as *mut u8) &= 0x7f;
+        for i in 0..u(G_STAFF_COUNT) as i32 {
+            *((u(G_STAFF_STATE_TABLE) as usize + 0x4f * i as usize + 0xb) as *mut u8) &= 0x7f;
         }
     }
-    *(0xae2d18 as *mut u32) = u(0xae235c);
-    let clubes = reservar(u(0xae235c).wrapping_mul(6));
-    *(0xae2d14 as *mut usize) = clubes;
+    *(G_CLUB_STATE_COUNT as *mut u32) = u(G_CLUB_COUNT);
+    let clubes = reservar(u(G_CLUB_COUNT).wrapping_mul(6));
+    *(G_CLUB_STATE_TABLE as *mut usize) = clubes;
     if clubes == 0 {
         fatal_da_carga(0x2503);
     }
     if v < 0x3e022 {
-        for i in 0..u(0xae2d18) as i32 {
-            let c = u(0xae2d14) as usize + 6 * i as usize;
+        for i in 0..u(G_CLUB_STATE_COUNT) as i32 {
+            let c = u(G_CLUB_STATE_TABLE) as usize + 6 * i as usize;
             core::ptr::write_unaligned(c as *mut u32, 0xffffffff);
-            *((u(0xae2d14) as usize + 6 * i as usize + 4) as *mut u8) = 0;
-            *((u(0xae2d14) as usize + 6 * i as usize + 5) as *mut u8) = 0;
+            *((u(G_CLUB_STATE_TABLE) as usize + 6 * i as usize + 4) as *mut u8) = 0;
+            *((u(G_CLUB_STATE_TABLE) as usize + 6 * i as usize + 5) as *mut u8) = 0;
         }
-        let r = reservar(u(0xae235c).wrapping_mul(4));
-        *(0xae2d1c as *mut usize) = r;
+        let r = reservar(u(G_CLUB_COUNT).wrapping_mul(4));
+        *(G_CLUB_REPUTATION_ORDER as *mut usize) = r;
         if r == 0 {
             fatal_da_carga(0x2516);
         }
         reputacao_inicial(1);
     } else {
-        if ler(clubes, 6, u(0xae2d18), z) != u(0xae2d18) as i32 {
+        if ler(clubes, 6, u(G_CLUB_STATE_COUNT), z) != u(G_CLUB_STATE_COUNT) as i32 {
             return erro_na_carga(0x251f, 0xa813e0, &mut z);
         }
-        let r = reservar(u(0xae235c).wrapping_mul(4));
-        *(0xae2d1c as *mut usize) = r;
+        let r = reservar(u(G_CLUB_COUNT).wrapping_mul(4));
+        *(G_CLUB_REPUTATION_ORDER as *mut usize) = r;
         if r == 0 {
             fatal_da_carga(0x2528);
         }
-        if ler(r, 4, u(0xae235c), z) != u(0xae235c) as i32 {
+        if ler(r, 4, u(G_CLUB_COUNT), z) != u(G_CLUB_COUNT) as i32 {
             aviso_do_setup(0x252c);
             fechar_item(&mut z);
             return 0;
@@ -435,8 +435,8 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
         }
         if i == PASSOS_DA_CARGA.len() - 1 && v < 0x3e032 {
             let acertar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_PLAYER_ATTRIBUTES);
-            for p in 0..u(0xae2364) as i32 {
-                acertar(u(0xae23bc) as usize + 0x6e * p as usize);
+            for p in 0..u(G_STAFF_COUNT) as i32 {
+                acertar(u(G_STAFF_TABLE) as usize + 0x6e * p as usize);
             }
         }
         if falta_espaco(0x19) {
@@ -477,18 +477,18 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
                             // a original empurra um dword com o ano nos 16 bits baixos e sobra de pilha nos
                             // altos; o construtor só usa a palavra (0x54cfe0 faz & 0xffff)
                             let f: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(construtor);
-                            f(p, *(0xae2c92 as *const u16) as u32, 0, 1)
+                            f(p, *(G_CURRENT_DATE_YEAR as *const u16) as u32, 0, 1)
                         }
                         ArgDaCarga::Idioma => {
                             // a original empurra edx com o byte em dl (o resto é sobra); o construtor só lê o byte
                             let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(construtor);
-                            f(p, *(0x9b5984 as *const u8) as u32)
+                            f(p, *(G_DATABASE_NAMES_LANGUAGE as *const u8) as u32)
                         }
                     }
                 };
                 *(global as *mut usize) = o;
                 // o FOG_OF_WAR confere o global de Media (como na gravação)
-                let conferido = if k == 0x29 { u(0xb6b7c8) as usize } else { o };
+                let conferido = if k == 0x29 { u(G_MEDIA) as usize } else { o };
                 if conferido == 0 {
                     aviso_do_setup(linha);
                     return 0;
@@ -503,27 +503,27 @@ pub(crate) unsafe extern "C" fn carregar_jogo(caminho: *const u8) -> u32 {
     if v >= 0x3e039 {
         regras_fifa(caminho);
     }
-    *(0xdd711c as *mut u32) = 1;
-    *(0xdd7130 as *mut u32) = 1;
-    *(0xa801bc as *mut u32) = 0;
+    *(G_GAME_DATA_LOADED_FLAG as *mut u32) = 1;
+    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
+    *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 0;
     let mut tmp = [0u8; 8];
     copia_data(0xdd70a0, tmp.as_mut_ptr(), 0xae2c90);
-    if *(0x9b5980 as *const u8) != 0 {
+    if *(G_FIFA_TRANSFER_RULES_FEATURE_ENABLED as *const u8) != 0 {
         // a data de mudança das regras [0xae2330] (palavra baixa: dia; alta: ano) contra a do jogo
         // [0xae2c90]: ano sem sinal, dia com sinal
-        let em_vigor = *(0xae233c as *const u8);
-        let (dia_jogo, ano_jogo) = (*(0xae2c90 as *const i16), *(0xae2c92 as *const u16));
-        let (dia, ano) = (*(0xae2330 as *const i16), *(0xae2332 as *const u16));
+        let em_vigor = *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8);
+        let (dia_jogo, ano_jogo) = (*(G_CURRENT_DATE as *const i16), *(G_CURRENT_DATE_YEAR as *const u16));
+        let (dia, ano) = (*(G_TRANSFER_RULE_CHANGE_DATE as *const i16), *(G_TRANSFER_RULE_CHANGE_DATE_YEAR as *const u16));
         let mut desligar = false;
-        if !(em_vigor == 0 && *(0xa83608 as *const u8) == 0xa) {
+        if !(em_vigor == 0 && *(G_MAX_CONTRACT_LENGTH_YEARS as *const u8) == 0xa) {
             desligar = ano > ano_jogo || (ano == ano_jogo && dia > dia_jogo);
         }
         if desligar {
-            *(0xae233c as *mut u8) = 0;
-            *(0xa83608 as *mut u8) = 0xa;
-        } else if !(em_vigor != 0 && *(0xa83608 as *const u8) == 5) && (ano < ano_jogo || (ano == ano_jogo && dia < dia_jogo)) {
-            *(0xae233c as *mut u8) = 1;
-            *(0xa83608 as *mut u8) = 5;
+            *(G_FIFA_TRANSFER_RULES_IN_FORCE as *mut u8) = 0;
+            *(G_MAX_CONTRACT_LENGTH_YEARS as *mut u8) = 0xa;
+        } else if !(em_vigor != 0 && *(G_MAX_CONTRACT_LENGTH_YEARS as *const u8) == 5) && (ano < ano_jogo || (ano == ano_jogo && dia < dia_jogo)) {
+            *(G_FIFA_TRANSFER_RULES_IN_FORCE as *mut u8) = 1;
+            *(G_MAX_CONTRACT_LENGTH_YEARS as *mut u8) = 5;
             ligar_regras(1);
         }
     }
@@ -543,15 +543,15 @@ pub(crate) unsafe fn tecnicos_de_ferias_desfeitos() {
     let u = |a: usize| *(a as *const usize);
     let um: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_CLEAR_INBOX);
     for i in 0..0x10usize {
-        let s = u(0xae23bc).wrapping_add(0x6e * ((*(0xae2364 as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize));
+        let s = u(G_STAFF_TABLE).wrapping_add(0x6e * ((*(G_STAFF_COUNT as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize));
         if *((s + 0x5f) as *const u8) != 5 {
             continue;
         }
         *((s + 0x5f) as *mut u8) = 0;
-        um(u(0xb7431c), s);
+        um(u(G_NEWS), s);
         for f in [0x5fd2f0usize, 0x5fd590, 0x5fe140] {
             let f: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(f);
-            f(u(0xb63c98), 0, s);
+            f(u(G_HUMAN_MANAGER), 0, s);
         }
         for (g, f) in [(0xae1050usize, 0x4ccbf0usize), (0xae1050, 0x4d0b50), (0xae1050, 0x4d0bd0), (0xb74318, 0x775ba0), (0xdd7f00, 0x86fb80), (0xdd7f00, 0x86fc70)] {
             let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(f);
@@ -659,7 +659,7 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
     let segundo_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_PICK_SECOND_NAME_FOR_NATION);
     let pos_humano: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_APPOINT_HUMAN_MANAGER_TO_CLUB);
     crate::comparacao::ramo("save criar jogo pela configuracao");
-    let opcoes = || *(0xae3138 as *const usize);
+    let opcoes = || *(G_CONFIG as *const usize);
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);
     let mut temporaria = [0u8; 0x104];
@@ -686,15 +686,15 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
         aplicar(opcoes());
         let mut k = 0i32;
         let mut d = 0usize;
-        while k < i(0xae2350) {
+        while k < i(G_NATION_COUNT) {
             k += 1;
-            *((u(0xae23a8) as usize + d + 0x11c) as *mut u8) = 0;
+            *((u(G_NATION_TABLE) as usize + d + 0x11c) as *mut u8) = 0;
             d += 0x122;
         }
-        *(0xae2d00 as *mut u32) = 0;
-        *(0xae2d04 as *mut u32) = 0;
+        *(G_NATIONS_TO_LOAD_COUNT as *mut u32) = 0;
+        *(G_SELECTED_NATION_COUNT as *mut u32) = 0;
         if de_frente {
-            *(0xae2d08 as *mut u32) = 0;
+            *(G_MAIN_NATION as *mut u32) = 0;
         }
         if nacoes_chave() == 0 {
             erro_fatal_do_setup(erro_chave);
@@ -735,7 +735,7 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
             }
         } else if comeca(b, 0xa812fc, 0x13) == 0 {
             // FOREGROUND_LEAGUES=
-            if u(0xae23a8) == 0 {
+            if u(G_NATION_TABLE) == 0 {
                 preparar_banco(true, 0x1c49, 0x1c5d);
             }
             let v = b.add(0x13);
@@ -747,22 +747,22 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
                     let marca = ((!(u(opcoes() + 4) as u8) & 2) | 1) << 1;
                     if *m == 0 {
                         *m = marca;
-                        *(0xae2d00 as *mut i32) += 1;
-                        *(0xae2d04 as *mut i32) += 1;
+                        *(G_NATIONS_TO_LOAD_COUNT as *mut i32) += 1;
+                        *(G_SELECTED_NATION_COUNT as *mut i32) += 1;
                     } else if *m == 1 {
                         *m = marca;
-                        *(0xae2d04 as *mut i32) += 1;
+                        *(G_SELECTED_NATION_COUNT as *mut i32) += 1;
                     }
                     let tam = core::ffi::CStr::from_ptr(nome_da_nacao(n) as *const core::ffi::c_char).to_bytes().len() as u32;
-                    if (comparar_n(v, nome_da_nacao(n), tam) == 0 || nacao_casa(n, v) != 0) && u(0xae2d08) == 0 {
-                        *(0xae2d08 as *mut u32) = n as u32;
+                    if (comparar_n(v, nome_da_nacao(n), tam) == 0 || nacao_casa(n, v) != 0) && u(G_MAIN_NATION) == 0 {
+                        *(G_MAIN_NATION as *mut u32) = n as u32;
                     }
                 }
                 liga += 0x48;
             }
         } else if comeca(b, 0xa812e8, 0x13) == 0 {
             // BACKGROUND_LEAGUES=
-            if u(0xae23a8) == 0 {
+            if u(G_NATION_TABLE) == 0 {
                 preparar_banco(false, 0x1c92, 0x1ca3);
             }
             let v = b.add(0x13);
@@ -773,10 +773,10 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
                     let m = (n + 0x11c) as *mut u8;
                     if *m == 0 {
                         *m = ((!(u(opcoes() + 4) as u8) & 2) << 1) | 1;
-                        *(0xae2d00 as *mut i32) += 1;
+                        *(G_NATIONS_TO_LOAD_COUNT as *mut i32) += 1;
                     } else if *m == 2 {
                         *m = ((!(u(opcoes() + 4) as u8) & 2) << 1) | 1;
-                        *(0xae2d04 as *mut i32) -= 1;
+                        *(G_SELECTED_NATION_COUNT as *mut i32) -= 1;
                     }
                 }
                 liga += 0x48;
@@ -787,7 +787,7 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
             let mut t = 0x9eb244usize;
             while t < 0x9eb290 {
                 if idioma_existe(k) != 0
-                    && (t == 0x9eb244 || u(0xae23a8) == 0 || idioma_no_banco(k) != 0)
+                    && (t == 0x9eb244 || u(G_NATION_TABLE) == 0 || idioma_no_banco(k) != 0)
                     && tem(9, u(t) as usize)
                 {
                     trocar_idioma(opcoes(), k);
@@ -800,16 +800,16 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
         } else if comeca(b, 0xa812c4, 0x14) == 0 {
             // ENABLE_MATCH_ENGINE=
             if tem(0x14, 0xa812c0) {
-                *(0xa5a390 as *mut u8) = 1;
+                *(G_MATCH_ENGINE_ENABLED as *mut u8) = 1;
             } else if tem(0x14, 0xa812bc) {
-                *(0xa5a390 as *mut u8) = 0;
+                *(G_MATCH_ENGINE_ENABLED as *mut u8) = 0;
             }
         } else if comeca(b, 0xa812a4, 0x15) == 0 {
             // ENABLE_COMPUTER_BIDS=
             if tem(0x15, 0xa812c0) {
-                *(0x9cd1f8 as *mut u32) = 1;
+                *(G_COMPUTER_BIDS_ENABLED as *mut u32) = 1;
             } else if tem(0x15, 0xa812bc) {
-                *(0x9cd1f8 as *mut u32) = 0;
+                *(G_COMPUTER_BIDS_ENABLED as *mut u32) = 0;
             }
         } else if comeca(b, 0xa81298, 0xb) == 0 {
             // ON_HOLIDAY=
@@ -821,15 +821,15 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
         }
     }
     fechar(f);
-    if i(0xae2d00) <= 0 || i(0xae2d04) <= 0 {
+    if i(G_NATIONS_TO_LOAD_COUNT) <= 0 || i(G_SELECTED_NATION_COUNT) <= 0 {
         return 0;
     }
-    let padrao = u(0xae2d08) as usize;
+    let padrao = u(G_MAIN_NATION) as usize;
     if padrao == 0 || *((padrao + 0x11c) as *const u8) & 2 == 0 {
         return 0;
     }
-    *(0xdd7124 as *mut u32) = 1;
-    *(0xdd713c as *mut u32) = 1;
+    *(G_NEW_GAME_SETUP_DONE_FLAG as *mut u32) = 1;
+    *(G_SETUP_FILE_GAME_FLAG as *mut u32) = 1;
     if criar_jogo(!qst.is_null() as u32) == 0 {
         erro_fatal_do_setup(0x1d11);
     }
@@ -841,19 +841,19 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
         return 1;
     }
     copiar_texto((opcoes() + 0x113) as *mut u8, 0xa81288 as *const u8);
-    *(0xdd7130 as *mut u32) = 1;
+    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
     let mut data = [0u8; 8];
     copia_data(0xdd70a0, data.as_mut_ptr(), 0xae2c90);
-    let vaga = || 0xb74c26usize.wrapping_add((*(0xb77c7a as *const i16) as isize as usize).wrapping_mul(0x300));
+    let vaga = || 0xb74c26usize.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize).wrapping_mul(0x300));
     if core::ptr::read_unaligned(vaga() as *const u32) != 0 {
         return 0;
     }
-    let tabela = u(0xae23bc) as usize;
+    let tabela = u(G_STAFF_TABLE) as usize;
     let mut p = 0usize;
     if tabela == 0 {
         aviso_do_setup(0x39b3);
     } else {
-        let mut q = tabela.wrapping_add((i(0xae2364) as usize).wrapping_mul(0x6e)).wrapping_sub(0x6e);
+        let mut q = tabela.wrapping_add((i(G_STAFF_COUNT) as usize).wrapping_mul(0x6e)).wrapping_sub(0x6e);
         for _ in 0..0x10 {
             if *((q + 0x5f) as *const u8) == 0 {
                 p = q;
@@ -869,11 +869,11 @@ pub(crate) unsafe extern "C" fn criar_jogo_pela_configuracao(cfg: *const u8, qst
     core::ptr::write_unaligned((p + 0x24) as *mut u32, 0);
     core::ptr::write_unaligned((p + 0x39) as *mut u32, 0);
     *((p + 0x5f) as *mut u8) = 1;
-    novo_humano(u(0xb63c98) as usize, p);
-    ferias_do_humano(u(0xb63c98) as usize, ferias, 0);
+    novo_humano(u(G_HUMAN_MANAGER) as usize, p);
+    ferias_do_humano(u(G_HUMAN_MANAGER) as usize, ferias, 0);
     let clube = loop {
-        let r = sorteio(i(0xae235c));
-        let c = (u(0xae23b4) as usize).wrapping_add((r as usize).wrapping_mul(0x245));
+        let r = sorteio(i(G_CLUB_COUNT));
+        let c = (u(G_CLUB_TABLE) as usize).wrapping_add((r as usize).wrapping_mul(0x245));
         if selecao(c) != 0 {
             continue;
         }
@@ -1029,16 +1029,16 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
     let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(FN_SAVE_FIFA_TRANSFER_RULES);
     let copia_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     crate::comparacao::ramo("save gravar jogo");
-    let opcoes = || *((*(0xae3138 as *const usize) + 4) as *const u32);
+    let opcoes = || *((*(G_CONFIG as *const usize) + 4) as *const u32);
     let tipo = || if opcoes() & 0x8000 != 0 { 3u32 } else { 4 };
-    let sem_memoria = || *(0x9cd1fc as *const u32) != 0 && memoria() < 1;
-    *(0xdd7110 as *mut u32) = 0xfffc1fb9;
+    let sem_memoria = || *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && memoria() < 1;
+    *(G_GAME_DATA_VERSION as *mut u32) = 0xfffc1fb9;
     if opcoes() & 0x20000000 != 0 {
         let falta = if disco(0) < 0x19 {
-            *(0xdd7134 as *mut u32) = 1;
+            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
             true
         } else if sem_memoria() {
-            *(0xdd7138 as *mut u32) = 1;
+            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
             true
         } else {
             false
@@ -1070,12 +1070,12 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
     }
     if opcoes() & 0x40000000 != 0 {
         if disco(0) < 0x19 {
-            *(0xdd7134 as *mut u32) = 1;
+            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
             apagar(caminho);
             return 0;
         }
         if sem_memoria() {
-            *(0xdd7138 as *mut u32) = 1;
+            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
             apagar(caminho);
             return 0;
         }
@@ -1084,12 +1084,12 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
     // disco e memória entre os passos: liga a marca, apaga o caminho de trabalho e devolve 0
     let falta_espaco = || {
         if disco(0) < 0x19 {
-            *(0xdd7134 as *mut u32) = 1;
+            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
             apagar(l);
             return true;
         }
         if sem_memoria() {
-            *(0xdd7138 as *mut u32) = 1;
+            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
             apagar(l);
             return true;
         }
@@ -1135,13 +1135,13 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
     {
         return 0;
     }
-    let padrao = u(0xae2d08);
+    let padrao = u(G_MAIN_NATION);
     let nacao_padrao: u32 = if padrao != 0 { u(padrao as usize) } else { 0xffffffff };
     if !campo(&nacao_padrao as *const u32 as usize, 4, 1, 0x2a06, 0xa818c0)
         || !campo(0xae2d10, 4, 1, 0x2a0e, 0xa81880)
-        || !campo(u(0xae2d0c) as usize, 0x4f, u(0xae2d10), 0x2a14, 0xa81848)
-        || !campo(u(0xae2d14) as usize, 6, u(0xae2d18), 0x2a1c, 0xa81814)
-        || !campo(u(0xae2d1c) as usize, 4, u(0xae235c), 0x2a24, 0xa817dc)
+        || !campo(u(G_STAFF_STATE_TABLE) as usize, 0x4f, u(G_STAFF_STATE_COUNT), 0x2a14, 0xa81848)
+        || !campo(u(G_CLUB_STATE_TABLE) as usize, 6, u(G_CLUB_STATE_COUNT), 0x2a1c, 0xa81814)
+        || !campo(u(G_CLUB_REPUTATION_ORDER) as usize, 4, u(G_CLUB_COUNT), 0x2a24, 0xa817dc)
     {
         return 0;
     }
@@ -1152,11 +1152,11 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
         // memória >= 25 (e não >= 1)
         if k == 0x11 {
             if disco(0) < 0x19 {
-                *(0xdd7134 as *mut u32) = 1;
+                *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
                 return 0;
             }
-            if *(0x9cd1fc as *const u32) != 0 && memoria() < 0x19 {
-                *(0xdd7138 as *mut u32) = 1;
+            if *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && memoria() < 0x19 {
+                *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
                 return 0;
             }
         } else if falta_espaco() {
@@ -1212,7 +1212,7 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
         caixa_do_save(linha, 0xa817a4, 0x9c7774, 0x9c7680);
         return 0;
     }
-    hall_da_fama(u(0xb5ded8) as usize);
+    hall_da_fama(u(G_HALL_OF_FAME) as usize);
     regras_fifa(l);
     if opcoes() & 0x20000000 != 0 {
         if existe(caminho) != 0 && apagar(caminho) == -1 {
@@ -1220,8 +1220,8 @@ pub(crate) unsafe extern "C" fn gravar_jogo(caminho: *const u8, a4: u32) -> u32 
         }
         renomear(l, caminho);
     }
-    *(0xdd7130 as *mut u32) = 1;
-    *(0xa801bc as *mut u32) = 0;
+    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
+    *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 0;
     let mut data = [0u8; 8];
     copia_data(0xdd70a0, data.as_mut_ptr(), 0xae2c90);
     1
@@ -1386,7 +1386,7 @@ pub(crate) unsafe fn aviso_do_setup(linha: u32) {
     let s = versao(nome.as_mut_ptr(), ext.as_mut_ptr(), linha);
     formatar(0xae24d0, 0x9870e8, s, nome.as_ptr(), ext.as_ptr(), linha);
     caixa(0x9870e0, 0xae24d0, 0);
-    *(0xb67a34 as *mut u32) = 0;
+    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
 }
 
 /// writes the last saved game item, fifa_transfer_rules.zip: 2 bytes ([0xae233c] and the rule in force [0xa83608]);
@@ -1462,8 +1462,8 @@ pub(crate) unsafe extern "C" fn carregar_regras_fifa(save: usize) {
         fechar_item(&mut z);
         return;
     }
-    if *(0xae233c as *const u8) == 1 {
-        *(0xa83608 as *mut u8) = 5;
+    if *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8) == 1 {
+        *(G_MAX_CONTRACT_LENGTH_YEARS as *mut u8) = 5;
     }
     fechar_item(&mut z);
 }
@@ -1530,8 +1530,8 @@ pub(crate) unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
             *resumo.add(0x3e8) = 0;
         }
     }
-    let quantos = *(0xae2364 as *const i32);
-    let tabela = *(0xae23bc as *const usize);
+    let quantos = *(G_STAFF_COUNT as *const i32);
+    let tabela = *(G_STAFF_TABLE as *const usize);
     for i in 0..0x10i32 {
         let clube_txt = resumo.add(0x820 + 0x78 * i as usize);
         let p = tabela.wrapping_add((quantos - i - 1).wrapping_mul(0x6e) as usize);
@@ -1557,10 +1557,10 @@ pub(crate) unsafe extern "C" fn montar_resumo_do_save(resumo: *mut u8) {
     copiar_texto(resumo.add(0x7d0), versao());
     let mut agora = 0i32;
     let t = relogio(&mut agora);
-    let total = (*(0xdd7140 as *const i32)).wrapping_add(t.wrapping_sub(*(0xdd7144 as *const i32)));
-    *(0xdd7140 as *mut i32) = total;
+    let total = (*(G_GAME_PLAY_TIME_TOTAL as *const i32)).wrapping_add(t.wrapping_sub(*(G_GAME_PLAY_TIME_LAST_STAMP as *const i32)));
+    *(G_GAME_PLAY_TIME_TOTAL as *mut i32) = total;
     core::ptr::write_unaligned(resumo.add(0xf6c) as *mut i32, total);
-    *(0xdd7144 as *mut i32) = t;
+    *(G_GAME_PLAY_TIME_LAST_STAMP as *mut i32) = t;
     let t2 = relogio(core::ptr::null_mut());
     core::ptr::write_unaligned(resumo.add(0xf70) as *mut i32, t2);
 }
@@ -1639,11 +1639,11 @@ pub(crate) unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
     }
     antes();
     objetos(&[(0xb67a50, 0x6b4190)]);
-    let p = *(0xadadfc as *const usize);
+    let p = *(G_COMP_OBJECT_TABLE as *const usize);
     if p != 0 {
         livre(p);
-        *(0xadadfc as *mut usize) = 0;
-        *(0xadadf8 as *mut usize) = 0;
+        *(G_COMP_OBJECT_TABLE as *mut usize) = 0;
+        *(G_COMP_OBJECT_COUNT as *mut usize) = 0;
     }
     competicoes();
     objetos(&[(0xb6b7c8, 0x72b200), (0xae2a60, 0x5af6a0), (0xb67a44, 0x68e0e0), (0xad9da8, 0x442e20),
@@ -1655,10 +1655,10 @@ pub(crate) unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
               (0xdd7f00, 0x8687c0), (0xb6b7c0, 0x7293c0), (0xb74350, 0x7c0d00), (0xb5e134, 0x58e330),
               (0xae2a58, 0x5aa0d0), (0xb63c98, 0x5fb730), (0xb74448, 0x7f6aa0), (0xb7431c, 0x785d00)]);
     // [0xdd7ef0]: só o delete, sem destrutor
-    let p = *(0xdd7ef0 as *const usize);
+    let p = *(G_SQUAD_MANAGER as *const usize);
     if p != 0 {
         apagar(p);
-        *(0xdd7ef0 as *mut usize) = 0;
+        *(G_SQUAD_MANAGER as *mut usize) = 0;
     }
     virtual_(0xb74434);
     objetos(&[(0xae1050, 0x4c74f0), (0xae2a38, 0x59a5a0)]);
@@ -1669,9 +1669,9 @@ pub(crate) unsafe extern "C" fn liberar_dados_do_jogo(tela: u32) -> u32 {
     soltos(&[0xae2338]);
     liberar_tabelas();
     acertar_data(0xae2c90, 1, 0, 0x7d1, -1);
-    *(0xae2c88 as *mut u8) = 0;
-    *(0xdd711c as *mut u32) = 0;
-    *(0xdd7130 as *mut u32) = 0;
+    *(G_CURRENT_DAY_SLICE as *mut u8) = 0;
+    *(G_GAME_DATA_LOADED_FLAG as *mut u32) = 0;
+    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 0;
     1
 }
 
@@ -1685,7 +1685,7 @@ pub(crate) unsafe extern "C" fn comparar_liberar_dados_do_jogo(tela: u32) -> u32
 /// [pt] { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
 /// original só troca `ax`: os 16 bits de cima da devolução são os de `x`.
 pub(crate) unsafe extern "C" fn cor_do_titulo(x: u32) -> u32 {
-    let c = if x != 0 { *(0xae3184 as *const u16) } else { *(0xae31a8 as *const u16) };
+    let c = if x != 0 { *(G_GUI_COLOUR_PALE_GREY as *const u16) } else { *(G_GUI_COLOUR_RED as *const u16) };
     (x & 0xffff_0000) | c as u32
 }
 

@@ -26,7 +26,7 @@ MUTACOES = [
     ('cpy8_neutro_do_comeco', '                    (cpy8_i(b + 8).wrapping_sub(ftol(conta * -0.75)), ftol(conta * 0.25)) // cpy8: o quarto de cima', '                    (cpy8_i(b + 8), ftol(conta * 0.25)) // mutacao: o comeco do bloco', 'cpy_8 arbitro neutro'),
     ('cpy9_nota_mais_dois', '    write_i16(r + 0x22, cpy9_s(0x50, 1) as i8 as i16); // cpy9: a nota +0x22', '    write_i16(r + 0x22, cpy9_s(0x50, 2) as i8 as i16); // mutacao: +2', 'cpy_9 arbitro novo'),
     ('cpy9_atributo_28_mais_oito', '    write_u8(r + 0x28, cpy9_s(10, 7)); // cpy9: o atributo +0x28', '    write_u8(r + 0x28, cpy9_s(10, 8)); // mutacao: +8', 'cpy_9 arbitro novo'),
-    ('cpy9_sem_ordenar', '    ordenar(read_usize(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela', '    let _ = (ordenar, n); // mutacao: sem ordenar', 'cpy_9 ordenar'),
+    ('cpy9_sem_ordenar', '    ordenar(read_usize(G_OFFICIAL_TABLE), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela', '    let _ = (ordenar, n); // mutacao: sem ordenar', 'cpy_9 ordenar'),
     ('cpy10_sem_sorteio_59', '    if v59 <= 0xf { // cpy10: o +0x59', '    if v59 <= 0x7f { // mutacao: sem sorteio pelo +0x59', 'cpy_10 sorteio do agradecimento'),
     ('cpy10_todos_sorteiam', '        return; // cpy10: só o creditado', '        // mutacao: o segundo e o terceiro seguem', 'cpy_10 sem crédito'),
     ('cpy10_renovacao_1200', '> 0x12c { // cpy10: mais de 300 dias', '> 0x4b0 { // mutacao: mais de 1200 dias', 'cpy_10 renovação'),
@@ -37,6 +37,6 @@ MUTACOES = [
     ('cpy12_verba_sem_veto', '    if valor as i64 > orcamento.wrapping_mul(12) / 10 { // cpy12: a verba da diretoria', '    if false && valor as i64 > orcamento.wrapping_mul(12) / 10 { // mutacao: a verba não veta', 'cpy_12 diretoria sem verba'),
     ('cpy12_fisio_sem_sorteio', '                let r = sorteio(200); // cpy12: o sorteio da gravidade', '                let r: i32 = 200; // mutacao: sem o sorteio da gravidade', 'cpy_12 fisioterapeuta avalia'),
     ('cpy13_sem_compensacao', '        pagar(fin, comp); // cpy13: a compensação ao clube', '        pagar(fin, 0); // mutacao: sem a compensação', 'cpy_13 compensacao paga'),
-    ('cpy13_fica_na_escalacao', '            escalacao(read_usize(0xde1d08), read_usize(p + 0x39), p, 1, 1); // cpy13: as escalações', '            let _ = escalacao; // mutacao: fica na escalação do time principal', 'cpy_13 sai do clube atual'),
+    ('cpy13_fica_na_escalacao', '            escalacao(read_usize(G_TACTICS), read_usize(p + 0x39), p, 1, 1); // cpy13: as escalações', '            let _ = escalacao; // mutacao: fica na escalação do time principal', 'cpy_13 sai do clube atual'),
     ('cpy13_sem_listas', '        listas(read_usize(this + 0x856), p, clube, 4, 2); // cpy13: a situação nas listas de observação', '        let _ = listas; // mutacao: sem a situação nas listas', 'cpy_13 liberado'),
 ]

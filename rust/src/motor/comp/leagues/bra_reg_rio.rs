@@ -253,7 +253,7 @@ pub(crate) unsafe fn cqt4_teto(c: usize, lim: i32) {
 ///   público real (sem o peso f); o piso pela reputação; e o teto de 2000 r (r ≤ 7), 3000 r (r ≤ 12) ou 5000 r.
 /// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
 pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
-    let tabela_c = read_usize(0xadadfc);
+    let tabela_c = read_usize(G_COMP_OBJECT_TABLE);
     let cima = if cqt4_i(liga + 0x1c) == -1 { 0 } else { read_usize(tabela_c + 4 * read_usize(liga + 0x1c)) };
     let baixo = if cqt4_i(liga + 0x20) == -1 { 0 } else { read_usize(tabela_c + 4 * read_usize(liga + 0x20)) };
     let mut f = 1.0f64;
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
     let mut i = 0i32;
     while i < n {
         let e = t + 0x76 * i as usize;
-        let c = read_usize(0xae23b4) + 0x245 * read_usize(e);
+        let c = read_usize(G_CLUB_TABLE) + 0x245 * read_usize(e);
         let pos = *((e + 0x73) as *const u8);
         let prevista = *((e + 0x72) as *const u8);
         let dono = *((c + 0x6d) as *const u8) != 0;
@@ -406,7 +406,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
 /// sorteador; a tabela final (0x4a4b20) é alocada e liberada nas duas.
 pub(crate) unsafe extern "C" fn comparar_cqt4_atualizar_media_de_publico(liga: usize) {
     let o = orig::<unsafe extern "C" fn(usize)>(2058);
-    let mut regioes = vec![(read_usize(0xae23b4), read_usize(0xae235c) * 0x245)];
+    let mut regioes = vec![(read_usize(G_CLUB_TABLE), read_usize(G_CLUB_COUNT) * 0x245)];
     regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&regioes, || o(liga), || crate::aleatorio::sem_contar(|| cqt4_atualizar_media_de_publico(liga)));
     PLACAR.registrar(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", liga));
@@ -576,7 +576,7 @@ pub(crate) unsafe fn cqr2_virada(this: usize, tabela: usize, arquivo: usize, ano
     let previstas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     previstas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(0xb74340), read_usize(this + 4))
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4))
 }
 
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os
@@ -747,7 +747,7 @@ pub(crate) unsafe extern "thiscall" fn cqo9_fim_da_temporada_do_carioca(this: us
     let noticia: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 675000i32, 1i32), (0x3b, 250000, 2)] {
         let c = read_usize(read_usize(this + 0xb1) + linha);
-        premio(financas(read_usize(0xae2a38), c), valor);
+        premio(financas(read_usize(G_FINANCE_TABLE), c), valor);
         noticia(this, read_usize(read_usize(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparacao::ramo("cqo_9 premios");
@@ -828,8 +828,8 @@ pub(crate) unsafe fn cqm8_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if cqm8_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
@@ -886,8 +886,8 @@ pub(crate) unsafe extern "thiscall" fn cqm8_tabela_do_paulista(this: usize) -> u
 pub(crate) unsafe fn cqm8_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         if cqm8_do_estadual(clube, g) {
             plano.push(clube);
         }

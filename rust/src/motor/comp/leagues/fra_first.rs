@@ -6,7 +6,7 @@ use super::*;
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes; a original faz id × 3 × 9 × 4 − id).
 pub(crate) unsafe fn cqq6_registro(g: usize) -> usize {
-    read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
+    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// Uma competição-marcador (operator new 0x944cf1 de 0xa3: push; add esp, 4 -> cdecl; sem memória: 0): Comp::Comp
@@ -75,9 +75,9 @@ pub(crate) unsafe extern "thiscall" fn construir_primeira_francesa(this: usize, 
         return this;
     }
     crate::comparacao::ramo("cqq_6 primeira francesa nova");
-    let n = || (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
+    let n = || (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     if n() > 0 {
-        let mut p = read_u32_as_usize(0xae23b4) + 0x57;
+        let mut p = read_u32_as_usize(G_CLUB_TABLE) + 0x57;
         let mut i: i32 = 0;
         loop {
             let comp = read_u32_as_usize(p);
@@ -1015,7 +1015,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_franca_1(this: usize) 
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
 pub(crate) unsafe fn cqj6_registro(g: usize) -> usize {
-    read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8).
@@ -1048,8 +1048,8 @@ pub(crate) unsafe fn cqj6_encher(this: usize, arquivo: usize, linha: u32, g: usi
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqj6: a linha k recebe o k-ésimo clube da divisão
@@ -1096,8 +1096,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_franca_1(this: usize) -> u32 {
 pub(crate) unsafe fn cqj6_comparar(nome: &str, this: usize, n: i16, g: usize, cota: Option<i32>, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);

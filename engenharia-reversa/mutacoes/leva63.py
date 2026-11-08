@@ -1,6 +1,6 @@
 # Mutacoes da leva63 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva63.py --jogo 2001-08-15
 MUTACOES = [
-    ('h_16', "*(pessoa as *const i32) >= (*(0xae2364 as *const i32)).wrapping_sub(16) {", "*(pessoa as *const i32) >= (*(0xae2364 as *const i32)).wrapping_sub(15) {"),
+    ('h_16', "*(pessoa as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {", "*(pessoa as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(15) {"),
     ('h_dono', "if tecnico != 0 && pessoa == tecnico &&", "if tecnico != 0 &&"),
     ('h_tatica', "            let tatica = sem_tatica == 0\n", "            let tatica = sem_tatica != 0\n"),
     ('h_9a01', "Ok(r) if *((r + 0x9a01) as *const u32) != 0));", "Ok(r) if *((r + 0x9a05) as *const u32) != 0));"),

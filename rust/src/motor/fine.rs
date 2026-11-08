@@ -57,17 +57,17 @@ pub(crate) unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, mot
         return;
     }
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contrato_de(read_usize(0xae1050), jogador);
-    *(0xae1080 as *mut usize) = k;
+    let k = contrato_de(read_usize(G_CONTRACT_MANAGER), jogador);
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k;
     if k == 0 {
         return;
     }
-    let clube = read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245));
+    let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245));
     if clube == 0 {
         return;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contrato(read_usize(0xae1050), jogador, clube);
+    let c = contrato(read_usize(G_CONTRACT_MANAGER), jogador, clube);
     if c == 0 {
         return;
     }
@@ -98,11 +98,11 @@ pub(crate) unsafe extern "stdcall" fn noticia_reacao_a_multa(jogador: usize, mot
     cpz9_gravar(nt, 8, (prazo as u8 == 1) as u32);
     let tipo = *((c + 0x4f) as *const u8) & 0xf0;
     cpz9_gravar(nt, 9, (tipo == 0x70) as u32);
-    cpz9_gravar(nt, 0xa, (futura(read_usize(0xde1f54), jogador, 0) != 0) as u32);
+    cpz9_gravar(nt, 0xa, (futura(read_usize(G_TRANSFER_MANAGER), jogador, 0) != 0) as u32);
     cpz9_gravar(nt, 0xb, efeitos as i8 as u32);
     let jogo = (cpz9_sb(jogador + 0x18) > 0x17 && tipo == 0x10) || tipo == 0x20;
     cpz9_gravar(nt, 0xc, jogo as u32);
-    entregar(read_usize(0xb7431c), nt, clube);
+    entregar(read_usize(G_NEWS), nt, clube);
 }
 
 /// O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "stdcall" fn noticia_retorno_do_treinador(jogador: usiz
     cpz9_gravar(nt, 8, desfecho as i8 as u32);
     let r = cpz9_sortear(5);
     cpz9_gravar(nt, 9, r as u32);
-    entregar(read_usize(0xb7431c), nt, read_usize(jogador + 0x39));
+    entregar(read_usize(G_NEWS), nt, read_usize(jogador + 0x39));
 }
 
 // ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem

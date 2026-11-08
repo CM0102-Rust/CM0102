@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, da
     copiar(this + 5, guardada.as_mut_ptr() as usize, data);
     let ano = read_u16(data + 2) as i32;
     let mut i = 0i32;
-    while i < read_usize(0xae2350) as i32 {
+    while i < read_usize(G_NATION_COUNT) as i32 {
         let e = read_usize(this) + i as usize * 0x2c;
         let mut k = (*((e + 0xa) as *const u8)).wrapping_sub(1) as i8 as i32;
         while k >= 0 {
@@ -89,9 +89,9 @@ pub(crate) unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, da
         ordenar(read_usize(e + 4), cpt1_h(e + 0xa) as i32 as u32, 5, 0x58e220);
         i += 1;
     }
-    if mes == *((this + 4) as *const u8) && read_u16(data + 2) != read_u16(0xdd6eca) {
+    if mes == *((this + 4) as *const u8) && read_u16(data + 2) != read_u16(G_GAME_START_DATE_YEAR) {
         let mut i = 0i32;
-        while i < read_usize(0xae2350) as i32 {
+        while i < read_usize(G_NATION_COUNT) as i32 {
             let e = read_usize(this) + i as usize * 0x2c;
             for o in [0x24usize, 0x20, 0x1c, 0x18, 0x14] {
                 *((e + o + 4) as *mut u32) = *((e + o) as *const u32);
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_ranking_da_fifa(this: usize, da
 pub(crate) unsafe extern "thiscall" fn comparar_atualizar_ranking_da_fifa(this: usize, data: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(1156);
     let t = read_usize(this);
-    let n = read_usize(0xae2350);
+    let n = read_usize(G_NATION_COUNT);
     let mut reg = vec![(this, 0xd), (t, n * 0x2c)];
     for i in 0..n {
         let e = t + i * 0x2c;
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
     let datar: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let fator = core::ptr::read_unaligned(0x96a350 as *const f64);
     let mut i = 0i32;
-    if read_usize(0xae2350) as i32 <= 0 {
+    if read_usize(G_NATION_COUNT) as i32 <= 0 {
         return;
     }
     loop {
@@ -296,7 +296,7 @@ pub(crate) unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
         }
         let ano = if conta > 8 { (todos.wrapping_mul(8) / conta as i32 + oito) / 2 } else { oito };
         *((e + 0x14) as *mut i32) = ano;
-        let base = core::ptr::read_unaligned(0xdd6ec8 as *const [u8; 8]);
+        let base = core::ptr::read_unaligned(G_GAME_START_DATE as *const [u8; 8]);
         let mut d = [0u8; 8];
         let r = datar(0xae2c90, &mut d, 0x16d);
         let (by, ry) = (u16::from_le_bytes([base[2], base[3]]), read_u16(r + 2));
@@ -315,7 +315,7 @@ pub(crate) unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
             .wrapping_add(t(0x14));
         *((e + 0xc) as *mut f32) = (soma as f64 * fator) as f32;
         i += 1;
-        if i >= read_usize(0xae2350) as i32 {
+        if i >= read_usize(G_NATION_COUNT) as i32 {
             break;
         }
     }
@@ -323,7 +323,7 @@ pub(crate) unsafe extern "thiscall" fn pontuacoes_do_ranking(this: usize) {
 
 pub(crate) unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize)>(1160);
-    let reg = [(read_usize(this), read_usize(0xae2350) * 0x2c)];
+    let reg = [(read_usize(this), read_usize(G_NATION_COUNT) * 0x2c)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || pontuacoes_do_ranking(this));
     PLACAR.registrar(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
@@ -347,15 +347,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_pontuacoes_do_ranking(this: usiz
 pub(crate) unsafe extern "thiscall" fn ordem_do_ranking(this: usize, conta: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let v = alocar((read_usize(0xae2350) as u32).wrapping_mul(4));
+    let v = alocar((read_usize(G_NATION_COUNT) as u32).wrapping_mul(4));
     if v == 0 {
         aviso_em(0x9c74f4, 0x1e3);
         return 0;
     }
-    let nacoes = read_usize(0xae23a8);
+    let nacoes = read_usize(G_NATION_TABLE);
     let mut n = 0usize;
     let mut i = 0usize;
-    while (i as i32) < read_usize(0xae2350) as i32 {
+    while (i as i32) < read_usize(G_NATION_COUNT) as i32 {
         if read_usize(nacoes + i * 0x122 + 0x71) != 0 {
             *((v + n * 4) as *mut usize) = read_usize(this) + i * 0x2c;
             n += 1;
@@ -421,7 +421,7 @@ pub(crate) unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let ordem: unsafe extern "thiscall" fn(usize, *mut i32) -> usize = core::mem::transmute(FN_FIFA_RANKINGS_COLLECT_RANKED_ORDER);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let t = calloc(read_u32(0xae2350), 0x2c);
+    let t = calloc(read_u32(G_NATION_COUNT), 0x2c);
     *(this as *mut usize) = t;
     if t == 0 {
         aviso_em(0x9c74f4, 0x2da);
@@ -430,10 +430,10 @@ pub(crate) unsafe extern "thiscall" fn ranking_fifa_inicial(this: usize) {
     let c1 = core::ptr::read_unaligned(0x96a348 as *const f64);
     let c2 = core::ptr::read_unaligned(0x968908 as *const f64);
     let mut k = 0i32;
-    while k < read_u32(0xae2350) as i32 {
+    while k < read_u32(G_NATION_COUNT) as i32 {
         let r = t + 0x2c * k as usize;
         *(r as *mut i32) = k;
-        let a = core::ptr::read_unaligned((read_u32(0xae23a8) as usize + 0x122 * k as usize + 0xa8) as *const f64) * c1;
+        let a = core::ptr::read_unaligned((read_u32(G_NATION_TABLE) as usize + 0x122 * k as usize + 0xa8) as *const f64) * c1;
         let p = (a * c2) as i32;
         for j in 0..6 {
             *((r + 0x14 + 4 * j) as *mut i32) = p;
@@ -460,7 +460,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ranking_fifa_inicial(this: usize
     let mut s = [0usize; 1];
     ranking_fifa_inicial(s.as_mut_ptr() as usize);
     let (ta, tb) = (read_u32(this) as usize, s[0]);
-    let n = (read_u32(0xae2350) as i32).max(0) as usize * 0x2c;
+    let n = (read_u32(G_NATION_COUNT) as i32).max(0) as usize * 0x2c;
     let igual = if ta != 0 && tb != 0 {
         core::slice::from_raw_parts(ta as *const u8, n) == core::slice::from_raw_parts(tb as *const u8, n)
     } else {

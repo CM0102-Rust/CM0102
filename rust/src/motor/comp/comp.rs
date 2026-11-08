@@ -11,7 +11,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn clube_na_competicao(this: usize, clube: usize) -> u8 {
     let base = *((this + 4) as *const usize);
     let d = |p: usize, o: usize| *((p + o) as *const usize);
-    let limite = (*(0xae235c as *const i32)).wrapping_sub(*(0xae2350 as *const i32));
+    let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
     let nacao = d(clube, 0x53);
     if *(clube as *const i32) >= limite {
         let continente = d(base, 0x59);
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_do_premio(this: usize, clube: usi
         false
     };
     dado(p, 6, venceu as u32);
-    entregar(read_u32_as_usize(0xb7431c), p, clube);
+    entregar(read_u32_as_usize(G_NEWS), p, clube);
 }
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_tv(this: usize, clube: usize, 
     dado(p, 1, read_u32_as_usize(read_u32_as_usize(this + 4)) as u32);
     dado(p, 2, valor);
     dado(p, 3, *((this + 0x40) as *const i16) as i32 as u32);
-    entregar(read_u32_as_usize(0xb7431c), p, clube);
+    entregar(read_u32_as_usize(G_NEWS), p, clube);
 }
 
 // ponytail: entrega a notícia (aloca); só a original. A cópia leva o ramo.
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn competicao_todas_completas(this: usize) -
     }
     let mut i = read_u32_as_usize(this + 0x20) as i32;
     while i >= 0 {
-        let c = read_u32_as_usize(read_u32_as_usize(0xadadfc) + i as usize * 4);
+        let c = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + i as usize * 4);
         if completa(c) == 0 {
             return 0;
         }
@@ -581,7 +581,7 @@ pub(crate) unsafe extern "C" fn comparar_entrada_da_nacao_chave_ativa(ativo: i8)
 /// +5 quantas), se o clube conta: id dentro dos [0xae235c] − 2 × [0xae2350] registros, com nação (+0x53) marcada
 /// (+0x11c) e que não é a de [0x9cf260].
 pub(crate) unsafe fn cpw13_registro(this: usize, c: usize) -> Option<usize> {
-    let n = (read_usize(0xae235c) as i32).wrapping_sub((read_usize(0xae2350) as i32).wrapping_mul(2));
+    let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let id = read_usize(c) as i32;
     if id >= n || id < 0 {
         return None;
@@ -644,7 +644,7 @@ pub(crate) unsafe fn cpw13_somar(this: usize, c: usize, conta: u8, d: *mut u8) -
 pub(crate) unsafe fn cpw13_pode_realocar(this: usize, time: usize) -> bool {
     (0..0x32usize).any(|i| {
         let s = read_usize(time + 0xd7 + 4 * i);
-        if s == 0 || read_usize(s) as i32 >= read_usize(0xae2364) as i32 || read_usize(s + 0x39) == 0 {
+        if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + 0x39) == 0 {
             return false;
         }
         match cpw13_registro(this, read_usize(s + 0x39)) {
@@ -718,14 +718,14 @@ pub(crate) unsafe extern "C" fn nacao_chave_do_jogo(comp: usize, partida: usize)
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let linha = |nacao: usize| (0..0x23usize).find(|&k| {
-        let n = read_usize(0xb63d60 + 72 * k);
+        let n = read_usize(G_LEAGUE_TABLE + 72 * k);
         n != 0 && *((n + 0x11c) as *const u8) != 0 && n == nacao
     });
     let nacao = read_usize(comp + 0x5d);
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
-    if (amistoso(read_usize(0xae2c74), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
+    if (amistoso(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
         let pc = read_usize(partida + 0x14);
-        if pc == read_usize(read_usize(0xae2c74) + 4) || read_usize(pc) == reservas {
+        if pc == read_usize(read_usize(G_FRIENDLY) + 4) || read_usize(pc) == reservas {
             if selecao(read_usize(partida + 0x1c)) != 0 || selecao(read_usize(partida + 0x20)) != 0 {
                 return 1;
             }

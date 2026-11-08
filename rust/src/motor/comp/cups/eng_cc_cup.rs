@@ -255,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cql10_supercopa_tabela(this: usi
 
 /// O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn cqm10_clube(i: i16) -> usize {
-    read_u32_as_usize(0xae23b4) + i as isize as usize * 0x245
+    read_u32_as_usize(G_CLUB_TABLE) + i as isize as usize * 0x245
 }
 
 /// O id da competição da divisão do clube (+0x57, ponteiro para o registro da competição; +0 o id), ou None sem divisão.
@@ -276,7 +276,7 @@ pub(crate) unsafe fn cqm10_inscrever(this: usize, k: i32, clube: usize, classe: 
 /// lista encher (+0x3e); a classe de cada um vem de `classe(clube)`.
 pub(crate) unsafe fn cqm10_passada(this: usize, n: &mut i32, id: usize, classe: impl Fn(usize) -> u8) {
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqm10_clube(i);
         if let Some(d) = cqm10_divisao(c) {
             if *n != read_i16(this + 0x3e) as i32 && d == read_u32_as_usize(id) && read_u32_as_usize(c + 0x1db) as i32 == -1 {
@@ -341,7 +341,7 @@ pub(crate) unsafe fn cqm10_copa_da_liga(this: usize) -> (i32, i32) {
         }
     });
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         let c = cqm10_clube(i);
         if let Some(d) = cqm10_divisao(c) {
             if n != read_i16(this + 0x3e) as i32
@@ -474,7 +474,7 @@ pub(crate) unsafe fn cqm10_trofeu(this: usize) -> (i32, i32) {
 /// banco: [0xae23d0] + 0x6b × id; 0x4afd80: push lugar; push competição; add esp, 8 -> cdecl).
 pub(crate) unsafe fn cqm10_colocado(id: usize, lugar: u32) -> usize {
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    colocado(read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
+    colocado(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b)), lugar)
 }
 
 /// { 0x56d780 } (thiscall, ret 0, eng_charity.cpp): `EngCharity::select_teams()`: +0x3e = 2; a lista (0x944e46 de 0xc em
@@ -601,7 +601,7 @@ pub(crate) unsafe fn cqn10_base(this: usize, hoje: usize, fase: u32) -> u32 {
 /// rodadas (virtual +0x8c), a árvore dos confrontos (virtual +0x94) e a ordem prevista (virtual +0x5c); uma devolução
 /// negativa dá a caixa (linhas 0x161, 0x168, 0x16f) e 0. Sempre, no fim, a atualização da copa.
 pub(crate) unsafe extern "thiscall" fn cqn10_copa_da_liga_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 {
+    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 {
         cqn10_liberar(this);
         crate::comparacao::ramo("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
@@ -629,7 +629,7 @@ pub(crate) unsafe extern "thiscall" fn cqn10_copa_da_liga_dia(this: usize, hoje:
 pub(crate) unsafe extern "thiscall" fn comparar_cqn10_copa_da_liga_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1790);
     let antes = read_u32_as_usize(this + 0x45);
-    let vira = antes == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
+    let vira = antes == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
     let depois = read_u32_as_usize(this + 0x45);
     PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("cqn10_copa_da_liga_dia({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));

@@ -69,10 +69,10 @@ pub(crate) unsafe extern "thiscall" fn marcar_noticia_lida(this: usize, tecnico:
     if sincronizar != 0 {
         let maquina: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
         let marcar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWS_MARK_ITEM_READ);
-        let da_vez = read_usize(0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize as usize);
+        let da_vez = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
         let m = maquina(0xb74450, da_vez) as u16;
         for j in 0..0x10i32 {
-            let p = read_usize(0xae23bc).wrapping_add((cpo6_i(0xae2364) - j - 1).wrapping_mul(0x6e) as usize);
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((cpo6_i(0xae2364) - j - 1).wrapping_mul(0x6e) as usize);
             if *((p + 0x5f) as *const u8) == 1 && p != tecnico && maquina(0xb74450, p) as u16 == m {
                 marcar(this, p, id, 0);
             }
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn entregar_noticia_ao_tecnico(this: usize, 
         cpn1_por(e + 4, inicio as usize);
     }
     let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    if *(0xdd6bec as *const i16) != 0 || ferias(read_usize(0xb63c98), tecnico) != 0 {
+    if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || ferias(read_usize(G_HUMAN_MANAGER), tecnico) != 0 {
         let responder: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWSITEM_AUTO_RESPOND);
         crate::comparacao::ramo("cpn_1 resposta automatica");
         responder(vaga(atual), tecnico, read_usize(tecnico + 0x39)); // o clube
@@ -390,7 +390,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_entregar_noticia_ao_tecnico(this
     // com o técnico de férias a resposta automática (0x784100) pode entregar outra notícia ao mesmo humano: o anel anda
     // mais vagas e a conta junto (achado em 31/10/2026, quando a rotina saiu das DESLIGADAS)
     let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    let responde = !repetida && (*(0xdd6bec as *const i16) != 0 || ferias(read_usize(0xb63c98), tecnico) != 0);
+    let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || ferias(read_usize(G_HUMAN_MANAGER), tecnico) != 0);
     let r = o(this, noticia, tecnico, livre);
     if r == 0 {
         PLACAR.registrar(novo, || format!("entregar_noticia_ao_tecnico devolveu 0 sem anel novo")); // só sem memória
@@ -644,7 +644,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_a_regiao_da_competicao(this:
 
 /// O técnico (+0xcf) do clube cujo id está no dado da notícia em `o` ([0xae23b4], 0x245 bytes por clube).
 pub(crate) unsafe fn cpk5_tecnico_do_clube(noticia: usize, o: usize) -> usize {
-    read_usize(read_usize(0xae23b4).wrapping_add(read_usize(noticia + o).wrapping_mul(0x245)) + 0xcf)
+    read_usize(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(noticia + o).wrapping_mul(0x245)) + 0xcf)
 }
 
 /// whether the news is important for the person, by category and type (bids on the person's club, the humans...)
@@ -674,7 +674,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_importante_para_a_pessoa(noticia:
             0xfb6 => cpk5_tecnico_do_clube(noticia, 0x15) == pessoa || cpk5_tecnico_do_clube(noticia, 0x19) == pessoa,
             _ => false,
         },
-        6 => t == 0x1770 && read_usize(noticia + 5) as i32 >= (read_usize(0xae2364) as i32).wrapping_sub(0x10),
+        6 => t == 0x1770 && read_usize(noticia + 5) as i32 >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10),
         1 => t == 0x1388,
         _ => false, // 3 e 7: nenhum
     };
@@ -739,7 +739,7 @@ pub(crate) unsafe fn cpk6_clube(clube: usize) -> usize {
     if clube != 0 {
         return clube;
     }
-    read_usize(read_usize(0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize as usize) + 0x39)
+    read_usize(read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize) + 0x39)
 }
 
 
@@ -763,7 +763,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_texto_do_dado_da_noticia(noticia
 
 /// O técnico humano `i` (0 a 15: os últimos 16 de [0xae23bc], 0x6e bytes), se ativo (+0x5f = 1).
 pub(crate) unsafe fn cpj3_humano_ativo(i: usize) -> Option<usize> {
-    let p = read_usize(0xae23bc).wrapping_add(read_usize(0xae2364).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
+    let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
     (*((p + 0x5f) as *const u8) == 1).then_some(p)
 }
 
@@ -865,7 +865,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_para_os_tecnicos_da_nacao(this: u
     *((noticia + 0xde) as *mut u8) = 2; // o alcance da nação
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_NEWS_DELIVER_TO_MANAGER);
     for i in 0..0x10usize {
-        let p = read_usize(0xae23bc).wrapping_add(read_usize(0xae2364).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
+        let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
         if *((p + 0x5f) as *const u8) != 1 {
             continue;
         }
@@ -887,7 +887,7 @@ pub(crate) unsafe fn cpi6_olheiro(this: usize) -> Option<usize> {
     if *((this + 0xa) as *const u8) != 4 || i <= -1 {
         return None;
     }
-    let p = read_usize(0xae23bc).wrapping_add((i as usize).wrapping_mul(0x6e));
+    let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(0x6e));
     let confere: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     if confere(p, read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 || p == 0 {
         return None;
@@ -911,7 +911,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_noticia_para_os_tecnicos_da_naca
 /// A entrada (12 bytes) da caixa de notícias do técnico humano: [noticias+8] + 12 × (id − [0xae2364] +
 /// 0x10); None quando o índice fica negativo (a original abre a caixa de erro).
 pub(crate) unsafe fn entrada_da_caixa_do_tecnico(noticias: usize, tecnico: usize) -> Option<usize> {
-    let i = (*(tecnico as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+    let i = (*(tecnico as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if i < 0 {
         return None;
     }
@@ -1023,7 +1023,7 @@ pub(crate) unsafe extern "stdcall" fn clube_de_tecnico_humano(clube: usize) -> u
     let tecnico: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
     let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let t = tecnico(clube);
-    ferias(*(0xb63c98 as *const usize), t);
+    ferias(*(G_HUMAN_MANAGER as *const usize), t);
     1 // humano
 }
 
@@ -1079,7 +1079,7 @@ pub(crate) unsafe extern "thiscall" fn esvaziar_caixa_de_entrada(this: usize, te
         aviso_em(0xa693ec, 0x24c1);
         return;
     }
-    let h = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    let h = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if h < 0 {
         aviso_em(0xa693ec, 0x24cc);
         return;
@@ -1112,7 +1112,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_esvaziar_caixa_de_entrada(this: 
     if tecnico == 0 {
         return o(this, tecnico);
     }
-    let h = read_i32(tecnico).wrapping_sub(read_i32(0xae2364)).wrapping_add(0x10);
+    let h = read_i32(tecnico).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if h < 0 {
         return o(this, tecnico);
     }
@@ -1153,7 +1153,7 @@ pub(crate) unsafe extern "thiscall" fn construir_noticia(this: usize, tipo: u32,
     }
     let mut temporaria = [0u32; 2];
     atribuir_data(this + 0xcd, temporaria.as_mut_ptr() as usize, 0xae2c90);
-    *((this + 0xd5) as *mut u8) = *(0xae2c88 as *const u8);
+    *((this + 0xd5) as *mut u8) = *(G_CURRENT_DAY_SLICE as *const u8);
     cpo5_por(this + 0xd6, 0);
     cpo5_por(this + 0xda, 0);
     this

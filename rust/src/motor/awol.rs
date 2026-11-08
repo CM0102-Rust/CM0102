@@ -223,14 +223,14 @@ pub(crate) unsafe extern "thiscall" fn noticia_da_falta_ao_treino(this: usize, j
                 gravar(nt, k, u32::MAX);
             }
         } else {
-            let p = read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e));
             gravar(nt, 7, id as u32);
             gravar(nt, 8, read_usize(read_usize(p + 4) + 0x33) as u32);
             gravar(nt, 9, read_usize(read_usize(p + 8) + 0x33) as u32);
             gravar(nt, 0xa, read_usize(read_usize(p + 0xc) + 0x33) as u32);
         }
     }
-    let noticias = read_usize(0xb7431c);
+    let noticias = read_usize(G_NEWS);
     let de_humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     // 0x7875e0: mov ecx, [0xb7431c]; push clube (ret 4); 0x7861e0: push clube +0x39; push notícia; mov ecx, [0xb7431c];
     // 0x7863f0: push nação; push notícia; mov ecx, [0xb7431c] -> thiscall nas três
@@ -311,7 +311,7 @@ pub(crate) unsafe fn cpw7_inicio(lista: usize) {
 
 /// A data `d` (dia com sinal em +0, ano sem sinal em +2) já passou: hoje ([0xae2c90]) é depois dela.
 pub(crate) unsafe fn cpw7_passou(d: usize) -> bool {
-    let (dia, ano) = (read_i16(0xae2c90), read_i16(0xae2c92) as u16);
+    let (dia, ano) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
     let a = read_i16(d + 2) as u16;
     ano > a || (ano == a && dia > read_i16(d))
 }
@@ -419,7 +419,7 @@ pub(crate) unsafe extern "thiscall" fn faltas_do_dia(this: usize) {
             return;
         }
         if cpw7_semana_passou(r + 8, 1) {
-            let pessoa = read_usize(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
+            let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
             let resolveu = if read_u8(r + 0x10) != 0 {
                 if read_usize(pessoa + 0x61) == 0 {
                     true
@@ -459,7 +459,7 @@ pub(crate) unsafe extern "thiscall" fn faltas_do_dia(this: usize) {
 
 /// A falta ao treino `r` com uma semana passada (o meio da lista (2) de `faltas_do_dia`).
 pub(crate) unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
-    let pessoa = read_usize(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
     if read_u8(r + 0xc) != 0 {
         // o caso repetido
         if read_usize(pessoa + 0x61) != 0 {
@@ -477,9 +477,9 @@ pub(crate) unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
     // o caso novo: os colegas do clube
     crate::comparacao::ramo("cpw_7 caso novo");
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contrato_de(read_usize(0xae1050), pessoa);
-    write_u32(0xae1080, k as u32);
-    let clube = if k != 0 { read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) } else { 0 };
+    let k = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+    write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
+    let clube = if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) } else { 0 };
     if clube != 0 {
         let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
         let marcas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_CONTRACT_GET_FLAGS);
@@ -489,7 +489,7 @@ pub(crate) unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
             if s == 0 || s == pessoa || read_usize(s + 0x61) == 0 {
                 continue;
             }
-            let ct = contrato(read_usize(0xae1050), pessoa, clube);
+            let ct = contrato(read_usize(G_CONTRACT_MANAGER), pessoa, clube);
             if ct == 0 {
                 continue;
             }
@@ -524,7 +524,7 @@ pub(crate) unsafe fn cpw7_resolver_falta(this: usize, r: usize) {
             cpw7_faltou(this, pessoa);
             if clube != 0 && read_usize(pessoa + 0x61) != 0 {
                 let brigar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_MEDIA_CREATE_PLAYER_MEDIA_STORY);
-                brigar(read_usize(0xb6b7c8), pessoa, clube, 8, 0, 0);
+                brigar(read_usize(G_MEDIA), pessoa, clube, 8, 0, 0);
             }
             return;
         }
@@ -554,9 +554,9 @@ pub(crate) unsafe extern "thiscall" fn teve_falta_ao_treino(this: usize, pessoa:
     }
     if read_u8(read_usize(this + 0xc).wrapping_add(id as usize)) & 2 != 0 {
         let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-        let k = contrato_de(read_usize(0xae1050), pessoa);
-        write_u32(0xae1080, k as u32);
-        if k == 0 || read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) == 0 {
+        let k = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+        write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
+        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) == 0 {
             let limpar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_AWOL_CLEAR_MISSED_TRAINING);
             limpar(this, pessoa);
         }
@@ -570,8 +570,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_teve_falta_ao_treino(this: usize
     let o = orig::<unsafe extern "thiscall" fn(usize, usize) -> u32>(1309);
     if pessoa != 0 && cpw7_i(pessoa) < cpw7_i(0xae2364) && read_u8(read_usize(this + 0xc).wrapping_add(cpw7_i(pessoa) as usize)) & 2 != 0 {
         let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-        let k = contrato_de(read_usize(0xae1050), pessoa);
-        if k == 0 || read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) == 0 {
+        let k = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+        if k == 0 || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245)) == 0 {
             // ponytail: tira a falta da lista (libera o nó): só a original
             return o(this, pessoa);
         }
@@ -642,7 +642,7 @@ pub(crate) unsafe fn cpw7_clube_do_contrato(k: usize) -> usize {
     if k == 0 {
         return 0;
     }
-    read_usize(0xae23b4).wrapping_add(read_usize(k + 4).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + 4).wrapping_mul(0x245))
 }
 
 /// O byte +0xc (caso repetido) do registro da falta. A 0x41a360 não o grava: o registro de 13 bytes é montado num local
@@ -670,8 +670,8 @@ pub(crate) unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pesso
         return;
     }
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contrato_de(read_usize(0xae1050), pessoa);
-    write_u32(0xae1080, k as u32);
+    let k = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+    write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
     let clube = cpw7_clube_do_contrato(k);
     if k == 0 || clube == 0 {
         return;
@@ -681,7 +681,7 @@ pub(crate) unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pesso
     if *m & 2 != 0 {
         return;
     }
-    let k2 = contrato_de(read_usize(0xae1050), pessoa);
+    let k2 = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
     if k2 != 0 && read_u8(k2 + 0x44) as i8 <= -100 {
         for bit in [0x2000u32, 0x800] {
             if read_usize(k2 + 0x45) as u32 & bit != 0
@@ -705,25 +705,25 @@ pub(crate) unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pesso
         return;
     }
     *m |= 2;
-    let k3 = contrato_de(read_usize(0xae1050), pessoa);
-    write_u32(0xae1080, k3 as u32);
+    let k3 = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+    write_u32(G_CONTRACT_LOOKUP_RESULT, k3 as u32);
     let noticia: unsafe extern "stdcall" fn(usize, usize) = core::mem::transmute(FN_AWOL_POST_MISSED_TRAINING_NEWS);
     noticia(pessoa, cpw7_clube_do_contrato(k3));
-    let linha = read_usize(0xae2d0c).wrapping_add((cpw7_i(pessoa) as usize).wrapping_mul(79)).wrapping_add(0xa) as *mut u8;
+    let linha = read_usize(G_STAFF_STATE_TABLE).wrapping_add((cpw7_i(pessoa) as usize).wrapping_mul(79)).wrapping_add(0xa) as *mut u8;
     let r = cpw7_sortear(10);
     *linha = (*linha).wrapping_add(r as u8);
     let condicao: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_CONDITION);
-    let c = condicao(read_usize(0xb63d28), pessoa, 0);
+    let c = condicao(read_usize(G_INJURY), pessoa, 0);
     // as contas da original são de 32 bits com bytes altos de outros valores no registrador, mas só a palavra baixa
     // chega (a condição é short na 0x62bd10)
     let queda = 0x15i16.wrapping_sub(read_u8(read_usize(pessoa + 0x61) + 0x34) as i8 as i16).wrapping_mul(25);
     let r = cpw7_sortear(queda as i32);
     let nova = (c as u16).wrapping_sub((queda as u16).wrapping_add(r as u16).wrapping_add(0x64));
     let gravar_condicao: unsafe extern "thiscall" fn(usize, usize, i16, i16) = core::mem::transmute(FN_INJURY_SET_MATCH_CONDITION);
-    gravar_condicao(read_usize(0xb63d28), pessoa, nova as i16, 0);
+    gravar_condicao(read_usize(G_INJURY), pessoa, nova as i16, 0);
     let mut reg = [0u8; 13];
     reg[..4].copy_from_slice(&cpw7_i(pessoa).to_le_bytes());
-    reg[4..12].copy_from_slice(core::slice::from_raw_parts(0xae2c90 as *const u8, 8));
+    reg[4..12].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     reg[12] = CPW7_BYTE_DO_CASO;
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     acrescentar(read_usize(this + 4), reg.as_ptr() as usize, 0xd);
@@ -744,7 +744,7 @@ pub(crate) unsafe extern "thiscall" fn marcar_falta_ao_treino(this: usize, pesso
     let b = cpw7_sortear(5);
     crate::comparacao::ramo("cpw_7 multa pela falta");
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINE_FINE_PLAYER);
-    multar(read_usize(0xae2a3c), pessoa, if a > b { 1 } else { 2 }, 1);
+    multar(read_usize(G_FINE), pessoa, if a > b { 1 } else { 2 }, 1);
 }
 
 /// O comparador da falta marcada, em ensaio: a cópia para na decisão (0 nada, 1 some, 2 marca a falta) e a original roda
@@ -792,15 +792,15 @@ pub(crate) unsafe extern "thiscall" fn fim_da_ausencia(this: usize, r: usize) {
         return;
     }
     crate::comparacao::ramo("cpw_7 fim da ausencia");
-    let pessoa = read_usize(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
+    let pessoa = read_usize(G_STAFF_TABLE).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
     let contrato_de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let k = contrato_de(read_usize(0xae1050), pessoa);
-    write_u32(0xae1080, k as u32);
+    let k = contrato_de(read_usize(G_CONTRACT_MANAGER), pessoa);
+    write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
     if k != 0 && cpw7_clube_do_contrato(k) != 0 {
         if CPW7_ENSAIO {
             CPW7_DECISAO = 1;
         } else {
-            let p = read_usize(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
             let noticia: unsafe extern "stdcall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_AWOL_POST_NEWS);
             noticia(p, read_usize(p + 0x39), 0, 0xffffffff);
         }
@@ -891,7 +891,7 @@ pub(crate) unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: 
                 cpz9_gravar(nt, k, u32::MAX);
             }
         }
-        entregar(read_usize(0xb7431c), nt, clube);
+        entregar(read_usize(G_NEWS), nt, clube);
     }
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if humano(clube, 0, 1, 0, 0) != 0 {
@@ -919,7 +919,7 @@ pub(crate) unsafe extern "thiscall" fn incidente_de_forma(this: usize, jogador: 
     let e = cpz9_sortear(5); // cpz9: o sorteio do prazo
     let prazo = if c > e { 1 } else { 2 }; // cpz9: o prazo da multa
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINE_FINE_PLAYER);
-    multar(read_usize(0xae2a3c), jogador, prazo, 1);
+    multar(read_usize(G_FINE), jogador, prazo, 1);
 }
 
 /// O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
@@ -935,7 +935,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_incidente_de_forma(this: usize, 
     let mut plano = [0u8; 0x10];
     plano[..4].copy_from_slice(&cpz9_u(jogador).to_le_bytes());
     plano[4..8].copy_from_slice(&cpz9_u(clube).to_le_bytes());
-    plano[8..].copy_from_slice(core::slice::from_raw_parts(0xae2c90 as *const u8, 8));
+    plano[8..].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     o(this, jogador, clube);
     let no = if cauda != 0 { read_usize(cauda + 6) } else { read_usize(l + 2) };
     let dados = if no != 0 { read_usize(no) } else { 0 };
@@ -951,7 +951,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_incidente_de_forma(this: usize, 
 /// `só_ler`, o bit 0 da marca da pessoa ([this+0xc] + id). Senão, com o bit e sem contrato (0x4cf5a0, guardado em
 /// [0xae1080]) ou sem clube do contrato, a ausência acaba (0x4196a0); devolve o bit relido.
 pub(crate) unsafe extern "thiscall" fn ausente_sem_licenca(this: usize, p: usize, so_ler: u32) -> u32 {
-    if p == 0 || read_usize(p) as i32 >= read_usize(0xae2364) as i32 {
+    if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
     let marca = || read_u8(read_usize(this + 0xc) + read_usize(p)) as u32 & 1;
@@ -970,7 +970,7 @@ pub(crate) unsafe extern "thiscall" fn ausente_sem_licenca(this: usize, p: usize
 /// sem contrato ou clube (a 0x4196a0 tira e libera o nó da lista: não pode rodar duas vezes), só a original.
 pub(crate) unsafe extern "thiscall" fn comparar_ausente_sem_licenca(this: usize, p: usize, so_ler: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(1472);
-    if p != 0 && (read_usize(p) as i32) < read_usize(0xae2364) as i32 && so_ler == 0 && read_u8(read_usize(this + 0xc) + read_usize(p)) & 1 != 0 {
+    if p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && so_ler == 0 && read_u8(read_usize(this + 0xc) + read_usize(p)) & 1 != 0 {
         let c = cqb5_contrato(p); // a original o refaz igual (e regrava [0xae1080])
         if c == 0 || cqb5_clube_do_contrato(c) == 0 {
             return o(this, p, so_ler);

@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpq1_sem_demissao', '    crate::comparacao::ramo("cpq_1 demitido");\n    cpq1_saida(this, clube, 1);', '    crate::comparacao::ramo("cpq_1 demitido"); // mutacao: a demissao nao entra na lista', 'cpq_1 demitido'),
     ('cpq1_ultimato_fora_da_lista', '    cpq1_acrescentar(read_usize(this + 0x10), &id as *const u32 as usize, 4);', '    let _ = id; // mutacao: o ultimato nao entra na lista', 'cpq_1 ultimato dado'),
-    ('cpq1_tecnico_com_contrato', '        sem_contrato(read_usize(0xae1050), tec);', '        let _ = (sem_contrato, tec); // mutacao: o tecnico fica com o contrato', 'cpq_1 tirar o tecnico'),
+    ('cpq1_tecnico_com_contrato', '        sem_contrato(read_usize(G_CONTRACT_MANAGER), tec);', '        let _ = (sem_contrato, tec); // mutacao: o tecnico fica com o contrato', 'cpq_1 tirar o tecnico'),
     ('cpq2_apuro_sem_saldo', '    (core::ptr::read_unaligned(f as *const i64) < 0) as u8', '    1 // mutacao: sem olhar o saldo'),
     ('cpq2_selecao_sem_piso', '        write_i16(cpq2_linha(this, selecao) + 6, 0x1964); // técnico novo', '        // mutacao: sem o piso do tecnico novo', 'cpq_2 selecao avaliada'),
     ('cpq2_federacao_demite', '    let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_MANAGER_MANAGER_CONSIDER_SACKING_MANAGER);\n    pensar(this, selecao, 0);', '    cpq2_saida(this, selecao, 0); // mutacao: demite em vez de pensar', 'cpq_2 a federacao pensa'),
@@ -21,7 +21,7 @@ MUTACOES = [
     ('cpq7_sem_permissao', 'dar(this, pessoa, read_usize(clube + 0x53), ano, 0, 1); // a permissão nova', 'let _ = (dar, ano); // mutacao: sem a permissao nova', 'cpq_7 permissao nova'),
     ('cpq7_sem_luvas', 'luvas(fin, valor); // as luvas', 'let _ = (luvas, fin, valor); // mutacao: sem luvas', 'cpq_7 luvas'),
     ('cpq7_fator', 'read_usize(oferta + 0x20), 1.0f64, 2) != 0 {', 'read_usize(oferta + 0x20), 1.1f64, 2) != 0 { // mutacao: fator 1,1', 'cpq_7 contrato da oferta'),
-    ('cpq8_contrato_fica', 'tirar_contrato(read_usize(0xae1050), cpq8_pessoa(read_usize(oferta + 0xc)), cpq8_clube(read_usize(oferta + 8))); // a oferta de contrato sai', 'let _ = tirar_contrato; // mutacao: a oferta de contrato fica', 'cpq_8 desfazer oferta'),
+    ('cpq8_contrato_fica', 'tirar_contrato(read_usize(G_CONTRACT_MANAGER), cpq8_pessoa(read_usize(oferta + 0xc)), cpq8_clube(read_usize(oferta + 8))); // a oferta de contrato sai', 'let _ = tirar_contrato; // mutacao: a oferta de contrato fica', 'cpq_8 desfazer oferta'),
     ('cpq8_salario', 'pelo_atual(c.as_mut_ptr(), jogador, clube, fim, percentual, a5, a6); // o salário pela porcentagem', 'pelo_atual(c.as_mut_ptr(), jogador, clube, fim, percentual.wrapping_add(10), a5, a6); // mutacao', 'cpq_8 oferta de emprestimo'),
     ('cpq8_sem_conclusao', 'concluir(this, oferta); // a transferência acontece', 'let _ = concluir; // mutacao: nao acontece', 'cpq_8 transferencia futura'),
     ('cpq9_sorteio_da_idade', 'let mut nota = sortear((idade - 31) * 150); // a idade', 'let mut nota = 0i32; // mutacao: sem o sorteio da idade'),

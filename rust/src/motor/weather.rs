@@ -66,8 +66,8 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
         let e = k as usize * 0x48;
         let fim = core::ptr::read_unaligned((0xb63d99 + e) as *const i16);
         let ano = core::ptr::read_unaligned((0xb63d9b + e) as *const u16);
-        let dia = core::ptr::read_unaligned(0xae2c90 as *const i16);
-        let ano_atual = core::ptr::read_unaligned(0xae2c92 as *const u16);
+        let dia = core::ptr::read_unaligned(G_CURRENT_DATE as *const i16);
+        let ano_atual = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
         if fim > 0x3c {
             if ano == ano_atual && (fim as i32 - 0x3c) < dia as i32 {
                 return 0;
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn adiar_pelo_clima(this: usize, jogo: usize
         }
     }
     if read_u8(jogo + 0x3f) == 2 { // cpu5: a fatia da noite
-        let fin = financas(read_usize(0xae2a38), casa);
+        let fin = financas(read_usize(G_FINANCE_TABLE), casa);
         if fin != 0 {
             let f = faixa(fin) as i8;
             let n = if f == -2 {
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn clima_da_partida(this: usize, s: *mut u8,
     let dia = if jogo != 0 {
         core::ptr::read_unaligned((jogo + 0x2a) as *const i16)
     } else {
-        core::ptr::read_unaligned(0xae2c90 as *const i16)
+        core::ptr::read_unaligned(G_CURRENT_DATE as *const i16)
     };
     let limite = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
     let p: usize = if dia < limite(0x1e) {
@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn temperatura_do_jogo(_this: usize, faixa: 
     let d: i32 = if jogo != 0 {
         core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32
     } else {
-        core::ptr::read_unaligned(0xae2c90 as *const i16) as i32
+        core::ptr::read_unaligned(G_CURRENT_DATE as *const i16) as i32
     };
     let x = d.wrapping_mul(f);
     let t: i8 = match f {
@@ -558,7 +558,7 @@ pub(crate) unsafe fn cpt5_ler_linha(f: usize, buf: *mut u8) -> i32 {
 /// as três medidas (+0, +1, +2) viram (medida + sorteio(100)) × 0,5 truncado, presas em 0..100; sorteio(10) zerado dá
 /// o vento novo (+3) = sorteio(3).
 pub(crate) unsafe extern "thiscall" fn tempo_das_cidades(this: usize) {
-    if read_usize(this + 4) == 0 || read_usize(0xae2354) as i32 <= 0 {
+    if read_usize(this + 4) == 0 || read_usize(G_CITY_COUNT) as i32 <= 0 {
         return;
     }
     crate::comparacao::ramo("cpt_5 tempo do dia");
@@ -582,7 +582,7 @@ pub(crate) unsafe extern "thiscall" fn tempo_das_cidades(this: usize) {
             *((read_usize(this + 4) + i * 4 + 3) as *mut u8) = r as u8;
         }
         i += 1;
-        if i as i32 >= read_usize(0xae2354) as i32 {
+        if i as i32 >= read_usize(G_CITY_COUNT) as i32 {
             break;
         }
     }
@@ -699,7 +699,7 @@ pub(crate) unsafe extern "thiscall" fn ler_o_clima(this: usize) {
     if r == 0 {
         erro_em(0xad4dec, 0x7e);
     }
-    let c = malloc(read_usize(0xae2354).wrapping_mul(4));
+    let c = malloc(read_usize(G_CITY_COUNT).wrapping_mul(4));
     *((this + 4) as *mut usize) = c;
     if c == 0 {
         erro_em(0xad4dec, 0x86);

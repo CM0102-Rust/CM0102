@@ -10,15 +10,15 @@ pub(crate) unsafe fn cqe6_h(a: usize) -> i16 {
 
 /// O clube de um contrato: +4 é o índice em [0xae23b4] (registros de 0x245 bytes).
 pub(crate) unsafe fn cqe6_clube_do_contrato(c: usize) -> usize {
-    read_usize(0xae23b4).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245))
 }
 
 /// O contrato principal da pessoa (0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4), guardado em
 /// [0xae1080] como a original faz.
 pub(crate) unsafe fn cqe6_contrato(p: usize) -> usize {
     let f: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = f(read_usize(0xae1050), p);
-    core::ptr::write_unaligned(0xae1080 as *mut usize, c);
+    let c = f(read_usize(G_CONTRACT_MANAGER), p);
+    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
     c
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_escocia(_this: usize,
     let comp = read_usize(clube + 0x57);
     if comp == read_usize(dono + 0x57) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
         crate::comparacao::ramo("cqe_6 escocia mesma divisao");
-        let r = read_usize(0xae23d0).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
+        let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
         return cqe6_recusa(msg, motivo, 0x9c4590, r, 0x1d);
     }
     1
@@ -101,7 +101,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_periodo_escocia(_this: usize, a1: us
     }
     // 0x4d45f0: push a1; mov ecx, [0xae1050] -> thiscall, ret 4 (o mês do fim da temporada)
     let mes_do_fim: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
-    let e = mes_do_fim(read_usize(0xae1050), a1) as i8;
+    let e = mes_do_fim(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *fim_mes = e;
     if (read_u8(jogador + 0x18) as i8) < 0x16 {
         crate::comparacao::ramo("cqe_6 escocia ate o fim da temporada");
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, c
     let mut n: i8 = 0;
     for k in 0..50usize {
         let p = read_usize(clube + 0xd7 + 4 * k);
-        if p == 0 || read_usize(p) as i32 >= read_usize(0xae2364) as i32 || emprestimo(read_usize(0xae1050), p) == 0 {
+        if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || emprestimo(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
         let cp = cqe6_contrato(p);
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_italia(this: usize, c
 /// motivo)`: cinco empréstimos na temporada (a conta de 16 bytes em [[0xde1f54] + 0x91c]): 0x1e; com contrato, o
 /// clube que pede e o dono na mesma divisão (+0x57, sem conferir o nulo, como a original): 0x1d, com o nome da nação.
 pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_irlanda(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    let conta = read_usize(read_usize(0xde1f54) + 0x91c).wrapping_add(read_usize(clube).wrapping_mul(16));
+    let conta = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(clube).wrapping_mul(16));
     if read_u8(conta) as i8 >= 5 {
         crate::comparacao::ramo("cqe_6 irlanda cinco na temporada");
         if msg != 0 {

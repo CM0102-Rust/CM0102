@@ -146,11 +146,11 @@ pub(crate) unsafe fn cqq10_intertoto(this: usize) -> (i32, i32) {
     }
     let mut k = 0i32;
     let mut i: i16 = 0;
-    while (i as i32) < read_u32_as_usize(0xae235c) as i32 {
+    while (i as i32) < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         if k >= read_i16(this + 0x3e) as i32 {
             break;
         }
-        let c = read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize);
+        let c = read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
         if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
             core::ptr::write_unaligned((v + k as usize * 4) as *mut u32, c as u32);
             k += 1;
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq10_intertoto_lista(this: usiz
 
 /// O objeto da Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]), ou 0.
 pub(crate) unsafe fn cqi10_uefa() -> usize {
-    read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
+    read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
 }
 
 /// Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
@@ -441,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn cqi10_intertoto_registros(this: usize, cl
     match desfecho as u8 {
         1 => {
             let peso = cpz4_escala(0x3c, 0x64, read_i16(jogo + 0x34), read_i16(this + 0x3c) as u16 as u32);
-            let uefa = read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
+            let uefa = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             cpz4_classificado(clube, uefa, 0, 0xa, peso);
             crate::comparacao::ramo("cqi_10 vencedor do intertoto");
             core::ptr::write_unaligned((clube + 0x1db) as *mut u32, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA

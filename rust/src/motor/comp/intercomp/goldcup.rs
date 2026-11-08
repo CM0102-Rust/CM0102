@@ -9,7 +9,7 @@ use super::*;
 /// add esp -> cdecl) com a nação da tabela [0xae23a8] (0x122 bytes cada).
 pub(crate) unsafe fn cqs12_selecao(id: usize) -> usize {
     let selecao: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
-    selecao(read_u32_as_usize(0xae23a8) + id * 0x122)
+    selecao(read_u32_as_usize(G_NATION_TABLE) + id * 0x122)
 }
 
 /// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
@@ -53,15 +53,15 @@ pub(crate) unsafe fn cqs12_selecoes(this: usize) -> u32 {
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // ponytail: a original empurra o eax com o ano nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
-    let quantas = sedes(read_u32_as_usize(0xb5e134), read_u32_as_usize(KEY_CLUB_COMP_COPA_AMERICA), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
+    let quantas = sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_COPA_AMERICA), ano as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut k = 0i16;
     while k < quantas as i16 {
         write_u32_from_usize(read_u32_as_usize(this + 0xee) + k as usize * 4, cqs12_selecao(ids[k as usize] as usize));
         k += 1;
     }
     let mut i = 0i16;
-    let mut nacao = read_u32_as_usize(0xae23a8);
-    while (i as i32) < read_u32_as_usize(0xae2350) as i32 && (k as i32) < read_u32_as_usize(this + 0xf2) as i32 {
+    let mut nacao = read_u32_as_usize(G_NATION_TABLE);
+    while (i as i32) < read_u32_as_usize(G_NATION_COUNT) as i32 && (k as i32) < read_u32_as_usize(this + 0xf2) as i32 {
         let continente = read_u32_as_usize(nacao + 0x71);
         let id = read_u32_as_usize(nacao);
         let entra = (continente != 0 && read_u32_as_usize(continente) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA))

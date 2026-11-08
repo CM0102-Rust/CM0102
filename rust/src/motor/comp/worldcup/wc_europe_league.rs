@@ -99,7 +99,7 @@ pub(crate) const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2)
 /// desempates (1, 2, 3), vagas diretas 4 − +0xef − +0xee (as isentas saem das quatro), uma de repescagem, seleções, 7 no
 /// banco e 3 substituições, +0xa7 = −1, +0xab = +0xdb = 0, começo em 25 do mês 0 num dia da semana 5.
 pub(crate) unsafe extern "thiscall" fn cqj12_eliminatoria_sul_americana_regras(this: usize) -> u32 {
-    let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
+    let lista = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
     if lista != 0 {
         let o = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
         if o != 0 {
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn cqj12_eliminatoria_sul_americana_regras(t
 // as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
 pub(crate) unsafe extern "thiscall" fn comparar_cqj12_eliminatoria_sul_americana_regras(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1701);
-    let lista = core::ptr::read_unaligned(0xadadfc as *const usize);
+    let lista = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
     let mut ef = *((this + 0xef) as *const u8);
     if lista != 0 {
         let c = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);

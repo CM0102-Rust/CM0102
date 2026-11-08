@@ -5,7 +5,7 @@ use super::*;
 
 /// O clube de id `id` (registros de 0x245 bytes em [0xae23b4]).
 pub(crate) unsafe fn cqj1_clube(id: u32) -> usize {
-    (read_u32(0xae23b4) as usize).wrapping_add((id as usize).wrapping_mul(0x245))
+    (read_u32(G_CLUB_TABLE) as usize).wrapping_add((id as usize).wrapping_mul(0x245))
 }
 
 /// O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
@@ -35,7 +35,7 @@ pub(crate) unsafe fn cqj1_entra(c: usize, fase: u8) -> bool {
 pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
     let campeao: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     let enesimo: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CONMEBOLSEEDING_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
-    let linha = |chave: usize| (read_u32(0xae23d0) as usize).wrapping_add(read_u32(chave).wrapping_mul(0x6b) as usize);
+    let linha = |chave: usize| (read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(read_u32(chave).wrapping_mul(0x6b) as usize);
     let h = campeao(linha(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0);
     if h != 0 && read_u32(h + 0x1db) == u32::MAX {
         *((h + 0x1df) as *mut u8) = 1;
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, 
         let e = this + k * 10;
         let mut n = 0u8;
         if read_u32(e) == read_u32(KEY_NATION_BRAZIL) {
-            if *(0xae2c92 as *const u16) > 0x7d2 {
+            if *(G_CURRENT_DATE_YEAR as *const u16) > 0x7d2 {
                 let mut c = campeao(linha(KEY_CLUB_COMP_BRAZILIAN_CUP), 0);
                 if c == 0 || read_u32(c + 0x1db) != u32::MAX {
                     c = campeao(linha(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
@@ -60,11 +60,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_vagas_libertadores(this: usize, 
                     n = n.wrapping_add(1);
                 }
             } else {
-                if cqj1_entra(cqj1_clube(read_u32(0x9d0274)), 2) {
+                if cqj1_entra(cqj1_clube(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {
                     crate::comparacao::ramo("cqj_1 brasil fixo");
                     n = 1; // cqj1: o Palmeiras
                 }
-                if cqj1_entra(cqj1_clube(read_u32(0x9d026c)), 2) {
+                if cqj1_entra(cqj1_clube(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE)), 2) {
                     n = n.wrapping_add(1);
                 }
             }
@@ -94,12 +94,12 @@ pub(crate) fn cqj1_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::
 /// Lado a lado: os clubes do jogo e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this: usize, clubes: usize, conta: u32) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32)>(1667);
-    let n = (read_u32(0xae235c) as i32).max(0) as usize;
+    let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
-    let reg = [(read_u32(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (read_u32(0xae23d4) as usize, (read_u32(0xae237c) as i32).max(0) as usize * 0x1a)];
+    let reg = [(read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || conmebol_vagas_libertadores(this, clubes, conta));
     PLACAR.registrar(igual, || {
-        let base = read_u32(0xae23b4) as usize;
+        let base = read_u32(G_CLUB_TABLE) as usize;
         let l: Vec<String> = cqj1_dif(&mo, &mr).iter().map(|&a| {
             if a < base || a - base >= mo.0[0].1.len() {
                 return format!("{:x}", a);
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_conmebol_vagas_libertadores(this
             let (x, y) = (mo.0[0].1[a - base], mr.0[0].1[a - base]);
             format!("clube {} +{:x}: {:02x}/{:02x}", q, k, x, y)
         }).collect();
-        format!("conmebol_vagas_libertadores (ano {}): {}", *(0xae2c92 as *const u16), l.join(", "))
+        format!("conmebol_vagas_libertadores (ano {}): {}", *(G_CURRENT_DATE_YEAR as *const u16), l.join(", "))
     });
 }
 
@@ -236,16 +236,16 @@ pub(crate) unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) 
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let t = alocar((read_u32(0xae235c) as i32).wrapping_mul(12) as u32);
+    let t = alocar((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
     *saida = t;
     if t == 0 {
         aviso_em(0x9a7ed8, 0xbb);
         return 0;
     }
     let mut k = 0u32;
-    let mut c = read_u32(0xae23b4) as usize;
+    let mut c = read_u32(G_CLUB_TABLE) as usize;
     let mut i = 0u32;
-    if read_u32(0xae235c) as i32 > 0 {
+    if read_u32(G_CLUB_COUNT) as i32 > 0 {
         loop {
             let nacao = read_u32(c + 0x53) as usize;
             if nacao != 0 && selecao(c) == 0 {
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "stdcall" fn conmebol_juntar_clubes(saida: *mut usize) 
             }
             c += 0x245;
             i += 1;
-            if (i as u16 as i16 as i32) >= read_u32(0xae235c) as i32 {
+            if (i as u16 as i16 as i32) >= read_u32(G_CLUB_COUNT) as i32 {
                 break;
             }
         }
@@ -298,8 +298,8 @@ pub(crate) fn cqj2_dif(mo: &crate::comparacao::Memoria, mr: &crate::comparacao::
 
 /// Os clubes do jogo, a marca da caixa e o histórico das competições (a 0x4afd80 o reordena: ver a cqj_1).
 pub(crate) unsafe fn cqj2_regioes_dos_clubes() -> Vec<(usize, usize)> {
-    let n = (read_u32(0xae235c) as i32).max(0) as usize;
-    vec![(read_u32(0xae23b4) as usize, n * 0x245), (0xb67a34, 4), (read_u32(0xae23d4) as usize, (read_u32(0xae237c) as i32).max(0) as usize * 0x1a)]
+    let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
+    vec![(read_u32(G_CLUB_TABLE) as usize, n * 0x245), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
 
 /// Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_virada_do_ano(this: usize, pular
     if pular != 0 {
         return;
     }
-    let ano = core::ptr::read_unaligned(0xae2c92 as *const u16);
+    let ano = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
     if ano == core::ptr::read_unaligned((this + 0x6f) as *const u16) {
         return;
     }

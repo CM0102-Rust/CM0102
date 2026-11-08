@@ -184,25 +184,25 @@ pub(crate) unsafe fn cpy10_premio(this: usize, p: usize, clube: usize, premio: u
         return;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contrato(read_usize(0xae1050), p);
-    *(0xae1080 as *mut usize) = c;
+    let c = contrato(read_usize(G_CONTRACT_MANAGER), p);
+    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 || read_u8(c + 0x35) & 0x3f == 5 {
         return;
     }
-    if read_usize(0xae23b4).wrapping_add(read_usize(c + 4).wrapping_mul(0x245)) == 0 {
+    if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + 4).wrapping_mul(0x245)) == 0 {
         return;
     }
     let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let k = do_clube(read_usize(0xae1050), p, cpv13_clube_do_contrato(p));
+    let k = do_clube(read_usize(G_CONTRACT_MANAGER), p, cpv13_clube_do_contrato(p));
     if k == 0 {
         return;
     }
-    if read_usize(0xde1f54) != 0 {
+    if read_usize(G_TRANSFER_MANAGER) != 0 {
         let dias: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
         if dias(0xae2c90, read_usize(k + 0x25), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
             let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(FN_SHORTLIST_MANAGER_FIND_CLUB_SHORTLIST_ENTRY);
             let dono = cpv13_clube_do_contrato(p);
-            let x = entrada(read_usize(read_usize(0xde1f54) + 0x856), dono, p, 0, 0);
+            let x = entrada(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), dono, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
                 crate::comparacao::ramo("cpy_10 renovação");
                 cpq3_renovar(p);

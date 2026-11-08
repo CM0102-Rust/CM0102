@@ -172,8 +172,8 @@ pub(crate) unsafe fn cqm7_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if cqm7_do_estadual(clube, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
@@ -212,8 +212,8 @@ pub(crate) unsafe extern "thiscall" fn cqm7_tabela_do_nordeste(this: usize) -> u
 pub(crate) unsafe fn cqm7_comparar(nome: &str, this: usize, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         if cqm7_do_estadual(clube, g) {
             plano.push(clube);
         }

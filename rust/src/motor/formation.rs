@@ -34,7 +34,7 @@ pub(crate) unsafe extern "C" fn criterio_da_competicao(registro: usize, a: u32, 
 /// { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
 /// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
 pub(crate) unsafe extern "thiscall" fn esquecer_pessoa(this: usize, pessoa: usize) {
-    let valida = || *(pessoa as *const i32) < *(0xae2364 as *const i32) && *(0x9cc270 as *const u8) != 0;
+    let valida = || *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
     if pessoa == 0 || !valida() {
         return;
     }
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn quadro_do_tecnico(this: usize, tecnico: u
     if tecnico == 0 {
         return 0;
     }
-    let k = (*(0xae2364 as *const i32)).wrapping_sub(*(tecnico as *const i32)) as usize;
+    let k = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(tecnico as *const i32)) as usize;
     *(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize)
 }
 
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn mascara_da_formacao(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn designado_da_posicao(this: usize, posicao: i8) -> usize {
     let i = *((this as isize + 0x5bf + 4 * posicao as isize) as *const i32);
     if i > -1 {
-        (*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)
+        (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
     } else {
         0
     }
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn gravar_casa(this: usize, posicao: i8, mas
         _ => 0,
     };
     if !(0..=10).contains(&posicao) || grupo == 0 {
-        *(0xb67a34 as *mut u32) = 0;
+        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return 0;
     }
     let casa = (this + 0x188b + 8 * posicao as usize) as *mut u64;
@@ -722,12 +722,12 @@ pub(crate) unsafe fn registro_da_partida_assistida(this: usize, humano: usize) -
     let h = if humano != 0 {
         humano
     } else {
-        *((0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize) as *const usize)
+        *((0xb74c26 + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize) as *const usize)
     };
     if h == 0 {
         return Ok(0);
     }
-    let i = (*(h as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+    let i = (*(h as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if i < 0 || i > (*((this + 4) as *const i32)).wrapping_sub(1) {
         return Err(());
     }

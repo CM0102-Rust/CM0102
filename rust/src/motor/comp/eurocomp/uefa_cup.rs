@@ -35,10 +35,10 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
         return -1;
     }
     *((this + 0xb2) as *mut u8) = 0;
-    let base = read_u32_as_usize(0xae23b4);
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut k: i16 = 0;
     let mut i: i16 = 0;
-    if (read_u32_as_usize(0xae235c) as i32) > 0 {
+    if (read_u32_as_usize(G_CLUB_COUNT) as i32) > 0 {
         loop {
             let c = base + i as u16 as usize * 0x245;
             if read_u32_as_usize(c + 0x1db) == read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) {
@@ -52,13 +52,13 @@ pub(crate) unsafe fn cqs9_inscritos(this: usize) -> i32 {
                 }
             }
             i = i.wrapping_add(1);
-            if i as i32 >= read_u32_as_usize(0xae235c) as i32 {
+            if i as i32 >= read_u32_as_usize(G_CLUB_COUNT) as i32 {
                 break;
             }
         }
     }
     if cqs9_conta(this, k) < 0x76 {
-        let lim = |_: ()| (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
+        let lim = |_: ()| (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
         let mut j: i16 = 0;
         if lim(()) > 0 {
             loop {
@@ -129,9 +129,9 @@ pub(crate) unsafe extern "thiscall" fn cqs9_uefa_inscritos(this: usize) -> i32 {
 pub(crate) unsafe extern "thiscall" fn comparar_cqs9_uefa_inscritos(this: usize) -> i32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> i32>(2086);
     let (a0, t0) = (read_u32_as_usize(this + 0xa7), read_u32_as_usize(this + 0x14));
-    let base = read_u32_as_usize(0xae23b4);
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut reg: Vec<(usize, usize)> = vec![(this + 0x36, 4), (this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)];
-    reg.extend((0..read_u32_as_usize(0xae235c)).map(|i| (base + i * 0x245 + 0x1db, 4)));
+    reg.extend((0..read_u32_as_usize(G_CLUB_COUNT)).map(|i| (base + i * 0x245 + 0x1db, 4)));
     let lo = core::cell::Cell::new((0usize, 0usize));
     let lr = core::cell::Cell::new((0usize, 0usize));
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {

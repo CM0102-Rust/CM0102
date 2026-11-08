@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqq7_play_off_da_serie_b(this: u
 
 /// A competição de id [`global`] (a tabela das competições [0xadadfc]).
 pub(crate) unsafe fn cqq8_comp(global: usize) -> usize {
-    read_usize(read_usize(0xadadfc) + 4 * read_usize(global))
+    read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(global))
 }
 
 /// A virtual `deslocamento` de `c`, thiscall sem argumentos.
@@ -247,7 +247,7 @@ pub(crate) unsafe fn cqq8_expectativas_e_arbitros(this: usize) -> u32 {
     let expectativas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(0xb74340), read_usize(this + 4)) // cqq8: os árbitros
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqq8: os árbitros
 }
 
 /// As viradas das outras catorze competições do Brasil, na ordem da original: a Série B, a Série C e os doze estaduais
@@ -395,8 +395,8 @@ pub(crate) unsafe fn cql7_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if cql7_da_divisao(clube, campo, g) {
             // ponytail: a original empurra a linha no eax com os bits de cima do id da competição; a 0x687430 só lê
             // o byte. Com girar = 0, (k + 0) % n = k.
@@ -448,8 +448,8 @@ pub(crate) unsafe extern "thiscall" fn cql7_tabela_da_serie_b(this: usize) -> u3
 pub(crate) unsafe fn cql7_plano(n: usize, campo: usize, g: usize) -> Vec<usize> {
     let mut plano = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && plano.len() < n {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && plano.len() < n {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         if cql7_da_divisao(clube, campo, g) {
             plano.push(clube);
         }
@@ -636,25 +636,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi7_regras_da_serie_b(this: usi
 /// 0x86bdd0 classificou-se (clube, comp, fase, rodada, peso; ret 0x14).
 pub(crate) unsafe fn cqj9_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
 pub(crate) unsafe fn cqj9_rebaixado(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
 pub(crate) unsafe fn cqj9_campeao(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
 }
 
 /// 0x869480 promovido (clube, liga, peso; ret 0xc).
 pub(crate) unsafe fn cqj9_promovido(clube: usize, comp: usize, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp, peso);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, peso);
 }
 
 /// 0x68ab70 `League::find_club_row(clube, 0)` (thiscall, ret 8): a linha do clube na tabela da liga.
@@ -813,7 +813,7 @@ pub(crate) unsafe fn cqj9_baiano(this: usize, clube: usize, situacao: u32, fase:
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_SCALE_BY_ROUND);
                     let peso = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, 2);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(0xdd7f00), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
+                    elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
                 }
                 let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {

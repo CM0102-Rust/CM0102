@@ -441,12 +441,12 @@ pub(crate) unsafe fn cqo13_convidados(this: usize) -> (i32, i32) {
     }
     let convidado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_CONMEBOLSEEDING_IS_MERCOSUR_INVITED_CLUB);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
-    let clubes = || (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
+    let clubes = || (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let mut k = 0i16;
     let mut i = 0i32;
     while i < clubes() {
-        let c = read_u32_as_usize(0xae23b4).wrapping_add((i as isize * 0x245) as usize);
-        if convidado(read_u32_as_usize(0xae1000), c) != 0 {
+        let c = read_u32_as_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
+        if convidado(read_u32_as_usize(G_CONMEBOL_SEEDING), c) != 0 {
             core::ptr::write_unaligned((read_u32_as_usize(this + 0xee) + k as usize * 4) as *mut u32, c as u32);
             k = k.wrapping_add(1);
         }

@@ -9,7 +9,7 @@ MUTACOES = [
     ('cpl_passada_conta', 'cpl3_por(this + 0x86a, n.wrapping_add(1)); // a conta das transferências passadas', 'cpl3_por(this + 0x86a, n); // mutacao: a conta nao sobe', 'cpl_3 transferencia passada'),
     ('cpl_permissao_marca', '*marca |= 0x20; // a marca da permissão', '*marca |= 0; // mutacao: sem a marca', 'cpl_3 permissao de trabalho'),
     ('cpl_premio_conta', 'cpl3_por(this + 0x894, n.wrapping_add(1)); // mais um prêmio', 'cpl3_por(this + 0x894, n); // mutacao: a conta nao sobe', 'cpl_3 premio por jogo'),
-    ('cpl_contrato_ligacao', 'cpl4_por(read_usize(0xae2d0c).wrapping_add(read_usize(pessoa).wrapping_mul(0x4f)), i as usize); // a pessoa aponta a vaga', '// mutacao: a pessoa nao aponta a vaga', 'cpl_4 contrato da pessoa'),
+    ('cpl_contrato_ligacao', 'cpl4_por(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(pessoa).wrapping_mul(0x4f)), i as usize); // a pessoa aponta a vaga', '// mutacao: a pessoa nao aponta a vaga', 'cpl_4 contrato da pessoa'),
     ('cpl_contrato_valor', 'gerar(c, pessoa, valor) // o valor da pessoa', 'gerar(c, pessoa, valor / 2) // mutacao: metade do valor', 'cpl_4 contrato da pessoa'),
     ('cpl_decisao_conta', 'cpl4_por(this + 0x14, n.wrapping_add(1)); // a data da decisão', 'cpl4_por(this + 0x14, n); // mutacao: a conta nao sobe', 'cpl_4 data de decisao'),
     ('cpl_proposta_fim', 'core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(fim as *const [u8; 8])); // o fim do contrato', 'core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(0xae2c90 as *const [u8; 8])); let _ = fim; // mutacao: vence hoje', 'cpl_5 contrato pelo atual'),

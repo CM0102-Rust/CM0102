@@ -18,7 +18,7 @@ MUTACOES = [
     ('cpg_suspensao_bits', '*m = (*m & !7) | (*((origem + 0x13) as *const u8) & 7); // as três marcas', '*m = (*m & !7) | (*((origem + 0x13) as *const u8) & 3); // mutacao: so duas marcas'),
     ('cpg_salario_minimo', '*((this + 0xc) as *mut i32) = if v < 0x37 { 0x37 } else { v }; // o mínimo de 55', '*((this + 0xc) as *mut i32) = if v < 0x38 { 0x38 } else { v }; // mutacao: minimo 56'),
     ('cpg_condicao_porcento', 'return ftol(c as f64 * *(0x96bac8 as *const f32) as f64) as u16; // em porcento', 'return (ftol(c as f64 * *(0x96bac8 as *const f32) as f64) - 1) as u16; // mutacao: um ponto a menos'),
-    ('cph_dias_fim', 'dias(this + 0x2d, read_u32(0xae2c90), read_u32(0xae2c94)) // a data do fim do contrato', 'dias(this + 0x25, read_u32(0xae2c90), read_u32(0xae2c94)) // mutacao: a data de inicio'),
+    ('cph_dias_fim', 'dias(this + 0x2d, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) // a data do fim do contrato', 'dias(this + 0x25, read_u32(0xae2c90), read_u32(0xae2c94)) // mutacao: a data de inicio'),
     ('cph_queixas_zero', 'core::ptr::write_unaligned((this + 0x45) as *mut u32, 0); // as queixas', '*((this + 0x45) as *mut u8) = 0; // mutacao: so o byte baixo'),
     ('cph_retirada_moral', '*((this + 0x44) as *mut u8) = read_u8(pessoa + 0x5b).wrapping_add(read_u8(pessoa + 0x59)).wrapping_add(5);', '*((this + 0x44) as *mut u8) = read_u8(pessoa + 0x5b).wrapping_add(read_u8(pessoa + 0x59)).wrapping_add(4); // mutacao'),
     ('cph_retirada_felicidade', '*((this + 0x3d) as *mut u8) = 15; // a felicidade mínima', '*((this + 0x3d) as *mut u8) = 14; // mutacao: 14'),

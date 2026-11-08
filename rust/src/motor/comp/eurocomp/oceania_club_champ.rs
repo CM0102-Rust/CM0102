@@ -334,12 +334,12 @@ pub(crate) unsafe fn cqt11_clubes(this: usize) -> u32 {
         aviso_em(0xa6a068, 0x307);
         return 0;
     }
-    let mut campeao = colocado(read_u32_as_usize(0xae23d0) + read_u32_as_usize(KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) * 0x6b, 0);
+    let mut campeao = colocado(read_u32_as_usize(G_CLUB_COMP_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) * 0x6b, 0);
     let (mut nz, mut aus, mut tai, mut fij, mut mel, mut pol) =
         (Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo());
     let mut i = 0i32;
-    let mut c = read_u32_as_usize(0xae23b4);
-    while i < (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2)) {
+    let mut c = read_u32_as_usize(G_CLUB_TABLE);
+    while i < (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
         let nacao = read_u32_as_usize(c + 0x53);
         if nacao != 0 && read_u32_as_usize(nacao + 0x71) != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_OCEANIA) {
             let id = read_u32_as_usize(nacao);

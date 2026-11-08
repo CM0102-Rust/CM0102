@@ -97,7 +97,7 @@ pub(crate) unsafe fn jogada_com(j: usize, forca: i16, altura: f32, estilo: i8, f
         _ => {
             // ponytail: a original mostra a caixa "Error" (versao, arquivo, linha 0x4755); +0x8ea9
             // fora de 0..4 nao acontece no jogo
-            *(0xb67a34 as *mut u32) = 0;
+            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             return 0;
         }
     };
@@ -371,7 +371,7 @@ pub(crate) unsafe fn jogadores_do_pos_jogo_com(partida: usize, t: usize, chamar:
         if d != 0.0 { core::ptr::read_unaligned((b + 0x10) as *const f64) / d } else { 6.8 }
     };
     let esp = especial(g(0xb74318), ler(partida + 0x14) as u32);
-    if *(0x9cc270 as *const u8) != 0 && g(0xae2a60) != 0 {
+    if *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 && g(0xae2a60) != 0 {
         registrar(g(0xae2a60), partida, t);
     }
     let comp = if ler(partida) > -1 { g(g(g(0xadadfc) + ler(partida) as usize * 4) + 8) } else { 0 };

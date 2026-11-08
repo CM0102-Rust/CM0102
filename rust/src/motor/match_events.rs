@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn gravar_eventos(e: usize, desc: *mut u32, 
         versao = 1;
         crate::comparacao::ramo("eventos arquivo novo");
         quantos = 0;
-        let r = *(0xb6b7c0 as *const usize) + 0x18;
+        let r = *(G_MATCH_STATS as *const usize) + 0x18;
         numero = *(r as *const i32) + 1;
         *(r as *mut i32) = numero;
         escrever(&versao as *const i32 as usize, 4, 1, f);
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "C" fn ler_eventos_cfg() {
     let quantos = |e: usize| core::ptr::read_unaligned((e + 0xc) as *const i16);
     let peso = |e: usize| (e + 0xe) as *mut i32;
 
-    if *(0xa1599c as *const i32) != idioma() {
+    if *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *const i32) != idioma() {
         limpar();
     }
     if *(FIM as *const u8) != 0 {
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "C" fn ler_eventos_cfg() {
         e += 0x12;
     }
     let lingua = idioma();
-    *(0xa1599c as *mut i32) = lingua;
+    *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *mut i32) = lingua;
     let nome = match lingua {
         2 => 0xa15cec,
         3 => 0xa15cdc,
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "stdcall" fn texto_do_evento(ev: usize, ctx: usize, com
                         let dois = t(pos + 2) == b'2';
                         let casa = b(6) != 0;
                         let id = if dois == casa { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                        let clube = (*(0xae23b4 as *const usize)).wrapping_add(id.wrapping_mul(0x245));
+                        let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(0x245));
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
                         let g = *((clube + 0x52) as *const u8) as u32;
@@ -644,7 +644,7 @@ pub(crate) unsafe extern "stdcall" fn texto_do_evento(ev: usize, ctx: usize, com
                     }
                     b'C' | b'c' | b'F' | b'f' => {
                         if comp >= 0 {
-                            let cp = (*(0xae23d0 as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b));
+                            let cp = (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
                             let r = if x as u8 == b'C' || x as u8 == b'c' {
@@ -674,7 +674,7 @@ pub(crate) unsafe extern "stdcall" fn texto_do_evento(ev: usize, ctx: usize, com
                                 formatar_texto(dest(out), fixo);
                             } else {
                                 let resto = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx + 4) as *const i32)) % 5) as i8;
-                                let ficha = (*(0xae23e8 as *const usize)).wrapping_add((arbitro as usize).wrapping_mul(0x2b));
+                                let ficha = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((arbitro as usize).wrapping_mul(0x2b));
                                 let modo = if idioma() == 4 && resto == 0 {
                                     1
                                 } else if resto == 0 {
@@ -804,7 +804,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
     if ev == 0 || ctx == 0 || painel as u16 == 0xffff {
         return 0;
     }
-    let eu = || *(0xb77c7a as *const i16) as isize;
+    let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let torcida = |n: usize| ((n as isize) + eu() + 0x20) as *mut u8;
     if *torcida(nar) != 0xff && tocando(SOM, *torcida(nar) as u32) == 0 {
         parar(SOM, *torcida(nar) as u32);
@@ -835,7 +835,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
         let lado = b(6);
         let mut clube_id = if lado != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
         let uniforme = *((ctx as isize + lado as i8 as isize * 1573 + 0x152) as *const u8) as u32;
-        cores_do_clube((*(0xae23b4 as *const usize)).wrapping_add(clube_id.wrapping_mul(0x245)), uniforme, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+        cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(clube_id.wrapping_mul(0x245)), uniforme, cor1.as_mut_ptr(), cor2.as_mut_ptr());
         let mut s = core::ptr::read_unaligned((sons() as isize + qual() * 0x110 + 0x108) as *const usize);
         let v = b(0xd) as i8;
         if v > 0 {
@@ -918,7 +918,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
         let mut arb = [0u8; 0xd0];
         let mut texto_fase = [0u8; 0x800];
         let cores_padrao = |c1: &mut [u8; 4], c2: &mut [u8; 4], segunda: usize| {
-            core::ptr::write_unaligned(c1.as_mut_ptr() as *mut u16, *(0xaebdea as *const u16));
+            core::ptr::write_unaligned(c1.as_mut_ptr() as *mut u16, *(G_GUI_COLOUR_BLACK as *const u16));
             core::ptr::write_unaligned(c2.as_mut_ptr() as *mut u16, *(segunda as *const u16));
         };
 
@@ -975,7 +975,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
                             let dois = t(pos + 2) == b'2';
                             let casa = b(6) != 0;
                             let id = if dois == casa { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                            let clube = (*(0xae23b4 as *const usize)).wrapping_add(id.wrapping_mul(0x245));
+                            let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(0x245));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
                             let g = *((clube + 0x52) as *const u8) as u32;
@@ -988,7 +988,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
                         }
                         b'C' | b'c' | b'F' | b'f' => {
                             if comp >= 0 {
-                                let cp = (*(0xae23d0 as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b));
+                                let cp = (*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((comp as usize).wrapping_mul(0x6b));
                                 prefixo(pos, &mut pre);
                                 sufixo(pos + 2, &mut suf);
                                 let r = if x == b'C' || x == b'c' {
@@ -1017,7 +1017,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
                             clube_id = if lado != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
                             let a = (lado == 0) as isize;
                             let uniforme = *((ctx as isize + a * 1573 + 0x152) as *const u8) as u32;
-                            cores_do_clube((*(0xae23b4 as *const usize)).wrapping_add(clube_id.wrapping_mul(0x245)), uniforme, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+                            cores_do_clube((*(G_CLUB_TABLE as *const usize)).wrapping_add(clube_id.wrapping_mul(0x245)), uniforme, cor1.as_mut_ptr(), cor2.as_mut_ptr());
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'Y' | b'y' => {
@@ -1039,7 +1039,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
                                         .wrapping_add(core::ptr::read_unaligned((ctx + 4) as *const i32))
                                         .wrapping_add(clube_id as i32);
                                     let resto = (soma % 5) as i8;
-                                    let ficha = (*(0xae23e8 as *const usize)).wrapping_add((arbitro as usize).wrapping_mul(0x2b));
+                                    let ficha = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((arbitro as usize).wrapping_mul(0x2b));
                                     let modo_nome = if idioma() == 4 && resto == 0 {
                                         1
                                     } else if resto == 0 {
@@ -1156,7 +1156,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
         let som = (sons() as isize + qual() * 0x110) as usize;
         if *((som + 4) as *const u8) != 0 {
             let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + 0x10) as usize };
-            *(0xb68780 as *mut usize) = canal;
+            *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *mut usize) = canal;
             if canal != 0 {
                 *(canal as *mut u8) = 0xfe;
                 let lado = match *((e + 5) as *const u8) {
@@ -1165,7 +1165,7 @@ pub(crate) unsafe extern "thiscall" fn narrar_no_painel(nar: usize, ev: usize, c
                     _ => 2,
                 };
                 let p = caminho(0x9c382c, som + 4);
-                tocar(SOM, *(0xb68780 as *const usize), lado, p, 0);
+                tocar(SOM, *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *const usize), lado, p, 0);
             }
         }
     }
@@ -1298,7 +1298,7 @@ pub(crate) unsafe extern "C" fn nome_do_jogador_na_narracao(pt: usize, jogador: 
     for k in 0..2 {
         let clube = *((pt + 4 * k) as *const u32) as usize;
         let mut l = [0usize; 100];
-        lista(*(0xae23b4 as *const usize) + clube * 0x245, l.as_mut_ptr(), 1);
+        lista(*(G_CLUB_TABLE as *const usize) + clube * 0x245, l.as_mut_ptr(), 1);
         for &q in l.iter() {
             if q == 0 {
                 continue;
@@ -1717,7 +1717,7 @@ pub(crate) unsafe fn sonda_do_comentario(m: usize, o: unsafe extern "thiscall" f
     // subtipo, registros de 0x17 bytes em ordem), uma notícia de hoje de cada subtipo que os
     // comentários consultam, para os dois clubes
     let c = *((m + 0x4792) as *const usize);
-    let hoje = *(0xae2c90 as *const [u8; 8]);
+    let hoje = *(G_CURRENT_DATE as *const [u8; 8]);
     let mut registros: Vec<[u8; 0x17]> = Vec::new();
     for o_clube in [0x1c, 0x20] {
         let clube = *((c + o_clube) as *const usize);
@@ -1739,12 +1739,12 @@ pub(crate) unsafe fn sonda_do_comentario(m: usize, o: unsafe extern "thiscall" f
     registros.sort_by_key(chave);
     registros.dedup_by_key(|r| chave(r));
     let falsa: [usize; 3] = [registros.as_ptr() as usize, 0, registros.len()];
-    let midia = *(0xb6b7c8 as *const usize);
+    let midia = *(G_MEDIA as *const usize);
     let minuto = core::ptr::read_unaligned((m + 0x8ed0) as *const i16);
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
         // 0: o estado real; 1: com as notícias; 2: com as notícias no minuto 31
         for cenario in 0..3 {
-            *(0xb6b7c8 as *mut usize) = if cenario == 0 { midia } else { falsa.as_ptr() as usize };
+            *(G_MEDIA as *mut usize) = if cenario == 0 { midia } else { falsa.as_ptr() as usize };
             core::ptr::write_unaligned((m + 0x8ed0) as *mut i16, if cenario == 2 { 31 * 11 } else { minuto });
             for lado in 0..2u32 {
                 let notas: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
@@ -1767,7 +1767,7 @@ pub(crate) unsafe fn sonda_do_comentario(m: usize, o: unsafe extern "thiscall" f
                 guardadas.escrever();
             }
         }
-        *(0xb6b7c8 as *mut usize) = midia;
+        *(G_MEDIA as *mut usize) = midia;
         core::ptr::write_unaligned((m + 0x8ed0) as *mut i16, minuto);
     }));
     estado.escrever();
@@ -1821,9 +1821,9 @@ pub(crate) unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torc
     b(3, 0);
     core::ptr::write_unaligned((t + 0x2dac) as *mut u32, 0);
     b(4, 0);
-    *(0xb68670 as *mut u16) = 1;
-    *(0xb68672 as *mut u16) = 0x2bc;
-    *(0xb68674 as *mut u8) = 0;
+    *(G_MATCH_EVENT_DEFAULT_VARIANT as *mut u16) = 1;
+    *(G_MATCH_EVENT_DEFAULT_VARIANT_LINE_DELAY as *mut u16) = 0x2bc;
+    *(G_MATCH_EVENT_DEFAULT_VARIANT_TEXT as *mut u8) = 0;
     *(0xb68778 as *mut u32) = 0xad9c64;
     *(0xb6877c as *mut u32) = 0xad9c64;
     let ler_eventos_cfg: unsafe extern "C" fn() = core::mem::transmute(FN_MATCH_EVENTS_READ_CONFIG);
@@ -1836,7 +1836,7 @@ pub(crate) unsafe extern "thiscall" fn construir_fila_da_narracao(t: usize, torc
     if torcida != 0 {
         let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
         let tocar: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) = core::mem::transmute(FN_SCREENMANAGER_PLAY_SOUND);
-        let lado = *(0xb77c7a as *const i16) as isize;
+        let lado = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let nome = caminho(0x9c382c, 0xa159a0);
         tocar(0xb74450, (t as isize + 0x20 + lado) as usize, 2, nome, 1);
     }
@@ -1872,8 +1872,8 @@ pub(crate) unsafe extern "C" fn liberar_tabelas_de_eventos() {
         }
         e += 0x12;
     }
-    *(0xb6b723 as *mut u8) = 0;
-    *(0xa1599c as *mut u32) = u32::MAX;
+    *(G_MATCH_EVENT_CONFIG_LOADED_FLAG as *mut u8) = 0;
+    *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *mut u32) = u32::MAX;
 }
 
 // ponytail: as tres enfileiram narracao, tocam som ou liberam memoria (nao rodam duas vezes): sem

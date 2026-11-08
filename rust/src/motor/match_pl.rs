@@ -2104,7 +2104,7 @@ pub(crate) unsafe fn responder_com(j: usize, forca: i16, tipo_in: i8, p4: f32, c
             _ => {
                 // ponytail: a original mostra a caixa "Error" (versao, arquivo, linha 0x17e2); tipo
                 // fora de 0..5 nao acontece no jogo
-                *(0xb67a34 as *mut u32) = 0;
+                *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
                 return 0;
             }
         }
@@ -4171,7 +4171,7 @@ pub(crate) unsafe fn narrar_a_acao_com(m: usize, p: usize, e: usize, codigo: i16
         }
         _ => {
             // a original mostra a caixa de erro ("unknown action") e zera 0xb67a34
-            *(0xb67a34 as *mut u32) = 0;
+            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         }
     }
 }
@@ -4381,8 +4381,8 @@ pub(crate) unsafe fn punir_no_movimento_com(m: usize, e: usize, p: usize, mut ti
         // o evento 0x82 (cartao 4/5 pelos motivos 5, 10, 11 e o historico do jogador)
         let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
         let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-        let v = ftol(media(u(0xb74350, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
-        let base = *(0xae2364 as *const i32);
+        let v = ftol(media(u(G_PLAYER_STATS, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
+        let base = *(G_STAFF_COUNT as *const i32);
         let lista = if m != 0 { u(m, 0x478e) } else { 0 };
         if lista != 0
             && (tipo == 5 || tipo == 4)
@@ -5878,8 +5878,8 @@ pub(crate) unsafe fn falta_no_passe_com(m: usize, e: usize, p: usize, mut tipo: 
     // o evento 0x82 (cartao 4/5 pelos motivos 5, 10, 11 e o historico do jogador)
     let media: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let v = ftol(media(u(0xb74350, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
-    let base = *(0xae2364 as *const i32);
+    let v = ftol(media(u(G_PLAYER_STATS, 0), u(e, 0x6d), 0xb, 2, 6.5)) as i8;
+    let base = *(G_STAFF_COUNT as *const i32);
     let lista = if m != 0 { u(m, 0x478e) } else { 0 };
     if lista != 0
         && (tipo == 5 || tipo == 4)
@@ -6710,14 +6710,14 @@ pub(crate) unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn Fn
     let fora = |c: usize| (ch.borrow_mut())(0x53b900, 0, [c as u32, 0, 0, 0, 0]) as i32;
     let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
     let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
-    let lista = || *(0xb67dc8 as *const usize);
-    let noticias = || *(0xb6b7c8 as *const usize);
+    let lista = || *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
+    let noticias = || *(G_MEDIA as *const usize);
     let ler = |p: usize| core::ptr::read_unaligned(p as *const i32);
-    let pessoa = |id: i32| (*(0xae23bc as *const usize) as isize + id as isize * 0x6e) as usize;
+    let pessoa = |id: i32| (*(G_STAFF_TABLE as *const usize) as isize + id as isize * 0x6e) as usize;
     let c45 = |c: usize| core::ptr::read_unaligned((c + 0x45) as *const u32);
     // a palavra +o da linha do clube em [[0xb67a44]] menos `menos`, entre 1 e 10000
     let ajustar = |clube: usize, o: usize, menos: i16| {
-        let linha = (**(0xb67a44 as *const *const usize) as isize + ler(clube) as isize * 0x49) as usize;
+        let linha = (**(G_MANAGER_MANAGER as *const *const usize) as isize + ler(clube) as isize * 0x49) as usize;
         let w = (linha + o) as *mut i16;
         let v = core::ptr::read_unaligned(w).wrapping_sub(menos);
         core::ptr::write_unaligned(w, v.clamp(1, 10000));
@@ -6733,7 +6733,7 @@ pub(crate) unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn Fn
             return;
         }
         k += 1;
-        let clube = (*(0xae23b4 as *const usize) as isize + ler(ev + 4) as isize * 0x245) as usize;
+        let clube = (*(G_CLUB_TABLE as *const usize) as isize + ler(ev + 4) as isize * 0x245) as usize;
         if (clube != *((partida + 0x1c) as *const usize) && clube != *((partida + 0x20) as *const usize)) || fora(clube) != 0 {
             continue;
         }
@@ -6749,7 +6749,7 @@ pub(crate) unsafe fn eventos_do_pos_jogo_com(partida: usize, chamar: &mut dyn Fn
             }
             _ => {
                 let p = pessoa(ler(ev));
-                let c = contrato(*(0xae1050 as *const usize), p, clube);
+                let c = contrato(*(G_CONTRACT_MANAGER as *const usize), p, clube);
                 if c == 0 {
                     continue;
                 }
@@ -8160,8 +8160,8 @@ pub(crate) unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     let rodada: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
     let do_grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
-    let objeto = || *((*(0xadadfc as *const usize)).wrapping_add((*(comp() as *const i32) as usize).wrapping_mul(4)) as *const usize);
-    let tecnico = |s: i32| (*(0xae23bc as *const usize)).wrapping_add(((g(0xae2364) - s - 1) as usize).wrapping_mul(110));
+    let objeto = || *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((*(comp() as *const i32) as usize).wrapping_mul(4)) as *const usize);
+    let tecnico = |s: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(((g(0xae2364) - s - 1) as usize).wrapping_mul(110));
     let u = |a: usize| *(a as *const usize);
     if id == g(KEY_CLUB_COMP_FRIENDLY) || id == g(KEY_CLUB_COMP_RESERVE) {
         let sel = |o: usize| e_selecao(u(p + o)) != 0 && *((u(u(p + o) + 0x53) + 0x11c) as *const u8) != 0;
@@ -8170,7 +8170,7 @@ pub(crate) unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
     if id == g(KEY_CLUB_COMP_B_INTERNATIONAL) || id == g(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
         return 0;
     }
-    if amistoso(u(0xae2c74), comp()) != 0 {
+    if amistoso(u(G_FRIENDLY), comp()) != 0 {
         for s in 0..16 {
             let t = tecnico(s);
             if byte(t, 0x5f) == 1 && u(t + 0x39) != 0 && na_competicao(objeto(), u(t + 0x39)) != 0 {
@@ -8183,7 +8183,7 @@ pub(crate) unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
         return 0;
     }
     if u(comp() + 0x5d) != 0 {
-        if u(0xb74434) != 0 && do_grupo(comp()) != 0 {
+        if u(G_RESERVE_COMP) != 0 && do_grupo(comp()) != 0 {
             return 0;
         }
         for s in 0..16 {
@@ -8218,7 +8218,7 @@ pub(crate) unsafe extern "C" fn partida_de_interesse(p: usize) -> u32 {
             None
         };
         if let Some(k) = k {
-            edi = (*(0xae23a4 as *const usize)).wrapping_add((k as usize).wrapping_mul(0xc6));
+            edi = (*(G_CONTINENT_TABLE as *const usize)).wrapping_add((k as usize).wrapping_mul(0xc6));
         }
         if edi == 0 && id != g(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
             return 1;
@@ -8511,7 +8511,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
     let motor = || *((this + 0x19e) as *const usize);
     let ta = || if motor() != 0 { tabela_a(motor(), this) } else { 0 };
     let tb = || if motor() != 0 { tabela_b(motor(), this) } else { 0 };
-    let n_pessoas = || *(0xae2364 as *const i32);
+    let n_pessoas = || *(G_STAFF_COUNT as *const i32);
     let clube_lado = || {
         let t = *((motor() + 0x4792) as *const usize);
         *((t + if byte(this, 0x27) != 0 { 0x20 } else { 0x1c }) as *const usize)
@@ -8523,7 +8523,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         let t = *((m + 0x4792) as *const usize);
         let l = byte(this, 0x27);
         let (c, fl) = if l != 0 { (*((t + 0x20) as *const usize), (byte(t, 0x41) == 0) as u32) } else { (*((t + 0x1c) as *const usize), (byte(t, 0x40) == 0) as u32) };
-        let k = vaga(*(0xde1d08 as *const usize), c, fl, 0) as i32;
+        let k = vaga(*(G_TACTICS as *const usize), c, fl, 0) as i32;
         (m as isize + 0x4796 + 0x1be * (k + 20 * l as i32) as isize) as usize
     };
     let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
@@ -8576,7 +8576,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
     }
     let l2c = if e_selecao(clube_lado()) == 0 {
         let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        contrato(*(0xae1050 as *const usize), pessoa(), clube_lado())
+        contrato(*(G_CONTRACT_MANAGER as *const usize), pessoa(), clube_lado())
     } else {
         0
     };
@@ -8619,7 +8619,7 @@ pub(crate) unsafe extern "thiscall" fn atualizar_atributos(this: usize) {
         }
     }
     let l30 = b(ficha(), 0x21) as f32;
-    let tabela79 = |id: i32| *((*(0xae2d0c as *const usize)).wrapping_add((id as usize).wrapping_mul(79)).wrapping_add(0xa) as *const u8) as i32;
+    let tabela79 = |id: i32| *((*(G_STAFF_STATE_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(79)).wrapping_add(0xa) as *const u8) as i32;
     let teto30 = |v: i32| if v as f64 > q(0x968dd8) { v as f64 } else { q(0x968dd8) };
     if p != 0 && *(p as *const i32) >= n_pessoas() {
         let v = w(ficha(), 5) as f64 + l18 as f64 * q(0x968f98) - l1c as f64;
@@ -9242,7 +9242,7 @@ pub(crate) unsafe extern "thiscall" fn nota_do_jogador(this: usize) -> i32 {
         forma = 4.0;
     }
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let r = contrato(*(0xae1050 as *const usize), pessoa, clube());
+    let r = contrato(*(G_CONTRACT_MANAGER as *const usize), pessoa, clube());
     let mut c = 0.0;
     if r != 0 {
         c = *((r + 0x44) as *const i8) as f64 * 0.013333333333333334 + 0.5;

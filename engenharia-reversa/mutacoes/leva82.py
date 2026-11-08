@@ -6,7 +6,7 @@ MUTACOES = [
     ('s_flag', "    if flag != 0 {\n        1\n    } else if e_segunda", "    if flag != 0 && !e_segunda {\n        1\n    } else if e_segunda"),
     ('m_110', "        .wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(110))", "        .wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(111))"),
     ('m_20', "        .wrapping_add((k as isize * 20) as usize)", "        .wrapping_add((k as u8 as isize * 20) as usize)"),
-    ('r_guarda', "                *(0x9b59b4 as *mut i32) = k;\n", ""),
+    ('r_guarda', "                *(G_EMPTY_COMMON_NAME_INDEX as *mut i32) = k;\n", ""),
     ('r_60', "                return base().wrapping_add(k as usize * 60);", "                return base().wrapping_add(k as usize * 61);"),
     ('r_sorteio', "            None => i = sortear(n),", "            None => i = sortear(n - 1),"),
 ]

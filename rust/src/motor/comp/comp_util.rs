@@ -10,10 +10,10 @@ pub(crate) unsafe extern "C" fn competicao_conta(id: i32) -> u32 {
     if id == g(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) || id == g(KEY_CLUB_COMP_FRENCH_CFA) || id == g(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
         return 1;
     }
-    if *((*(0xae23d0 as *const usize)).wrapping_add((id as usize).wrapping_mul(107)).wrapping_add(0x5d) as *const u32) == 0 {
+    if *((*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(107)).wrapping_add(0x5d) as *const u32) == 0 {
         return 0;
     }
-    let c = *((*(0xadadfc as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize);
+    let c = *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize);
     if c == 0 || byte(c, 0x43) != 2 || *((c + 0x3e) as *const u16) == 0 {
         return 0;
     }
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn e_amistoso(this: usize, comp: usize) -> u
     if comp == *((this + 4) as *const usize) {
         return 1;
     }
-    (*(comp as *const i32) >= (*(0xae2378 as *const i32)).wrapping_sub(0x7f)) as u32
+    (*(comp as *const i32) >= (*(G_CLUB_COMP_COUNT as *const i32)).wrapping_sub(0x7f)) as u32
 }
 
 /// { 0x4cf5a0 } (contract_manager.cpp): contrato da pessoa (registros de 80 bytes a partir de +0
@@ -90,10 +90,10 @@ pub(crate) unsafe extern "thiscall" fn contrato_de(this: usize, pessoa: usize) -
         return 0;
     }
     let id = *(pessoa as *const i32);
-    if id >= *(0xae2364 as *const i32) {
+    if id >= *(G_STAFF_COUNT as *const i32) {
         return 0;
     }
-    let tabela = *(0xae2d0c as *const usize);
+    let tabela = *(G_STAFF_STATE_TABLE as *const usize);
     let i = *((tabela as isize + 79 * id as isize) as *const i32);
     if i < 0 {
         return 0;
@@ -106,10 +106,10 @@ pub(crate) unsafe extern "thiscall" fn contrato_de(this: usize, pessoa: usize) -
 /// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
 pub(crate) unsafe extern "C" fn e_selecao(clube: usize) -> u32 {
     if clube == 0 {
-        *(0xb67a34 as *mut u32) = 0;
+        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return 0;
     }
-    let limite = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
+    let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
     (*(clube as *const i32) >= limite) as u32
 }
 
@@ -496,7 +496,7 @@ pub(crate) unsafe extern "C" fn tipo_de_confronto_na_liga(a: usize, b: usize) ->
     if menor(comp) != 0 {
         return 0;
     }
-    let liga = read_usize((*(0xadadfc as *const usize)).wrapping_add(4 * *(read_usize(a + 0x57) as *const u32) as usize));
+    let liga = read_usize((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add(4 * *(read_usize(a + 0x57) as *const u32) as usize));
     if liga == 0 || read_usize(liga + 8) == 0 {
         return 0;
     }
@@ -570,7 +570,7 @@ pub(crate) unsafe extern "C" fn forca_do_clube(clube: usize) -> i32 {
     if clube == 0 {
         return -10_000_000;
     }
-    let financas = *(0xae2a38 as *const usize);
+    let financas = *(G_FINANCE_TABLE as *const usize);
     let mut forca: i32 = 0;
     if financas == 0 {
         forca = core::ptr::read_unaligned((clube + 0x65) as *const i32) / 400;
@@ -632,15 +632,15 @@ pub(crate) unsafe extern "C" fn clube_colocado_mais_recente(comp: usize, lugar: 
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let buscar: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let comparar: unsafe extern "C" fn(*const u8, usize) -> i32 = core::mem::transmute(FN_DATABASE_COMPARE_COMP_HISTORY_ROWS);
-    qsort(*(0xae23d4 as *const usize), *(0xae237c as *const i32), 0x1a, 0x540780);
+    qsort(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), *(G_CLUB_COMP_HISTORY_COUNT as *const i32), 0x1a, 0x540780);
     let mut chave = [0u8; 0x1a];
     chave[4..8].copy_from_slice(&comp.to_le_bytes());
     chave[8..10].copy_from_slice(&0xffffu16.to_le_bytes()); // o ano: qualquer
-    let mut p = buscar(chave.as_ptr(), *(0xae23d4 as *const usize), *(0xae237c as *const i32), 0x1a, 0x540780);
+    let mut p = buscar(chave.as_ptr(), *(G_CLUB_COMP_HISTORY_TABLE as *const usize), *(G_CLUB_COMP_HISTORY_COUNT as *const i32), 0x1a, 0x540780);
     if p == 0 {
         return 0;
     }
-    let t = *(0xae23d4 as *const usize);
+    let t = *(G_CLUB_COMP_HISTORY_TABLE as *const usize);
     while p > t {
         p -= 0x1a;
         if comparar(chave.as_ptr(), p) != 0 {
@@ -656,8 +656,8 @@ pub(crate) unsafe extern "C" fn comparar_clube_colocado_mais_recente(comp: usize
     if lugar as u8 > 2 {
         return o(comp, lugar);
     }
-    let n = (*(0xae237c as *const i32)).max(0) as usize;
-    let reg = [(*(0xae23d4 as *const usize), 0x1a * n)];
+    let n = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).max(0) as usize;
+    let reg = [(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), 0x1a * n)];
     let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(comp, lugar), || clube_colocado_mais_recente(comp, lugar));
     PLACAR.registrar(igual && r == x, || format!("clube_colocado_mais_recente({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, lugar as u8, r, x, mo, mr));
     r
@@ -944,11 +944,11 @@ pub(crate) unsafe extern "C" fn acrescentar_ao_historico(liga: usize, a: u32, b:
         if crescer(0x14) == 0 {
             return 0;
         }
-        let n = *(0xae237c as *const i32);
-        r = (*(0xae23d4 as *const usize)).wrapping_add(26usize.wrapping_mul(n.wrapping_sub(20) as usize));
+        let n = *(G_CLUB_COMP_HISTORY_COUNT as *const i32);
+        r = (*(G_CLUB_COMP_HISTORY_TABLE as *const usize)).wrapping_add(26usize.wrapping_mul(n.wrapping_sub(20) as usize));
     }
     core::ptr::write_unaligned((r + 4) as *mut usize, read_usize(liga + 4));
-    core::ptr::write_unaligned((r + 8) as *mut u16, *(0xae2c92 as *const u16)); // o ano
+    core::ptr::write_unaligned((r + 8) as *mut u16, *(G_CURRENT_DATE_YEAR as *const u16)); // o ano
     for (k, v) in [a, b, c, d].into_iter().enumerate() {
         core::ptr::write_unaligned((r + 0xa + 4 * k) as *mut u32, v);
     }

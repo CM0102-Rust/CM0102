@@ -7,7 +7,7 @@ use super::*;
 
 /// O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
 pub(crate) unsafe fn cqi11_comp(id: usize) -> usize {
-    read_u32_as_usize(0xae23d0).wrapping_add(id.wrapping_mul(0x6b))
+    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
 }
 
 /// As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
@@ -26,9 +26,9 @@ pub(crate) unsafe fn cqi11_listas() -> Cqi11Listas {
     // o comparador manda esse caso para a original sozinha)
     let mut l = Cqi11Listas { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
     let (mut a, mut b, mut c, mut m) = (0u8, 0u8, 0u8, 0i8);
-    let mut clube = read_u32_as_usize(0xae23b4);
+    let mut clube = read_u32_as_usize(G_CLUB_TABLE);
     let mut i = 0i32;
-    while i < read_u32_as_usize(0xae235c) as i32 {
+    while i < read_u32_as_usize(G_CLUB_COUNT) as i32 {
         if selecao(clube) != 0 {
             break;
         }
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize)
     let ordenar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
-    let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
+    let outro = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     let mut l = cqi11_listas();
     ordenar(l.mex.as_mut_ptr() as usize, l.n[0], 2);
     ordenar(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
@@ -127,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn cqi11_concacaf_classificados(this: usize)
 pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1688);
     let l = cqi11_listas();
-    let outro = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
+    let outro = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (outro == 0 && l.n[3] < 2) || read_u32_as_usize(this + 0xa7) == 0 {
         return o(this); // ponytail: lista curta (a original lê sobra de pilha) ou sem tabela: só a original
     }
@@ -135,9 +135,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi11_concacaf_classificados(thi
     regioes.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
     // a 0x4afd80 reordena o histórico de competições ([0xae23d4], [0xae237c] linhas de 0x1a bytes) a cada chamada; com
     // empate, a ordem que a original deixou muda o campeão que a cópia acharia: o histórico entra nas regiões
-    let historico = read_u32_as_usize(0xae23d4);
+    let historico = read_u32_as_usize(G_CLUB_COMP_HISTORY_TABLE);
     if historico != 0 {
-        regioes.push((historico, read_u32_as_usize(0xae237c).wrapping_mul(0x1a)));
+        regioes.push((historico, read_u32_as_usize(G_CLUB_COMP_HISTORY_COUNT).wrapping_mul(0x1a)));
     }
     let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this), || crate::aleatorio::sem_contar(|| cqi11_concacaf_classificados(this)));
     PLACAR.registrar(igual && r == rr, || format!("cqi11_concacaf_classificados({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));

@@ -100,12 +100,12 @@ pub(crate) unsafe extern "thiscall" fn mundial_sortear_grupos(this: usize) -> us
     }
     crate::comparacao::ramo("cqf_4 sorteio de 2002");
     for (i, &chave) in CQF4_SORTEIO_2002.iter().enumerate() { // cqf4: as nações do sorteio real
-        let nacao = read_u32_as_usize(0xae23a8).wrapping_add((read_u32_as_usize(chave) as i32).wrapping_mul(0x122) as usize);
+        let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add((read_u32_as_usize(chave) as i32).wrapping_mul(0x122) as usize);
         write_u32_from_usize(lista + i * 5, read_u32_as_usize(principal(nacao)));
     }
     for i in 0..32usize {
         let e = lista + i * 5;
-        let clube = read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(e).wrapping_mul(0x245));
+        let clube = read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(e).wrapping_mul(0x245));
         write_u32_from_usize(read_u32_as_usize(this + 0x14) + i * 6, clube);
         write_u8(read_u32_as_usize(this + 0x14) + i * 6 + 4, 6);
         write_u8(e + 4, (i / 4) as u8 + 1);
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn mundial_sorteio_dos_grupos(this: usize) {
     soltar(lista);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
     previstas(this);
-    let orgao = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(0xae28f0)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
+    let orgao = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
     cartoes(orgao, 0);
 }
 
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_mundial_dia(this: usize, hoje: u
 
 /// O clube da entrada `i` da lista do sorteio (5 bytes: +0 o id): 0xae23b4 + id × 0x245.
 pub(crate) unsafe fn cqf5_clube(lista: usize, i: usize) -> usize {
-    read_u32_as_usize(0xae23b4).wrapping_add(read_u32_as_usize(lista + i * 5).wrapping_mul(0x245))
+    read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(lista + i * 5).wrapping_mul(0x245))
 }
 
 /// the World Cup itself becomes group 1: four teams, the allocated table, the group 1 teams of the list in the rows and
@@ -466,7 +466,7 @@ pub(crate) unsafe extern "thiscall" fn mundial_posicoes_previstas(this: usize) {
     let mut i = 0i16;
     while i < read_i16(this + 0x36) {
         crate::comparacao::ramo("cqf_5 competição da nação");
-        competicao(read_u32_as_usize(0xb74318), read_u32_as_usize(read_u32_as_usize(v + i as usize * 4) + 0x53), read_u32_as_usize(this + 4));
+        competicao(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(read_u32_as_usize(v + i as usize * 4) + 0x53), read_u32_as_usize(this + 4));
         i += 1; // cqf5: a próxima nação
     }
     soltar(v);
@@ -665,12 +665,12 @@ pub(crate) unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
         aviso_em(0xad5888, 0x59e);
         let mut k = 0i32;
         let mut desloc = 0usize;
-        if read_u32_as_usize(0xae2350) as i32 > 0 {
+        if read_u32_as_usize(G_NATION_COUNT) as i32 > 0 {
             while read_i16(this + 0x36) < 0x20 {
                 let mut j = 0i16;
                 let mut ja = false;
                 while j < read_i16(this + 0x36) {
-                    let c = principal(read_u32_as_usize(0xae23a8).wrapping_add(desloc));
+                    let c = principal(read_u32_as_usize(G_NATION_TABLE).wrapping_add(desloc));
                     if read_u32_as_usize(read_u32_as_usize(this + 0x14) + j as usize * 6) == c {
                         ja = true;
                         break;
@@ -678,13 +678,13 @@ pub(crate) unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
                     j += 1;
                 }
                 if !ja {
-                    let c = principal(read_u32_as_usize(0xae23a8).wrapping_add(desloc));
+                    let c = principal(read_u32_as_usize(G_NATION_TABLE).wrapping_add(desloc));
                     write_u32_from_usize(read_u32_as_usize(this + 0x14) + read_i16(this + 0x36) as usize * 6, c);
                     write_u16(this + 0x36, (read_i16(this + 0x36) as u16).wrapping_add(1));
                 }
                 k += 1;
                 desloc += 0x122;
-                if k >= read_u32_as_usize(0xae2350) as i32 {
+                if k >= read_u32_as_usize(G_NATION_COUNT) as i32 {
                     break;
                 }
             }
@@ -694,10 +694,10 @@ pub(crate) unsafe extern "thiscall" fn mundial_cabecas_de_chave(this: usize) {
     // ponytail: as duas saídas começam em −1 (sem sede); a original as deixa com o resto da pilha quando a 0x5fa730 não
     // acha a Copa (ela só as grava achando)
     let (mut a, mut b) = (-1i32, -1i32);
-    sedes(read_u32_as_usize(0xb5e134), read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), read_i16(this + 0x40) as u16 as u32, &mut a, &mut b, 1);
-    let sede1 = if a != -1 { principal(read_u32_as_usize(0xae23a8).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
-    let sede2 = if b != -1 { principal(read_u32_as_usize(0xae23a8).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
-    let detentor = campeao(read_u32_as_usize(0xae23d0).wrapping_add((read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);
+    sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), read_i16(this + 0x40) as u16 as u32, &mut a, &mut b, 1);
+    let sede1 = if a != -1 { principal(read_u32_as_usize(G_NATION_TABLE).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
+    let sede2 = if b != -1 { principal(read_u32_as_usize(G_NATION_TABLE).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
+    let detentor = campeao(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add((read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);
     let mut fixos = 0i8;
     for i in 0..32usize {
         for (vaga, alvo) in [(0usize, detentor), (1, sede1), (2, sede2)] {

@@ -62,20 +62,30 @@ def gravar():
 def tipos():
     r = subprocess.run(['cargo', 'build', '--release', '--message-format=short'], cwd=os.path.join(R, 'rust'),
                        capture_output=True, text=True, encoding='utf-8', errors='replace')
-    erros = re.findall(r'^(src[^:]+):(\d+):(\d+): error\[E0308\]: mismatched types', r.stderr, re.M)
+    # E0308: "expected `u32`, found `usize`" na constante; E0277: "cannot add `isize` to `usize`" (a constante à
+    # esquerda de uma soma com outro tipo): em ambos a constante leva `as <tipo pedido>`
+    erros = [(f, l, c, t) for f, l, c, t in re.findall(
+        r'^(src[^:]+):(\d+):(\d+): error\[E0308\]: mismatched types: expected `(\w+)`, found `usize`', r.stderr, re.M)]
+    erros += [(f, l, c, t) for f, l, c, t in re.findall(
+        r'^(src[^:]+):(\d+):(\d+): error\[E0277\]: cannot (?:add|subtract|multiply) `(\w+)` (?:to|from|by) `usize`', r.stderr, re.M)]
     feitos = 0
     por_arq = {}
-    for f, l, c in erros:
-        por_arq.setdefault(os.path.join(os.path.join(R, 'rust'), f), set()).add((int(l), int(c)))
+    for f, l, c, t in erros:
+        por_arq.setdefault(os.path.join(os.path.join(R, 'rust'), f), set()).add((int(l), int(c), t))
     for f, pos in por_arq.items():
         ls = open(f, encoding='utf-8').read().split('\n')
-        for l, c in sorted(pos, reverse=True):
+        for l, c, t in sorted(pos, reverse=True):
             linha = ls[l - 1]
-            m = re.match(r'KEY_\w+', linha[c - 1:])
-            if not m:
-                continue
-            # o tipo esperado vem da mensagem; sem ela, u32 (o caso comum nas tabelas)
-            ls[l - 1] = linha[:c - 1 + m.end()] + ' as u32' + linha[c - 1 + m.end():]
+            # a constante na coluna do erro, ou a última antes dela na mesma linha (o operando esquerdo da soma)
+            m = re.match(r'(?:KEY|G)_\w+', linha[c - 1:])
+            if m:
+                ini, fim = c - 1, c - 1 + m.end()
+            else:
+                antes = list(re.finditer(r'\b(?:KEY|G)_\w+\b(?! as )', linha[:c + 40]))
+                if not antes:
+                    continue
+                ini, fim = antes[-1].start(), antes[-1].end()
+            ls[l - 1] = linha[:ini] + '(%s as %s)' % (linha[ini:fim], t) + linha[fim:] if t != 'u32' else linha[:fim] + ' as u32' + linha[fim:]
             feitos += 1
         open(f, 'w', encoding='utf-8').write('\n'.join(ls))
     print('%d erros de tipo, %d corrigidos' % (len(erros), feitos))

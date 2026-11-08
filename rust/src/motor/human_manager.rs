@@ -9,7 +9,7 @@ use super::*;
 /// conjunto de selecoes (0x5409b0), repete com a selecao principal da nacao dele (0x53b3d0),
 /// ja sem `qualquer`. Clube nulo: a original (caixa de erro, zera 0xb67a34, 0).
 pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qualquer: u8, pessoa: usize, forcar: u32) -> u32 {
-    let h = *(0xb63c98 as *const usize);
+    let h = *(G_HUMAN_MANAGER as *const usize);
     let (mut clube, mut qualquer, mut pessoa) = (clube, qualquer, pessoa);
     let t9ace: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_COMPUTER_CONTROLLED);
     let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_CONTROLS_ALL_NATIONAL_TEAMS);
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qual
             pessoa = *((clube + 0xcf) as *const usize);
         }
         let tecnico = *((clube + 0xcf) as *const usize);
-        if tecnico != 0 && pessoa == tecnico && *(pessoa as *const i32) >= (*(0xae2364 as *const i32)).wrapping_sub(16) {
+        if tecnico != 0 && pessoa == tecnico && *(pessoa as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {
             let tatica = sem_tatica == 0
                 && (t9ace(h, pessoa) != 0 || matches!(tecnico_humano(h, pessoa), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
             if !tatica {
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "C" fn clube_humano(clube: usize, sem_tatica: u32, qual
 /// A pessoa (ou, sem ela, o tecnico humano atual) e o registro dela; `None` nos casos de erro do
 /// original (caixa de mensagem), que ficam com ele.
 pub(crate) unsafe fn pessoa_e_registro(this: usize, pessoa: usize) -> Option<(usize, usize)> {
-    let p = if pessoa != 0 { pessoa } else { *((0xb74c26 + 768 * *(0xb77c7a as *const i16) as isize) as *const usize) };
+    let p = if pessoa != 0 { pessoa } else { *((0xb74c26 + 768 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize) as *const usize) };
     if p == 0 {
         return None;
     }
@@ -99,13 +99,13 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a06(this: usize, pessoa: usize, 
 pub(crate) unsafe fn tecnico_humano(this: usize, pessoa: usize) -> Result<usize, bool> {
     let mut pessoa = pessoa;
     if pessoa == 0 {
-        let atual = *(0xb77c7a as *const i16) as isize;
+        let atual = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         pessoa = *((0xb74c26 + 768 * atual) as *const usize);
         if pessoa == 0 {
             return Err(true);
         }
     }
-    let i = (*(pessoa as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(16);
+    let i = (*(pessoa as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(16);
     if i < 0 || i > (*((this + 4) as *const i32)).wrapping_sub(1) {
         return Err(false);
     }
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a01(this: usize, pessoa: usize) 
         Ok(r) => *((r + 0x9a01) as *const u32),
         Err(sem_pessoa) => {
             if sem_pessoa {
-                *(0xb67a34 as *mut u32) = 0;
+                *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             }
             0
         }
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn tecnico_9a05(this: usize, pessoa: usize) 
     match tecnico_humano(this, pessoa) {
         Ok(r) => (*((r + 0x9a05) as *const u8) != 0) as u32,
         Err(_) => {
-            *(0xb67a34 as *mut u32) = 0;
+            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             0
         }
     }
@@ -159,7 +159,7 @@ pub(crate) unsafe extern "C" fn separar_mascara(m: u32, setor: *mut u16, lado: *
     match [1u16, 2, 4, 8, 0x10, 0x20, 0x40].iter().find(|&&b| m & b as u32 != 0) {
         Some(&b) => *setor = b,
         None => {
-            *(0xb67a34 as *mut u32) = 0;
+            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             return 0;
         }
     }
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "C" fn separar_mascara(m: u32, setor: *mut u16, lado: *
     } else if m & 0x800 != 0 {
         0x800
     } else {
-        *(0xb67a34 as *mut u32) = 0;
+        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return 0;
     };
     *lado = v;
@@ -195,7 +195,7 @@ pub(crate) unsafe fn cpx8_tecnico(tecnico: usize) -> usize {
     if tecnico != 0 {
         return tecnico;
     }
-    read_usize((read_i16(0xb77c7a) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize)
+    read_usize((read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize)
 }
 
 /// O índice do registro do técnico humano no gerenciador `this` (id − [0xae2364] + 16), se estiver entre 0 e a conta
@@ -307,7 +307,7 @@ pub(crate) unsafe fn cpj5_assistida(this: usize, i: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn limpar_partidas_assistidas(this: usize) -> u32 {
     let pode_ver: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_CAN_WATCH_FIXTURE);
     for i in 0..0x10usize {
-        let p = read_usize(0xae23bc).wrapping_add(read_usize(0xae2364).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
+        let p = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(0x6e));
         if *((p + 0x5f) as *const u8) == 0 {
             continue;
         }
@@ -326,7 +326,7 @@ pub(crate) unsafe fn cpj5_alvos(this: usize, id: u32) -> Vec<usize> {
     while k < read_usize(this + 0x64) as i32 {
         let e = read_usize(this + 0x5c).wrapping_add(k as usize * 0x11);
         if read_usize(e) as u32 == id { // o pedido do clube
-            v.push(read_usize(0xae23bc).wrapping_add(read_usize(e + 4).wrapping_mul(0x6e)));
+            v.push(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(e + 4).wrapping_mul(0x6e)));
         }
         k += 1;
     }
@@ -360,8 +360,8 @@ pub(crate) unsafe extern "thiscall" fn humano_assiste_a_partida(this: usize, par
     }
     let assiste: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_WATCHING_FIXTURE);
     for k in 0..16i32 {
-        let i = k.wrapping_add(*(0xae2364 as *const i32)).wrapping_sub(0x10);
-        let h = (*(0xae23bc as *const usize)).wrapping_add((i as isize * 110) as usize);
+        let i = k.wrapping_add(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10);
+        let h = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as isize * 110) as usize);
         if *((h + 0x5f) as *const u8) != 0 && assiste(this, partida, h) != 0 {
             return 1;
         }
@@ -375,12 +375,12 @@ pub(crate) unsafe fn indice_do_humano_do_apelido(this: usize, humano: usize) -> 
     let h = if humano != 0 {
         humano
     } else {
-        *((0xb74c26 + 0x300 * *(0xb77c7a as *const i16) as isize) as *const usize)
+        *((0xb74c26 + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize) as *const usize)
     };
     if h == 0 {
         return None;
     }
-    let i = (*(h as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+    let i = (*(h as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if i < 0 || i > (*((this + 4) as *const i32)).wrapping_sub(1) {
         return Some(None);
     }
@@ -443,11 +443,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_humano_deu_apelido(this: usize, 
 /// vez, [0xb74c26 + 0x300 × vaga]). Os humanos são as 16 últimas pessoas: índice = id − ([0xae2364] − 16),
 /// válido de 0 a [gerente+4] − 1. `None` quando a original dá a caixa de erro.
 pub(crate) unsafe fn registro_do_tecnico_humano(gerente: usize, pessoa: usize) -> Option<usize> {
-    let pessoa = if pessoa != 0 { pessoa } else { *((0xb74c26 + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize) };
+    let pessoa = if pessoa != 0 { pessoa } else { *((0xb74c26 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 0x300) as *const usize) };
     if pessoa == 0 {
         return None;
     }
-    let d = (*(pessoa as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+    let d = (*(pessoa as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if d < 0 || d > *((gerente + 4) as *const i32) - 1 {
         return None;
     }
@@ -587,7 +587,7 @@ pub(crate) unsafe extern "thiscall" fn pode_ver_a_partida(this: usize, partida: 
     }
     let mut humano = humano;
     if humano == 0 {
-        humano = read_usize(0xb74c26usize.wrapping_add((read_i16(0xb77c7a) as isize as usize).wrapping_mul(0x300)));
+        humano = read_usize(G_SCREEN_RECORDS_MANAGER.wrapping_add((read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize).wrapping_mul(0x300)));
         if humano == 0 {
             return 0;
         }
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn pode_ver_a_partida(this: usize, partida: 
     let lista_de: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut grupo = 0u8;
-    while (grupo as i8) < read_u8(0xb64738) as i8 {
+    while (grupo as i8) < read_u8(G_KEY_NATION_ACTIVE_COUNT) as i8 {
         let mut d = [0u8; 8];
         let data = data_nova(d.as_mut_ptr() as usize, read_i16(partida + 0x2a) as u16 as u32, read_i16(partida + 0x28) as u16 as u32);
         // ponytail: a original empurra o grupo como palavra inteira (os bytes de cima são sobra de pilha); a 0x5ae6a0
@@ -726,19 +726,19 @@ pub(crate) unsafe extern "C" fn humano_manda_no_clube(clube: usize, qualquer: u3
         if c == 0 {
             return orig::<unsafe extern "C" fn(usize, u32, i8) -> u32>(371)(0, qualquer, forcar);
         }
-        let vez = *(0xb77c7a as *const i16) as isize;
+        let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         let humano = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const usize);
         let tecnico = core::ptr::read_unaligned((c + 0xcf) as *const usize);
         'proximo: {
             if tecnico == 0 || humano != tecnico {
                 break 'proximo;
             }
-            let humanos = *(0xb63c98 as *const usize);
+            let humanos = *(G_HUMAN_MANAGER as *const usize);
             if qualquer == 0 {
                 if tecnico_9ace(humanos, humano) != 0 {
                     break 'proximo;
                 }
-                let i = (*(humano as *const i32)).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+                let i = (*(humano as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
                 if i >= 0
                     && i <= (*((humanos + 4) as *const i32)).wrapping_sub(1)
                     && core::ptr::read_unaligned((*(humanos as *const usize) + i as usize * 0xa6ef + 0x9a01) as *const u32) != 0
@@ -775,13 +775,13 @@ pub(crate) unsafe extern "C" fn comparar_humano_manda_no_clube(clube: usize, qua
 pub(crate) unsafe extern "thiscall" fn gravar_dado_do_humano(t: usize, valor: u32, tecnico: *const i32) -> u32 {
     let mut p = tecnico;
     if p.is_null() {
-        let vez = *(0xb77c7a as *const i16) as isize;
+        let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
     }
     if p.is_null() {
         return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(369)(t, valor, tecnico);
     }
-    let i = (*p).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+    let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
     if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) {
         return orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(369)(t, valor, tecnico);
     }
@@ -794,13 +794,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_do_humano(t: usize, 
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(369);
     let mut p = tecnico;
     if p.is_null() {
-        let vez = *(0xb77c7a as *const i16) as isize;
+        let vez = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
         p = core::ptr::read_unaligned((0xb74c26 + vez * 0x300) as usize as *const *const i32);
     }
     let reg = if p.is_null() {
         vec![]
     } else {
-        let i = (*p).wrapping_sub(*(0xae2364 as *const i32)).wrapping_add(0x10);
+        let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
         if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) { vec![] } else { vec![(*(t as *const usize) + i as usize * 0xa6ef + 0x9a65, 4)] }
     };
     let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(t, valor, tecnico), || gravar_dado_do_humano(t, valor, tecnico));
@@ -821,13 +821,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_gravar_dado_do_humano(t: usize, 
 pub(crate) unsafe extern "thiscall" fn ferias_do_humano(this: usize, ferias: u32, tecnico: usize) {
     let mut t = tecnico;
     if t == 0 {
-        t = read_usize(0xb74c26 + 0x300 * (*(0xb77c7a as *const i16) as isize as usize));
+        t = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
         if t == 0 {
             aviso_em(0x9cf11c, 0x41c);
             return;
         }
     }
-    let i = (read_usize(t) as i32).wrapping_sub(read_usize(0xae2364) as i32).wrapping_add(0x10);
+    let i = (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10);
     if i < 0 || i > (read_usize(this + 4) as i32).wrapping_sub(1) {
         aviso_em(0x9cf11c, 0x428);
         return;
@@ -847,13 +847,13 @@ pub(crate) unsafe extern "thiscall" fn ferias_do_humano(this: usize, ferias: u32
     if ferias != 0 {
         let responder: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_AUTO_RESPOND_ALL);
         if read_usize(t + 0x39) != 0 {
-            responder(read_usize(0xb7431c), t, read_usize(t + 0x39));
+            responder(read_usize(G_NEWS), t, read_usize(t + 0x39));
         }
         if read_usize(t + 0x24) != 0 {
-            responder(read_usize(0xb7431c), t, read_usize(t + 0x24));
+            responder(read_usize(G_NEWS), t, read_usize(t + 0x24));
         }
     }
-    let dia = read_usize(0xb67a50);
+    let dia = read_usize(G_MATCH_DAY);
     if dia != 0 {
         let interesse: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_MATCH_DAY_REFRESH_HUMAN_INTEREST_FLAGS);
         interesse(dia);
@@ -862,8 +862,8 @@ pub(crate) unsafe extern "thiscall" fn ferias_do_humano(this: usize, ferias: u32
 
 pub(crate) unsafe extern "thiscall" fn comparar_ferias_do_humano(this: usize, ferias: u32, tecnico: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, u32, usize)>(1378);
-    let t = if tecnico != 0 { tecnico } else { read_usize(0xb74c26 + 0x300 * (*(0xb77c7a as *const i16) as isize as usize)) };
-    let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(0xae2364) as i32).wrapping_add(0x10) };
+    let t = if tecnico != 0 { tecnico } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)) };
+    let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10) };
     if i < 0 || i > (read_usize(this + 4) as i32).wrapping_sub(1) {
         return o(this, ferias, tecnico); // a caixa: só a original
     }

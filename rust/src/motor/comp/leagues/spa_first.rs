@@ -432,7 +432,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_primera(this: usize) -
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
 pub(crate) unsafe fn cqk5_registro(g: usize) -> usize {
-    read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// La Primera has 20 clubs; first, the clubs of the Spanish lower division move to the generic lower division; prize
@@ -457,8 +457,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
     }
     // a divisão de baixo espanhola vira a genérica
     let mut i: i16 = 0;
-    let mut campo = read_usize(0xae23b4) + 0x57;
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut campo = read_usize(G_CLUB_TABLE) + 0x57;
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(campo);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
             core::ptr::write_unaligned(campo as *mut usize, cqk5_registro(KEY_CLUB_COMP_A_LOWER_DIVISION));
@@ -469,8 +469,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
             let linha = k; // cqk5: a linha k recebe o k-ésimo clube da Primera
@@ -505,8 +505,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_primera(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_primera(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1765);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
-    for i in 0..(read_usize(0xae235c) as i32).max(0) as usize {
-        let clube = read_usize(0xae23b4) + i * 0x245;
+    for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
+        let clube = read_usize(G_CLUB_TABLE) + i * 0x245;
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
             baixo.push(clube);
@@ -533,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_primera(this: usize) -
 
 /// O registro de staff ([0xdd7f00]).
 pub(crate) unsafe fn cqk5_registros() -> usize {
-    read_usize(0xdd7f00)
+    read_usize(G_STAFF_RECORDS)
 }
 
 /// Serie C2/A records: in the table, the title, promotion (weight 100), the play-off place (weight 40) and relegation;

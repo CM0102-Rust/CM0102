@@ -108,7 +108,7 @@ pub(crate) unsafe fn caixa_fatal_das_chaves_dbw(linha: u32, marca: u32) -> ! {
     // a original não desempilha os argumentos da 0x90d130: são o resto do "v%s %s.%s %d"
     formatar(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), linha);
     caixa(0x9870e0, 0xae24d0, 0);
-    *(0xb67a34 as *mut u32) = 0;
+    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
     antes_de_sair1();
     antes_de_sair2();
     sair(marca)

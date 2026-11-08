@@ -1,7 +1,7 @@
 # Mutações da 283a leva (itens cqs_4, cqs_5, cqs_6, cqs_7, cqs_10, cqs_11, cqs_12, cqt_1, cqt_2, cqt_3, cqt_4, cqt_10, cqt_11). Uso: python mutacoes.py mutacoes\leva283.py --carreira 2002-06-01
 MUTACOES = [
     ('cqs4_final_trocada', '    lista[0] = cqs4_primeiro(this, 8); // cqs4: o campeão do grupo A\n    lista[1] = cqs4_primeiro(this, 9);\n', '    lista[0] = cqs4_primeiro(this, 9); // mutacao: o campeao do grupo B primeiro\n    lista[1] = cqs4_primeiro(this, 8);\n', 'cqs_4 final'),
-    ('cqs4_virada_sem_arbitros', 'renovar(read_usize(0xb74340), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C', 'let _ = renovar; // mutacao: sem a renovacao dos arbitros', 'cqs_4 virada da serie c'),
+    ('cqs4_virada_sem_arbitros', 'renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)); // cqs4: a renovação dos árbitros da Série C', 'let _ = renovar; // mutacao: sem a renovacao dos arbitros', 'cqs_4 virada da serie c'),
     ('cqs4_previstas_sem_ordenar', 'ordenar(read_usize(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação', 'let _ = ordenar; // mutacao: sem ordenar pela reputacao', 'cqs_4 posicoes previstas'),
     ('cqs5_rebaixado_nao_entra', 'cqs5_por(this, &mut k, c); // cqs5: o rebaixado entra', '// mutacao: o rebaixado nao entra', 'cqs_5 rebaixado para a conference'),
     ('cqs5_chaves_sem_latitude', 'ordenar(read_u32_as_usize(this + 0xb2), read_u32_as_usize(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude', '// mutacao: sem a latitude', 'cqs_5 chaves do trofeu da liga'),

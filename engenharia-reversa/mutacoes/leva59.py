@@ -1,7 +1,7 @@
 # Mutacoes da leva59 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva59.py
 MUTACOES = [
-    ('d_neg', "    if i > -1 {\n        (*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)", "    if i > 0 {\n        (*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)"),
-    ('d_110', "(*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)", "(*(0xae23bc as *const usize)).wrapping_add(100 * i as usize)"),
+    ('d_neg', "    if i > -1 {\n        (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)", "    if i > 0 {\n        (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)"),
+    ('d_110', "(*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)", "(*(G_STAFF_TABLE as *const usize)).wrapping_add(100 * i as usize)"),
     ('d_4', "    if marca(formacao, byte(this, 0x19)) & 4 == 0 {\n        return 0;", "    if marca(formacao, byte(this, 0x19)) & 1 == 0 {\n        return 0;"),
     ('d_ativo', ".find(|&q| byte(q, 0x19) >= 0 && *((q + 0x69) as *const usize) == ficha)", ".find(|&q| *((q + 0x69) as *const usize) == ficha)"),
     ('d_10', "    if marca(formacao, byte(this, 0x19)) & 0x10 == 0 {\n        return alvo;", "    if marca(formacao, byte(this, 0x19)) & 0x20 == 0 {\n        return alvo;"),

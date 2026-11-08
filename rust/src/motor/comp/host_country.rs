@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: us
     while it != 0 {
         let e = read_u32_as_usize(it);
         let k = *((e + 0x1e) as *const i8);
-        let pular = ((k > 0 || k == -3) && read_u16(0xae2c92) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
+        let pular = ((k > 0 || k == -3) && read_u16(G_CURRENT_DATE_YEAR) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
             || read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
             || (read_u32_as_usize(e) == read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_u32_as_usize(e + 6) == read_u32_as_usize(KEY_NATION_GERMANY));
         if !pular {
@@ -214,11 +214,11 @@ pub(crate) unsafe extern "thiscall" fn noticia_das_sedes(_this: usize, lista: us
                 dado(p, 3, read_u32_as_usize(read_u32_as_usize(it).wrapping_add(o) + 0xa) as u32);
             }
             let id = read_u32_as_usize(read_u32_as_usize(it));
-            let c = read_u32_as_usize(read_u32_as_usize(0xae23d0).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
+            let c = read_u32_as_usize(read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
             if c != 0 {
-                continente(read_u32_as_usize(0xb7431c), p, c);
+                continente(read_u32_as_usize(G_NEWS), p, c);
             } else {
-                todos(read_u32_as_usize(0xb7431c), p);
+                todos(read_u32_as_usize(G_NEWS), p);
             }
         }
         it = proximo(lista);

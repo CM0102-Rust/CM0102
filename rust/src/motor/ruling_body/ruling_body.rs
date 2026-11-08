@@ -119,13 +119,13 @@ pub(crate) unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
             let liberar = if s == -1 {
                 true
             } else {
-                let ban = read_u32_as_usize(read_u32_as_usize(0xae28f0) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
+                let ban = read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
                 let anos = if cpu10_i(this + 0x17) == -1 && cpu10_i(this + 0x1b) == -1 { 4 } else { 2 };
                 let ano = *((ban + 6) as *const u16) as i32;
-                if *(0xae2c92 as *const u16) as i32 - ano >= anos {
+                if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - ano >= anos {
                     crate::comparacao::ramo("cpu_10 suspensao velha");
                     // ponytail: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
-                    soltar(read_u32_as_usize(0xae28f0), id as u32, s as u16 as u32);
+                    soltar(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
                     true
                 } else {
                     false
@@ -133,11 +133,11 @@ pub(crate) unsafe extern "thiscall" fn nova_temporada_do_orgao(this: usize) {
             };
             if liberar {
                 let id = cpu10_i(e);
-                let g = guardada(read_u32_as_usize(0xae28f0), id, *((this + 4) as *const i8));
+                let g = guardada(read_u32_as_usize(G_DISCIPLINE), id, *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = 0xffff_ffff;
                 } else {
-                    gravar(read_u32_as_usize(0xae28f0), cpu10_i(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
+                    gravar(read_u32_as_usize(G_DISCIPLINE), cpu10_i(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
                 }
                 *(e as *mut u32) = 0xffff_ffff;
             } else {
@@ -181,11 +181,11 @@ pub(crate) unsafe extern "thiscall" fn compactar_disciplina_do_orgao(this: usize
         if cpu10_i(origem) != -1 {
             if origem != destino {
                 core::ptr::copy(origem as *const u8, destino as *mut u8, 0xe);
-                let g = guardada(read_u32_as_usize(0xae28f0), cpu10_i(origem), *((this + 4) as *const i8));
+                let g = guardada(read_u32_as_usize(G_DISCIPLINE), cpu10_i(origem), *((this + 4) as *const i8));
                 if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
                     *((g + 6) as *mut u32) = n;
                 } else {
-                    gravar(read_u32_as_usize(0xae28f0), cpu10_i(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
+                    gravar(read_u32_as_usize(G_DISCIPLINE), cpu10_i(origem), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
                 }
             }
             destino += 0xe;

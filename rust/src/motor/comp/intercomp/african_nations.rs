@@ -118,17 +118,17 @@ pub(crate) unsafe fn cqs13_sorteio(this: usize) -> u32 {
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // ponytail: a original empurra o eax com o ano nos 16 bits baixos e sobra nos altos; a 0x5fa730 só lê o word
-    let quantas = sedes(read_u32_as_usize(0xb5e134), read_u32_as_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), read_i16(this + 0x40) as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
+    let quantas = sedes(read_u32_as_usize(G_HOST_COUNTRY), read_u32_as_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), read_i16(this + 0x40) as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut n = 0usize;
     if quantas > 0 {
         for &id in ids.iter().take(quantas as usize) {
-            write_u32_from_usize(read_u32_as_usize(this + 0xee) + n * 4, selecao(read_u32_as_usize(0xae23a8) + id as usize * 0x122));
+            write_u32_from_usize(read_u32_as_usize(this + 0xee) + n * 4, selecao(read_u32_as_usize(G_NATION_TABLE) + id as usize * 0x122));
             n += 1;
         }
     }
     let mut i = 0i16;
-    let mut nacao = read_u32_as_usize(0xae23a8);
-    while (i as i32) < read_u32_as_usize(0xae2350) as i32 {
+    let mut nacao = read_u32_as_usize(G_NATION_TABLE);
+    while (i as i32) < read_u32_as_usize(G_NATION_COUNT) as i32 {
         let continente = read_u32_as_usize(nacao + 0x71);
         if continente != 0 && read_u32_as_usize(continente) == read_u32_as_usize(KEY_CONTINENT_AFRICA) && n < 0x32 { // cqs13: até 50 africanas
             let l = read_u32_as_usize(this + 0xee);
@@ -500,7 +500,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj10_copa_africana_registros(th
 /// A competição atual da seleção acaba (0x775000 em [0xb74318]: push nação; mov ecx -> thiscall, ret 4).
 pub(crate) unsafe fn cqj10_fim_da_competicao(clube: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NATIONALTEAMS_CLEAR_CURRENT_COMPETITION);
-    f(read_u32_as_usize(0xb74318), read_u32_as_usize(clube + 0x53));
+    f(read_u32_as_usize(G_NATIONAL_TEAMS), read_u32_as_usize(clube + 0x53));
 }
 
 /// rule: in the Oceania qualifier groups, a team going through gets the qualification (weight 20) and one going out the
@@ -543,9 +543,9 @@ pub(crate) unsafe extern "thiscall" fn cqj10_eliminatoria_oceania_registros(this
         if d == 1 {
             crate::comparacao::ramo("cqj_10 oceania na copa do mundo");
             let id = read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
-            cpz4_classificado(clube, read_u32_as_usize(0xae23d0).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
+            cpz4_classificado(clube, read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
             let vaga: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_WORLDCUP_ADD_QUALIFIED_TEAM);
-            vaga(read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(id.wrapping_mul(4))), clube);
+            vaga(read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), clube);
             *(saida as *mut u8) = 4;
         } else if d == 2 {
             eliminar(0x64);
@@ -559,7 +559,7 @@ pub(crate) unsafe extern "thiscall" fn cqj10_eliminatoria_oceania_registros(this
 pub(crate) unsafe extern "thiscall" fn comparar_cqj10_eliminatoria_oceania_registros(this: usize, clube: usize, desfecho: u32, fase: u32, saida: usize, jogo: usize, a6: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, usize, u32) -> u32>(1696);
     let vaga = fase as u8 == 2 && desfecho as u8 == 1 && saida != 0;
-    let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(4)));
+    let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP).wrapping_mul(4)));
     if vaga && mundial == 0 {
         return o(this, clube, desfecho, fase, saida, jogo, a6);
     }

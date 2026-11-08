@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_c1_b(this: usize, 
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
 pub(crate) unsafe fn cqn4_registro(g: usize) -> usize {
-    read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
+    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// the rules of the two French background leagues: home and away, 3 points a win and 1 a draw, tie-breaks 4, 1, 2
@@ -406,8 +406,8 @@ pub(crate) unsafe fn cqn4_construir(this: usize, ano: u32, p: &Cqn4Fundo) -> usi
     let mut lista = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
-    let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
-    let base_clubes = read_u32_as_usize(0xae23b4);
+    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let base_clubes = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i32 = 0;
     while i < n {
         let c = base_clubes + (i as usize) * 0x245;

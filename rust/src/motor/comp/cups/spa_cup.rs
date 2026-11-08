@@ -18,7 +18,7 @@ pub(crate) unsafe fn cqt5_virtual(this: usize, o: usize) -> i32 {
 /// dá a caixa (linhas 0x161, 0x168, 0x16f) e 0 — e as posições previstas (virtual +0x5c). Sempre, no fim, a atualização da
 /// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase: u32) -> u32 {
-    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei
+    if read_u32_as_usize(this + 0x45) == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0 { // cqt5: o ano da Copa do Rei
         let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         for o in [0xa7usize, 0xa3] {
             if read_u32_as_usize(this + o) != 0 {
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn cqt5_copa_do_rei_dia(this: usize, hoje: u
 pub(crate) unsafe extern "thiscall" fn comparar_cqt5_copa_do_rei_dia(this: usize, hoje: usize, fase: u32) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(2087);
     let antes = read_u32_as_usize(this + 0x45);
-    let vira = antes == 0 && read_i16(read_u32_as_usize(0xde1f58) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
+    let vira = antes == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
     let r = o(this, hoje, fase);
     let depois = read_u32_as_usize(this + 0x45);
     PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("cqt5_copa_do_rei_dia({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));

@@ -59,7 +59,7 @@ pub(crate) unsafe fn erro_de_match_man(linha: u32) -> ! {
     let s = juntar(nome.as_mut_ptr(), ext.as_mut_ptr(), linha);
     formatar(0xae24d0, 0x9870e8, s);
     caixa(0x9870e0, 0xae24d0, 0);
-    *(0xb67a34 as *mut u32) = 0;
+    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
     fechar1();
     fechar2();
     sair(-1)
@@ -82,11 +82,11 @@ pub(crate) unsafe extern "thiscall" fn encerrar_dia(dia: usize) {
     let destruir_5f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_MATCH_TEAM_PAIR_DESTRUCTOR);
     let destruir_motor: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_DESTRUCTOR_CM3_MATCH_ENGINE);
     let d = |o: usize| (dia + o) as *mut usize;
-    let lista = *(0xb67dc8 as *const usize);
+    let lista = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
     if lista != 0 {
         destruir_lista(lista);
         liberar(lista);
-        *(0xb67dc8 as *mut usize) = 0;
+        *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *mut usize) = 0;
     }
     for o in [1usize, 0xd] {
         if *d(o) != 0 {
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn encerrar_dia(dia: usize) {
             destruir_motor(motor);
             liberar(motor);
             *q(0x57) = 0;
-            tirar(*(0xde2f70 as *const usize), p + 4);
+            tirar(*(G_VIRTUAL_STAFF as *const usize), p + 4);
         }
         if *q(0x5b) != 0 {
             liberar(*q(0x5b));
@@ -160,10 +160,10 @@ pub(crate) unsafe extern "thiscall" fn escolher_partida_do_dia(dia: usize) -> u3
     }
     let mostrar: unsafe extern "C" fn(u32, usize) = core::mem::transmute(FN_OPEN_DAY_FIXTURES_SCREEN);
     let atualizar: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SCREENMANAGER_MONITOR);
-    *(0xb67a48 as *mut u32) = 1;
+    *(G_MATCH_DAY_SCREEN_SHOWING_FLAG as *mut u32) = 1;
     mostrar(0, escolhida);
     atualizar(0xb74450);
-    *(0xb67a48 as *mut u32) = 0;
+    *(G_MATCH_DAY_SCREEN_SHOWING_FLAG as *mut u32) = 0;
     achou
 }
 
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "thiscall" fn iniciar_proxima_partida(dia: usize) -> u3
                 && u(p, 0x57) == 0
                 && u(p, 0x53) == 0
             {
-                tirar(u(0xde2f70, 0), p + 4, -3, 0);
+                tirar(u(G_VIRTUAL_STAFF, 0), p + 4, -3, 0);
                 let mem = novo(0xf63b);
                 let motor = if mem != 0 { construir(mem) } else { 0 };
                 *((p + 0x57) as *mut usize) = motor;
@@ -267,13 +267,13 @@ pub(crate) unsafe extern "thiscall" fn andar_partida_do_dia(dia: usize, ate_o_fi
     let registrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MATCH_STATS_RECORD_MATCH);
     let destruir_motor: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_DESTRUCTOR_CM3_MATCH_ENGINE);
     let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_VIRTUAL_STAFF_RELEASE_FIXTURE);
-    let contador = 0xb67a54 as *mut i32;
+    let contador = G_STEP_BACKGROUND_MATCH_COUNTER as *mut i32;
     *contador += 1;
     if *contador > 100 {
         *contador = 0;
     }
     if ate_o_fim == 0 {
-        let modo = u(u(0xae3138, 0), 4);
+        let modo = u(u(G_CONFIG, 0), 4);
         if modo & 0x40000 != 0 && *contador % 3 > 0 {
             return 0;
         }
@@ -321,14 +321,14 @@ pub(crate) unsafe extern "thiscall" fn andar_partida_do_dia(dia: usize, ate_o_fi
         aviso_em(0xa15708, 0x713);
         return 0;
     }
-    registrar(u(0xb6b7c0, 0), u(p, 0x57), mem);
+    registrar(u(G_MATCH_STATS, 0), u(p, 0x57), mem);
     let motor = u(p, 0x57);
     if motor != 0 {
         destruir_motor(motor);
         liberar(motor);
     }
     *((p + 0x57) as *mut usize) = 0;
-    tirar(u(0xde2f70, 0), p + 4);
+    tirar(u(G_VIRTUAL_STAFF, 0), p + 4);
     1
 }
 
@@ -357,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn fechar_partida_do_dia(_dia: usize, p: usi
     core::ptr::copy((p + 4) as *const u8, jogo as *mut u8, 0x4f);
     let resumo = u(p, 0x5f);
     let mut rodada = [0u8; 4];
-    let competicao = |id: i32| *((u(0xadadfc, 0) as isize + 4 * id as isize) as *const usize);
+    let competicao = |id: i32| *((u(G_COMP_OBJECT_TABLE, 0) as isize + 4 * id as isize) as *const usize);
     if u(jogo, 0x14) != 0 {
         crate::comparacao::ramo("fechar com competicao");
         let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
@@ -393,9 +393,9 @@ pub(crate) unsafe extern "thiscall" fn fechar_partida_do_dia(_dia: usize, p: usi
             let fora: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_WEATHER_POST_ABANDONED_NEWS);
             let gravar: unsafe extern "thiscall" fn(usize, *mut u8) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
             let juntar: unsafe extern "thiscall" fn(usize, *mut u8, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-            fora(u(0xde2f74, 0), p + 4, ((*((jogo + 0x4d) as *const u16) >> 12) & 3) as u32);
-            gravar(u(0xae2a58, 0), copia.as_mut_ptr());
-            juntar(u(0xae2a58, 0), copia.as_mut_ptr(), 1);
+            fora(u(G_WEATHER, 0), p + 4, ((*((jogo + 0x4d) as *const u16) >> 12) & 3) as u32);
+            gravar(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr());
+            juntar(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr(), 1);
         } else {
             let c = competicao(*(jogo as *const i32));
             let metodo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(u(u(c, 0), 4));
@@ -403,7 +403,7 @@ pub(crate) unsafe extern "thiscall" fn fechar_partida_do_dia(_dia: usize, p: usi
             crate::comparacao::ramo("fechar metodo da competicao");
         }
     }
-    *(0xa801bc as *mut u32) = 1;
+    *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 1;
     let jogadores: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_MATCH_DAY_APPLY_POST_MATCH_PLAYER_CHANGES);
     let eventos: unsafe extern "C" fn(usize) = core::mem::transmute(FN_MATCH_DAY_PROCESS_PLAYER_INCIDENTS);
     jogadores(jogo, resumo);
@@ -412,17 +412,17 @@ pub(crate) unsafe extern "thiscall" fn fechar_partida_do_dia(_dia: usize, p: usi
         let g: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(f);
         g(this, jogo, resumo);
     };
-    dois(u(0xae1050, 0), 0x4ca6d0);
-    dois(u(0xae28f0, 0), 0x55ca00);
+    dois(u(G_CONTRACT_MANAGER, 0), 0x4ca6d0);
+    dois(u(G_DISCIPLINE, 0), 0x55ca00);
     if byte(p, 0x47) != -3 {
-        dois(u(0xb74318, 0), 0x76b600);
+        dois(u(G_NATIONAL_TEAMS, 0), 0x76b600);
     }
-    dois(u(0xb63d28, 0), 0x62c080);
+    dois(u(G_INJURY, 0), 0x62c080);
     if byte(p, 0x47) == -3 {
         return 1;
     }
     if *(jogo as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
-        let h = u(0xb74434, 0);
+        let h = u(G_RESERVE_COMP, 0);
         dois(h, u(u(h, 0), 4));
         crate::comparacao::ramo("fechar historia");
     }
@@ -473,11 +473,11 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let por = |p: usize, o: usize, v: usize| core::ptr::write_unaligned((p + o) as *mut usize, v);
     let ler = |o: usize| *((dia + o) as *const i32);
-    let rede = || *(0xa5a390 as *const u8) != 0;
-    let gerente = || u(0xb63c98, 0);
+    let rede = || *(G_MATCH_ENGINE_ENABLED as *const u8) != 0;
+    let gerente = || u(G_HUMAN_MANAGER, 0);
     let partida = |k: i32| u(dia, 0x19).wrapping_add((k as isize * 0x69) as usize);
-    let humano_a = |i: i32| u(0xae23bc, 0).wrapping_add(((*(0xae2364 as *const i32) - i - 1) as isize * 0x6e) as usize);
-    let humano_b = |i: i32| u(0xae23bc, 0).wrapping_add(((*(0xae2364 as *const i32) + i - 0x10) as isize * 0x6e) as usize);
+    let humano_a = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) - i - 1) as isize * 0x6e) as usize);
+    let humano_b = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) + i - 0x10) as isize * 0x6e) as usize);
     let iniciar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_MATCH_DAY_START_NEXT_BACKGROUND_MATCH);
     let andar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_MATCH_DAY_STEP_BACKGROUND_MATCH);
     let fechar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MATCH_DAY_APPLY_MATCH_RESULT);
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
             liberar(m);
         }
         por(p, 0x57, 0);
-        tirar(u(0xde2f70, 0), p + 4);
+        tirar(u(G_VIRTUAL_STAFF, 0), p + 4);
     };
     let novo_motor = |p: usize| {
         let mem = novo(0xf63b);
@@ -566,7 +566,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
                 let p = partida(k);
                 let e = byte(p, 0x47);
                 if e != -2 && e <= -1 && u(p, 0x53) != 0 {
-                    tirar_da_fila(u(0xde2f70, 0), p + 4, -1, 0);
+                    tirar_da_fila(u(G_VIRTUAL_STAFF, 0), p + 4, -1, 0);
                     let r = novo(0x11d);
                     por(p, 0x5b, r);
                     if r == 0 {
@@ -670,7 +670,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
                 let p = partida(k);
                 if u(p, 0x53) != 0 && u(p, 0x57) != 0 {
                     ate_o_fim(p);
-                    registrar(u(0xb6b7c0, 0), u(p, 0x57), u(p, 0x5f));
+                    registrar(u(G_MATCH_STATS, 0), u(p, 0x57), u(p, 0x5f));
                     sem_motor(p);
                     liberar(u(p, 0x5b));
                     por(p, 0x5b, 0);
@@ -680,16 +680,16 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
         }
 
         // as partidas sem humano, uma a uma
-        *(0xb67a4c as *mut u32) = 1;
+        *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 1;
         let mut placar_escrito = false;
-        *(0xb67a34 as *mut u32) = 0;
+        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         let hora = relogio();
         let mut k = 0i32;
         while k < ler(0x21) {
-            if *(0xdd7118 as *const u32) != 0 {
+            if *(G_INTERACTIVE_MODE_FLAG as *const u32) != 0 {
                 ajustar_relogio(2);
                 f68d520();
-                if *(0xb67a34 as *const u32) != 0 {
+                if *(G_MOUSE_LEFT_BUTTON_DOWN as *const u32) != 0 {
                     let mut redesenha = false;
                     for i in 0..16 {
                         let h = humano_a(i);
@@ -705,7 +705,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
                     if redesenha {
                         redesenhar(0xb74450);
                     }
-                    *(0xb67a34 as *mut u32) = 0;
+                    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
                 }
             }
             let p = partida(k);
@@ -713,11 +713,11 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
                 let com_humano = humano(u(p, 0x20), 0, b(p, 0x44) as u32, 0, 0) != 0 || humano(u(p, 0x24), 0, b(p, 0x45) as u32, 0, 0) != 0;
                 if com_humano && rede() {
                     andar(dia, 1);
-                    *(0xb67a4c as *mut u32) = 0;
+                    *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 0;
                     crate::comparacao::ramo("humano em rede recomeca");
                     continue 'reinicio;
                 }
-                tirar_da_fila(u(0xde2f70, 0), p + 4, -2, 0);
+                tirar_da_fila(u(G_VIRTUAL_STAFF, 0), p + 4, -2, 0);
                 let m = novo_motor(p);
                 if m == 0 {
                     aviso_em(0xa15708, 0x39d);
@@ -731,7 +731,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
                     if resumo == 0 {
                         aviso_em(0xa15708, 0x3b5);
                     } else {
-                        registrar(u(0xb6b7c0, 0), u(p, 0x57), resumo);
+                        registrar(u(G_MATCH_STATS, 0), u(p, 0x57), resumo);
                         sem_motor(p);
                         if !rapido {
                             crate::comparacao::ramo("placar na barra");
@@ -760,7 +760,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
         // o fechamento de cada partida
         ajustar_relogio(hora);
         andar(dia, 1);
-        *(0xb67a4c as *mut u32) = 0;
+        *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 0;
         let mut k = 0i32;
         while k < ler(0x21) {
             let p = partida(k);
@@ -790,7 +790,7 @@ pub(crate) unsafe extern "thiscall" fn jogar_o_dia(dia: usize) -> u32 {
         }
         if placar_escrito {
             crate::comparacao::ramo("data na barra");
-            data_texto(0xae2c90, 0xde1f64, 0x7d0, *(0xae2c88 as *const u8) as u32);
+            data_texto(0xae2c90, 0xde1f64, 0x7d0, *(G_CURRENT_DAY_SLICE as *const u8) as u32);
             mostrar(0xb74450, 0xde1f64, -1, 0, -1);
         }
         return 1;
@@ -850,12 +850,12 @@ pub(crate) unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, mod
     por(dia, 0x2f, u32::MAX);
     *((dia + 0x33) as *mut u8) = 1;
     por(dia, 0x34, 0);
-    *(0xb67dc8 as *mut usize) = 0;
+    *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *mut usize) = 0;
     if data == 0 || modo8 > 2 {
         aviso_em(0xa15708, 0x93);
         return dia;
     }
-    preparar_historia(u(0xb74434, 0));
+    preparar_historia(u(G_RESERVE_COMP, 0));
     // cresce um vetor (ponteiro +o, capacidade +o+4, contagem +o+8) de 5 em 5; false sem memoria
     let crescer = |o: usize, tam: u32| -> bool {
         if ler(o + 8) == ler(o + 4) {
@@ -871,8 +871,8 @@ pub(crate) unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, mod
     };
     let mut comp_atual = 0usize;
     let mut i = 0i32;
-    while i < *(0xb64738 as *const i8) as i32 {
-        let lista = lista_do_dia(u(0xae2a58, 0), data, modo, i as u32);
+    while i < *(G_KEY_NATION_ACTIVE_COUNT as *const i8) as i32 {
+        let lista = lista_do_dia(u(G_FIXTURE_MANAGER, 0), data, modo, i as u32);
         if lista != 0 && *(lista as *const i16) > 0 {
             por(lista, 0xa, u(lista, 2) as u32);
             let mut grupo = 0usize;
@@ -880,18 +880,18 @@ pub(crate) unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, mod
             while x != 0 {
                 let e = byte(x, 0x43);
                 if e <= -1 && e != -2 {
-                    let r = decidida(u(0xde2f74, 0), x);
+                    let r = decidida(u(G_WEATHER, 0), x);
                     if r & 1 != 0 {
                         crate::comparacao::ramo("montagem decidida antes");
                         let mut copia = [0u8; 0x100];
                         core::ptr::copy(x as *const u8, copia.as_mut_ptr(), 0x4f);
                         *((x + 0x43) as *mut u8) = 0xfe;
                         // ponytail: o 2o argumento vai so com o byte; a original passa sobra da pilha nos altos (lidos como byte)
-                        marcar(u(0xde2f74, 0), x, r as u32);
-                        gravar(u(0xae2a58, 0), copia.as_mut_ptr());
-                        juntar(u(0xae2a58, 0), copia.as_mut_ptr(), 1);
+                        marcar(u(G_WEATHER, 0), x, r as u32);
+                        gravar(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr());
+                        juntar(u(G_FIXTURE_MANAGER, 0), copia.as_mut_ptr(), 1);
                     } else {
-                        avisar(u(0xb74340, 0), x, x + 0x2e);
+                        avisar(u(G_OFFICIALS_MANAGER, 0), x, x + 0x2e);
                         crate::comparacao::ramo("montagem avisada");
                     }
                     if grupo == 0 {
@@ -978,7 +978,7 @@ pub(crate) unsafe extern "thiscall" fn montar_o_dia(dia: usize, data: usize, mod
         i += 1;
     }
     let mem = novo(0xe);
-    *(0xb67dc8 as *mut usize) = if mem != 0 { lista_nova(mem) } else { 0 };
+    *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *mut usize) = if mem != 0 { lista_nova(mem) } else { 0 };
     interesse(dia);
     dia
 }
@@ -1149,7 +1149,7 @@ pub(crate) unsafe extern "C" fn partida_sem_humano(partida: usize) -> u32 {
             crate::comparacao::ramo("sem humano selecao de humano");
             *(e as *mut u8) = 1;
         }
-        *(0xa15704 as *mut u32) = 0;
+        *(G_QUICK_SIM_COMP_FLAGS_PENDING as *mut u32) = 0;
     }
     if g(0xdd7118) == 0 {
         return 1;
@@ -1228,7 +1228,7 @@ pub(crate) unsafe extern "C" fn comparar_partida_sem_humano(partida: usize) -> u
         return o(partida);
     }
     let mut reg = vec![(0xa15704usize, 4usize)];
-    if *(0xa15704 as *const usize) != 0 {
+    if *(G_QUICK_SIM_COMP_FLAGS_PENDING as *const usize) != 0 {
         reg.extend(marcas_das_selecoes().into_iter().map(|e| (e, 1)));
     }
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(partida), || partida_sem_humano(partida));
@@ -1267,7 +1267,7 @@ pub(crate) unsafe fn clube_do_pos_jogo_com(clube: usize, outro: usize, partida: 
     if clube == 0 || partida == 0 || outro == 0 {
         // ponytail: a original mostra a caixa "Error" (match_day.cpp, linhas 0xc45/0xc4a/0xc4f); nao
         // acontece no jogo
-        *(0xb67a34 as *mut u32) = 0;
+        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return;
     }
     if g(clube + 0xcf) == 0 {
@@ -1502,7 +1502,7 @@ pub(crate) unsafe fn comparar_pos(nome: &str, reg: Vec<(usize, usize)>, original
 /// As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
 pub(crate) unsafe fn regiao_do_contrato(pessoa: usize, clube: usize) -> Option<(usize, usize)> {
     let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contrato(*(0xae1050 as *const usize), pessoa, clube);
+    let c = contrato(*(G_CONTRACT_MANAGER as *const usize), pessoa, clube);
     (c != 0).then_some((c + 0x40, 9))
 }
 
@@ -1510,10 +1510,10 @@ pub(crate) unsafe extern "C" fn comparar_eventos_do_pos_jogo(partida: usize) {
     let o = orig::<unsafe extern "C" fn(usize)>(295);
     // o cursor da lista, as linhas dos dois clubes em [[0xb67a44]] e as flags dos contratos dos eventos
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    let lista = *(0xb67dc8 as *const usize);
+    let lista = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
     if lista != 0 {
         reg.push((lista, 0xe));
-        let pessoa = |id: i32| (*(0xae23bc as *const usize) as isize + id as isize * 0x6e) as usize;
+        let pessoa = |id: i32| (*(G_STAFF_TABLE as *const usize) as isize + id as isize * 0x6e) as usize;
         let mut no = core::ptr::read_unaligned((lista + 2) as *const usize);
         let mut k = 0;
         while no != 0 && k < core::ptr::read_unaligned(lista as *const i16) as i32 {
@@ -1523,13 +1523,13 @@ pub(crate) unsafe extern "C" fn comparar_eventos_do_pos_jogo(partida: usize) {
             if ev == 0 {
                 break;
             }
-            let clube = (*(0xae23b4 as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
+            let clube = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
             if clube == *((partida + 0x1c) as *const usize) || clube == *((partida + 0x20) as *const usize) {
                 reg.extend(regiao_do_contrato(pessoa(core::ptr::read_unaligned(ev as *const i32)), clube));
             }
         }
     }
-    let tabela = *(0xb67a44 as *const usize);
+    let tabela = *(G_MANAGER_MANAGER as *const usize);
     if tabela != 0 {
         for o in [0x1c, 0x20] {
             let clube = *((partida + o) as *const usize);
@@ -1617,7 +1617,7 @@ pub(crate) unsafe extern "C" fn largar_partida_assistida() {
     let registrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_MATCH_STATS_RECORD_MATCH);
     let destruir_motor: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_CM3_MATCH_ENGINE_DESTRUCTOR_CM3_MATCH_ENGINE);
     let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_VIRTUAL_STAFF_RELEASE_FIXTURE);
-    let vez = || *(0xb77c7a as *const i16) as isize;
+    let vez = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
 
     let p = u((0xb74c26 + vez() * 0x300) as usize, 0);
     if p == 0 {
@@ -1633,11 +1633,11 @@ pub(crate) unsafe extern "C" fn largar_partida_assistida() {
     }
     let mut sozinho = true;
     for i in 0..0x10usize {
-        let idx = (*(0xae2364 as *const usize)).wrapping_add(i).wrapping_sub(0x10);
-        let q = u(0xae23bc, 0).wrapping_add(idx.wrapping_mul(110));
+        let idx = (*(G_STAFF_COUNT as *const usize)).wrapping_add(i).wrapping_sub(0x10);
+        let q = u(G_STAFF_TABLE, 0).wrapping_add(idx.wrapping_mul(110));
         // como a original, sem conferir a ficha nula do outro humano
         if *((q + 0x5f) as *const u8) != 0 && q != p && u(ficha(q), 0xe2) == jogo {
-            let minha = *(0xb77c7a as *const u16);
+            let minha = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const u16);
             if indice(0xb74450, q) == minha {
                 return;
             }
@@ -1675,7 +1675,7 @@ pub(crate) unsafe extern "C" fn largar_partida_assistida() {
         let e = laco(core::ptr::read_unaligned(motor), -1) as u8;
         *estado = e;
         if e == 2 || e == 8 {
-            *((u(0xb67a50, 0) + 0x25) as *mut i32) += 1;
+            *((u(G_MATCH_DAY, 0) + 0x25) as *mut i32) += 1;
         }
     }
     if *estado != 8 {
@@ -1688,7 +1688,7 @@ pub(crate) unsafe extern "C" fn largar_partida_assistida() {
             aviso_em(0xa15708, 0xa68);
             return;
         }
-        registrar(u(0xb6b7c0, 0), core::ptr::read_unaligned(motor), mem);
+        registrar(u(G_MATCH_STATS, 0), core::ptr::read_unaligned(motor), mem);
     }
     let m = core::ptr::read_unaligned(motor);
     if m != 0 {
@@ -1696,7 +1696,7 @@ pub(crate) unsafe extern "C" fn largar_partida_assistida() {
         liberar(m);
     }
     core::ptr::write_unaligned(motor, 0);
-    tirar(u(0xde2f70, 0), jogo + 4);
+    tirar(u(G_VIRTUAL_STAFF, 0), jogo + 4);
 }
 
 /// finds in the fixture list the match of a statistics record (date, competition and club) and copies the fixture
@@ -1722,7 +1722,7 @@ pub(crate) unsafe extern "thiscall" fn ficha_do_registro(estat: usize, k: i32, s
     // a original empurra os registradores inteiros: em cima, os 16 bits de [this] e de k × 3
     let d1 = (tab as u32 & 0xffff_0000) | *((e + 8) as *const u16) as u32;
     let d2 = ((k as u32).wrapping_mul(3) & 0xffff_0000) | *((e + 0xa) as *const u16) as u32;
-    jogos(*(0xae2a58 as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
+    jogos(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
     // o cursor (+0xa) começa na cabeça (+2)
     core::ptr::copy(lista.as_ptr().add(2), lista.as_mut_ptr().add(0xa), 4);
     let clube = *((e + 4) as *const u32);
@@ -1796,7 +1796,7 @@ pub(crate) unsafe extern "thiscall" fn passo_em_rede(dia: usize, p: usize) -> u3
     crate::comparacao::ramo("passo em rede");
     let motor = u(p, 0x57);
     let estado = pl as *mut u8;
-    let eu = *(0xb77c7a as *const i16) as isize;
+    let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let visto = |i: isize| ((pl as isize) + 0x85 + 4 * i) as *mut u32;
     // todos viram de novo: so o humano da vez marca e espera
     let rever = || {
@@ -1897,7 +1897,7 @@ pub(crate) unsafe extern "thiscall" fn passo_em_rede(dia: usize, p: usize) -> u3
     }
     rever();
     por(pl, 0x10d, relogio());
-    registrar(u(0xb6b7c0, 0), motor, u(p, 0x5f), 1);
+    registrar(u(G_MATCH_STATS, 0), motor, u(p, 0x5f), 1);
     let s = u(u(dia, 0x34), 0x5f);
     let trocar = if s != 0 {
         let a = competicao(*((u(p, 0x5f) + 0x4f) as *const u16) as u32, 1) as i8;
@@ -1946,7 +1946,7 @@ pub(crate) unsafe extern "thiscall" fn confirmar_partida_em_rede(_dia: usize, p:
         return 0;
     }
     let pl = u(p, 0x5b);
-    let eu = *(0xb77c7a as *const i16) as isize;
+    let eu = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let confirmou = (pl as isize + eu * 4 + 0x45) as *mut u32;
     if core::ptr::read_unaligned(confirmou) == 0 {
         core::ptr::write_unaligned(confirmou, 1);
@@ -1978,7 +1978,7 @@ pub(crate) unsafe extern "thiscall" fn confirmar_partida_em_rede(_dia: usize, p:
             let e = laco(u(p, 0x57), -1) as u8;
             *estado = e;
             if terminou(e) {
-                *((u(0xb67a50, 0) + 0x25) as *mut i32) += 1;
+                *((u(G_MATCH_DAY, 0) + 0x25) as *mut i32) += 1;
             }
         }
         let r = novo_resumo();
@@ -1986,14 +1986,14 @@ pub(crate) unsafe extern "thiscall" fn confirmar_partida_em_rede(_dia: usize, p:
             aviso_em(FONTE, 0x4ea);
             return 0;
         }
-        registrar(u(0xb6b7c0, 0), u(p, 0x57), r);
+        registrar(u(G_MATCH_STATS, 0), u(p, 0x57), r);
         let m = u(p, 0x57);
         if m != 0 {
             destruir_motor(m);
             liberar(m);
         }
         por(p, 0x57, 0);
-        tirar(u(0xde2f70, 0), p + 4);
+        tirar(u(G_VIRTUAL_STAFF, 0), p + 4);
         por(pl, 0x119, 1);
         return 0;
     }
@@ -2006,7 +2006,7 @@ pub(crate) unsafe extern "thiscall" fn confirmar_partida_em_rede(_dia: usize, p:
         aviso_em(FONTE, 0x511);
         return 0;
     }
-    registrar_para_ver(u(0xb6b7c0, 0), u(p, 0x57), r, 1);
+    registrar_para_ver(u(G_MATCH_STATS, 0), u(p, 0x57), r, 1);
     1
 }
 

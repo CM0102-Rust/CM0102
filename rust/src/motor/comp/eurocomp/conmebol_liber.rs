@@ -371,8 +371,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqj11_libertadores_regras(this: 
 pub(crate) unsafe fn cqk11_inscritos(this: usize, max: i32, saida: &mut [usize; 32]) -> i32 {
     let mut n = 0i32;
     let mut i = 0i16;
-    let mut clube = read_u32_as_usize(0xae23b4);
-    if (read_u32_as_usize(0xae235c) as i32) > 0 {
+    let mut clube = read_u32_as_usize(G_CLUB_TABLE);
+    if (read_u32_as_usize(G_CLUB_COUNT) as i32) > 0 {
         loop {
             if read_u32_as_usize(clube + 0x1db) == read_u32_as_usize(read_u32_as_usize(this + 4)) && n < max {
                 if (n as usize) < saida.len() {
@@ -382,7 +382,7 @@ pub(crate) unsafe fn cqk11_inscritos(this: usize, max: i32, saida: &mut [usize; 
             }
             i = i.wrapping_add(1);
             clube = clube.wrapping_add(0x245);
-            if i as i32 >= read_u32_as_usize(0xae235c) as i32 {
+            if i as i32 >= read_u32_as_usize(G_CLUB_COUNT) as i32 {
                 break;
             }
         }
@@ -503,7 +503,7 @@ pub(crate) unsafe extern "thiscall" fn cqk11_libertadores_registros(this: usize,
             }
             1 => {
                 final_(0x86a800);
-                let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
+                let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
                 let t = read_u32_as_usize(mundial + 0xa7);
                 let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
                 crate::comparacao::ramo("cqk_11 campeao da libertadores");
@@ -532,7 +532,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqk11_libertadores_registros(thi
     let titulo = fase as u8 == 7 && desfecho as u8 == 1;
     let mut vaga = 0usize;
     if titulo {
-        let mundial = read_u32_as_usize(read_u32_as_usize(0xadadfc).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
+        let mundial = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
         let t = read_u32_as_usize(mundial + 0xa7);
         let nacao = read_u32_as_usize(read_u32_as_usize(t) + 0x53);
         vaga = if nacao != 0 && read_u32_as_usize(read_u32_as_usize(nacao + 0x71)) == read_u32_as_usize(KEY_CONTINENT_SOUTH_AMERICA) { t } else { t + 6 };

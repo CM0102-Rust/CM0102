@@ -115,7 +115,7 @@ pub(crate) unsafe fn cql5_criar_fases(this: usize, arquivo: usize, linhas: [u32;
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     // a Supercopa da Série C1
-    let copa = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
+    let copa = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
     let inscritos = read_u32_as_usize(copa + 0xa7);
     let campeao = cql5_clube(this, 0);
     if read_u32_as_usize(inscritos) != 0 {
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn fases_do_fim_da_c1b(this: usize) {
 /// O comparador das duas: alocam e sorteiam: só a original. O plano, feito antes: o campeão e a vaga da Supercopa. Depois:
 /// a vaga com o campeão, as duas fases em [+0xc] e +0x30 = 1.
 pub(crate) unsafe fn cql5_comparar_fases(nome: &str, this: usize, original: impl FnOnce()) {
-    let copa = read_u32_as_usize(read_u32_as_usize(0xadadfc) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
+    let copa = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
     let inscritos = read_u32_as_usize(copa + 0xa7);
     let campeao = cql5_clube(this, 0);
     let vaga = if read_u32_as_usize(inscritos) != 0 { inscritos + 6 } else { inscritos };

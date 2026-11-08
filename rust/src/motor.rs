@@ -2671,6 +2671,9 @@ pub(crate) use self::formation::*;
 #[path = "motor/game.rs"]
 pub(crate) mod game;
 pub(crate) use self::game::*;
+#[path = "motor/globals.rs"]
+pub(crate) mod globals;
+pub(crate) use self::globals::*;
 #[path = "motor/human_manager.rs"]
 pub(crate) mod human_manager;
 pub(crate) use self::human_manager::*;
@@ -2856,7 +2859,7 @@ unsafe extern "stdcall" fn serve_para_a_vaga(j: usize, vaga: i8) -> u8 {
                 }
             }
             let contrato = core::ptr::read_unaligned((j + 0x69) as *const usize);
-            return (contrato != 0 && *(j as *const i32) < (*(0xae2364 as *const i32)).wrapping_sub(0x10)) as u8;
+            return (contrato != 0 && *(j as *const i32) < (*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10)) as u8;
         }
     };
     (n(setor) && (lado == 0 || n(lado))) as u8
@@ -2904,8 +2907,8 @@ unsafe extern "stdcall" fn codigo_da_posicao(m: i16) -> u8 {
 /// faixas, a reputação do clube, e menos o número de funções acima de uma) decide pelas funções e
 /// pelas notas se devolve 1.
 unsafe extern "thiscall" fn criterio_da_comissao(t: usize) -> u32 {
-    let p = (*(0xae23bc as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(0x6e));
-    let clube = (*(0xae23b4 as *const usize)).wrapping_add((*((t + 4) as *const i32) as usize).wrapping_mul(0x245));
+    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(0x6e));
+    let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + 4) as *const i32) as usize).wrapping_mul(0x245));
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let tecnico = u(clube + 0xcf);
     if tecnico != 0 && p == tecnico {
@@ -3073,7 +3076,7 @@ unsafe extern "thiscall" fn pessoa_da_vaga_tatica(t: usize, clube: usize, vaga: 
     if id <= -1 {
         return 0;
     }
-    let pessoas = *(0xae23bc as *const usize);
+    let pessoas = *(G_STAFF_TABLE as *const usize);
     let p = pessoas.wrapping_add((id as usize).wrapping_mul(0x6e));
     if core::ptr::read_unaligned((p + 0x61) as *const usize) == 0 {
         core::ptr::write_unaligned(casa, -1);
@@ -3947,7 +3950,7 @@ comparar_valor!(comparar_nota_do_jogador, nota_do_jogador, 216, () -> i32);
 unsafe extern "thiscall" fn comparar_esquecer_pessoa(this: usize, pessoa: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize)>(217);
     let mut reg: Vec<(usize, usize)> = Vec::new();
-    if pessoa != 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+    if pessoa != 0 && *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) {
         for k in 0..16usize {
             let q = *((this + 4 * k) as *const usize);
             if q != 0 {
@@ -4207,7 +4210,7 @@ unsafe extern "thiscall" fn comparar_escolher_formacao(c: usize, fichas: usize, 
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4), (0xae2470, 8), (0xae2418, 1), (0xae24c0, 8), (0xae249e, 1), (0xadae10, 4)]);
-    let taticas = *(0xde1d08 as *const usize);
+    let taticas = *(G_TACTICS as *const usize);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let clube = *((c + 0x2f) as *const usize);
     for humano in 0..2u32 {
@@ -4233,7 +4236,7 @@ unsafe extern "thiscall" fn comparar_instrucoes(c: usize) {
     let m = *((c + 0x12) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (*((c + 0x2b) as *const usize), 0x18e3), (0xb67a34, 4)]);
-    let taticas = *(0xde1d08 as *const usize);
+    let taticas = *(G_TACTICS as *const usize);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let clube = *((c + 0x2f) as *const usize);
     for humano in 0..2u32 {
@@ -4252,7 +4255,7 @@ unsafe extern "thiscall" fn comparar_instrucoes(c: usize) {
 }
 /// As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
 unsafe fn linhas_do_clube(clube: usize) -> Vec<(usize, usize)> {
-    let taticas = *(0xde1d08 as *const usize);
+    let taticas = *(G_TACTICS as *const usize);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let mut v = Vec::new();
     for humano in 0..2u32 {
@@ -4560,7 +4563,7 @@ unsafe extern "thiscall" fn comparar_jogador_saiu(m: usize, j: usize, ja_fora: u
     reg.extend([(m, MOTOR), (0xb67a34, 4), (0xae1080, 4)]);
     // o capitao guardado na linha da tatica (+0x52) dos dois clubes: a substituicao (0x6e1090) o troca
     // antes de a comparada conferir se quem saiu era o capitao
-    let taticas = *(0xde1d08 as *const usize);
+    let taticas = *(G_TACTICS as *const usize);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let t = *((m + 0x4792) as *const usize);
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
@@ -4608,12 +4611,12 @@ unsafe extern "thiscall" fn comparar_lesao_na_dividida(m: usize, a: usize, tipo_
     // o sorteio, os dois jogadores, os registros de lesao deles e o que a 0x6d0980 mexe no motor
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m + 0x8ea0, 0x20), (m + 0xf582, 4), (m + 0xf639, 2)]);
-    let tabela = *(*(0xb63d28 as *const usize) as *const usize);
+    let tabela = *(*(G_INJURY as *const usize) as *const usize);
     for p in [a, b] {
         if p != 0 {
             reg.push((p, 0x1be));
             let pessoa = *((p + 0x69) as *const usize);
-            if pessoa != 0 && *(pessoa as *const i32) >= 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+            if pessoa != 0 && *(pessoa as *const i32) >= 0 && *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) {
                 reg.push((tabela + *(pessoa as *const i32) as usize * 31, 31));
             }
         }
@@ -4976,7 +4979,7 @@ unsafe extern "C" fn comparar_chance_de_conhecer(pessoa: usize, nivel: i8) -> i3
 unsafe extern "thiscall" fn comparar_conhecer_pessoa(this: usize, pessoa: usize, fonte: usize) {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, usize)>(201);
     let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    if pessoa != 0 && *(pessoa as *const i32) < *(0xae2364 as *const i32) {
+    if pessoa != 0 && *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) {
         reg.push(((*(this as *const usize)).wrapping_add((*(pessoa as *const i32) as usize).wrapping_mul(9)), 9));
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, fonte), || crate::aleatorio::sem_contar(|| conhecer_pessoa(this, pessoa, fonte)));
@@ -4986,7 +4989,7 @@ unsafe extern "stdcall" fn comparar_nevoa_apos_partida(partida: usize, dados: us
     let o = orig::<unsafe extern "stdcall" fn(usize, usize)>(202);
     // os registros que a rotina pode mexer (mesmos testes, sem o 0x32 das reservas: sobra nao atrapalha)
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let n = *(0xae2364 as *const i32);
+    let n = *(G_STAFF_COUNT as *const i32);
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
         let clube = *((partida + 0x20 - 4 * lado) as *const usize);
@@ -4994,13 +4997,13 @@ unsafe extern "stdcall" fn comparar_nevoa_apos_partida(partida: usize, dados: us
             continue;
         }
         let q = *((clube + 0xcf) as *const usize);
-        let obj = *((*(0xae2a60 as *const usize)).wrapping_add((n.wrapping_sub(*(q as *const i32)) as usize).wrapping_mul(4)).wrapping_sub(4) as *const usize);
+        let obj = *((*(G_FOG_OF_WAR as *const usize)).wrapping_add((n.wrapping_sub(*(q as *const i32)) as usize).wrapping_mul(4)).wrapping_sub(4) as *const usize);
         if obj == 0 {
             continue;
         }
         for vaga in 0..20usize {
             let i = *((dados + lado * 0x625 + 0x190 + vaga * 0x49) as *const i32);
-            let p = (*(0xae23bc as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
+            let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((i as usize).wrapping_mul(0x6e));
             if i != -1 && p != 0 && *(p as *const i32) < n {
                 reg.push(((*(obj as *const usize)).wrapping_add((*(p as *const i32) as usize).wrapping_mul(9)), 9));
             }
@@ -9796,8 +9799,8 @@ unsafe fn diag_amostra(c: usize, qual: &str) {
         return;
     }
     let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let p = (*(0xae23bc as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110));
-    let k = achar(*(0xae1050 as *const usize), p);
+    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110));
+    let k = achar(*(G_CONTRACT_MANAGER as *const usize), p);
     linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CHAMADAS,
         core::ptr::read_unaligned(c as *const i32), core::ptr::read_unaligned((c + 4) as *const i32), DIAG_PESSOA,
         if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", core::ptr::read_unaligned(k as *const i32), core::ptr::read_unaligned((k + 4) as *const i32), diag_contrato(k)) }));
@@ -9822,7 +9825,7 @@ unsafe extern "thiscall" fn diag_queixa(c: usize, f: u32, z: u32) -> u32 {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
             FORCADA = true;
             let achar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-            let k = achar(*(0xae1050 as *const usize), (*(0xae23bc as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110)));
+            let k = achar(*(G_CONTRACT_MANAGER as *const usize), (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PESSOA.wrapping_mul(110)));
             if k != 0 {
                 linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PESSOA, diag_contrato(k)));
                 let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_QUEIXA)(k, q, 0);
@@ -11102,14 +11105,14 @@ pub unsafe fn autoteste(casos: u64) {
                 // tecnico humano
                 let globais60 = [0xae2364usize, 0xb63c98];
                 let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
-                *(0xae2364 as *mut i32) = 1000;
+                *(G_STAFF_COUNT as *mut i32) = 1000;
                 let regs60 = tecnicos56.as_mut_ptr() as usize;
                 for k in 0..16usize {
                     *((regs60 + 42735 * k + 0x9a01) as *mut u32) = if (h61 >> k) % 2 == 0 { 0 } else { 7 };
                     *((regs60 + 42735 * k + 0x9a05) as *mut u8) = ((h61 >> (k + 16)) % 2) as u8;
                 }
                 let gerente60 = [regs60, 16usize];
-                *(0xb63c98 as *mut usize) = gerente60.as_ptr() as usize;
+                *(G_HUMAN_MANAGER as *mut usize) = gerente60.as_ptr() as usize;
                 let mut tec60 = [0u8; 0x60];
                 *(tec60.as_mut_ptr() as *mut i32) = [1000 - 16, 999, 1000, 983, 5][((h61 >> 32) % 5) as usize];
                 tec60[0x5f] = ((h61 >> 35) % 3) as u8;
@@ -11119,8 +11122,8 @@ pub unsafe fn autoteste(casos: u64) {
                 }
                 let globais_sel = [0xae235cusize, 0xae2350];
                 let antes_sel: Vec<u32> = globais_sel.iter().map(|&a| *(a as *const u32)).collect();
-                *(0xae235c as *mut i32) = 5000;
-                *(0xae2350 as *mut i32) = 200;
+                *(G_CLUB_COUNT as *mut i32) = 5000;
+                *(G_NATION_COUNT as *mut i32) = 200;
                 let clubes60 = [[4500i32 + ((h61 >> 42) % 2) as i32 * 200], [4500i32 + ((h61 >> 43) % 2) as i32 * 200]];
                 let pa60 = partida50.as_mut_ptr() as usize;
                 *((pa60 + 0x1c) as *mut usize) = clubes60[0].as_ptr() as usize;
@@ -11133,8 +11136,8 @@ pub unsafe fn autoteste(casos: u64) {
                     // fichas contiguas, como o vetor de pessoas do jogo (0xae23bc, 110 bytes cada): a lista de
                     // penaltis do tecnico humano guarda indices nele
                     let mut fichas56 = vec![0u8; 110 * 20];
-                    let pessoas_antes = *(0xae23bc as *const usize);
-                    *(0xae23bc as *mut usize) = fichas56.as_mut_ptr() as usize;
+                    let pessoas_antes = *(G_STAFF_TABLE as *const usize);
+                    *(G_STAFF_TABLE as *mut usize) = fichas56.as_mut_ptr() as usize;
                     let mut pessoas56 = vec![[0u8; 0x30]; 20];
                     let mut excl56 = [0u8; 40];
                     let r0 = s.proximo();
@@ -11208,7 +11211,7 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     comparar_escolher_cobrador(m, lado56, tipo, excl);
                     core::ptr::copy_nonoverlapping(antes_bloco56.as_ptr(), bloco56 as *mut u8, antes_bloco56.len());
-                    *(0xae23bc as *mut usize) = pessoas_antes;
+                    *(G_STAFF_TABLE as *mut usize) = pessoas_antes;
                 }
                 for (i, &a) in globais60.iter().enumerate() {
                     *(a as *mut u32) = antes60[i];
@@ -11235,11 +11238,11 @@ pub unsafe fn autoteste(casos: u64) {
             {
                 let mut antes67 = [0u8; 4 * 40];
                 core::ptr::copy_nonoverlapping((m + 0x8f7e) as *const u8, antes67.as_mut_ptr(), antes67.len());
-                let (n67, g67) = (*((m + 0x8eb8) as *const u8), *(0xb67a64 as *const u32));
+                let (n67, g67) = (*((m + 0x8eb8) as *const u8), *(G_ACTION_ORDER_MATCH_ENGINE as *const u32));
                 comparar_ordem_dos_jogadores(m);
                 core::ptr::copy_nonoverlapping(antes67.as_ptr(), (m + 0x8f7e) as *mut u8, antes67.len());
                 *((m + 0x8eb8) as *mut u8) = n67;
-                *(0xb67a64 as *mut u32) = g67;
+                *(G_ACTION_ORDER_MATCH_ENGINE as *mut u32) = g67;
             }
             // quadragesima quinta leva: teste de condicao (condicao 0..100, abaixo de 1 divide por zero)
             let h53 = s.proximo();
@@ -11279,23 +11282,23 @@ pub unsafe fn autoteste(casos: u64) {
             let antes55: Vec<u32> = globais.iter().map(|&a| *(a as *const u32)).collect();
             comparar_unidades([0i32, 9, 10, 999, 1000, 1001, -1, -10, -999, i32::MIN, ((h55 >> 3) % 3000) as i32 - 1000][((h55 >> 60) % 11) as usize]);
             let ncomp = 200 + ((h55 >> 8) % 100) as i32;
-            *(0xae2378 as *mut i32) = ncomp;
+            *(G_CLUB_COMP_COUNT as *mut i32) = ncomp;
             let mut comp55 = [0i32; 2];
             comp55[0] = [ncomp - 0x7f, ncomp - 0x80, ncomp, 0, -5, ((h55 >> 16) % 400) as i32][((h55 >> 24) % 6) as usize];
             let obj55 = [0usize, if (h55 >> 27) % 4 == 0 { comp55.as_ptr() as usize } else { 0x4321 }];
             comparar_e_amistoso(obj55.as_ptr() as usize, comp55.as_ptr() as usize);
             let npes = 50 + ((h55 >> 30) % 20) as i32;
-            *(0xae2364 as *mut i32) = npes;
+            *(G_STAFF_COUNT as *mut i32) = npes;
             for k in 0..80usize {
                 *((tabela55.as_mut_ptr() as usize + 79 * k) as *mut i32) = if (h55 >> (k % 40)) % 5 == 0 { -1 - (k as i32 % 3) } else { (k * 3) as i32 };
             }
-            *(0xae2d0c as *mut usize) = tabela55.as_mut_ptr() as usize;
+            *(G_STAFF_STATE_TABLE as *mut usize) = tabela55.as_mut_ptr() as usize;
             let pessoa55 = [[0i32, 1, npes - 1, npes, npes + 3, 2, ((h55 >> 36) % 70) as i32][((h55 >> 40) % 7) as usize]];
             let contratos55 = [0x10000usize, 0];
             comparar_contrato_de(contratos55.as_ptr() as usize, if (h55 >> 43) % 6 == 0 { 0 } else { pessoa55.as_ptr() as usize });
-            *(0xae235c as *mut i32) = 5000 + ((h55 >> 46) % 100) as i32;
-            *(0xae2350 as *mut i32) = 200 + ((h55 >> 50) % 50) as i32;
-            let limite55 = *(0xae235c as *const i32) - 2 * *(0xae2350 as *const i32);
+            *(G_CLUB_COUNT as *mut i32) = 5000 + ((h55 >> 46) % 100) as i32;
+            *(G_NATION_COUNT as *mut i32) = 200 + ((h55 >> 50) % 50) as i32;
+            let limite55 = *(G_CLUB_COUNT as *const i32) - 2 * *(G_NATION_COUNT as *const i32);
             let clube55 = [[limite55, limite55 - 1, limite55 + 1, 0, 9999, -3][((h55 >> 54) % 6) as usize]];
             comparar_e_selecao(clube55.as_ptr() as usize);
             for (i, &a) in globais.iter().enumerate() {
@@ -11307,9 +11310,9 @@ pub unsafe fn autoteste(casos: u64) {
             let globais56 = [0xae2364usize, 0xb77c7a];
             let antes56: Vec<u32> = globais56.iter().map(|&a| *(a as *const u32)).collect();
             let npes56 = 1000 + ((h56 >> 2) % 50) as i32;
-            *(0xae2364 as *mut i32) = npes56;
+            *(G_STAFF_COUNT as *mut i32) = npes56;
             let atual56 = ((h56 >> 8) % 4) as i16;
-            *(0xb77c7a as *mut i16) = atual56;
+            *(G_SCREEN_MANAGER_CURRENT_SLOT as *mut i16) = atual56;
             let tab56 = 0xb74c26 + 768 * atual56 as usize;
             let antes_tab56 = *(tab56 as *const u32);
             let ntec = 1 + ((h56 >> 12) % 16) as i32;
@@ -11343,9 +11346,9 @@ pub unsafe fn autoteste(casos: u64) {
                 // o tecnico 0 com outra pessoa valida: pegar a vaga errada aparece
                 let mut outra62 = [0u32; 16];
                 outra62[0] = (npes56 - 16 + (dentro56 + 1) % ntec) as u32;
-                let antes_vaga0 = *(0xb74c26 as *const u32);
+                let antes_vaga0 = *(G_SCREEN_RECORDS_MANAGER as *const u32);
                 if atual56 != 0 {
-                    *(0xb74c26 as *mut usize) = outra62.as_ptr() as usize;
+                    *(G_SCREEN_RECORDS_MANAGER as *mut usize) = outra62.as_ptr() as usize;
                 }
                 let quem62 = if (h56 >> 47) % 4 == 0 { 0 } else { pessoa62.as_ptr() as usize };
                 comparar_tecnico_9ace(obj56.as_ptr() as usize, quem62);
@@ -11363,9 +11366,9 @@ pub unsafe fn autoteste(casos: u64) {
                 let h63 = s.proximo();
                 let globais63 = [0xb63c98usize, 0xae235c, 0xae2350, 0xae23b4, 0xae23a8];
                 let antes63: Vec<u32> = globais63.iter().map(|&a| *(a as *const u32)).collect();
-                *(0xb63c98 as *mut usize) = obj56.as_ptr() as usize;
-                *(0xae235c as *mut i32) = 5000;
-                *(0xae2350 as *mut i32) = 200;
+                *(G_HUMAN_MANAGER as *mut usize) = obj56.as_ptr() as usize;
+                *(G_CLUB_COUNT as *mut i32) = 5000;
+                *(G_NATION_COUNT as *mut i32) = 200;
                 for k in 0..16usize {
                     let r = regs56 + 42735 * k;
                     if (h63 >> k) & 1 == 0 {
@@ -11380,8 +11383,8 @@ pub unsafe fn autoteste(casos: u64) {
                 *(clube_b63.as_mut_ptr() as *mut i32) = 100;
                 *(clube_b63.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h63 >> 34) % 3) as usize];
                 let nacao63 = [0i32; 4];
-                *(0xae23b4 as *mut usize) = (clube_b63.as_ptr() as usize).wrapping_sub(581 * 4600);
-                *(0xae23a8 as *mut u32) = 1;
+                *(G_CLUB_TABLE as *mut usize) = (clube_b63.as_ptr() as usize).wrapping_sub(581 * 4600);
+                *(G_NATION_TABLE as *mut u32) = 1;
                 let mut clube_a63 = [0u8; 0x100];
                 *(clube_a63.as_mut_ptr() as *mut i32) = [100i32, 4650, 4850][((h63 >> 36) % 3) as usize];
                 *(clube_a63.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h63 >> 38) % 3) as usize];
@@ -11409,12 +11412,12 @@ pub unsafe fn autoteste(casos: u64) {
                 let obj84 = [0usize, blocos84.as_mut_ptr() as usize];
                 comparar_byte_42_da_selecao(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 48) & 1) as u32);
                 comparar_byte_43_da_selecao(obj84.as_ptr() as usize, clube_a63.as_ptr() as usize, ((h63 >> 49) & 1) as u32);
-                let especiais84 = (*(0x9d00a4 as *const u32), *(0x9d00a8 as *const u32));
-                *(0x9d00a4 as *mut u32) = [4650u32, 7, 9][((h63 >> 51) % 3) as usize];
-                *(0x9d00a8 as *mut u32) = [100u32, 8][((h63 >> 53) % 2) as usize];
+                let especiais84 = (*(G_KEY_CLUB_MLS_ALL_STARS_EAST as *const u32), *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *const u32));
+                *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *mut u32) = [4650u32, 7, 9][((h63 >> 51) % 3) as usize];
+                *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *mut u32) = [100u32, 8][((h63 >> 53) % 2) as usize];
                 comparar_selecao_ou_especial(clube_a63.as_ptr() as usize);
-                *(0x9d00a4 as *mut u32) = especiais84.0;
-                *(0x9d00a8 as *mut u32) = especiais84.1;
+                *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *mut u32) = especiais84.0;
+                *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *mut u32) = especiais84.1;
                 let mut pref84 = [0usize; 8];
                 pref84[4 + ((h63 >> 54) % 3) as usize] = if (h63 >> 56) & 1 == 0 { clube_b63.as_ptr() as usize } else { 1 };
                 let mut pessoa84 = [0u8; 0x70];
@@ -11427,8 +11430,8 @@ pub unsafe fn autoteste(casos: u64) {
                     let h75 = s.proximo();
                     let globais75 = [0xae2a60usize, 0xae23bc, 0xae2c90, 0xae2c94];
                     let antes75: Vec<u32> = globais75.iter().map(|&a| *(a as *const u32)).collect();
-                    *(0xae2c90 as *mut u32) = (h75 >> 3) as u32;
-                    *(0xae2c94 as *mut u32) = (h75 >> 29) as u32;
+                    *(G_CURRENT_DATE as *mut u32) = (h75 >> 3) as u32;
+                    *(G_CURRENT_DATE_LEAP as *mut u32) = (h75 >> 29) as u32;
                     let mut conhec75 = vec![0u8; 9 * 1100];
                     for (k, b) in conhec75.iter_mut().enumerate() {
                         *b = if k % 9 == 0 { (h75.rotate_left(k as u32 % 61) % 4) as u8 } else { (k as u8).wrapping_mul(37) };
@@ -11438,13 +11441,13 @@ pub unsafe fn autoteste(casos: u64) {
                     for k in 0..32usize {
                         quadro75[k] = if (h75 >> (k % 40 + 5)) % 5 == 0 { 0 } else { obj75.as_ptr() as usize };
                     }
-                    *(0xae2a60 as *mut usize) = quadro75.as_ptr() as usize;
+                    *(G_FOG_OF_WAR as *mut usize) = quadro75.as_ptr() as usize;
                     let mut pessoas75 = vec![0u8; 0x6e * 64];
                     for k in 0..64usize {
                         let z = h75.rotate_left(k as u32) ^ (k as u64 * 0x9e37);
                         *(pessoas75.as_mut_ptr().add(0x6e * k) as *mut i32) = if z % 9 == 0 { npes56 + ((z >> 8) % 3) as i32 } else { (k * 13) as i32 % npes56 };
                     }
-                    *(0xae23bc as *mut usize) = pessoas75.as_ptr() as usize;
+                    *(G_STAFF_TABLE as *mut usize) = pessoas75.as_ptr() as usize;
                     let mut dados75 = vec![0u8; 0x1000];
                     for lado in 0..2usize {
                         for v in 0..20usize {
@@ -11509,7 +11512,7 @@ pub unsafe fn autoteste(casos: u64) {
                     for _ in 0..3 {
                         comparar_proximo_da_lista(cursor77.as_mut_ptr() as usize);
                     }
-                    let n77 = *(0xae2364 as *const i32);
+                    let n77 = *(G_STAFF_COUNT as *const i32);
                     let mut regs77 = vec![0u8; 31 * 8];
                     for (k, b) in regs77.iter_mut().enumerate() {
                         *b = (h77.rotate_left(k as u32 % 64) as u8) ^ (k as u8).wrapping_mul(29);
@@ -11554,8 +11557,8 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     *(rodada78.as_mut_ptr().add(0x57) as *mut i32) = 500 + ((h78 >> 40) % 3) as i32;
                     *(rodada78.as_mut_ptr().add(0x60) as *mut i32) = 500 + ((h78 >> 42) % 3) as i32;
-                    *(0xae23d0 as *mut usize) = tabela78.as_ptr() as usize;
-                    *(0xadadfc as *mut usize) = ptrs78.as_ptr() as usize;
+                    *(G_CLUB_COMP_TABLE as *mut usize) = tabela78.as_ptr() as usize;
+                    *(G_COMP_OBJECT_TABLE as *mut usize) = ptrs78.as_ptr() as usize;
                     comparar_competicao_conta(((h78 >> 44) % 16) as i32);
                     for (k, &a) in globais78.iter().enumerate() {
                         *(a as *mut u32) = antes78[k];
@@ -11576,8 +11579,8 @@ pub unsafe fn autoteste(casos: u64) {
                     // octogesima leva: quadros da nevoa (16, alguns nulos ou inativos; nevoa ligada ou
                     // nao) e a formacao (casas das onze mascaras trocadas, ou casas sorteadas)
                     let h80 = s.proximo();
-                    let antes_nevoa80 = *(0x9cc270 as *const u8);
-                    *(0x9cc270 as *mut u8) = ((h80 >> 1) % 4 != 0) as u8;
+                    let antes_nevoa80 = *(G_ATTRIBUTE_MASKING_ENABLED as *const u8);
+                    *(G_ATTRIBUTE_MASKING_ENABLED as *mut u8) = ((h80 >> 1) % 4 != 0) as u8;
                     let mut niveis80 = vec![0u8; 9 * 70];
                     for (k, b) in niveis80.iter_mut().enumerate() {
                         *b = 1 + (k % 3) as u8;
@@ -11591,7 +11594,7 @@ pub unsafe fn autoteste(casos: u64) {
                     }
                     let pessoa80 = [n77 - 64 + ((h80 >> 40) % 66) as i32];
                     comparar_esquecer_pessoa(ptrs80.as_ptr() as usize, if (h80 >> 47) % 8 == 0 { 0 } else { pessoa80.as_ptr() as usize });
-                    *(0x9cc270 as *mut u8) = antes_nevoa80;
+                    *(G_ATTRIBUTE_MASKING_ENABLED as *mut u8) = antes_nevoa80;
                     let tecnico80 = [n77 - 1 - ((h80 >> 50) % 16) as i32];
                     comparar_quadro_do_tecnico(ptrs80.as_ptr() as usize, if (h80 >> 54) % 6 == 0 { 0 } else { tecnico80.as_ptr() as usize });
                     let codigos80: Vec<u16> = core::iter::once(1u16)
@@ -11673,22 +11676,22 @@ pub unsafe fn autoteste(casos: u64) {
                     comparar_byte_44_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, k83);
                     comparar_ligar_44_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 7) % 9) as i8 - 2);
                     comparar_campo_3a_da_pessoa(obj82.as_ptr() as usize, pessoa82.as_ptr() as usize, ((h83 >> 11) % 9) as i8 - 2);
-                    let antes83 = *(0x9b5984 as *const u32);
-                    *(0x9b5984 as *mut u32) = (h83 >> 20) as u32;
+                    let antes83 = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
+                    *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = (h83 >> 20) as u32;
                     comparar_global_9b5984();
                     // octogesima quarta leva: competicao da pessoa (indice +4 negativo ou nao) e data com marca
                     let h84 = s.proximo();
-                    let antes84 = *(0xae23d0 as *const usize);
-                    *(0xae23d0 as *mut usize) = 0x0200_0000;
+                    let antes84 = *(G_CLUB_COMP_TABLE as *const usize);
+                    *(G_CLUB_COMP_TABLE as *mut usize) = 0x0200_0000;
                     for k in 0..10usize {
                         *(marcas82.as_mut_ptr().add(0x40 + 110 * k + 4) as *mut i32) = if (h84 >> k) % 4 == 0 { -1 - k as i32 } else { (h84 >> (k + 10)) as i32 & 0xff };
                     }
                     comparar_competicao_da_pessoa(obj82.as_ptr() as usize, if (h84 >> 30) % 6 == 0 { 0 } else { pessoa82.as_ptr() as usize });
-                    *(0xae23d0 as *mut usize) = antes84;
+                    *(G_CLUB_COMP_TABLE as *mut usize) = antes84;
                     let origem84: [u8; 12] = core::array::from_fn(|k| (h84 >> (k * 5)) as u8);
                     let mut destino84 = [0u8; 12];
                     comparar_copiar_data_e_marca(destino84.as_mut_ptr() as usize, origem84.as_ptr() as usize);
-                    *(0x9b5984 as *mut u32) = antes83;
+                    *(G_DATABASE_NAMES_LANGUAGE as *mut u32) = antes83;
                     let globais82 = [0x9b59b4usize, 0xae23a0, 0xae23f8];
                     let antes82: Vec<u32> = globais82.iter().map(|&a| *(a as *const u32)).collect();
                     let n82 = 1 + ((h82 >> 23) % 8) as i32;
@@ -11696,9 +11699,9 @@ pub unsafe fn autoteste(casos: u64) {
                     if (h82 >> 27) % 3 != 0 {
                         tabela82[60 * ((h82 >> 29) % 9) as usize] = 0;
                     }
-                    *(0xae23a0 as *mut i32) = n82;
-                    *(0xae23f8 as *mut usize) = tabela82.as_ptr() as usize;
-                    *(0x9b59b4 as *mut i32) = if (h82 >> 33) % 3 == 0 { ((h82 >> 35) % 9) as i32 } else { -1 };
+                    *(G_COMMON_NAME_COUNT as *mut i32) = n82;
+                    *(G_COMMON_NAME_TABLE as *mut usize) = tabela82.as_ptr() as usize;
+                    *(G_EMPTY_COMMON_NAME_INDEX as *mut i32) = if (h82 >> 33) % 3 == 0 { ((h82 >> 35) % 9) as i32 } else { -1 };
                     comparar_registro_livre();
                     for (k, &a) in globais82.iter().enumerate() {
                         *(a as *mut u32) = antes82[k];
@@ -11733,8 +11736,8 @@ pub unsafe fn autoteste(casos: u64) {
                     for k in 0..30usize {
                         *(pessoas68.as_mut_ptr().add(110 * k) as *mut i32) = 7000 + (k as i32 % 25);
                     }
-                    let antes68 = *(0xae23bc as *const usize);
-                    *(0xae23bc as *mut usize) = pessoas68.as_ptr() as usize;
+                    let antes68 = *(G_STAFF_TABLE as *const usize);
+                    *(G_STAFF_TABLE as *mut usize) = pessoas68.as_ptr() as usize;
                     let linhas68: Vec<usize> = [100usize, 4650, 4850].into_iter().chain(4999..5033).collect();
                     let copia68: Vec<[u8; 0x91]> = linhas68.iter().map(|&l| {
                         let mut c = [0u8; 0x91];
@@ -11759,7 +11762,7 @@ pub unsafe fn autoteste(casos: u64) {
                     for (n, &l) in linhas68.iter().enumerate() {
                         TABELA65[0x91 * l..0x91 * l + 0x91].copy_from_slice(&copia68[n]);
                     }
-                    *(0xae23bc as *mut usize) = antes68;
+                    *(G_STAFF_TABLE as *mut usize) = antes68;
                 }
                 // sexagesima nona leva: clube na competicao e clube especial
                 {
@@ -11845,8 +11848,8 @@ pub unsafe fn autoteste(casos: u64) {
                         clube73[0x244] = ((h73 >> 20) % 3 != 0) as u8;
                         let mut eh73 = 5u32;
                         let ponteiro73 = if (h73 >> 23) % 3 == 0 { core::ptr::null_mut() } else { &mut eh73 as *mut u32 };
-                        let antes_base73 = *(0xae23b4 as *const u32);
-                        *(0xae23b4 as *mut u32) = 0x0100_0000;
+                        let antes_base73 = *(G_CLUB_TABLE as *const u32);
+                        *(G_CLUB_TABLE as *mut u32) = 0x0100_0000;
                         comparar_clube_parceiro(clube73.as_mut_ptr() as usize, ponteiro73, ((h73 >> 25) & 1) as u32);
                         // septuagesima quarta leva: contrato com o clube e nivel do contrato
                         if CLUBES74.is_empty() {
@@ -11856,19 +11859,19 @@ pub unsafe fn autoteste(casos: u64) {
                             }
                         }
                         // a partir da vaga 16: parceiros de indice negativo (-5) ainda caem dentro do vetor
-                        *(0xae23b4 as *mut usize) = CLUBES74.as_ptr() as usize + 581 * 16;
+                        *(G_CLUB_TABLE as *mut usize) = CLUBES74.as_ptr() as usize + 581 * 16;
                         let h74 = s.proximo();
                         let id_p74: i32 = [5i32, 40, 99999][((h74 >> 1) % 3) as usize];
                         let pessoa74 = [id_p74, 0, 0, 0];
                         let mut entrada74 = [0u8; 79];
                         *(entrada74.as_mut_ptr() as *mut i32) = [0i32, 1, 2, 3, -1][((h74 >> 3) % 5) as usize];
                         *(entrada74.as_mut_ptr().add(4) as *mut i32) = [0i32, 1, 2, 3, -1][((h74 >> 6) % 5) as usize];
-                        let antes74 = (*(0xae2d0c as *const usize), *(0xae1050 as *const usize));
+                        let antes74 = (*(G_STAFF_STATE_TABLE as *const usize), *(G_CONTRACT_MANAGER as *const usize));
                         // limite das selecoes (clubes - 2 x nacoes) no meio dos ids dos pares
-                        let limites74 = (*(0xae235c as *const i32), *(0xae2350 as *const i32));
-                        *(0xae235c as *mut i32) = 2100;
-                        *(0xae2350 as *mut i32) = 400 + ((h74 >> 20) % 700) as i32;
-                        *(0xae2d0c as *mut usize) = (entrada74.as_ptr() as usize).wrapping_sub((id_p74.max(0) as usize).wrapping_mul(79));
+                        let limites74 = (*(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
+                        *(G_CLUB_COUNT as *mut i32) = 2100;
+                        *(G_NATION_COUNT as *mut i32) = 400 + ((h74 >> 20) % 700) as i32;
+                        *(G_STAFF_STATE_TABLE as *mut usize) = (entrada74.as_ptr() as usize).wrapping_sub((id_p74.max(0) as usize).wrapping_mul(79));
                         let id_c74 = *(clube73.as_ptr() as *const u32);
                         let mut regs74 = [0u8; 80 * 4];
                         for k in 0..4usize {
@@ -11878,7 +11881,7 @@ pub unsafe fn autoteste(casos: u64) {
                             regs74[80 * k + 0x44] = (z >> 24) as u8;
                         }
                         let obj74 = [regs74.as_ptr() as usize, 0];
-                        *(0xae1050 as *mut usize) = obj74.as_ptr() as usize;
+                        *(G_CONTRACT_MANAGER as *mut usize) = obj74.as_ptr() as usize;
                         comparar_contrato_com_clube(obj74.as_ptr() as usize, pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
                         comparar_nivel_do_contrato(pessoa74.as_ptr() as usize, clube73.as_mut_ptr() as usize);
                         // septuagesima nona leva: nota do jogador (motor com o clube73 nos dois lados,
@@ -11906,17 +11909,17 @@ pub unsafe fn autoteste(casos: u64) {
                         *(jog79.as_mut_ptr().add(0x19e) as *mut usize) = motor79.as_ptr() as usize;
                         *(jog79.as_mut_ptr().add(0x69) as *mut usize) = pessoa79.as_ptr() as usize;
                         *(jog79.as_mut_ptr().add(0x6d) as *mut usize) = ficha79.as_ptr() as usize;
-                        let hoje79 = (*(0xae2c90 as *const u32), *(0xae2c94 as *const u32));
-                        *(0xae2c90 as *mut u32) = (2001u32 << 16) | ((h79 >> 52) % 366) as u32;
-                        *(0xae2c94 as *mut u32) = 0;
+                        let hoje79 = (*(G_CURRENT_DATE as *const u32), *(G_CURRENT_DATE_LEAP as *const u32));
+                        *(G_CURRENT_DATE as *mut u32) = (2001u32 << 16) | ((h79 >> 52) % 366) as u32;
+                        *(G_CURRENT_DATE_LEAP as *mut u32) = 0;
                         comparar_nota_do_jogador(jog79.as_ptr() as usize);
-                        *(0xae2c90 as *mut u32) = hoje79.0;
-                        *(0xae2c94 as *mut u32) = hoje79.1;
-                        *(0xae2d0c as *mut usize) = antes74.0;
-                        *(0xae1050 as *mut usize) = antes74.1;
-                        *(0xae235c as *mut i32) = limites74.0;
-                        *(0xae2350 as *mut i32) = limites74.1;
-                        *(0xae23b4 as *mut u32) = antes_base73;
+                        *(G_CURRENT_DATE as *mut u32) = hoje79.0;
+                        *(G_CURRENT_DATE_LEAP as *mut u32) = hoje79.1;
+                        *(G_STAFF_STATE_TABLE as *mut usize) = antes74.0;
+                        *(G_CONTRACT_MANAGER as *mut usize) = antes74.1;
+                        *(G_CLUB_COUNT as *mut i32) = limites74.0;
+                        *(G_NATION_COUNT as *mut i32) = limites74.1;
+                        *(G_CLUB_TABLE as *mut u32) = antes_base73;
                         for (k, &a) in todos73.iter().enumerate().rev() {
                             *(a as *mut u32) = antes73[k];
                         }
@@ -11951,7 +11954,7 @@ pub unsafe fn autoteste(casos: u64) {
                         *((regs66(t) + 0x9a01) as *mut u32) = 0;
                     }
                     partida64[0x41] = ((h63 >> 57) & 1) as u8;
-                    let antes66 = (*(0xde1d08 as *const usize), *((m + 0x904d) as *const usize), *((m + 0x911d) as *const usize),
+                    let antes66 = (*(G_TACTICS as *const usize), *((m + 0x904d) as *const usize), *((m + 0x911d) as *const usize),
                         *((m + 0x904b) as *const u8), *((m + 0x911b) as *const u8));
                     // a marca vai para +0x8eda + 20 x lado + byte da tabela (com sinal): ate 128 bytes em volta
                     let mut marcas66 = [0u8; 0x140];
@@ -11960,7 +11963,7 @@ pub unsafe fn autoteste(casos: u64) {
                     core::ptr::copy_nonoverlapping((m + 0x1af) as *const u8, ordem66.as_mut_ptr(), 22);
                     let mut obj66 = [0u8; 0x608];
                     *(obj66.as_mut_ptr().add(0x601) as *mut usize) = TABELA65.as_ptr() as usize;
-                    *(0xde1d08 as *mut usize) = obj66.as_ptr() as usize;
+                    *(G_TACTICS as *mut usize) = obj66.as_ptr() as usize;
                     let ta = ((h63 >> 58) & 1) as usize;
                     *((m + 0x904d) as *mut usize) = tec66[ta].as_ptr() as usize;
                     *((m + 0x911d) as *mut usize) = tec66[1 - ta].as_ptr() as usize;
@@ -11968,7 +11971,7 @@ pub unsafe fn autoteste(casos: u64) {
                     *((m + 0x904b) as *mut u8) = (sel_a && (h63 >> 59) & 1 == 1) as u8;
                     *((m + 0x911b) as *mut u8) = 0;
                     comparar_ordem_dos_penaltis(m);
-                    *(0xde1d08 as *mut usize) = antes66.0;
+                    *(G_TACTICS as *mut usize) = antes66.0;
                     *((m + 0x904d) as *mut usize) = antes66.1;
                     *((m + 0x911d) as *mut usize) = antes66.2;
                     *((m + 0x904b) as *mut u8) = antes66.3;
@@ -11983,7 +11986,7 @@ pub unsafe fn autoteste(casos: u64) {
                 for (i, &a) in globais63.iter().enumerate() {
                     *(a as *mut u32) = antes63[i];
                 }
-                *(0xb74c26 as *mut u32) = antes_vaga0;
+                *(G_SCREEN_RECORDS_MANAGER as *mut u32) = antes_vaga0;
                 *(tab56 as *mut usize) = id56.as_ptr() as usize;
                 comparar_tecnico_9a05(obj56.as_ptr() as usize, quem56);
             }
@@ -11998,15 +12001,15 @@ pub unsafe fn autoteste(casos: u64) {
             let h57 = s.proximo();
             let globais57 = [0xae235cusize, 0xae2350];
             let antes57: Vec<u32> = globais57.iter().map(|&a| *(a as *const u32)).collect();
-            *(0xae235c as *mut i32) = 5000;
-            *(0xae2350 as *mut i32) = 200;
+            *(G_CLUB_COUNT as *mut i32) = 5000;
+            *(G_NATION_COUNT as *mut i32) = 200;
             let clube57 = [[4800i32, 4799, 4801, 0, 4900][((h57 >> 2) % 5) as usize]];
             comparar_e_segunda_selecao(clube57.as_ptr() as usize);
             // sexagesima leva: clube da selecao (so aritmetica; base e 0xae23a8 falsos)
             let globais60 = [0xae23b4usize, 0xae23a8];
             let antes60: Vec<u32> = globais60.iter().map(|&a| *(a as *const u32)).collect();
-            *(0xae23b4 as *mut u32) = 0x0100_0000 + ((h57 >> 53) as u32 & 0xfff) * 4;
-            *(0xae23a8 as *mut u32) = 0x0200_0000;
+            *(G_CLUB_TABLE as *mut u32) = 0x0100_0000 + ((h57 >> 53) as u32 & 0xfff) * 4;
+            *(G_NATION_TABLE as *mut u32) = 0x0200_0000;
             let nacao60 = [[0i32, 1, 199, 200, -3, 7000][((h57 >> 30) % 6) as usize]];
             comparar_selecao_principal(nacao60.as_ptr() as usize);
             comparar_selecao_b(nacao60.as_ptr() as usize);
@@ -12055,8 +12058,8 @@ pub unsafe fn autoteste(casos: u64) {
             // formacao adversaria fechada, 0x106, tabelas A/B do marcado)
             {
                 let mut pessoas59 = vec![0u8; 110 * 24];
-                let pessoas_antes = *(0xae23bc as *const usize);
-                *(0xae23bc as *mut usize) = pessoas59.as_mut_ptr() as usize;
+                let pessoas_antes = *(G_STAFF_TABLE as *const usize);
+                *(G_STAFF_TABLE as *mut usize) = pessoas59.as_mut_ptr() as usize;
                 let r0 = s.proximo();
                 let l59 = (r0 % 2) as usize;
                 let o59 = 1 - l59;
@@ -12124,7 +12127,7 @@ pub unsafe fn autoteste(casos: u64) {
                 core::ptr::copy_nonoverlapping(antes_form.as_ptr(), form as *mut u8, antes_form.len());
                 *((form_o + 0x187b) as *mut u32) = antes_fo;
                 *((m + 0xaf + o59) as *mut u8) = antes_af;
-                *(0xae23bc as *mut usize) = pessoas_antes;
+                *(G_STAFF_TABLE as *mut usize) = pessoas_antes;
                 for (t, a) in tabelas.iter_mut().zip(antes_tabelas.iter()) {
                     t.copy_from_slice(a);
                 }
@@ -12188,9 +12191,9 @@ pub unsafe fn autoteste(casos: u64) {
                 let mut pa = vec![0u8; 0x60];
                 let mut cl = vec![vec![0u8; 0x90]; 2];
                 let mut cp = vec![0u8; 0x70];
-                *(0xae235c as *mut i32) = 5000;
-                *(0xae2350 as *mut i32) = 200;
-                *(0xb74350 as *mut usize) = est.as_mut_ptr() as usize;
+                *(G_CLUB_COUNT as *mut i32) = 5000;
+                *(G_NATION_COUNT as *mut i32) = 200;
+                *(G_PLAYER_STATS as *mut usize) = est.as_mut_ptr() as usize;
                 let antes_m = *((m + 0x4792) as *const usize);
                 for _ in 0..6 {
                     let r: Vec<u64> = (0..12).map(|_| s.proximo()).collect();

@@ -335,8 +335,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
         return 0;
     }
     let mut k: u8 = 0;
-    let n = read_u32_as_usize(0xae235c) as i32;
-    let base = read_u32_as_usize(0xae23b4);
+    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245; // cqm6: o clube i do banco
@@ -367,8 +367,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_segunda(this: usize) -> u32 {
 /// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 pub(crate) unsafe extern "thiscall" fn comparar_tabela_da_segunda(this: usize) -> u32 {
     let o = orig::<unsafe extern "thiscall" fn(usize) -> u32>(1874);
-    let n = read_u32_as_usize(0xae235c) as i32;
-    let base = read_u32_as_usize(0xae23b4);
+    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut plano: Vec<(usize, bool)> = Vec::new();
     for i in 0..n.max(0) as usize {
         let c = base + i * 0x245;

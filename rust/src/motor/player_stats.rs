@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn arquivar_estatisticas(this: usize, p: usi
             true
         } else {
             let t = 0xb63d8a + k as usize * 0x48;
-            let (dia, ano) = (core::ptr::read_unaligned(0xae2c90 as *const i16), core::ptr::read_unaligned(0xae2c92 as *const u16));
+            let (dia, ano) = (core::ptr::read_unaligned(G_CURRENT_DATE as *const i16), core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16));
             let (d0, a0) = (core::ptr::read_unaligned(t as *const i16), core::ptr::read_unaligned((t + 2) as *const u16));
             let (d1, a1) = (core::ptr::read_unaligned((t + 0xf) as *const i16), core::ptr::read_unaligned((t + 0x11) as *const u16));
             let depois_do_inicio = (dia > d0 && ano == a0) || ano > a0;
@@ -634,7 +634,7 @@ pub(crate) unsafe extern "stdcall" fn anos_desde_o_clube(p: usize, clube: usize)
     let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
-    let t = montar(read_u32_as_usize(0xb74350), p, &mut n);
+    let t = montar(read_u32_as_usize(G_PLAYER_STATS), p, &mut n);
     let mut maior = 0x7b3i32;
     if t != 0 {
         let mut i = 0i32;
@@ -652,7 +652,7 @@ pub(crate) unsafe extern "stdcall" fn anos_desde_o_clube(p: usize, clube: usize)
     if maior == 0x7b3 {
         return -1;
     }
-    read_u16(0xae2c92).wrapping_sub(maior as u16) as i16
+    read_u16(G_CURRENT_DATE_YEAR).wrapping_sub(maior as u16) as i16
 }
 
 /// Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
@@ -728,7 +728,7 @@ pub(crate) unsafe extern "thiscall" fn estatistica_da_categoria(this: usize, jog
         aviso_em(0xa78310, 0x659);
         return 0.0;
     }
-    if read_usize(jogador) as i32 >= read_usize(0xae236c) as i32 {
+    if read_usize(jogador) as i32 >= read_usize(G_PLAYER_DATA_COUNT) as i32 {
         return 0.0;
     }
     let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_PLAYERSTATS_GET_CATEGORY_RECORD);
@@ -785,7 +785,7 @@ pub(crate) unsafe extern "thiscall" fn estatistica_da_categoria(this: usize, jog
 
 pub(crate) unsafe extern "thiscall" fn comparar_estatistica_da_categoria(this: usize, jogador: usize, categoria: u32, qual: u32, padrao: f32) -> f64 {
     let o = orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64>(1200);
-    if jogador == 0 || (read_usize(jogador) as i32) >= read_usize(0xae236c) as i32 {
+    if jogador == 0 || (read_usize(jogador) as i32) >= read_usize(G_PLAYER_DATA_COUNT) as i32 {
         return o(this, jogador, categoria, qual, padrao);
     }
     let c = categoria as u8 as i8;
@@ -902,7 +902,7 @@ pub(crate) unsafe extern "stdcall" fn gols_na_carreira(pessoa: usize) -> u16 {
     let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
-    let t = montar(read_u32_as_usize(0xb74350), pessoa, &mut n);
+    let t = montar(read_u32_as_usize(G_PLAYER_STATS), pessoa, &mut n);
     let mut s = 0u16;
     if t != 0 {
         let mut i = 0i32; // cps9: do primeiro grupo
@@ -1284,12 +1284,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_zerar_estatisticas_do_jogador(th
 /// sem a tabela ou sem o registro, 0. Os chamadores só leem o al.
 pub(crate) unsafe extern "thiscall" fn fluencia_no_idioma(this: usize, pessoa: usize, clube: usize, idioma: u32, pelo_contrato: u32) -> u8 {
     let idioma = idioma as u8;
-    if pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(0xae2364) as i32 {
+    if pessoa != 0 && read_usize(pessoa) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return if read_u8(read_usize(pessoa + 0x1a) + 0x77) == idioma { 10 } else { 0 }; // o técnico humano
     }
     if pelo_contrato != 0 {
         let contrato: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        let c = contrato(read_usize(0xae1050), pessoa, clube);
+        let c = contrato(read_usize(G_CONTRACT_MANAGER), pessoa, clube);
         if c != 0 {
             let cp = read_usize(pessoa + 0x39);
             if cp != 0 && read_usize(clube + 0x53) == read_usize(cp + 0x53) {
@@ -1445,7 +1445,7 @@ pub(crate) unsafe extern "thiscall" fn registrar_partida_nas_estatisticas(this: 
             if cat == 2 || (read_usize(p) as i32 > -1 && conta(read_usize(p) as i32) != 0) {
                 cpx12_mais_w(reg + 0x20, 1);
                 cpx12_mais_w(reg + 0x22, read_u8(e + 0x21) as u16);
-                if ficha(read_usize(0xae1050), pessoa) == 0 && cpx12_contrato(pessoa) != 0 {
+                if ficha(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 && cpx12_contrato(pessoa) != 0 {
                     cpx12_mais_w(cpx12_contrato(pessoa) + 0x3b, 1);
                 }
             }
@@ -1536,7 +1536,7 @@ pub(crate) unsafe extern "thiscall" fn arquivar_estatisticas_da_nacao(this: usiz
                 if p == 0 || read_usize(p + 0x61) == 0 || cpp10_i(p) >= cpp10_i(0xae2364) {
                     continue;
                 }
-                if emprestimo(read_usize(0xae1050), p) == 0 || read_usize(p + 0x39) == clube {
+                if emprestimo(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + 0x39) == clube {
                     crate::comparacao::ramo("cpp_10 arquivar");
                     arquivar(this, p, -1, 0, 0, -1, 0);
                 }
@@ -1681,7 +1681,7 @@ pub(crate) unsafe extern "stdcall" fn gols_pelo_clube(pessoa: usize, clube: usiz
     let montar: unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize = core::mem::transmute(FN_PLAYERSTATS_BUILD_CAREER_HISTORY);
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let mut n = 0i32;
-    let t = montar(read_u32_as_usize(0xb74350), pessoa, &mut n);
+    let t = montar(read_u32_as_usize(G_PLAYER_STATS), pessoa, &mut n);
     let mut s = 0u16;
     if t != 0 {
         let mut i = 0i32;

@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn cqe6_pode_emprestar_espanha(this: usize, 
     if read_usize(clube + 0x57) == read_usize(dono + 0x57) {
         // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall, ret 0x10 (devolve no st0)
         let jogos: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-        let v = jogos(read_usize(0xb74350), read_usize(jogador + 0x61), 2, 1, 6.5);
+        let v = jogos(read_usize(G_PLAYER_STATS), read_usize(jogador + 0x61), 2, 1, 6.5);
         if v > f32_em(0x968990) as f64 {
             crate::comparacao::ramo("cqe_6 espanha mesma divisao");
             return cqe6_recusa(msg, motivo, 0xa82b00, read_usize(this + 0xa), 0x1f);

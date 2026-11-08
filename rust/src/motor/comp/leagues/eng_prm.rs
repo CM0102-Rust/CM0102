@@ -317,12 +317,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_regras_da_third(this: usize) -> 
 
 /// O registro de competição (0x6b bytes em [0xae23d0]) do id guardado no global `g`.
 pub(crate) unsafe fn cqi5_registro(g: usize) -> usize {
-    read_usize(0xae23d0).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
+    read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(g) as i32 as usize).wrapping_mul(0x6b))
 }
 
 /// O ano do jogo ([0xae2c92]) passou de 1999 (o dinheiro da TV maior).
 pub(crate) unsafe fn cqi5_depois_de_1999() -> bool {
-    core::ptr::read_unaligned(0xae2c92 as *const u16) > 0x7cf
+    core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) > 0x7cf
 }
 
 /// League::pay_tv_rights (0x683010: thiscall(liga, valor, filtro), ret 8): o valor a cada clube da tabela, ou só aos
@@ -349,8 +349,8 @@ pub(crate) unsafe fn cqi5_tabela(this: usize, n: i16, arquivo: usize, linha: u32
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
-    let mut clube = read_usize(0xae23b4);
-    while (i as i32) < read_usize(0xae235c) as i32 {
+    let mut clube = read_usize(G_CLUB_TABLE);
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             let linha = k; // cqi5: a linha k recebe o k-ésimo clube da divisão
@@ -407,8 +407,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_third(this: usize) -> u32 {
 pub(crate) unsafe fn cqi5_comparar(nome: &str, this: usize, n: i16, g: usize, cota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plano: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
-    while i < read_usize(0xae235c) as i32 && (plano.len() as i16) < n {
-        let clube = read_usize(0xae23b4) + (i as usize) * 0x245;
+    while i < read_usize(G_CLUB_COUNT) as i32 && (plano.len() as i16) < n {
+        let clube = read_usize(G_CLUB_TABLE) + (i as usize) * 0x245;
         let comp = read_usize(clube + 0x57);
         if comp != 0 && read_usize(comp) == read_usize(g) {
             plano.push(clube);

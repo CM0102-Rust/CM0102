@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_terceira_inglesa(t
 
 /// O registro de staff ([0xdd7f00]).
 pub(crate) unsafe fn cpz2_registros() -> usize {
-    read_usize(0xdd7f00)
+    read_usize(G_STAFF_RECORDS)
 }
 
 /// in the league (stage 0xff): title (5) 0x868c50, promotion (0) 0x869480 with weight 0x64, play-off place (1) 0x86bdd0

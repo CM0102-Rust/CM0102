@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn cqo8_fim_da_temporada_do_paranaense(this:
     let noticia: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
         let c = read_usize(read_usize(this + 0xb1) + linha);
-        premio(financas(read_usize(0xae2a38), c), valor);
+        premio(financas(read_usize(G_FINANCE_TABLE), c), valor);
         noticia(this, read_usize(read_usize(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparacao::ramo("cqo_8 premios");

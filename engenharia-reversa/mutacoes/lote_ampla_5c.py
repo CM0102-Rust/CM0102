@@ -15,7 +15,7 @@ MUTACOES = [
     ('t_vaga', '    if k < *((tabela + 4) as *const i32) {', '    if k <= *((tabela + 4) as *const i32) {'),
     ('r_ids', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e] {'),
     ('s_empate', '        if melhor == 0 || reputacao(c) > reputacao(melhor) {', '        if melhor == 0 || reputacao(c) >= reputacao(melhor) {'),
-    ('c_clube', '    *clube = (*(0xae23b4 as *const usize) as isize + *((contrato + 4) as *const i32) as isize * 581) as usize;', '    *clube = (*(0xae23b4 as *const usize) as isize + *((contrato + 4) as *const i32) as isize * 580) as usize;'),
+    ('c_clube', '    *clube = (*(G_CLUB_TABLE as *const usize) as isize + *((contrato + 4) as *const i32) as isize * 581) as usize;', '    *clube = (*(G_CLUB_TABLE as *const usize) as isize + *((contrato + 4) as *const i32) as isize * 580) as usize;'),
     ('p_vaga', '        if *(p as *const i32) == id && *((p + 4) as *const i8) == vaga {', '        if *(p as *const i32) == id {'),
     ('a_torneio', '        if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && objeto != 0 {', '        if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && objeto != 0 && i > 0 {'),
     ('l_venda', '    tirar_da_lista_de_pagamentos(gerente, id, 8, 0x880, 0x888, 9);', '    tirar_da_lista_de_pagamentos(gerente, id, 8, 0x880, 0x888, 5);'),

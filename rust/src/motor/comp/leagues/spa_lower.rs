@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_calendario_da_divisao_de_baixo_e
 
 /// O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
 pub(crate) unsafe fn cqm6_registro(g: usize) -> usize {
-    read_u32_as_usize(0xae23d0).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
+    read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(g).wrapping_mul(0x6b))
 }
 
 /// A competição do clube (+0x57, o id no +0) é a de id [g]?
@@ -411,8 +411,8 @@ pub(crate) unsafe fn cqm6_time_b_de(c: usize, g: usize) -> bool {
 pub(crate) unsafe fn cqm6_candidatos() -> Vec<usize> {
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut v = Vec::new();
-    let n = read_u32_as_usize(0xae235c) as i32;
-    let base = read_u32_as_usize(0xae23b4);
+    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n && v.len() < 100 {
         let c = base + (i as u16 as usize) * 0x245;
@@ -437,8 +437,8 @@ pub(crate) unsafe fn cqm6_candidatos() -> Vec<usize> {
 /// banco, até 22 linhas (`k` já usadas). Os últimos `2 × [0xae2350]` clubes do banco ficam de fora [inferência: os
 /// clubes criados depois, sem divisão].
 pub(crate) unsafe fn cqm6_times_b(g: usize, k: &mut u8, linhas: i16, mut por: impl FnMut(usize, bool)) {
-    let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
-    let base = read_u32_as_usize(0xae23b4);
+    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245;
@@ -487,8 +487,8 @@ pub(crate) unsafe extern "thiscall" fn tabela_da_divisao_de_baixo_espanhola(this
         return 0;
     }
     // os clubes desta divisão passam à genérica
-    let n = (read_u32_as_usize(0xae235c) as i32).wrapping_sub((read_u32_as_usize(0xae2350) as i32).wrapping_mul(2));
-    let base = read_u32_as_usize(0xae23b4);
+    let n = (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let base = read_u32_as_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * 0x245;

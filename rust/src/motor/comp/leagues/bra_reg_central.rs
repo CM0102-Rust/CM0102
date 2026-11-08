@@ -126,19 +126,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqi8_regras_do_catarinense(this:
 /// fase, rodada, peso; ret 0x14).
 pub(crate) unsafe fn cqk7_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86a1c0 rebaixado (clube, liga; ret 8).
 pub(crate) unsafe fn cqk7_rebaixado(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
 }
 
 /// 0x868c50 campeão da liga (clube, liga; ret 8).
 pub(crate) unsafe fn cqk7_campeao(clube: usize, comp: usize) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
 }
 
 /// A fase de pontos corridos (fase -1) dos estaduais: os classificados (6) ganham o registro de classificação (rodada
@@ -184,7 +184,7 @@ pub(crate) unsafe fn cqk7_mata_mata(this: usize, clube: usize, st: u8, jogo: usi
                     crate::comparacao::ramo("cqk_7 eliminado do estadual");
                     let peso = escala(0x1e, 0x32, read_i16(jogo + 0x34) as u16 as u32, rodadas);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                    elim(read_u32_as_usize(0xdd7f00), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
+                    elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
                 }
                 let l = read_u32_as_usize(this + 0xb1) + 0x3b * i as usize;
                 if fazer {
@@ -260,7 +260,7 @@ pub(crate) unsafe fn cqk7_nsl(this: usize, clube: usize, situacao: u32, fase: u3
         if st == 0xfe {
             if fazer {
                 let nao: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-                nao(read_u32_as_usize(0xdd7f00), clube, comp, 0x435, 0x28);
+                nao(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, 0x435, 0x28);
             }
             return (u32::MAX, 0, 0);
         }

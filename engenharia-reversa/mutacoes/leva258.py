@@ -29,7 +29,7 @@ MUTACOES = [
     ('cpv9_metade_das_vezes', 'if sorteio(4) == 0 { // cpv9: uma vez em quatro', 'if sorteio(4) < 2 { // mutacao: metade das vezes', 'cpv_9 uma em quatro'),
     ('cpv10_fica_a_lesao_atual', 'core::ptr::write_unaligned((cpv10_registro(this, read_i32(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual', 'let _ = cpv10_registro(this, read_i32(pessoa)); // mutacao: o +0xe fica', 'cpv_10 fim da lesao'),
     ('cpv10_entrada_zero_nao_termina', 'if i == -1 { // cpv10: a lesão atual', 'if i <= 0 { // mutacao: a entrada 0 nao termina', 'cpv_10 entrada zero'),
-    ('cpv10_metade_de_cima_nao_termina', 'if id >= read_i32(0xae2364) { // cpv10: o id da pessoa', 'if id >= read_i32(0xae2364) / 2 { // mutacao: a metade de cima nao termina', 'cpv_10 metade de cima'),
+    ('cpv10_metade_de_cima_nao_termina', 'if id >= read_i32(G_STAFF_COUNT) { // cpv10: o id da pessoa', 'if id >= read_i32(0xae2364) / 2 { // mutacao: a metade de cima nao termina', 'cpv_10 metade de cima'),
     ('cpv11_limite_28', 'if dias < 0xe { // cpv11: o limite de dias', 'if dias < 0x1c { // mutacao: limite de 28 dias', 'cpv_11 lesão de 14 a 27 dias'),
     ('cpv11_tipo_sub21', '(read_u8(p + 0x5e) >> 3) & 1 // cpv11: o tipo pelas marcas', '2 // mutacao: o sub-21', 'cpv_11 tipo pelas marcas'),
     ('cpv11_sem_substituto', 'substituto(this, nacao, tipo as u32, nivel, p); // cpv11: o substituto', 'let _ = (substituto, nivel); // mutacao: sem substituto', 'cpv_11 substituto'),

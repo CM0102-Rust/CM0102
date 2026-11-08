@@ -296,9 +296,9 @@ pub(crate) unsafe extern "thiscall" fn cqs1_tabela_da_mls(this: usize) -> u32 {
         return 0;
     }
     let mut n: i16 = 0;
-    let base = read_usize(0xae23b4);
+    let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
-    while (i as i32) < read_usize(0xae235c) as i32 && n < read_i16(this + 0x3e) {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < read_i16(this + 0x3e) {
         let c = base + i as u16 as usize * 0x245;
         if cqs1_da_divisao(this, c, 0x413) {
             iniciar(this, n as u8 as u32, c, 0, 0); // cqs1: a linha seguinte da primeira divisão
@@ -334,9 +334,9 @@ pub(crate) unsafe fn cqs1_divisao(this: usize, codigo: i16, k: u32, atual: u32, 
         return aviso_em(0xaa1fb4, linhas[0]);
     }
     let mut n: i16 = 0;
-    let base = read_usize(0xae23b4);
+    let base = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
-    while i < read_usize(0xae235c) as i32 && n < read_i16(this + 0x3e) {
+    while i < read_usize(G_CLUB_COUNT) as i32 && n < read_i16(this + 0x3e) {
         let c = base + i as usize * 0x245;
         if cqs1_da_divisao(this, c, codigo) {
             core::ptr::write_unaligned((v + 4 * n as usize) as *mut usize, c);
@@ -394,9 +394,9 @@ pub(crate) unsafe extern "thiscall" fn cqs1_terceira_divisao_da_mls(this: usize)
 pub(crate) unsafe extern "thiscall" fn comparar_cqs1_tabela_da_mls(this: usize) -> u32 {
     let mut plano = [0usize; 4];
     let mut n = 0usize;
-    let base = read_usize(0xae23b4);
+    let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
-    while (i as i32) < read_usize(0xae235c) as i32 && n < 4 {
+    while (i as i32) < read_usize(G_CLUB_COUNT) as i32 && n < 4 {
         let c = base + i as u16 as usize * 0x245;
         if cqs1_da_divisao(this, c, 0x413) {
             plano[n] = c;
@@ -417,9 +417,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs1_tabela_da_mls(this: usize) 
 pub(crate) unsafe fn cqs1_comparar(nome: &str, this: usize, codigo: i16, k: usize, original: impl FnOnce()) {
     let mut plano = [0usize; 8];
     let mut n = 0usize;
-    let base = read_usize(0xae23b4);
+    let base = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
-    while i < read_usize(0xae235c) as i32 && (n as i16) < read_i16(this + 0x3e) && n < 8 {
+    while i < read_usize(G_CLUB_COUNT) as i32 && (n as i16) < read_i16(this + 0x3e) && n < 8 {
         let c = base + i as usize * 0x245;
         if cqs1_da_divisao(this, c, codigo) {
             plano[n] = c;
@@ -531,7 +531,7 @@ pub(crate) unsafe fn cqs2_virada(this: usize, ano: i16) -> u32 {
     let expectativas: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectativas(this);
     let renovar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_OFFICIALSMANAGER_RENEW_OFFICIALS);
-    renovar(read_usize(0xb74340), read_usize(this + 4)) // cqs2: a renovação dos árbitros da MLS
+    renovar(read_usize(G_OFFICIALS_MANAGER), read_usize(this + 4)) // cqs2: a renovação dos árbitros da MLS
 }
 
 /// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the
@@ -691,13 +691,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_cqs2_clubes_da_mls(this: usize, 
 /// 0x86bdd0 Staff_Records::add_qualified_for_round_record (thiscall em [0xdd7f00], ret 0x14; já em Rust).
 pub(crate) unsafe fn cqk9_classificou(clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp, fase, rodada, peso);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, fase, rodada, peso);
 }
 
 /// 0x86c1d0 Staff_Records::add_failed_to_qualify_record (thiscall em [0xdd7f00], ret 0x10; já em Rust).
 pub(crate) unsafe fn cqk9_nao_classificou(clube: usize, comp: usize, fase: u32, peso: u32) {
     let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_FAILED_TO_QUALIFY_RECORD);
-    f(read_u32_as_usize(0xdd7f00), clube, comp, fase, peso);
+    f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, fase, peso);
 }
 
 /// 0x4bf850 comp_util_scale_by_round (cdecl): o peso de 50 a 70 pela rodada do jogo, em 2 rodadas.
@@ -745,14 +745,14 @@ pub(crate) unsafe fn cqk9_destino(this: usize, clube: usize, situacao: u32, fase
             if fazer {
                 let peso = cqk9_escala(jogo);
                 let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
-                elim(read_u32_as_usize(0xdd7f00), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
+                elim(read_u32_as_usize(G_STAFF_RECORDS), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, peso);
             }
         }
         return 0;
     }
     if st == 1 && fazer {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_LEAGUE_CHAMPIONS_RECORD);
-        f(read_u32_as_usize(0xdd7f00), clube, comp);
+        f(read_u32_as_usize(G_STAFF_RECORDS), clube, comp);
     }
     0
 }

@@ -13,12 +13,12 @@ pub(crate) unsafe fn cpw6_i(a: usize) -> i32 {
 
 /// A pessoa `id` ([0xae23bc], 0x6e bytes cada).
 pub(crate) unsafe fn cpw6_pessoa(id: i32) -> usize {
-    read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
+    read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
 /// O clube `id` ([0xae23b4], 0x245 bytes cada).
 pub(crate) unsafe fn cpw6_clube(id: i32) -> usize {
-    read_usize(0xae23b4).wrapping_add((id as usize).wrapping_mul(0x245))
+    read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(0x245))
 }
 
 /// O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn premiar_o_melhor_do_mes(this: usize, nota
     }
     crate::comparacao::ramo("cpw_6 premiou o melhor do mes");
     let id = cpw6_i(r);
-    let tabela = read_usize(0xae23bc) as u32;
+    let tabela = read_usize(G_STAFF_TABLE) as u32;
     let clube = read_usize(cpw6_pessoa(id) + 0x39);
     let ano = (tabela & 0xffff0000) | read_i16(notas + 0xd) as u16 as u32;
     let mes = read_u8(notas + 0xc) as u32;
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn gravar_vencedor_do_mes(this: usize, id: i
     let cid = cpw6_i(v + 0x21);
     let clube = if cid != -1 { cpw6_clube(cid) } else { 0 };
     let registro: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_MONTH_AWARD_RECORD);
-    registro(read_usize(0xdd7f00), cpw6_pessoa(cpw6_i(v + 0x1d)), clube, read_usize(this + 5) as u32, mes, ano);
+    registro(read_usize(G_STAFF_RECORDS), cpw6_pessoa(cpw6_i(v + 0x1d)), clube, read_usize(this + 5) as u32, mes, ano);
 }
 
 /// As regiões que a reputação do premiado grava: o registro do jogador (+0x61: +9..+0xe), o do não jogador (+0x69:
@@ -132,7 +132,7 @@ pub(crate) unsafe fn cpw6_regioes_da_reputacao(regioes: &mut Vec<(usize, usize)>
         regioes.push((np + 8, 6));
     }
     if clube != 0 {
-        let linhas = read_usize(read_usize(0xb67a44));
+        let linhas = read_usize(read_usize(G_MANAGER_MANAGER));
         regioes.push((linhas.wrapping_add((cpw6_i(clube) as usize).wrapping_mul(73)).wrapping_add(6), 2));
     }
 }
@@ -214,7 +214,7 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
         }
         cpw6_somar(p + 0xb, ftol(nac as i32 as f64 * f64_em(0x967880)));
         cpw6_teto_e_piso(p + 0xb, nac);
-        let listas = read_usize(read_usize(0xde1f54) + 0x856);
+        let listas = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
         if listas != 0 && !CPW6_ENSAIO {
             let f: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_ADD_PLAYER_TO_CLUB_SHORTLISTS);
             f(listas, pessoa, 1);
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "C" fn reputacao_do_premiado(pessoa: usize, clube: usiz
     if clube == 0 {
         return;
     }
-    let linha = read_usize(read_usize(0xb67a44)).wrapping_add((cpw6_i(clube) as usize).wrapping_mul(73)).wrapping_add(6);
+    let linha = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((cpw6_i(clube) as usize).wrapping_mul(73)).wrapping_add(6);
     let v = read_i16(linha).wrapping_add(1000);
     let v = if v < 1 {
         1

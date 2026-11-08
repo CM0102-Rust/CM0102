@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usiz
     }
     let celula = (*((this + 0x601) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;
     let v = *celula;
-    if v > (*(0xae2364 as *const i32)).wrapping_add(0x52d) {
+    if v > (*(G_STAFF_COUNT as *const i32)).wrapping_add(0x52d) {
         crate::comparacao::ramo("batedor alem das pessoas");
         *celula = -1;
         return 0;
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usiz
         crate::comparacao::ramo("batedor vazio");
         return 0;
     }
-    let pessoa = (*(0xae23bc as *const usize)).wrapping_add(v as usize * 0x6e);
+    let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * 0x6e);
     if *((pessoa + 0x61) as *const u32) == 0 {
         crate::comparacao::ramo("batedor sem ficha");
         *celula = -1;
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn batedor_guardado(this: usize, clube: usiz
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let vinculo: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_IS_NATIONAL_OR_ALL_STAR_TEAM);
-    if selecao(clube) != 0 || vinculo(*(0xb74318 as *const usize), clube) != 0 {
+    if selecao(clube) != 0 || vinculo(*(G_NATIONAL_TEAMS as *const usize), clube) != 0 {
         crate::comparacao::ramo("batedor de fora do clube");
         return pessoa;
     }
@@ -84,11 +84,11 @@ pub(crate) unsafe extern "thiscall" fn guardar_instrucoes(this: usize, clube: us
     let ocupados = (this + 0x5f0) as *mut u8;
     // o espaco do humano da vez, se houver
     let espaco = || {
-        let humano = *((0xb74c26 + *(0xb77c7a as *const i16) as isize as usize * 0x300) as *const usize);
+        let humano = *((0xb74c26 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize * 0x300) as *const usize);
         if humano == 0 {
             return None;
         }
-        let e = (*(0xae2364 as *const i32)).wrapping_sub(*(humano as *const i32)).wrapping_sub(1);
+        let e = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(humano as *const i32)).wrapping_sub(1);
         if (0..16).contains(&e) { Some(this + e as usize * 0x5c) } else { None }
     };
     let u = |p: usize, o: usize| (p + o) as *mut u32;
@@ -681,7 +681,7 @@ pub(crate) unsafe fn simulacao_rapida_com(m: usize, chamar: &mut dyn FnMut(usize
                     continue;
                 }
                 let comp = u(pt(), 0x14);
-                let liga = u(0xae2c74, 0);
+                let liga = u(G_FRIENDLY, 0);
                 let teto = if comp == 0 || (liga != 0 && e_amistoso(liga, comp) != 0) { 0x5b } else { 0x66 };
                 let g = sortear(teto) as u8;
                 let tipo = match sortear(10) {
@@ -747,7 +747,7 @@ pub(crate) unsafe extern "thiscall" fn vaga_marcada(this: usize, clube: usize, h
         return orig::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(186)(this, clube, humano, menos_um);
     }
     let Some(linha) = linha_na_tabela(this, clube, humano) else { return 0 };
-    let pessoas = *(0xae23bc as *const usize);
+    let pessoas = *(G_STAFF_TABLE as *const usize);
     for vaga in 0..20usize {
         let i = *((linha + 2 + 4 * vaga) as *const i32);
         if i != -1 && *(pessoas.wrapping_add((i as usize).wrapping_mul(110)) as *const i32) == *((linha + 0x52) as *const i32) {
@@ -784,7 +784,7 @@ pub(crate) unsafe extern "thiscall" fn pessoa_da_linha(this: usize, clube: usize
     if i < 0 {
         return 0;
     }
-    (*(0xae23bc as *const usize)).wrapping_add(110 * i as usize)
+    (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
 }
 
 // ---------- sexagesima quinta leva: tabela tatica do clube ----------
@@ -806,8 +806,8 @@ pub(crate) unsafe extern "stdcall" fn linha_tatica(clube: usize, humano: u32) ->
             return orig::<unsafe extern "stdcall" fn(usize, u32) -> i32>(182)(clube, humano);
         }
         let e_selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-        let clubes = *(0xae235c as *const i32);
-        let base = (*(0xae2364 as *const i32)).wrapping_sub(*(tecnico as *const i32));
+        let clubes = *(G_CLUB_COUNT as *const i32);
+        let base = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(tecnico as *const i32));
         let i = base.wrapping_add(if e_selecao(clube) != 0 { 0xf } else { -1 }).wrapping_add(clubes);
         if i < 0 || i >= clubes.wrapping_add(0x20) {
             return orig::<unsafe extern "stdcall" fn(usize, u32) -> i32>(182)(clube, humano);
@@ -1168,7 +1168,7 @@ pub(crate) unsafe extern "thiscall" fn tem_copia_da_escalacao(this: usize, clube
     if read_u8(this + 0x5f0) == 0 {
         return 0;
     }
-    let t = read_usize((read_i16(0xb77c7a) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize);
+    let t = read_usize((read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as i32).wrapping_mul(0x300).wrapping_add(0xb74c26) as usize);
     if t == 0 {
         return 0;
     }
@@ -1397,7 +1397,7 @@ pub(crate) unsafe extern "thiscall" fn tatica_do_clube(this: usize, clube: usize
     }
     let humano: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     if humano(clube, 1, 1, 0, 0) != 0 {
-        let gerente = read_usize(0xb63c98);
+        let gerente = read_usize(G_HUMAN_MANAGER);
         let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
         let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
         if t9a01(gerente, read_usize(clube + 0xcf)) == 0 || opcao(gerente, 2, read_usize(clube + 0xcf)) != 0 {
@@ -1427,7 +1427,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tatica_do_clube(this: usize, clu
     if clube == 0 {
         return o(this, clube, time);
     }
-    let gerente = read_usize(0xb63c98);
+    let gerente = read_usize(G_HUMAN_MANAGER);
     let t = read_usize(clube + 0xcf);
     let mut reg = Vec::new();
     if gerente != 0 && t != 0 {

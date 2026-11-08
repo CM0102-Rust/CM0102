@@ -11,7 +11,7 @@ pub(crate) unsafe fn cpw5_i(a: usize) -> i32 {
 
 /// A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
 pub(crate) unsafe fn cpw5_pessoa(id: i32) -> usize {
-    read_usize(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e))
+    read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(0x6e))
 }
 
 /// both sides of the match, 20 slots each: except the empty slot (0xfb) and the substitute who did not come on, each
