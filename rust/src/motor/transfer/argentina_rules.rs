@@ -35,13 +35,6 @@ pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows(thi
     set_transfer_windows(this, 2, &ARGENTINA_TRANSFER_WINDOWS, 0x987960, 0x50);
 }
 
-/// Comparer for `argentina_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ARGENTINA_RULES_INIT_TRANSFER_WINDOWS);
-    compare_transfer_rules_ctor("argentina_rules_init_transfer_windows", this, || o(this), |s| argentina_rules_init_transfer_windows(s));
-}
 
 /// As janelas de Portugal: duas janelas, de 1º de junho a 1º de setembro; de 15 de dezembro a 15 de janeiro.
 pub(crate) const PORTUGAL_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
@@ -61,13 +54,6 @@ pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows_7d3
     set_transfer_windows(this, 2, &PORTUGAL_TRANSFER_WINDOWS, 0xa78844, 0x4f);
 }
 
-/// Comparer for `argentina_rules_init_transfer_windows_7d3df0` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_argentina_rules_init_transfer_windows_7d3df0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ARGENTINA_RULES_INIT_TRANSFER_WINDOWS_7D3DF0);
-    compare_transfer_rules_ctor("argentina_rules_init_transfer_windows_7d3df0", this, || o(this), |s| argentina_rules_init_transfer_windows_7d3df0(s));
-}
 
 /// As janelas da Coreia do Sul: uma janela, de 25 de novembro (andando para o domingo [inferência]) a 25 de julho.
 pub(crate) const SOUTH_KOREA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
@@ -87,15 +73,4 @@ pub(crate) unsafe extern "thiscall" fn construct_korea_rules(this: usize, a1: u3
     this
 }
 
-/// Comparer for `construct_korea_rules` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_korea_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_KOREA_RULES);
-    let mut r = 0usize;
-    compare_transfer_rules_ctor("construct_korea_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        construct_korea_rules(s, a1, a2, a3, a4, a5);
-    });
-    r
-}
 

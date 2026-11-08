@@ -72,23 +72,8 @@ pub(crate) unsafe fn ita_ser_c1a_compare_advance_stage(nome: &str, this: usize, 
     PLACAR.registrar(igual, || format!("{}({:#x}) original={:x?} rust={:x?}", nome, this, mo, mr));
 }
 
-/// Comparer for `ita_ser_c1a_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE);
-    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage", this, || o(this), || ita_ser_c1a_advance_stage(this))
-}
 
-/// Comparer for `ita_ser_c1a_advance_stage_64fba0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_64fba0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE_64FBA0);
-    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage_64fba0", this, || o(this), || ita_ser_c1a_advance_stage_64fba0(this))
-}
 
-/// Comparer for `ita_ser_c1a_advance_stage_578330` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_578330(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_ADVANCE_STAGE_578330);
-    ita_ser_c1a_compare_advance_stage("ita_ser_c1a_advance_stage_578330", this, || o(this), || ita_ser_c1a_advance_stage_578330(this))
-}
 
 /// As linhas dos 4 clubes do play-off de acesso (2º contra 5º, 3º contra 4º: a lista é 5º, 2º, 4º, 3º) e do play-out
 /// (14º contra 17º, 15º contra 16º: 17º, 14º, 16º, 15º), na ordem da lista que vai para a fase.
@@ -224,17 +209,7 @@ pub(crate) unsafe fn compare_end_of_league_stages(nome: &str, this: usize, origi
     PLACAR.registrar(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", nome, this, read_u32_as_usize(vaga), campeao, fases, read_u32_as_usize(this + 0x30) as i32));
 }
 
-/// Comparer for `create_playoff_stages` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_playoff_stages(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_PLAYOFF_STAGES);
-    compare_end_of_league_stages("create_playoff_stages", this, || o(this))
-}
 
-/// Comparer for `create_play_off_stages` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_create_play_off_stages(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_PLAY_OFF_STAGES);
-    compare_end_of_league_stages("create_play_off_stages", this, || o(this))
-}
 
 /// the Serie C1 schedule (each group of 18): 34 rounds from 5 September to 7 May, nearly all on the same weekday (6)
 /// and two midweek; no TV slots. The promotion play-offs (stage 0): two-legged semi-finals on 21 and 28 May (4 clubs,
@@ -248,11 +223,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, 
     create_c1_schedule(this, fase, rodadas, extra, liga, &C1BracketVariant { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
 }
 
-/// Comparer for `ita_ser_c1a_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ITA_SER_C1A_CREATE_SCHEDULE);
-    compare_c1_schedule("ita_ser_c1a_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| ita_ser_c1a_create_schedule(this, fase, r, e, l))
-}
 
 /// the club's place forecast in C1/A: in the league, best and worst place become bands (2 to 5 = the promotion
 /// play-off: best 2, worst 5; 14 to 17 = the play-out: best 14, worst 17); in the play-off, places + 1; in the
@@ -265,11 +235,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_club_progress(this: usize
     set_c1_club_progress(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8)
 }
 
-/// Comparer for `ita_ser_c1a_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ITA_SER_C1A_SET_CLUB_PROGRESS);
-    compare_c1_club_progress("ita_ser_c1a_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || ita_ser_c1a_set_club_progress(this, clube, fase, atual, melhor, pior))
-}
 
 /// the 2001/02 C1/A: the 306 matches (34 rounds of 9) fixed by club name; with a name missing from the database, the
 /// list is dropped and the league draws its schedule
@@ -281,11 +246,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_fixed_fixtures(this: u
     set_up_fixed_fixtures_body(this, &C1A_FIXTURES, 0x9ea474, 0x3fd)
 }
 
-/// Comparer for `ita_ser_c1a_set_up_fixed_fixtures` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ITA_SER_C1A_SET_UP_FIXED_FIXTURES);
-    fra_first_compare_fixed_fixtures("ita_ser_c1a_set_up_fixed_fixtures", this, || o(this))
-}
 
 /// C1/A: discipline 0x11, the league and 2 stages (the promotion play-off and the play-out), the real 2001/02 fixture
 /// list
@@ -297,11 +257,6 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, ano: u
     construct_italian_division(this, ano, registro, &SERIE_C1A_DIVISION)
 }
 
-/// Comparer for `construct_ita_ser_c1a` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1A);
-    compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &SERIE_C1A_DIVISION, || o(this, ano, registro))
-}
 
 /// Serie C1/A (18): the champion goes up to B, 2nd to 5th go to the promotion play-off, 14th to 17th to the relegation
 /// play-out and the last goes down; tie-breaks 1 and 2; the league below stored is C1/B (as in the original)
@@ -316,11 +271,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_rules(this: usize) -> 
     ita_ser_a_apply_league_rules(this, &serie_c1a_rules(this))
 }
 
-/// Comparer for `ita_ser_c1a_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_rules(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_C1A_SET_UP_RULES);
-    ita_ser_a_compare_league_rules("ita_ser_c1a_set_up_rules", this, serie_c1a_rules(this), || o(this), || ita_ser_c1a_set_up_rules(this))
-}
 
 /// Serie C1/A has 18 clubs; no prize fund and no TV money
 /// Original: `ItaSerC1a::create_table` (0x64b670, ita_ser_c1a.cpp, thiscall, ret 0).
@@ -331,8 +281,3 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_table(this: usize) -> 
     ita_ser_a_fill_league_table(this, 0x12, 0x9ea474, 0x1bd, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A).unwrap_or(false) as u32
 }
 
-/// Comparer for `ita_ser_c1a_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_SER_C1A_CREATE_TABLE);
-    ita_ser_a_compare_league_table("ita_ser_c1a_create_table", this, 0x12, KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, None, || o(this))
-}

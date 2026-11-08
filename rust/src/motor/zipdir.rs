@@ -52,16 +52,6 @@ pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(padrao: *const u8,
     }
 }
 
-/// Comparer for `zipdir_match_filename_pattern` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zipdir_match_filename_pattern(padrao: *const u8, nome: *const u8) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_ZIPDIR_MATCH_FILENAME_PATTERN)(padrao, nome);
-    let n = zipdir_match_filename_pattern(padrao, nome);
-    PLACAR.registrar(r == n, || {
-        let t = |p: *const u8| String::from_utf8_lossy(core::ffi::CStr::from_ptr(p as *const core::ffi::c_char).to_bytes()).into_owned();
-        format!("zipdir_match_filename_pattern({:?}, {:?}) {} x {}", t(padrao), t(nome), r, n)
-    });
-    r
-}
 
 /// Reads the container's 12-byte header and index (1000 items, or 250 for old types 1/2 converted to 3/4) into the copy
 /// h.
@@ -122,13 +112,6 @@ pub(crate) unsafe extern "C" fn zget_archive_id(caminho: usize) -> u32 {
 }
 
 // O id e o tamanho só leem o arquivo e liberam o que alocam: as duas rodam lado a lado.
-/// Comparer for `zget_archive_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zget_archive_id(caminho: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_ZGET_ARCHIVE_ID)(caminho);
-    let n = zget_archive_id(caminho);
-    PLACAR.registrar(r == n, || format!("zget_archive_id {:#x} x {:#x}", r, n));
-    r
-}
 
 /// adds up the uncompressed sizes of the items matching the pattern (signed int: negative above 2 GB, as in the
 /// original)
@@ -175,13 +158,6 @@ pub(crate) unsafe extern "C" fn zget_matching_size(caminho: usize, padrao: usize
     soma
 }
 
-/// Comparer for `zget_matching_size` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zget_matching_size(caminho: usize, padrao: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_ZGET_MATCHING_SIZE)(caminho, padrao);
-    let n = zget_matching_size(caminho, padrao);
-    PLACAR.registrar(r == n, || format!("zget_matching_size {} x {}", r, n));
-    r
-}
 
 /// strcpy: copies C string origem (with terminator) to destino.
 ///
@@ -257,12 +233,8 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(caminho: usize, pasta: usize
     1
 }
 
-// ponytail: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
+// simplification: cria itens no contêiner (e o arquivo, se não existir); não roda duas vezes. A prova do
 // save compara o .qst gravado com e sem a leva.
-/// Comparer for `zadd_matching_files` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zadd_matching_files(caminho: usize, pasta: usize, padrao: usize, a4: u32, tipo: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_ZADD_MATCHING_FILES)(caminho, pasta, padrao, a4, tipo)
-}
 
 /// each container item whose name matches the pattern becomes a folder file (zopen for reading, zread in 0x30d40
 /// blocks, fwrite)
@@ -310,7 +282,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: u
     let h = novo(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x282);
-        // ponytail: o nome do fonte que a 0x944cff separa cai na casa da resposta
+        // simplification: o nome do fonte que a 0x944cff separa cai na casa da resposta
         resposta = u32::from_le_bytes(*b"zipd");
     } else {
         let f = abrir(caminho, 0x98f928);
@@ -371,12 +343,8 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(caminho: usize, pasta: u
     resposta
 }
 
-// ponytail: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
+// simplification: cria arquivos na pasta temporária e aloca; não roda duas vezes. A carga da prova do save
 // (--sav) passa por aqui; a gravação não.
-/// Comparer for `zextract_matching_files` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zextract_matching_files(caminho: usize, pasta: usize, padrao: usize) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_ZEXTRACT_MATCHING_FILES)(caminho, pasta, padrao)
-}
 
 /// builds the CM3_TEMP folder path in [0xde279c] and deletes its files matching the pattern, in groups of 100
 /// Original: `utils_clear_temp_folder` (0x90cd50, utils.cpp, cdecl).
@@ -432,11 +400,7 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(padrao: usize) {
     }
 }
 
-// ponytail: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
-/// Comparer for `utils_clear_temp_folder` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_utils_clear_temp_folder(padrao: usize) {
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_UTILS_CLEAR_TEMP_FOLDER)(padrao)
-}
+// simplification: apaga arquivos; não roda duas vezes. A gravação do .qst passa por aqui (create_game).
 
 //
 // O ZFILE (0xa3191 bytes, do zopen 0x9326e0): +0 o FILE da CRT, +4 modo (1 gravando), +8 posição
@@ -472,7 +436,7 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
         zf_write_i32(z, 0xa3185, c + 1);
         return b;
     }
-    // ponytail: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
+    // simplification: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
     crate::comparacao::ramo("save zread bloco");
     zf_write_i32(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
@@ -559,12 +523,8 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i3
     pedido / tam
 }
 
-// ponytail: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
+// simplification: lê do arquivo e anda o cursor do FILE e do item; não roda duas vezes. A prova do save
 // (carga, --sav) e a gravação (o zseek relê pela zread) passam por aqui.
-/// Comparer for `zipdir_zread` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZREAD)(buf, tam, quantos, z)
-}
 
 /// Puts a compressed byte in the write buffer, flushing it with fwrite when full.
 ///
@@ -578,7 +538,7 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
         zf_write_i32(z, 0xa3189, p + 1);
         return;
     }
-    // ponytail: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
+    // simplification: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
     crate::comparacao::ramo("save zwrite bloco");
     escrever(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
@@ -638,12 +598,8 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos:
     quantos
 }
 
-// ponytail: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
+// simplification: grava no arquivo (buffer e fwrite) e muda o índice; não roda duas vezes. A prova do save
 // compara o .qst tipo 4 gravado com e sem a leva.
-/// Comparer for `zipdir_zwrite` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32>(IDX_ZIPDIR_ZWRITE)(buf, tam, quantos, z)
-}
 
 /// when writing: flushes the buffer, closes the pending RLE run and rewrites header and index at the start; closes the
 /// file and frees the item
@@ -694,9 +650,5 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     *zz = 0;
 }
 
-// ponytail: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
-/// Comparer for `zclose` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_zclose(zz: *mut usize) {
-    original_fn::<unsafe extern "C" fn(*mut usize)>(IDX_ZCLOSE)(zz)
-}
+// simplification: grava, fecha o arquivo e libera; efeito único. A prova do save compara o .qst gravado.
 

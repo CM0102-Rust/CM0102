@@ -1,0 +1,421 @@
+use super::*;
+
+// The comparers of the routines in ../media.rs (comparison mode: see the header of motor.rs).
+// [pt] Os comparadores das rotinas de ../media.rs (modo comparação: ver o cabeçalho do motor.rs).
+
+/// Comparer for `process_transfer_interest` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_interest(this: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PROCESS_TRANSFER_INTEREST)(this)
+}
+
+/// Comparer for `news_create_not_for_sale_story` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_news_create_not_for_sale_story(jogador: usize, clube: usize, presidente: usize, outro: usize) {
+    original_fn::<unsafe extern "C" fn(usize, usize, usize, usize)>(IDX_NEWS_CREATE_NOT_FOR_SALE_STORY)(jogador, clube, presidente, outro)
+}
+
+/// Comparer for `queue_trophy_praise_story` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_queue_trophy_praise_story(this: usize, clube: usize, comp: usize, marca: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_QUEUE_TROPHY_PRAISE_STORY)(this, clube, comp, marca)
+}
+
+/// Comparer for `apply_squad_reaction_to_player_story` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pela fita das portas do pós-jogo (comparar_pos): as desafeições (0x547af0), a marca (0x867560) e as
+/// queixas (0x867700) rodam uma vez, na original, e a cópia confere a chamada e recebe o estado de depois. Regiões: o
+/// sorteador, [0xae1080], as seis pessoas do clube (+0x9b, a 0x547940), o contrato do jogador e, de cada pessoa do
+/// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
+pub(crate) unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: usize, topico: u32, jogador: usize, clube: usize, ids: usize, n: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(IDX_APPLY_SQUAD_REACTION_TO_PLAYER_STORY);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
+    if clube != 0 && jogador != 0 {
+        reg.push((clube + club::FAV_STAFF1, 24));
+        reg.extend(contract_region(jogador, clube));
+        for &p in club_staff_vector(clube, &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
+            if p == 0 {
+                continue;
+            }
+            let pref = read_usize(p + 0x65);
+            if pref != 0 {
+                reg.push((pref + 0x1c, 24));
+            }
+            reg.push((p + 0x58, 6));
+            reg.extend(contract_region(p, clube));
+        }
+    }
+    comparar_pos("apply_squad_reaction_to_player_story", reg, || o(this, topico, jogador, clube, ids, n),
+        |chamar| squad_reaction_to_story_with(topico, jogador, clube, ids, n, chamar));
+}
+
+/// Comparer for `warn_squad_of_position_rival` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pela fita das portas do pós-jogo (a história 0x72c1f0 e a marca 0x867560 rodam só na original). Regiões:
+/// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
+pub(crate) unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, jogador: usize, clube: usize, a: u32, b: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_WARN_SQUAD_OF_POSITION_RIVAL);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
+    if clube != 0 {
+        for i in 0..50 {
+            let p = read_usize(clube + club::SQUAD + 4 * i);
+            if p != 0 {
+                reg.push((p + 0x58, 6));
+                reg.extend(contract_region(p, clube));
+            }
+        }
+    }
+    comparar_pos("warn_squad_of_position_rival", reg, || o(this, jogador, clube, a, b), |chamar| warn_position_rivals_with(jogador, clube, chamar));
+}
+
+/// Comparer for `media_format_response_option_label` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado nos primeiros bytes da saída (até 0x50, o maior rótulo tem 61).
+pub(crate) unsafe extern "stdcall" fn comparar_media_format_response_option_label(tipo: u32, opcao: u32, saida: usize, tamanho: u32) {
+    let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(IDX_MEDIA_FORMAT_RESPONSE_OPTION_LABEL);
+    let reg = if saida != 0 && (tamanho as i16) >= 0xf { vec![(saida, (tamanho as u16 as usize).min(0x50))] } else { Vec::new() };
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(tipo, opcao, saida, tamanho), || media_format_response_option_label(tipo, opcao, saida, tamanho));
+    PLACAR.registrar(igual, || format!("media_format_response_option_label({}, {}) {:x?} x {:x?}", tipo as i16, opcao as i8, mo, mr));
+}
+
+/// Comparer for `process_transfer_squad_reactions` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador em ensaio: a cópia sem notícia nem pedido de transferência (para quando chega a um) e a original a partir
+/// do mesmo estado: o sorteio, [0xae1080] (a ficha do último contrato), a data estática da 0x54cdb0, a linha da torcida
+/// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
+/// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_process_transfer_squad_reactions(this: usize, p: usize, novo: usize, velho: usize, flag: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_PROCESS_TRANSFER_SQUAD_REACTIONS);
+    if p == 0 || novo == 0 || read_usize(p + 0x61) == 0 || read_i8_as_i32(p + 0x18) < 0x13 || current_reputation(p) < 0x109a {
+        return o(this, p, novo, velho, flag);
+    }
+    let ficha = read_usize(G_CONTRACT_LOOKUP_RESULT);
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
+    reg.push((G_DAYS_SINCE_SCRATCH_DATE, 8));
+    if read_usize(G_MANAGER_MANAGER) != 0 {
+        reg.push((read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(novo) as u32).wrapping_mul(0x49) as usize), 0x49));
+    }
+    let mut juntar = |m: usize, clube: usize| {
+        if m == 0 {
+            return;
+        }
+        let c = media_contract_for_club(m, clube);
+        if c != 0 {
+            reg.push((c, 0x50));
+        }
+        reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(m) as u32).wrapping_mul(0x4f) as usize), 0x4f));
+    };
+    for clube in [novo, velho] {
+        if clube != 0 {
+            for j in 0..50usize {
+                juntar(read_usize(clube + club::SQUAD + 4 * j), clube);
+            }
+        }
+    }
+    if read_i32(this + 8) > 0 && read_i32(read_usize(this) + 8) != -1 {
+        juntar(media_staff_by_id(read_i32(read_usize(this) + 8)), novo);
+    }
+    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, ficha); // os contratos lidos acima não contam
+    let antes = crate::comparacao::Memoria::ler(&reg);
+    MEDIA_REACTION_DRY_RUN = true;
+    MEDIA_REACTION_STOPPED = false;
+    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| process_transfer_squad_reactions(this, p, novo, velho, flag)));
+    MEDIA_REACTION_DRY_RUN = false;
+    let mr = crate::comparacao::Memoria::ler(&reg);
+    antes.escrever();
+    if MEDIA_REACTION_STOPPED {
+        crate::comparacao::ramo("cqa_13 reacoes so na original");
+        return o(this, p, novo, velho, flag);
+    }
+    o(this, p, novo, velho, flag);
+    let mo = crate::comparacao::Memoria::ler(&reg);
+    PLACAR.registrar(mo == mr, || {
+        let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
+        format!("process_transfer_squad_reactions(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p, novo, velho, dif)
+    });
+}
+
+/// Comparer for `queue_signing_celebration_story` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(this: usize, p: usize, clube: usize, tipo: u32, a: u32, porta_voz: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize)>(IDX_QUEUE_SIGNING_CELEBRATION_STORY)(this, p, clube, tipo, a, porta_voz)
+}
+
+/// Comparer for `queue_sale_unrest_story` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_queue_sale_unrest_story(this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_QUEUE_SALE_UNREST_STORY)(this, velho, novo, p, comp)
+}
+
+/// Comparer for `media_pick_outlet_type_for_club` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_club(clube: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_CLUB);
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(clube), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_club(clube)));
+    PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", clube, r, n, igual));
+    r
+}
+
+/// Comparer for `media_pick_outlet_type_for_person` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_media_pick_outlet_type_for_person(pessoa: usize) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_PERSON);
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa), || crate::aleatorio::sem_contar(|| media_pick_outlet_type_for_person(pessoa)));
+    PLACAR.registrar(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", pessoa, r, n, igual));
+    r
+}
+
+/// Comparer for `adjust_supporter_confidence` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original sorteia e entrega a notícia (não pode rodar duas vezes): roda só ela e confere o plano feito
+/// antes: a confiança da torcida nova (a variação é pura).
+pub(crate) unsafe extern "thiscall" fn comparar_adjust_supporter_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADJUST_SUPPORTER_CONFIDENCE);
+    if clube == 0 {
+        return o(this, clube, sujeito, topico, alvo, variante);
+    }
+    let p = manager_manager_row(clube) + 8;
+    let antes = read_i16(p);
+    let v = fan_confidence_change(clube, alvo);
+    let esperado = antes.wrapping_add(v).clamp(1, 10000);
+    o(this, clube, sujeito, topico, alvo, variante);
+    let depois = read_i16(manager_manager_row(clube) + 8);
+    PLACAR.registrar(depois == esperado, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i16, antes, v, esperado, depois));
+}
+
+/// Comparer for `adjust_board_confidence` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: como o da torcida, pela confiança da diretoria nova.
+pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_ADJUST_BOARD_CONFIDENCE);
+    if clube == 0 {
+        return o(this, clube, sujeito, topico, alvo, variante, sexto);
+    }
+    let p = manager_manager_row(clube) + 6;
+    let antes = read_i16(p);
+    let v = board_confidence_change(clube, alvo);
+    let esperado = antes.wrapping_add(v).clamp(1, 10000);
+    o(this, clube, sujeito, topico, alvo, variante, sexto);
+    let depois = read_i16(manager_manager_row(clube) + 6);
+    PLACAR.registrar(depois == esperado, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", clube, alvo as i32, antes, v, esperado, depois));
+}
+
+/// Comparer for `queue_player_gratitude_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a gratidão sorteia, sobe +0x44 da ficha e entrega a notícia: só a original (a prova é a carreira e o
+/// modo Rust).
+pub(crate) unsafe extern "thiscall" fn comparar_queue_player_gratitude_news(this: usize, jogador: usize, clube: usize, tipo: u32, variante: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_QUEUE_PLAYER_GRATITUDE_NEWS)(this, jogador, clube, tipo, variante)
+}
+
+/// Comparer for `post_player_backing_request_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a notícia vai à caixa do técnico (não pode rodar duas vezes): só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_post_player_backing_request_news(this: usize, jogador: usize, clube: usize, tipo: u32, quarto: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_BACKING_REQUEST_NEWS)(this, jogador, clube, tipo, quarto)
+}
+
+/// Comparer for `post_player_criticism_reaction_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a notícia vai às caixas dos técnicos (não pode rodar duas vezes): só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_post_player_criticism_reaction_news(this: usize, jogador: usize, clube: usize, topico: u32, resposta: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_CRITICISM_REACTION_NEWS)(this, jogador, clube, topico, resposta)
+}
+
+/// Comparer for `rate_player_form_for_story` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a nota é pura (as estatísticas, as datas e o contrato só leem; nada sorteia): compara a devolução bit a
+/// bit (a original e a cópia na mesma precisão dupla do x87).
+pub(crate) unsafe extern "thiscall" fn comparar_rate_player_form_for_story(this: usize, jogador: usize, clube: usize, contrato: usize, tipo: u32, modo: u32, peso: f32) -> f64 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(IDX_RATE_PLAYER_FORM_FOR_STORY)(this, jogador, clube, contrato, tipo, modo, peso);
+    let n = rate_player_form_for_story(this, jogador, clube, contrato, tipo, modo, peso);
+    PLACAR.registrar(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
+        || format!("rate_player_form_for_story(tipo {}, modo {}, peso {}) {} x {}", tipo as u16 as i16, modo as u8, peso, o, n));
+    o
+}
+
+/// Comparer for `write_financial_trouble_news_text` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original (a cópia
+/// prova no modo Rust, pelo ramo).
+pub(crate) unsafe extern "thiscall" fn comparar_write_financial_trouble_news_text(this: usize, noticia: usize, corpo: u32, saida: usize) {
+    // simplification: o objeto de texto não pode receber o texto duas vezes; só a original roda aqui
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, noticia, corpo, saida);
+}
+
+/// Comparer for `log_story` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
+/// que o registro esperado está na lista (a ordem é a do qsort).
+pub(crate) unsafe extern "thiscall" fn comparar_log_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, resposta: u32) {
+    let n = read_usize(this + 8);
+    let esperado = build_news_log_record(a, b, tipo, subtipo, resposta);
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_LOG_STORY)(this, a, b, tipo, subtipo, resposta);
+    let m = read_usize(this + 8);
+    let achou = (0..m).any(|k| {
+        core::slice::from_raw_parts(read_usize(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &esperado[..]
+    });
+    PLACAR.registrar(m == n.wrapping_add(1) && achou, || {
+        format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", tipo, subtipo as u8 as i8, n, m, esperado, achou)
+    });
+}
+
+/// Comparer for `expire_story_log` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelo registro (ponteiro, capacidade e conta; as histórias) e o estado do sorteio (a cópia
+/// sem contar os sorteios).
+pub(crate) unsafe extern "thiscall" fn comparar_expire_story_log(this: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EXPIRE_STORY_LOG);
+    if read_usize(this) == 0 {
+        return o(this);
+    }
+    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    reg.push((this, 0xc));
+    reg.push((read_usize(this), (read_usize(this + 8) as i32).max(0) as usize * 0x17));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| expire_story_log(this)));
+    // mo.0[2] e mr.0[2]: ponteiro, capacidade e conta depois de cada lado
+    PLACAR.registrar(igual, || format!("expire_story_log {:x?} x {:x?}", mo.0[2].1, mr.0[2].1));
+}
+
+/// Comparer for `has_logged_story` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (a busca e a data padrão da chave só leem).
+pub(crate) unsafe extern "thiscall" fn comparar_has_logged_story(this: usize, a: usize, b: usize, tipo: u32, subtipo: u32, desde: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, tipo, subtipo, desde);
+    let n = has_logged_story(this, a, b, tipo, subtipo, desde);
+    PLACAR.registrar(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", tipo, subtipo as u16 as i16, desde != 0, r, n));
+    r
+}
+
+/// Comparer for `add_transfer_interest` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o plano antes (já está? o registro novo);
+/// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
+pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_interest(this: usize, jogador: usize, clube: usize, valor: i32, avaliacao: f64) {
+    let n = read_usize(this + 0x14);
+    let ja_esta = has_interest(this, &interest_key(jogador, clube));
+    let esperado = if ja_esta { None } else { Some(build_interest_record(jogador, clube, valor, avaliacao)) };
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(IDX_ADD_TRANSFER_INTEREST)(this, jogador, clube, valor, avaliacao);
+    let m = read_usize(this + 0x14);
+    let ok = match &esperado {
+        None => m == n,
+        Some(e) => m == n.wrapping_add(1) && (0..m).any(|k| {
+            core::slice::from_raw_parts(read_usize(this + 0xc).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
+        }),
+    };
+    PLACAR.registrar(ok, || format!("add_transfer_interest(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", valor, avaliacao, n, m, esperado));
+}
+
+/// Comparer for `compare_id_pair_keys` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê).
+pub(crate) unsafe extern "C" fn comparar_compare_id_pair_keys(a: usize, b: usize) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_ID_PAIR_KEYS)(a, b);
+    let n = compare_id_pair_keys(a, b);
+    PLACAR.registrar(r == n, || format!("compare_id_pair_keys({:x}, {:x}) original={} rust={}", a, b, r, n));
+    r
+}
+
+/// Comparer for `compare_story_log_records` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pelo valor (só lê).
+pub(crate) unsafe extern "C" fn comparar_compare_story_log_records(a: usize, b: usize) -> i32 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STORY_LOG_RECORDS)(a, b);
+    let n = compare_story_log_records(a, b);
+    PLACAR.registrar(r == n, || format!("compare_story_log_records({:x}, {:x}) original={} rust={}", a, b, r, n));
+    r
+}
+
+/// Comparer for `remove_transfer_interest` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_remove_transfer_interest(this: usize, pessoa: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_TRANSFER_INTEREST);
+    let n = (*((this + 0x14) as *const i32)).max(0) as usize;
+    let reg = [(this + 0xc, 0xc), (read_u32(this + 0xc) as usize, n * 25)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa), || remove_transfer_interest(this, pessoa));
+    PLACAR.registrar(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", pessoa, mo, mr));
+}
+
+/// Comparer for `get_finable_story_kind` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_get_finable_story_kind(midia: usize, jogador: usize) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_GET_FINABLE_STORY_KIND)(midia, jogador);
+    let n = get_finable_story_kind(midia, jogador);
+    PLACAR.registrar(r == n, || format!("get_finable_story_kind original={} rust={}", r, n));
+    r
+}
+
+/// Comparer for `story_with_response_two` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_story_with_response_two(midia: usize, id: *const i32) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u32>(IDX_STORY_WITH_RESPONSE_TWO)(midia, id);
+    let n = story_with_response_two(midia, id);
+    PLACAR.registrar(r == n, || format!("story_with_response_two({}) original={} rust={}", *id, r, n));
+    r
+}
+
+/// Comparer for `has_story` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_has_story(midia: usize, id: *const i32) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(IDX_HAS_STORY)(midia, id);
+    let n = has_story(midia, id);
+    PLACAR.registrar(r == n, || format!("has_story({}) original={} rust={}", *id, r, n));
+    r
+}
+
+/// Comparer for `media_queue_player_apology_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a notícia sorteia e vai para a caixa do técnico: só a original (a prova é a carreira e o modo Rust).
+pub(crate) unsafe extern "stdcall" fn comparar_media_queue_player_apology_news(jogador: usize, clube: usize, historia: i16) {
+    original_fn::<unsafe extern "stdcall" fn(usize, usize, i16)>(IDX_MEDIA_QUEUE_PLAYER_APOLOGY_NEWS)(jogador, clube, historia)
+}
+
+/// Comparer for `pick_former_international_pundit` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_pick_former_international_pundit(this: usize, clube: usize, assunto: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_PICK_FORMER_INTERNATIONAL_PUNDIT);
+    if assunto == 0 && clube == 0 {
+        return o(this, clube, assunto);
+    }
+    // o comentarista sai só do sorteio
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube, assunto),
+        || crate::aleatorio::sem_contar(|| pick_former_international_pundit(this, clube, assunto)));
+    PLACAR.registrar(igual && r == n, || format!("pick_former_international_pundit {:#x} x {:#x} {:x?} x {:x?}", r, n, mo, mr));
+    r
+}
+
+/// Comparer for `pick_ai_manager_response` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
+/// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
+pub(crate) unsafe extern "thiscall" fn comparar_pick_ai_manager_response(this: usize, tecnico: usize, jogador: usize, tipo: u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
+    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
+    if tecnico != 0 && read_usize(tecnico + 0x65) != 0 {
+        regioes.push((read_usize(tecnico + 0x65) + 0x1c, 0x18));
+    }
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
+        &regioes,
+        || o(this, tecnico, jogador, tipo),
+        || crate::aleatorio::sem_contar(|| pick_ai_manager_response(this, tecnico, jogador, tipo)),
+    );
+    PLACAR.registrar(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", tipo as i16, r, n, mo.0, mr.0));
+    r
+}
+
+/// Comparer for `post_financial_trouble_news` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: a notícia sorteia (0x90cfc0) e vai para as caixas dos técnicos: só a original (a prova é a carreira e o
+/// modo Rust).
+pub(crate) unsafe extern "thiscall" fn comparar_post_financial_trouble_news(this: usize, clube: usize) {
+    crate::comparacao::ramo("post_financial_trouble_news");
+    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_FINANCIAL_TROUBLE_NEWS)(this, clube)
+}
+
+/// Comparer for `pick_rival_manager_id` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio, a cópia em sem_contar (as escritas são só nas
+/// locais da pilha de cada uma).
+pub(crate) unsafe extern "thiscall" fn comparar_pick_rival_manager_id(this: usize, clube: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_PICK_RIVAL_MANAGER_ID);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(this, clube),
+        || crate::aleatorio::sem_contar(|| pick_rival_manager_id(this, clube)));
+    PLACAR.registrar(igual && r == n, || format!("pick_rival_manager_id({:x}) original={:#x} rust={:#x} {:x?} x {:x?}", clube, r, n, mo, mr));
+    r
+}
+
+/// Comparer for `queue_manager_fa_complaint_story` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_queue_manager_fa_complaint_story(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_QUEUE_MANAGER_FA_COMPLAINT_STORY)(this, clube, pessoa, tipo, a, b, c)
+}

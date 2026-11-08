@@ -168,7 +168,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
     let qualquer_unidade = exigir && *(0x82aac4 as *const u8) == 0x90;
     let sempre_achou = exigir && *(0x82ab07 as *const u8) != 0x85;
     loop {
-        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
+        // simplification: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
         let mut lista = [0u8; 0x100];
         if units_digit(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
             let mut i = 0usize;
@@ -194,7 +194,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
                     }
                     fechar_busca(ach);
                 }
-                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
+                // simplification: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
                 i += 4;
                 if lista[i] == 0 {
                     break;
@@ -583,12 +583,8 @@ pub(crate) unsafe fn undo_holiday_managers() {
     }
 }
 
-// ponytail: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
+// simplification: carrega o save inteiro (apaga e recria os subsistemas, desempacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela carga da prova do save.
-/// Comparer for `load_game_data` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_load_game_data(caminho: *const u8) -> u32 {
-    original_fn::<unsafe extern "C" fn(*const u8) -> u32>(IDX_LOAD_GAME_DATA)(caminho)
-}
 
 /// Setup.cpp "Error" box (setup_warning) followed by fatal cleanup and exit(-1).
 ///
@@ -905,13 +901,9 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     1
 }
 
-// ponytail: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
+// simplification: cria o jogo inteiro (carrega o banco, sorteia, grava o .qst e libera tudo); não roda
 // duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst) e pelas
 // carreiras (o auto_setup.cfg).
-/// Comparer for `create_game_from_setup_file` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
-    original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> u32>(IDX_CREATE_GAME_FROM_SETUP_FILE)(cfg, qst)
-}
 
 /// Save error box: "v%s %s.%s %d (%s)" with Setup.cpp, line and text, translated title and body, message box; the game
 /// continues (G_MOUSE_LEFT_BUTTON_DOWN untouched).
@@ -1242,12 +1234,8 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
     1
 }
 
-// ponytail: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
+// simplification: grava o save inteiro (apaga o antigo, cria o contêiner, empacota a pasta temporária);
 // não roda duas vezes. Só a original; a cópia leva o ramo e é provada pela prova do save.
-/// Comparer for `save_game_data` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_save_game_data(caminho: *const u8, a4: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(*const u8, u32) -> u32>(IDX_SAVE_GAME_DATA)(caminho, a4)
-}
 
 /// file box filter for saved games: 1 if the container has id 0x16 (.sav), else 2 (ax only); a null path gives the
 /// error box
@@ -1268,16 +1256,6 @@ pub(crate) unsafe extern "C" fn check_saved_game_file(caminho: usize) -> u32 {
 
 // O id só lê o arquivo e libera o que aloca: as duas rodam lado a lado. Caminho nulo (caixa de
 // erro) só a original.
-/// Comparer for `check_saved_game_file` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_check_saved_game_file(caminho: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_SAVED_GAME_FILE)(caminho);
-    if caminho == 0 {
-        return r;
-    }
-    let n = check_saved_game_file(caminho);
-    PLACAR.registrar(r == n, || format!("check_saved_game_file {:#x} x {:#x}", r, n));
-    r
-}
 
 /// file box filter for quick starts: 1 if the container has id 0x17 (.qst) and the saved version is the exe one, else 2
 /// (ax only)
@@ -1302,13 +1280,9 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
     (v & 0xffff0000) | if v != 0 { 1 } else { 2 }
 }
 
-// ponytail: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
+// simplification: a versão (0x838eb0) abre o general.dat e não o fecha quando dá certo (o ZFILE e o
 // arquivo ficam abertos, como na original): rodar duas vezes deixaria dois. Só a original; a cópia
 // leva o ramo e roda no modo Rust (só a caixa de arquivos chama).
-/// Comparer for `check_quick_start_file` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_check_quick_start_file(caminho: usize) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_QUICK_START_FILE)(caminho)
-}
 
 /// "Load Game Error" box of valid_saved_game_version with line and reason; does not clear [0xb67a34].
 ///
@@ -1382,13 +1356,9 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 
     (exe == gravada) as u32
 }
 
-// ponytail: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
+// simplification: abre o item e, quando dá certo, não o fecha (o ZFILE e o arquivo ficam abertos, como na
 // original); nos erros, a caixa. Não roda duas vezes: só a original; a cópia leva o ramo e roda no
 // modo Rust (só a caixa de arquivos, pelo filtro do início rápido, chama).
-/// Comparer for `valid_saved_game_version` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_valid_saved_game_version(caminho: usize) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_VALID_SAVED_GAME_VERSION)(caminho)
-}
 
 /// Setup.cpp "Error" box "v%s %s.%s %d" with the line, then clears G_MOUSE_LEFT_BUTTON_DOWN.
 ///
@@ -1444,12 +1414,8 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     fechar_item(&mut z);
 }
 
-// ponytail: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
+// simplification: acrescenta um item ao contêiner; não roda duas vezes. Só a original; a cópia leva o
 // ramo e é provada pela prova do save (o .qst gravado com e sem a leva).
-/// Comparer for `save_fifa_transfer_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_save_fifa_transfer_rules(save: usize) {
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_SAVE_FIFA_TRANSFER_RULES)(save)
-}
 
 /// reads the 2 bytes of fifa_transfer_rules.zip; if the first is 1, the rule in force becomes 5
 /// Original: `load_fifa_transfer_rules` (0x839760, Setup.cpp, cdecl).
@@ -1488,12 +1454,8 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     fechar_item(&mut z);
 }
 
-// ponytail: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
+// simplification: abre e lê o contêiner (aloca o ZFILE) e só roda na carga; segue a regra do bloco do save
 // (arquivo = só a original). A cópia leva o ramo; a etapa de carregar da prova do save a exercita.
-/// Comparer for `load_fifa_transfer_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_load_fifa_transfer_rules(save: usize) {
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_LOAD_FIFA_TRANSFER_RULES)(save)
-}
 
 /// strcat: appends fonte to the end of destino.
 ///
@@ -1593,18 +1555,6 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(resumo: *mut u8) {
 // Lado a lado sobre o resumo inteiro (0xf74) e o relógio do tempo de jogo ([0xdd7140], [0xdd7144]),
 // restaurados entre as duas; compara só +0..+0xf6c: o tempo de jogo e o time() (+0xf6c, +0xf70) são
 // relógio (fixos só no modo simulação), como na prova do save.
-/// Comparer for `build_save_game_summary` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_build_save_game_summary(resumo: *mut u8) {
-    let regioes = [(resumo as usize, 0xf6c), (resumo as usize + 0xf6c, 8), (0xdd7140, 8)];
-    let (_, _, _, mo, mr) = crate::comparacao::lado_a_lado(&regioes,
-        || original_fn::<unsafe extern "C" fn(*mut u8)>(IDX_BUILD_SAVE_GAME_SUMMARY)(resumo),
-        || build_save_game_summary(resumo));
-    PLACAR.registrar(mo.0[0] == mr.0[0], || {
-        let (a, b) = (&mo.0[0].1, &mr.0[0].1);
-        let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);
-        format!("build_save_game_summary: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])
-    });
-}
 
 /// releases the screens, destroys the subsystems held in globals (destructor + delete, free, virtual destructor) in the
 /// original order, deletes the *.tmp files, frees the database tables, resets the game date and clears three flags;
@@ -1701,10 +1651,6 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     1
 }
 
-/// Comparer for `free_game_data` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_free_game_data(tela: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_FREE_GAME_DATA)(tela)
-}
 
 /// the heading text colour (two colours by the flag)
 /// Original: `get_heading_colour` (0x839590, Setup.cpp, cdecl).
@@ -1716,10 +1662,3 @@ pub(crate) unsafe extern "C" fn get_heading_colour(x: u32) -> u32 {
     (x & 0xffff_0000) | c as u32
 }
 
-/// Comparer for `get_heading_colour` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_GET_HEADING_COLOUR)(x);
-    let n = get_heading_colour(x);
-    PLACAR.registrar(r == n, || format!("get_heading_colour({:#x}) original={:#x} rust={:#x}", x, r, n));
-    r
-}

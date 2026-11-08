@@ -103,7 +103,7 @@ impl Alocador {
     /// pelo menor livre que caiba, partindo o resto. Deterministico (pela ordem dos enderecos). A carreira ampla
     /// (8 ligas) esgotava 1 GB em abril de 2002: a lista de estatisticas dos jogadores cresce de 100 em 100 e as
     /// copias antigas nunca serviam de novo (27/10/2026).
-    /// ponytail: varre todas as listas a cada esgotamento; se ficar lento, juntar so depois de N bytes liberados.
+    /// simplification: varre todas as listas a cada esgotamento; se ficar lento, juntar so depois de N bytes liberados.
     unsafe fn alocar_juntando(&mut self, n: usize, cap: usize, zerar: bool) -> usize {
         let mut p = self.menor_livre(cap);
         if p == 0 {

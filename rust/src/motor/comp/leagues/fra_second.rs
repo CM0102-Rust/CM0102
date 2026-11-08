@@ -84,7 +84,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         if *((nacao + nation::NATION_LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: a divisão de baixo espanhola
             crate::comparacao::ramo("cqm_5 divisao de baixo espanhola");
             let e = novo(0xee);
-            // ponytail: a original empurra o ano na palavra de baixo do ecx, com o resto do ponteiro do registro em
+            // simplification: a original empurra o ano na palavra de baixo do ecx, com o resto do ponteiro do registro em
             // cima; a 0x851020 só lê a palavra (mov ax, word ptr [esp + 0x21c]).
             let b = if e != 0 { baixo(e, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32) } else { 0 };
             write_u32_from_usize(this + 0xee, b);
@@ -167,11 +167,6 @@ pub(crate) unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: 
     r
 }
 
-/// Comparer for `construct_fra_second` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SECOND);
-    compare_division_league_ctor("construct_fra_second", this, ano, registro, &FRENCH_SECOND_DIVISION, || o(this, ano, registro))
-}
 
 /// the second: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as the top division
 /// Original: `FraSecond::set_up_rules` (0x5bf0a0, fra_second.cpp, thiscall, ret 0).
@@ -184,11 +179,6 @@ pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u
     fra_first_apply_league_rules(this, &fra_first_second_division_rules(this))
 }
 
-/// Comparer for `fra_second_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_second_set_up_rules(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_SET_UP_RULES);
-    fra_first_compare_league_rules("fra_second_set_up_rules", this, fra_first_second_division_rules(this), || o(this), || fra_second_set_up_rules(this))
-}
 
 /// the second has 20 clubs; no prize fund; TV pays by the division the club came from: 2,000,000 to those relegated
 /// from the top flight and 1,500,000 to those who stayed and those promoted from the National
@@ -212,11 +202,6 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
     1
 }
 
-/// Comparer for `fra_second_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_SECOND_CREATE_TABLE);
-    fra_first_compare_league_table("fra_second_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION, None, || o(this))
-}
 
 /// the second division schedule: 38 rounds, from 31 July to 20 May; in 18 rounds one match goes to a TV slot (day 5,
 /// slot 1) [inference: the televised match]
@@ -228,8 +213,3 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, f
     create_league_schedule(this, fase, rodadas, extra, liga, &FRENCH_SECOND_DIVISION_LEAGUE)
 }
 
-/// Comparer for `fra_second_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SECOND_CREATE_SCHEDULE);
-    compare_league_schedule("fra_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_second_create_schedule(this, fase, r, e, l))
-}

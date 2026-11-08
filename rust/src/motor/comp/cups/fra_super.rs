@@ -99,7 +99,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, fase
 pub(crate) unsafe fn fra_super_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
-        // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
         return a;
@@ -151,16 +151,7 @@ pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table(this: usize,
         |r| r.jogo.5 = french_super_cup_venue(this))
 }
 
-// ponytail: fora de 2001 a original sorteia o mando (0x90cfc0): só ela roda nesse caso.
-/// Comparer for `fra_super_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SUPER_CREATE_ROUND_TABLE);
-    if core::ptr::read_unaligned((this + 0x40) as *const i16) != 0x7d1 {
-        return o(this, fase, rodadas, extra, saida);
-    }
-    fra_super_compare_round_table("fra_super_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| fra_super_create_round_table(this, fase, r, e, s))
-}
+// simplification: fora de 2001 a original sorteia o mando (0x90cfc0): só ela roda nesse caso.
 
 /// A Supercopa da Espanha: ida e volta (7 dias entre os jogos) em agosto, sem sorteio (+0xd = 0x200), desempate de ida e
 /// volta 1.
@@ -186,12 +177,6 @@ pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table_666020(this:
     fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &JAPAN_SUPER_CUP_ROUNDS, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
 }
 
-/// Comparer for `fra_super_create_round_table_666020` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_super_create_round_table_666020(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_SUPER_CREATE_ROUND_TABLE_666020);
-    fra_super_compare_round_table("fra_super_create_round_table_666020", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| fra_super_create_round_table_666020(this, fase, r, e, s))
-}
 
 /// rule: the French Super Cup is between the First Division champion and the Coupe de France winner; if the same club
 /// won both, the First Division runner-up takes its place; if one is missing, the error box
@@ -203,9 +188,3 @@ pub(crate) unsafe extern "thiscall" fn fra_super_select_teams(this: usize) -> i3
     french_super_cup_select_teams(this).0
 }
 
-/// Comparer for `fra_super_select_teams` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_super_select_teams(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_SUPER_SELECT_TEAMS);
-    eng_cc_cup_compare_entrant_list("fra_super_select_teams", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_super_cup_select_teams(this),
-        |r, _| if r == 1 { 12 } else { 0 })
-}

@@ -48,20 +48,6 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nacao: usize, t
     1
 }
 
-/// Comparer for `nation_get_nationality_adjective` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
-    if texto == 0 {
-        return o(nacao, texto, tamanho, genero);
-    }
-    // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
-    let n = ((tamanho as u16 as i16).max(1) as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nacao, texto, tamanho, genero),
-        || nation_get_nationality_adjective(nacao, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
-        nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
-    r
-}
 
 // As listas da set_key_ids, geradas do exe por `python engenharia-reversa/chaves_fixas.py` (rust/src/chaves_fixas.rs).
 include!("../chaves_fixas.rs");
@@ -286,27 +272,7 @@ pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 pub(crate) const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
-/// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
-    let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
-        reset_key_globals();
-        set_fixed_key_ids(u32::MAX, false)
-    });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
-    r
-}
 
-/// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
-    let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
-        reset_key_ranges_1080();
-        set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
-    });
-    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
-    r
-}
 
 
 
@@ -387,19 +353,6 @@ pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, taman
     1
 }
 
-/// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
-    let r = regiao as u8 as i8;
-    if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
-        return o(regiao, texto, tamanho, forma); // caixa: só a original
-    }
-    // os 100 primeiros bytes (o tamanho mínimo aceito)
-    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
-        || get_region_name(regiao, texto, tamanho, forma));
-    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
-    x
-}
 
 /// Os adjetivos dos continentes da 0x6177f0 por idioma (imediatos do código, pelos endereços no exe; levantados
 /// seguindo os desvios da original): linhas África [0x9cfa08], Ásia [0x9cfa0c], Europa [0x9cfa10], América do Norte
@@ -470,18 +423,6 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continente: usize, texto
     1
 }
 
-/// Comparer for `get_continent_adjective` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
-    if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
-        return o(continente, texto, tamanho, forma);
-    }
-    // os 50 primeiros bytes (o tamanho mínimo aceito)
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
-        || get_continent_adjective(continente, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
-    r
-}
 
 /// As chaves de clube do index.cpp (0x6146b0), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
 pub(crate) static CLUB_KEYS: &[&[(u32, u32)]] = &[
@@ -1494,38 +1435,8 @@ pub(crate) fn describe_key_diffs(mo: &crate::comparacao::Memoria, mr: &crate::co
     s
 }
 
-/// Comparer for `match_club_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
-    let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
-    PLACAR.registrar(igual && r == n, || {
-        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
-    });
-    r
-}
 
-/// Comparer for `remap_club_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
-    let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
-    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, describe_key_diffs(&mo, &mr)));
-    r
-}
 
-/// Comparer for `match_nation_key_id` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
-    let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
-    PLACAR.registrar(igual && r == n, || {
-        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
-        format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
-    });
-    r
-}
 
 /// As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
 pub(crate) static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
@@ -2412,6 +2323,101 @@ pub(crate) unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32)
     r as u32 // o eax do último _stricmp (chave de competição de pessoa)
 }
 
+pub(crate) unsafe extern "C" fn comparar_nation_get_nationality_adjective(nacao: usize, texto: usize, tamanho: u32, genero: u32) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_NATION_GET_NATIONALITY_ADJECTIVE);
+    if texto == 0 {
+        return o(nacao, texto, tamanho, genero);
+    }
+    // o texto produzido (até o tamanho dado, de 1 a 128 bytes; abaixo de 50 só o zero do começo)
+    let n = ((tamanho as u16 as i16).max(1) as usize).min(128);
+    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nacao, texto, tamanho, genero),
+        || nation_get_nationality_adjective(nacao, texto, tamanho, genero));
+    PLACAR.registrar(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
+        nacao, tamanho as u16 as i16, genero as u8, r, x, mo, mr));
+    r
+}
+
+/// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
+    let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
+        reset_key_globals();
+        set_fixed_key_ids(u32::MAX, false)
+    });
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    r
+}
+
+/// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
+    let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
+        reset_key_ranges_1080();
+        set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
+    });
+    PLACAR.registrar(igual && r == n, || format!("set_key_ids_1080() original={} rust={} {}", r, n, describe_key_diffs(&mo, &mr)));
+    r
+}
+
+/// Comparer for `get_region_name` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME);
+    let r = regiao as u8 as i8;
+    if texto == 0 || !(1..=14).contains(&r) || (tamanho as u16 as i16) < 100 {
+        return o(regiao, texto, tamanho, forma); // caixa: só a original
+    }
+    // os 100 primeiros bytes (o tamanho mínimo aceito)
+    let (x, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(regiao, texto, tamanho, forma),
+        || get_region_name(regiao, texto, tamanho, forma));
+    PLACAR.registrar(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, forma as u8, x, n, mo, mr));
+    x
+}
+
+/// Comparer for `get_continent_adjective` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE);
+    if continente == 0 || texto == 0 || (tamanho as u16 as i16) < 0x32 {
+        return o(continente, texto, tamanho, forma);
+    }
+    // os 50 primeiros bytes (o tamanho mínimo aceito)
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 50)], || o(continente, texto, tamanho, forma),
+        || get_continent_adjective(continente, texto, tamanho, forma));
+    PLACAR.registrar(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continente, forma as u8, r, n, mo, mr));
+    r
+}
+
+/// Comparer for `match_club_key_id` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_match_club_key_id(nome: usize, linha: u32) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_CLUB_KEY_ID);
+    let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_club_key_id(nome, linha));
+    PLACAR.registrar(igual && r == n, || {
+        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
+        format!("match_club_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
+    });
+    r
+}
+
+/// Comparer for `remap_club_key_id` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_remap_club_key_id(antigo: u32, novo: u32) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u32>(IDX_REMAP_CLUB_KEY_ID);
+    let reg: [(usize, usize); 2] = [(0x9d00a4, 0x484), (0xb63c9c, 0x68)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(antigo, novo), || remap_club_key_id(antigo, novo));
+    PLACAR.registrar(igual && r == n, || format!("remap_club_key_id({}, {}) original={} rust={} {}", antigo as i32, novo as i32, r, n, describe_key_diffs(&mo, &mr)));
+    r
+}
+
+/// Comparer for `match_nation_key_id` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha: u32) -> u32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_MATCH_NATION_KEY_ID);
+    let reg: [(usize, usize); 1] = [(KEY_NATION_AFGHANISTAN, 0x348)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(nome, linha), || match_nation_key_id(nome, linha));
+    PLACAR.registrar(igual && r == n, || {
+        let t = std::ffi::CStr::from_ptr(nome as *const std::os::raw::c_char).to_string_lossy();
+        format!("match_nation_key_id(\"{}\", {}) original={} rust={} {}", t, linha, r as i32, n as i32, describe_key_diffs(&mo, &mr))
+    });
+    r
+}
 
 /// Comparer for `match_club_comp_key_id` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
@@ -2436,4 +2442,3 @@ pub(crate) unsafe extern "C" fn comparar_match_staff_comp_key_id(nome: usize, li
     });
     r
 }
-

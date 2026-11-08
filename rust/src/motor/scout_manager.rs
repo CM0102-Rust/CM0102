@@ -193,42 +193,6 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     1
 }
 
-/// Comparer for `scout_manager_daily_update` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7f8750: os relatórios sorteiam e alocam e as buscas mexem nas listas dos humanos: só a original
-/// roda. Antes, a cópia em ensaio poda uma cópia dos pedidos (sem os relatórios) e os põe na ordem da original; os
-/// pedidos que a original deixa (conta e os 0x11 bytes de cada) têm de ser esses.
-pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_daily_update(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SCOUT_MANAGER_DAILY_UPDATE);
-    if read_u8(G_CURRENT_DAY_SLICE) != 2 {
-        return o(this);
-    }
-    let n0 = read_i32(this + 0x64).max(0) as usize;
-    let base = read_usize(this + 0x5c);
-    let mut copia: Vec<u8> = (0..n0 * 0x11).map(|k| read_u8(base + k)).collect();
-    copia.push(0);
-    // o ensaio poda a cópia: troca o vetor e a conta do `this` pelos da cópia e devolve depois
-    let (b0, c0) = (read_usize(this + 0x5c), read_i32(this + 0x64));
-    core::ptr::write_unaligned((this + 0x5c) as *mut usize, copia.as_mut_ptr() as usize);
-    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let a1080 = read_usize(G_CONTRACT_LOOKUP_RESULT);
-    SCOUT_DAILY_DRY_RUN = true;
-    crate::aleatorio::sem_contar(|| scout_manager_daily_update(this));
-    SCOUT_DAILY_DRY_RUN = false;
-    estado.escrever();
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, a1080);
-    let n1 = read_i32(this + 0x64).max(0) as usize;
-    let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    ordenar(copia.as_mut_ptr() as usize, n1 as i32, 0x11, 0x7fc270);
-    let plano: Vec<u8> = copia[..n1 * 0x11].to_vec();
-    core::ptr::write_unaligned((this + 0x5c) as *mut usize, b0);
-    core::ptr::write_unaligned((this + 0x64) as *mut i32, c0);
-    let r = o(this);
-    let n2 = read_i32(this + 0x64).max(0) as usize;
-    let agora: Vec<u8> = (0..n2 * 0x11).map(|k| read_u8(read_usize(this + 0x5c) + k)).collect();
-    PLACAR.registrar(r == 1 && agora == plano, || format!("scout_manager_daily_update: pedidos {} -> original {} ensaio {}; {:x?} x {:x?}", n0, n2, n1, agora, plano));
-    r
-}
 
 /// O registro das notícias de relatório que a 0x7f9a60 recebe (jogador, clube, quantos), ligado só no comparador da
 /// 0x7f9890 para conferir os grupos da original.
@@ -300,24 +264,6 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, lista: us
     liberar(v);
 }
 
-/// Comparer for `send_scout_reports` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7f9890: a original entrega notícias (aloca nas caixas): só ela roda, com o registro das chamadas à
-/// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
-/// chamadas da original têm de ser essas.
-pub(crate) unsafe extern "thiscall" fn comparar_send_scout_reports(this: usize, lista: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_SCOUT_REPORTS);
-    let cursor = read_usize(lista + 0xa);
-    *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) = Some(Vec::new());
-    SCOUT_DAILY_DRY_RUN = true;
-    send_scout_reports(this, lista);
-    SCOUT_DAILY_DRY_RUN = false;
-    let plano = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).replace(Vec::new()).unwrap_or_default();
-    core::ptr::write_unaligned((lista + 0xa) as *mut usize, cursor);
-    o(this, lista);
-    let feito = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).take().unwrap_or_default();
-    PLACAR.registrar(feito == plano, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", lista, feito, plano));
-}
 
 /// the 0x138e news item with up to 3 records, the scout, the match and the player's strengths for the club, to the club
 /// manager
@@ -377,16 +323,6 @@ pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: us
     entregar(read_usize(G_NEWS), nt, friendly_club_by_id(read_usize(r + 0x50)));
 }
 
-/// Comparer for `send_scout_report_news` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7f9a60: a notícia é entregue (aloca na caixa do humano): só a original roda (ponytail: o efeito é a
-/// caixa de entrada; os grupos que chegam aqui são conferidos pela 0x7f9890). Com o registro ligado, anota a chamada.
-pub(crate) unsafe extern "thiscall" fn comparar_send_scout_report_news(this: usize, r: usize, quantos: u32) {
-    if let Some(g) = &mut *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) {
-        g.push((read_usize(r + 0x2b) as u32, read_usize(r + 0x50) as u32, quantos as u8));
-    }
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SEND_SCOUT_REPORT_NEWS)(this, r, quantos);
-}
 
 
 
@@ -524,19 +460,6 @@ pub(crate) unsafe extern "thiscall" fn current_search_has_no_club(this: usize) -
     (read_usize(search_record(s, *(s as *const i8) as i32) + 0x191) as i32 == -2) as u32
 }
 
-/// Comparer for `current_search_has_no_club` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_current_search_has_no_club(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CURRENT_SEARCH_HAS_NO_CLUB);
-    if matches!(current_human_index(), Ok(None)) {
-        return o(this);
-    }
-    let r = o(this);
-    let n = current_search_has_no_club(this);
-    PLACAR.registrar(r == n, || format!("current_search_has_no_club() original={} rust={}", r, n));
-    r
-}
 
 /// one of the 10 searches of the current human manager session is for the club
 /// Original: `SCOUT_MANAGER::is_club_in_session_searches` (0x7f8500, scout_manager.cpp, thiscall).
@@ -555,23 +478,10 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, 
         return 0;
     }
     let id = read_usize(clube);
-    // ponytail: a original testa o contador contra 0xff (nunca) para usar a busca atual (+0); fica o contador
+    // simplification: a original testa o contador contra 0xff (nunca) para usar a busca atual (+0); fica o contador
     (0..10).any(|k| read_usize(search_record(s, k) + 0x191) == id) as u32
 }
 
-/// Comparer for `is_club_in_session_searches` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_is_club_in_session_searches(this: usize, clube: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_CLUB_IN_SESSION_SEARCHES);
-    if matches!(current_human_index(), Ok(None)) {
-        return o(this, clube);
-    }
-    let r = o(this, clube);
-    let n = is_club_in_session_searches(this, clube);
-    PLACAR.registrar(r == n, || format!("is_club_in_session_searches(clube {:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 
 /// the scouts at the match: for each human manager, the 10 scouts in a drawn order; one for the playing club starts the
@@ -619,7 +529,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
                 }
             };
             core::ptr::write_unaligned(marcas.wrapping_add((q as isize * 4) as usize) as *mut u32, 1);
-            // ponytail: a original empurra o dword com o byte do observador e sobra de pilha em cima; a 0x7f6cd0 lê o
+            // simplification: a original empurra o dword com o byte do observador e sobra de pilha em cima; a 0x7f6cd0 lê o
             // byte
             let r = registro(this, q as u8 as u32, pessoa);
             if read_usize(r + 0x19d) != 0 && *((p + 0x40) as *const u8) != 0 && *((p + 0x41) as *const u8) != 0 {
@@ -637,16 +547,6 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
     1
 }
 
-/// Comparer for `scout_manager_scout_match` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: a observação (0x7b5be0, original) grava o que os olheiros sabem e os relatórios, a 0x7ae9c0 começa
-/// buscas e a 0x7f9890 entrega as notícias: não pode rodar duas vezes. Só a original roda (ponytail: ela mesma só grava
-/// o vetor e a lista locais, que saem); confere a devolução (1).
-pub(crate) unsafe extern "thiscall" fn comparar_scout_manager_scout_match(this: usize, p: usize, resultado: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SCOUT_MANAGER_SCOUT_MATCH)(this, p, resultado);
-    PLACAR.registrar(r == 1, || format!("scout_manager_scout_match(partida {:x}) original={}", p, r));
-    r
-}
 
 /// Index (0..15) of the given manager (null: current human); None when missing or out of range.
 ///
@@ -678,19 +578,6 @@ pub(crate) unsafe extern "thiscall" fn get_edit_session(this: usize, tecnico: us
     read_usize(this + 0xc + i * 4)
 }
 
-/// Comparer for `get_edit_session` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor (só lê); com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_edit_session(this: usize, tecnico: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_EDIT_SESSION);
-    if scout_manager_human_manager_index(tecnico).is_none() {
-        return o(this, tecnico);
-    }
-    let r = o(this, tecnico);
-    let n = get_edit_session(this, tecnico);
-    PLACAR.registrar(r == n, || format!("get_edit_session(tecnico {:x}) original={:x} rust={:x}", tecnico, r, n));
-    r
-}
 
 /// stores the human manager's searches edit session and returns 1
 /// Original: `SCOUT_MANAGER::set_edit_session` (0x7f6af0, scout_manager.cpp, thiscall).
@@ -706,21 +593,6 @@ pub(crate) unsafe extern "thiscall" fn set_edit_session(this: usize, sessao: usi
     1
 }
 
-/// Comparer for `set_edit_session` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelas 16 sessões e a devolução; com a caixa, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_set_edit_session(this: usize, sessao: usize, tecnico: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SET_EDIT_SESSION);
-    if scout_manager_human_manager_index(tecnico).is_none() {
-        return o(this, sessao, tecnico);
-    }
-    let reg = [(this + 0xc, 0x40)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, sessao, tecnico),
-        || set_edit_session(this, sessao, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("set_edit_session(sessao {:x}, tecnico {:x}) original={} rust={} {:x?} x {:x?}",
-        sessao, tecnico, r, n, mo, mr));
-    r
-}
 
 
 
@@ -862,19 +734,6 @@ pub(crate) unsafe extern "thiscall" fn get_selected_list(this: usize, tecnico: u
     *((this + 0x4c + i) as *const u8)
 }
 
-/// Comparer for `get_selected_list` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: a devolução (rotina pura); nos casos de erro, só a original (caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_get_selected_list(this: usize, tecnico: usize) -> u8 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_SELECTED_LIST);
-    if manager_human_index(tecnico).is_none() {
-        return o(this, tecnico);
-    }
-    let r = o(this, tecnico);
-    let n = get_selected_list(this, tecnico);
-    PLACAR.registrar(r == n, || format!("get_selected_list(tecnico {:x}) original={} rust={}", tecnico, r, n));
-    r
-}
 
 /// stores the list selected by the human manager (null: the current one)
 /// Original: `SCOUT_MANAGER::set_selected_list` (0x7f6f20, scout_manager.cpp, thiscall).
@@ -890,19 +749,6 @@ pub(crate) unsafe extern "thiscall" fn set_selected_list(this: usize, lista: u32
     1
 }
 
-/// Comparer for `set_selected_list` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelos 16 bytes das listas escolhidas, e a devolução; nos casos de erro, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_set_selected_list(this: usize, lista: u32, tecnico: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u32>(IDX_SET_SELECTED_LIST);
-    if manager_human_index(tecnico).is_none() {
-        return o(this, lista, tecnico);
-    }
-    let reg = [(this + 0x4c, 0x10)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, lista, tecnico), || set_selected_list(this, lista, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("set_selected_list(lista {}, tecnico {:x}) original={} rust={} {:x?} x {:x?}", lista as u8, tecnico, r, n, mo, mr));
-    r
-}
 
 
 
@@ -978,13 +824,6 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     0
 }
 
-/// Comparer for `fixture_has_scouted_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FIXTURE_HAS_SCOUTED_PLAYER)(this, partida);
-    let n = fixture_has_scouted_player(this, partida);
-    PLACAR.registrar(r == n, || format!("fixture_has_scouted_player(partida {:x}) original={} rust={}", partida, r, n));
-    r
-}
 
 /// The current human's manager record ([0xb74c26 + 0x300 x current screen slot]).
 ///
@@ -1021,7 +860,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa
         let da_edicao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_SEARCHEDITSESSION_IS_PLAYER_ON_SHORT_LIST);
         return da_edicao(s, pessoa);
     }
-    // ponytail: a original empurra um dword local com o índice só no byte baixo; a 0x7f6cd0 lê só esse byte
+    // simplification: a original empurra um dword local com o índice só no byte baixo; a 0x7f6cd0 lê só esse byte
     let busca: unsafe extern "thiscall" fn(usize, u32, usize) -> usize = core::mem::transmute(FN_SCOUT_MANAGER_GET_SEARCH);
     let tem: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_PLAYER_SEARCH_CONTAINS_PLAYER);
     for i in 0..10u32 {
@@ -1035,20 +874,9 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, pessoa
     0
 }
 
-/// Comparer for `is_player_shortlisted` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_is_player_shortlisted(this: usize, pessoa: usize, gerente: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_PLAYER_SHORTLISTED);
-    if pessoa == 0 || (gerente == 0 && scout_manager_current_human_manager() == 0) {
-        return o(this, pessoa, gerente);
-    }
-    let r = o(this, pessoa, gerente);
-    let n = is_player_shortlisted(this, pessoa, gerente);
-    PLACAR.registrar(r == n, || format!("is_player_shortlisted(pessoa {:x}, gerente {:x}) original={} rust={}", pessoa, gerente, r, n));
-    r
-}
 
 
-// ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
+// simplification: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
 
 /// the human manager's scouting record 0..9 (0x2b0 bytes)
@@ -1077,13 +905,6 @@ pub(crate) unsafe extern "thiscall" fn scout_record(t: usize, qual: i8, tecnico:
 
 
 
-/// Comparer for `scout_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_scout_record(t: usize, qual: i8, tecnico: *const i32) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, qual, tecnico);
-    let n = scout_record(t, qual, tecnico);
-    PLACAR.registrar(r == n, || format!("scout_record({:#x}, {}, {:p}) original={:#x} rust={:#x}", t, qual, tecnico, r, n));
-    r
-}
 
 /// empties the list and adds the person of each scout request of the club; returns whether there is any
 /// Original: `SCOUT_MANAGER::collect_club_scout_targets` (0x7f9690, scout_manager.cpp, thiscall, ret 8).
@@ -1109,22 +930,6 @@ pub(crate) unsafe extern "thiscall" fn collect_club_scout_targets(this: usize, c
     (!alvos.is_empty()) as u32
 }
 
-/// Comparer for `collect_club_scout_targets` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: os alvos da cópia antes; a original enche a lista; confere o valor e a lista (cada item, os 0x6e bytes
-/// da pessoa).
-pub(crate) unsafe extern "thiscall" fn comparar_collect_club_scout_targets(this: usize, clube: *const u32, lista: usize) -> u32 {
-    let alvos = if clube.is_null() { Vec::new() } else { scouting_targets_of_club(this, *clube) };
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize) -> u32>(IDX_COLLECT_CLUB_SCOUT_TARGETS)(this, clube, lista);
-    let mut igual = r == (!alvos.is_empty()) as u32;
-    if lista != 0 {
-        let itens = list_items_capped(lista);
-        igual &= itens.len() == alvos.len()
-            && itens.iter().zip(&alvos).all(|(&i, &p)| core::slice::from_raw_parts(i as *const u8, 0x6e) == core::slice::from_raw_parts(p as *const u8, 0x6e));
-    }
-    PLACAR.registrar(igual, || format!("collect_club_scout_targets original={} alvos {}", r, alvos.len()));
-    r
-}
 
 /// finds the request (club, person; 17 bytes), pulls the next ones up and sorts again (0x7fc270); null club = the
 /// current human manager club
@@ -1180,14 +985,6 @@ pub(crate) unsafe extern "thiscall" fn remove_scout_request(this: usize, pessoa:
     }
 }
 
-/// Comparer for `remove_scout_request` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_remove_scout_request(this: usize, pessoa: usize, clube: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REMOVE_SCOUT_REQUEST);
-    let n = (*((this + 0x64) as *const i32)).max(0) as usize;
-    let reg = [(this + 0x5c, 0xc), (read_u32(this + 0x5c) as usize, n * 17)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, clube), || remove_scout_request(this, pessoa, clube));
-    PLACAR.registrar(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", pessoa, clube, mo, mr));
-}
 
 /// poor (balance < 1,000,000) and small (reputation < 5000) club outside the nation's region: 0; else 1
 /// Original: `SCOUT_MANAGER::can_club_scout_nation` (0x7f9190, scout_manager.cpp, thiscall, ret 8).
@@ -1212,18 +1009,6 @@ pub(crate) unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nacao:
     1
 }
 
-/// Comparer for `can_club_scout_nation` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor (a 0x5a0590 só procura).
-pub(crate) unsafe extern "thiscall" fn comparar_can_club_scout_nation(this: usize, nacao: usize, clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_CLUB_SCOUT_NATION)(this, nacao, clube);
-    if club_or_current_human(clube) == 0 {
-        return r;
-    }
-    let n = can_club_scout_nation(this, nacao, clube);
-    PLACAR.registrar(r == n, || format!("can_club_scout_nation({:x}, {:x}) original={} rust={}", nacao, clube, r, n));
-    r
-}
 
 /// removes from the manager's scout lists the scouts no longer at the club and gives each club scout without a list the
 /// first free list; with the edit session open, it refreshes the scouts
@@ -1300,31 +1085,6 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: us
     1
 }
 
-/// Comparer for `sync_scout_lists` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7f7270: lado a lado nas 10 buscas do técnico (0x2b0 bytes cada, achadas antes pela 0x7f6cd0, que
-/// só lê) e na devolução. Sem técnico ou com a edição aberta (a 0x8043c0 mexe na edição): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_sync_scout_lists(this: usize, tecnico: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SYNC_SCOUT_LISTS);
-    let m = if tecnico != 0 { tecnico } else { scout_manager_current_human_manager() };
-    if m == 0 {
-        return o(this, tecnico);
-    }
-    let vaga = read_u8(m).wrapping_sub(read_u8(G_STAFF_COUNT)).wrapping_add(0x10) as i8;
-    if !(0..=15).contains(&vaga) || read_usize(this + vaga as usize * 4 + 0xc) != 0 {
-        return o(this, tecnico);
-    }
-    let mut regioes = Vec::new();
-    for i in 0..10u8 {
-        let l = get_search(this, i, m);
-        if l != 0 {
-            regioes.push((l, 0x2b0usize));
-        }
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, tecnico), || sync_scout_lists(this, tecnico));
-    PLACAR.registrar(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
-    r
-}
 
 /// the player's slot in the record of the human's search that scouts his club, or 0
 /// Original: `SCOUT_MANAGER::find_club_search_entry` (0x7f8610, scout_manager.cpp, thiscall, ret 4).
@@ -1347,7 +1107,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: us
     let busca: unsafe extern "thiscall" fn(usize, u32, usize) -> usize = core::mem::transmute(FN_SCOUT_MANAGER_GET_SEARCH);
     for i in 0..10u32 {
         let l = busca(this, i, m);
-        // ponytail: a original lê +0x190 sem conferir a busca (cairia com 0); aqui a busca nula não conta
+        // simplification: a original lê +0x190 sem conferir a busca (cairia com 0); aqui a busca nula não conta
         if l == 0 || read_usize(l + 0x190) != read_usize(read_usize(p + 0x39)) || read_usize(busca(this, i, m) + 0x170) == 0 {
             continue;
         }
@@ -1357,16 +1117,6 @@ pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: us
     0
 }
 
-/// Comparer for `find_club_search_entry` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7f8610: pela devolução (só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_find_club_search_entry(this: usize, p: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_CLUB_SEARCH_ENTRY);
-    let r = o(this, p);
-    let n = find_club_search_entry(this, p);
-    PLACAR.registrar(r == n, || format!("find_club_search_entry(pessoa {:x}) original={:x} rust={:x}", p, r, n));
-    r
-}
 
 /// the translated scout list name: Short List, Player Search, Staff Search or Scout #n
 /// Original: `scout_manager_write_list_name` (0x7fc150, scout_manager.cpp, cdecl).
@@ -1391,21 +1141,6 @@ pub(crate) unsafe extern "C" fn scout_manager_write_list_name(indice: u32, texto
     1
 }
 
-/// Comparer for `scout_manager_write_list_name` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelo texto (até 0x100 bytes do tamanho dado), e a devolução; nos casos de erro, só a
-/// original (caixa).
-pub(crate) unsafe extern "C" fn comparar_scout_manager_write_list_name(indice: u32, texto: usize, tamanho: i32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u32>(IDX_SCOUT_MANAGER_WRITE_LIST_NAME);
-    let k = indice as u8 as i8;
-    if !(0..=9).contains(&k) || texto == 0 || tamanho < 0x32 {
-        return o(indice, texto, tamanho);
-    }
-    let reg = [(texto, (tamanho as usize).min(0x100))];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(indice, texto, tamanho), || scout_manager_write_list_name(indice, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("scout_manager_write_list_name(indice {}) original={} rust={} {:x?} x {:x?}", k, r, n, mo, mr));
-    r
-}
 
 /// whether the club (or the current human's) asked to scout the player, with fewer than 3 reports and, if asked, with
 /// the date already due
@@ -1464,16 +1199,3 @@ pub(crate) unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: u
     1
 }
 
-/// Comparer for `has_scout_request` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: consulta pura (a busca binária e a data local): pelo valor; jogador nulo só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn comparar_has_scout_request(this: usize, jogador: usize, clube: usize, so_vencidos: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_HAS_SCOUT_REQUEST);
-    if jogador == 0 {
-        return o(this, jogador, clube, so_vencidos);
-    }
-    let r = o(this, jogador, clube, so_vencidos);
-    let n = has_scout_request(this, jogador, clube, so_vencidos);
-    PLACAR.registrar(r == n, || format!("has_scout_request(jogador {:x}, clube {:x}, {}) original={} rust={}", jogador, clube, so_vencidos, r, n));
-    r
-}

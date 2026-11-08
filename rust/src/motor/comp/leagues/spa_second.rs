@@ -263,11 +263,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, f
     }
 }
 
-/// Comparer for `spa_second_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_SPA_SECOND_CREATE_SCHEDULE);
-    spa_second_compare_schedule_all_stages("spa_second_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| spa_second_create_schedule(this, fase, r, e, l))
-}
 
 /// the Spanish Segunda: discipline rule 0x1a (the Spanish one), only the league
 /// Original: `SpaSecond::SpaSecond` (0x8539a0, spa_second.cpp, thiscall, ret 8).
@@ -278,11 +273,6 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, ano: u3
     construct_division_league(this, ano, registro, &SPANISH_SEGUNDA)
 }
 
-/// Comparer for `construct_spa_second` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_SECOND);
-    compare_division_league_ctor("construct_spa_second", this, ano, registro, &SPANISH_SEGUNDA, || o(this, ano, registro))
-}
 
 /// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from
 /// nation bit 4]; B teams cannot go up (marked by the table, 0x855b40)
@@ -297,11 +287,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
 
-/// Comparer for `spa_second_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_second_set_up_rules(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_SET_UP_RULES);
-    spa_first_compare_league_rules("spa_second_set_up_rules", this, segunda_rules(this), || o(this), || spa_second_set_up_rules(this))
-}
 
 /// the Segunda has 22 clubs (the competition's, in database order); the B team of a Primera club is marked as not
 /// promotable (fate −4); the prize fund starts from 50,000
@@ -354,33 +339,3 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     1
 }
 
-/// Comparer for `spa_second_create_table` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
-/// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
-pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);
-    let n = read_u32_as_usize(G_CLUB_COUNT) as i32;
-    let base = read_u32_as_usize(G_CLUB_TABLE);
-    let mut plano: Vec<(usize, bool)> = Vec::new();
-    for i in 0..n.max(0) as usize {
-        let c = base + i * club::SIZE;
-        if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
-            plano.push((c, is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)));
-            if plano.len() == 0x16 {
-                break;
-            }
-        }
-    }
-    let r = o(this);
-    let t = read_u32_as_usize(this + 0xb1);
-    let mut ok = r == (plano.len() == 0x16) as u32 && read_i16(this + 0x3e) == 0x16 && t != 0;
-    if ok {
-        for (k, &(c, b)) in plano.iter().enumerate() {
-            let l = t + k * 0x3b;
-            ok = ok && read_u32_as_usize(l) == c && (!b || *((l + 0x37) as *const u8) == 0xfc);
-        }
-    }
-    PLACAR.registrar(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this, r, plano));
-    r
-}

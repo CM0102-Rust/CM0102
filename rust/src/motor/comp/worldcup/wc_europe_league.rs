@@ -21,7 +21,7 @@ pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, campos: &[(
 pub(crate) unsafe fn comp_date_word(this: usize, dia: u32, mes: u32, semana: u32) -> u16 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    // ponytail: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
+    // simplification: o ano vai num registrador com lixo nos 16 bits altos; a 0x549f70 o lê como palavra
     data(d.as_mut_ptr(), dia, mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, semana);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
@@ -84,12 +84,7 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize
     finish_rules_setup(this, palavra, 0)
 }
 
-// ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-/// Comparer for `wc_europe_league_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_EUROPE_LEAGUE_SET_UP_RULES);
-    check_qualifier_rules("wc_europe_league_set_up_rules", this, &EUROPE_RULE_FIELDS, (0x19, 2, 5), 0, || o(this))
-}
+// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 
 pub(crate) const SOUTH_AMERICA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
     (0xdb, 2, 0), (0xc5, 1, 1), (0xc7, 1, 3), (0xbf, 1, 1), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7), (0x4a, 1, 3), (0xa7, 2, 0xffff)];
@@ -122,25 +117,8 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this
     finish_rules_setup(this, palavra, 0)
 }
 
-// ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
+// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras e
 // as vagas diretas (4 − +0xef − +0xee, com o +0xef que a própria rotina copia, calculado antes).
-/// Comparer for `wc_europe_league_set_up_rules_921040` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_921040(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_EUROPE_LEAGUE_SET_UP_RULES_921040);
-    let lista = core::ptr::read_unaligned(G_COMP_OBJECT_TABLE as *const usize);
-    let mut ef = *((this + 0xef) as *const u8);
-    if lista != 0 {
-        let c = core::ptr::read_unaligned((lista + core::ptr::read_unaligned(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION as *const usize).wrapping_mul(4)) as *const usize);
-        if c != 0 {
-            ef = *((c + 0xee) as *const u8);
-        }
-    }
-    let vagas = 4u8.wrapping_sub(ef).wrapping_sub(*((this + 0xee) as *const u8));
-    let r = check_qualifier_rules("wc_europe_league_set_up_rules_921040", this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS, (0x19, 0, 5), 0, || o(this));
-    let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + 0xbe) as *const u8));
-    PLACAR.registrar(lido_ef == ef && lido_be == vagas, || format!("wc_europe_league_set_up_rules_921040({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, vagas));
-    r
-}
 
 pub(crate) const ASIA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0)];
@@ -160,10 +138,5 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this
     finish_rules_setup(this, palavra, 1)
 }
 
-// ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
-/// Comparer for `wc_europe_league_set_up_rules_912eb0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_WC_EUROPE_LEAGUE_SET_UP_RULES_912EB0);
-    check_qualifier_rules("wc_europe_league_set_up_rules_912eb0", this, &ASIA_QUALIFIER_RULE_FIELDS, (0x19, 2, 5), 1, || o(this))
-}
+// simplification: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 

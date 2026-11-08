@@ -1,0 +1,192 @@
+use super::*;
+
+// The comparers of the routines in ../player_search.rs (comparison mode: see the header of motor.rs).
+// [pt] Os comparadores das rotinas de ../player_search.rs (modo comparação: ver o cabeçalho do motor.rs).
+
+/// Comparer for `player_search_record_scouted_club_match` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7bd310: lado a lado nas 50 vagas (o registro inteiro). Com as máscaras ligadas e o técnico do clube
+/// humano, a 0x5b09d0 grava o que se sabe do jogador e sorteia: aí só a original roda (simplification: o caso de um humano
+/// observando o próprio clube; a carreira automática não chega a esta rotina).
+pub(crate) unsafe extern "thiscall" fn comparar_player_search_record_scouted_club_match(this: usize, jogo: usize, resultado: usize) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PLAYER_SEARCH_RECORD_SCOUTED_CLUB_MATCH);
+    let clube_obs = friendly_club_by_id(read_usize(this));
+    if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && read_usize(clube_obs + club::MANAGER) != 0 {
+        o(this, jogo, resultado);
+        return;
+    }
+    let regioes = [(this, 4 + 0x32 * 0x1a2), (0xae24d0, 0x100), (0xb67a34, 4)];
+    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, jogo, resultado),
+        || player_search_record_scouted_club_match(this, jogo, resultado));
+    PLACAR.registrar(igual, || format!("player_search_record_scouted_club_match(clube {:#x}, jogo {:#x}) {:x?} x {:x?}", read_usize(this), jogo, mo, mr));
+}
+
+/// Comparer for `player_search_scout_match` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7b5be0: o relatório sorteia (0x7b62a0, 0x5b09d0) e põe registros na saída (aloca): só a original
+/// roda. Antes, a cópia em ensaio decide até o relatório sem os efeitos (sem o histórico e sem o relatório, com o estado
+/// do sorteador guardado e devolvido) e diz a devolução e se o começo da lista vai a amanhã; a original tem de bater.
+pub(crate) unsafe extern "thiscall" fn comparar_player_search_scout_match(this: usize, jogo: usize, resultado: usize, saida: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAYER_SEARCH_SCOUT_MATCH);
+    if jogo == 0 || resultado == 0 {
+        return o(this, jogo, resultado, saida);
+    }
+    let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
+    let antes = (read_usize(this + 0x1a5), read_usize(this + 0x1a9));
+    SCOUT_MATCH_DRY_RUN = true;
+    SCOUT_MATCH_WOULD_REPORT = false;
+    let n = crate::aleatorio::sem_contar(|| player_search_scout_match(this, jogo, resultado, saida));
+    SCOUT_MATCH_DRY_RUN = false;
+    let relata = SCOUT_MATCH_WOULD_REPORT;
+    estado.escrever();
+    let previsto = if relata {
+        let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
+        let mut t = [0u32; 2];
+        let a = mais(G_CURRENT_DATE, t.as_mut_ptr() as usize, 1);
+        (read_i16(a + 2) as u16, read_i16(a))
+    } else {
+        (read_i16(this + 0x1a7) as u16, read_i16(this + 0x1a5))
+    };
+    let r = o(this, jogo, resultado, saida);
+    let depois = (read_i16(this + 0x1a7) as u16, read_i16(this + 0x1a5));
+    PLACAR.registrar(r == n && depois == previsto, || format!("player_search_scout_match(lista {:#x}, jogo {:#x}) original={} ensaio={} começo antes {:x?} previsto {:x?} depois {:x?}",
+        this, jogo, r, n, antes, previsto, depois));
+    r
+}
+
+/// Comparer for `contains_player` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7af600: pela devolução (só lê; as datas e a chave são locais). Pessoa nula: a caixa, só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_contains_player(this: usize, pessoa: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONTAINS_PLAYER);
+    if pessoa == 0 {
+        return o(this, pessoa);
+    }
+    let r = o(this, pessoa);
+    let n = contains_player(this, pessoa);
+    PLACAR.registrar(r == n, || format!("contains_player(busca {:x}, pessoa {:x}) original={} rust={}", this, pessoa, r, n));
+    r
+}
+
+/// Comparer for `player_search_find_or_claim_player_slot` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador da 0x7bd700: sem `reservar`, pela devolução (só lê); com ele, lado a lado nas 50 vagas e na devolução.
+pub(crate) unsafe extern "thiscall" fn comparar_player_search_find_or_claim_player_slot(this: usize, pessoa: usize, reservar: u32) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_PLAYER_SEARCH_FIND_OR_CLAIM_PLAYER_SLOT);
+    if pessoa == 0 {
+        return o(this, pessoa, reservar);
+    }
+    if reservar == 0 {
+        let r = o(this, pessoa, reservar);
+        let n = player_search_find_or_claim_player_slot(this, pessoa, reservar);
+        PLACAR.registrar(r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}) original={:x} rust={:x}", this, pessoa, r, n));
+        return r;
+    }
+    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this + 4, 0x32 * 0x1a2)], || o(this, pessoa, reservar), || player_search_find_or_claim_player_slot(this, pessoa, reservar));
+    PLACAR.registrar(igual && r == n, || format!("player_search_find_or_claim_player_slot(registro {:x}, pessoa {:x}, reservar) original={:x} rust={:x} iguais={}", this, pessoa, r, n, igual));
+    r
+}
+
+/// Comparer for `player_search_get_club_target_rating` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
+pub(crate) unsafe extern "C" fn comparar_player_search_get_club_target_rating(clube: usize, base: *mut i32, forcada: *const i16) -> i32 {
+    let o = original_fn::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(IDX_PLAYER_SEARCH_GET_CLUB_TARGET_RATING);
+    let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
+    let r = o(clube, &mut bo, forcada);
+    let n = player_search_get_club_target_rating(clube, &mut br, forcada);
+    PLACAR.registrar(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", clube, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
+    if !base.is_null() {
+        *base = bo;
+    }
+    r
+}
+
+/// Comparer for `player_search_slot_get_match_entry` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura: compara a devolução.
+pub(crate) unsafe extern "thiscall" fn comparar_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_PLAYER_SEARCH_SLOT_GET_MATCH_ENTRY)(this, i);
+    let n = player_search_slot_get_match_entry(this, i);
+    PLACAR.registrar(r == n, || format!("player_search_slot_get_match_entry({:x}, {}) {:x}/{:x}", this, i as u8 as i8, r, n));
+    r
+}
+
+/// Comparer for `player_search_slot_sum_goals` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: pura: compara a devolução.
+pub(crate) unsafe extern "thiscall" fn comparar_player_search_slot_sum_goals(this: usize) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(IDX_PLAYER_SEARCH_SLOT_SUM_GOALS)(this);
+    let n = player_search_slot_sum_goals(this);
+    PLACAR.registrar(r == n, || format!("player_search_slot_sum_goals({:x}) {}/{}", this, r, n));
+    r
+}
+
+/// Comparer for `set_slot_index` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_set_slot_index(busca: usize, vaga: i8) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_SET_SLOT_INDEX);
+    if !(0..=9).contains(&vaga) {
+        return o(busca, vaga);
+    }
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(busca + 4, 1)], || o(busca, vaga), || set_slot_index(busca, vaga));
+    PLACAR.registrar(igual && ro == rr, || format!("set_slot_index({}) original={} rust={} {:x?} x {:x?}", vaga, ro, rr, mo, mr));
+    ro
+}
+
+/// Comparer for `set_list_type` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_set_list_type(busca: usize, tipo: i8) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_SET_LIST_TYPE);
+    if !(1..=4).contains(&tipo) {
+        return o(busca, tipo);
+    }
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(busca + 0xa, 1)], || o(busca, tipo), || set_list_type(busca, tipo));
+    PLACAR.registrar(igual && ro == rr, || format!("set_list_type({}) original={} rust={} {:x?} x {:x?}", tipo, ro, rr, mo, mr));
+    ro
+}
+
+/// Comparer for `set_scout` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelo olheiro e as missões (+0x174 a +0x199; a 0x53e990 só lê).
+pub(crate) unsafe extern "thiscall" fn comparar_set_scout(this: usize, olheiro: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_SCOUT);
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(this + 0x174, 0x25)], || o(this, olheiro), || set_scout(this, olheiro));
+    PLACAR.registrar(igual && r == n, || format!("set_scout({:x}) {:x?} x {:x?}", olheiro, mo, mr));
+    r
+}
+
+/// Comparer for `set_manager` (comparison mode: see the header of motor.rs).
+pub(crate) unsafe extern "thiscall" fn comparar_set_manager(busca: usize, pessoa: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_MANAGER);
+    if pessoa == 0 || *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) - 0x10 {
+        return o(busca, pessoa);
+    }
+    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(busca, 4)], || o(busca, pessoa), || set_manager(busca, pessoa));
+    PLACAR.registrar(igual && ro == rr, || format!("set_manager original={} rust={} {:x?} x {:x?}", ro, rr, mo, mr));
+    ro
+}
+
+/// Comparer for `get_scout_assignment` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
+pub(crate) unsafe extern "thiscall" fn comparar_get_scout_assignment(this: usize, clube: *mut u32, nacao: *mut u32, regiao: *mut u8, comp: *mut u32, base: *mut u32, adversario: *mut u32) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT);
+    if check_search_scout(this).is_none() {
+        return o(this, clube, nacao, regiao, comp, base, adversario);
+    }
+    let reg = [(clube as usize, 4), (nacao as usize, 4), (regiao as usize, 1), (comp as usize, 4), (base as usize, 4), (adversario as usize, 4)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, clube, nacao, regiao, comp, base, adversario),
+        || get_scout_assignment(this, clube, nacao, regiao, comp, base, adversario));
+    PLACAR.registrar(igual && r == n, || format!("get_scout_assignment original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
+    r
+}
+
+/// Comparer for `scout_covers_nation` (comparison mode: see the header of motor.rs).
+///
+/// [pt] Comparador: lado a lado pelo valor e pelas missões +0x18c..+0x1a0 (a 0x7aefd0 as copia sobre elas mesmas).
+pub(crate) unsafe extern "thiscall" fn comparar_scout_covers_nation(this: usize, nacao: usize) -> u32 {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCOUT_COVERS_NATION);
+    let reg = [(this + 0x18c, 0x15)];
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, nacao), || scout_covers_nation(this, nacao));
+    PLACAR.registrar(igual && r == n, || format!("scout_covers_nation(nacao {:#x}) original={} rust={} {:x?} x {:x?}", nacao, r, n, mo, mr));
+    r
+}

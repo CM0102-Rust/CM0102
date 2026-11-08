@@ -84,16 +84,6 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     1 // cpu10: a punição feita
 }
 
-/// Comparer for `make_points_ban` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
-pub(crate) unsafe extern "thiscall" fn comparar_make_points_ban(this: usize, r: usize, j: usize, por_jogos: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_MAKE_POINTS_BAN);
-    let regioes = [(r, 0x70)];
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(this, r, j, por_jogos), || make_points_ban(this, r, j, por_jogos));
-    PLACAR.registrar(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_u32_as_usize(j), por_jogos, a, b, mo, mr));
-    a
-}
 
 /// at the new season, releases bans 2 (or 4) years old, frees the entries without a ban, clears the bookings of the
 /// others and compacts the table
@@ -125,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 let ano = *((ban + 6) as *const u16) as i32;
                 if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - ano >= anos {
                     crate::comparacao::ramo("cpu_10 suspensao velha");
-                    // ponytail: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
+                    // simplification: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
                     soltar(read_u32_as_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
                     true
                 } else {
@@ -157,11 +147,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 }
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
-// ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
-/// Comparer for `ruling_body_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ruling_body_start_new_season(this: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RULING_BODY_START_NEW_SEASON)(this);
-}
+// simplification: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
 
 /// removes the free entries from the body's discipline table, fixes the stored index of each moved player and
 /// reallocates with 100 spare rows
@@ -206,25 +192,4 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     }
 }
 
-/// Comparer for `compact_entries` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
-/// original e confere a conta, a capacidade e as entradas na nova ordem.
-pub(crate) unsafe extern "thiscall" fn comparar_compact_entries(this: usize) {
-    let mut esperado: Vec<u8> = Vec::new();
-    let base = read_u32_as_usize(this + 0xb);
-    for k in 0..read_i32(this + 0x13).max(0) as usize {
-        let e = base + 0xe * k;
-        if read_i32(e) != -1 {
-            esperado.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 0xe));
-        }
-    }
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_COMPACT_ENTRIES)(this);
-    let n = (esperado.len() / 0xe) as u32;
-    let p = read_u32_as_usize(this + 0xb);
-    let iguais = p != 0 && core::slice::from_raw_parts(p as *const u8, esperado.len()) == &esperado[..];
-    PLACAR.registrar(read_u32_as_usize(this + 0x13) as u32 == n && read_u32_as_usize(this + 0xf) as u32 == n + 100 && iguais, || {
-        format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", read_u32_as_usize(this + 0x13), n, read_u32_as_usize(this + 0xf), iguais)
-    });
-}
 

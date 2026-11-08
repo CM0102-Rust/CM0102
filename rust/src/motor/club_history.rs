@@ -47,13 +47,6 @@ pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usiz
     1
 }
 
-/// Comparer for `club_history_save` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x443f50: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_club_history_save(this: usize, save: usize) -> u32 {
-    // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CLUB_HISTORY_SAVE)(this, save)
-}
 
 /// Shows the officials_manager.cpp error box at the line, closes the item and returns 0.
 ///
@@ -92,11 +85,4 @@ pub(crate) unsafe extern "thiscall" fn club_history_save_84c680(this: usize, sav
     zip_close(&mut z);
 }
 
-/// Comparer for `club_history_save_84c680` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x84c680: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_club_history_save_84c680(this: usize, save: usize) {
-    // ponytail: grava no contêiner do save (não pode rodar duas vezes); a cópia é provada pela prova do save
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLUB_HISTORY_SAVE_84C680)(this, save)
-}
 

@@ -64,19 +64,6 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, club
     1
 }
 
-/// Comparer for `fill_match_record_from_fixture` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7e4750: lado a lado (leve) no registro de saída (0x1f bytes) e na devolução; ponteiro nulo: a caixa,
-/// só a original.
-pub(crate) unsafe extern "C" fn comparar_fill_match_record_from_fixture(jogo: usize, clube: usize, saida: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_FILL_MATCH_RECORD_FROM_FIXTURE);
-    if jogo == 0 || clube == 0 || saida == 0 {
-        return o(jogo, clube, saida);
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x1f)], || o(jogo, clube, saida), || fill_match_record_from_fixture(jogo, clube, saida));
-    PLACAR.registrar(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", jogo, clube, r, n, mo, mr));
-    r
-}
 
 /// Name id (+0x33 of a name record), or -1 without name.
 ///
@@ -111,18 +98,6 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(pessoa: usize, saida: usize)
     1
 }
 
-/// Comparer for `fill_staff_name_ref` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7e4920: lado a lado (leve) na referência (0x18 bytes) e na devolução; ponteiro nulo: só a original.
-pub(crate) unsafe extern "C" fn comparar_fill_staff_name_ref(pessoa: usize, saida: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FILL_STAFF_NAME_REF);
-    if pessoa == 0 || saida == 0 {
-        return o(pessoa, saida);
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(saida, 0x18)], || o(pessoa, saida), || fill_staff_name_ref(pessoa, saida));
-    PLACAR.registrar(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", pessoa, r, n, mo, mr));
-    r
-}
 
 /// the result code of the record: 3 win, 2 score draw, 1 goalless draw, -3 defeat
 /// Original: `match_record_result_code` (0x7e56d0, record_utils.cpp, cdecl).
@@ -147,19 +122,6 @@ pub(crate) unsafe extern "C" fn match_record_result_code(registro: usize) -> u8 
     }
 }
 
-/// Comparer for `match_record_result_code` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x7e56d0: pelo byte devolvido (só lê); registro nulo: só a original.
-pub(crate) unsafe extern "C" fn comparar_match_record_result_code(registro: usize) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_MATCH_RECORD_RESULT_CODE);
-    if registro == 0 {
-        return o(registro);
-    }
-    let r = o(registro);
-    let n = match_record_result_code(registro);
-    PLACAR.registrar(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", registro, r as i8, n as i8));
-    r
-}
 
 
 
@@ -258,18 +220,6 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -
     (da > db || (da == db && fa > fb)) as u32
 }
 
-/// Comparer for `match_record_is_bigger_win` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pura; registro nulo (a caixa), só a original.
-pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_win(a: usize, b: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
-    if a == 0 || b == 0 {
-        return r;
-    }
-    let n = match_record_is_bigger_win(a, b);
-    PLACAR.registrar(r == n, || format!("match_record_is_bigger_win({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// the match record is a defeat by a larger margin than the other one, or the same with more goals conceded
 /// Original: `match_record_is_bigger_defeat` (0x7e4b00, record_utils.cpp, cdecl).
@@ -289,16 +239,4 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize
     (da > db || (da == db && sa > signed_byte_at)) as u32
 }
 
-/// Comparer for `match_record_is_bigger_defeat` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pura; registro nulo (a caixa), só a original.
-pub(crate) unsafe extern "C" fn comparar_match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
-    if a == 0 || b == 0 {
-        return r;
-    }
-    let n = match_record_is_bigger_defeat(a, b);
-    PLACAR.registrar(r == n, || format!("match_record_is_bigger_defeat({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 

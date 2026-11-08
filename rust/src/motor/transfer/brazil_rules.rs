@@ -35,17 +35,6 @@ pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u
     this
 }
 
-/// Comparer for `construct_brazil_rules` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_BRAZIL_RULES);
-    let mut r = 0usize;
-    compare_transfer_rules_ctor("construct_brazil_rules", this, || r = o(this, a1, a2, a3, a4, a5), |s| {
-        construct_brazil_rules(s, a1, a2, a3, a4, a5);
-    });
-    r
-}
 
 /// As janelas da Alemanha: de 1º de julho a 15 de agosto e de 1º de julho a 15 de janeiro.
 pub(crate) const GERMANY_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
@@ -66,13 +55,6 @@ pub(crate) unsafe extern "thiscall" fn brazil_rules_init_transfer_windows(this: 
     set_transfer_windows(this, 2, &GERMANY_TRANSFER_WINDOWS, 0x9cd538, 0x4d);
 }
 
-/// Comparer for `brazil_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_brazil_rules_init_transfer_windows(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRAZIL_RULES_INIT_TRANSFER_WINDOWS);
-    compare_transfer_rules_ctor("brazil_rules_init_transfer_windows", this, || o(this), |s| brazil_rules_init_transfer_windows(s));
-}
 
 /// A janela da Escócia: de 30 de maio (andando para o sábado [inferência]) a 30 de março (andando para a quinta-feira [inferência]).
 pub(crate) const SCOTLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [

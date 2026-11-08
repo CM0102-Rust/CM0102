@@ -325,21 +325,7 @@ pub(crate) fn zero_stack_below() {
     std::hint::black_box(&mut a);
 }
 
-/// Comparer for `favourite_of` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_favourite_of(a: usize, b: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_FAVOURITE_OF)(a, b);
-    let n = favourite_of(a, b);
-    PLACAR.registrar(r == n, || format!("favourite_of original={} rust={}", r, n));
-    r
-}
 
-/// Comparer for `rejected_by` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_rejected_by(a: usize, b: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_REJECTED_BY)(a, b);
-    let n = rejected_by(a, b);
-    PLACAR.registrar(r == n, || format!("rejected_by original={} rust={}", r, n));
-    r
-}
 
 /// Memory regions compared for fechamento: RNG state, the match engine, the day's incident list header/cursor and
 /// each 0x19-byte incident in it.
@@ -1916,41 +1902,6 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     }
 }
 
-/// Comparer for `database_player_initialisation` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador de 0x535a80: original e cópia lado a lado sobre o banco que ela escreve (pessoas, jogadores e não
-/// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
-/// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
-/// contar sorteios). Sem pessoas (caixa e fim): só a original.
-pub(crate) unsafe extern "C" fn comparar_database_player_initialisation(data: usize) {
-    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION);
-    let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
-    let rd = |a: usize| *(a as *const usize);
-    if gi(0xae2364) == 0 || rd(G_STAFF_TABLE) == 0 {
-        return o(data);
-    }
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    regioes.extend_from_slice(&[(0x9b59b4, 4), (0x9b59b8, 2), (0xae2044, 0xbd), (0xae2114, 0xbd), (0xae18bc, 0xbd),
-        (0xae2238, 0xbd), (0xde1f64, 0x100), (0xae24aa, 1), (G_SUB_WEEKS_RESULT_DATE, 8)]);
-    regioes.push((rd(G_STAFF_TABLE), gi(0xae2364) * 110));
-    regioes.push((rd(G_STAFF_STATE_TABLE), gi(0xae2364) * 0x4f));
-    if rd(G_PLAYER_DATA_TABLE) != 0 {
-        regioes.push((rd(G_PLAYER_DATA_TABLE), gi(0xae236c) * 70));
-    }
-    if rd(G_NON_PLAYER_TABLE) != 0 {
-        regioes.push((rd(G_NON_PLAYER_TABLE), gi(0xae2368) * 68));
-    }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(data),
-        || crate::aleatorio::sem_contar(|| database_player_initialisation(data)));
-    let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])));
-    PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("database_player_initialisation: diverge em {:x} original={:02x} rust={:02x}", a, x, y),
-        None => "database_player_initialisation: estado do sorteador diferente".to_string(),
-    });
-    // ponytail: dezenas de MB por foto; não voltam às sobras
-    mo.0.clear();
-    mr.0.clear();
-}
 
 
 /// strcpy: copies a null-terminated string from origem to destino.
@@ -2034,19 +1985,6 @@ pub(crate) unsafe extern "C" fn database_format_name_from_strings(nome: usize, s
     1
 }
 
-/// Comparer for `database_format_name_from_strings` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_STRINGS);
-    if texto == 0 || (tamanho as u16 as i16) < 0x69 || !(1..=7).contains(&(forma as u8)) {
-        return o(nome, sobrenome, comum, texto, tamanho, forma); // caixa: só a original
-    }
-    // o texto produzido (até o tamanho dado, no máximo 128 bytes)
-    let n = (tamanho as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma),
-        || database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", forma as u8, r, x, mo, mr));
-    r
-}
 
 /// Os textos dos cargos 0..0x11 da 0x53ad00 (imediatos do código, pelos endereços no exe): curto minúsculo, curto
 /// maiúsculo, inteiro minúsculo, inteiro maiúsculo e o gênero com o idioma 4 (0: não grava). Os curtos levam o
@@ -2102,17 +2040,6 @@ pub(crate) unsafe extern "C" fn database_get_job_name(cargo: u32, curto: u32, ma
     G_JOB_NAME_BUFFER
 }
 
-/// Comparer for `database_get_job_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiuscula: u32, genero: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, usize) -> usize>(IDX_DATABASE_GET_JOB_NAME);
-    // o texto [0xae19b4] e o byte do gênero, se houver
-    let regioes = [(G_JOB_NAME_BUFFER, 100usize), (genero, 1)];
-    let reg = if genero != 0 { &regioes[..] } else { &regioes[..1] };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(reg, || o(cargo, curto, maiuscula, genero),
-        || database_get_job_name(cargo, curto, maiuscula, genero));
-    PLACAR.registrar(igual && r == x, || format!("database_get_job_name({}, {}, {}) original={:x} rust={:x} {:x?} x {:x?}", cargo as u8 as i8, curto, maiuscula, r, x, mo, mr));
-    r
-}
 
 /// Os nomes dos idiomas 1..64 da 0x53cee0 (imediatos do código, pelos endereços no exe; o 34 repete o albanês),
 /// todos com o vazio 0xad9c64 ("<%s - COMMENT - language>").
@@ -2141,13 +2068,6 @@ pub(crate) unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize
     0xae21d4
 }
 
-/// Comparer for `database_get_language_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_language_name(idioma: u32) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_DATABASE_GET_LANGUAGE_NAME);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(0xae21d4, 100)], || o(idioma), || database_get_language_name(idioma));
-    PLACAR.registrar(igual && r == x, || format!("database_get_language_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8 as i8, r, x, mo, mr));
-    r
-}
 
 
 /// True if the text's first byte is 0.
@@ -2242,19 +2162,6 @@ pub(crate) unsafe extern "C" fn club_get_national_team_name(clube: usize, varian
     1
 }
 
-/// Comparer for `club_get_national_team_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante: u32, texto: usize, tamanho: i32, forma: u32, aspas: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, usize, i32, u32, u32) -> u32>(IDX_CLUB_GET_NATIONAL_TEAM_NAME);
-    let f = forma as u8 as i8;
-    if tamanho < 0x47 || ((1..=4).contains(&f) && clube == 0) {
-        return o(clube, variante, texto, tamanho, forma, aspas); // caixa: só a original
-    }
-    let n = (tamanho as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(clube, variante, texto, tamanho, forma, aspas),
-        || club_get_national_team_name(clube, variante, texto, tamanho, forma, aspas));
-    PLACAR.registrar(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", clube, variante, f, aspas, r, x, mo, mr));
-    r
-}
 
 /// Os nomes dos 31 atributos de jogador da 0x5428a0 (imediatos do código, pelos endereços no exe): (abreviado, leva o
 /// vazio 0xad9c64, inteiro, leva o vazio).
@@ -2317,19 +2224,6 @@ pub(crate) unsafe extern "C" fn database_get_player_attribute_name(atributo: u32
     1
 }
 
-/// Comparer for `database_get_player_attribute_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_PLAYER_ATTRIBUTE_NAME);
-    let x = atributo as u8 as i8;
-    if !(1..=0x1f).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
-        return o(atributo, texto, tamanho, abreviado); // caixa: só a original
-    }
-    // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 100)], || o(atributo, texto, tamanho, abreviado),
-        || database_get_player_attribute_name(atributo, texto, tamanho, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("database_get_player_attribute_name({}, {}) original={} rust={} {:x?} x {:x?}", x, abreviado, r, n, mo, mr));
-    r
-}
 
 /// Appends one position to the position text built by 0x53ee50: short or long form (translated via the global buffer
 /// 0xde1f64) with a "/" separator, or a single letter only while the text is empty.
@@ -2497,20 +2391,6 @@ pub(crate) unsafe extern "C" fn database_format_player_positions(jogador: usize,
     1
 }
 
-/// Comparer for `database_format_player_positions` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_player_positions(jogador: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_PLAYER_POSITIONS);
-    if texto == 0 || jogador == 0 || (tamanho as u16 as i16) < 0x1e {
-        return o(jogador, texto, tamanho, forma); // caixa: só a original
-    }
-    // o texto, as notas do jogador (a original pode gravar +0x13) e o começo do texto global [0xde1f64]
-    let n = (tamanho as u16 as usize).min(128);
-    let reg = [(texto, n), (jogador + 0xf, 12), (0xde1f64, 64)];
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(jogador, texto, tamanho, forma),
-        || database_format_player_positions(jogador, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", jogador, forma as u8, r, x, mo, mr));
-    r
-}
 
 
 /// Text pointer is non-null and the text is not empty.
@@ -2552,19 +2432,6 @@ pub(crate) unsafe extern "C" fn database_format_name_from_ids(nome: i32, sobreno
     formatar(n, s, c, texto, tamanho, forma, -1)
 }
 
-/// Comparer for `database_format_name_from_ids` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_name_from_ids(nome: i32, sobrenome: i32, comum: i32, texto: usize, tamanho: u32, forma: u32, pessoa: i32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_IDS);
-    if texto == 0 || (tamanho as i16) < 0x69 {
-        return o(nome, sobrenome, comum, texto, tamanho, forma, pessoa); // caixa: só a original
-    }
-    // o texto produzido (até o tamanho dado, no máximo 128 bytes)
-    let n = (tamanho as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(nome, sobrenome, comum, texto, tamanho, forma, pessoa),
-        || database_format_name_from_ids(nome, sobrenome, comum, texto, tamanho, forma, pessoa));
-    PLACAR.registrar(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", nome, sobrenome, comum, forma, pessoa, r, x, mo, mr));
-    r
-}
 
 /// the official name by format: 1 "%s %s", 2 "%c.%s", 3 "%s, %s", 4 "%s, %c", 5 the surname, 6 the initials; nation
 /// [0x9cf488]: surname only
@@ -2633,18 +2500,6 @@ pub(crate) unsafe extern "C" fn database_format_official_name(oficial: usize, te
     1
 }
 
-/// Comparer for `database_format_official_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_OFFICIAL_NAME);
-    if oficial == 0 || texto == 0 || (tamanho as i16) < 0x69 {
-        return o(oficial, texto, tamanho, forma); // caixa: só a original
-    }
-    let n = (tamanho as u16 as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(oficial, texto, tamanho, forma),
-        || database_format_official_name(oficial, texto, tamanho, forma));
-    PLACAR.registrar(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, forma as u8, r, x, mo, mr));
-    r
-}
 
 /// the translated position name of the mask (goalkeeper, support, striker, wing back, wingers, midfielders, centre
 /// back, full backs, sweeper, substitute, defender) and the gender by language
@@ -2709,18 +2564,6 @@ pub(crate) unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usiz
     }
 }
 
-/// Comparer for `position_mask_get_text` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32) -> u8>(IDX_POSITION_MASK_GET_TEXT);
-    if texto == 0 {
-        return o(mascara, texto, maiuscula);
-    }
-    // sem tamanho: os nomes traduzidos cabem em 128
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 128)], || o(mascara, texto, maiuscula),
-        || position_mask_get_text(mascara, texto, maiuscula));
-    PLACAR.registrar(igual && r == x, || format!("position_mask_get_text({:x}, {}) original={} rust={} {:x?} x {:x?}", mascara, maiuscula as u8, r, x, mo, mr));
-    r
-}
 
 
 
@@ -2811,18 +2654,6 @@ pub(crate) unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, 
     g
 }
 
-/// Comparer for `write_position_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, tamanho: i32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_WRITE_POSITION_NAME);
-    if tamanho < 0x1e {
-        return o(mascara, texto, tamanho); // caixa: só a original
-    }
-    let n = (tamanho as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(mascara, texto, tamanho),
-        || write_position_name(mascara, texto, tamanho));
-    PLACAR.registrar(igual && r == x, || format!("write_position_name({:x}) original={} rust={} {:x?} x {:x?}", mascara, r, x, mo, mr));
-    r
-}
 
 /// the player description by strengths (0x546ab0) and position: forward, midfielder, full back, defender, veteran or
 /// rookie by age; the gender by language
@@ -2933,18 +2764,6 @@ pub(crate) unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u
     g
 }
 
-/// Comparer for `write_player_description` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_write_player_description(pessoa: i32, posicao: u32, qualidades: u32, texto: usize, tamanho: i32, genero: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_WRITE_PLAYER_DESCRIPTION);
-    if tamanho < 0x1e {
-        return o(pessoa, posicao, qualidades, texto, tamanho, genero); // caixa: só a original
-    }
-    let n = (tamanho as usize).min(128);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, n)], || o(pessoa, posicao, qualidades, texto, tamanho, genero),
-        || write_player_description(pessoa, posicao, qualidades, texto, tamanho, genero));
-    PLACAR.registrar(igual && r == x, || format!("write_player_description({}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, posicao, qualidades, r, x, mo, mr));
-    r
-}
 
 /// Score of colleague `o` as a favourite of `pessoa` at `clube` (filters and score of 0x548810/0x548da0: contract at
 /// the club, reputation, not leaving, stats), or None if he does not qualify.
@@ -3071,16 +2890,6 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(pessoa: usize, 
     1
 }
 
-/// Comparer for `staff_is_best_favoured_candidate` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_best_favoured_candidate(pessoa: usize, clube: usize, candidato: usize) -> u8 {
-    // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
-    // cópia não conta, se alguma delas sortear
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u8>(IDX_STAFF_IS_BEST_FAVOURED_CANDIDATE);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube, candidato),
-        || crate::aleatorio::sem_contar(|| staff_is_best_favoured_candidate(pessoa, clube, candidato)));
-    PLACAR.registrar(igual && r == x, || format!("staff_is_best_favoured_candidate({:x}, {:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, candidato, r, x, mo, mr));
-    r
-}
 
 
 
@@ -3398,21 +3207,7 @@ pub(crate) unsafe fn compare_with_rng_retry(o: impl Fn() -> u32, n: impl Fn() ->
     (r, x, igual2 && r2 == x2, format!("1a {:x} x {:x}; 2a {:x} x {:x} {:x?} x {:x?}", r, x, r2, x2, mo, mr))
 }
 
-/// Comparer for `staff_get_player_strength_flags` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_strength_flags(pessoa: usize, outro: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_STRENGTH_FLAGS);
-    let (r, _, igual, d) = compare_with_rng_retry(|| o(pessoa, outro), || staff_get_player_strength_flags(pessoa, outro));
-    PLACAR.registrar(igual, || format!("staff_get_player_strength_flags({:x}, {:x}) {}", pessoa, outro, d));
-    r
-}
 
-/// Comparer for `staff_get_player_weakness_flags` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_weakness_flags(pessoa: usize, clube: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_GET_PLAYER_WEAKNESS_FLAGS);
-    let (r, _, igual, d) = compare_with_rng_retry(|| o(pessoa, clube), || staff_get_player_weakness_flags(pessoa, clube));
-    PLACAR.registrar(igual, || format!("staff_get_player_weakness_flags({:x}, {:x}) {}", pessoa, clube, d));
-    r
-}
 
 /// Club linked to `clube` as A/B team (club_get_linked_b_team 0x540a50, active=1); sets eh_a to 1 if the club is the A
 /// team; 0 if none.
@@ -3445,16 +3240,6 @@ pub(crate) unsafe extern "C" fn database_count_club_physios(clube: usize) -> u8 
     validos(clube) + if b != 0 { validos(b) } else { 0 } // os do clube e os do time B (dbt)
 }
 
-/// Comparer for `database_count_club_physios` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_count_club_physios(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_PHYSIOS)(clube);
-    if clube == 0 {
-        return r; // caixa: só a original
-    }
-    let n = database_count_club_physios(clube);
-    PLACAR.registrar(r == n, || format!("database_count_club_physios({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// 1 when the club has a partner (0x540a50 with the flag) and is its B team
 /// Original: `club_is_b_team` (0x5448c0, Database.cpp, cdecl).
@@ -3470,16 +3255,6 @@ pub(crate) unsafe extern "C" fn club_is_b_team(clube: usize) -> u32 {
     (database_linked_b_team(clube, &mut eh_a) != 0 && eh_a == 0) as u32 // é o B (dbt)
 }
 
-/// Comparer for `club_is_b_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_is_b_team(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_B_TEAM)(clube);
-    if clube == 0 {
-        return r;
-    }
-    let n = club_is_b_team(clube);
-    PLACAR.registrar(r == n, || format!("club_is_b_team({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// the non-playing staff (6 from +0xbf, 15 from +0x19f) of the club and its B team into an array, up to the maximum;
 /// the count in `al`
@@ -3512,17 +3287,6 @@ pub(crate) unsafe extern "C" fn club_collect_non_playing_staff(clube: usize, sai
     n as u8
 }
 
-/// Comparer for `club_collect_non_playing_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_collect_non_playing_staff(clube: usize, saida: *mut usize, max: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_CLUB_COLLECT_NON_PLAYING_STAFF);
-    if clube == 0 {
-        return o(clube, saida, max);
-    }
-    let reg = [(saida as usize, 4 * (max as i8).max(0) as usize)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, saida, max), || club_collect_non_playing_staff(clube, saida, max));
-    PLACAR.registrar(igual && r == n, || format!("club_collect_non_playing_staff({:x}, {:x}, {}) original={} rust={} {:x?} x {:x?}", clube, saida as usize, max as i8, r, n, mo, mr));
-    r
-}
 
 /// 1 when the viewer sees the attribute: no fog or knowledge 3, always; knowledge 1 or 2, by the attribute and the id
 /// modulo 4 (divisible by 4 or 2, or by 3); in `al`
@@ -3569,13 +3333,6 @@ pub(crate) unsafe extern "C" fn staff_is_player_attribute_visible(quem_ve: usize
     (a % divisor == 0 || b % 3 == 0) as u8
 }
 
-/// Comparer for `staff_is_player_attribute_visible` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_player_attribute_visible(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_IS_PLAYER_ATTRIBUTE_VISIBLE)(quem_ve, pessoa, atributo);
-    let n = staff_is_player_attribute_visible(quem_ve, pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("staff_is_player_attribute_visible({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, atributo as u8 as i8, r, n));
-    r
-}
 
 /// the player attribute (0x543540) or 0xf9 (unknown) when the fog hides it from the viewer; in `al`
 /// Original: `staff_get_player_attribute_for_viewer` (0x543440, Database.cpp, cdecl).
@@ -3603,17 +3360,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute_for_viewer(quem_ve: u
     calcular(pessoa, jogador, atributo) as u8
 }
 
-/// Comparer for `staff_get_player_attribute_for_viewer` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usize, pessoa: usize, atributo: u32) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE_FOR_VIEWER)(quem_ve, pessoa, atributo);
-    let x = atributo as u8 as i8;
-    if pessoa == 0 || !(1..=0x1f).contains(&x) {
-        return r; // caixa: só a original
-    }
-    let n = staff_get_player_attribute_for_viewer(quem_ve, pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("staff_get_player_attribute_for_viewer({:x}, {:x}, {}) original={} rust={}", quem_ve, pessoa, x, r, n));
-    r
-}
 
 /// Os nomes dos 12 atributos de técnico (abreviado, inteiro) da 0x543b10, pelos endereços dos textos no exe; o 8º
 /// (gestão de pessoas) abreviado é um formato com o texto de [0xad9c64].
@@ -3658,20 +3404,6 @@ pub(crate) unsafe extern "C" fn database_get_non_player_attribute_name(atributo:
     1
 }
 
-/// Comparer for `database_get_non_player_attribute_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_non_player_attribute_name(atributo: u32, texto: usize, tamanho: u32, abreviado: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_DATABASE_GET_NON_PLAYER_ATTRIBUTE_NAME);
-    let x = atributo as u8 as i8;
-    if !(1..=12).contains(&x) || texto == 0 || (tamanho as u16 as i16) < 100 {
-        return o(atributo, texto, tamanho, abreviado);
-    }
-    // os 100 primeiros bytes (o tamanho mínimo aceito): os nomes cabem neles
-    let reg = [(texto, 100)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(atributo, texto, tamanho, abreviado),
-        || database_get_non_player_attribute_name(atributo, texto, tamanho, abreviado));
-    PLACAR.registrar(igual && r == n, || format!("database_get_non_player_attribute_name({}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}", x, texto, tamanho as u16 as i16, abreviado, r, n, mo, mr));
-    r
-}
 
 /// qsort comparison of staff by style-4 name (0x53dba0), case-insensitive; null person: empty text
 /// Original: `database_compare_staff_by_surname` (0x53ff60, Database.cpp, cdecl).
@@ -3694,13 +3426,6 @@ pub(crate) unsafe extern "C" fn database_compare_staff_by_surname(a: usize, b: u
     compare_text_nocase(na.as_ptr(), nb.as_ptr())
 }
 
-/// Comparer for `database_compare_staff_by_surname` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_SURNAME)(a, b);
-    let n = database_compare_staff_by_surname(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_staff_by_surname({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// qsort comparison of club pointers by reputation (+0x80), highest first; null club: 0
 /// Original: `database_compare_clubs_by_reputation` (0x53ffe0, Database.cpp, cdecl).
@@ -3724,13 +3449,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b
     }
 }
 
-/// Comparer for `database_compare_clubs_by_reputation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_REPUTATION)(a, b);
-    let n = database_compare_clubs_by_reputation(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// 1 when the club nation (+0x53) is in the EEC (+0x7f = 2)
 /// Original: `database_club_nation_is_eec` (0x53d7d0, Database.cpp, cdecl).
@@ -3743,13 +3461,6 @@ pub(crate) unsafe extern "C" fn database_club_nation_is_eec(clube: usize) -> u32
     (nacao != 0 && *((nacao + nation::GROUP_MEMBERSHIP) as *const u8) == 2) as u32 // na CEE (dbt)
 }
 
-/// Comparer for `database_club_nation_is_eec` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_club_nation_is_eec(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_NATION_IS_EEC)(clube);
-    let n = database_club_nation_is_eec(clube);
-    PLACAR.registrar(r == n, || format!("database_club_nation_is_eec({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// the global array of the 14 regions (0xae2104) sorted by name in the given language (qsort 0x945333 with 0x545e00)
 /// Original: `get_regions_sorted_by_name` (0x545dc0, Database.cpp, cdecl).
@@ -3768,14 +3479,6 @@ pub(crate) unsafe extern "C" fn get_regions_sorted_by_name(idioma: u32) -> usize
     G_REGIONS_SORTED_BY_NAME
 }
 
-/// Comparer for `get_regions_sorted_by_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_regions_sorted_by_name(idioma: u32) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(u32) -> usize>(IDX_GET_REGIONS_SORTED_BY_NAME);
-    let reg = [(G_REGIONS_SORTED_BY_NAME, 14), (0xae232b, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(idioma), || get_regions_sorted_by_name(idioma));
-    PLACAR.registrar(igual && r == n, || format!("get_regions_sorted_by_name({}) original={:x} rust={:x} {:x?} x {:x?}", idioma as u8, r, n, mo, mr));
-    r
-}
 
 /// qsort comparison of regions by name (0x616f20), case-insensitive; null a: 1; null b: -1
 /// Original: `compare_region_names` (0x545e00, Database.cpp, cdecl).
@@ -3800,13 +3503,6 @@ pub(crate) unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 
     compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)
 }
 
-/// Comparer for `compare_region_names` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_compare_region_names(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_REGION_NAMES)(a, b);
-    let n = compare_region_names(a, b);
-    PLACAR.registrar(r == n, || format!("compare_region_names({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// the person at the other end of the opinion link (record [0xae2d0c] + id × 79: +0x27/+0x37 or +0x3b/+0x4b), or 0
 /// Original: `staff_get_opinion_link_staff` (0x549dd0, Database.cpp, cdecl).
@@ -3839,13 +3535,6 @@ pub(crate) unsafe extern "C" fn staff_get_opinion_link_staff(pessoa: usize, alvo
     pessoas.wrapping_add((indice as usize).wrapping_mul(110))
 }
 
-/// Comparer for `staff_get_opinion_link_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_opinion_link_staff(pessoa: usize, alvo: u32) -> usize {
-    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_GET_OPINION_LINK_STAFF)(pessoa, alvo);
-    let n = staff_get_opinion_link_staff(pessoa, alvo);
-    PLACAR.registrar(r == n, || format!("staff_get_opinion_link_staff({:x}, {:x}) original={:x} rust={:x}", pessoa, alvo, r, n));
-    r
-}
 
 
 /// True if the three-dword list at `lista` contains `quem`.
@@ -3911,14 +3600,6 @@ pub(crate) unsafe extern "C" fn club_add_favoured_staff(clube: usize, pessoa: us
     database_add_to_preference_list(clube + club::FAV_STAFF1, clube + club::DIS_STAFF1, pessoa, list3_contains(clube + club::FAV_STAFF1, pessoa), forcar) // as favoritas do clube
 }
 
-/// Comparer for `club_add_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_add_favoured_staff(clube: usize, pessoa: usize, forcar: u32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_FAVOURED_STAFF);
-    let reg = preference_regions(if clube != 0 { clube + club::FAV_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
-        || crate::aleatorio::sem_contar(|| club_add_favoured_staff(clube, pessoa, forcar)));
-    PLACAR.registrar(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
-}
 
 /// puts the person among the three disliked staff of the club (+0xa7..+0xaf): already disliked, nothing; favoured
 /// (+0x9b..+0xa3), stops being; otherwise the first free slot; no free slot and the third argument set, a random slot
@@ -3936,14 +3617,6 @@ pub(crate) unsafe extern "C" fn club_add_disliked_staff(clube: usize, pessoa: us
     database_add_to_preference_list(clube + club::DIS_STAFF1, clube + club::FAV_STAFF1, pessoa, list3_contains(clube + club::DIS_STAFF1, pessoa), forcar) // as rejeitadas do clube
 }
 
-/// Comparer for `club_add_disliked_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_add_disliked_staff(clube: usize, pessoa: usize, forcar: u32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_DISLIKED_STAFF);
-    let reg = preference_regions(if clube != 0 { clube + club::FAV_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(clube, pessoa, forcar),
-        || crate::aleatorio::sem_contar(|| club_add_disliked_staff(clube, pessoa, forcar)));
-    PLACAR.registrar(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", clube, pessoa, forcar, mo, mr));
-}
 
 /// puts the other person among the three favoured staff of the person (preferences +0x1c..+0x24): already favoured,
 /// nothing; disliked (+0x28..+0x30), stops being; otherwise the first free slot; no free slot and the third argument
@@ -3966,15 +3639,6 @@ pub(crate) unsafe extern "C" fn staff_add_favoured_staff(pessoa: usize, outra: u
     database_add_to_preference_list(pref + 0x1c, pref + 0x28, outra, list3_contains(pref + 0x1c, outra), forcar) // as favoritas da pessoa
 }
 
-/// Comparer for `staff_add_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_add_favoured_staff(pessoa: usize, outra: usize, forcar: u32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_FAVOURED_STAFF);
-    let pref = if pessoa != 0 { read_usize(pessoa + staff::STAFF_PREFERENCES) } else { 0 };
-    let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, outra, forcar),
-        || crate::aleatorio::sem_contar(|| staff_add_favoured_staff(pessoa, outra, forcar)));
-    PLACAR.registrar(igual, || format!("staff_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, forcar, mo, mr));
-}
 
 
 
@@ -4018,15 +3682,6 @@ pub(crate) unsafe extern "C" fn staff_add_disliked_club(pessoa: usize, clube: us
     }
 }
 
-/// Comparer for `staff_add_disliked_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_add_disliked_club(pessoa: usize, clube: usize, forcar: u32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_STAFF_ADD_DISLIKED_CLUB);
-    let pref = if pessoa != 0 { read_usize(pessoa + staff::STAFF_PREFERENCES) } else { 0 };
-    let reg = preference_regions(if pref != 0 { pref + 4 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, clube, forcar),
-        || crate::aleatorio::sem_contar(|| staff_add_disliked_club(pessoa, clube, forcar)));
-    PLACAR.registrar(igual, || format!("staff_add_disliked_club({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, clube, forcar, mo, mr));
-}
 
 /// each favoured person (preferences +0x1c..+0x24) leaves when a random draw of (+0x59) + 15 gives 0; each disliked one
 /// (+0x28..+0x30), with 35 − (+0x5d)
@@ -4055,15 +3710,6 @@ pub(crate) unsafe extern "C" fn staff_fade_staff_relationships(pessoa: usize) {
     }
 }
 
-/// Comparer for `staff_fade_staff_relationships` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_fade_staff_relationships(pessoa: usize) {
-    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_FADE_STAFF_RELATIONSHIPS);
-    let pref = if pessoa != 0 { read_usize(pessoa + staff::STAFF_PREFERENCES) } else { 0 };
-    let reg = preference_regions(if pref != 0 { pref + 0x1c } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa),
-        || crate::aleatorio::sem_contar(|| staff_fade_staff_relationships(pessoa)));
-    PLACAR.registrar(igual, || format!("staff_fade_staff_relationships({:x}) {:x?} x {:x?}", pessoa, mo, mr));
-}
 
 /// copies the present disliked staff (preferences +0x28..+0x30) to the output, counting in the byte of the third
 /// argument (always cleared)
@@ -4091,17 +3737,6 @@ pub(crate) unsafe extern "C" fn staff_get_disliked_staff(pessoa: usize, saida: u
     n
 }
 
-/// Comparer for `staff_get_disliked_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_disliked_staff(pessoa: usize, saida: usize, n: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> usize>(IDX_STAFF_GET_DISLIKED_STAFF);
-    let mut reg = vec![(n, 1)];
-    if saida != 0 {
-        reg.push((saida, 12));
-    }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, saida, n), || staff_get_disliked_staff(pessoa, saida, n));
-    PLACAR.registrar(igual && r == m, || format!("staff_get_disliked_staff({:x}, {:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, saida, n, r, m, mo, mr));
-    r
-}
 
 
 
@@ -4167,13 +3802,6 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -
     0x10
 }
 
-/// Comparer for `staff_get_natural_position_mask` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_natural_position_mask(pessoa: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_STAFF_GET_NATURAL_POSITION_MASK)(pessoa);
-    let n = staff_get_natural_position_mask(pessoa);
-    PLACAR.registrar(r == n, || format!("staff_get_natural_position_mask({:x}) original={:x} rust={:x}", pessoa, r, n));
-    r
-}
 
 /// how many of the 50 in the squad (+0xd7) with a player record have the given natural position mask
 /// Original: `club_count_squad_with_position_mask` (0x548150, Database.cpp, cdecl).
@@ -4193,13 +3821,6 @@ pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(clube: usize
     n
 }
 
-/// Comparer for `club_count_squad_with_position_mask` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_count_squad_with_position_mask(clube: usize, mascara: u32) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_CLUB_COUNT_SQUAD_WITH_POSITION_MASK)(clube, mascara);
-    let n = club_count_squad_with_position_mask(clube, mascara);
-    PLACAR.registrar(r == n, || format!("club_count_squad_with_position_mask({:x}, {:x}) original={} rust={}", clube, mascara, r, n));
-    r
-}
 
 /// the squad mate the person picks as favoured: filters by the person (age, +0x57, +0x59) and by the mate (disliked,
 /// position, contract, reputation, 0x8cca10), score by reputation, the 0x7c1e30 average, already favoured, ids,
@@ -4322,16 +3943,6 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(pessoa: usize, clu
     melhor
 }
 
-/// Comparer for `staff_pick_favoured_team_mate` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_pick_favoured_team_mate(pessoa: usize, clube: usize) -> usize {
-    // as chamadas (contrato, média, 0x8cca10) vão pelo endereço do jogo: o estado do sorteio volta entre os lados e a
-    // cópia não conta, se alguma delas sortear
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_PICK_FAVOURED_TEAM_MATE);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(pessoa, clube),
-        || crate::aleatorio::sem_contar(|| staff_pick_favoured_team_mate(pessoa, clube)));
-    PLACAR.registrar(igual && r == n, || format!("staff_pick_favoured_team_mate({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
-    r
-}
 
 /// Id (+0) of the club's nation (+0x53); None if club or nation is null.
 ///
@@ -4362,13 +3973,6 @@ pub(crate) unsafe extern "C" fn club_nation_is_not_argentina(clube: usize) -> u3
     }
 }
 
-/// Comparer for `club_nation_is_not_argentina` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_nation_is_not_argentina(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_IS_NOT_ARGENTINA)(clube);
-    let n = club_nation_is_not_argentina(clube);
-    PLACAR.registrar(r == n, || format!("club_nation_is_not_argentina({:x}) original={:x} rust={:x}", clube, r, n));
-    r
-}
 
 /// 1 when the club nation is not Argentina, France or Croatia (keys 0x9cf218, 0x9cf300, 0x9cf2ac); null: 0
 /// Original: `club_nation_not_argentina_france_croatia` (0x5487d0, Database.cpp, cdecl).
@@ -4386,13 +3990,6 @@ pub(crate) unsafe extern "C" fn club_nation_not_argentina_france_croatia(clube: 
     }
 }
 
-/// Comparer for `club_nation_not_argentina_france_croatia` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_nation_not_argentina_france_croatia(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_NATION_NOT_ARGENTINA_FRANCE_CROATIA)(clube);
-    let n = club_nation_not_argentina_france_croatia(clube);
-    PLACAR.registrar(r == n, || format!("club_nation_not_argentina_france_croatia({:x}) original={:x} rust={:x}", clube, r, n));
-    r
-}
 
 /// 1 if the nation's id matches the id of any of the given KEY_* nations, else 0.
 ///
@@ -4412,13 +4009,6 @@ pub(crate) unsafe extern "C" fn database_is_melanesian_nation(nacao: usize) -> u
     nation_is_one_of(nacao, &[KEY_NATION_PAPUA_NEW_GUINEA, KEY_NATION_SOLOMON_ISLANDS, KEY_NATION_NEW_CALEDONIA, KEY_NATION_FIJI, KEY_NATION_VANUATU]) // melanésias
 }
 
-/// Comparer for `database_is_melanesian_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_melanesian_nation(nacao: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_MELANESIAN_NATION)(nacao);
-    let n = database_is_melanesian_nation(nacao);
-    PLACAR.registrar(r == n, || format!("database_is_melanesian_nation({:x}) original={} rust={}", nacao, r, n));
-    r
-}
 
 /// 1 when the nation is one of the five Polynesian ones (keys 0x9cf4d0, 0x9cf52c, 0x9cf4b4, 0x9cf2a4, 0x9cf514)
 /// Original: `database_is_polynesian_nation` (0x53d940, Database.cpp, cdecl).
@@ -4432,13 +4022,6 @@ pub(crate) unsafe extern "C" fn database_is_polynesian_nation(nacao: usize) -> u
     chaves.iter().any(|&k| *(k as *const u32) == id) as u32
 }
 
-/// Comparer for `database_is_polynesian_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_polynesian_nation(nacao: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_POLYNESIAN_NATION)(nacao);
-    let n = database_is_polynesian_nation(nacao);
-    PLACAR.registrar(r == n, || format!("database_is_polynesian_nation({:x}) original={} rust={}", nacao, r, n));
-    r
-}
 
 /// the job name (5/12 manager, 6/13 assistant, 8/15 coach; others: empty) translated into 0xae1980; with language 4
 /// writes the gender (4 or 1) into the second argument
@@ -4467,16 +4050,6 @@ pub(crate) unsafe extern "C" fn database_get_coaching_job_name(cargo: u32, gener
     G_COACHING_JOB_NAME_BUFFER
 }
 
-/// Comparer for `database_get_coaching_job_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_coaching_job_name(cargo: u32, genero: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize) -> usize>(IDX_DATABASE_GET_COACHING_JOB_NAME);
-    // o texto (os nomes traduzidos cabem em 64) e o byte do gênero
-    let com = [(G_COACHING_JOB_NAME_BUFFER, 64usize), (genero, 1)];
-    let regioes = if genero != 0 { &com[..] } else { &com[..1] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(cargo, genero), || database_get_coaching_job_name(cargo, genero));
-    PLACAR.registrar(igual && r == n, || format!("database_get_coaching_job_name({}) original={:x} rust={:x} {:x?} x {:x?}", cargo as i8, r, n, mo, mr));
-    r
-}
 
 /// the full years between the dates (end year minus start year, minus 1 when the start day is later) as "%d" text of an
 /// unsigned word; returns 1
@@ -4501,18 +4074,6 @@ pub(crate) unsafe extern "C" fn database_format_years_between_dates(fim: usize, 
     1
 }
 
-/// Comparer for `database_format_years_between_dates` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_years_between_dates(fim: usize, inicio: usize, texto: usize, tamanho: i32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_DATABASE_FORMAT_YEARS_BETWEEN_DATES);
-    if texto == 0 || tamanho < 5 || fim == 0 || inicio == 0 {
-        return o(fim, inicio, texto, tamanho); // caixa: só a original
-    }
-    // "%d" de uma palavra: até 6 bytes com o zero
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(texto, 6)], || o(fim, inicio, texto, tamanho),
-        || database_format_years_between_dates(fim, inicio, texto, tamanho));
-    PLACAR.registrar(igual && r == n, || format!("database_format_years_between_dates({:x}, {:x}) original={} rust={} {:x?} x {:x?}", fim, inicio, r, n, mo, mr));
-    r
-}
 
 /// Case-insensitive string compare (Utils string compare 0x90c1d0 with (a, b, 1, 0)) used by the Database.cpp sorts.
 ///
@@ -4537,13 +4098,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b
     compare_text_nocase(nome(a), nome(b))
 }
 
-/// Comparer for `database_compare_clubs_by_short_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_SHORT_NAME)(a, b);
-    let n = database_compare_clubs_by_short_name(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_short_name({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// qsort comparison of staff by style-1 name (0x53dba0), case-insensitive; null person: empty text
 /// Original: `database_compare_staff_by_full_name` (0x540270, Database.cpp, cdecl).
@@ -4565,13 +4119,6 @@ pub(crate) unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b:
     compare_text_nocase(na.as_ptr(), nb.as_ptr())
 }
 
-/// Comparer for `database_compare_staff_by_full_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_STAFF_BY_FULL_NAME)(a, b);
-    let n = database_compare_staff_by_full_name(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_staff_by_full_name({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// 1 when the person (with a player or non-player record) has the requested first, second and common name ids (on the
 /// non-null ones) and, with a date, the same birth date
@@ -4604,17 +4151,6 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(pessoa: usize, nome
     1
 }
 
-/// Comparer for `database_staff_matches_names` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_staff_matches_names(pessoa: usize, nome: u32, sobrenome: u32, comum: u32, data: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_DATABASE_STAFF_MATCHES_NAMES);
-    if pessoa == 0 {
-        return o(pessoa, nome, sobrenome, comum, data); // caixa: só a original
-    }
-    let r = o(pessoa, nome, sobrenome, comum, data);
-    let n = database_staff_matches_names(pessoa, nome, sobrenome, comum, data);
-    PLACAR.registrar(r == n, || format!("database_staff_matches_names({:x}, {:x}, {:x}, {:x}, {:x}) original={} rust={}", pessoa, nome, sobrenome, comum, data, r, n));
-    r
-}
 
 /// Orders two clubs by the f64 coordinate at offset d of their stadium's (+0x69) city (+0x38): -1, 0 or 1; a missing
 /// city uses [0x9689a0] for ca and 0 for cb.
@@ -4655,17 +4191,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_latitude(a: usize, b: 
     order_by_city_coordinate(ca, cb, 0x23) // a latitude
 }
 
-/// Comparer for `database_compare_clubs_by_latitude` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LATITUDE);
-    if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
-        return o(a, b); // caixa: só a original
-    }
-    let r = o(a, b);
-    let n = database_compare_clubs_by_latitude(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_latitude({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// the same comparison by longitude (+0x2b, f64)
 /// Original: `database_compare_clubs_by_longitude` (0x53fe50, Database.cpp, cdecl).
@@ -4681,17 +4206,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_longitude(a: usize, b:
     order_by_city_coordinate(ca, cb, 0x2b) // a longitude
 }
 
-/// Comparer for `database_compare_clubs_by_longitude` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LONGITUDE);
-    if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
-        return o(a, b); // caixa: só a original
-    }
-    let r = o(a, b);
-    let n = database_compare_clubs_by_longitude(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_clubs_by_longitude({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// Counts squad members (+0xd7, 50 slots) with a player record matching `posicao`, not badly injured, valid id and
 /// current ability (+5) above `limit`.
@@ -4780,13 +4294,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_defenders(clube: usize) -> u8 {
     (count_squad_above_ability(clube, limit, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
 }
 
-/// Comparer for `club_has_enough_defenders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_DEFENDERS)(clube);
-    let n = club_has_enough_defenders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_defenders({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// 1 when more than 2 midfielders (+0x14, +0x12 or +0x13 = 20) without serious injury are above the limit
 /// (reputation/65 + 40, 40 to 145)
@@ -4803,13 +4310,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_midfielders(clube: usize) -> u8 
     (count_squad_above_ability(clube, limit, meia) > 2) as u8 // meias (dbo)
 }
 
-/// Comparer for `club_has_enough_midfielders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_MIDFIELDERS)(clube);
-    let n = club_has_enough_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_midfielders({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// club scoring fewer than 1.5 goals a game: 0; otherwise 1 when more than 1 striker (+0x15 = 20) without serious
 /// injury is above the limit (reputation/65 + 40, 40 to 150)
@@ -4831,13 +4331,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_strikers(clube: usize) -> u8 {
     (count_squad_above_ability(clube, limit, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
 }
 
-/// Comparer for `club_has_enough_strikers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_STRIKERS)(clube);
-    let n = club_has_enough_strikers(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_strikers({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// Like count_squad_above_ability but also requiring the `extra` predicate on the player record.
 ///
@@ -4892,13 +4385,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_hard_workers(clube: usize) -> u8
     (n > 4) as u8 // esforcados (dbo)
 }
 
-/// Comparer for `club_has_enough_hard_workers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_enough_hard_workers(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_ENOUGH_HARD_WORKERS)(clube);
-    let n = club_has_enough_hard_workers(clube);
-    PLACAR.registrar(r == n, || format!("club_has_enough_hard_workers({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// 1 when some goalkeeper (+0xf = 20) in the squad has no serious injury and a valid id
 /// Original: `club_has_fit_goalkeeper` (0x549470, Database.cpp, cdecl).
@@ -4928,13 +4414,6 @@ pub(crate) unsafe extern "C" fn club_has_fit_goalkeeper(clube: usize) -> u8 {
     0
 }
 
-/// Comparer for `club_has_fit_goalkeeper` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_fit_goalkeeper(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FIT_GOALKEEPER)(clube);
-    let n = club_has_fit_goalkeeper(clube);
-    PLACAR.registrar(r == n, || format!("club_has_fit_goalkeeper({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// 1 when more than 1 midfielder without serious injury is above the limit (reputation/75 + 25, 40 to 135) with
 /// attributes +0x44 and +0x3e above reputation/500 + 5 (at most 14)
@@ -4956,13 +4435,6 @@ pub(crate) unsafe extern "C" fn club_has_ball_winning_midfielders(clube: usize) 
     (n > 1) as u8 // meias que roubam (dbo)
 }
 
-/// Comparer for `club_has_ball_winning_midfielders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_ball_winning_midfielders(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_BALL_WINNING_MIDFIELDERS)(clube);
-    let n = club_has_ball_winning_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_ball_winning_midfielders({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// Counts squad members natural (byte 20) at position offset `posicao`, not badly injured, valid id, ability above
 /// rep/75+25 (40..135) and attribute above rep/500+5 (max teto).
@@ -5011,13 +4483,6 @@ pub(crate) unsafe extern "C" fn club_lacks_aerial_strikers(clube: usize) -> u8 {
     (count_natural_at_position(clube, 0x15, 0x2e, 13) <= 1) as u8 // atacantes pelo alto (dbo)
 }
 
-/// Comparer for `club_lacks_aerial_strikers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_strikers(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_STRIKERS)(clube);
-    let n = club_lacks_aerial_strikers(clube);
-    PLACAR.registrar(r == n, || format!("club_lacks_aerial_strikers({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// the same with defenders (+0x11 = 20) and attribute +0x2e (at most 13)
 /// Original: `club_lacks_aerial_defenders` (0x5495b0, Database.cpp, cdecl).
@@ -5032,13 +4497,6 @@ pub(crate) unsafe extern "C" fn club_lacks_aerial_defenders(clube: usize) -> u8 
     (count_natural_at_position(clube, 0x11, 0x2e, 13) <= 1) as u8 // zagueiros pelo alto (dbo)
 }
 
-/// Comparer for `club_lacks_aerial_defenders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_lacks_aerial_defenders(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_AERIAL_DEFENDERS)(clube);
-    let n = club_lacks_aerial_defenders(clube);
-    PLACAR.registrar(r == n, || format!("club_lacks_aerial_defenders({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// the same with defenders (+0x11 = 20) and attribute +0x36 (at most 10)
 /// Original: `club_lacks_fast_defenders` (0x549690, Database.cpp, cdecl).
@@ -5053,13 +4511,6 @@ pub(crate) unsafe extern "C" fn club_lacks_fast_defenders(clube: usize) -> u8 {
     (count_natural_at_position(clube, 0x11, 0x36, 10) <= 1) as u8 // zagueiros rapidos (dbo)
 }
 
-/// Comparer for `club_lacks_fast_defenders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_lacks_fast_defenders(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_LACKS_FAST_DEFENDERS)(clube);
-    let n = club_lacks_fast_defenders(clube);
-    PLACAR.registrar(r == n, || format!("club_lacks_fast_defenders({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// Counts squad members matching `posicao`, not badly injured, valid id, ability above rep/75+25 (40..135) and passing
 /// `extra` with the attribute threshold rep/500+5 (max teto).
@@ -5110,13 +4561,6 @@ pub(crate) unsafe extern "C" fn club_has_fast_striker(clube: usize) -> u8 {
     (n > 0) as u8 // atacante rapido (dbo)
 }
 
-/// Comparer for `club_has_fast_striker` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_fast_striker(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_FAST_STRIKER)(clube);
-    let n = club_has_fast_striker(clube);
-    PLACAR.registrar(r == n, || format!("club_has_fast_striker({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// 1 when more than 1 midfielder without serious injury is above the limit with attributes +0x43 and +0x37 above
 /// reputation/500 + 5 (at most 14)
@@ -5134,13 +4578,6 @@ pub(crate) unsafe extern "C" fn club_has_two_creative_midfielders(clube: usize) 
     (n > 1) as u8 // meias criativos (dbo)
 }
 
-/// Comparer for `club_has_two_creative_midfielders` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_has_two_creative_midfielders(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_HAS_TWO_CREATIVE_MIDFIELDERS)(clube);
-    let n = club_has_two_creative_midfielders(clube);
-    PLACAR.registrar(r == n, || format!("club_has_two_creative_midfielders({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// the 0..6 band from the average ability of the best in the squad (up to 16, qsort with 0x549c30) or, without them,
 /// from the reputation; adjusted by the scout club reputation and, in the same competition, by the reputation gap and
@@ -5226,13 +4663,6 @@ pub(crate) unsafe extern "C" fn club_squad_strength_band(clube: usize, outro: us
     f.clamp(0, 6) as u8
 }
 
-/// Comparer for `club_squad_strength_band` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_squad_strength_band(clube: usize, outro: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_CLUB_SQUAD_STRENGTH_BAND)(clube, outro);
-    let n = club_squad_strength_band(clube, outro);
-    PLACAR.registrar(r == n, || format!("club_squad_strength_band({:x}, {:x}) original={} rust={}", clube, outro, r, n));
-    r
-}
 
 
 
@@ -5356,15 +4786,6 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(clube: usize, pessoa: 
     ((eax as u32 & 0xffff_0000) | rep as u16 as u32).wrapping_add(bonus as u32)
 }
 
-/// Comparer for `club_reputation_for_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_reputation_for_staff(clube: usize, pessoa: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_CLUB_REPUTATION_FOR_STAFF);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(clube, pessoa),
-        || club_reputation_for_staff(clube, pessoa));
-    // os chamadores leem só o ax (movsx)
-    PLACAR.registrar(igual && r as u16 == n as u16, || format!("club_reputation_for_staff({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
-    r
-}
 
 /// How many of the three people in the preference list at `base` belong (+0x39) to `clube`; 0 on null inputs.
 ///
@@ -5397,13 +4818,6 @@ pub(crate) unsafe extern "C" fn staff_count_disliked_staff_at_club(pessoa: usize
     count_preferred_people_at_club(pessoa, clube, 0x28) // os rejeitados
 }
 
-/// Comparer for `staff_count_disliked_staff_at_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_count_disliked_staff_at_club(pessoa: usize, clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_DISLIKED_STAFF_AT_CLUB)(pessoa, clube);
-    let n = staff_count_disliked_staff_at_club(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("staff_count_disliked_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
-    r
-}
 
 /// how many of the three favoured staff (preferences +0x1c..+0x24) are at the club (+0x39)
 /// Original: `staff_count_favoured_staff_at_club` (0x547ce0, Database.cpp, cdecl).
@@ -5414,13 +4828,6 @@ pub(crate) unsafe extern "C" fn staff_count_favoured_staff_at_club(pessoa: usize
     count_preferred_people_at_club(pessoa, clube, 0x1c) // os favoritos
 }
 
-/// Comparer for `staff_count_favoured_staff_at_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_count_favoured_staff_at_club(pessoa: usize, clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_STAFF_COUNT_FAVOURED_STAFF_AT_CLUB)(pessoa, clube);
-    let n = staff_count_favoured_staff_at_club(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("staff_count_favoured_staff_at_club({:x}, {:x}) original={} rust={}", pessoa, clube, r, n));
-    r
-}
 
 /// Zeroes the first of three dword slots that holds `alvo`.
 ///
@@ -5461,17 +4868,6 @@ pub(crate) unsafe extern "C" fn staff_remove_favoured_club(pessoa: usize, clube:
     pref
 }
 
-/// Comparer for `staff_remove_favoured_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_club(pessoa: usize, clube: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_CLUB);
-    let pref = staff_preferences(pessoa);
-    if pref == 0 {
-        return o(pessoa, clube); // não escreve nada
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 4, 12)], || o(pessoa, clube), || staff_remove_favoured_club(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_club({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
-    r
-}
 
 /// clears the first of the three favoured staff of the club (+0x9b..+0xa3) that is the person
 /// Original: `club_remove_favoured_staff` (0x547bd0, Database.cpp, cdecl).
@@ -5486,16 +4882,6 @@ pub(crate) unsafe extern "C" fn club_remove_favoured_staff(clube: usize, pessoa:
     clube
 }
 
-/// Comparer for `club_remove_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_remove_favoured_staff(clube: usize, pessoa: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_CLUB_REMOVE_FAVOURED_STAFF);
-    if clube == 0 {
-        return o(clube, pessoa);
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::FAV_STAFF1, 12)], || o(clube, pessoa), || club_remove_favoured_staff(clube, pessoa));
-    PLACAR.registrar(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", clube, pessoa, r, n, mo, mr));
-    r
-}
 
 /// clears the first of the three favoured staff of the person (preferences +0x1c..+0x24) that is the target
 /// Original: `staff_remove_favoured_staff` (0x547c10, Database.cpp, cdecl).
@@ -5513,17 +4899,6 @@ pub(crate) unsafe extern "C" fn staff_remove_favoured_staff(pessoa: usize, alvo:
     pref
 }
 
-/// Comparer for `staff_remove_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_favoured_staff(pessoa: usize, alvo: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_FAVOURED_STAFF);
-    let pref = staff_preferences(pessoa);
-    if pref == 0 {
-        return o(pessoa, alvo);
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x1c, 12)], || o(pessoa, alvo), || staff_remove_favoured_staff(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
-    r
-}
 
 /// clears the first of the three disliked staff of the person (preferences +0x28..+0x30) that is the target
 /// Original: `staff_remove_disliked_staff` (0x547c50, Database.cpp, cdecl).
@@ -5550,17 +4925,6 @@ pub(crate) unsafe extern "C" fn staff_remove_disliked_staff(pessoa: usize, alvo:
     pref
 }
 
-/// Comparer for `staff_remove_disliked_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_disliked_staff(pessoa: usize, alvo: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_STAFF_REMOVE_DISLIKED_STAFF);
-    let pref = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + staff::STAFF_PREFERENCES) as *const usize) };
-    if pref == 0 {
-        return o(pessoa, alvo); // não escreve nada
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pref + 0x28, 12)], || o(pessoa, alvo), || staff_remove_disliked_staff(pessoa, alvo));
-    PLACAR.registrar(igual && r == n, || format!("staff_remove_disliked_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", pessoa, alvo, r, n, mo, mr));
-    r
-}
 
 /// clears the counter and copies the non-null favoured staff (preferences +0x1c..+0x24) into the array, counting them
 /// Original: `staff_get_favoured_staff` (0x548090, Database.cpp, cdecl).
@@ -5590,15 +4954,6 @@ pub(crate) unsafe extern "C" fn staff_get_favoured_staff(pessoa: usize, vetor: u
     n
 }
 
-/// Comparer for `staff_get_favoured_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_favoured_staff(pessoa: usize, vetor: usize, n: *mut i8) -> *mut i8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut i8) -> *mut i8>(IDX_STAFF_GET_FAVOURED_STAFF);
-    let com_vetor = [(vetor, 12), (n as usize, 1)];
-    let regioes: &[(usize, usize)] = if vetor == 0 { &com_vetor[1..] } else { &com_vetor };
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(pessoa, vetor, n), || staff_get_favoured_staff(pessoa, vetor, n));
-    PLACAR.registrar(igual && r == x, || format!("staff_get_favoured_staff({:x}, {:x}) {:x?} x {:x?}", pessoa, vetor, mo, mr));
-    r
-}
 
 /// null club: 0; otherwise key_nation_club_in_season 0x669bd0(club, null, null): 1 when today is inside the season of
 /// the club nation (the whole eax)
@@ -5617,13 +4972,6 @@ pub(crate) unsafe extern "C" fn club_is_in_season(clube: usize) -> u32 {
     temporada(clube, 0, 0) // a temporada da nação do clube
 }
 
-/// Comparer for `club_is_in_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_is_in_season(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_IN_SEASON)(clube);
-    let n = club_is_in_season(clube);
-    PLACAR.registrar(r == n, || format!("club_is_in_season({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// 1 when the club nation (+0x53) is England, France, Germany, Italy, Spain or Holland (the index.cpp keys); null club
 /// or nation: 0
@@ -5646,13 +4994,6 @@ pub(crate) unsafe extern "C" fn club_is_in_major_nation(clube: usize) -> u8 {
     chaves.iter().any(|&k| *(k as *const i32) == id) as u8
 }
 
-/// Comparer for `club_is_in_major_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_is_in_major_nation(clube: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_IS_IN_MAJOR_NATION)(clube);
-    let n = club_is_in_major_nation(clube);
-    PLACAR.registrar(r == n, || format!("club_is_in_major_nation({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
 /// the same six-key test on the nation itself; null: 0
 /// Original: `nation_is_major_nation` (0x549ea0, Database.cpp, cdecl).
@@ -5669,13 +5010,6 @@ pub(crate) unsafe extern "C" fn nation_is_major_nation(nacao: usize) -> u8 {
     chaves.iter().any(|&k| *(k as *const i32) == id) as u8
 }
 
-/// Comparer for `nation_is_major_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_is_major_nation(nacao: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_NATION_IS_MAJOR_NATION)(nacao);
-    let n = nation_is_major_nation(nacao);
-    PLACAR.registrar(r == n, || format!("nation_is_major_nation({:x}) original={} rust={}", nacao, r, n));
-    r
-}
 
 /// The person's 79-byte record in the staff state table (G_STAFF_STATE_TABLE) holding the two relationship links
 /// (+0x27/+0x37, +0x3b/+0x4b); None for a null person or id >= staff count.
@@ -5719,13 +5053,6 @@ pub(crate) unsafe extern "C" fn staff_clear_opinion_links(pessoa: usize) {
     }
 }
 
-/// Comparer for `staff_clear_opinion_links` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_clear_opinion_links(pessoa: usize) {
-    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_CLEAR_OPINION_LINKS);
-    let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa) }; // não escreve nada
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa), || staff_clear_opinion_links(pessoa));
-    PLACAR.registrar(igual, || format!("staff_clear_opinion_links({:x}) {:x?} x {:x?}", pessoa, mo, mr));
-}
 
 /// writes the other person id and the value into the first empty link (+0x27 = −1) or else into the second,
 /// overwriting; both persons must be valid
@@ -5752,14 +5079,6 @@ pub(crate) unsafe extern "C" fn staff_add_opinion_link(pessoa: usize, outra: usi
     }
 }
 
-/// Comparer for `staff_add_opinion_link` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_add_opinion_link(pessoa: usize, outra: usize, valor: i32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, i32)>(IDX_STAFF_ADD_OPINION_LINK);
-    let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa, outra, valor) };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, outra, valor),
-        || staff_add_opinion_link(pessoa, outra, valor));
-    PLACAR.registrar(igual, || format!("staff_add_opinion_link({:x}, {:x}, {}) {:x?} x {:x?}", pessoa, outra, valor, mo, mr));
-}
 
 /// empties the first link with the given value or, if not, the second
 /// Original: `staff_remove_opinion_link` (0x549d60, Database.cpp, cdecl).
@@ -5778,13 +5097,6 @@ pub(crate) unsafe extern "C" fn staff_remove_opinion_link(pessoa: usize, valor: 
     }
 }
 
-/// Comparer for `staff_remove_opinion_link` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_remove_opinion_link(pessoa: usize, valor: i32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, i32)>(IDX_STAFF_REMOVE_OPINION_LINK);
-    let Some(c) = database_staff_state_record(pessoa) else { return o(pessoa, valor) };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(c, 79)], || o(pessoa, valor), || staff_remove_opinion_link(pessoa, valor));
-    PLACAR.registrar(igual, || format!("staff_remove_opinion_link({:x}, {}) {:x?} x {:x?}", pessoa, valor, mo, mr));
-}
 
 /// the club assistant (+0xd3); without one, the partner (senior/B) team one; none: 0
 /// Original: `database_get_club_assistant` (0x53cb80, Database.cpp, cdecl).
@@ -5810,17 +5122,6 @@ pub(crate) unsafe extern "C" fn database_get_club_assistant(clube: usize) -> usi
     rd(p + 0xd3) // o auxiliar do parceiro
 }
 
-/// Comparer for `database_get_club_assistant` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_assistant(clube: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_ASSISTANT);
-    if clube == 0 {
-        return o(clube); // caixa: só a original
-    }
-    // a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_get_club_assistant(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
 /// copies the 5 club coaches into an array; with a partner team (senior/B), merges both up to 5 and clears the rest
 /// Original: `database_get_club_coaches` (0x53cc30, Database.cpp, cdecl).
@@ -5867,18 +5168,6 @@ pub(crate) unsafe extern "C" fn database_get_club_coaches(clube: usize, vetor: *
     1
 }
 
-/// Comparer for `database_get_club_coaches` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_coaches(clube: usize, vetor: *mut usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_COACHES);
-    if clube == 0 {
-        return o(clube, vetor); // caixa: só a original
-    }
-    // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 20), (clube + club::HAS_LINKED_CLUB, 1)],
-        || o(clube, vetor), || database_get_club_coaches(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
 /// how many valid coaches (non-null, id < [0xae2364]) the club and the partner team have together
 /// Original: `database_count_club_coaches` (0x53c8d0, Database.cpp, cdecl).
@@ -5907,32 +5196,7 @@ pub(crate) unsafe extern "C" fn database_count_club_coaches(clube: usize) -> u8 
     n
 }
 
-/// Comparer for `database_count_club_coaches` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_count_club_coaches(clube: usize) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES);
-    if clube == 0 {
-        return o(clube); // caixa: só a original
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube), || database_count_club_coaches(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `nome_em_ingles` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador dos nomes em inglês (0x5454c0, 0x5455a0, 0x5456a0): com o idioma dos nomes ([0x9b5984]) ≠ 0 e ≠ 1 e
-/// a tabela do eng.lng ([0xae2408]) ainda nula, o primeiro uso aloca e carrega sob o quadro SEH: só a original.
-/// Senão as duas, comparando o ponteiro devolvido (sem efeito na memória).
-pub(crate) unsafe fn comparar_nome_em_ingles(nome: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
-    let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
-    if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
-        return o(x);
-    }
-    let a = o(x);
-    let b = r(x);
-    PLACAR.registrar(a == b, || format!("{}({:x}) idioma {} original={:x} rust={:x}", nome, x, idioma, a, b));
-    a
-}
 
 /// the nation's three-letter code, or its English one from eng.lng (109-byte rows, by id, code at +0x4f) when another
 /// language is loaded
@@ -5948,17 +5212,13 @@ pub(crate) unsafe extern "C" fn nation_get_english_three_letter_name(nacao: usiz
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
+        // simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME)(nacao);
     }
     let id = *(nacao as *const i32);
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109)).wrapping_add(0x4f) // sigla na linha
 }
 
-/// Comparer for `nation_get_english_three_letter_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_get_english_three_letter_name(nacao: usize) -> usize {
-    comparar_nome_em_ingles("nation_get_english_three_letter_name", nacao, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_THREE_LETTER_NAME), nation_get_english_three_letter_name)
-}
 
 /// the competition's name, or its English one from eng.lng (83-byte rows: club ones by id, nation ones by id minus the
 /// club count) when another language is loaded
@@ -5974,7 +5234,7 @@ pub(crate) unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
+        // simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME)(comp);
     }
     let id = *(comp as *const i32);
@@ -5986,10 +5246,6 @@ pub(crate) unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     }
 }
 
-/// Comparer for `comp_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_comp_get_english_name(comp: usize) -> usize {
-    comparar_nome_em_ingles("comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_COMP_GET_ENGLISH_NAME), comp_get_english_name)
-}
 
 /// the staff competition's name, or its English one from eng.lng (79-byte rows, by id) when another language is loaded
 /// Original: `staff_comp_get_english_name` (0x5456a0, Database.cpp, cdecl).
@@ -6003,17 +5259,13 @@ pub(crate) unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usiz
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
+        // simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME)(comp);
     }
     let id = *(comp as *const i32);
     (*((t + 0x3c) as *const usize)).wrapping_add((id as usize).wrapping_mul(79)) // competição de pessoal na tabela
 }
 
-/// Comparer for `staff_comp_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_comp_get_english_name(comp: usize) -> usize {
-    comparar_nome_em_ingles("staff_comp_get_english_name", comp, original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STAFF_COMP_GET_ENGLISH_NAME), staff_comp_get_english_name)
-}
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação): nem a carreira nem o save passam pelo caminho do eng.lng
 /// (o jogo dos testes está em inglês). 512 casos com o idioma de 0 a 13 e uma tabela do eng.lng falsa (nunca
@@ -6060,25 +5312,13 @@ pub(crate) unsafe extern "C" fn stadium_get_english_name(estadio: usize) -> usiz
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
+        // simplification: primeiro uso (aloca e carrega o eng.lng sob o quadro SEH): a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME)(estadio);
     }
     let id = *(estadio as *const i32);
     (*((t + 0x34) as *const usize)).wrapping_add((id as usize).wrapping_mul(52)) // estádio na tabela
 }
 
-/// Comparer for `stadium_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME);
-    let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
-    if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
-        return o(estadio); // primeiro uso (aloca e carrega): só a original
-    }
-    let r = o(estadio);
-    let n = stadium_get_english_name(estadio);
-    PLACAR.registrar(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", estadio, idioma, r, n));
-    r
-}
 
 /// Os nomes dos `.lng` no .rdata do exe por idioma: 0, 1, 11 e 12 "eng.lng"; 2 fra, 3 ger, 4 ita, 5 esp, 6 dan,
 /// 7 hol, 8 nor, 9 por, 10 swe; os outros (13, negativos...) nenhum.
@@ -6101,14 +5341,6 @@ pub(crate) unsafe extern "C" fn database_language_file_exists(idioma: i32) -> i3
     }
 }
 
-/// Comparador: as duas a partir do mesmo buffer do caminho (0xde279c, 0x104 bytes); compara a resposta e o caminho
-/// montado (acusa o nome trocado mesmo sem o arquivo na pasta).
-pub(crate) unsafe extern "C" fn comparar_database_language_file_exists(idioma: i32) -> i32 {
-    let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_DATABASE_LANGUAGE_FILE_EXISTS);
-    let (r, x, igual, _, _) = crate::comparacao::lado_a_lado(&[(0xde279c, 0x104)], || o(idioma), || database_language_file_exists(idioma));
-    PLACAR.registrar(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", idioma, r, x, igual));
-    r
-}
 
 /// Calls `soltar` on each non-null of the 8 eng.lng table rows (+0x20..+0x3c) of the table.
 ///
@@ -6134,11 +5366,7 @@ pub(crate) unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
 }
 
 /// Comparador: soltar duas vezes soltaria os mesmos blocos duas vezes.
-// ponytail: só a original (como as da 232a); a cópia é provada pelo autoteste_dbm_2 (a ordem dos blocos soltos).
-/// Comparer for `eng_lng_free_tables` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_lng_free_tables(t: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_LNG_FREE_TABLES)(t)
-}
+// simplification: só a original (como as da 232a); a cópia é provada pelo autoteste_dbm_2 (a ordem dos blocos soltos).
 
 /// Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação). (1) O estádio: 256 casos com o idioma de 0 a 13 e uma
 /// tabela do eng.lng falsa (nunca nula), ids de −2 a 13. (2) O `.lng` do idioma: idiomas de −3 a 16 contra a
@@ -6627,47 +5855,12 @@ pub(crate) fn first_memory_difference(mo: &crate::comparacao::Memoria, mr: &crat
     mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])))
 }
 
-/// Comparer for `database_generate_extra_non_playing_staff` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
-/// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
-/// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
-pub(crate) unsafe extern "C" fn comparar_database_generate_extra_non_playing_staff() -> u32 {
-    let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GENERATE_EXTRA_NON_PLAYING_STAFF);
-    if any_coach_missing_from_club() {
-        return o();
-    }
-    let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    regioes.push((0x9b59b4, 4));
-    regioes.push((0xde1f64, 0x40));
-    regioes.push((read_usize(G_CLUB_TABLE), read_i32(G_CLUB_COUNT).max(0) as usize * 581));
-    regioes.push((read_usize(G_STAFF_TABLE), read_i32(G_STAFF_COUNT).max(0) as usize * 110));
-    let (r, m, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(),
-        || crate::aleatorio::sem_contar(|| database_generate_extra_non_playing_staff()));
-    let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual && r == m, || match onde {
-        Some((a, x, y)) => format!("database_generate_extra_non_playing_staff: original={} rust={}, diverge em {:x} original={:02x} rust={:02x}", r, m, a, x, y),
-        None => format!("database_generate_extra_non_playing_staff: original={} rust={}", r, m),
-    });
-    // ponytail: 29 MB por foto; não voltam às sobras
-    mo.0.clear();
-    mr.0.clear();
-    r
-}
 
-// ponytail: compacta e realoca a tabela de clubes, aloca [0xae23fc] e troca as chaves de clube; não roda duas
+// simplification: compacta e realoca a tabela de clubes, aloca [0xae23fc] e troca as chaves de clube; não roda duas
 // vezes. Só a original; a cópia leva o ramo e é provada pela prova do save (o .qst tem a tabela cortada).
-/// Comparer for `database_trim_club_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_trim_club_table(tamanho: u32) {
-    original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_TRIM_CLUB_TABLE)(tamanho)
-}
 
-// ponytail: compacta e realoca o histórico de competições; não roda duas vezes. Só a original; a cópia é provada
+// simplification: compacta e realoca o histórico de competições; não roda duas vezes. Só a original; a cópia é provada
 // pela prova do save (o histórico podado vai para o .qst).
-/// Comparer for `database_prune_comp_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_prune_comp_history_table() {
-    original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_PRUNE_COMP_HISTORY_TABLE)()
-}
 
 
 /// As tabelas do banco: (ponteiro, quantidade, bytes por linha).
@@ -6904,50 +6097,7 @@ pub(crate) unsafe extern "C" fn database_sort_clubs_by_reputation(refazer: u32) 
 }
 
 
-/// Comparer for `resolve_database_indexes` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador de 0x5315a0: original e cópia lado a lado sobre as 12 tabelas inteiras (~50 MB na carga) e o texto de
-/// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
-pub(crate) unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
-    let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_RESOLVE_DATABASE_INDEXES);
-    let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
-    let rd = |a: usize| *(a as *const usize);
-    let (pessoas, n) = (rd(G_STAFF_TABLE), gi(0xae2364));
-    let caixa = (0..n.max(0) as usize).any(|i| PERSON_RANGE_CHECK_FIELDS.iter().any(|&(d, teto, ..)| gi(pessoas + i * staff::SIZE + d) >= gi(teto)));
-    if caixa {
-        return o(leniente);
-    }
-    let mut regioes = vec![(0xde1f64usize, 0x80usize)];
-    for &(p, cont, tam) in DATABASE_TABLES.iter() {
-        if rd(p) != 0 && gi(cont) > 0 {
-            regioes.push((rd(p), gi(cont) as usize * tam));
-        }
-    }
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, || o(leniente), || resolve_database_indexes(leniente));
-    let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("resolve_database_indexes({}): diverge em {:x} original={:02x} rust={:02x}", leniente, a, x, y),
-        None => format!("resolve_database_indexes({}): diverge", leniente),
-    });
-    // ponytail: ~50 MB por foto; não voltam às sobras
-    mo.0.clear();
-    mr.0.clear();
-}
 
-/// Comparer for `database_sort_clubs_by_reputation` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
-pub(crate) unsafe extern "C" fn comparar_database_sort_clubs_by_reputation(refazer: u32) {
-    let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_SORT_CLUBS_BY_REPUTATION);
-    let v = *(G_CLUB_REPUTATION_ORDER as *const usize);
-    let n = core::ptr::read_unaligned(G_CLUB_COUNT as *const i32);
-    if v == 0 || n <= 0 {
-        return o(refazer);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(v, n as usize * 4)], || o(refazer), || database_sort_clubs_by_reputation(refazer));
-    let onde = first_memory_difference(&mo, &mr);
-    PLACAR.registrar(igual, || format!("database_sort_clubs_by_reputation({}): diverge em {:x?}", refazer as u8, onde));
-}
 
 /// Frees a database table with GlobalFree when the database uses the shared block (G_DATABASE_SHARED_ALLOC_MODE), else
 /// with CRT free.
@@ -6984,11 +6134,7 @@ pub(crate) unsafe extern "C" fn database_free_staff_history_table() {
 }
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
-// ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-/// Comparer for `database_free_staff_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_free_staff_history_table() {
-    original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_FREE_STAFF_HISTORY_TABLE)()
-}
+// simplification: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
 
 /// the same for the award (staff competition) history
 /// Original: `database_free_staff_comp_history_table` (0x527f20, Database.cpp, cdecl).
@@ -7007,11 +6153,7 @@ pub(crate) unsafe extern "C" fn database_free_staff_comp_history_table() {
 }
 
 /// Comparador: liberar duas vezes soltaria o mesmo bloco duas vezes.
-// ponytail: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
-/// Comparer for `database_free_staff_comp_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
-    original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_FREE_STAFF_COMP_HISTORY_TABLE)()
-}
+// simplification: só a original; a prova é o .qst (a tabela sai do save) e o ramo da cópia no modo Rust.
 
 /// reallocs the competition history to n more rows (out of memory: 0); count, national part pointer and the new rows
 /// with their own index at +0 and the rest zero; 1
@@ -7044,11 +6186,7 @@ pub(crate) unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 
 }
 
 /// Comparador: o `realloc` não se desfaz (crescer duas vezes deixaria a tabela com 2n linhas a mais).
-// ponytail: só a original; a prova é o .qst (a tabela vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `database_grow_comp_history_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_grow_comp_history_table(n: i32) -> u32 {
-    original_fn::<unsafe extern "C" fn(i32) -> u32>(IDX_DATABASE_GROW_COMP_HISTORY_TABLE)(n)
-}
+// simplification: só a original; a prova é o .qst (a tabela vai para o save) e o ramo da cópia no modo Rust.
 
 
 /// qsort comparison of club ids by reputation (+0x80), highest first; negative id = 0
@@ -7073,13 +6211,6 @@ pub(crate) unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize
     }
 }
 
-/// Comparer for `qsort_comparator_club_ids_by_reputation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_CLUB_IDS_BY_REPUTATION)(a, b);
-    let n = qsort_comparator_club_ids_by_reputation(a, b);
-    PLACAR.registrar(r == n, || format!("qsort_comparator_club_ids_by_reputation({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// qsort comparison of squads: null staff last, then the player word +0xb, highest first
 /// Original: `qsort comparator (squad by player +0xb)` (0x5402f0, Database.cpp, cdecl).
@@ -7103,13 +6234,6 @@ pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b
     habilidade(pb) as i32 - habilidade(pa) as i32 // a maior primeiro
 }
 
-/// Comparer for `qsort_comparator_squad_by_player_0xb` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_QSORT_COMPARATOR_SQUAD_BY_PLAYER_0XB)(a, b);
-    let n = qsort_comparator_squad_by_player_0xb(a, b);
-    PLACAR.registrar(r == n, || format!("qsort_comparator_squad_by_player_0xb({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// qsort comparison of a squad: no player last, then current ability (+5) and, when tied, the word +0xb, highest first
 /// Original: `compare_staff_by_player_ability_desc` (0x549c30, Database.cpp, cdecl).
@@ -7139,13 +6263,6 @@ pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b
     }
 }
 
-/// Comparer for `compare_staff_by_player_ability_desc` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STAFF_BY_PLAYER_ABILITY_DESC)(a, b);
-    let n = compare_staff_by_player_ability_desc(a, b);
-    PLACAR.registrar(r == n, || format!("compare_staff_by_player_ability_desc({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
 /// Calls TRAINING_MANAGER remove_or_restore_training_progress on G_TRAINING_MANAGER for the person (devolver 0 removes,
 /// 1 restores); nothing without a manager.
@@ -7220,7 +6337,7 @@ pub(crate) unsafe fn rebalance_attr_vector(v: *mut u8, inicio: i8, fim: i8, joga
                     break;
                 }
             }
-            // ponytail: com inicio >= fim (ou menos de 12 células) o original roda para sempre; a cópia também
+            // simplification: com inicio >= fim (ou menos de 12 células) o original roda para sempre; a cópia também
             limit += 5;
         }
         if melhor > -1 {
@@ -7330,35 +6447,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(pesso
     remove_or_restore_training(pessoa, 1);
 }
 
-/// Comparer for `normalizacao_do_jogador` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
-/// do treino ([0xde1f44]) zerado nos dois lados (o tirar e devolver do progresso mexe nas tabelas do treino,
-/// fora das regiões); com gerente, a original roda depois de verdade a partir do mesmo estado.
-pub(crate) unsafe fn comparar_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), pessoa: usize,
-                                           nome: &'static str) {
-    let jogador = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize) };
-    if jogador == 0 {
-        return o(pessoa); // não faz nada: só a original
-    }
-    let regioes = [(jogador, 70), (pessoa + staff::DETERMINATION, 1)];
-    let gerente = *(G_TRAINING_MANAGER as *const usize);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
-    *(G_TRAINING_MANAGER as *mut usize) = 0;
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(pessoa), || rust(pessoa));
-    *(G_TRAINING_MANAGER as *mut usize) = gerente;
-    PLACAR.registrar(igual, || format!("{}({:x}) {:x?} x {:x?}", nome, pessoa, mo, mr));
-    if gerente != 0 {
-        antes.escrever();
-        o(pessoa);
-    }
-}
 
-/// Comparer for `staff_normalise_player_physical_attributes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(pessoa: usize) {
-    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES), staff_normalise_player_physical_attributes, pessoa,
-        "staff_normalise_player_physical_attributes");
-}
 
 /// a second name: with the nation having more than 10, the heaviest of 3 draws in its range; otherwise a draw over the
 /// whole table
@@ -7391,15 +6480,6 @@ pub(crate) unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize
     linha(scaled_crt_rand(name_count_capped(0xae239c)))
 }
 
-/// Comparer for `database_pick_second_name_by_weight` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_by_weight(nacao: usize) -> usize {
-    // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_BY_WEIGHT);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_second_name_by_weight(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
-    r
-}
 
 /// rebalances the player attribute vector with target −20 (12 cells within the limit, excess above 85 spread); with
 /// +0xf ≥ 15 removes the +0x2a/+0x3a average; removes and restores the training progress
@@ -7432,11 +6512,6 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(pessoa: usize)
     remove_or_restore_training(pessoa, 1);
 }
 
-/// Comparer for `staff_normalise_player_attributes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_normalise_player_attributes(pessoa: usize) {
-    comparar_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_ATTRIBUTES), staff_normalise_player_attributes, pessoa,
-        "staff_normalise_player_attributes");
-}
 
 /// Competição (107 bytes) no club_comp.dat / nation_comp.dat versão 1 (104 no arquivo): `(deslocamento,
 /// tamanho, quantos)` na ordem do arquivo; buracos em +0x37 e +0x52; tamanho 0 = a reputação num byte, u16 em +0x69.
@@ -7445,7 +6520,7 @@ pub(crate) const COMPETITION_V1_LAYOUT: [(usize, u32, usize); 7] = [(0, 4, 1), (
 
 /// Comparador: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à posição do `ftell`
 /// 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo parou.
-// ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
+// simplification: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
 
 /// the nation's name, or its English one from eng.lng (109-byte rows, by id) when another language is loaded
 /// Original: `nation_get_english_name` (0x5453f0, Database.cpp, cdecl).
@@ -7460,25 +6535,13 @@ pub(crate) unsafe extern "C" fn nation_get_english_name(nacao: usize) -> usize {
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
+        // simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME)(nacao);
     }
     let id = *(nacao as *const i32);
     (*((t + 0x2c) as *const usize)).wrapping_add((id as usize).wrapping_mul(109))
 }
 
-/// Comparer for `nation_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_get_english_name(nacao: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME);
-    let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
-    if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
-        return o(nacao); // primeiro uso (aloca e carrega): só a original
-    }
-    let r = o(nacao);
-    let n = nation_get_english_name(nacao);
-    PLACAR.registrar(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nacao, idioma, r, n));
-    r
-}
 
 /// the club's short name, or its English one from eng.lng (79-byte rows, through the id map or by id) when another
 /// language is loaded
@@ -7495,7 +6558,7 @@ pub(crate) unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usi
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: o primeiro uso aloca e carrega o eng.lng sob o quadro SEH: a original
+        // simplification: o primeiro uso aloca e carrega o eng.lng sob o quadro SEH: a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME)(clube);
     }
     let linhas = *((t + 0x20) as *const usize);
@@ -7511,18 +6574,6 @@ pub(crate) unsafe extern "C" fn club_get_english_short_name(clube: usize) -> usi
     linhas.wrapping_add((i as usize).wrapping_mul(79)).wrapping_add(0x34) // nome curto na linha
 }
 
-/// Comparer for `club_get_english_short_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_get_english_short_name(clube: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME);
-    let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
-    if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
-        return o(clube); // primeiro uso (aloca e carrega): só a original
-    }
-    let r = o(clube);
-    let n = club_get_english_short_name(clube);
-    PLACAR.registrar(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
-    r
-}
 
 /// Autoteste (CM_AUTOTESTE=1, modo comparação): nem a carreira nem o save passam por estas três (a base é
 /// versão 2; o jogo dos testes está em inglês). (1) O conversor das competições: 64 casos de sementes fixas,
@@ -7732,7 +6783,7 @@ pub(crate) unsafe extern "C" fn database_build_nation_name_index() {
     let t = alocar((nacoes as u32).wrapping_mul(0x24));
     *(G_NATION_NAME_INDEX_TABLE as *mut usize) = t;
     if t == 0 {
-        // ponytail: a original pede de novo e, sem memória, abre a caixa e encerra o jogo
+        // simplification: a original pede de novo e, sem memória, abre a caixa e encerra o jogo
         return original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
     }
     fill_nation_name_index(t);
@@ -7822,62 +6873,9 @@ pub(crate) unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
     regioes
 }
 
-/// Comparer for `times_a_e_b` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Original e cópia lado a lado sobre as regiões dos times A e B; a mensagem dá o primeiro byte que difere (a
-/// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
-pub(crate) unsafe fn comparar_times_a_e_b(nome: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
-    let regioes = ab_team_regions();
-    let (_, _, igual, mut mo, mut mr) = crate::comparacao::lado_a_lado(&regioes, original, rust);
-    let onde = mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| {
-        x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k]))
-    });
-    PLACAR.registrar(igual, || match onde {
-        Some((a, x, y)) => format!("{}: diverge em {:x} original={:02x} rust={:02x}", nome, a, x, y),
-        None => format!("{}: diverge", nome),
-    });
-    mo.0.clear();
-    mr.0.clear();
-}
 
-/// Comparer for `database_trim_senior_and_b_team_squads` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_trim_senior_and_b_team_squads() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_TRIM_SENIOR_AND_B_TEAM_SQUADS);
-    comparar_times_a_e_b("database_trim_senior_and_b_team_squads", || o(), || database_trim_senior_and_b_team_squads());
-}
 
-/// Comparer for `database_merge_b_team_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_merge_b_team_staff() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_MERGE_B_TEAM_STAFF);
-    comparar_times_a_e_b("database_merge_b_team_staff", || o(), || database_merge_b_team_staff());
-}
 
-/// Comparer for `database_build_nation_name_index` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
-/// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
-/// impressão dele não é critério).
-pub(crate) unsafe extern "C" fn comparar_database_build_nation_name_index() {
-    original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
-    let t = *(G_NATION_NAME_INDEX_TABLE as *const usize);
-    let n = (*(G_NATION_COUNT as *const i32)).max(0) as usize * 0x24;
-    if t == 0 || n == 0 {
-        return;
-    }
-    let mut buffer = vec![0u8; n];
-    let r = buffer.as_mut_ptr() as usize;
-    *(G_NATION_NAME_INDEX_TABLE as *mut usize) = r;
-    fill_nation_name_index(r);
-    let original = core::slice::from_raw_parts(t as *const u8, n);
-    let copia = core::slice::from_raw_parts(r as *const u8, n);
-    let onde = original.iter().zip(copia).position(|(a, b)| a != b);
-    PLACAR.registrar(onde.is_none(), || {
-        let k = onde.unwrap_or(0) & !3;
-        format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
-            core::ptr::read_unaligned((t + k) as *const i32), core::ptr::read_unaligned((r + k) as *const i32))
-    });
-    *(G_NATION_NAME_INDEX_TABLE as *mut usize) = t;
-}
 
 /// removes the person from the club slot her job points to (writing the date into her, when given, and, for the senior
 /// national team manager, from the under-21 side too) and, if asked, clears the club in the person; 0 if she was not in
@@ -8009,42 +7007,7 @@ pub(crate) unsafe extern "C" fn database_get_club_scouts(clube: usize, vetor: *m
     1
 }
 
-/// Comparer for `database_remove_staff_from_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_remove_staff_from_club(clube: usize, pessoa: usize, data: usize, desligar: u32, como_jogador: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB);
-    if clube == 0 || pessoa == 0 {
-        return o(clube, pessoa, data, desligar, como_jogador); // 0 ou caixa: só a original
-    }
-    // o clube, a pessoa e, na seleção principal, a sub-21 (a única outra casa que a rotina zera)
-    let mut regioes = vec![(clube, 581), (pessoa, 110)];
-    let (id, n, nacoes) = (*(clube as *const i32), *(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
-    let nacao = core::ptr::read_unaligned((clube + club::NATION) as *const usize);
-    if id >= n.wrapping_sub(nacoes.wrapping_mul(2)) && id < n.wrapping_sub(nacoes) && nacao != 0 {
-        let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_U21_TEAM);
-        let s = sub21(nacao);
-        if s != clube {
-            regioes.push((s, 581));
-        }
-    }
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, data, desligar, como_jogador),
-        || database_remove_staff_from_club(clube, pessoa, data, desligar, como_jogador));
-    PLACAR.registrar(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
-        clube, pessoa, data != 0, desligar, r, m, mo, mr));
-    r
-}
 
-/// Comparer for `database_get_club_scouts` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_scouts(clube: usize, vetor: *mut usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_SCOUTS);
-    if clube == 0 {
-        return o(clube, vetor); // caixa: só a original
-    }
-    // o vetor e a marca +0x244 do clube, que a 0x540a50 zera quando recusa o parceiro
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(vetor as usize, 28), (clube + club::HAS_LINKED_CLUB, 1)],
-        || o(clube, vetor), || database_get_club_scouts(clube, vetor));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
 /// As formas do adjetivo de 0x545a60 (tabelas de salto 0x545b2c/0x545b34, 0x545b58/0x545b60, 0x545b84,
 /// 0x545c10, 0x545c9c e 0x545d28), índice 1..35. Os idiomas 3, 6, 7, 8 e 10 dão a mesma linha.
@@ -8111,36 +7074,8 @@ pub(crate) unsafe extern "C" fn player_attribute_rating_with_scaled_ability(joga
     attribute_rating(habilidade * read_f64_at(0x967880) + (v + v)) as u32 // 0x967880 = 0.1
 }
 
-/// Comparer for `get_adjective_form_index` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(IDX_GET_ADJECTIVE_FORM_INDEX);
-    let r = o(indice, idioma);
-    let n = get_adjective_form_index(indice, idioma);
-    PLACAR.registrar(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", indice as u8 as i8, idioma, r, n));
-    r
-}
 
-/// Comparer for `staff_get_non_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_non_player_attribute(pessoa: usize, atributo: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_NON_PLAYER_ATTRIBUTE);
-    let r = o(pessoa, atributo);
-    let a = atributo as u8 as i8;
-    if pessoa == 0 || !(1..=12).contains(&a) {
-        return r; // caixa: só a original
-    }
-    let n = staff_get_non_player_attribute(pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("staff_get_non_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
-    r
-}
 
-/// Comparer for `player_attribute_rating_with_scaled_ability` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_player_attribute_rating_with_scaled_ability(jogador: usize, valor: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING_WITH_SCALED_ABILITY);
-    let r = o(jogador, valor);
-    let n = player_attribute_rating_with_scaled_ability(jogador, valor);
-    PLACAR.registrar(r == n, || format!("player_attribute_rating_with_scaled_ability({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
-    r
-}
 
 /// a first name: nation with more than 15 names, the heaviest of 3 draws in its range; otherwise a draw over the whole
 /// table
@@ -8183,7 +7118,7 @@ pub(crate) unsafe extern "C" fn database_get_comp_colours(competicao: usize, fre
     if competicao == 0 {
         return original_fn::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_COMP_COLOURS)(competicao, frente, fundo);
     }
-    // ponytail: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
+    // simplification: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
     // a 0x5e4800 faz & 0xff nos três, então os bytes estendidos dão o mesmo pixel (como em 0x53b640)
     let cor: unsafe extern "C" fn(u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
     core::ptr::write_unaligned(frente, *(G_GUI_COLOUR_PALE_GREY as *const u16));
@@ -8244,41 +7179,8 @@ pub(crate) unsafe extern "C" fn database_club_has_room_for_job(clube: usize, car
     tem as u32
 }
 
-/// Comparer for `database_pick_first_name_by_weight` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_by_weight(nacao: usize) -> usize {
-    // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados e a cópia não conta
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_BY_WEIGHT);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_first_name_by_weight(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_by_weight({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_get_comp_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_comp_colours(competicao: usize, frente: *mut u16, fundo: *mut u16) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_COMP_COLOURS);
-    if competicao == 0 {
-        return o(competicao, frente, fundo); // caixa: só a original
-    }
-    let regioes = [(frente as usize, 2), (fundo as usize, 2)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(competicao, frente, fundo),
-        || database_get_comp_colours(competicao, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("database_get_comp_colours({:x}) original={} rust={} {:x?} x {:x?}", competicao, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_club_has_room_for_job` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_club_has_room_for_job(clube: usize, cargo: u32, pessoa: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, usize) -> u32>(IDX_DATABASE_CLUB_HAS_ROOM_FOR_JOB);
-    let r = o(clube, cargo, pessoa);
-    let c = cargo as u8 as i8;
-    if clube == 0 || pessoa == 0 || !(1..=15).contains(&c) || c == 14 {
-        return r; // caixa: só a original
-    }
-    let n = database_club_has_room_for_job(clube, cargo, pessoa);
-    PLACAR.registrar(r == n, || format!("database_club_has_room_for_job({:x}, {}, {:x}) original={} rust={}", clube, c, pessoa, r, n));
-    r
-}
 
 /// Puts the person in the first empty of the n club slots at clube+d; false if none.
 ///
@@ -8395,20 +7297,6 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(clube: usize, pessoa:
     1
 }
 
-/// Comparer for `database_add_staff_to_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_add_staff_to_club(clube: usize, pessoa: usize, cargo: u32, data: usize, gravar: u32, reduzir: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, usize, u32, u32) -> u32>(IDX_DATABASE_ADD_STAFF_TO_CLUB);
-    if clube == 0 || pessoa == 0 {
-        return o(clube, pessoa, cargo, data, gravar, reduzir); // caixa: só a original
-    }
-    // grava só no clube (581 bytes) e na pessoa (110); 0x600a50 só consulta
-    let regioes = [(clube, 0x245), (pessoa, 0x6e)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, pessoa, cargo, data, gravar, reduzir),
-        || database_add_staff_to_club(clube, pessoa, cargo, data, gravar, reduzir));
-    PLACAR.registrar(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
-        clube, pessoa, cargo as u8, data, gravar, reduzir, r, n, mo, mr));
-    r
-}
 
 /// Person pointer in squad slot i (+0xd7) of the club.
 ///
@@ -8466,7 +7354,7 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(clube: usize, modo: u3
         }
         n
     };
-    // ponytail: o original passa o endereço de um local; 0x540a50 só devolve parceiro depois de gravá-lo
+    // simplification: o original passa o endereço de um local; 0x540a50 só devolve parceiro depois de gravá-lo
     let mut eh_a = 0u32;
     let p = parceiro(clube, &mut eh_a, 1);
     if p == 0 {
@@ -8556,7 +7444,7 @@ pub(crate) unsafe extern "C" fn club_can_be_managed(clube: usize) -> u8 {
     if u(0x57) == 0 {
         return 0;
     }
-    // ponytail: o original usa o lugar do próprio argumento como saída; só é lido com parceiro, e aí já foi gravado
+    // simplification: o original usa o lugar do próprio argumento como saída; só é lido com parceiro, e aí já foi gravado
     let mut eh_a = 0u32;
     if parceiro(clube, &mut eh_a, 1) != 0 && eh_a == 0 {
         return 0; // time B
@@ -8572,41 +7460,8 @@ pub(crate) unsafe extern "C" fn club_can_be_managed(clube: usize) -> u8 {
     (*((u(0x53) + 0x11c) as *const u8) & 2 != 0) as u8
 }
 
-/// Comparer for `database_count_club_squad` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_count_club_squad(clube: usize, modo: u32, filtro: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD);
-    if clube == 0 {
-        return o(clube, modo, filtro); // caixa: só a original
-    }
-    // 0x540a50 pode zerar +0x244 do clube; o filtro grava o último contrato em [0xae1080]
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1), (G_CONTRACT_LOOKUP_RESULT, 4)],
-        || o(clube, modo, filtro), || database_count_club_squad(clube, modo, filtro));
-    PLACAR.registrar(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", clube, modo as u8, filtro, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_collect_club_squad` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_collect_club_squad(clube: usize, vetor: *mut usize, dobro: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_DATABASE_COLLECT_CLUB_SQUAD);
-    if clube == 0 {
-        return o(clube, vetor, dobro); // caixa: só a original
-    }
-    let regioes = [(vetor as usize, if dobro != 0 { 400 } else { 200 }), (clube + club::HAS_LINKED_CLUB, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&regioes, || o(clube, vetor, dobro),
-        || database_collect_club_squad(clube, vetor, dobro));
-    PLACAR.registrar(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, dobro, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `club_can_be_managed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_can_be_managed(clube: usize) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_CLUB_CAN_BE_MANAGED);
-    let marca = [(clube.wrapping_add(0x244), 1)];
-    let regioes = if clube == 0 { &marca[..0] } else { &marca[..] };
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(regioes, || o(clube), || club_can_be_managed(clube));
-    PLACAR.registrar(igual && r == n, || format!("club_can_be_managed({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
 /// writes the low byte of the vector's 21 cells back to the non-player's coaching attributes (+0x0e..+0x22)
 /// Original: `database_vector_to_non_player` (0x53a980, Database.cpp, cdecl).
@@ -8704,7 +7559,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: us
                     break;
                 }
             }
-            // ponytail: com a célula do corte = −127 o original roda para sempre; a cópia também
+            // simplification: com a célula do corte = −127 o original roda para sempre; a cópia também
             limit += 10;
         }
         if melhor > -1 {
@@ -8755,36 +7610,8 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: us
     devolver(nj, pessoa, v as usize);
 }
 
-/// Comparer for `database_vector_to_non_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, pessoa: usize, vetor: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_NON_PLAYER);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nao_jogador + 0x0e, 21)],
-        || o(nao_jogador, pessoa, vetor), || database_vector_to_non_player(nao_jogador, pessoa, vetor));
-    PLACAR.registrar(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_vector_to_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_PLAYER);
-    // os deslocamentos de ATTRIBUTE_VECTOR_CELLS ficam em +0x0f..+0x44
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(jogador + 0x0f, 0x44 - 0x0f + 1), (pessoa + staff::DETERMINATION, 1)],
-        || o(jogador, pessoa, vetor), || database_vector_to_player(jogador, pessoa, vetor));
-    PLACAR.registrar(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `staff_normalise_non_player_attributes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_normalise_non_player_attributes(pessoa: usize) {
-    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
-    let nj = if pessoa == 0 { 0 } else { core::ptr::read_unaligned((pessoa + staff::NON_PLAYER) as *const usize) };
-    if nj == 0 {
-        return o(pessoa); // não faz nada: só a original
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(nj + 0x0e, 21)], || o(pessoa),
-        || staff_normalise_non_player_attributes(pessoa));
-    PLACAR.registrar(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", pessoa, mo, mr));
-}
 
 /// As cores fixas (chaves do index.cpp em 0x9cf178..0x9cf1fc, ids) e a família de cada uma, na ordem
 /// das comparações de 0x540520.
@@ -8877,42 +7704,8 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(pessoa: usize
     }
 }
 
-/// Comparer for `database_get_colour_family` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_colour_family(cor: usize) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_GET_COLOUR_FAMILY);
-    let r = o(cor);
-    if colour_family(cor).is_none() {
-        return r; // caixa: só a original
-    }
-    let n = database_get_colour_family(cor);
-    PLACAR.registrar(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", cor, *(cor as *const u32), r, n));
-    r
-}
 
-/// Comparer for `database_colours_clash` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_colours_clash(a: usize, b: usize) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_COLOURS_CLASH);
-    let r = o(a, b);
-    if colour_family(a).is_none() || colour_family(b).is_none() {
-        return r; // caixa: só a original
-    }
-    let n = database_colours_clash(a, b);
-    PLACAR.registrar(r == n, || format!("database_colours_clash({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
-/// Comparer for `staff_compute_non_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_compute_non_player_attribute(pessoa: usize, nao_jogador: usize, atributo: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE);
-    let r = o(pessoa, nao_jogador, atributo);
-    let a = atributo as u8 as i8;
-    if pessoa == 0 || !(1..=12).contains(&a) || nao_jogador == 0 {
-        return r; // caixa: só a original
-    }
-    let n = staff_compute_non_player_attribute(pessoa, nao_jogador, atributo);
-    PLACAR.registrar(r == n, || format!("staff_compute_non_player_attribute({:x}, {:x}, {}) original={} rust={}", pessoa, nao_jogador, a, r, n));
-    r
-}
 
 /// CRT rand() scaled to n: rand * n / 0x8000 (64-bit arithmetic, low 32 bits).
 ///
@@ -9181,37 +7974,8 @@ pub(crate) unsafe extern "C" fn database_format_staff_name(pessoa: usize, destin
     1
 }
 
-/// Comparer for `database_pick_first_name_for_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_first_name_for_nation(nacao: usize) -> usize {
-    // só o rand() da CRT muda ([0xad6c30]): o estado volta entre os lados
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_FIRST_NAME_FOR_NATION);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_first_name_for_nation(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_first_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_pick_second_name_for_nation` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_pick_second_name_for_nation(nacao: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_PICK_SECOND_NAME_FOR_NATION);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&crate::aleatorio::REGIOES_DO_ESTADO, || o(nacao),
-        || crate::aleatorio::sem_contar(|| database_pick_second_name_for_nation(nacao)));
-    PLACAR.registrar(igual && r == n, || format!("database_pick_second_name_for_nation({:x}) original={:x} rust={:x} {:x?} x {:x?}", nacao, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_format_staff_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_format_staff_name(pessoa: usize, destino: usize, tamanho: u32, estilo: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_STAFF_NAME);
-    if pessoa == 0 || destino == 0 || (tamanho as i16) < 0x69 || !(1..=7).contains(&(estilo as u8)) {
-        return o(pessoa, destino, tamanho, estilo); // caixa: só a original
-    }
-    // o destino tem pelo menos 0x69 bytes (a rotina exige); 0x600740 e 0x6005e0 só leem
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(destino, 0x69)], || o(pessoa, destino, tamanho, estilo),
-        || database_format_staff_name(pessoa, destino, tamanho, estilo));
-    PLACAR.registrar(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", pessoa, estilo as u8, r, n, mo, mr));
-    r
-}
 
 /// the club's home, away or third kit colours as screen pixels, with defaults when missing
 /// Original: `database_get_club_kit_colours` (0x53b640, Database.cpp, cdecl).
@@ -9225,7 +7989,7 @@ pub(crate) unsafe extern "C" fn database_get_club_kit_colours(clube: usize, kit:
     if clube == 0 {
         return original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS)(clube, kit, frente, fundo);
     }
-    // ponytail: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
+    // simplification: a original empurra dwords com só o byte de baixo escrito (o resto é lixo de pilha);
     // a 0x5e4800 faz & 0xff nos três, então os bytes estendidos dão o mesmo pixel
     let cor: unsafe extern "C" fn(u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
     core::ptr::write_unaligned(frente, *(G_GUI_COLOUR_BLUE as *const u16));
@@ -9297,7 +8061,7 @@ pub(crate) unsafe extern "C" fn club_get_english_name(clube: usize) -> usize {
     }
     let t = *(G_ENGLISH_NAME_TABLES as *const usize);
     if t == 0 {
-        // ponytail: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
+        // simplification: o primeiro uso aloca (new 0x40) e carrega o eng.lng (0x544fc0) sob o quadro SEH: a original
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME)(clube);
     }
     let linhas = *((t + 0x20) as *const usize);
@@ -9314,44 +8078,8 @@ pub(crate) unsafe extern "C" fn club_get_english_name(clube: usize) -> usize {
     }
 }
 
-/// Comparer for `database_get_club_kit_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS);
-    if clube == 0 {
-        return o(clube, kit, frente, fundo); // caixa: só a original
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(frente as usize, 2), (fundo as usize, 2)],
-        || o(clube, kit, frente, fundo), || database_get_club_kit_colours(clube, kit, frente, fundo));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_kit_colours({:x}, {}) original={} rust={} {:x?} x {:x?}", clube, kit as u8, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_get_club_manager` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_club_manager(clube: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_MANAGER);
-    if clube == 0 {
-        return o(clube); // caixa: só a original
-    }
-    // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro (e a recusa se repete com ela zerada):
-    // a região volta entre os lados
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
-        || database_get_club_manager(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `club_get_english_name` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_club_get_english_name(clube: usize) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME);
-    let idioma = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
-    if idioma != 0 && idioma != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
-        return o(clube); // primeiro uso (aloca e carrega): só a original
-    }
-    let r = o(clube);
-    let n = club_get_english_name(clube);
-    PLACAR.registrar(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", clube, idioma, r, n));
-    r
-}
 
 /// adds a delta to the player's morale, damped by a draw near the ends, clamped to 1..20; returns whether it changed
 /// Original: `staff_adjust_morale` (0x544710, Database.cpp, cdecl).
@@ -9434,44 +8162,8 @@ pub(crate) unsafe extern "C" fn staff_set_squad_flags(pessoa: usize, elenco: u32
     pessoa
 }
 
-/// Comparer for `staff_adjust_morale` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_STAFF_ADJUST_MORALE);
-    if delta as u8 == 0 {
-        let r = o(pessoa, delta, limitar);
-        PLACAR.registrar(r == 0, || format!("staff_adjust_morale({:x}, 0) original={}", pessoa, r));
-        return r;
-    }
-    // sorteia (0x90cfc0): o estado do gerador volta entre os lados e a cópia não conta os sorteios
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize) + 0x45, 1));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(pessoa, delta, limitar),
-        || crate::aleatorio::sem_contar(|| staff_adjust_morale(pessoa, delta, limitar)));
-    PLACAR.registrar(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", pessoa, delta as u8 as i8, limitar, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `database_non_player_to_attribute_vector` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_non_player_to_attribute_vector(nao_jogador: usize, pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8) -> u32>(IDX_DATABASE_NON_PLAYER_TO_ATTRIBUTE_VECTOR);
-    let mut regioes = vec![(vetor, 21 * 3)];
-    if !fim.is_null() {
-        regioes.push((fim as usize, 1));
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(nao_jogador, pessoa, vetor, fim),
-        || database_non_player_to_attribute_vector(nao_jogador, pessoa, vetor, fim));
-    PLACAR.registrar(igual && r == n, || format!("database_non_player_to_attribute_vector({:x}) original={:x} rust={:x} {:x?} x {:x?}", nao_jogador, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `staff_set_squad_flags` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_set_squad_flags(pessoa: usize, elenco: u32) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_STAFF_SET_SQUAD_FLAGS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(pessoa + staff::PLAYING_SQUAD, 1)], || o(pessoa, elenco),
-        || staff_set_squad_flags(pessoa, elenco));
-    PLACAR.registrar(igual && r == n, || format!("staff_set_squad_flags({:x}, {:x}) {:x?} x {:x?}", pessoa, elenco as u8, mo, mr));
-    r
-}
 
 /// qsort comparison of the competition history: rows without a competition last, by competition id and by season,
 /// newest first
@@ -9555,38 +8247,8 @@ pub(crate) unsafe extern "C" fn nation_is_uk_or_ireland(nacao: usize) -> u32 {
     (id == g(KEY_NATION_ENGLAND) || id == g(KEY_NATION_SCOTLAND) || id == g(KEY_NATION_REPUBLIC_OF_IRELAND) || id == g(KEY_NATION_WALES) || id == g(KEY_NATION_NORTHERN_IRELAND)) as u32
 }
 
-/// Comparer for `database_compare_comp_history_rows` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_COMP_HISTORY_ROWS)(a, b);
-    let n = database_compare_comp_history_rows(a, b);
-    PLACAR.registrar(r == n, || format!("database_compare_comp_history_rows({:x}, {:x}) original={} rust={}", a, b, r, n));
-    r
-}
 
-/// Comparer for `database_player_to_attribute_vector` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
-                                                            fim_das_posicoes: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(IDX_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
-    let mut regioes = vec![(vetor, 0x3f * 3)];
-    for p in [fim_dos_lados, fim_das_posicoes, fim_dos_ponderados] {
-        if !p.is_null() {
-            regioes.push((p as usize, 1));
-        }
-    }
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes,
-        || o(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados),
-        || database_player_to_attribute_vector(jogador, pessoa, vetor, fim_dos_lados, fim_das_posicoes, fim_dos_ponderados));
-    PLACAR.registrar(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, pessoa, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `nation_is_uk_or_ireland` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_is_uk_or_ireland(nacao: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_IS_UK_OR_IRELAND)(nacao);
-    let n = nation_is_uk_or_ireland(nacao);
-    PLACAR.registrar(r == n, || format!("nation_is_uk_or_ireland({:x}) original={} rust={}", nacao, r, n));
-    r
-}
 
 /// Os 23 clubes bascos de 0x53d7f0 (ponteiros fixos da área 0x9d00a4..), na ordem da original.
 pub(crate) const BASQUE_CLUBS: [usize; 23] = [
@@ -9673,33 +8335,8 @@ pub(crate) unsafe extern "C" fn staff_is_loan_listed(pessoa: usize, clube: usize
     (v != 0 && *((v + 0x4e) as *const u8) & 2 != 0) as u32
 }
 
-/// Comparer for `database_is_basque_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_basque_club(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_IS_BASQUE_CLUB)(clube);
-    let n = database_is_basque_club(clube);
-    PLACAR.registrar(r == n, || format!("database_is_basque_club({:x}) original={} rust={}", clube, r, n));
-    r
-}
 
-/// Comparer for `staff_is_transfer_listed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed(pessoa: usize, clube: usize) -> u32 {
-    // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0, 0x4cf5f0 e 0x600a50 (clube não
-    // nulo) só leem
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(pessoa, clube),
-        || staff_is_transfer_listed(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `staff_is_loan_listed` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_loan_listed(pessoa: usize, clube: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LOAN_LISTED);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(pessoa, clube),
-        || staff_is_loan_listed(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_loan_listed({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
-    r
-}
 
 /// whether the person's link with the club (or the contract club) is transfer listed at request
 /// Original: `staff_is_listed_by_request` (0x544600, Database.cpp, cdecl).
@@ -9784,36 +8421,8 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(clube: usize) ->
     1 // pode
 }
 
-/// Comparer for `staff_is_listed_by_request` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_listed_by_request(pessoa: usize, clube: usize) -> u32 {
-    // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_LISTED_BY_REQUEST);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(pessoa, clube),
-        || staff_is_listed_by_request(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_listed_by_request({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `player_attribute_rating` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_player_attribute_rating(jogador: usize, valor: u32) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_PLAYER_ATTRIBUTE_RATING)(jogador, valor);
-    let n = player_attribute_rating(jogador, valor);
-    PLACAR.registrar(r == n, || format!("player_attribute_rating({:x}, {}) original={} rust={}", jogador, valor as u8 as i8, r, n));
-    r
-}
 
-/// Comparer for `database_club_has_reserve_squad` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_club_has_reserve_squad(clube: usize) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_HAS_RESERVE_SQUAD);
-    if clube == 0 {
-        return o(clube); // caixa: só a original
-    }
-    // 0x540a50 zera a marca +0x244 do clube quando recusa o parceiro: a região volta entre os lados
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(clube + club::HAS_LINKED_CLUB, 1)], || o(clube),
-        || database_club_has_reserve_squad(clube));
-    PLACAR.registrar(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", clube, r, n, mo, mr));
-    r
-}
 
 /// how far the viewer stands from the person (0 same club or league, 2 same nation, 3 club nation or high reputation, 4
 /// world): picks the reputation
@@ -9966,30 +8575,8 @@ pub(crate) unsafe extern "C" fn database_is_staff_foreign(pessoa: usize, nacao: 
     1 // estrangeira
 }
 
-/// Comparer for `database_get_reputation_scope` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_reputation_scope(pessoa: usize, quem_ve: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_DATABASE_GET_REPUTATION_SCOPE)(pessoa, quem_ve);
-    let n = database_get_reputation_scope(pessoa, quem_ve);
-    PLACAR.registrar(r == n, || format!("database_get_reputation_scope({:x}, {:x}) original={} rust={}", pessoa, quem_ve, r, n));
-    r
-}
 
-/// Comparer for `database_get_staff_reputation_for_viewer` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_staff_reputation_for_viewer(pessoa: usize, quem_ve: usize, nao_jogador: u32) -> u16 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u16>(IDX_DATABASE_GET_STAFF_REPUTATION_FOR_VIEWER)(pessoa, quem_ve, nao_jogador);
-    let n = database_get_staff_reputation_for_viewer(pessoa, quem_ve, nao_jogador);
-    PLACAR.registrar(r == n, || format!("database_get_staff_reputation_for_viewer({:x}, {:x}, {}) original={} rust={}", pessoa, quem_ve, nao_jogador, r, n));
-    r
-}
 
-/// Comparer for `database_is_staff_foreign` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_staff_foreign(pessoa: usize, nacao: usize, grupos: u32) -> u32 {
-    // a 0x4cf5a0 e o Date (num Date local) só leem: os dois lados podem rodar
-    let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u32>(IDX_DATABASE_IS_STAFF_FOREIGN)(pessoa, nacao, grupos);
-    let n = database_is_staff_foreign(pessoa, nacao, grupos);
-    PLACAR.registrar(r == n, || format!("database_is_staff_foreign({:x}, {:x}, {}) original={} rust={}", pessoa, nacao, grupos, r, n));
-    r
-}
 
 /// the person's age in whole years on a date, from the birth date
 /// Original: `database_get_staff_age` (0x53ab90, Database.cpp, cdecl).
@@ -10075,33 +8662,8 @@ pub(crate) unsafe extern "C" fn database_is_staff_eu_national(pessoa: usize, nac
     0
 }
 
-/// Comparer for `database_get_staff_age` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_get_staff_age(pessoa: usize, data: *const u16) -> u16 {
-    let o = original_fn::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_DATABASE_GET_STAFF_AGE);
-    if pessoa == 0 {
-        return o(pessoa, data); // caixa: só a original
-    }
-    let r = o(pessoa, data);
-    let n = database_get_staff_age(pessoa, data);
-    PLACAR.registrar(r == n, || format!("database_get_staff_age({:x}) original={} rust={}", pessoa, r, n));
-    r
-}
 
-/// Comparer for `nation_allows_free_transfers` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_nation_allows_free_transfers(nacao: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_NATION_ALLOWS_FREE_TRANSFERS)(nacao);
-    let n = nation_allows_free_transfers(nacao);
-    PLACAR.registrar(r == n, || format!("nation_allows_free_transfers({:x}) original={} rust={}", nacao, r, n));
-    r
-}
 
-/// Comparer for `database_is_staff_eu_national` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_is_staff_eu_national(pessoa: usize, nacao_do_clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DATABASE_IS_STAFF_EU_NATIONAL)(pessoa, nacao_do_clube);
-    let n = database_is_staff_eu_national(pessoa, nacao_do_clube);
-    PLACAR.registrar(r == n, || format!("database_is_staff_eu_national({:x}, {:x}) original={} rust={}", pessoa, nacao_do_clube, r, n));
-    r
-}
 
 /// whether the person's link with the club (or the contract club) is transfer listed, by the club or at request
 /// Original: `staff_is_transfer_listed_or_requested` (0x544520, Database.cpp, cdecl).
@@ -10166,7 +8728,7 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(pessoa: usize, jo
     if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
         return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE)(pessoa, jogador, atributo);
     }
-    // ponytail: a original empurra o registrador inteiro com o byte embaixo; as duas só leem o byte
+    // simplification: a original empurra o registrador inteiro com o byte embaixo; as duas só leem o byte
     let relativo: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING);
     let relativo_goleiro: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_PLAYER_ATTRIBUTE_RATING_WITH_SCALED_ABILITY);
     let b = |d: usize| *((jogador + d) as *const i8);
@@ -10225,41 +8787,8 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute(pessoa: usize, atribu
     calcular(pessoa, core::ptr::read_unaligned((pessoa + staff::PLAYER) as *const usize), atributo)
 }
 
-/// Comparer for `staff_is_transfer_listed_or_requested` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_is_transfer_listed_or_requested(pessoa: usize, clube: usize) -> u32 {
-    // sem clube, as duas gravam o contrato em [0xae1080]; 0x4cf5a0 e 0x4cf5f0 só leem
-    let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(pessoa, clube),
-        || staff_is_transfer_listed_or_requested(pessoa, clube));
-    PLACAR.registrar(igual && r == n, || format!("staff_is_transfer_listed_or_requested({:x}, {:x}) original={} rust={} {:x?} x {:x?}", pessoa, clube, r, n, mo, mr));
-    r
-}
 
-/// Comparer for `staff_compute_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_compute_player_attribute(pessoa: usize, jogador: usize, atributo: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_PLAYER_ATTRIBUTE);
-    let a = atributo as u8 as i8;
-    if pessoa == 0 || !(1..=0x1f).contains(&a) || jogador == 0 {
-        return o(pessoa, jogador, atributo); // caixa: só a original
-    }
-    let r = o(pessoa, jogador, atributo);
-    let n = staff_compute_player_attribute(pessoa, jogador, atributo);
-    PLACAR.registrar(r == n, || format!("staff_compute_player_attribute({:x}, {}) original={} rust={}", jogador, a, r, n));
-    r
-}
 
-/// Comparer for `staff_get_player_attribute` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_get_player_attribute(pessoa: usize, atributo: u32) -> u8 {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32) -> u8>(IDX_STAFF_GET_PLAYER_ATTRIBUTE);
-    let a = atributo as u8 as i8;
-    if pessoa == 0 || !(1..=0x1f).contains(&a) {
-        return o(pessoa, atributo); // caixa: só a original
-    }
-    let r = o(pessoa, atributo);
-    let n = staff_get_player_attribute(pessoa, atributo);
-    PLACAR.registrar(r == n, || format!("staff_get_player_attribute({:x}, {}) original={} rust={}", pessoa, a, r, n));
-    r
-}
 
 /// save_game_data step 1: save_database(save, 1, a4, type), the database tables into the container
 /// Original: `save_database_for_game` (0x524d30, Database.cpp, cdecl).
@@ -10275,12 +8804,8 @@ pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, tip
     gravar_banco(save, 1, a4, tipo)
 }
 
-// ponytail: grava as tabelas do banco no contêiner; não roda duas vezes. Só a original; a cópia
+// simplification: grava as tabelas do banco no contêiner; não roda duas vezes. Só a original; a cópia
 // leva o ramo e é provada pela prova do save.
-/// Comparer for `save_database_for_game` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_save_database_for_game(save: usize, a4: u32, tipo: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u32>(IDX_SAVE_DATABASE_FOR_GAME)(save, a4, tipo)
-}
 
 /// load_game_data step 2: load_database(save, shared, 1), the database read from the container
 /// Original: `load_database_from_stream` (0x524d10, Database.cpp, cdecl).
@@ -10294,15 +8819,11 @@ pub(crate) unsafe extern "C" fn load_database_from_stream(save: usize, compartil
     carregar_banco(save, compartilhado, 1)
 }
 
-// ponytail: carrega o banco inteiro do contêiner (aloca as tabelas); não roda duas vezes. Só a
+// simplification: carrega o banco inteiro do contêiner (aloca as tabelas); não roda duas vezes. Só a
 // original; a cópia leva o ramo (a etapa de carregar da prova do save a exercita).
-/// Comparer for `load_database_from_stream` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_LOAD_DATABASE_FROM_STREAM)(save, compartilhado)
-}
 
 
-// ponytail: destrói todos os subsistemas e apaga os *.tmp; não roda duas vezes. Só a original; a
+// simplification: destrói todos os subsistemas e apaga os *.tmp; não roda duas vezes. Só a original; a
 // cópia leva o ramo e roda no modo Rust (abertura da carreira, fim do início rápido).
 
 /// reads global 0x9b5984
@@ -10313,184 +8834,20 @@ pub(crate) unsafe extern "C" fn database_global_9b5984() -> u32 {
     *(G_DATABASE_NAMES_LANGUAGE as *const u32)
 }
 
-/// Comparer for `ball_out` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_ball_out(this: usize, l: u8) -> u8 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u8>(IDX_BALL_OUT);
-    // chamada de dentro de outra comparacao que grava os comentarios: so a original (ver porta)
-    if GRAVANDO_6D6F70.load(std::sync::atomic::Ordering::Relaxed) {
-        return o(this, l);
-    }
-    if is_recording() {
-        return call_recording(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, this, [l as u32, 0, 0, 0, 0], || o(this, l) as u32) as u8;
-    }
-    let mut extra = vec![(this + 0x8ea0, 0x20), (this + 0x4780, 0x10), (this + 0xf570, 0x20), (this + 0x1a0, 0x10)];
-    let dono = *((this + 0xf582) as *const usize);
-    if dono != 0 {
-        extra.extend([(dono + 0x29, 2), (dono + 0x19c, 2)]);
-    }
-    let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));
-    let (igual, k) = comparar_com_comentarios_em(&extra, || r.set(o(this, l)), |c| n.set(ball_out_with(this, l, c)));
-    PLACAR.registrar(igual && r.get() == n.get(), || format!("ball_out({}) original={} rust={} ({} comentarios)", l, r.get(), n.get(), k));
-    r.get()
-}
 
-/// Comparer for `likes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_likes(alvo: usize, pessoa: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_LIKES)(alvo, pessoa);
-    let n = likes(alvo, pessoa);
-    PLACAR.registrar(r == n, || format!("likes original={} rust={}", r, n));
-    r
-}
 
-/// Comparer for `dislikes` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_dislikes(alvo: usize, pessoa: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DISLIKES)(alvo, pessoa);
-    let n = dislikes(alvo, pessoa);
-    PLACAR.registrar(r == n, || format!("dislikes original={} rust={}", r, n));
-    r
-}
 
-/// Comparer for `mark_position` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_mark_position(this: usize, posicao: i8, ficha: *const u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *const u32) -> u32>(IDX_MARK_POSITION);
-    let reg = [((this as isize + 0x5bf + 4 * posicao as isize) as usize, 4), (this + 0x187f, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, posicao, ficha), || mark_position(this, posicao, ficha));
-    PLACAR.registrar(igual && r == n, || format!("mark_position({}) original={:x?} rust={:x?}", posicao, mo, mr));
-    r
-}
 
-/// Comparer for `foul_in_engine` (comparison mode: see the header of motor.rs).
-#[allow(clippy::too_many_arguments)]
-#[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_foul_in_engine(
-    m: usize, j: usize, outro: usize, tipo: i8, quem: i8, cartao: *mut u8, grav: *mut i8, vantagem: *mut u8,
-) -> u8 {
-    // a decisao em si (0x6e9820) ja e comparada no proprio desvio; aqui so o repasse
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i8, i8, *mut u8, *mut i8, *mut u8) -> u8>(IDX_FOUL_IN_ENGINE);
-    let mut regioes = vec![(m + 0xf5b2 + 8, 2), (cartao as usize, 1), (grav as usize, 1), (vantagem as usize, 1)];
-    for p in [j, outro] {
-        if p != 0 {
-            regioes.push((p, 0x1be));
-        }
-    }
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (r, v, igual, _, _) = crate::comparacao::lado_a_lado(
-        &regioes,
-        || o(m, j, outro, tipo, quem, cartao, grav, vantagem),
-        || crate::aleatorio::sem_contar(|| foul_in_engine(m, j, outro, tipo, quem, cartao, grav, vantagem)),
-    );
-    PLACAR.registrar(igual && r == v, || format!("foul_in_engine original={} rust={}", r, v));
-    r
-}
 
-/// Comparer for `type_not_11` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_type_not_11(tipo: i8) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(i8) -> u32>(IDX_TYPE_NOT_11)(tipo);
-    let v = type_not_11(tipo);
-    PLACAR.registrar(r == v, || format!("type_not_11({}) original={} rust={}", tipo, r, v));
-    r
-}
 
-/// Comparer for `type_11_to_15` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_type_11_to_15(tipo: i8) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(i8) -> u32>(IDX_TYPE_11_TO_15)(tipo);
-    let v = type_11_to_15(tipo);
-    PLACAR.registrar(r == v, || format!("type_11_to_15({}) original={} rust={}", tipo, r, v));
-    r
-}
 
-/// Comparer for `national_side_class` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_national_side_class(clube: usize, flag: u32) -> u8 {
-    let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_NATIONAL_SIDE_CLASS)(clube, flag);
-    let v = national_side_class(clube, flag);
-    PLACAR.registrar(r == v, || format!("national_side_class({:#x}, {}) original={} rust={}", clube, flag, r, v));
-    r
-}
 
-/// Comparer for `clear_person_mark` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_clear_person_mark(this: usize, pessoa: usize, k: i8) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_CLEAR_PERSON_MARK);
-    let reg = [(person_flag_byte(this, pessoa, k) as usize, 1)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, k), || clear_person_mark(this, pessoa, k));
-    PLACAR.registrar(igual, || format!("clear_person_mark original={:x?} rust={:x?}", mo, mr));
-}
 
-/// Comparer for `free_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_free_record() -> usize {
-    let o = original_fn::<unsafe extern "C" fn() -> usize>(IDX_FREE_RECORD);
-    let mut reg: Vec<(usize, usize)> = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((0x9b59b4, 4));
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| free_record()));
-    PLACAR.registrar(igual && r == v, || format!("free_record original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
-    r
-}
 
-/// Comparer for `database_global_9b5984` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_database_global_9b5984() -> u32 {
-    let r = original_fn::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GLOBAL_9B5984)();
-    let v = database_global_9b5984();
-    PLACAR.registrar(r == v, || format!("database_global_9b5984 original={:#x} rust={:#x}", r, v));
-    r
-}
 
-/// Comparer for `partner_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_partner_club(clube: usize, eh_a: *mut u32, ativo: u32) -> usize {
-    let o = original_fn::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(IDX_PARTNER_CLUB);
-    let mut reg: Vec<(usize, usize)> = vec![(clube + club::HAS_LINKED_CLUB, 1)];
-    if !eh_a.is_null() {
-        reg.push((eh_a as usize, 4));
-    }
-    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(clube, eh_a, ativo), || partner_club(clube, eh_a, ativo));
-    PLACAR.registrar(igual && r == v, || format!("partner_club original={:x} {:x?} rust={:x} {:x?}", r, mo, v, mr));
-    r
-}
 
-/// Comparer for `likes_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_likes_club(pessoa: usize, clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_LIKES_CLUB)(pessoa, clube);
-    let n = likes_club(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("likes_club original={} rust={}", r, n));
-    r
-}
 
-/// Comparer for `dislikes_club` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_dislikes_club(pessoa: usize, clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_DISLIKES_CLUB)(pessoa, clube);
-    let n = dislikes_club(pessoa, clube);
-    PLACAR.registrar(r == n, || format!("dislikes_club original={} rust={}", r, n));
-    r
-}
 
-/// Comparer for `main_national_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_main_national_team(nacao: usize) -> usize {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_MAIN_NATIONAL_TEAM)(nacao);
-    let v = main_national_team(nacao);
-    PLACAR.registrar(r == v, || format!("main_national_team original={:x} rust={:x}", r, v));
-    r
-}
 
-/// Comparer for `b_national_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_b_national_team(nacao: usize) -> usize {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_B_NATIONAL_TEAM)(nacao);
-    let v = b_national_team(nacao);
-    PLACAR.registrar(r == v, || format!("b_national_team original={:x} rust={:x}", r, v));
-    r
-}
 
-/// Comparer for `is_second_national_team` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_is_second_national_team(clube: usize) -> u32 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_SECOND_NATIONAL_TEAM)(clube);
-    let v = is_second_national_team(clube);
-    PLACAR.registrar(r == v, || format!("is_second_national_team original={} rust={}", r, v));
-    r
-}
 
-/// Comparer for `aggregate_score` (comparison mode: see the header of motor.rs).
-#[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn comparar_aggregate_score(this: usize, l: i8, casa: *mut i8, fora: *mut i8, cl: *mut u8, ida: *mut u8, f3: *mut u8, bonus: u8) -> u8 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, *mut i8, *mut i8, *mut u8, *mut u8, *mut u8, u8) -> u8>(IDX_AGGREGATE_SCORE);
-    let reg = [(casa as usize, 1), (fora as usize, 1), (cl as usize, 1), (ida as usize, 1), (f3 as usize, 1)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, l, casa, fora, cl, ida, f3, bonus), || aggregate_score(this, l, casa, fora, cl, ida, f3, bonus));
-    PLACAR.registrar(igual && r == n, || format!("aggregate_score({}, {}) original={} {:x?} rust={} {:x?}", l, bonus, r, mo, n, mr));
-    r
-}

@@ -83,15 +83,6 @@ pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
     reg
 }
 
-/// Comparer for `roll_coefficients` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado: a tabela das nações, as temporadas de cada nação e a posição gravada nas seleções.
-pub(crate) unsafe extern "thiscall" fn comparar_roll_coefficients(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ROLL_COEFFICIENTS);
-    let reg = seeding_regions(this);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || roll_coefficients(this));
-    PLACAR.registrar(igual, || format!("roll_coefficients: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
-}
 
 /// places by coefficient position. Champions League: 1st to 3rd 4 places, 4th to 6th 3, 7th to 15th 2, 16th to 48th 1.
 /// UEFA Cup: 1st to 6th 3, 7th and 8th 4, 9th to 15th 2, 16th to 21st 3, 22nd to 48th 2, 49th and 50th 1 (Liechtenstein
@@ -214,16 +205,6 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
     }
 }
 
-/// Comparer for `set_place_counts` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado: a tabela das nações, o sorteio (a cópia sem contar) e a marca da caixa.
-pub(crate) unsafe extern "thiscall" fn comparar_set_place_counts(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_PLACE_COUNTS);
-    let mut reg = vec![(this, 0x43b), (0xb67a34, 4)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || crate::aleatorio::sem_contar(|| set_place_counts(this)));
-    PLACAR.registrar(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
-}
 
 /// in the European club table sorted by nation, the nth club of the nation, skipping on request those already holding a
 /// European place and those with a human manager; this is how each place goes to the nation's next club (the order
@@ -284,16 +265,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
     0
 }
 
-/// Comparer for `uefa_find_nth_unplaced_club_of_nation` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A devolução das duas (a rotina só lê).
-pub(crate) unsafe extern "thiscall" fn comparar_uefa_find_nth_unplaced_club_of_nation(this: usize, clubes: usize, conta: u32, nacao: u32, n: u32, sem_vaga: u32, sem_humano: u32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
-    let r = o(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
-    let c = uefa_find_nth_unplaced_club_of_nation(this, clubes, conta, nacao, n, sem_vaga, sem_humano);
-    PLACAR.registrar(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nacao, n as u8, sem_vaga, sem_humano, r, c));
-    r
-}
 
 
 
@@ -386,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida
     if core::ptr::read_unaligned((this + 0x439) as *const i16) == 0x7d1 {
         euro_cfg(this, t, k);
     }
-    // ponytail: a original devolve o ax com os bytes altos do eax que sobraram (quem chama lê só o si); a cópia, zero
+    // simplification: a original devolve o ax com os bytes altos do eax que sobraram (quem chama lê só o si); a cópia, zero
     k as u16 as u32
 }
 
@@ -399,25 +370,6 @@ pub(crate) unsafe fn club_regions() -> Vec<(usize, usize)> {
     vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (read_u32(G_CLUB_STATE_TABLE) as usize, n * 6), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
 }
 
-/// Comparer for `collect_european_clubs` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
-/// linha de cada um em [0xae2d14], a devolução e os registros das duas tabelas.
-pub(crate) unsafe extern "thiscall" fn comparar_collect_european_clubs(this: usize, saida: *mut usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize) -> u32>(IDX_COLLECT_EUROPEAN_CLUBS);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let mut t2 = 0usize;
-    let reg = club_regions();
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, saida), || collect_european_clubs(this, &mut t2));
-    let (n, m) = (a as u16 as i16, b as u16 as i16);
-    let t1 = *saida;
-    let tabela = n == m && (n <= 0 || t1 == 0 || t2 == 0 || core::slice::from_raw_parts(t1 as *const u8, n as usize * 12) == core::slice::from_raw_parts(t2 as *const u8, n as usize * 12));
-    if t2 != 0 {
-        soltar(t2);
-    }
-    PLACAR.registrar(igual && tabela, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, tabela, memory_diff_addresses(&mo, &mr)));
-    a
-}
 
 /// the Champions League rule (the game's rounds 1 to 4 read as groups, third, second and first qualifying round
 /// [inference]): the last winner goes straight to the groups; nations, by coefficient position: 1st to 3rd 2 clubs in
@@ -511,16 +463,6 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
     }
 }
 
-/// Comparer for `assign_champions_league_places` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado: a tabela das nações, os clubes e a marca da caixa.
-pub(crate) unsafe extern "thiscall" fn comparar_assign_champions_league_places(this: usize, clubes: usize, conta: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CHAMPIONS_LEAGUE_PLACES);
-    let mut reg = club_regions();
-    reg.push((this, 0x440));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || assign_champions_league_places(this, clubes, conta));
-    PLACAR.registrar(igual, || format!("assign_champions_league_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
-}
 
 /// the Intertoto rule: 60 clubs; it cycles through the nations in coefficient order, each nation with its places (from
 /// 0x903cc0) and its first clubs still without a European place; the first 8 nations enter round 1, the 9th to 12th
@@ -595,22 +537,6 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
     }
 }
 
-/// Comparer for `assign_intertoto_places` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado em 2001 (a 0x903890 devolve 0 sem efeito) e sem a lista dos voluntários (soltá-la duas vezes não dá):
-/// a tabela das nações, os clubes e o sorteio (a cópia sem contar). Fora disso, só a original (a 0x903890 sorteia e
-/// entrega notícia).
-pub(crate) unsafe extern "thiscall" fn comparar_assign_intertoto_places(this: usize, clubes: usize, conta: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_INTERTOTO_PLACES);
-    if *(G_CURRENT_DATE_YEAR as *const i16) != 0x7d1 || read_u32(this + 0x43b) != 0 {
-        return o(this, clubes, conta);
-    }
-    let mut reg = club_regions();
-    reg.push((this, 0x440));
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_intertoto_places(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("assign_intertoto_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
-}
 
 
 
@@ -847,19 +773,6 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clube
 }
 
 
-/// Comparer for `assign_uefa_cup_places` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado: a classificação (com a tabela das finais em +0x440), os clubes, o sorteio (a cópia sem contar) e a marca
-/// da caixa.
-pub(crate) unsafe extern "thiscall" fn comparar_assign_uefa_cup_places(this: usize, clubes: usize, conta: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_UEFA_CUP_PLACES);
-    let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
-    // o histórico das competições também: a 0x4afd80 o reordena (linhas empatadas: a ordem de antes muda o clube achado)
-    let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (0xb67a34, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
-    reg.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, conta), || crate::aleatorio::sem_contar(|| assign_uefa_cup_places(this, clubes, conta)));
-    PLACAR.registrar(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
-}
 
 /// England's Intertoto club: outside 2001, up to 6 volunteers drawn among Premier clubs without a human manager or a
 /// European place; the volunteer from the highest division goes (the best placed [inference: +0x5f]); without
@@ -953,20 +866,6 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     melhor
 }
 
-/// Comparer for `pick_english_intertoto_club` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Em 2001 (devolve 0 sem efeito): a devolução das duas. Fora de 2001 só a original (sorteia, aloca a lista e entrega a
-/// notícia).
-pub(crate) unsafe extern "thiscall" fn comparar_pick_english_intertoto_club(this: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_PICK_ENGLISH_INTERTOTO_CLUB);
-    if read_i16(G_CURRENT_DATE_YEAR) != 0x7d1 {
-        return o(this);
-    }
-    let r = o(this);
-    let c = pick_english_intertoto_club(this);
-    PLACAR.registrar(r == c, || format!("pick_english_intertoto_club: original {:x} rust {:x}", r, c));
-    r
-}
 
 /// the seeding calendar: every new game year it redoes the coefficients, the places per nation and the Champions
 /// League, UEFA Cup and Intertoto places, and posts the qualifiers news; on day 100 of the year it asks Premier human
@@ -1042,13 +941,6 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
     prazos(this);
 }
 
-/// Comparer for `update_season` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Só a original (refaz as vagas pelas rotinas de dentro, solta a tabela, entrega notícias); a cópia leva o contador.
-pub(crate) unsafe extern "thiscall" fn comparar_update_season(this: usize, diario: u32) {
-    // ponytail: refaz a classificação inteira e entrega notícias: não dá para rodar duas vezes
-    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_SEASON)(this, diario)
-}
 
 
 /// Reads a signed byte count as u32 (movsx).
@@ -1123,14 +1015,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usiz
     uefa_seeding_crt_fclose(f);
 }
 
-/// Comparer for `uefa_seeding_save_to_temp_file` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador da 0x905510: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_uefa_seeding_save_to_temp_file(this: usize) {
-    // ponytail: grava um arquivo em CM3_TEMP (não pode rodar duas vezes); a cópia é provada pela prova do save
-    // (o .tmp vai no .qst pelo zadd_matching_files)
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UEFA_SEEDING_SAVE_TO_TEMP_FILE)(this)
-}
 
 
 

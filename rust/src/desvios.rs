@@ -49,7 +49,7 @@ pub static ISOLAR: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool
 pub static VENENO: AtomicU32 = AtomicU32::new(0);
 static mut GUARDA_EDI: u32 = 0;
 /// A carreira com motor usa ate 33 KB da pilha particular (medido ate 2001-09-01) e entra nela ~158 milhoes de vezes ate
-/// 2002-06-01: encher 1 MB a cada entrada deixava a carreira 6 vezes mais lenta. ponytail: faixa fixa; se a linha
+/// 2002-06-01: encher 1 MB a cada entrada deixava a carreira 6 vezes mais lenta. simplification: faixa fixa; se a linha
 /// "pilha particular usou ate" passar dela, aumentar.
 const VENENO_FAIXA: u32 = 64 << 10;
 
@@ -187,7 +187,7 @@ unsafe fn isolar_com(destino: usize, envenenar: bool) -> usize {
 }
 
 // Pilha dos ECX e retornos guardados pelo trecho de `preservar_ecx` (chamadas aninhadas).
-// ponytail: uma pilha só, para a thread principal (o jogo chama as rotinas desviadas nela); 512 níveis.
+// simplification: uma pilha só, para a thread principal (o jogo chama as rotinas desviadas nela); 512 níveis.
 static mut PILHA_ECX: [u32; 1024] = [0; 1024];
 static mut TOPO_ECX: u32 = 0;
 static mut GUARDA_EAX: u32 = 0;
@@ -699,7 +699,7 @@ unsafe fn instalar_motor() {
 // Patcher que muda codigo depois da instalacao: uma vez por dia do jogo (pelo sorteio, que roda em todos os modos),
 // o corpo de cada rotina desviada (a faixa das ASSINATURAS sem o prologo, onde esta o nosso jmp) e comparado com a
 // foto do fim da instalacao. Corpo mudado: o prologo original volta (desvio desfeito) e o log registra. ~670 KB de
-// hash por dia (~2 ms). ponytail: so as rotinas das ASSINATURAS (data, sorteio e simulacao nao tem faixa).
+// hash por dia (~2 ms). simplification: so as rotinas das ASSINATURAS (data, sorteio e simulacao nao tem faixa).
 
 /// (inicio, prologo original, fim da faixa, hash do corpo, o nosso jmp); hash 0 = sem foto ou ja desfeito.
 static mut INSTALADOS: Vec<(usize, &'static [u8], usize, u64, [u8; 5])> = Vec::new();

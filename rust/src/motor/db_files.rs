@@ -93,50 +93,10 @@ pub(crate) type V1Converter = unsafe extern "C" fn(usize, i32, usize, u32) -> i3
 /// Comparador de um conversor: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à
 /// posição do `ftell` 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo
 /// parou. Fica a posição da Rust (a mesma, se iguais).
-// ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
-/// Comparer for `conversor_v1` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, stream: usize, use_zip: i32,
-                                registros: usize, n: u32, tamanho: usize) -> i32 {
-    if use_zip != 0 {
-        return o(stream, use_zip, registros, n);
-    }
-    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FTELL);
-    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let pos = ftell(stream);
-    let (mut fim_o, mut fim_r) = (0, 0);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(registros, n as usize * tamanho)],
-        || {
-            let r = o(stream, use_zip, registros, n);
-            fim_o = ftell(stream);
-            r
-        },
-        || {
-            fseek(stream, pos, 0);
-            let r = rust(stream, use_zip, registros, n);
-            fim_r = ftell(stream);
-            r
-        });
-    PLACAR.registrar(igual && r == x && fim_o == fim_r, || {
-        let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
-        format!("{}(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", nome, n, r, x, fim_o, fim_r, pos, dif)
-    });
-    r
-}
+// simplification: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
 
-/// Comparer for `db_files_read_clubs_v1` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_clubs_v1", original_fn::<V1Converter>(IDX_DB_FILES_READ_CLUBS_V1), db_files_read_clubs_v1, stream, use_zip, registros, n, 581)
-}
 
-/// Comparer for `db_files_read_players_v1` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_players_v1", original_fn::<V1Converter>(IDX_DB_FILES_READ_PLAYERS_V1), db_files_read_players_v1, stream, use_zip, registros, n, 68)
-}
 
-/// Comparer for `db_files_read_non_players_v1` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_non_players_v1", original_fn::<V1Converter>(IDX_DB_FILES_READ_NON_PLAYERS_V1), db_files_read_non_players_v1, stream, use_zip, registros, n, 70)
-}
 
 /// Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
 /// versão 2 e a carreira não passa por eles). Para cada conversor, 64 casos de sementes fixas: de 1 a 6
@@ -195,11 +155,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_staff_history` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_staff_history(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_STAFF_HISTORY)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// writes n 107-byte records (club_comp.dat, in two calls: the competitions and the 127 reserve ones; nation_comp.dat)
 /// in one go, through zwrite (save) or fwrite (Data folder); 1 if everything went
@@ -221,11 +177,7 @@ pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_comps` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_comps(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_COMPS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// writes n 26-byte records (club_comp_history.dat and nation_comp_history.dat, ids 19 and 20) in one go, through
 /// zwrite (save) or fwrite (Data folder); 1 if everything went
@@ -247,11 +199,7 @@ pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_z
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_comp_history` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_comp_history(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_COMP_HISTORY)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// writes n 101-byte records (staff_comp.dat, id 11) in one go, through zwrite (save) or fwrite (Data folder); 1 if
 /// everything went
@@ -273,11 +221,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zi
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_staff_comps` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_staff_comps(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_STAFF_COMPS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// writes n 43-byte records (officials.dat, id 7) in one go, through zwrite (save) or fwrite (Data folder); 1 if
 /// everything went
@@ -299,11 +243,7 @@ pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip:
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_officials` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_officials(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_OFFICIALS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// writes n 58-byte records (colour.dat, id 2, and staff_comp_history.dat, id 18: the same routine for both) in one go,
 /// through zwrite (save) or fwrite (Data folder); 1 if everything went
@@ -325,11 +265,7 @@ pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_z
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_records_0x3a` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_records_0x3a(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_RECORDS_0X3A)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// writes n 60-byte records (first_names.dat, second_names.dat and common_names.dat, ids 13 to 15) in one go, through
 /// zwrite (save) or fwrite (Data folder); 1 if everything went (it only writes, despite the community name)
@@ -351,11 +287,7 @@ pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usiz
 }
 
 /// Comparador: gravar duas vezes duplicaria os registros no arquivo.
-// ponytail: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_or_read_records_0x3c` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_OR_READ_RECORDS_0X3C)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a gravação do save) e o ramo da cópia no modo Rust.
 
 /// Builds a .dat path with _makepath(dest, 0, folder, name, 0) (FN_CRT_MAKEPATH).
 ///
@@ -392,15 +324,6 @@ pub(crate) unsafe extern "C" fn db_files_open_for_read(pasta: usize, nome: usize
     fopen(0xde1f64, 0x98f928)
 }
 
-/// Comparer for `db_files_open_for_read` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: abrir duas vezes deixaria outro FILE aberto (ou alocaria um lugar novo na tabela de FILE da
-/// CRT, que fica). Roda a original e compara só o caminho (sem efeito colateral).
-pub(crate) unsafe extern "C" fn comparar_db_files_open_for_read(pasta: usize, nome: usize) -> usize {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_DB_FILES_OPEN_FOR_READ)(pasta, nome);
-    check_database_path("db_files_open_for_read", pasta, nome);
-    r
-}
 
 /// builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "wb"); only when writing the database to the
 /// folder; the comparator checks the path
@@ -416,15 +339,6 @@ pub(crate) unsafe extern "C" fn db_files_open_for_write(pasta: usize, nome: usiz
     fopen(0xde1f64, 0x9a7f28) // criar (wb)
 }
 
-/// Comparer for `db_files_open_for_write` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: criar duas vezes truncaria o arquivo com dois FILE abertos. Roda a original e compara só o
-/// caminho.
-pub(crate) unsafe extern "C" fn comparar_db_files_open_for_write(pasta: usize, nome: usize) -> usize {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_DB_FILES_OPEN_FOR_WRITE)(pasta, nome);
-    check_database_path("db_files_open_for_write", pasta, nome);
-    r
-}
 
 /// writes the continent.dat (id 3) table of 198-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
 /// everything went out
@@ -447,11 +361,7 @@ pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_continents` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_continents(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_CONTINENTS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the nation.dat (id 4) table of 290-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
 /// everything went out
@@ -474,11 +384,7 @@ pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_nations` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_nations(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_NATIONS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the city.dat (id 21) table of 56-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
 /// everything went out
@@ -501,11 +407,7 @@ pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i3
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_cities` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_cities(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_CITIES)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the stadium.dat table of 78-byte records in one go, through zwrite (save) or fwrite (Data); 1 if everything
 /// went out
@@ -528,11 +430,7 @@ pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: 
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_stadiums` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_stadiums(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_STADIUMS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the club.dat and nat_club.dat (ids 0, 1) table of 581-byte records in one go, through zwrite (save) or fwrite
 /// (Data); 1 if everything went out
@@ -555,11 +453,7 @@ pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_clubs` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_clubs(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_CLUBS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the staff.dat (staff, 110 bytes; id 6) table of 110-byte records in one go, through zwrite (save) or fwrite
 /// (Data); 1 if everything went out
@@ -582,11 +476,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_staff(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_STAFF)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the staff.dat non-player (id 9; the community map calls it players) table of 68-byte records in one go,
 /// through zwrite (save) or fwrite (Data); 1 if everything went out
@@ -609,11 +499,7 @@ pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_players` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_PLAYERS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the staff.dat player (id 10; the community map calls it non_players) table of 70-byte records in one go,
 /// through zwrite (save) or fwrite (Data); 1 if everything went out
@@ -636,11 +522,7 @@ pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zi
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_non_players` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_non_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_NON_PLAYERS)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// writes the staff preferences (id 22) table of 52-byte records in one go, through zwrite (save) or fwrite (Data); 1
 /// if everything went out
@@ -663,11 +545,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zi
 }
 
 /// Comparador: gravar duas vezes duplicaria a tabela no arquivo.
-// ponytail: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_write_staff_extra` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_write_staff_extra(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_WRITE_STAFF_EXTRA)(stream, use_zip, registros, n)
-}
+// simplification: só a original; a prova é o .qst (a tabela gravada) e o ramo da cópia no modo Rust.
 
 /// reads the officials.dat table (id 7) of 43-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 1 (other: box and exit); 1 if everything came
@@ -696,11 +574,7 @@ pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: 
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_officials` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_officials(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_OFFICIALS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the colour.dat table (id 2) of 58-byte records in one go, through zread (save) or fread (Data), with the entry
 /// version 1 (other: box and exit); 1 if everything came
@@ -729,11 +603,7 @@ pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i3
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_colours` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_colours(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COLOURS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the first_names.dat, second_names.dat and common_names.dat tables (ids 13, 14, 15) of 60-byte records in one
 /// go, through zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -763,11 +633,7 @@ pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_names` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_names(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NAMES)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the club.dat and nat_club.dat table (ids 0, 1) of 581-byte records in one go, through zread (save) or fread
 /// (Data), with the entry version 2, and turns reputation 0 into 1; version 1: the 0x54dc90 converter (other: box and
@@ -813,11 +679,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_clubs` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_clubs(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CLUBS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the club_comp.dat and nation_comp.dat table (ids 12, 16) of 107-byte records in one go, through zread (save)
 /// or fread (Data), with the entry version 2; version 1: the 0x54ffd0 converter (other: box and exit); 1 if everything
@@ -853,11 +715,7 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_comps` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_comps(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMPS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the non-player table of staff.dat (id 9; the community map calls it players) of 68-byte records in one go,
 /// through zread (save) or fread (Data), with the entry version 2; version 1: the 0x54e9a0 converter (other: box and
@@ -894,11 +752,7 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_players` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_players(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_PLAYERS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the player table of staff.dat (id 10; the community map calls it non_players) of 70-byte records in one go,
 /// through zread (save) or fread (Data), with the entry version 2; version 1: the 0x54f150 converter (other: box and
@@ -935,11 +789,7 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_non_players` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_non_players(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NON_PLAYERS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the staff.dat (staff, 110-byte file version: the save and community databases) table (id 6) of 110-byte
 /// records in one go, through zread (save) or fread (Data), with the entry version 2 (other: box and exit); 1 if
@@ -970,11 +820,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32,
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
-/// Comparer for `db_files_read_staff` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_staff(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
 
 /// reads the staff preferences table (id 22: the save and community databases) of 52-byte records in one go, through
 /// zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -1004,11 +850,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
-/// Comparer for `db_files_read_staff_extra` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_staff_extra(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_EXTRA)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é a carga do save (a tabela lida vira o banco do jogo) e o ramo da cópia.
 
 /// reads the continent.dat table (id 3) of 198-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 1 (other: box and exit); 1 if everything came
@@ -1037,11 +879,7 @@ pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip:
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_continents` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_continents(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CONTINENTS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the nation.dat table (id 4) of 290-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 2 (other: box and exit); 1 if everything came
@@ -1070,11 +908,7 @@ pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i3
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_nations` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_nations(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NATIONS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the city.dat table (id 21) of 56-byte records in one go, through zread (save) or fread (Data), with the entry
 /// version 1 to 2 (other: box and exit); 1 if everything came
@@ -1103,11 +937,7 @@ pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_cities` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_cities(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CITIES)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the stadium.dat table (id 5) of 78-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 1 (other: box and exit); 1 if everything came
@@ -1136,11 +966,7 @@ pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_stadiums` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_stadiums(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STADIUMS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the staff.dat (staff, 157-byte file version) table (id 6) of 157-byte records in one go, through zread (save)
 /// or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -1169,11 +995,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_staff_v1` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_staff_v1(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_V1)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the staff_history.dat table (id 17) of 17-byte records in one go, through zread (save) or fread (Data), with
 /// the entry version 1 (other: box and exit); 1 if everything came
@@ -1202,11 +1024,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_z
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_staff_history` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_staff_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_HISTORY)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the club_comp_history.dat and nation_comp_history.dat table (id 19, 20) of 26-byte records in one go, through
 /// zread (save) or fread (Data), with the entry version 1 (other: box and exit); 1 if everything came
@@ -1235,11 +1053,7 @@ pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zi
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_comp_history` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_comp_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMP_HISTORY)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the staff_comp.dat table (id 11) of 101-byte records in one go, through zread (save) or fread (Data), with the
 /// entry version 2 (other: box and exit); 1 if everything came
@@ -1268,11 +1082,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_staff_comps` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_staff_comps(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMPS)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads the staff_comp_history.dat table (id 18) of 58-byte records in one go, through zread (save) or fread (Data),
 /// with the entry version 1 (other: box and exit); 1 if everything came
@@ -1301,11 +1111,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
 }
 
 /// Comparador: ler duas vezes avançaria o arquivo (e a tabela é a que a carga usa).
-// ponytail: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
-/// Comparer for `db_files_read_staff_comp_history` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_staff_comp_history(stream: usize, use_zip: i32, registros: usize, entrada: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMP_HISTORY)(stream, use_zip, registros, entrada)
-}
+// simplification: só a original; a prova é o .qst (a tabela lida vai para o save) e o ramo da cópia no modo Rust.
 
 /// reads version 1 club_comp.dat / nation_comp.dat field by field (104 bytes on file for 107-byte records, holes at
 /// +0x37 and +0x52), the reputation in one byte; 0 at the first read that does not come, 1 if everything came
@@ -1340,31 +1146,3 @@ pub(crate) unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i
     1
 }
 
-/// Comparer for `db_files_read_comps_v1` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    let o = original_fn::<unsafe extern "C" fn(usize, i32, usize, u32) -> i32>(IDX_DB_FILES_READ_COMPS_V1);
-    if use_zip != 0 {
-        return o(stream, use_zip, registros, n);
-    }
-    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FTELL);
-    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let pos = ftell(stream);
-    let (mut fim_o, mut fim_r) = (0, 0);
-    let (r, x, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(registros, n as usize * 107)],
-        || {
-            let r = o(stream, use_zip, registros, n);
-            fim_o = ftell(stream);
-            r
-        },
-        || {
-            fseek(stream, pos, 0);
-            let r = db_files_read_comps_v1(stream, use_zip, registros, n);
-            fim_r = ftell(stream);
-            r
-        });
-    PLACAR.registrar(igual && r == x && fim_o == fim_r, || {
-        let dif = mo.0.first().zip(mr.0.first()).and_then(|(a, b)| a.1.iter().zip(&b.1).position(|(p, q)| p != q));
-        format!("db_files_read_comps_v1(n {}) original={} rust={} arquivo em {} x {} (de {}), 1º byte diferente {:?}", n, r, x, fim_o, fim_r, pos, dif)
-    });
-    r
-}

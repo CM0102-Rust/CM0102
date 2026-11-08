@@ -91,27 +91,6 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, mo
     entregar(read_usize(G_NEWS), nt, clube);
 }
 
-/// Comparer for `post_fine_reaction_news` (comparison mode: see the header of motor.rs).
-///
-/// [pt] O comparador em ensaio: a cópia para antes da notícia; a original roda a partir do mesmo estado ([0xae1080] e
-/// sorteio). Sem notícia, tudo igual; com notícia (que sorteia e vai às caixas), só [0xae1080].
-pub(crate) unsafe extern "stdcall" fn comparar_post_fine_reaction_news(jogador: usize, motivo: u32, reacao: u32, prazo: u32, efeitos: u32) {
-    let o = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32, u32, u32)>(IDX_POST_FINE_REACTION_NEWS);
-    let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4)];
-    regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    let antes = crate::comparacao::Memoria::ler(&regioes);
-    FINE_NEWS_DRY_RUN = true;
-    FINE_NEWS_WOULD_BUILD = false;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| post_fine_reaction_news(jogador, motivo, reacao, prazo, efeitos)));
-    FINE_NEWS_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&regioes);
-    antes.escrever();
-    o(jogador, motivo, reacao, prazo, efeitos);
-    let mo = crate::comparacao::Memoria::ler(&regioes);
-    let montaria = FINE_NEWS_WOULD_BUILD;
-    let igual = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
-    PLACAR.registrar(igual, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", jogador, montaria, mo, mr));
-}
 
 /// player and coach with a record and nation, player with a club: news 0x1394 with the outcome and draw(5)
 /// Original: `post_coach_fine_feedback_news` (0x5a7f20, Fine.cpp, stdcall, ret 0xc).
@@ -141,10 +120,6 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usi
     entregar(read_usize(G_NEWS), nt, read_usize(jogador + 0x39));
 }
 
-// ponytail: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
+// simplification: a notícia sorteia e vai às caixas dos técnicos (aloca): só a original, com a cópia levando o ramo; sem
 // notícia as duas não fazem nada.
-/// Comparer for `post_coach_fine_feedback_news` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_post_coach_fine_feedback_news(jogador: usize, treinador: usize, desfecho: u32) {
-    original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_POST_COACH_FINE_FEEDBACK_NEWS)(jogador, treinador, desfecho)
-}
 

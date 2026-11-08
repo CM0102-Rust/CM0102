@@ -150,18 +150,8 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_north(this: usize, ano:
     bra_reg_goias_construct_state_league(this, ano, registro, &NORTH_CHAMPIONSHIP, 7, true, "cqt_2 norte novo") // cqt2: a disciplina e as posições previstas do Norte
 }
 
-/// Comparer for `construct_bra_reg_goias` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_goias(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_GOIAS);
-    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_goias", this, ano, registro, &GOIANO_STATE_CHAMPIONSHIP, || o(this, ano, registro))
-}
 
 
-/// Comparer for `construct_bra_reg_north` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_north(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTH);
-    bra_reg_goias_compare_state_league_ctor("construct_bra_reg_north", this, ano, registro, &NORTH_CHAMPIONSHIP, || o(this, ano, registro))
-}
 
 
 
@@ -212,29 +202,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_advance_stage_436030(this: 
 
 
 
-/// Comparer for `bra_reg_goias_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_start_new_season(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_START_NEW_SEASON);
-    compare_state_league_new_season("bra_reg_goias_start_new_season", this, || o(this))
-}
 
-/// Comparer for `bra_reg_goias_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_advance_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GOIAS_ADVANCE_STAGE);
-    compare_state_league_advance_stage("bra_reg_goias_advance_stage", this, || o(this))
-}
 
-/// Comparer for `bra_reg_goias_start_new_season_435e80` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_start_new_season_435e80(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_START_NEW_SEASON_435E80);
-    compare_state_league_new_season("bra_reg_goias_start_new_season_435e80", this, || o(this))
-}
 
-/// Comparer for `bra_reg_goias_advance_stage_436030` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_advance_stage_436030(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GOIAS_ADVANCE_STAGE_436030);
-    compare_state_league_advance_stage("bra_reg_goias_advance_stage_436030", this, || o(this))
-}
 
 
 
@@ -264,7 +234,7 @@ pub(crate) unsafe fn bra_reg_goias_create_state_league_table(this: usize, n: i16
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if is_in_state_league(clube, g) {
-            // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
+            // simplification: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
@@ -333,18 +303,8 @@ pub(crate) unsafe fn bra_reg_goias_compare_state_league_table(nome: &str, this: 
     r
 }
 
-/// Comparer for `bra_reg_goias_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_CREATE_TABLE);
-    bra_reg_goias_compare_state_league_table("bra_reg_goias_create_table", this, 0xe, KEY_CLUB_COMP_BRAZILIAN_GOIAS_STATE_CHAMPIONSHIP, || o(this))
-}
 
 
-/// Comparer for `bra_reg_goias_create_table_435d80` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_create_table_435d80(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_CREATE_TABLE_435D80);
-    bra_reg_goias_compare_state_league_table("bra_reg_goias_create_table_435d80", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_NORTH_STATE_CHAMPIONSHIP, || o(this))
-}
 
 
 
@@ -444,19 +404,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -
     1
 }
 
-/// Comparer for `bra_reg_goias_set_up_rules` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
-/// saídas do calendário; a devolução.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules(this: usize) -> u32 {
-    let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_SET_UP_RULES)(this), || {
-        goiano_rules(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("bra_reg_goias_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}
 
 
 
@@ -473,16 +420,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules_665140(this: u
     1
 }
 
-/// Comparador: como o do Goiano.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_set_up_rules_665140(this: usize) -> u32 {
-    let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_SET_UP_RULES_665140)(this), || {
-        j2_rules(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("bra_reg_goias_set_up_rules_665140({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}
 
 /// Goias: after the round robin, the top 8 go to the quarter-finals: 1st v 8th, 3rd v 6th, 7th v 2nd, 5th v 4th (the
 /// seeds are the positions [inference: two legs])
@@ -494,8 +431,3 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_goias_create_knockout_stage(this:
     create_knockout_from_table(this, &[0, 7, 2, 5, 6, 1, 4, 3], &[0, 7, 2, 5, 6, 1, 4, 3], 0x98ae90, 0x214, 0x22c, "cqn_9 goiano"); // cqn9: 1º × 8º, 3º × 6º, 7º × 2º, 5º × 4º Goiano
 }
 
-/// Comparer for `bra_reg_goias_create_knockout_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_goias_create_knockout_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_GOIAS_CREATE_KNOCKOUT_STAGE);
-    bra_reg_gaucho_compare_knockout_from_table("bra_reg_goias_create_knockout_stage", this, &[0, 7, 2, 5, 6, 1, 4, 3], || o(this))
-}

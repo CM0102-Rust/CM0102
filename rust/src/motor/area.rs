@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let colunas = *((area + 0xbab) as *const u8);
     let linhas = *((area + 0xbac) as *const u8);
     if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
-        // ponytail: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
+        // simplification: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
     crate::comparacao::ramo("telas organizar a area");
@@ -126,26 +126,6 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     }
 }
 
-/// Comparer for `area_layout` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
-/// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
-pub(crate) unsafe extern "thiscall" fn comparar_area_layout(area: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT);
-    let marcas = *((area + 0x18) as *const u32);
-    let colunas = *((area + 0xbab) as *const u8);
-    let linhas = *((area + 0xbac) as *const u8);
-    if marcas & 0x80000 == 0 && colunas != 0 && (colunas > 30 || (linhas != 0 && linhas > 30)) {
-        return o(area);
-    }
-    let mut reg = vec![(area, 0xbf1), (G_ACTIVE_AREA_SCROLLBAR, 4)];
-    let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
-    if dono != -1 {
-        reg.push((area_item_at(*((area + 0x208) as *const usize), dono) + 0x7c, 2));
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(area), || area_layout(area));
-    PLACAR.registrar(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
-}
 
 /// initialises the area: rectangle clamped to the screen, fields, cleared scrollbar and the column and row weights; the
 /// visible rows clamped at 30 (the grid size), the rest goes to the scroll bar
@@ -233,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn init(
 /// 1920 × 1080 o relatório de uma partida antiga pede mais; travadas em 30, o resto vai para a barra de
 /// rolagem, como em 800 × 600 (onde nunca passa de 30 e a trava não muda nada). Fica no Area::init porque
 /// o começo do Display::add_area (0x55fba0) já é desvio do exe de 1080 (escala das coordenadas).
-// ponytail: as 30 linhas se espalham pela altura da área (linhas mais altas em 1080); layout pela
+// simplification: as 30 linhas se espalham pela altura da área (linhas mais altas em 1080); layout pela
 // resolução de verdade fica para a modernização (PLANO_LIMITE.md); a original e a cópia recebem a trava
 // igual no comparador, então a comparação segue valendo
 /// Caps an area grid's row count (low byte) at 30, the fixed array size; extra rows go to the scroll bar.
@@ -246,20 +226,6 @@ pub(crate) fn cap_area_rows(linhas: u32) -> u32 {
     }
 }
 
-/// Comparer for `init` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_init(
-    area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
-    pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
-) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, i32, i32, i32, u32, usize, u32, usize, u32, u32, u32)>(IDX_INIT);
-    let reg = [(area, 0xbcb + 0xff)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
-        &reg,
-        || o(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, cap_area_rows(linhas), pesos_linhas, marcas, cor, dono),
-        || init(area, areas, itens, indice, x1, y1, x2, y2, colunas, pesos_colunas, linhas, pesos_linhas, marcas, cor, dono),
-    );
-    PLACAR.registrar(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
-}
 
 /// draws the area: the panel, the grid lines or each visible widget in its cell, and the scrollbar
 /// Original: `Area::draw` (0x402e70, Area.cpp, thiscall).
@@ -286,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *imagem == 0 {
         *imagem = guardar(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
-    // ponytail: a original empurra edx com a cor em dx e, em cima, sobra de chamadas anteriores
+    // simplification: a original empurra edx com a cor em dx e, em cima, sobra de chamadas anteriores
     // (imprevisível); a cor é u16 para o painel, aqui estendida com zero
     let painel: unsafe extern "C" fn(i32, i32, i32, i32, u32, u32, u32) = core::mem::transmute(FN_GUI_DRAW_PANEL);
     let cor = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
@@ -359,11 +325,7 @@ pub(crate) unsafe fn position_area_item(area: usize, item: usize, d: i32) {
     write_i32_at(item, 0x1c, y2);
 }
 
-// ponytail: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
+// simplification: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
 // duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
 // (contador "telas desenhar a area" no ddraw.log)
-/// Comparer for `draw` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_draw(area: usize, redesenhar: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redesenhar)
-}
 

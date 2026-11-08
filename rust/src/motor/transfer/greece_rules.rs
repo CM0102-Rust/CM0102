@@ -22,13 +22,6 @@ pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows(this: 
     set_transfer_windows(this, 2, &GREECE_TRANSFER_WINDOWS, 0x9cdbc8, 0x51);
 }
 
-/// Comparer for `greece_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS);
-    compare_transfer_rules_ctor("greece_rules_init_transfer_windows", this, || o(this), |s| greece_rules_init_transfer_windows(s));
-}
 
 /// As janelas da Rússia: duas janelas, de 15 de dezembro a 24 de março (andando para a quinta-feira [inferência]); de 28 de junho (andando para a terça-feira [inferência]) a 4 de agosto.
 pub(crate) const RUSSIA_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
@@ -49,13 +42,6 @@ pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_7ec7e0
     set_transfer_windows(this, 2, &RUSSIA_TRANSFER_WINDOWS, 0xa7ad38, 0x4d);
 }
 
-/// Comparer for `greece_rules_init_transfer_windows_7ec7e0` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_7ec7e0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_7EC7E0);
-    compare_transfer_rules_ctor("greece_rules_init_transfer_windows_7ec7e0", this, || o(this), |s| greece_rules_init_transfer_windows_7ec7e0(s));
-}
 
 /// As janelas da Bélgica: três janelas, de 1º de junho a 30 de junho; de 1º de junho a 31 de dezembro; de 1º de junho a 31 de março.
 pub(crate) const BELGIUM_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
@@ -77,11 +63,4 @@ pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows_424c00
     set_transfer_windows(this, 3, &BELGIUM_TRANSFER_WINDOWS, 0x989e34, 0x53);
 }
 
-/// Comparer for `greece_rules_init_transfer_windows_424c00` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_greece_rules_init_transfer_windows_424c00(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_GREECE_RULES_INIT_TRANSFER_WINDOWS_424C00);
-    compare_transfer_rules_ctor("greece_rules_init_transfer_windows_424c00", this, || o(this), |s| greece_rules_init_transfer_windows_424c00(s));
-}
 

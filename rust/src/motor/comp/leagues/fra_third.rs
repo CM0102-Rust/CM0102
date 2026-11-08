@@ -246,11 +246,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, fa
     create_league_schedule(this, fase, rodadas, extra, liga, &FRENCH_THIRD_LEAGUE)
 }
 
-/// Comparer for `fra_third_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_THIRD_CREATE_SCHEDULE);
-    compare_league_schedule("fra_third_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_third_create_schedule(this, fase, r, e, l))
-}
 
 
 
@@ -264,11 +259,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule_5bd920(this: us
     create_league_schedule(this, fase, rodadas, extra, liga, &LOWER_DIVISION_LEAGUE)
 }
 
-/// Comparer for `fra_third_create_schedule_5bd920` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule_5bd920(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_THIRD_CREATE_SCHEDULE_5BD920);
-    compare_league_schedule("fra_third_create_schedule_5bd920", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| fra_third_create_schedule_5bd920(this, fase, r, e, l))
-}
 
 /// the National: 4 go up in 2001 and 3 afterwards, 4 go down (no league below in the game); 3 substitutes and 3
 /// substitutions
@@ -282,11 +272,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u3
     fra_first_apply_league_rules(this, &national_division_rules(this))
 }
 
-/// Comparer for `fra_third_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_third_set_up_rules(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_SET_UP_RULES);
-    fra_first_compare_league_rules("fra_third_set_up_rules", this, national_division_rules(this), || o(this), || fra_third_set_up_rules(this))
-}
 
 /// the National has 20 clubs; prize fund of 20,000 per place; TV pays 200,000 to each club
 /// Original: `FraThird::create_table` (0x5c05d0, fra_third.cpp, thiscall, ret 0).
@@ -303,11 +288,6 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u3
     1
 }
 
-/// Comparer for `fra_third_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_THIRD_CREATE_TABLE);
-    fra_first_compare_league_table("fra_third_create_table", this, 0x14, KEY_CLUB_COMP_FRENCH_NATIONAL, Some(0x4e20), || o(this))
-}
 
 /// the French third division (the National): discipline 0xc, only the league
 /// Original: `FraThird::FraThird` (0x5bfb40, fra_third.cpp, thiscall, ret 8).
@@ -318,8 +298,3 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_third(this: usize, ano: u32
     construct_division_league(this, ano, registro, &FRENCH_THIRD_DIVISION)
 }
 
-/// Comparer for `construct_fra_third` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_THIRD);
-    compare_division_league_ctor("construct_fra_third", this, ano, registro, &FRENCH_THIRD_DIVISION, || o(this, ano, registro))
-}

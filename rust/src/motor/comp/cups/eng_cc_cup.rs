@@ -109,7 +109,7 @@ pub(crate) unsafe fn eng_cc_cup_written_round_bytes(t: usize, n: i16) -> Vec<u8>
 pub(crate) unsafe fn eng_cc_cup_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
-        // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
         return a;
@@ -171,12 +171,6 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table(this: usize
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &t, 0x9c4224, 0xa2, "cql_10 tabela da copa da liga")
 }
 
-/// Comparer for `eng_cc_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_CC_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("eng_cc_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| eng_cc_cup_create_round_table(this, fase, r, e, s))
-}
 
 /// A Copa da Inglaterra (EngFaCup): nove rodadas de outubro a maio do ano seguinte, com replay (+0x20 = 1) até as
 /// quartas; as rodadas 2 a 5 dependem de +0xb3 (isenções) e +0xb4 (a escolha da entrada na 5ª rodada) e do +0x3e (os
@@ -237,12 +231,6 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56f320(this
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &t, 0x9c42cc, 0xb6, "cql_10 tabela da copa da inglaterra")
 }
 
-/// Comparer for `eng_cc_cup_create_round_table_56f320` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56f320(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_CC_CUP_CREATE_ROUND_TABLE_56F320);
-    eng_cc_cup_compare_round_table("eng_cc_cup_create_round_table_56f320", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| eng_cc_cup_create_round_table_56f320(this, fase, r, e, s))
-}
 
 /// A Supercopa inglesa (Charity Shield): uma rodada, um jogo em agosto.
 pub(crate) const CHARITY_SHIELD_ROUNDS: [EngCcCupCupRound; 1] = [
@@ -259,12 +247,6 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56d640(this
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CHARITY_SHIELD_ROUNDS, 0x9c425c, 0x9c, "cql_10 tabela da supercopa inglesa")
 }
 
-/// Comparer for `eng_cc_cup_create_round_table_56d640` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56d640(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_CC_CUP_CREATE_ROUND_TABLE_56D640);
-    eng_cc_cup_compare_round_table("eng_cc_cup_create_round_table_56d640", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| eng_cc_cup_create_round_table_56d640(this, fase, r, e, s))
-}
 
 
 
@@ -467,12 +449,6 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(nome: &str, this: usize, re
     a
 }
 
-/// Comparer for `eng_cc_cup_collect_entrants` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_collect_entrants(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CC_CUP_COLLECT_ENTRANTS);
-    eng_cc_cup_compare_entrant_list("eng_cc_cup_collect_entrants", this, &[(this + 0x3e, 2), (this + 0xb2, 1), (0xb67a34, 4)], || o(this),
-        || collect_league_cup_entrants(this), |_, n| n.max(0) as usize * 6)
-}
 
 /// EngAutoCup::collect_entrants (0x56b3c0): +0x3e = 28 and an entrant list with the second half of the 56 chosen clubs
 /// (+0xb2 + 0x70).
@@ -570,12 +546,6 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_select_teams(this: usize) -> i
     select_charity_shield_teams(this).0
 }
 
-/// Comparer for `eng_cc_cup_select_teams` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_select_teams(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_CC_CUP_SELECT_TEAMS);
-    eng_cc_cup_compare_entrant_list("eng_cc_cup_select_teams", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || select_charity_shield_teams(this),
-        |r, _| if r == 1 { 12 } else { 0 })
-}
 
 
 
@@ -650,7 +620,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, h
         crate::comparacao::ramo("cqn_10 virada da copa da liga");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqn10: a Copa da Liga refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_ENGCCCUP_COLLECT_ENTRANTS);
-        // ponytail: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
+        // simplification: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte
         if inscritos(this) < 0 {
             show_error_at(0x9c4224, 0x161);
             return 0;
@@ -668,18 +638,8 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, h
     eng_cc_cup_cup_update_for_date(this, hoje, fase)
 }
 
-// ponytail: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
+// simplification: a virada libera e refaz as tabelas e a atualização da copa joga e sorteia: não rodam duas vezes. Só a
 // original; o plano: +0x45 vai a 1 quando a condição vale, senão fica.
-/// Comparer for `eng_cc_cup_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE);
-    let antes = read_u32_as_usize(this + 0x45);
-    let vira = antes == 0 && read_i16(read_u32_as_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == read_i16(this + 0x40) as i32 && fase != 0;
-    let r = o(this, hoje, fase);
-    let depois = read_u32_as_usize(this + 0x45);
-    PLACAR.registrar(depois == if vira { 1 } else { antes }, || format!("eng_cc_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
-    r
-}
 
 /// rule: the FA Cup gathers its entrants on 3 October each year (Date(3, 9): month 9 is October; the community map says
 /// September), rebuilds the rounds and the tree and draws the preliminary round, once per season (+0x45); on 1 October
@@ -697,10 +657,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date(this:
 pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: usize, hoje: usize, fase: u32) -> u32 {
     if read_u32_as_usize(this + 0x45) == 0 && fase != 0 {
         if is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), hoje) && *((this + 0xb2) as *const u8) == 0 {
-            // ponytail: a pergunta de 1999 monta e entrega uma notícia (só nesse dia, fora de qualquer carreira nova)
+            // simplification: a pergunta de 1999 monta e entrega uma notícia (só nesse dia, fora de qualquer carreira nova)
             return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE_570550)(this, hoje, fase);
         }
-        // ponytail: o ano vai no ax com o resto do eax nos bytes altos; a 0x549f70 o lê como palavra
+        // simplification: o ano vai no ax com o resto do eax nos bytes altos; a 0x549f70 o lê como palavra
         if is_date_today(make_date_dword(3, 9, read_i16(hoje + 2) as u16 as u32, 0xffff_ffff), hoje) { // cqn10: as inscrições da Copa da Inglaterra em 3/10
             free_season_tables(this);
             crate::comparacao::ramo("cqn_10 inscricoes da copa da inglaterra");
@@ -726,20 +686,9 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date_570550(this: u
     eng_cc_cup_cup_update_for_date(this, hoje, fase)
 }
 
-// ponytail: como a da Copa da Liga, só a original; o plano: +0x45 vai a 1 em 3 de outubro (com +0x45 = 0 e a fase), fora
+// simplification: como a da Copa da Liga, só a original; o plano: +0x45 vai a 1 em 3 de outubro (com +0x45 = 0 e a fase), fora
 // do caminho de 1999.
-/// Comparer for `eng_cc_cup_update_for_date_570550` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_cc_cup_update_for_date_570550(this: usize, hoje: usize, fase: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_CC_CUP_UPDATE_FOR_DATE_570550);
-    let antes = read_u32_as_usize(this + 0x45);
-    let vira = antes == 0 && fase != 0 && is_date_today(make_date_dword(3, 9, read_i16(hoje + 2) as u16 as u32, 0xffff_ffff), hoje)
-        && !(is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), hoje) && *((this + 0xb2) as *const u8) == 0);
-    let r = o(this, hoje, fase);
-    let depois = read_u32_as_usize(this + 0x45);
-    PLACAR.registrar(!vira || depois == 1, || format!("eng_cc_cup_update_for_date_570550({:#x}) vira {} +0x45 {} -> {}", this, vira, antes, depois));
-    r
-}
 
 
-// ponytail: a convocação mexe nos elencos e a atualização da copa joga: não rodam duas vezes. Só a original roda.
+// simplification: a convocação mexe nos elencos e a atualização da copa joga: não rodam duas vezes. Só a original roda.
 

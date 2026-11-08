@@ -435,28 +435,7 @@ pub(crate) unsafe fn compare_champion_update(nome: &str, this: usize, clube: usi
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
-/// Comparer for `add_league_champions_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_league_champions_record(this: usize, clube: usize, comp: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_LEAGUE_CHAMPIONS_RECORD);
-    if clube == 0 || comp == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(comp))) == 0 {
-        return o(this, clube, comp);
-    }
-    let t = read_usize(clube + club::MANAGER);
-    let notas = if t != 0 && read_usize(t + 0x69) != 0 { (read_usize(t + 0x69) + 8, 6) } else { (clube + club::REPUTATION, 2) };
-    compare_champion_update("add_league_champions_record", this, clube, notas, true, || o(this, clube, comp),
-        || add_league_champions_record(this, clube, comp));
-}
 
-/// Comparer for `add_cup_winners_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_cup_winners_record(this: usize, clube: usize, jogo: usize, partida: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_WINNERS_RECORD);
-    if clube == 0 || jogo == 0 || partida == 0 {
-        return o(this, clube, jogo, partida);
-    }
-    let notas = (partida + 0x188 + 0x625 * (read_usize(jogo + 0x20) == clube) as usize, 6);
-    compare_champion_update("add_cup_winners_record", this, clube, notas, false, || o(this, clube, jogo, partida),
-        || add_cup_winners_record(this, clube, jogo, partida));
-}
 
 /// the human manager record (one of the 16; else the person itself, as in the original) cleared, with −1 in the slots
 /// Original: `Staff_Records::clear_human_manager_record` (0x86fc70, staff_records.cpp, thiscall).
@@ -480,23 +459,6 @@ pub(crate) unsafe extern "thiscall" fn clear_human_manager_record(this: usize, p
     }
 }
 
-/// Comparer for `clear_human_manager_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelo registro (os 0xd2 bytes que a rotina zera).
-pub(crate) unsafe extern "thiscall" fn comparar_clear_human_manager_record(this: usize, pessoa: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_HUMAN_MANAGER_RECORD);
-    let id = read_i32(pessoa);
-    let lim = read_i32(G_STAFF_COUNT);
-    let r = if id >= lim.wrapping_sub(0x10) && id < lim {
-        let vaga = id.wrapping_sub(lim).wrapping_add(read_i32(G_NON_PLAYER_COUNT)).wrapping_add(0x10);
-        read_usize(this + 8).wrapping_add((vaga as usize).wrapping_mul(0xd2))
-    } else {
-        pessoa
-    };
-    let ((), (), igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, pessoa),
-        || clear_human_manager_record(this, pessoa));
-    PLACAR.registrar(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", pessoa, mo, mr));
-}
 
 
 
@@ -651,26 +613,6 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
     }
 }
 
-/// Comparer for `record_match_result` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador lado a lado nos dois registros (0xd2 bytes), criados antes pela 0x86f5b0 como a original faria (a segunda
-/// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
-pub(crate) unsafe extern "thiscall" fn comparar_record_match_result(this: usize, p: usize, m: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RESULT);
-    if *((p + 0x3a) as *const u8) == 1 {
-        return o(this, p, m);
-    }
-    let a = club_manager_record(this, read_usize(p + 0x1c));
-    let v = club_manager_record(this, read_usize(p + 0x20));
-    let mut reg = Vec::new();
-    for r in [a, v] {
-        if r != 0 {
-            reg.push((r, 0xd2));
-        }
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, p, m), || record_match_result(this, p, m));
-    PLACAR.registrar(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
-}
 
 /// at the end of the league, each club's final position in its manager's history
 /// Original: `Staff_Records::add_league_finish_records` (0x86a070, staff_records.cpp, thiscall).
@@ -700,11 +642,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, li
     }
 }
 
-// ponytail: só grava o histórico no arquivo (não roda duas vezes): só a original; a cópia leva o ramo.
-/// Comparer for `add_league_finish_records` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_league_finish_records(this: usize, liga: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_LEAGUE_FINISH_RECORDS)(this, liga)
-}
+// simplification: só grava o histórico no arquivo (não roda duas vezes): só a original; a cópia leva o ramo.
 
 /// O ensaio do comparador da 0x86dc30: a cópia sem o histórico (arquivo).
 pub(crate) static mut SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: bool = false;
@@ -738,32 +676,6 @@ pub(crate) unsafe extern "thiscall" fn add_supporters_player_of_year_record(this
     }
 }
 
-/// Comparer for `add_supporters_player_of_year_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador em ensaio: a cópia sem o histórico e a original a partir do mesmo estado (sorteio, as pessoas favoritas e
-/// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
-/// só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_add_supporters_player_of_year_record(this: usize, pessoa: usize, clube: usize, a: u32, b: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_ADD_SUPPORTERS_PLAYER_OF_YEAR_RECORD);
-    if pessoa == 0 || clube == 0 {
-        return o(this, pessoa, clube, a, b);
-    }
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((clube + club::FAV_STAFF1, 0x18));
-    let pref = read_usize(pessoa + staff::STAFF_PREFERENCES);
-    if pref != 0 {
-        reg.push((pref + 4, 0x18));
-    }
-    let antes = crate::comparacao::Memoria::ler(&reg);
-    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
-    crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| add_supporters_player_of_year_record(this, pessoa, clube, a, b)));
-    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
-    o(this, pessoa, clube, a, b);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", pessoa, clube, mo, mr));
-}
 
 
 
@@ -937,19 +849,7 @@ pub(crate) unsafe fn compare_cup_placed(nome: &str, clube: usize, jogo: usize, p
     PLACAR.registrar(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", nome, clube, jogo, mo, mr));
 }
 
-/// Comparer for `add_cup_runners_up_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_cup_runners_up_record(this: usize, clube: usize, jogo: usize, partida: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_RUNNERS_UP_RECORD);
-    compare_cup_placed("add_cup_runners_up_record", clube, jogo, partida, || o(this, clube, jogo, partida),
-        || add_cup_runners_up_record(this, clube, jogo, partida))
-}
 
-/// Comparer for `add_cup_third_place_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_THIRD_PLACE_RECORD);
-    compare_cup_placed("add_cup_third_place_record", clube, jogo, partida, || o(this, clube, jogo, partida),
-        || add_cup_third_place_record(this, clube, jogo, partida))
-}
 
 /// Copies date src into dst (0x417c10).
 ///
@@ -1066,34 +966,6 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, te
     append_club_history_by_id(this, read_usize(clube), &e3);
 }
 
-/// Comparer for `record_manager_job_change` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
-/// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
-/// 0x54cdb0). Nulos: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_record_manager_job_change(this: usize, tecnico: usize, clube: usize, contratado: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RECORD_MANAGER_JOB_CHANGE);
-    if clube == 0 || tecnico == 0 {
-        return o(this, tecnico, clube, contratado);
-    }
-    let mut reg = vec![(G_DAYS_SINCE_SCRATCH_DATE, 8usize)];
-    if is_national_team(clube) == 0 || contratado as u8 == 1 {
-        let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
-        let r = registro(this, tecnico, 1);
-        if r != 0 {
-            reg.push((r, 0xd2));
-        }
-    }
-    let antes = crate::comparacao::Memoria::ler(&reg);
-    CUP_PLACED_CLUB_DRY_RUN = true;
-    record_manager_job_change(this, tecnico, clube, contratado);
-    CUP_PLACED_CLUB_DRY_RUN = false;
-    let mr = crate::comparacao::Memoria::ler(&reg);
-    antes.escrever();
-    o(this, tecnico, clube, contratado);
-    let mo = crate::comparacao::Memoria::ler(&reg);
-    PLACAR.registrar(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", tecnico, clube, contratado as u8, mo, mr));
-}
 
 
 
@@ -1122,12 +994,8 @@ pub(crate) unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pess
     append_person_history_by_id(true, this, read_u32_as_usize(pessoa), &e);
 }
 
-// ponytail: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
+// simplification: o histórico vai para o arquivo (não roda duas vezes) e a cópia não grava mais nada: só a original; a
 // cópia leva o ramo.
-/// Comparer for `add_team_of_year_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_team_of_year_record(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(IDX_ADD_TEAM_OF_YEAR_RECORD)(this, pessoa, clube, premio, a, b)
-}
 
 /// Returns the club manager's points record from G_STAFF_RECORDS (0x86f5b0, creating it), or 0 without a manager (uses
 /// G_STAFF_RECORDS instead of this).
@@ -1163,14 +1031,7 @@ pub(crate) unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a:
     read_i32(rb + 0xba).wrapping_sub(read_i32(ra + 0xba)) // cps10: mais pontos primeiro
 }
 
-// ponytail: a 0x86f5b0 cria o registro que falta; a original roda antes e a cópia só acha os que ela criou.
-/// Comparer for `staff_records_compare_clubs_by_manager_points` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STAFF_RECORDS_COMPARE_CLUBS_BY_MANAGER_POINTS)(a, b);
-    let n = staff_records_compare_clubs_by_manager_points(a, b);
-    PLACAR.registrar(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", read_u32_as_usize(a), read_u32_as_usize(b), r, n));
-    r
-}
+// simplification: a 0x86f5b0 cria o registro que falta; a original roda antes e a cópia só acha os que ela criou.
 
 
 
@@ -1187,7 +1048,7 @@ pub(crate) unsafe fn staff_records_add_i32(a: usize, v: i32) {
 /// New 0x40-byte history entry on the stack with Date() and the current game date copied in.
 ///
 /// [pt] Uma entrada de histórico na pilha: a data (0x54a110) com a data do jogo copiada (0x417c10).
-/// ponytail: os bytes que a original não grava (lixo da pilha dela) saem zerados aqui; só vão para o arquivo do
+/// simplification: os bytes que a original não grava (lixo da pilha dela) saem zerados aqui; só vão para o arquivo do
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
 pub(crate) unsafe fn dated_history_entry() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
@@ -1437,21 +1298,6 @@ pub(crate) unsafe fn promotion_regions(this: usize, clube: usize, acesso: bool) 
     Some(reg)
 }
 
-/// Comparer for `add_promotion_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelas regiões (a cópia sem os históricos em arquivo, que a original já gravou, e sem contar
-/// os sorteios); com renovação de contrato ou clube/competição nulos, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_add_promotion_record(this: usize, clube: usize, comp: usize, peso: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_ADD_PROMOTION_RECORD);
-    let reg = if clube != 0 && comp != 0 { promotion_regions(this, clube, true) } else { None };
-    let reg = match reg {
-        Some(r) => r,
-        None => return o(this, clube, comp, peso),
-    };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, comp, peso),
-        || crate::aleatorio::sem_contar(|| apply_promotion(this, clube, comp, peso, false)));
-    PLACAR.registrar(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
-}
 
 /// Adds v to a non-player rating i16, clamped to 1..10000.
 ///
@@ -1544,20 +1390,6 @@ pub(crate) unsafe extern "thiscall" fn add_relegation_record(this: usize, clube:
     apply_relegation(this, clube, comp, true)
 }
 
-/// Comparer for `add_relegation_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: como o do acesso (sem o registro de pontos, que o rebaixamento não usa).
-pub(crate) unsafe extern "thiscall" fn comparar_add_relegation_record(this: usize, clube: usize, comp: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_RELEGATION_RECORD);
-    let reg = if clube != 0 && comp != 0 { promotion_regions(this, clube, false) } else { None };
-    let reg = match reg {
-        Some(r) => r,
-        None => return o(this, clube, comp),
-    };
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, comp),
-        || crate::aleatorio::sem_contar(|| apply_relegation(this, clube, comp, false)));
-    PLACAR.registrar(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", clube, mo, mr));
-}
 
 /// Qualification of a club: person history entry (type 3, stage, base round) for the manager and adds reputation² ×
 /// weight points to his record (national team or club totals).
@@ -1579,7 +1411,7 @@ pub(crate) unsafe fn record_qualification(this: usize, clube: usize, comp: usize
     if r == 0 {
         return;
     }
-    // ponytail: a original faz pow(x, 2,0) (0x945ff0): x × x, exato para a importância (16 bits)
+    // simplification: a original faz pow(x, 2,0) (0x945ff0): x × x, exato para a importância (16 bits)
     let x = read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64;
     let pontos = match_pl_ftol(x * x * (peso as u8 as i8 as i32) as f64);
     staff_records_add_i32(r + 0xb6, pontos);
@@ -1606,24 +1438,6 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_for_round_record(this: usiz
     record_qualification(this, clube, comp, fase, rodada, peso, true)
 }
 
-/// Comparer for `add_qualified_for_round_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelo registro de pontos do técnico (criado antes, como a original faria), a cópia sem o
-/// histórico em arquivo; sem clube ou sem técnico, só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_add_qualified_for_round_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, peso: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    if clube == 0 || read_usize(clube + club::MANAGER) == 0 {
-        return o(this, clube, comp, fase, rodada, peso);
-    }
-    let registro: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
-    let r = registro(this, read_usize(clube + club::MANAGER), 1);
-    if r == 0 {
-        return o(this, clube, comp, fase, rodada, peso);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, clube, comp, fase, rodada, peso),
-        || record_qualification(this, clube, comp, fase, rodada, peso, false));
-    PLACAR.registrar(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", clube, peso as u8 as i8, mo, mr));
-}
 
 
 
@@ -1657,7 +1471,7 @@ pub(crate) unsafe fn stamp_game_date(a: *mut u8) {
 /// New 0x40-byte history entry on the stack with a constructed Date (0x54a110).
 ///
 /// [pt] Uma entrada de histórico na pilha com a data construída (0x54a110).
-/// ponytail: os bytes que a original não grava (lixo da pilha dela) saem zerados aqui; só vão para o arquivo do
+/// simplification: os bytes que a original não grava (lixo da pilha dela) saem zerados aqui; só vão para o arquivo do
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
 pub(crate) unsafe fn history_entry() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
@@ -1733,7 +1547,7 @@ pub(crate) unsafe fn for_each_swap_item(t: usize, mut f: impl FnMut(usize)) {
 /// [pt] O tipo do cargo é de jogador (0x53b620: 11, 12, 13 ou 15)?
 pub(crate) unsafe fn staff_records_is_player_job(cargo: u8) -> bool {
     let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
-    f(cargo as u32) != 0 // ponytail: a original empurra o registro com o byte no al; a 0x53b620 lê só o byte
+    f(cargo as u32) != 0 // simplification: a original empurra o registro com o byte no al; a 0x53b620 lê só o byte
 }
 
 /// Returns the manager's points record (FN_STAFF_RECORDS_GET_MANAGER_RECORD with create).
@@ -1897,31 +1711,6 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_records(this: usize, t: usiz
     record_transfer(this, t, true)
 }
 
-/// Comparer for `add_transfer_records` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pela global [0xae1080], o estado do sorteador (o valor da oferta pode pedir a avaliação), a
-/// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
-/// sem os históricos em arquivo, que a original já gravou, e sem contar os sorteios.
-pub(crate) unsafe extern "thiscall" fn comparar_add_transfer_records(this: usize, t: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_TRANSFER_RECORDS);
-    let (pessoa, _, vendedor, comprador) = transfer_parties(t);
-    let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
-    if read_usize(t + 4) != 0 {
-        reg.push((read_usize(t + 4), 0xe));
-    }
-    for (clube, cargo) in [(comprador, read_u8(t + 0x11)), (vendedor, read_u8(pessoa + staff::JOB_FOR_CLUB))] {
-        if clube != 0 && read_usize(clube + club::MANAGER) != 0 && staff_records_is_player_job(cargo) {
-            let r = staff_records_manager_record(this, read_usize(clube + club::MANAGER));
-            if r != 0 {
-                reg.push((r, 0xd2));
-            }
-        }
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, t),
-        || crate::aleatorio::sem_contar(|| record_transfer(this, t, false)));
-    PLACAR.registrar(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
-}
 
 /// Builds a dated person history entry with club id (+8), type (+0xc), competition id or −1 (+0xd) and the signed stage
 /// (+0x11).
@@ -1971,12 +1760,8 @@ pub(crate) unsafe extern "thiscall" fn add_knocked_out_record(this: usize, clube
     end_national_duty(clube, comp);
 }
 
-// ponytail: o histórico vai para o arquivo e as convocações acabam (não rodam duas vezes) e a cópia sem eles não mexe
+// simplification: o histórico vai para o arquivo e as convocações acabam (não rodam duas vezes) e a cópia sem eles não mexe
 // em nada: só a original; a cópia leva os ramos.
-/// Comparer for `add_knocked_out_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_knocked_out_record(this: usize, clube: usize, comp: usize, fase: u32, rodada: u32, x: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADD_KNOCKED_OUT_RECORD)(this, clube, comp, fase, rodada, x)
-}
 
 /// the manager history (type 7, with the round) and the end of the national team duty in the stored competition
 /// Original: `Staff_Records::add_failed_to_qualify_record` (0x86c1d0, staff_records.cpp, thiscall, ret 0x10).
@@ -1996,11 +1781,7 @@ pub(crate) unsafe extern "thiscall" fn add_failed_to_qualify_record(this: usize,
     end_national_duty(clube, comp);
 }
 
-// ponytail: como a eliminação: só a original.
-/// Comparer for `add_failed_to_qualify_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_failed_to_qualify_record(this: usize, clube: usize, comp: usize, fase: u32, x: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_ADD_FAILED_TO_QUALIFY_RECORD)(this, clube, comp, fase, x)
-}
+// simplification: como a eliminação: só a original.
 
 
 
@@ -2170,84 +1951,8 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
     melhor
 }
 
-/// Comparer for `staff_records_daily_update` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: os pontos vão ao hall da fama (0x5ef270, soma): roda só a original e confere o plano: na virada, os pontos
-/// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
-pub(crate) unsafe extern "thiscall" fn comparar_staff_records_daily_update(this: usize, data: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STAFF_RECORDS_DAILY_UPDATE);
-    let virada = date_month(data) as i32 != read_i16(this + 0x14) as u16 as i32 || read_i16(data + 2) != read_i16(this + 0x16);
-    let ano = read_i16(data) == 0;
-    let (m, a) = (date_month(data), read_i16(data + 2));
-    o(this, data);
-    if !virada && !ano {
-        return;
-    }
-    let mut ok = !virada || (read_i16(this + 0x14) == m && read_i16(this + 0x16) == a);
-    let mut primeiro = -1i32;
-    for k in 0..manager_record_count().max(0) {
-        let e = manager_record_at(this, k);
-        let certo = (!virada || (read_usize(e + 0xca) == 0 && read_usize(e + 0xce) == 0)) && (!ano || read_usize(e + 0xb6) == 0);
-        if !certo && primeiro < 0 {
-            primeiro = k;
-        }
-        ok &= certo;
-    }
-    PLACAR.registrar(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, ano, primeiro));
-}
 
-/// Comparer for `staff_records_end_season_for_nation` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
-/// quatro campos (+0xba, +0xbe, +0xc2, +0xc6) de cada registro.
-pub(crate) unsafe extern "thiscall" fn comparar_staff_records_end_season_for_nation(this: usize, entrada: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STAFF_RECORDS_END_SEASON_FOR_NATION);
-    let p = read_usize(entrada + 4);
-    if !(p != 0 && read_usize(p) == read_usize(KEY_CONTINENT_EUROPE)) && read_usize(entrada) == 0 {
-        return o(this, entrada);
-    }
-    let comp = read_usize(entrada);
-    let id = if comp != 0 { read_i32(comp) } else { -1 };
-    let n = manager_record_count().max(0);
-    let mut plano = Vec::with_capacity(n as usize);
-    for k in 0..n {
-        let s = manager_record_at(this, k) + 0xba;
-        let (mut liga, mut copa, mut cl, mut cc) = (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc));
-        if cl == id {
-            if cc == id {
-                cc = -1; // a copa somada à liga, que vai ao hall da fama e zera
-                copa = 0;
-            }
-            liga = 0;
-            cl = -1;
-        } else if cc == id {
-            copa = 0;
-            cc = -1;
-        }
-        plano.push((liga, copa, cl, cc));
-    }
-    o(this, entrada);
-    let errado = (0..n).find(|&k| {
-        let s = manager_record_at(this, k) + 0xba;
-        plano[k as usize] != (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc))
-    });
-    PLACAR.registrar(errado.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, errado));
-}
 
-/// Comparer for `find_manager_of_the_month` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
-pub(crate) unsafe extern "thiscall" fn comparar_find_manager_of_the_month(this: usize, indice: i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_FIND_MANAGER_OF_THE_MONTH);
-    let liga = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((indice as usize).wrapping_mul(4)));
-    if *((liga + 0x43) as *const u8) != 2 {
-        return o(this, indice);
-    }
-    let r = o(this, indice);
-    let n = find_manager_of_the_month(this, indice);
-    PLACAR.registrar(r == n, || format!("find_manager_of_the_month({}) original={:x} rust={:x}", indice, r, n));
-    r
-}
 
 /// sorts the clubs and keeps up to three whose manager has been in the job 28 weeks and has games in the record
 /// Original: `Staff_Records::get_manager_of_year_candidates` (0x86fab0, staff_records.cpp, thiscall, ret 8).
@@ -2287,18 +1992,6 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
     k
 }
 
-/// Comparer for `get_manager_of_year_candidates` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
-/// técnicos que a 0x86f5b0 cria na original já existem para a cópia).
-pub(crate) unsafe extern "thiscall" fn comparar_get_manager_of_year_candidates(this: usize, clubes: usize, n: u32) -> u8 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_MANAGER_OF_YEAR_CANDIDATES);
-    let k = (n as u16 as i16).max(0) as usize;
-    let reg = [(clubes, 4 * k), (G_SUB_WEEKS_RESULT_DATE, 8), (0xae24aa, 1)];
-    let (r, c, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clubes, n), || get_manager_of_year_candidates(this, clubes, n));
-    PLACAR.registrar(igual && r == c, || format!("get_manager_of_year_candidates({}) original={} rust={} {:x?} x {:x?}", k, r, c, mo, mr));
-    r
-}
 
 /// finds (or creates, or takes over) the manager's 210-byte record and updates the nations, the current spell and the
 /// longest and shortest spells
@@ -2419,30 +2112,6 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: u
     r
 }
 
-/// Comparer for `get_manager_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelo registro do técnico (e, quando a vaga é de outro, pelo registro que a original zera),
-/// pela devolução. Pessoa nula (a caixa) e o humano sem situação: só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_get_manager_record(this: usize, pessoa: usize, criar: u32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_MANAGER_RECORD);
-    if pessoa == 0 {
-        return o(this, pessoa, criar);
-    }
-    let Some(r) = manager_manager_manager_record(this, pessoa) else {
-        return o(this, pessoa, criar);
-    };
-    let mut reg = vec![(r, 0xd2)];
-    let dono = read_u32(r + 0x86) as i32;
-    if dono != -1 && dono != read_u32(pessoa) as i32 {
-        let z = (read_u32(this + 8) as usize).wrapping_add((read_u32(read_u32(pessoa + staff::NON_PLAYER) as usize) as usize).wrapping_mul(0xd2));
-        if z != r {
-            reg.push((z, 0xd2));
-        }
-    }
-    let (a, b, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(this, pessoa, criar), || get_manager_record(this, pessoa, criar));
-    PLACAR.registrar(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", pessoa, criar, a, b, mo, mr));
-    a
-}
 
 /// the free release histories: the club manager one (type 0x68) and the person one (type 0x67)
 /// Original: `Staff_Records::add_free_release_records` (0x86d800, staff_records.cpp, thiscall, ret 4).
@@ -2476,10 +2145,6 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, pes
     }
 }
 
-/// Comparer for `add_free_release_records` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_free_release_records(this: usize, pessoa: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_FREE_RELEASE_RECORDS)(this, pessoa)
-}
 
 /// the loan histories: the one of the receiving club manager (type 0x69) and the one of the person (type 0x6a)
 /// Original: `Staff_Records::add_loan_records` (0x86da20, staff_records.cpp, thiscall, ret 0xc).
@@ -2512,10 +2177,6 @@ pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, pessoa: usi
     }
 }
 
-/// Comparer for `add_loan_records` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_LOAN_RECORDS)(this, pessoa, de, clube)
-}
 
 /// the last offset of the person's history list (+4 of the pair at [+0xc] + 8 × id) = −1 (0x58f110)
 /// Original: `Staff_Records::rewind_staff_history` (0x86fb80, staff_records.cpp, thiscall, ret 4).
@@ -2533,18 +2194,6 @@ pub(crate) unsafe extern "thiscall" fn rewind_staff_history(this: usize, pessoa:
     sem_ultimo(read_usize(this), par, par + 4); // o último deslocamento
 }
 
-/// Comparer for `rewind_staff_history` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado pelo par da pessoa (8 bytes; a 0x58f110 só grava o segundo).
-pub(crate) unsafe extern "thiscall" fn comparar_rewind_staff_history(this: usize, pessoa: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REWIND_STAFF_HISTORY);
-    if pessoa == 0 {
-        return o(this, pessoa);
-    }
-    let par = read_usize(this + 0xc).wrapping_add(read_usize(pessoa).wrapping_mul(8));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(par, 8)], || o(this, pessoa), || rewind_staff_history(this, pessoa));
-    PLACAR.registrar(igual, || format!("rewind_staff_history({}) {:x?} x {:x?}", read_usize(pessoa), mo, mr));
-}
 
 /// the year award entry in the person history; the manager adds the award to his record; the player with a long
 /// contract on the club list gets the renewal offer and the winner may thank the manager (draw by loyalty)
@@ -2566,29 +2215,6 @@ pub(crate) unsafe extern "thiscall" fn add_year_award_record(this: usize, p: usi
     add_year_award(this, p, clube, premio, a4, a5, credito, true)
 }
 
-/// Comparer for `add_year_award_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
-/// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
-/// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_add_year_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32, credito: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_ADD_YEAR_AWARD_RECORD);
-    if p == 0 || premio == 0 {
-        return o(this, p, clube, premio, a4, a5, credito);
-    }
-    let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
-    if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("add_year_award_record jogador");
-        return o(this, p, clube, premio, a4, a5, credito);
-    }
-    let r = staff_records_manager_record(this, p);
-    if r == 0 {
-        return o(this, p, clube, premio, a4, a5, credito);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5, credito),
-        || add_year_award(this, p, clube, premio, a4, a5, credito, false));
-    PLACAR.registrar(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(premio), mo, mr));
-}
 
 /// the first cap history of the person (type 6: the club, the opponent and the age)
 /// Original: `Staff_Records::add_first_cap_record` (0x86cc50, staff_records.cpp, thiscall, ret 8).
@@ -2612,10 +2238,6 @@ pub(crate) unsafe extern "thiscall" fn add_first_cap_record(this: usize, pessoa:
     }
 }
 
-/// Comparer for `add_first_cap_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_add_first_cap_record(this: usize, pessoa: usize, adversario: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_FIRST_CAP_RECORD)(this, pessoa, adversario)
-}
 
 /// writes the 0x33 history entry of the winner; a manager counts +1 in his record; a player may get a contract renewal
 /// and, by a draw, thanks his manager (news)
@@ -2635,29 +2257,6 @@ pub(crate) unsafe extern "thiscall" fn add_month_award_record(this: usize, p: us
     add_month_award_record_body(this, p, clube, premio, a4, a5, true)
 }
 
-/// Comparer for `add_month_award_record` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
-/// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
-/// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
-pub(crate) unsafe extern "thiscall" fn comparar_add_month_award_record(this: usize, p: usize, clube: usize, premio: usize, a4: u32, a5: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(IDX_ADD_MONTH_AWARD_RECORD);
-    if p == 0 || premio == 0 {
-        return o(this, p, clube, premio, a4, a5);
-    }
-    let (t3d, t28) = (read_u8(p + 0x3d), read_u8(p + 0x28));
-    if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparacao::ramo("add_month_award_record jogador");
-        return o(this, p, clube, premio, a4, a5);
-    }
-    let r = staff_records_manager_record(this, p);
-    if r == 0 {
-        return o(this, p, clube, premio, a4, a5);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 0xd2)], || o(this, p, clube, premio, a4, a5),
-        || add_month_award_record_body(this, p, clube, premio, a4, a5, false));
-    PLACAR.registrar(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p, read_usize(premio), mo, mr));
-}
 
 /// clears the manager record and sets the owner, league and club ids to −1
 /// Original: `Staff_Records::clear_manager_record` (0x86fc20, staff_records.cpp, thiscall).
@@ -2672,10 +2271,3 @@ pub(crate) unsafe extern "thiscall" fn clear_manager_record(registros: usize, id
     }
 }
 
-/// Comparer for `clear_manager_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_clear_manager_record(registros: usize, id: *const i32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(IDX_CLEAR_MANAGER_RECORD);
-    let r = friendly_manager_record(registros, id);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(r, 210)], || o(registros, id), || clear_manager_record(registros, id));
-    PLACAR.registrar(igual, || format!("clear_manager_record({}) {:x?} x {:x?}", *id, mo, mr));
-}

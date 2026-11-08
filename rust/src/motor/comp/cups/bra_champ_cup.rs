@@ -166,12 +166,6 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize
     build_stage_schedule(this, champions_cup_stage(fase), rodadas, extra, liga, 0x98a1e8)
 }
 
-/// Comparer for `bra_champ_cup_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CHAMP_CUP_CREATE_SCHEDULE);
-    compare_stage_schedule("bra_champ_cup_create_schedule", fase, champions_cup_stage(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| bra_champ_cup_create_schedule(this, fase, r, e, l))
-}
 
 /// A Merconorte, grupos (fases abaixo de 3): seis rodadas às terças de 15 em 15 dias, de 9 de setembro a 18 de novembro.
 pub(crate) const MERCONORTE_GROUP_ROUNDS: [BraChampCupGroupRound; 6] = [(9, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // cqp10: os grupos da Merconorte
@@ -221,12 +215,6 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_round_table(this: us
     eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &ASIAN_SUPER_CUP, 0x987be0, 0x97, "cqp_10 tabela da supercopa asiatica")
 }
 
-/// Comparer for `bra_champ_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_BRA_CHAMP_CUP_CREATE_ROUND_TABLE);
-    eng_cc_cup_compare_round_table("bra_champ_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| bra_champ_cup_create_round_table(this, fase, r, e, s))
-}
 
 /// rule: the Brazilian Champions' Cup group is single round robin, 3 points a win and 1 a draw; tiebreak by codes 3, 1,
 /// 2 and 4 [inference: wins, goal difference, goals for, head-to-head]; two qualifiers; rule bits 8 (those who secure
@@ -242,9 +230,3 @@ pub(crate) unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -
     set_cup_league_rules(this, &CHAMPIONS_CUP_RULES, 1)
 }
 
-/// Comparer for `bra_champ_cup_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_champ_cup_set_up_rules(this: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_CHAMP_CUP_SET_UP_RULES)(this);
-    check_cup_league_rules("bra_champ_cup_set_up_rules", this, &CHAMPIONS_CUP_RULES, r);
-    r
-}

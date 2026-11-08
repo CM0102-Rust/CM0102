@@ -77,29 +77,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
     liga(this, hoje, completo)
 }
 
-// ponytail: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
+// simplification: os clubes (embaralhados), as tabelas, os jogos e o dia de liga não rodam duas vezes. Só a original; o plano
 // no dia do sorteio (a condição da cópia): +0x45 = 1, a lista +0xee zerada, a tabela do primeiro grupo e as 4 fases
 // criadas e a fase atual (+0x30) a última delas.
-/// Comparer for `conmebol_merc_update_for_date` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_update_for_date(this: usize, hoje: usize, completo: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_FOR_DATE);
-    let sorteia = read_u32_as_usize(this + 0x45) == 0
-        && completo != 0
-        && (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16) == core::ptr::read_unaligned((hoje + 2) as *const u16)
-        && read_i16(this + 0xb6) as u16 == core::ptr::read_unaligned(hoje as *const u16) && !is_rollover_day(this, hoje);
-    let r = o(this, hoje, completo);
-    if sorteia {
-        let fases = read_u32_as_usize(this + 0xc);
-        let ok = read_u32_as_usize(this + 0x45) == 1
-            && read_u32_as_usize(this + 0xee) == 0
-            && read_u32_as_usize(this + 0xb1) != 0
-            && fases != 0
-            && (0..4).all(|g| read_u32_as_usize(fases + g * 4) != 0)
-            && read_u32_as_usize(this + 0x30) == 3;
-        PLACAR.registrar(ok, || format!("conmebol_merc_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this, read_u32_as_usize(this + 0x45), read_u32_as_usize(this + 0x30) as i32));
-    }
-    r
-}
 
 /// Is today June 1 with the cup from another year (rollover day, draw not checked)?
 ///
@@ -135,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     let mut i = 0i8;
     while (i as i16) < read_i16(this + 0x3e) {
         crate::comparacao::ramo("cqr_11 linha do primeiro grupo");
-        // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
+        // simplification: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
@@ -143,28 +123,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     1
 }
 
-// ponytail: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
+// simplification: a tabela é alocada (e cada linha aloca o histórico) e a notícia vai aos técnicos: não roda duas vezes. Só a
 // original; o plano: devolve 1, 4 times e na linha i (0x3b bytes) o sorteado i com a posição i (+4).
-/// Comparer for `conmebol_merc_create_first_group_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_first_group_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_MERC_CREATE_FIRST_GROUP_TABLE);
-    let lista = read_u32_as_usize(this + 0xee);
-    if lista == 0 {
-        return o(this);
-    }
-    let previstos: [usize; 4] = core::array::from_fn(|i| read_u32_as_usize(lista + i * 4));
-    let r = o(this);
-    let t = read_u32_as_usize(this + 0xb1);
-    let mut lidos = [(0usize, 0u8); 4];
-    if t != 0 {
-        for (i, l) in lidos.iter_mut().enumerate() {
-            *l = (read_u32_as_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
-        }
-    }
-    let igual = r == 1 && read_i16(this + 0x3e) == 4 && t != 0 && (0..4).all(|i| lidos[i] == (previstos[i], i as u8));
-    PLACAR.registrar(igual, || format!("conmebol_merc_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this, r, lidos, previstos));
-    r
-}
 
 /// rule: each of the other groups of the Copa Mercosur is a league stage with the next 4 drawn clubs (4g + 4 to 4g +
 /// 7), the cup's rules and year and the cup's round table for the group; human managers get the news
@@ -246,29 +206,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     1
 }
 
-// ponytail: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
+// simplification: a fase é alocada e a notícia vai aos técnicos: não roda duas vezes. Só a original; o plano: devolve 1 com a
 // fase em [+0xc][g], +0x30 = g, a fase com os times e o ano da copa e, na tabela dela (+0xb1, linhas de 0x3b bytes), os
 // sorteados 4g + 4 a 4g + 7 (em qualquer ordem: o construtor ordena a tabela).
-/// Comparer for `conmebol_merc_create_group_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_group_stage(this: usize, g: i32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> u32>(IDX_CONMEBOL_MERC_CREATE_GROUP_STAGE);
-    let lista = read_u32_as_usize(this + 0xee);
-    if lista == 0 || !(0..4).contains(&g) {
-        return o(this, g);
-    }
-    let mut plano: Vec<usize> = (0..4).map(|k| read_u32_as_usize(lista + (g as usize * 4 + 4 + k) * 4)).collect();
-    let r = o(this, g);
-    if r == 1 {
-        let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
-        let t = if f != 0 { read_u32_as_usize(f + 0xb1) } else { 0 };
-        let mut a: Vec<usize> = if t != 0 { (0..4).map(|k| read_u32_as_usize(t + k * 0x3b)).collect() } else { Vec::new() };
-        a.sort_unstable();
-        plano.sort_unstable();
-        let ok = f != 0 && read_u32_as_usize(this + 0x30) as i32 == g && read_i16(f + 0x3e) == 4 && read_i16(f + 0x40) == read_i16(this + 0x40) && a == plano;
-        PLACAR.registrar(ok, || format!("conmebol_merc_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plano, a));
-    }
-    r
-}
 
 /// Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
@@ -346,7 +286,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(nome: &str, fase: u32, 
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = fase as u8 as i8;
     if f > limit {
-        // ponytail: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, f, a));
         return a;
@@ -417,12 +357,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize
         "cqo_13 grupos da mercosul", "cqo_13 mata-mata da mercosul")
 }
 
-/// Comparer for `conmebol_merc_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_CONMEBOL_MERC_CREATE_SCHEDULE);
-    compare_south_american_cup_schedule("conmebol_merc_create_schedule", fase, rodadas, extra, liga, 4, &MERCOSUR_FINAL_EXTRA_WRITES, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| conmebol_merc_create_schedule(this, fase, r, e, l))
-}
 
 
 /// Port of ConmebolMerc::select_invited_clubs (0x4c5850): 20-slot list of clubs the seeding rules invite, shuffled;
@@ -455,7 +389,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         i += 1;
     }
     crate::comparacao::ramo("cqo_13 convidados da mercosul");
-    // ponytail: a original empurra a palavra +0xf2 com lixo nos 16 bits altos (o eax de antes); a 0x4afb40 lê a palavra
+    // simplification: a original empurra a palavra +0xf2 com lixo nos 16 bits altos (o eax de antes); a 0x4afb40 lê a palavra
     embaralhar(read_u32_as_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
 }
@@ -470,42 +404,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: 
     mercosur_select_invited_clubs(this).0
 }
 
-/// Comparer for `conmebol_merc_select_invited_clubs` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
-/// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CONMEBOL_MERC_SELECT_INVITED_CLUBS);
-    let lo = core::cell::Cell::new(0usize);
-    let lr = core::cell::Cell::new(0usize);
-    let nr = core::cell::Cell::new(0i32);
-    let a_ = crate::aleatorio::REGIOES_DO_ESTADO;
-    let reg = [(this + 0xf2, 4usize), (0xb67a34, 4), a_[0], a_[1]];
-    let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || {
-        let r = o(this);
-        lo.set(read_u32_as_usize(this + 0xee));
-        r
-    }, || {
-        let (r, n) = crate::aleatorio::sem_contar(|| mercosur_select_invited_clubs(this));
-        lr.set(read_u32_as_usize(this + 0xee));
-        nr.set(n);
-        core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
-        r
-    });
-    let (lo, lr) = (lo.get(), lr.get());
-    let k = nr.get().max(0) as usize * 4;
-    let lista = if lo != 0 && lr != 0 {
-        core::slice::from_raw_parts(lo as *const u8, k) == core::slice::from_raw_parts(lr as *const u8, k)
-    } else {
-        lo == 0 && lr == 0
-    };
-    if lr != 0 && lr != lo {
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-        soltar(lr);
-    }
-    PLACAR.registrar(igual && a == b && lista, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, lista, k));
-    a
-}
 
 /// rule: the Mercosur moves on one stage when the current one ends; after the 4 group stages (on reaching 4) it builds
 /// the quarter-finals; going past the last stage is an error
@@ -517,8 +415,3 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) 
     con_merc_cup_advance_stage_cqs11_fase_seguinte(this, 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 
-/// Comparer for `conmebol_merc_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_conmebol_merc_advance_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_MERC_ADVANCE_STAGE);
-    con_merc_cup_compare_advance_stage("conmebol_merc_advance_stage", this, || o(this))
-}

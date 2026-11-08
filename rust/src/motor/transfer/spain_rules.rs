@@ -33,13 +33,6 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows(this: u
     set_transfer_windows(this, 2, &SPAIN_TRANSFER_WINDOWS, 0xa82ac8, 0x54);
 }
 
-/// Comparer for `spain_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPAIN_RULES_INIT_TRANSFER_WINDOWS);
-    compare_transfer_rules_ctor("spain_rules_init_transfer_windows", this, || o(this), |s| spain_rules_init_transfer_windows(s));
-}
 
 /// As janelas da Itália: de 1º de julho a 27 de setembro (andando para a quinta-feira [inferência]), de 2 a 31 de janeiro, e a terceira, de 1º de julho a 30 de abril [inferência: a dos jogadores sem contrato].
 pub(crate) const ITALY_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
@@ -62,13 +55,6 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_6613f0(
     set_transfer_windows(this, 3, &ITALY_TRANSFER_WINDOWS, 0x9ea9a4, 0x52);
 }
 
-/// Comparer for `spain_rules_init_transfer_windows_6613f0` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_6613f0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPAIN_RULES_INIT_TRANSFER_WINDOWS_6613F0);
-    compare_transfer_rules_ctor("spain_rules_init_transfer_windows_6613f0", this, || o(this), |s| spain_rules_init_transfer_windows_6613f0(s));
-}
 
 /// As janelas da França: de 30 de maio a 31 de agosto, de 1º de setembro a 20 de dezembro e de 21 de dezembro a 10 de janeiro (com os dias da semana para os quais as datas andam [inferência]).
 pub(crate) const FRANCE_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
@@ -91,13 +77,6 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_5c15e0(
     set_transfer_windows(this, 3, &FRANCE_TRANSFER_WINDOWS, 0x9cccf4, 0x4f);
 }
 
-/// Comparer for `spain_rules_init_transfer_windows_5c15e0` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
-pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_windows_5c15e0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SPAIN_RULES_INIT_TRANSFER_WINDOWS_5C15E0);
-    compare_transfer_rules_ctor("spain_rules_init_transfer_windows_5c15e0", this, || o(this), |s| spain_rules_init_transfer_windows_5c15e0(s));
-}
 
 /// refuses outside the window (9) and between clubs of the same division after five league games of the player (0x1f)
 /// Original: `SPAIN_RULES::can_loan_player` (0x859630, spain_rules.cpp, thiscall, ret 0x10).
@@ -128,7 +107,3 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
     1
 }
 
-/// Comparer for `spain_rules_can_loan_player` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_can_loan_player(this: usize, clube: usize, jogador: usize, msg: usize, motivo: *mut u16) -> u32 {
-    scotland_rules_compare_can_loan(original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut u16) -> u32>(IDX_SPAIN_RULES_CAN_LOAN_PLAYER), spain_rules_can_loan_player, "spain_rules_can_loan_player", this, clube, jogador, msg, motivo)
-}

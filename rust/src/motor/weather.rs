@@ -88,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
             }
         }
     }
-    // ponytail: a original grava o clima na vaga do próprio argumento; se o clima não grava (sem regiões), ficam os
+    // simplification: a original grava o clima na vaga do próprio argumento; se o clima não grava (sem regiões), ficam os
     // bytes do ponteiro do jogo, como aqui.
     let mut cl = jogo as u32;
     clima(this, &mut cl as *mut u32 as usize, jogo);
@@ -174,11 +174,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
     }
 }
 
-// ponytail: sorteia: só a original; a cópia leva os ramos.
-/// Comparer for `check_postponement` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_check_postponement(this: usize, jogo: usize) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_CHECK_POSTPONEMENT)(this, jogo)
-}
+// simplification: sorteia: só a original; a cópia leva os ramos.
 
 /// the finance record (0x167 bytes) by the club id; a B club with an A partner, the A one (0x540a50); null club, error
 /// box
@@ -201,19 +197,6 @@ pub(crate) unsafe extern "thiscall" fn get_club_finance(this: usize, clube: usiz
     read_usize(this).wrapping_add((read_usize(c) as u32).wrapping_mul(0x167) as usize)
 }
 
-/// Comparer for `get_club_finance` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
-pub(crate) unsafe extern "thiscall" fn comparar_get_club_finance(this: usize, clube: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_CLUB_FINANCE);
-    if clube == 0 {
-        return o(this, clube);
-    }
-    let r = o(this, clube);
-    let n = get_club_finance(this, clube);
-    PLACAR.registrar(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", clube, r, n));
-    r
-}
 
 
 
@@ -391,15 +374,6 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     }
 }
 
-/// Comparer for `get_match_weather` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: lado a lado nos 4 bytes da saída.
-pub(crate) unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s: *mut u8, jogo: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(IDX_GET_MATCH_WEATHER);
-    let regioes = [(s as usize, 4)];
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regioes, || o(this, s, jogo), || get_match_weather(this, s, jogo));
-    PLACAR.registrar(igual, || format!("get_match_weather(jogo {:#x}) {:x?} x {:x?}", jogo, mo.0, mr.0));
-}
 
 /// (day × band) modulo 6/7/8 plus the band base (−5 to 35; other band −100); in the evening slot, − 2 below 10,
 /// otherwise × 0.8
@@ -436,15 +410,6 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
     t as u8
 }
 
-/// Comparer for `get_temperature` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_get_temperature(this: usize, band: u32, jogo: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(IDX_GET_TEMPERATURE)(this, band, jogo);
-    let n = get_temperature(this, band, jogo);
-    PLACAR.registrar(r == n, || format!("get_temperature(band {}, jogo {:#x}) original={} rust={}", band as u8 as i8, jogo, r as i8, n as i8));
-    r
-}
 
 /// by the rain, the temperature, the stadium flag and places and a fixture remainder modulo 20: 0, 1, 2, 4, 8, 0x10,
 /// 0x20 or 0x40; covered stadium, 0
@@ -523,15 +488,6 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     0
 }
 
-/// Comparer for `get_pitch_condition` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Comparador: pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_get_pitch_condition(this: usize, clima: *const u8, jogo: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(IDX_GET_PITCH_CONDITION)(this, clima, jogo);
-    let n = get_pitch_condition(this, clima, jogo);
-    PLACAR.registrar(r == n, || format!("get_pitch_condition(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), jogo, r, n));
-    r
-}
 
 
 
@@ -582,11 +538,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
     }
 }
 
-// ponytail: sorteia 3 ou 4 vezes por cidade: só a original; a cópia leva os ramos.
-/// Comparer for `update_city_weather` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_update_city_weather(this: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_CITY_WEATHER)(this)
-}
+// simplification: sorteia 3 ou 4 vezes por cidade: só a original; a cópia leva os ramos.
 
 /// one weather.cfg line with the region id and name ("%ld %s") and its four periods (0x922d20) at +0x1e, +0x31, +0x44
 /// and +0x57
@@ -614,11 +566,7 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, regiao
     1
 }
 
-// ponytail: lê do arquivo (não dá para ler duas vezes): só a original; a cópia leva o ramo.
-/// Comparer for `read_region` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_read_region(this: usize, f: usize, regiao: usize) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION)(this, f, regiao)
-}
+// simplification: lê do arquivo (não dá para ler duas vezes): só a original; a cópia leva o ramo.
 
 /// one line with the name and 18 integers (the day, five W, five P, seven H): the period gets the day (word) and the 17
 /// bytes; a null file is the "Error" box
@@ -639,7 +587,7 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
     if read_config_line(f, linha.as_mut_ptr()) == 0 {
         return 0;
     }
-    // ponytail: o nome tem 200 bytes na original; aqui 2000 para o %s não estourar (com os nomes do arquivo, igual).
+    // simplification: o nome tem 200 bytes na original; aqui 2000 para o %s não estourar (com os nomes do arquivo, igual).
     let mut nome = [0u8; 2000];
     let mut v = [0i32; 18];
     let p = v.as_mut_ptr();
@@ -656,11 +604,7 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
     1
 }
 
-// ponytail: lê do arquivo: só a original; a cópia leva o ramo.
-/// Comparer for `read_region_period` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_read_region_period(this: usize, f: usize, periodo: usize) -> u8 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_READ_REGION_PERIOD)(this, f, periodo)
-}
+// simplification: lê do arquivo: só a original; a cópia leva o ramo.
 
 /// reads CM3_DATA\weather.cfg: the region count, the regions (0x922c40) and the city table, with the three readings
 /// ((random(100) + random(100)) × 0.5) and the wind (random(3)) drawn; a file or memory error stops the game
@@ -726,7 +670,3 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
     fechar(f);
 }
 
-/// Comparer for `load_config` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_load_config(this: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LOAD_CONFIG)(this)
-}

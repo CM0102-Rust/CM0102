@@ -96,7 +96,7 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, fase: u32, rodad
 pub(crate) unsafe fn compare_cup_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
-        // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
         return a;
@@ -137,12 +137,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table(this: usize,
     build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &J_LEAGUE_CUP_ROUNDS, 0x9eaf14, 0x9e, "cqn_11 tabela da copa da liga japonesa")
 }
 
-/// Comparer for `jap_j_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_JAP_J_CUP_CREATE_ROUND_TABLE);
-    compare_cup_round_table("jap_j_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| jap_j_cup_create_round_table(this, fase, r, e, s))
-}
 
 /// A Copa do Imperador: sete rodadas em jogo único de novembro ao começo de janeiro do ano seguinte, sorteio por sementes
 /// com grupos separados (+0xd = 0x83).
@@ -168,12 +162,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table_661ff0(this:
     build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &EMPERORS_CUP_ROUNDS, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
 }
 
-/// Comparer for `jap_j_cup_create_round_table_661ff0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table_661ff0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_JAP_J_CUP_CREATE_ROUND_TABLE_661FF0);
-    compare_cup_round_table("jap_j_cup_create_round_table_661ff0", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| jap_j_cup_create_round_table_661ff0(this, fase, r, e, s))
-}
 
 /// A Copa dos EUA (US Open Cup): cinco rodadas em jogo único de junho a outubro; na 1ª rodada o sorteio leva também o
 /// bit 0x400 (+0xd = 0x483).
@@ -197,12 +185,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_create_round_table_90b170(this:
     build_single_stage_cup_rounds(this, fase, rodadas, extra, saida, &US_OPEN_CUP_ROUNDS, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
 }
 
-/// Comparer for `jap_j_cup_create_round_table_90b170` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_create_round_table_90b170(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_JAP_J_CUP_CREATE_ROUND_TABLE_90B170);
-    compare_cup_round_table("jap_j_cup_create_round_table_90b170", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| jap_j_cup_create_round_table_90b170(this, fase, r, e, s))
-}
 
 
 /// Club record i in the club table (0x245 bytes each).
@@ -228,7 +210,7 @@ pub(crate) unsafe fn jap_j_cup_random(n: i32) -> i32 {
 /// esp, 0xc -> cdecl; já em Rust).
 pub(crate) unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas: u32) {
     let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
-    // ponytail: a original empurra a conta com lixo nos 16 bits altos; a 0x4afbd0 lê a palavra
+    // simplification: a original empurra a conta com lixo nos 16 bits altos; a 0x4afbd0 lê a palavra
     f(v as usize, n as i16 as u16 as u32, escolhas);
 }
 
@@ -341,11 +323,6 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(nome: &str, this: usize, o: 
     a
 }
 
-/// Comparer for `jap_j_cup_collect_entrants` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS);
-    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants", this, || o(this), || collect_j_cup_entrants(this))
-}
 
 /// UsaOpenCup::collect_entrants (0x90b530): 32 entrants, top 10 shuffled clubs from the A-League and USISL with class
 /// 2, then all MLS clubs with class 1.
@@ -359,7 +336,7 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x20);
     let comp = |id: usize| read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add(read_u32_as_usize(id).wrapping_mul(0x6b));
     let (a, b) = (comp(KEY_CLUB_COMP_AMERICAN_A_LEAGUE), comp(KEY_CLUB_COMP_AMERICAN_USISL));
-    // ponytail: os vetores locais da original começam com o que estava na pilha; com menos de 10 clubes numa das
+    // simplification: os vetores locais da original começam com o que estava na pilha; com menos de 10 clubes numa das
     // ligas ela copiaria essa sobra (e a 0x4afbd0 já daria a caixa): a cópia começa com zero
     let mut va = [0usize; 50];
     let mut vb = [0usize; 50];
@@ -418,11 +395,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_collect_entrants_90b530(this: u
     collect_us_open_cup_entrants(this).0
 }
 
-/// Comparer for `jap_j_cup_collect_entrants_90b530` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_90b530(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS_90B530);
-    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants_90b530", this, || o(this), || collect_us_open_cup_entrants(this))
-}
 
 /// JapEmpCup::collect_entrants (0x6624f0): 80 entrants from Japanese lower divisions (shuffled), then J2 and J1 clubs
 /// (class = last season position), sorting the last 16.
@@ -483,7 +455,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
             vd[0] = if na >= 0 { va[na as usize] } else { 0 };
         }
     } else {
-        // ponytail: sem clubes a original lê o vetor fora do lugar (índice −1); a cópia usa zero e cai na caixa abaixo
+        // simplification: sem clubes a original lê o vetor fora do lugar (índice −1); a cópia usa zero e cai na caixa abaixo
         na = na.wrapping_sub(1);
         nd = 1;
         vd[0] = 0;
@@ -544,11 +516,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_collect_entrants_6624f0(this: u
     collect_emperors_cup_entrants(this).0
 }
 
-/// Comparer for `jap_j_cup_collect_entrants_6624f0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_collect_entrants_6624f0(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS_6624F0);
-    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants_6624f0", this, || o(this), || collect_emperors_cup_entrants(this))
-}
 
 /// rule: the same turn in the Japanese League Cup (J-League Cup): tables freed, history archived, year +1, the 28
 /// entrants (JapJCup::collect_entrants), the rounds, the tree and the predicted positions
@@ -561,8 +528,3 @@ pub(crate) unsafe extern "thiscall" fn jap_j_cup_start_new_season(this: usize) -
     start_new_cup_season(this, 0x665a00, 0x9eaf14, [0x1a3, 0x1aa, 0x1b1], 1, "cqr_5 virada da copa da liga japonesa") // cqr5: a Copa da Liga japonesa
 }
 
-/// Comparer for `jap_j_cup_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_jap_j_cup_start_new_season(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J_CUP_START_NEW_SEASON);
-    compare_cup_new_season("jap_j_cup_start_new_season", this, || o(this))
-}

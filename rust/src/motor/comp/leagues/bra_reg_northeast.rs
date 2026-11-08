@@ -141,11 +141,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_northeast(this: usize, 
 
 
 
-/// Comparer for `construct_bra_reg_northeast` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_northeast(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_NORTHEAST);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_northeast", this, ano, registro, &NORDESTE_STATE_LEAGUE, || o(this, ano, registro))
-}
 
 
 
@@ -175,7 +170,7 @@ pub(crate) unsafe fn build_state_league_table(this: usize, n: i16, arquivo: usiz
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         if is_in_state_league(clube, g) {
-            // ponytail: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
+            // simplification: a original empurra a linha no eax com os bits de cima do id do estadual; a 0x687430 só lê o
             // byte. Com girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
             iniciar(this, l as u32, clube, 0, 0);
@@ -234,11 +229,6 @@ pub(crate) unsafe fn bra_reg_northeast_compare_state_league_table(nome: &str, th
     r
 }
 
-/// Comparer for `bra_reg_northeast_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_NORTHEAST_CREATE_TABLE);
-    bra_reg_northeast_compare_state_league_table("bra_reg_northeast_create_table", this, 0x10, KEY_CLUB_COMP_BRAZILIAN_NORTHEAST_STATE_CHAMPIONSHIP, || o(this))
-}
 
 /// Northeast: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
 /// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
@@ -250,11 +240,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_create_semi_final_stage
     bra_reg_bahia_build_knockout_from_table(this, &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98af54, 0x20d, 0x221, "cqn_7 nordeste"); // cqn7: 1º × 4º, 2º × 3º Nordeste
 }
 
-/// Comparer for `bra_reg_northeast_create_semi_final_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_create_semi_final_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_NORTHEAST_CREATE_SEMI_FINAL_STAGE);
-    bra_reg_bahia_compare_knockout_from_table("bra_reg_northeast_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
-}
 
 /// The Northeast turnover: archives the season in the statistics, clears the previous table and stages, moves to the
 /// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
@@ -267,11 +252,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_start_new_season(this: 
     state_league_new_season(this, 0x436d90, 0x98af54, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_8 virada do nordeste") // cqp8: o ano seguinte do Nordeste
 }
 
-/// Comparer for `bra_reg_northeast_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_start_new_season(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_NORTHEAST_START_NEW_SEASON);
-    compare_state_league_new_season("bra_reg_northeast_start_new_season", this, || o(this))
-}
 
 /// The Northeast next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
 /// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
@@ -283,8 +263,3 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_northeast_advance_stage(this: usi
     state_league_advance_stage(this, 0x98af54, 0x1ea, 0x4370d0);
 }
 
-/// Comparer for `bra_reg_northeast_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_northeast_advance_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_NORTHEAST_ADVANCE_STAGE);
-    compare_state_league_advance_stage("bra_reg_northeast_advance_stage", this, || o(this))
-}

@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: 
     let qualquer_unidade = *(0x729089 as *const u8) == 0x90;
     let sempre_achou = *(0x7290cb as *const u8) != 0x85; // o original tem `test eax, eax` (85 c0); qualquer outra coisa é patch sem CD (xor 31 c0 ou 33 c0)
     'cd: loop {
-        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
+        // simplification: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
         // (mais de 50 letras), impossível
         let mut lista = [0u8; 0x100];
         if units_digit(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: 
                     }
                     fechar_busca(ach);
                 }
-                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
+                // simplification: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
                 i += 4;
                 if lista[i] == 0 {
                     break;
@@ -131,19 +131,11 @@ pub(crate) unsafe extern "thiscall" fn destroy_match_stats(estat: usize) {
     }
 }
 
-// ponytail: o construtor confere o CD (caixa que espera o clique), aloca o índice e recria o arquivo
+// simplification: o construtor confere o CD (caixa que espera o clique), aloca o índice e recria o arquivo
 // temporário; o destrutor libera o índice: rodar duas vezes não dá, então os comparadores só chamam a
 // original; as cópias se provam no modo Rust (os ramos: a carreira automática cria o jogo e passa pelo
 // construtor).
-/// Comparer for `construct_match_stats` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_match_stats(estat: usize, zip: usize, n: i32) -> usize {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> usize>(IDX_CONSTRUCT_MATCH_STATS)(estat, zip, n)
-}
 
-/// Comparer for `destroy_match_stats` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_destroy_match_stats(estat: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_MATCH_STATS)(estat)
-}
 
 /// fills the match statistics record: clubs, dates, attendance, gate receipts, weather, sorted events, formation,
 /// captain and the 20 players of each side
@@ -333,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(estat: usize, m: usize,
             let mut copia = [0u8; 8];
             copiar_data(x - 8, copia.as_mut_ptr() as usize, if d(y) != 0 { d(y) as usize + 0x10 } else { G_MATCH_STATS_FILL_RECORD_STATIC_DATE });
             pb(x + 3, b(y - 0x4d));
-            // ponytail: fld f32 × fmul f64 (0,01) em 80 bits no x87; em f64 dá o mesmo truncamento (f32 × 0,01 nunca cai a 2^-53 de um inteiro)
+            // simplification: fld f32 × fmul f64 (0,01) em 80 bits no x87; em f64 dá o mesmo truncamento (f32 × 0,01 nunca cai a 2^-53 de um inteiro)
             let nota = core::ptr::read_unaligned((y - 0x1c) as *const f32) as f64 * core::ptr::read_unaligned(0x967898 as *const f64);
             pb(x + 4, match_pl_ftol(nota) as u8);
             for (o, de) in [(5, 0x5d), (6, 0x5a), (7, 0x5c), (8, 0x5b), (9, 0x5f), (0xa, 0x5e), (0xb, 0x59), (0xc, 0x58),
@@ -380,31 +372,7 @@ pub(crate) unsafe extern "C" fn match_stats_compare_events(a: *const u8, b: *con
 }
 
 
-/// Comparer for `fill_match_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fill_match_record(estat: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_FILL_MATCH_RECORD);
-    // ponytail: a primeira chamada (data estática e atexit) e os erros só pela original
-    if m == 0 || reg == 0 || *(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD as *const u8) & 1 == 0 {
-        return o(estat, m, reg, sem_renda);
-    }
-    // o número da camisa dado pela original (0x85a470) fica fora das regiões: a cópia já o acha dado
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(reg, 0xd7a)], || o(estat, m, reg, sem_renda),
-        || fill_match_record(estat, m, reg, sem_renda));
-    PLACAR.registrar(igual && r == n, || {
-        let difs: Vec<usize> = mo.0[0].1.iter().zip(mr.0[0].1.iter()).enumerate().filter(|(_, (a, b))| a != b).map(|(i, _)| i).take(16).collect();
-        format!("fill_match_record(sem_renda={}) original={} rust={} bytes diferentes em {:x?}", sem_renda, r, n, difs)
-    });
-    r
-}
 
-/// Comparer for `match_stats_compare_events` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_stats_compare_events(a: *const u8, b: *const u8) -> i32 {
-    let r = original_fn::<unsafe extern "C" fn(*const u8, *const u8) -> i32>(IDX_MATCH_STATS_COMPARE_EVENTS)(a, b);
-    let n = match_stats_compare_events(a, b);
-    PLACAR.registrar(r == n, || format!("match_stats_compare_events({:x?}, {:x?}) original={} rust={}",
-        core::slice::from_raw_parts(a, 4), core::slice::from_raw_parts(b, 4), r, n));
-    r
-}
 
 
 /// Os 25 registros de aba (0xd4 bytes: +4 o título, +0xcc a marca, +0xd0 o valor) que a barra de abas
@@ -1362,91 +1330,11 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
     destruct_match_tabs(&mut abas);
 }
 
-/// Comparer for `montagem_da_partida` (comparison mode: see the header of motor.rs).
-///
-/// [pt] As montagens da tela da partida são comparadas pela lista de exibição: as regiões da tela, o bloco
-/// de parâmetros sem o 0x14 (a hora que o redesenho dos últimos placares 0x724520 grava na aba 8), as
-/// marcas 0xb6b7a8/ac/b0, o texto 0xde1f64 e a posição do buffer de rede ([0xae290c]), mais `extra`.
-pub(crate) unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
-    let mut reg = screen_build_regions();
-    reg.push((0xb6b7a8, 12));
-    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
-    if bloco != 0 {
-        reg.push((bloco, 0xb4));
-        reg.push((bloco + 0xb8, 0x200 - 0xb8));
-    }
-    reg.push((0xde1f64, 0x100));
-    reg.push((0xae290c, 4));
-    reg.extend_from_slice(extra);
-    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
-    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
-    PLACAR.registrar(igual, || format!("{}: diferencas em {:?}", nome, first_differences(&mo, &mr)));
-}
 
-/// Comparer for `build_match_screen` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A tela da partida é comparada pela lista de exibição, com o que ela grava fora da tela: a ficha do
-/// humano (+0 e +0xea), a marca dele nos espectadores e a contagem, o foco das velocidades no `Display`
-/// do humano (+0x12f4fe) e o volume do narrador (+0x2db0). Só a original quando há o que não roda duas
-/// vezes: a foto do parâmetro 0x1d a liberar, o lance do parâmetro 7 a narrar (som, 0x6d7b00) ou as
-/// abas 1 (o resumo também narra), 3 (as zonas alocam a foto) e 10 (a tabela ao vivo).
-pub(crate) unsafe extern "C" fn comparar_build_match_screen() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_MATCH_SCREEN);
-    let aba = get_screen_param(2) as u8;
-    // as abas 2 (estatisticas) e 7 (notas) alocam a copia do estado 0x1d quando ela falta: tambem so a original
-    if get_screen_param(0x1d) != 0 || get_screen_param(7) != 0 || matches!(aba, 1 | 2 | 3 | 7 | 10) {
-        // ponytail: liberar, narrar com som e alocar não rodam duas vezes; esses casos se provam no modo Rust
-        return o();
-    }
-    let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_GET_HUMAN_MANAGER_RECORD);
-    let f = ficha(0);
-    let mut extra = Vec::new();
-    if current_human_display() != 0 {
-        extra.push((current_human_display() + 0x12f4fe, 3));
-    }
-    if f != 0 {
-        extra.push((f, 1));
-        extra.push((f + 0xea, 4));
-    }
-    let p = get_screen_param(0);
-    if p != 0 && get_screen_param(1) as u8 != 1 {
-        let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-        let espectadores = rd(p + 0x5b);
-        extra.push(((espectadores as isize + 0xc5 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize, 4));
-        extra.push((espectadores + 0x108, 1));
-        let pm = rd(p + 0x57);
-        if pm != 0 && rd(pm + 0x8f7a) != 0 {
-            extra.push((rd(pm + 0x8f7a) + 0x2db0, 1));
-        }
-    }
-    comparar_montagem_da_partida("build_match_screen", &extra, || o(), || build_match_screen());
-}
 
-// ponytail: a resposta mexe em telas, menu, rede, narração (som) e tática (não roda duas vezes): no modo
+// simplification: a resposta mexe em telas, menu, rede, narração (som) e tática (não roda duas vezes): no modo
 // comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust (contador "telas ...")
-/// Comparer for `handle_match_screen_input` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_handle_match_screen_input(item: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_HANDLE_MATCH_SCREEN_INPUT)(item)
-}
 
-/// Comparer for `build_match_details_screen` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A tela de detalhes é comparada pela lista de exibição quando o registro e a foto da partida já
-/// existem (parâmetros 0x1f e 0x20) e não há foto 0x1d a liberar. Só a original quando eles nascem aqui
-/// (alocação) ou nas abas 1 (o resumo narra com som), 3 (as zonas alocam a foto) e 4 (o relatório nasce).
-pub(crate) unsafe extern "C" fn comparar_build_match_details_screen() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_MATCH_DETAILS_SCREEN);
-    let aba = get_screen_param(2) as u8;
-    // as abas 2 (estatisticas) e 6 (notas) alocam a copia do estado 0x1d: tambem so a original
-    if get_screen_param(0x1d) != 0 || get_screen_param(0x1f) == 0 || get_screen_param(0x20) == 0 || matches!(aba, 1 | 2 | 3 | 4 | 6) {
-        // ponytail: alocar, liberar e narrar não rodam duas vezes; esses casos se provam no modo Rust
-        return o();
-    }
-    comparar_montagem_da_partida("build_match_details_screen", &[], || o(), || build_match_details_screen());
-}
 
 /// redraws the overview possession bar when the share changes (percentages and the colour of the club with more of the
 /// ball) and stores the match state in the param 0x1d copy
@@ -2231,77 +2119,8 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize
     liga_fim(local);
 }
 
-/// Comparer for `refresh_possession_bar` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A barra é comparada de verdade quando já existe a cópia do estado (parâmetro 0x1d) e a atualização
-/// é local: o `Display` do gerente, os parâmetros, a cópia (0xd7a bytes) e o texto 0xde1f64. Sem a cópia
-/// (nasce aqui) ou pela rede: só a original.
-pub(crate) unsafe extern "C" fn comparar_refresh_possession_bar() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_POSSESSION_BAR);
-    let p0 = get_screen_param(0);
-    let copia = get_screen_param(0x1d);
-    let mut reg = match screen_update_regions(false) {
-        Some(r) if p0 == 0 || copia != 0 => r,
-        // ponytail: a alocação da cópia e o pacote pela rede não rodam duas vezes; provados no modo Rust
-        _ => return o(),
-    };
-    reg.extend(screen_param_regions());
-    if copia != 0 {
-        reg.push((copia, 0xd7a));
-    }
-    reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_possession_bar());
-    PLACAR.registrar(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
-}
 
-/// Comparer for `draw_match_overview_panel` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
-/// do fim (o `Display` do gerente e a cópia do estado). Só a original: com o aviso de erro, com o
-/// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
-/// aloca) e com a atualização pela rede.
-pub(crate) unsafe extern "C" fn comparar_draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_OVERVIEW_PANEL);
-    let p0 = get_screen_param(0);
-    let foto = get_screen_param(0x1d);
-    let narrador = p0 != 0
-        && core::ptr::read_unaligned((core::ptr::read_unaligned((p0 + 0x5f) as *const usize) + 0x53) as *const u32) == 0
-        && get_screen_param(7) != 0;
-    let reg = screen_update_regions(false);
-    if overview_would_error() || narrador || (p0 != 0 && foto == 0) || reg.is_none() {
-        // ponytail: aviso, som, alocação e rede não rodam duas vezes; esses caminhos se provam no modo Rust
-        return o(topo, base);
-    }
-    let mut reg = reg.unwrap_or_default();
-    reg.extend(screen_param_regions());
-    reg.push((0xde1f64, 0x100));
-    reg.push((topo as usize, 4));
-    reg.push((base as usize, 4));
-    if foto != 0 {
-        reg.push((foto, 0xd7a));
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || draw_match_overview_panel(topo, base));
-    PLACAR.registrar(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
-}
 
-/// Comparer for `match_screens_draw_live_league_table` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a
-/// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
-/// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
-pub(crate) unsafe extern "C" fn comparar_match_screens_draw_live_league_table(liga: usize, topo: i32, base: i32) {
-    let o = original_fn::<unsafe extern "C" fn(usize, i32, i32)>(IDX_MATCH_SCREENS_DRAW_LIVE_LEAGUE_TABLE);
-    if liga == 0 || get_screen_param(0xe) == 0 {
-        return o(liga, topo, base);
-    }
-    let mut extra = vec![(liga, 0xee)];
-    let tabela = core::ptr::read_unaligned((liga + 0xb1) as *const usize);
-    let n = core::ptr::read_unaligned((liga + 0x3e) as *const i16);
-    if tabela != 0 && n > 0 {
-        extra.push((tabela, n as usize * 59));
-    }
-    comparar_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(liga, topo, base), || match_screens_draw_live_league_table(liga, topo, base));
-}
 
 /// C strcpy.
 ///
@@ -2473,7 +2292,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         g.1 += 1;
     };
     for vaga in 0..0x14u8 {
-        // ponytail: a original empurra a vaga como dword com os 3 bytes de cima sem valor (a variável é um
+        // simplification: a original empurra a vaga como dword com os 3 bytes de cima sem valor (a variável é um
         // char); a chamada usa o char, aqui vai estendida com zero
         let p = escolhido(g(G_TACTICS), clube, vaga as u32, equipe);
         if p == 0 {
@@ -2543,7 +2362,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
     nome_da_equipe(clube, equipe, BUF, 0x7d0, 3, 1);
     titulo(SCREEN_MANAGER, fundo_da_cor as usize, frente as usize, BUF);
 
-    // ponytail: o motivo de inelegibilidade fora de 1 a 11 deixa a mensagem da original com o que
+    // simplification: o motivo de inelegibilidade fora de 1 a 11 deixa a mensagem da original com o que
     // sobrou na pilha; aqui ela começa vazia
     let mut msg = [0u8; 0x2710];
     let m = msg.as_mut_ptr();
@@ -2624,7 +2443,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         if c < 0 || vaga_do_capitao(g(G_TACTICS), clube, equipe, 1) as i8 >= 0xb {
             let s = melhor_titular(clube, equipe) as i8;
             if s > -1 {
-                // ponytail: como na vaga acima, os 3 bytes de cima do dword empurrado não têm valor
+                // simplification: como na vaga acima, os 3 bytes de cima do dword empurrado não têm valor
                 let p = escolhido(g(G_TACTICS), clube, s as u8 as u32, equipe);
                 if p != 0 {
                     nome_do(p, nome.as_mut_ptr(), 0xc8, 1);
@@ -2782,26 +2601,10 @@ pub(crate) unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usi
     1
 }
 
-/// Comparer for `match_screens_draw_team_selection` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A conferência é comparada de verdade pela lista de exibição (o Text local é alocado e liberado
-/// dentro de cada execução).
-pub(crate) unsafe extern "C" fn comparar_match_screens_draw_team_selection() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_MATCH_SCREENS_DRAW_TEAM_SELECTION);
-    comparar_painel_pela_lista("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
-}
 
-// ponytail: carregar e salvar mexem no arquivo do save (e carregar aloca o índice): rodar duas vezes
+// simplification: carregar e salvar mexem no arquivo do save (e carregar aloca o índice): rodar duas vezes
 // leria/gravaria duas vezes, então o comparador só chama a original; as cópias se provam no modo Rust.
-/// Comparer for `match_screens_load` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_match_screens_load(estat: usize, zip: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MATCH_SCREENS_LOAD)(estat, zip)
-}
 
-/// Comparer for `match_screens_save` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_match_screens_save(estat: usize, zip: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MATCH_SCREENS_SAVE)(estat, zip)
-}
 
 /// Os registros de estatística da partida têm 0xd7a bytes no "match_stats_matches.tmp" de CM3_TEMP.
 pub(crate) const MATCH_STATS_RECORD_SIZE: u32 = 0xd7a;
@@ -2937,23 +2740,11 @@ pub(crate) unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: us
     1
 }
 
-// ponytail: as três mexem no arquivo temporário (e a gravação também nos eventos e no índice): rodar
+// simplification: as três mexem no arquivo temporário (e a gravação também nos eventos e no índice): rodar
 // duas vezes gravaria o registro duas vezes, então o comparador só chama a original; as cópias se
 // provam no modo Rust (os ramos) e pela carreira com as mutações.
-/// Comparer for `read_match_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_read_match_record(estat: usize, k: i32, saida: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_READ_MATCH_RECORD)(estat, k, saida)
-}
 
-/// Comparer for `match_screens_record_match` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_match_screens_record_match(estat: usize, m: usize, r: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_MATCH_SCREENS_RECORD_MATCH)(estat, m, r)
-}
 
-/// Comparer for `write_match_record` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_write_match_record(estat: usize, jogo: usize, r: usize, eventos: usize) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_WRITE_MATCH_RECORD)(estat, jogo, r, eventos)
-}
 
 /// 16-bit colour stored at a, as u32.
 ///
@@ -3101,7 +2892,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(modo: u32, area: usize) {
                     marcas = 0x30;
                     estilo = 1;
                     formatar(BUF, 0x98806c, if n > 0 { n as i32 } else { i + 1 });
-                    // ponytail: a original compara i com ([info + 0x4d] & 0xf) + 0xb, mas os dois ramos dão 0x30
+                    // simplification: a original compara i com ([info + 0x4d] & 0xf) + 0xb, mas os dois ramos dão 0x30
                 }
                 1 | 2 => {
                     cor = colour_word_u32(0xae317e);
@@ -3719,52 +3510,10 @@ pub(crate) unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
     -4
 }
 
-/// Comparer for `fill_team_stats_rows` (comparison mode: see the header of motor.rs).
-///
-/// [pt] As células são comparadas de verdade: montagem (`modo` ≠ 0) pela lista de exibição, atualização
-/// local pelo `Display` do gerente; os parâmetros (o 0x1a) e o texto 0xde1f64 também. Atualização que
-/// vai pela rede ou parâmetro 0x1c fora de 1 e 2: só a original.
-pub(crate) unsafe extern "C" fn comparar_fill_team_stats_rows(modo: u32, area: usize) {
-    let o = original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_FILL_TEAM_STATS_ROWS);
-    let coluna = get_screen_param(0x1c) as u8;
-    let mut reg = match screen_update_regions(modo != 0) {
-        Some(r) if coluna == 1 || coluna == 2 => r,
-        _ => return o(modo, area),
-    };
-    reg.extend(screen_param_regions());
-    reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(modo, area), || fill_team_stats_rows(modo, area));
-    PLACAR.registrar(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", modo, area, first_differences(&mo, &mr)));
-}
 
-/// Comparer for `refresh_latest_scores_rows` (comparison mode: see the header of motor.rs).
-///
-/// [pt] O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
-/// o 0x14, a hora que a rotina grava no fim) e o texto 0xde1f64. Pela rede: só a original.
-pub(crate) unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_LATEST_SCORES_ROWS);
-    let mut reg = match screen_update_regions(false) {
-        Some(r) => r,
-        None => return o(),
-    };
-    reg.push((0xb6b7a8, 12));
-    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
-    if bloco != 0 {
-        reg.push((bloco, 0xb4));
-        reg.push((bloco + 0xb8, 0x200 - 0xb8));
-    }
-    reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || refresh_latest_scores_rows());
-    PLACAR.registrar(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
-}
 
-// ponytail: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas
+// simplification: a espera fecha as telas, mostra a mensagem e abre a tela da partida (rede); não roda duas
 // vezes: no modo comparação só a original (a cópia é provada no modo Rust pelo ramo)
-/// Comparer for `match_screens_handle_waiting_screen` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_screens_handle_waiting_screen() -> i32 {
-    original_fn::<unsafe extern "C" fn() -> i32>(IDX_MATCH_SCREENS_HANDLE_WAITING_SCREEN)()
-}
 
 pub(crate) type DisplayLineFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
 pub(crate) type ManagerBoxFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
@@ -3835,7 +3584,7 @@ pub(crate) unsafe extern "C" fn draw_action_zones_panel(topo: *mut i32, base: *m
     let t = *topo as usize;
     let c = caixa(sm, 0x6e, t, 0xeb, t + 0x14, 0x30, colour_word(0xae317e), 0xc, 1, colour_word(0xae3184), BUF, 0, 0);
     let periodos = lista(current_human_display(), 0, 0, 0, 0, 0, 0, 0, 0, 0x130, colour_word(0xae31aa), c);
-    // ponytail: com a vista fora de 0 a 4 a original passa o texto de uma variável local sem valor; aqui vazio
+    // simplification: com a vista fora de 0 a 4 a original passa o texto de uma variável local sem valor; aqui vazio
     let mut titulo = [0u8; 200];
     for (k, &(rotulo, item)) in [(0xa16738usize, 4u8), (0xa167ec, 0), (0xa167e0, 1), (0xa168a8, 2), (0x98800c, 3)].iter().enumerate() {
         texto(BUF, rotulo);
@@ -3950,11 +3699,11 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *m
             let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
             let memoria = novo(0x2db1);
             if memoria == 0 {
-                // ponytail: sem memória a original mostra o erro (e tenta alocar de novo, sem efeito)
+                // simplification: sem memória a original mostra o erro (e tenta alocar de novo, sem efeito)
                 return o(topo, base);
             }
             crate::comparacao::ramo("telas painel do relatorio da partida (montar)");
-            // ponytail: o quadro SEH da original só libera a memória se o construtor lançar exceção, o que ele não faz
+            // simplification: o quadro SEH da original só libera a memória se o construtor lançar exceção, o que ele não faz
             let construir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_MATCH_EVENTS);
             let r = construir(memoria, 0);
             set_screen_param(0x2d, r);
@@ -4015,7 +3764,7 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *m
                     let (b, a) = (*base, *topo);
                     let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_FONT_GET_HEIGHT);
                     let n = ((b - a) / altura(2)) as u8;
-                    // ponytail: os 3 bytes de cima das linhas são lixo da pilha na original; aqui 0
+                    // simplification: os 3 bytes de cima das linhas são lixo da pilha na original; aqui 0
                     tabela = lista(current_human_display(), 0x6e, a as usize, 0x30c, b as usize, 2, colunas.as_mut_ptr() as usize, n as usize, 0, 1, 0, usize::MAX);
                 }
                 let cor_rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
@@ -4296,65 +4045,9 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
     *((grupo as isize + 0x14 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as *mut u32) = 1;
 }
 
-/// Comparer for `pela_lista_com` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Como `comparar_painel_pela_lista`, com mais regiões (o que a rotina grava fora da tela).
-pub(crate) unsafe fn comparar_pela_lista_com(nome: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
-    let mut reg = screen_build_regions();
-    reg.extend(screen_param_regions());
-    reg.push((0xde1f64, 0x100));
-    reg.push((0xae290c, 4));
-    reg.extend_from_slice(extra);
-    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
-    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, || crate::aleatorio::sem_contar(rust));
-    PLACAR.registrar(igual, || {
-        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
-            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
-            Some(format!("{:#x}+{:#x}", a, k))
-        }).collect();
-        format!("{}: diferencas em {:?}", nome, dif)
-    });
-}
 
-/// Comparer for `draw_action_zones_panel` (comparison mode: see the header of motor.rs).
-///
-/// [pt] As zonas de ação são comparadas de verdade, com o `*topo` (+0x19), a cor fixa 0xb6b7a4 e a guarda
-/// 0xb6b7b4 e a foto da partida que os valores (0x720320) comparam e regravam (parâmetro 0x1d, 0xd7a
-/// bytes). Sem a foto ainda (o primeiro desenho), os valores a alocam: só a original roda.
-pub(crate) unsafe extern "C" fn comparar_draw_action_zones_panel(topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_ACTION_ZONES_PANEL);
-    let foto = get_screen_param(0x1d);
-    if foto == 0 {
-        // ponytail: a alocação não roda duas vezes; esse desenho se prova no modo Rust
-        return o(topo, base);
-    }
-    let extra = [(topo as usize, 4), (0xb6b7a4, 2), (0xb6b7b4, 1), (foto, 0xd7a)];
-    comparar_pela_lista_com("draw_action_zones_panel", &extra, || o(topo, base), || draw_action_zones_panel(topo, base));
-}
 
-/// Comparer for `draw_match_report_panel` (comparison mode: see the header of motor.rs).
-///
-/// [pt] O relatório é comparado de verdade quando já existe (na partida ou no parâmetro 0x2d); quando nasce
-/// aqui (alocação e construção) só a original roda.
-pub(crate) unsafe extern "C" fn comparar_draw_match_report_panel(topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_REPORT_PANEL);
-    if get_screen_param(0) == 0 && *((get_screen_param(0x20) + 0x4c) as *const u8) == 0 && get_screen_param(0x2d) == 0 {
-        // ponytail: a alocação do relatório não roda duas vezes; esse caminho se prova no modo Rust
-        return o(topo, base);
-    }
-    comparar_painel_pela_lista("draw_match_report_panel", || o(topo, base), || draw_match_report_panel(topo, base));
-}
 
-/// Comparer for `build_day_fixtures_screen` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A montagem é comparada de verdade, com a marca de vista do humano no grupo (+0x14 + 4h).
-pub(crate) unsafe extern "C" fn comparar_build_day_fixtures_screen() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_DAY_FIXTURES_SCREEN);
-    let marca = (get_screen_param(1) as isize + 0x14 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize;
-    comparar_pela_lista_com("build_day_fixtures_screen", &[(marca, 4)], || o(), || build_day_fixtures_screen());
-}
 
 /// Copies the match state (0xd7a bytes) into the copy in screen param 0x1d field by field, allocating and constructing
 /// it first if needed.
@@ -4712,51 +4405,9 @@ pub(crate) unsafe extern "C" fn refresh_player_ratings_rows() {
     save_match_snapshot(copia, e);
 }
 
-/// Comparer for `valores_da_partida` (comparison mode: see the header of motor.rs).
-///
-/// [pt] As três rotinas são comparadas de verdade quando já existe a cópia do estado (parâmetro 0x1d): as
-/// duas atualizam a partir do mesmo estado e o gerente de telas (com a posição do buffer de mensagens
-/// em +0x3802, que cada atualização de item zera e preenche), o `Display` da tela atual, o bloco de
-/// parâmetros, a cópia do estado (0xd7a bytes) e o texto 0xde1f64 têm de sair iguais. O conteúdo do
-/// buffer de mensagens ([gerente + 0x37fe]) não entra (como na leva das listas).
-pub(crate) unsafe fn comparar_valores_da_partida(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
-    let copia = get_screen_param(0x1d);
-    if copia == 0 {
-        // ponytail: sem cópia a rotina aloca a cópia (0x944cf1) e a grava no parâmetro 0x1d; não dá
-        // para rodar duas vezes. Só a original; a cópia Rust prova esse ramo no modo Rust.
-        return original();
-    }
-    let mut reg = screen_build_regions();
-    reg.extend(screen_param_regions());
-    reg.push((copia, 0xd7a));
-    reg.push((0xde1f64, 0x100));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
-    PLACAR.registrar(igual, || {
-        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
-            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
-            Some(format!("{:#x}+{:#x}", a, k))
-        }).collect();
-        format!("{}: diferencas em {:?}", nome, dif)
-    });
-}
 
-/// Comparer for `refresh_match_stats_values` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_refresh_match_stats_values() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_MATCH_STATS_VALUES);
-    comparar_valores_da_partida("refresh_match_stats_values", || o(), || refresh_match_stats_values());
-}
 
-/// Comparer for `refresh_action_zones_values` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_refresh_action_zones_values() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_ACTION_ZONES_VALUES);
-    comparar_valores_da_partida("refresh_action_zones_values", || o(), || refresh_action_zones_values());
-}
 
-/// Comparer for `refresh_player_ratings_rows` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_refresh_player_ratings_rows() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_PLAYER_RATINGS_ROWS);
-    comparar_valores_da_partida("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
-}
 
 pub(crate) type ListCellFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
 pub(crate) type ListCellTextFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
@@ -5014,55 +4665,9 @@ pub(crate) unsafe extern "C" fn draw_match_stats_panel(topo: *mut i32, base: *mu
     preencher();
 }
 
-/// Comparer for `painel_pela_lista` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Os três painéis são comparados de verdade: as duas desenham a partir do mesmo estado e o gerente de
-/// telas, o `Display` da tela atual, o bloco de parâmetros com as marcas 0xb6b7a8/ac/b0 e o texto
-/// 0xde1f64 têm de sair iguais. A lista (0x55fba0) também escreve num buffer de rede ([0xae2908] na
-/// posição [0xae290c]): a posição entra nas regiões (volta para a segunda rodada escrever no mesmo
-/// lugar e o tamanho escrito é comparado); o conteúdo desse buffer não.
-pub(crate) unsafe fn comparar_painel_pela_lista(nome: &str, original: impl FnOnce(), rust: impl FnOnce()) {
-    let mut reg = screen_build_regions();
-    reg.extend(screen_param_regions());
-    reg.push((0xde1f64, 0x100));
-    reg.push((0xae290c, 4));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, original, rust);
-    PLACAR.registrar(igual, || {
-        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
-            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
-            Some(format!("{:#x}+{:#x}", a, k))
-        }).collect();
-        format!("{}: diferencas em {:?}", nome, dif)
-    });
-}
 
-/// Comparer for `draw_team_stats_panel` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(u32, *mut i32, *mut i32)>(IDX_DRAW_TEAM_STATS_PANEL);
-    comparar_painel_pela_lista("draw_team_stats_panel", || o(lado, topo, base), || draw_team_stats_panel(lado, topo, base));
-}
 
-/// Comparer for `draw_player_ratings_panel` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_PLAYER_RATINGS_PANEL);
-    // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
-    // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
-    if get_screen_param(0x1d) == 0 {
-        return o(topo, base);
-    }
-    comparar_painel_pela_lista("draw_player_ratings_panel", || o(topo, base), || draw_player_ratings_panel(topo, base));
-}
 
-/// Comparer for `draw_match_stats_panel` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_STATS_PANEL);
-    // ponytail: sem a copia do estado (parametro 0x1d) a atualizacao dentro do painel a aloca, e cada
-    // lado alocaria a sua (enderecos diferentes): so a original; o modo Rust prova esse caminho
-    if get_screen_param(0x1d) == 0 {
-        return o(topo, base);
-    }
-    comparar_painel_pela_lista("draw_match_stats_panel", || o(topo, base), || draw_match_stats_panel(topo, base));
-}
 
 /// Value at [0xb74c26 + 0x300 x current slot]: the current human's slot entry [inference: his person pointer].
 ///
@@ -5135,7 +4740,7 @@ pub(crate) unsafe extern "C" fn match_screens_handle_continue_command(item: u32)
                 let formatar_texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
                 formatar_texto(0xde1f64, 0xa16d94);
                 let aviso: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
-                // ponytail: a original empurra ecx com 16 bits altos que sobram de 0x66f4e0 (imprevisíveis); aqui zero
+                // simplification: a original empurra ecx com 16 bits altos que sobram de 0x66f4e0 (imprevisíveis); aqui zero
                 aviso(SCREEN_MANAGER, 0xde1f64, 0, 0, humano() as u16 as u32);
                 let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_OPEN_MATCH_SCREEN);
                 abrir_partida(current_human_screen_person(), clube);
@@ -5263,22 +4868,10 @@ pub(crate) unsafe extern "C" fn match_screens_handle_team_selection_input(item: 
     -9
 }
 
-// ponytail: as três abrem telas, mexem na rede ou no capitão (não rodam duas vezes): no modo comparação
+// simplification: as três abrem telas, mexem na rede ou no capitão (não rodam duas vezes): no modo comparação
 // só a original; a cópia é provada no modo Rust pelos ramos
-/// Comparer for `match_screens_handle_continue_command` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_screens_handle_continue_command(item: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_MATCH_SCREENS_HANDLE_CONTINUE_COMMAND)(item)
-}
 
-/// Comparer for `match_screens_open_team_selection` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_screens_open_team_selection() {
-    original_fn::<unsafe extern "C" fn()>(IDX_MATCH_SCREENS_OPEN_TEAM_SELECTION)()
-}
 
-/// Comparer for `match_screens_handle_team_selection_input` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_screens_handle_team_selection_input(item: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_MATCH_SCREENS_HANDLE_TEAM_SELECTION_INPUT)(item)
-}
 
 /// Copies fields of size 1, 2 or 4 bytes from s to d over [ini, fim) in ascending order like the original.
 ///
@@ -5316,13 +4909,6 @@ pub(crate) unsafe extern "thiscall" fn match_team_block_assign(this: usize, src:
     this
 }
 
-/// Comparer for `match_team_block_assign` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_match_team_block_assign(this: usize, src: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_TEAM_BLOCK_ASSIGN);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
-    PLACAR.registrar(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
-    r
-}
 
 /// copies one player row of the team block (0x49 bytes), the date through Date::operator=
 /// Original: `match_player_row_assign` (0x71df00, match_screens.cpp, thiscall).
@@ -5341,13 +4927,6 @@ pub(crate) unsafe extern "thiscall" fn match_player_row_assign(this: usize, src:
     this
 }
 
-/// Comparer for `match_player_row_assign` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_match_player_row_assign(this: usize, src: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_PLAYER_ROW_ASSIGN);
-    let (r, n, igual, _, _) = crate::comparacao::lado_a_lado(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
-    PLACAR.registrar(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
-    r
-}
 
 /// counts the goals and shoot-out goals of a match up to the current minute of the live match
 /// Original: `match_screens_tally_live_score` (0x728e90, match_screens.cpp, cdecl).
@@ -5404,15 +4983,6 @@ pub(crate) unsafe extern "C" fn match_screens_tally_live_score(partida: usize, i
     }
 }
 
-/// Comparer for `match_screens_tally_live_score` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_screens_tally_live_score(partida: usize, indice: u32, res: usize) {
-    let o = original_fn::<unsafe extern "C" fn(usize, u32, usize)>(IDX_MATCH_SCREENS_TALLY_LIVE_SCORE);
-    if res == 0 {
-        return o(partida, indice, res);
-    }
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(res + 0x43, 0xa)], || o(partida, indice, res), || match_screens_tally_live_score(partida, indice, res));
-    PLACAR.registrar(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, indice, mo.0, mr.0));
-}
 
 
 /// reports whether a match statistics entry holds the two given clubs in either order and the given date
@@ -5469,7 +5039,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(jogo: usize,
         return if v as i32 * 2 >= 10000 || v >= 0x157c { 0 } else { 2 };
     }
     let w = |o: usize| core::ptr::read_unaligned((jogo + o) as *const i16) as i32;
-    // ponytail: as duas tabelas de bytes dos saltos são lidas do próprio exe (o desvio só troca o começo da rotina)
+    // simplification: as duas tabelas de bytes dos saltos são lidas do próprio exe (o desvio só troca o começo da rotina)
     let tabela = |end: usize, i: i32| *((end + i as usize) as *const u8);
     match (*((jogo + 0x3a) as *const i8) as i32).wrapping_sub(1) {
         0 => 3,
@@ -5500,25 +5070,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(jogo: usize,
 }
 
 
-/// Comparer for `fixture_entry_matches` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fixture_entry_matches(estat: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(IDX_FIXTURE_ENTRY_MATCHES);
-    if k < -1 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) {
-        return o(estat, k, a, b, data_a, data_b);
-    }
-    let r = o(estat, k, a, b, data_a, data_b);
-    let n = fixture_entry_matches(estat, k, a, b, data_a, data_b);
-    PLACAR.registrar(r == n, || format!("fixture_entry_matches({}, {}, {}, {}, {}) original={} rust={}", k, a, b, data_a, data_b, r, n));
-    r
-}
 
-/// Comparer for `match_stats_get_record_bucket` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "stdcall" fn comparar_match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
-    let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u8>(IDX_MATCH_STATS_GET_RECORD_BUCKET)(jogo, registro);
-    let n = match_stats_get_record_bucket(jogo, registro);
-    PLACAR.registrar(r == n, || format!("match_stats_get_record_bucket original={} rust={}", r, n));
-    r
-}
 
 /// opens the day fixtures screen in a slot with the fixture group (error box without a group)
 /// Original: `open_day_fixtures_screen` (0x717cc0, match_screens.cpp, cdecl).
@@ -5616,30 +5168,10 @@ pub(crate) unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatic
     vaga
 }
 
-// ponytail: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
+// simplification: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-/// Comparer for `open_day_fixtures_screen` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_open_day_fixtures_screen(vaga: u32, grupo: usize) {
-    original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_DAY_FIXTURES_SCREEN)(vaga, grupo)
-}
 
-/// Comparer for `handle_day_fixtures_input` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_handle_day_fixtures_input(item: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_HANDLE_DAY_FIXTURES_INPUT)(item)
-}
 
-/// Comparer for `match_screens_find_best_rated_starter_slot` (comparison mode: see the header of motor.rs).
-///
-/// [pt] Só lê: compara a vaga devolvida (tática nula: só a original, pela caixa de erro).
-pub(crate) unsafe extern "C" fn comparar_match_screens_find_best_rated_starter_slot(tatica: usize, contexto: i32) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, i32) -> u8>(IDX_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT)(tatica, contexto);
-    if tatica == 0 {
-        return r;
-    }
-    let n = match_screens_find_best_rated_starter_slot(tatica, contexto);
-    PLACAR.registrar(r == n, || format!("match_screens_find_best_rated_starter_slot({:#x}, {}) {} x {}", tatica, contexto, r as i8, n as i8));
-    r
-}
 
 /// Regions of the current screen's parameter block and the marks at 0xb6b7a8.
 ///
@@ -5794,41 +5326,10 @@ pub(crate) unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
     0
 }
 
-// ponytail: abrir a tela mexe em telas e na rede (não roda duas vezes): no modo comparação só a original
-/// Comparer for `open_match_screen` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_open_match_screen(vaga: u32, partida: usize) {
-    original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_MATCH_SCREEN)(vaga, partida)
-}
+// simplification: abrir a tela mexe em telas e na rede (não roda duas vezes): no modo comparação só a original
 
-/// Comparer for `resposta` (comparison mode: see the header of motor.rs).
-///
-/// [pt] As duas respostas são comparadas de verdade nos cliques (o bloco de parâmetros da tela e as marcas
-/// 0xb6b7a8/ac/b0, mais a devolução); quando há redesenho (a troca de 5 s dos placares, os dados novos
-/// das estatísticas) só a original roda, porque o redesenho grava a hora no parâmetro 0x14 e mexe na
-/// lista de exibição.
-pub(crate) unsafe fn comparar_resposta(nome: &str, item: u32, o: unsafe extern "C" fn(u32) -> i32, r: unsafe extern "C" fn(u32) -> i32, redesenha: bool) -> i32 {
-    if item as u16 == 0xffff || redesenha {
-        return o(item);
-    }
-    let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&screen_param_regions(), || o(item), || r(item));
-    PLACAR.registrar(igual && ro == rr, || format!("{}(item {:#x}) original={} rust={} {:?} x {:?}", nome, item, ro, rr, mo, mr));
-    ro
-}
 
-/// Comparer for `match_screens_handle_latest_scores_cycle` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
-    let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_UTILS_GET_TIME_MS);
-    // folga de 1 s: a hora pode virar entre os dois lados
-    let redesenha = agora().wrapping_add(1000) >= (get_screen_param(0x14) as u32).wrapping_add(5000);
-    comparar_resposta("match_screens_handle_latest_scores_cycle", item, original_fn(431), match_screens_handle_latest_scores_cycle, redesenha)
-}
 
-/// Comparer for `handle_team_stats_input` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_handle_team_stats_input(item: u32) -> i32 {
-    let p0 = get_screen_param(0);
-    let redesenha = *(G_MATCH_SCREEN_LIVE_DATA_FLAG as *const u32) != 0 && *(*((p0 + 0x5b) as *const usize) as *const u8) & 4 != 0;
-    comparar_resposta("handle_team_stats_input", item, original_fn(432), handle_team_stats_input, redesenha)
-}
 
 /// Reads parameter k of the current screen (screen manager 0x7ff010).
 ///
@@ -6021,22 +5522,10 @@ pub(crate) unsafe extern "C" fn close_match_details() {
     }
 }
 
-// ponytail: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
+// simplification: as três mexem em telas, menus e memória (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-/// Comparer for `open_match_details` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_open_match_details(partida: usize) {
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_OPEN_MATCH_DETAILS)(partida)
-}
 
-/// Comparer for `match_details_input` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_details_input(item: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_MATCH_DETAILS_INPUT)(item)
-}
 
-/// Comparer for `close_match_details` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_close_match_details() {
-    original_fn::<unsafe extern "C" fn()>(IDX_CLOSE_MATCH_DETAILS)()
-}
 
 /// O gerente de telas (o objeto [0xb74450], que tem a vaga da tela atual em +0x382a e um `Display` por
 /// vaga em +0x7fc + 0x300 x vaga).
@@ -6165,42 +5654,10 @@ pub(crate) unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
     ligacao(item)
 }
 
-// ponytail: abrir e responder mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
+// simplification: abrir e responder mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
-/// Comparer for `open_latest_scores` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_open_latest_scores(vaga: u32, entrada: usize) {
-    original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_LATEST_SCORES)(vaga, entrada)
-}
 
-/// Comparer for `build_latest_scores` (comparison mode: see the header of motor.rs).
-///
-/// [pt] A montagem é comparada de verdade: as duas montam a tela a partir do mesmo estado e o gerente de
-/// telas, o `Display` da tela atual (a lista de exibição) e o título (0xde1f64) têm de sair iguais.
-pub(crate) unsafe extern "C" fn comparar_build_latest_scores() {
-    let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_LATEST_SCORES);
-    let mut reg = screen_build_regions();
-    reg.push((0xde1f64, 0x100));
-    // a lista (0x55fba0) escreve num buffer de rede ([0xae2908] na posicao [0xae290c]): a posicao volta
-    // para a segunda rodada escrever no mesmo lugar
-    reg.push((0xae290c, 4));
-    // a foto de fundo (0x41c410) sorteia: o estado do gerador volta para a segunda rodada (sem ele o
-    // gerador andava duas vezes no modo comparação e a carreira se deslocava; 204ª)
-    reg.extend_from_slice(&crate::aleatorio::REGIOES_DO_ESTADO);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(), || crate::aleatorio::sem_contar(|| build_latest_scores()));
-    PLACAR.registrar(igual, || {
-        // so as diferencas (a lista e grande): onde comecam e quantos bytes
-        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
-            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
-            Some(format!("{:#x}+{:#x}", a, k))
-        }).collect();
-        format!("build_latest_scores: diferencas em {:?}", dif)
-    });
-}
 
-/// Comparer for `latest_scores_input` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_latest_scores_input(item: u32) -> i32 {
-    original_fn::<unsafe extern "C" fn(u32) -> i32>(IDX_LATEST_SCORES_INPUT)(item)
-}
 
 /// the match control button label (waiting, kick off, restart, pause or resume, continue) and whether it is disabled
 /// Original: `match_control_label` (0x725a70, match_screens.cpp, cdecl).
@@ -6285,30 +5742,11 @@ pub(crate) unsafe extern "C" fn open_waiting_screen(vaga: u32) {
     abrir(G_SCREEN_MANAGER, vaga, 0x727fa0, 0x727fb0, 0, 0, 0);
 }
 
-/// Comparer for `match_control_label` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_match_control_label(estado: u8, m: usize, saida: *mut u8, tam: i32, marcas: *mut u32) -> u32 {
-    let o = original_fn::<unsafe extern "C" fn(u8, usize, *mut u8, i32, *mut u32) -> u32>(IDX_MATCH_CONTROL_LABEL);
-    if m == 0 || saida.is_null() || tam < 100 || marcas.is_null() {
-        return o(estado, m, saida, tam, marcas);
-    }
-    let reg = [(saida as usize, tam.min(0x100) as usize), (marcas as usize, 4)];
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(estado, m, saida, tam, marcas), || match_control_label(estado, m, saida, tam, marcas));
-    PLACAR.registrar(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", estado, r, n, mo, mr));
-    r
-}
 
-// ponytail: fechar e abrir mexem no gerente de telas e na memória (não rodam duas vezes): no modo
+// simplification: fechar e abrir mexem no gerente de telas e na memória (não rodam duas vezes): no modo
 // comparação só a original roda; as cópias se provam no jogo do Lucas em modo Rust (JOGAR.bat), com
 // os contadores "telas ..." no ddraw.log
-/// Comparer for `close_match_screen` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_close_match_screen() {
-    original_fn::<unsafe extern "C" fn()>(IDX_CLOSE_MATCH_SCREEN)()
-}
 
-/// Comparer for `open_waiting_screen` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "C" fn comparar_open_waiting_screen(vaga: u32) {
-    original_fn::<unsafe extern "C" fn(u32)>(IDX_OPEN_WAITING_SCREEN)(vaga)
-}
 
 /// draws the latest scores panel: title, badge, the day's groups and matches, table and buttons
 /// Original: `draw_latest_scores_panel` (0x723d20, match_screens.cpp, cdecl).
@@ -6455,31 +5893,3 @@ pub(crate) unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *
     redesenhar();
 }
 
-/// Comparer for `draw_latest_scores_panel` (comparison mode: see the header of motor.rs).
-///
-/// [pt] O painel é comparado de verdade: as duas desenham a partir do mesmo estado e o gerente de telas, o
-/// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
-/// `*topo` e o texto 0xde1f64 têm de sair iguais.
-pub(crate) unsafe extern "C" fn comparar_draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
-    let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_LATEST_SCORES_PANEL);
-    let mut reg = screen_build_regions();
-    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
-    if bloco != 0 {
-        reg.push((bloco, 0xb4));
-        reg.push((bloco + 0xb8, 0x200 - 0xb8));
-    }
-    reg.push((topo as usize, 4));
-    reg.push((0xde1f64, 0x100));
-    // a lista (0x55fba0) escreve num buffer de rede ([0xae2908] na posicao [0xae290c]): a posicao volta
-    // para a segunda rodada escrever no mesmo lugar
-    reg.push((0xae290c, 4));
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(topo, base), || draw_latest_scores_panel(topo, base));
-    PLACAR.registrar(igual, || {
-        let dif: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter_map(|((a, x), (_, y))| {
-            let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
-            Some(format!("{:#x}+{:#x}", a, k))
-        }).collect();
-        format!("draw_latest_scores_panel: diferencas em {:?}", dif)
-    });
-}

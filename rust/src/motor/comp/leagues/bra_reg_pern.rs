@@ -68,41 +68,11 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_advance_stage_43cef0(this: u
     state_league_advance_stage(this, 0x98b090, 0x1ea, 0x43cf80);
 }
 
-/// Comparer for `bra_reg_pern_start_new_season` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_START_NEW_SEASON);
-    compare_state_league_new_season("bra_reg_pern_start_new_season", this, || o(this))
-}
 
-/// Comparer for `bra_reg_pern_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_ADVANCE_STAGE);
-    compare_state_league_advance_stage("bra_reg_pern_advance_stage", this, || o(this))
-}
 
-/// Comparer for `bra_reg_pern_start_new_season_43bd10` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season_43bd10(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_START_NEW_SEASON_43BD10);
-    compare_state_league_new_season("bra_reg_pern_start_new_season_43bd10", this, || o(this))
-}
 
-/// Comparer for `bra_reg_pern_advance_stage_43bec0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage_43bec0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_ADVANCE_STAGE_43BEC0);
-    compare_state_league_advance_stage("bra_reg_pern_advance_stage_43bec0", this, || o(this))
-}
 
-/// Comparer for `bra_reg_pern_start_new_season_43cd40` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_start_new_season_43cd40(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_START_NEW_SEASON_43CD40);
-    compare_state_league_new_season("bra_reg_pern_start_new_season_43cd40", this, || o(this))
-}
 
-/// Comparer for `bra_reg_pern_advance_stage_43cef0` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_advance_stage_43cef0(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_ADVANCE_STAGE_43CEF0);
-    compare_state_league_advance_stage("bra_reg_pern_advance_stage_43cef0", this, || o(this))
-}
 
 
 
@@ -140,7 +110,7 @@ pub(crate) unsafe fn bra_reg_pern_build_knockout_from_table(this: usize, linhas:
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = novo(0xb2);
-    // ponytail: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
+    // simplification: a original empurra as rodadas, o extra e o ano em dwords com lixo nos 16 bits altos (as saídas da
     // virtual são words na pilha; o ano vai no cx); o construtor só lê as palavras.
     let fase = if p != 0 {
         #[allow(clippy::type_complexity)]
@@ -217,23 +187,8 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(nome: &str, this: 
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", nome, this, pl, fase, ac, read_i16(fase + 0x3e)));
 }
 
-/// Comparer for `bra_reg_pern_create_semi_final_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_CREATE_SEMI_FINAL_STAGE);
-    bra_reg_pern_compare_knockout_from_table("bra_reg_pern_create_semi_final_stage", this, &[0, 3, 1, 2], || o(this))
-}
 
-/// Comparer for `bra_reg_pern_create_semi_final_stage_43bf50` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43bf50(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_CREATE_SEMI_FINAL_STAGE_43BF50);
-    bra_reg_pern_compare_knockout_from_table("bra_reg_pern_create_semi_final_stage_43bf50", this, &[0, 3, 1, 2], || o(this))
-}
 
-/// Comparer for `bra_reg_pern_create_semi_final_stage_43cf80` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_stage_43cf80(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PERN_CREATE_SEMI_FINAL_STAGE_43CF80);
-    bra_reg_pern_compare_knockout_from_table("bra_reg_pern_create_semi_final_stage_43cf80", this, &[0, 3, 1, 2], || o(this))
-}
 
 /// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with
 /// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
@@ -245,11 +200,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, ano: 
     bra_reg_northeast_construct_state_league(this, ano, registro, &PERNAMBUCANO_STATE_CHAMPIONSHIP, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
 }
 
-/// Comparer for `construct_bra_reg_pern` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_pern(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PERN);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_pern", this, ano, registro, &PERNAMBUCANO_STATE_CHAMPIONSHIP, || o(this, ano, registro))
-}
 
 /// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds
 /// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
@@ -261,11 +211,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) ->
     build_state_league_table(this, 0xa, 0x98afd8, 0x167, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, 0, "cqm_7 pernambucano cheio")
 }
 
-/// Comparer for `bra_reg_pern_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_CREATE_TABLE);
-    bra_reg_northeast_compare_state_league_table("bra_reg_pern_create_table", this, 0xa, KEY_CLUB_COMP_BRAZILIAN_PERNAMBUCO_STATE_CHAMPIONSHIP, || o(this))
-}
 
 /// North and Pernambuco (the same routine in the two vtables): 4 top places (the final stage of 4); 2 relegated; double
 /// round robin; win 3, draw 1; tie-break by head-to-head, then goal difference; no play-offs in the table; no league
@@ -283,13 +228,3 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) ->
     1
 }
 
-/// Comparador: como o do Paranaense.
-pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_set_up_rules(this: usize) -> u32 {
-    let reg = league_regions_without_schedule(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PERN_SET_UP_RULES)(this), || {
-        pernambucano_rules(this);
-        1
-    });
-    PLACAR.registrar(igual && r == n, || format!("bra_reg_pern_set_up_rules({:x}) original={} rust={} {:?} {:?}", this, r, n, mo, mr));
-    r
-}

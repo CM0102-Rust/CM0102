@@ -363,11 +363,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fa
     }
 }
 
-/// Comparer for `eng_first_create_schedule` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_ENG_FIRST_CREATE_SCHEDULE);
-    eng_first_compare_round_table("eng_first_create_schedule", fase, rodadas, extra, liga, || o(this, fase, rodadas, extra, liga), |r, e, l| eng_first_create_schedule(this, fase, r, e, l))
-}
 
 
 
@@ -409,7 +404,7 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, linhas: [usize; 4], arqui
     let t = tabela(this, 0, &mut rodadas, &mut extra, 0);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = novo(0xb2);
-    // ponytail: a original empurra a conta, as rodadas e a palavra +0x40 em registradores inteiros com lixo nos 16 bits
+    // simplification: a original empurra a conta, as rodadas e a palavra +0x40 em registradores inteiros com lixo nos 16 bits
     // altos; o construtor só lê as palavras ([esp+0x230], [esp+0x238], [esp+0x244] e [esp+0x250] com mov ax/dx).
     let fase = if p != 0 {
         let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
@@ -484,18 +479,8 @@ pub(crate) unsafe fn compare_playoff_stage(nome: &str, this: usize, linhas: [usi
     PLACAR.registrar(igual, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", nome, this, plano, fase, achou, read_i16(fase + 0x3e), n));
 }
 
-/// Comparer for `eng_first_create_playoff_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_playoff_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_FIRST_CREATE_PLAYOFF_STAGE);
-    compare_playoff_stage("eng_first_create_playoff_stage", this, [5, 2, 4, 3], || o(this))
-}
 
 
-/// Comparer for `eng_first_create_play_off_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_play_off_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_FIRST_CREATE_PLAY_OFF_STAGE);
-    compare_playoff_stage("eng_first_create_play_off_stage", this, [6, 3, 5, 4], || o(this))
-}
 
 /// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the
 /// play-offs (0x573080)
@@ -507,11 +492,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_advance_stage(this: usize) {
     advance_league_stage(this, 0x9c4374, 0x2ce, 0x573080, "cpz_3 mata-mata da first")
 }
 
-/// Comparer for `eng_first_advance_stage` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: usize) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_FIRST_ADVANCE_STAGE);
-    compare_stage_advance("eng_first_advance_stage", this, || o(this), || eng_first_advance_stage(this))
-}
 
 /// the First Division: discipline 9, no minimum ground, the league and 1 stage (the promotion play-off)
 /// Original: `EngFirst::EngFirst` (0x571680, eng_first.cpp, thiscall, ret 8).
@@ -522,11 +502,6 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, ano: u32
     construct_english_division(this, ano, registro, &FIRST_DIVISION)
 }
 
-/// Comparer for `construct_eng_first` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_FIRST);
-    compare_english_constructor("construct_eng_first", this, ano, registro, &FIRST_DIVISION, || o(this, ano, registro))
-}
 
 /// the First (24): the top 2 go up directly, 3rd to 6th go to the promotion play-offs, the bottom 3 go down to the
 /// Second; 5 substitutes and 3 substitutions; 2 rounds, 3 points
@@ -541,11 +516,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u3
     eng_prm_apply_league_rules(this, &eng_prm_first_division_rules())
 }
 
-/// Comparer for `eng_first_set_up_rules` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_set_up_rules(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_FIRST_SET_UP_RULES);
-    eng_prm_compare_league_rules("eng_first_set_up_rules", this, eng_prm_first_division_rules(), || o(this), || eng_first_set_up_rules(this))
-}
 
 /// the First has 24 clubs; prize fund of 70,000 per place; TV pays by the division the club came from: 5,877,777 to
 /// those relegated from the Premier and 4,099,999 to those already in the First and those promoted from the Second
@@ -568,11 +538,6 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_table(this: usize) -> u3
     })
 }
 
-/// Comparer for `eng_first_create_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_create_table(this: usize) -> u32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ENG_FIRST_CREATE_TABLE);
-    eng_prm_compare_league_table("eng_first_create_table", this, 0x18, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, 0x11170, || o(this))
-}
 
 /// writes stage, best and worst in the club stats entry (+0x73..+0x75): in the league, best 3 to 6 becomes 3 and worst
 /// 3 to 6 becomes 6; in the play-offs (stage 0), 1, 2 and 3 become 3, 4 and 5
@@ -584,8 +549,3 @@ pub(crate) unsafe extern "thiscall" fn eng_first_set_club_progress(this: usize, 
     set_club_stage_status(this, clube, fase as u8, atual as u8, melhor as u8, pior as u8, 3, 6)
 }
 
-/// Comparer for `eng_first_set_club_progress` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_eng_first_set_club_progress(this: usize, clube: usize, fase: u32, atual: u32, melhor: u32, pior: u32) {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_ENG_FIRST_SET_CLUB_PROGRESS);
-    compare_club_stage_status("eng_first_set_club_progress", this, clube, || o(this, clube, fase, atual, melhor, pior), || eng_first_set_club_progress(this, clube, fase, atual, melhor, pior))
-}

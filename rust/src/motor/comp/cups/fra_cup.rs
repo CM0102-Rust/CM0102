@@ -95,7 +95,7 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, fase: u32, rodadas: *
 pub(crate) unsafe fn compare_single_stage_round_table(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if fase as u8 != 0xff {
-        // ponytail: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
+        // simplification: fora da fase −1 nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
         return a;
@@ -143,12 +143,6 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, f
     single_stage_round_table(this, fase, rodadas, extra, saida, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
-/// Comparer for `fra_cup_create_round_table` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE);
-    compare_single_stage_round_table("fra_cup_create_round_table", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| fra_cup_create_round_table(this, fase, r, e, s))
-}
 
 /// A Copa da Liga francesa (FraLgeCup): sete rodadas de setembro a abril do ano seguinte.
 pub(crate) const FRENCH_LEAGUE_CUP_ROUNDS: [FraCupCupRound; 7] = [
@@ -173,12 +167,6 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table_5bcc40(this: u
     single_stage_round_table(this, fase, rodadas, extra, saida, &FRENCH_LEAGUE_CUP_ROUNDS, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
 }
 
-/// Comparer for `fra_cup_create_round_table_5bcc40` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_create_round_table_5bcc40(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_FRA_CUP_CREATE_ROUND_TABLE_5BCC40);
-    compare_single_stage_round_table("fra_cup_create_round_table_5bcc40", fase, rodadas, extra, saida, || o(this, fase, rodadas, extra, saida),
-        |r, e, s| fra_cup_create_round_table_5bcc40(this, fase, r, e, s))
-}
 
 /// A Copa do Rei (SpaCup): sete rodadas de agosto a maio do ano seguinte; o clube da divisão mais baixa joga em casa e
 /// os clubes da mesma nação se separam (+0xb = 3) até a semifinal; da 3ª rodada à semifinal, ida e volta.
@@ -304,12 +292,6 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> 
 }
 
 
-/// Comparer for `fra_cup_collect_entrants` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS);
-    eng_cc_cup_compare_entrant_list("fra_cup_collect_entrants", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_cup_collect_entrants(this),
-        |_, n| n.clamp(0, 0xde) as usize * 6)
-}
 
 /// Port of FraLgeCup::collect_entrants (0x5bd160): 54 entrants from National (by origin) then Second and First
 /// divisions; returns (full flag, count).
@@ -366,12 +348,6 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants_5bd160(this: usi
     french_league_cup_collect_entrants(this).0
 }
 
-/// Comparer for `fra_cup_collect_entrants_5bd160` (comparison mode: see the header of motor.rs).
-pub(crate) unsafe extern "thiscall" fn comparar_fra_cup_collect_entrants_5bd160(this: usize) -> i32 {
-    let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_FRA_CUP_COLLECT_ENTRANTS_5BD160);
-    eng_cc_cup_compare_entrant_list("fra_cup_collect_entrants_5bd160", this, &[(this + 0x3e, 2), (0xb67a34, 4)], || o(this), || french_league_cup_collect_entrants(this),
-        |_, n| n.clamp(0, 0x36) as usize * 6)
-}
 
 
 /// Port of FraSuper::select_teams (0x5bf770): First division champion and French Cup winner (runner-up if same club);
