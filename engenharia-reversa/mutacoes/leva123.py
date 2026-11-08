@@ -7,5 +7,5 @@ MUTACOES = [
     ('u_campo', "                    ((weight as f64 + 1.0) * 0.5) as f32", "                    ((weight as f64 + 1.0) * 0.6) as f32"),
     ('u_cansar', "                call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [1, 0, 0, 0, 0]);", "                call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, j, [0; 5]);"),
     ('u_nove', "            if sortear(9) == 0 {", "            if sortear(8) == 0 {"),
-    ('u_fim', "    *((m + 0x8eb4) as *mut u8) = 2;", "    *((m + 0x8eb4) as *mut u8) = 3;"),
+    ('u_fim', "    *((m + engine::PUNISHMENT_STATE) as *mut u8) = 2;", "    *((m + engine::PUNISHMENT_STATE) as *mut u8) = 3;"),
 ]

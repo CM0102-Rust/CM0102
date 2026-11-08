@@ -6,7 +6,7 @@ MUTACOES = [
     ('t_vence', "if nota1 as i16 > nota0 as i16 {", "if nota1 as i16 >= nota0 as i16 {"),
     ('t_folego', "*w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(4);", "*w(wv, 0x35) = (*w(wv, 0x35)).wrapping_add(5);", "contest falta do vencedor"),
     ('t_agora', "sortear(match_pl_ftol(to_goal(d) as f64 * 10.0 + 2.0)) != 0", "sortear(match_pl_ftol(to_goal(d) as f64 * 10.0 + 3.0)) != 0", "contest falta do vencedor"),
-    ('t_pendente', "            *b(m, 0x475b) = x as u8;\n            *((m + 0x4761) as *mut usize) = who;", "            *b(m, 0x475b) = y as u8;\n            *((m + 0x4761) as *mut usize) = who;", "contest falta pendente"),
+    ('t_pendente', "            *b(m, 0x475b) = x as u8;\n            *((m + engine::PENDING_PLAY_OFFENDER) as *mut usize) = who;", "            *b(m, 0x475b) = y as u8;\n            *((m + engine::PENDING_PLAY_OFFENDER) as *mut usize) = who;", "contest falta pendente"),
     ('t_penalti', "*w(f, 0x35) = (*w(f, 0x35)).wrapping_sub(500);", "*w(f, 0x35) = (*w(f, 0x35)).wrapping_sub(499);", "contest penalty"),
     ('t_lado', "let lado_narrado = if modo == 1 { ub(v, 0x27) } else { zero(f) };", "let lado_narrado = if modo == 1 { zero(v) } else { zero(f) };", "contest punida modo 1"),
     ('t_extra', "let (alvo, lado_extra) = if modo == 1 { (v, zero(v)) } else { (f, ub(f, 0x27)) };", "let (alvo, lado_extra) = if modo == 1 { (v, zero(v)) } else { (f, zero(f)) };", "contest punida modo 3"),

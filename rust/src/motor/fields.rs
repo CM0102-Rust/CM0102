@@ -468,3 +468,116 @@ pub(crate) mod player_sheet {
     pub(crate) const VISION: usize = 0x43; // 1 byte(s), sbyte
     pub(crate) const WORK_RATE: usize = 0x44; // 1 byte(s), sbyte
 }
+
+/// Fields of the match `engine` object, named from how the engine uses them. [pt] Campos do objeto `engine` do motor.
+#[allow(dead_code)]
+pub(crate) mod engine {
+    pub(crate) const PENDING_INCIDENT_COUNT: usize = 0x1a3; // 1 byte(s): number of pending incident entries at +0xb1
+    pub(crate) const SHOT_PENDING: usize = 0x1a7; // 1 byte(s): set when a shot is taken, cleared when the ball is released [inference]
+    pub(crate) const PENALTY_TAKER_ORDER: usize = 0x1af; // 22 byte(s): shootout taker order, 11 signed bytes per side (-1 empty)
+    pub(crate) const SIDE_SENT_OFF: usize = 0x1cb; // 2 byte(s): per-side flag set when a player of that side is sent off (goalkeeper: table 1)
+    pub(crate) const GRID: usize = 0x215e; // 9720 byte(s): pitch occupancy grid, 9 x 12 cells of 90 bytes (cell = +0x215e + 90 x (12 x x + y))
+    pub(crate) const WEATHER: usize = 0x4756; // ? byte(s): weather block of the match (filled at preparation; its factor scatters passes)
+    pub(crate) const PENDING_PLAY_CODE: usize = 0x475f; // 2 byte(s): commentary/play code of the pending incident (0xffff none)
+    pub(crate) const PENDING_PLAY_OFFENDER: usize = 0x4761; // 4 byte(s): player who committed the pending incident
+    pub(crate) const PENDING_PLAY_VICTIM: usize = 0x4765; // 4 byte(s): player who suffered the pending incident
+    pub(crate) const STANCE_FACTOR: usize = 0x476a; // 8 byte(s): stored stance factor per side (f32 per side; -1000.0 at start)
+    pub(crate) const ADJUSTED_PLAYER_ID: usize = 0x477a; // 4 byte(s): id (first dword of the record) of the last player adjusted by the disposition adjust [inference]
+    pub(crate) const BALL_RECEIVER: usize = 0x477e; // 4 byte(s): player due to receive the ball in transit
+    pub(crate) const MOMENTUM_A: usize = 0x4782; // 4 byte(s): signed momentum score changed by shots and goals (i32) [inference]
+    pub(crate) const MOMENTUM_B: usize = 0x4786; // 4 byte(s): second signed momentum score changed by shots and goals (i32) [inference]
+    pub(crate) const FOULED_PLAYER: usize = 0x478a; // 4 byte(s): player who suffered the last foul/tackle (0 none) [inference]
+    pub(crate) const EVENT_LIST: usize = 0x478e; // 4 byte(s): pointer to the list of match/pre-match events
+    pub(crate) const MATCH: usize = 0x4792; // 4 byte(s): pointer to the match (fixture) record being played
+    pub(crate) const PLAYERS: usize = 0x4796; // 17840 byte(s): the 40 match players, 20 per side, 0x1be bytes each (+0x4796 + 0x22d8 x side + 0x1be x k)
+    pub(crate) const PLAYERS_SIDE1: usize = 0x6a6e; // 8920 byte(s): side 1's 20 match players (+0x4796 + 0x22d8)
+    pub(crate) const POSSESSION_COUNTER: usize = 0x8d46; // 2 byte(s): possession counter byte per side (+1 for the side, -10 for the other)
+    pub(crate) const OWNS_COMMENTATOR: usize = 0x8e9d; // 1 byte(s): the commentator was created by the engine and must be freed with it
+    pub(crate) const BALL_X: usize = 0x8ea7; // 1 byte(s): ball column (0..8)
+    pub(crate) const BALL_Y: usize = 0x8ea8; // 1 byte(s): ball row (0..11)
+    pub(crate) const POSSESSION_SIDE: usize = 0x8eae; // 1 byte(s): side with the ball (0 or 1; -1 nobody)
+    pub(crate) const RESTART_TYPE: usize = 0x8eb2; // 1 byte(s): pending set piece/restart (2 throw-in, 3 corner, 4 goal kick, 5 penalty, 6 free kick, 8 kick-off; 0 open play)
+    pub(crate) const PUNISHMENT_STATE: usize = 0x8eb4; // 1 byte(s): pending punishments step (0 not prepared, 1 prepared, 2 done)
+    pub(crate) const SUBSTITUTION_PENDING: usize = 0x8eb5; // 1 byte(s): substitutions pending, cleared after they are applied
+    pub(crate) const ACTIVE_LIST_COUNT: usize = 0x8eb8; // 1 byte(s): count of the active-player action list at +0x8f7e
+    pub(crate) const POSITION_TABLE: usize = 0x8ebc; // 8 byte(s): pointer per side to the position table (11 words by tactical position)
+    pub(crate) const CLOCK: usize = 0x8ed0; // 2 byte(s): match clock in ticks (minute x 11)
+    pub(crate) const PERIOD_END: usize = 0x8ed4; // 2 byte(s): end tick of the current period (0x1ef first half, 0x3de second half, then extra time)
+    pub(crate) const PASS_POWER: usize = 0x8ed6; // 2 byte(s): power of the pass/shot handed to the receiver
+    pub(crate) const BALL_DIRECTION: usize = 0x8ed8; // 2 byte(s): direction of the loose ball in degrees
+    pub(crate) const SHOOTOUT_TAKEN: usize = 0x8eda; // 40 byte(s): per-side marks of the shootout takers already chosen, 20 bytes per side
+    pub(crate) const COMMENTATOR: usize = 0x8f7a; // 4 byte(s): pointer to the match commentator
+    pub(crate) const ACTIVE_LIST: usize = 0x8f7e; // ? byte(s): list of active players in action order, count at +0x8eb8
+    pub(crate) const MATCH_MANAGERS: usize = 0x9032; // 416 byte(s): the two sides' match manager objects, 0xd0 bytes each (+0x9032 + 0xd0 x side)
+    pub(crate) const SIDE0_MANAGER: usize = 0x904d; // 4 byte(s): match manager +0x1b: the side's manager (person) pointer (side 1 at +0xd0)
+    pub(crate) const PITCH_CONDITION: usize = 0x91d2; // 12 byte(s): pitch condition values (three dwords: 100, 90, 10 by default)
+    pub(crate) const ACTION_FIRST_PLAYER: usize = 0x91de; // 4 byte(s): player put first in the action order after the ball holder
+    pub(crate) const TACTICS: usize = 0x91e2; // 12742 byte(s): the two sides' tactics objects, 6371 bytes each (+0x91e2 + 0x18e3 x side)
+    pub(crate) const TACTICS_FLAGS: usize = 0x9766; // 4 byte(s): side 0 tactics flag dword (tactics +0x584; side 1 at +0x18e3)
+    pub(crate) const TACTICS_BACKUP: usize = 0xc3a8; // 12742 byte(s): copy of both tactics objects taken at preparation
+    pub(crate) const FORMATION_TABLE: usize = 0xf56e; // 8 byte(s): pointer per side to the formation/set-piece position table (216 bytes per position)
+    pub(crate) const PASSER: usize = 0xf576; // 4 byte(s): player who made the current pass/took the set piece
+    pub(crate) const SET_PIECE_TAKER: usize = 0xf57a; // 4 byte(s): set-piece taker
+    pub(crate) const BALL_HOLDER: usize = 0xf582; // 4 byte(s): player with the ball (0 loose)
+    pub(crate) const NEAREST_TO_BALL: usize = 0xf586; // 8 byte(s): each side's player nearest to the ball, pointer per side
+    pub(crate) const LOWEST_Y_PLAYER: usize = 0xf58e; // 8 byte(s): stored extreme player per side (side 0 smallest y at +0xf58e, side 1 largest y at +0xf592)
+    pub(crate) const FURTHEST_FORWARD: usize = 0xf596; // 8 byte(s): stored opposite-extreme player per side (side 0 largest y, side 1 smallest y at +0xf59a)
+    pub(crate) const GOALKEEPER: usize = 0xf59e; // 8 byte(s): each side's goalkeeper on the pitch, pointer per side
+    pub(crate) const ASSIST_CANDIDATE: usize = 0xf5a6; // 4 byte(s): previous passer, credited with the assist if the receiver scores
+    pub(crate) const PASS_RECEIVER: usize = 0xf5aa; // 4 byte(s): receiver of the last pass (cleared when someone else gets the ball)
+    pub(crate) const REFEREE: usize = 0xf5b2; // ? byte(s): embedded match referee object (decides fouls and cards)
+    pub(crate) const REFEREE_ID: usize = 0xf5b6; // 4 byte(s): match referee's id (-1 none); referee object +4
+    pub(crate) const REFEREE_RATING: usize = 0xf5ba; // 2 byte(s): referee base rating used for the post-match grade (/1000); referee object +8 [inference]
+    pub(crate) const SIDE_STATS: usize = 0xf5bc; // 108 byte(s): per-side match stats block, 0x36 bytes per side (+0xf5bc + 0x36 x side); +0 shootout goals
+    pub(crate) const SCORE: usize = 0xf5bd; // 1 byte(s): side 0 goals (side 1 at +0xf5f3); SIDE_STATS +1
+    pub(crate) const SIDE_SUMMARY: usize = 0xf5c0; // ? byte(s): side summary (player ratings) in SIDE_STATS +4
+    pub(crate) const OFFSIDES: usize = 0xf5ca; // 1 byte(s): side 0 offsides (side 1 at +0xf600); SIDE_STATS +0xe
+    pub(crate) const CARDS: usize = 0xf5cb; // 1 byte(s): side 0 cards (side 1 at +0xf601); SIDE_STATS +0xf
+    pub(crate) const FOULS: usize = 0xf5cc; // 1 byte(s): side 0 fouls (side 1 at +0xf602); SIDE_STATS +0x10
+    pub(crate) const SCORE_SIDE1: usize = 0xf5f3; // 1 byte(s): side 1 goals (SIDE_STATS of side 1 +1)
+    pub(crate) const ABANDON_MINUTE: usize = 0xf638; // 1 byte(s): minute at which the match is abandoned (0xff never)
+    pub(crate) const INJURY_COUNT: usize = 0xf639; // 2 byte(s): number of injuries in the match
+}
+
+/// Fields of the match `match_player` object, named from how the engine uses them. [pt] Campos do objeto `match_player` do motor.
+#[allow(dead_code)]
+pub(crate) mod match_player {
+    pub(crate) const BALLS_CONTESTED: usize = 0x12; // 1 byte(s): count of loose balls contested by the player (incremented in respond) [inference]
+    pub(crate) const OFFSIDES: usize = 0x13; // 1 byte(s): times caught offside in the match
+    pub(crate) const SENT_OFF: usize = 0x16; // 1 byte(s): set to 1 when the player is sent off
+    pub(crate) const POSITION: usize = 0x19; // 1 byte(s): formation position 0..10 while on the pitch; negative off it (-1 bench, -2 off injured, -4 substituted, 0xfb empty)
+    pub(crate) const PREVIOUS_POSITION: usize = 0x1a; // 1 byte(s): position held before leaving the pitch / reserve position 0..10
+    pub(crate) const INJURY_PENDING: usize = 0x1d; // 1 byte(s): an injury waiting to be processed by the engine (cleared after)
+    pub(crate) const SUBSTITUTED_OFF: usize = 0x1e; // 1 byte(s): set to 1 when substituted off
+    pub(crate) const MINUTE_ON: usize = 0x1f; // 1 byte(s): minute he came on (-1 if not)
+    pub(crate) const MINUTE_OFF: usize = 0x20; // 1 byte(s): minute he was substituted off (-1 if not)
+    pub(crate) const INJURY_MINUTE: usize = 0x22; // 1 byte(s): minute he left injured
+    pub(crate) const SIDE: usize = 0x27; // 1 byte(s): side in the match (0 home, 1 away)
+    pub(crate) const BUSY: usize = 0x2b; // 1 byte(s): busy/down counter: >0 means occupied (on the ground, just played) and not available
+    pub(crate) const COMMENTARY_ID: usize = 0x2e; // 1 byte(s): player identifier passed to the commentary events (with SIDE)
+    pub(crate) const MATCH_RATING: usize = 0x35; // 2 byte(s): performance word (code calls it disposition): starts at 6100, rises with good play, drops with fouls and cards [inference]
+    pub(crate) const SHOT_QUALITY: usize = 0x39; // 2 byte(s): quality part of the last shot value
+    pub(crate) const EFFECTIVE_ABILITY: usize = 0x3b; // 2 byte(s): match ability word (current ability adjusted by morale, captain, contract) [inference]
+    pub(crate) const STAMINA: usize = 0x4d; // 4 byte(s): f32 stamina/fitness 0..10000
+    pub(crate) const STAFF: usize = 0x69; // 4 byte(s): pointer to the staff (person) record
+    pub(crate) const PLAYER: usize = 0x6d; // 4 byte(s): pointer to the player record (attributes)
+    pub(crate) const AGILITY: usize = 0x79; // 4 byte(s): f32 match agility (player +0x1d)
+    pub(crate) const ANTICIPATION: usize = 0x7d; // 4 byte(s): f32 match anticipation (player +0x1e)
+    pub(crate) const FINISHING: usize = 0x99; // 4 byte(s): f32 match finishing (player +0x27)
+    pub(crate) const FREE_KICKS: usize = 0xa1; // 4 byte(s): f32 match free kicks (player +0x29)
+    pub(crate) const HANDLING: usize = 0xa5; // 4 byte(s): f32 match handling (player +0x2a)
+    pub(crate) const JUMPING: usize = 0xad; // 4 byte(s): f32 match jumping (player +0x2e)
+    pub(crate) const LONG_SHOTS: usize = 0xb1; // 4 byte(s): f32 match long shots (player +0x31)
+    pub(crate) const TACKLING: usize = 0xdd; // 4 byte(s): f32 match tackling (player +0x3e)
+    pub(crate) const TEAMWORK: usize = 0xe1; // 4 byte(s): f32 match teamwork (player +0x3f)
+    pub(crate) const TECHNIQUE: usize = 0xe5; // 4 byte(s): f32 match technique (player +0x40)
+    pub(crate) const MARKER_COUNT: usize = 0x101; // 1 byte(s): number of entries in MARKERS
+    pub(crate) const MOVE_SKILL: usize = 0x11a; // 126 byte(s): i16 skill word per move code (+0x11a + 2 x move, 63 words)
+    pub(crate) const ACTION: usize = 0x198; // 2 byte(s): current action/move code
+    pub(crate) const FACING: usize = 0x19a; // 2 byte(s): facing direction in degrees
+    pub(crate) const BALL_CONTROL: usize = 0x19c; // 2 byte(s): control margin word, clamped to -200..200 [inference]
+    pub(crate) const ENGINE: usize = 0x19e; // 4 byte(s): pointer to the match engine
+    pub(crate) const CONFIDENCE: usize = 0x1a2; // 4 byte(s): f32 0..100 (docs: condition), floor 2 x (25 - temperament) [inference]
+    pub(crate) const MARKING_TARGET: usize = 0x1aa; // 4 byte(s): match player he man-marks (0 none)
+    pub(crate) const MARKERS: usize = 0x1ae; // 12 byte(s): match players marking him (up to 3 pointers, count in MARKER_COUNT)
+}

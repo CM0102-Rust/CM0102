@@ -20,7 +20,7 @@ MUTACOES = [
     ('k_razao', "        razao as f64 > read_f32_at(0x96d808) as f64 // 0x96d808 = 71\n    } else {", "        razao as f64 > read_f32_at(0x96d80c) as f64\n    } else {"),
     ('k_piso', "            let piso = (ub(p, 0xc) as i32 + 5) * 1000;", "            let piso = (ub(p, 0xc) as i32 + 4) * 1000;", "shot gol"),
     ('k_sofreu', "                *w(g, 0x35) = (*w(g, 0x35)).wrapping_sub(500);\n            }\n            let di = *w(g, 0x35);", "                *w(g, 0x35) = (*w(g, 0x35)).wrapping_sub(501);\n            }\n            let di = *w(g, 0x35);", "shot gol"),
-    ('k_placar', "        let k = m + 0xf5bd + (lado as isize * 0x36) as usize;\n        *b(k, 0) = (*b(k, 0)).wrapping_add(1);", "        let k = m + 0xf5bd + (lado as isize * 0x36) as usize;\n        *b(k, 0) = (*b(k, 0)).wrapping_add(2);", "shot gol valido"),
+    ('k_placar', "        let k = m + engine::SCORE + (lado as isize * 0x36) as usize;\n        *b(k, 0) = (*b(k, 0)).wrapping_add(1);", "        let k = m + engine::SCORE + (lado as isize * 0x36) as usize;\n        *b(k, 0) = (*b(k, 0)).wrapping_add(2);", "shot gol valido"),
     ('k_disposicao', "        add_disposition(m, lado, 0x96);", "        add_disposition(m, lado, 0x97);", "shot gol valido"),
     ('k_segura', "        *w(g, 0x35) = (*w(g, 0x35)).wrapping_add(if c.tipo != 0x33 { 200 } else { 1300 });", "        *w(g, 0x35) = (*w(g, 0x35)).wrapping_add(if c.tipo != 0x33 { 201 } else { 1300 });", "shot defesa segura"),
     ('k_rebatida', "        *b(g, 0x2b) = (*b(g, 0x2b)).wrapping_add((sortear(3) + 1) as u8);", "        *b(g, 0x2b) = (*b(g, 0x2b)).wrapping_add((sortear(3) + 2) as u8);", "shot defesa rebatida"),

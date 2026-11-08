@@ -9,10 +9,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_shot(j: usize, strength: u32, x:
     if is_recording_top_level() {
         return o(j, strength, x, y);
     }
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + 0x4792) as *const usize);
+    let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_shoot(p: usize, a1: u32, a2: u32
 /// Comparer for `destroy_match_player` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_destroy_match_player(j: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_MATCH_PLAYER);
-    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(j + 0x19e, 4)], || o(j), || destroy_match_player(j));
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(j + match_player::ENGINE, 4)], || o(j), || destroy_match_player(j));
     PLACAR.registrar(igual, || format!("destroy_match_player({:#x}) {:x?} x {:x?}", j, mo, mr));
 }
 
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_write_2b(this: usize, v: u8) {
 pub(crate) unsafe extern "thiscall" fn comparar_release_ball(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RELEASE_BALL);
     let m = *((this + 0x19e) as *const usize);
-    let reg = [(m + 0x4786, 4), (m + 0x8eae, 1), (m + 0xf582, 4), (m + 0x1a7, 1), (this + 0x29, 2), (this + 0x19c, 2)];
+    let reg = [(m + engine::MOMENTUM_B, 4), (m + engine::POSSESSION_SIDE, 1), (m + engine::BALL_HOLDER, 4), (m + engine::SHOT_PENDING, 1), (this + 0x29, 2), (this + 0x19c, 2)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || release_ball(this));
     PLACAR.registrar(igual, || format!("release_ball original={:x?} rust={:x?}", mo, mr));
 }
@@ -247,7 +247,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_to(this: usize, x: i8, y: i
     let engine = *((this + 0x19e) as *const usize);
     let antiga = occupancy_grid_cell(engine, byte(this, 0x102), byte(this, 0x103)) as usize;
     let new = occupancy_grid_cell(engine, x, y) as usize;
-    let mut reg = vec![(this + 0x28, 1), (this + 0x102, 2), (antiga, 90), (new, 90), (engine + 0x8ea7, 2)];
+    let mut reg = vec![(this + 0x28, 1), (this + 0x102, 2), (antiga, 90), (new, 90), (engine + engine::BALL_X, 2)];
     let (l, v) = (lado(this), byte(this, 0x28));
     let n = byte(antiga, 0x58 + l as usize);
     if v >= 0 && n > 0 {
@@ -332,12 +332,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_tackle(j: usize, strong: u32) {
     if is_recording_top_level() {
         return o(j, strong);
     }
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.extend([(m, MOTOR), (0xb67a34, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + 0x4792) as *const usize);
+    let t = *((m + engine::MATCH) as *const usize);
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
@@ -363,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tackle(j: usize, strong: u32) {
 /// Comparer for `recover_stamina` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_recover_stamina(j: usize, ceiling: u8) {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_RECOVER_STAMINA);
-    let regions = [(j + 0x4d, 8)];
+    let regions = [(j + match_player::STAMINA, 8)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&regions, || f(j, ceiling), || recover_stamina(j, ceiling));
     PLACAR.registrar(igual, || format!("recover_stamina(teto {}) original={:x?} rust={:x?}", ceiling, mo, mr));
 }
@@ -374,9 +374,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_save_shot(j: usize, strength: i1
     if is_recording_top_level() {
         return o(j, strength);
     }
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0xa0)]);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0xa0)]);
     let (r, n, igual, sequencia, k) = comparar_com_fita(reg, || o(j, strength), |chamar| {
         save_shot_injected(j, strength, &mut |rotina, this, args| {
             chamar(rotina, this, args, if rotina == 0x6d6f70 { [0xffff, u32::MAX, 0xff, 0xff, 0xff] } else { [0xff, 0xff, 0xffff, 0xff, u32::MAX] })
@@ -392,9 +392,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_long_ball(j: usize, mode: i8, re
     if is_recording_top_level() {
         return o(j, mode, refinar);
     }
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0xa0)]);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0xa0)]);
     const MASCARAS: [(usize, [u32; 5]); 3] = [
         (0x6fad40, [0xff, 0xff, u32::MAX, u32::MAX, 0xff]),
         (0x6d6f70, [0xffff, u32::MAX, 0xff, 0xff, 0xff]),
@@ -418,9 +418,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_pass_ball(j: usize, kind: u8, re
     if is_recording_top_level() {
         return o(j, kind, receptor, a3, a4, a5);
     }
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0xa0)]);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0xa0)]);
     const MASCARAS: [(usize, [u32; 5]); 3] = [
         (0x6fad40, [0xff, 0xff, 0xff, u32::MAX, u32::MAX]),
         (0x6d6f70, [0xffff, u32::MAX, 0xff, 0xff, 0xff]),
@@ -445,14 +445,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_player(j: usize) {
         });
         return;
     }
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     // what the decision writes and what it rereads after carrying the ball (ball owner, +0x8eb2, side’s situation)
-    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0x48)]);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0x48)]);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j), |chamar| {
         player_decide_injected(j, &mut |rotina, this, args| chamar(rotina, this, args, if rotina == 0x713fc0 { [u32::MAX, 0, 0, 0, 0] } else { [0; 5] }))
     });
-    PLACAR.registrar(igual && sequencia, || format!("decide_player acao {:#x} {} chamadas", *((j + 0x198) as *const u16), k));
+    PLACAR.registrar(igual && sequencia, || format!("decide_player acao {:#x} {} chamadas", *((j + match_player::ACTION) as *const u16), k));
 }
 
 /// Comparer for `move_off_ball` (comparison mode: see the header of motor.rs).
@@ -468,8 +468,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_off_ball(j: usize) {
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     // the Rust copy runs after the whole original: the recorded calls (0x6f09f0 decides and moves the
     // other players) change what it reads before them; all players, the grid and the ball go in
-    let m = *((j + 0x19e) as *const usize);
-    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0x48)]);
+    let m = *((j + match_player::ENGINE) as *const usize);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0x48)]);
     const MASCARAS: [(usize, [u32; 5]); 5] = [
         (0x6f09f0, XY_ARG_MASK),
         (0x6f46b0, XY_ARG_MASK),
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_off_ball(j: usize) {
             chamar(rotina, this, args, mask)
         })
     });
-    PLACAR.registrar(igual && sequencia, || format!("move_off_ball acao {:#x} {} chamadas", *((j + 0x198) as *const u16), k));
+    PLACAR.registrar(igual && sequencia, || format!("move_off_ball acao {:#x} {} chamadas", *((j + match_player::ACTION) as *const u16), k));
 }
 
 /// Comparer for `decide_off_ball` (comparison mode: see the header of motor.rs).
@@ -499,10 +499,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_off_ball(j: usize, a: u32
     // the Rust copy runs after the whole original: what it (and what it calls without writing: 0x6c2be0,
     // 0x6bce80, 0x6c4130...) reads before a recorded call and that this call changes must go back to
     // previous state. The recorded calls touch the player (cell, direction), the grid and the rows.
-    let m = *((j + 0x19e) as *const usize);
+    let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     // the written 0x6f09f0 also moves the other players (decides for them): all of them go in
-    reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0x48)]);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0x48)]);
     // 0x6f09f0 e 0x6f46b0 leem x e y como bytes; 0x6f5b80, so o `direto`
     const MASCARAS: [(usize, [u32; 5]); 3] = [(0x6f09f0, XY_ARG_MASK), (0x6f46b0, XY_ARG_MASK), (0x6f5b80, [0xff, 0, 0, 0, 0])];
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j, a), |chamar| {
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_off_ball(j: usize, a: u32
             chamar(rotina, j, args, mask)
         })
     });
-    PLACAR.registrar(igual && sequencia && k == 1, || format!("decide_off_ball acao {:#x} {} chamadas: {}", *((j + 0x198) as *const u16), k, tape_detail()));
+    PLACAR.registrar(igual && sequencia && k == 1, || format!("decide_off_ball acao {:#x} {} chamadas: {}", *((j + match_player::ACTION) as *const u16), k, tape_detail()));
 }
 
 /// Comparer for `advance_row` (comparison mode: see the header of motor.rs).

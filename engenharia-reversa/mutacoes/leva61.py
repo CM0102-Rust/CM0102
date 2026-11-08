@@ -9,6 +9,6 @@ MUTACOES = [
     ('q_empate', "        if best == 0 || rating as i16 > rating_best {", "        if best == 0 || rating as i16 >= rating_best {"),
     ('q_linhas', "    while r <= y.wrapping_add(1) {", "    while r <= y {"),
     ('q_bola', "                b = b.wrapping_add(e);\n                store(c,", "                b = b.wrapping_add(e) + 1;\n                store(c,"),
-    ('q_ad', "                if (sortear(30) as f64) < read_f32_at(q + 0xad) as f64 && (sortear(30) as f64) < read_f32_at(j + 0xad) as f64 {", "                if (sortear(30) as f64) < read_f32_at(q + 0xad) as f64 {"),
+    ('q_ad', "                if (sortear(30) as f64) < read_f32_at(q + 0xad) as f64 && (sortear(30) as f64) < read_f32_at(j + match_player::JUMPING) as f64 {", "                if (sortear(30) as f64) < read_f32_at(q + 0xad) as f64 {"),
     ('q_f18', "                if (f18 as f64) < read_f64_at(0x9688a0) && byte(c, 0x109) != 0 {", "                if (f1c as f64) < read_f64_at(0x9688a0) && byte(c, 0x109) != 0 {"),
 ]

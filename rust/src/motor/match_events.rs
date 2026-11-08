@@ -1649,7 +1649,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     // the fake media: in the news log (0x757da0 searches by subject -1, club id, type -1 and
     // subtype, records of 0x17 bytes in order), one of today’s news items of each subtype that the
     // the comments query, for both clubs
-    let c = *((m + 0x4792) as *const usize);
+    let c = *((m + engine::MATCH) as *const usize);
     let today = *(G_CURRENT_DATE as *const [u8; 8]);
     let mut records: Vec<[u8; 0x17]> = Vec::new();
     for o_clube in [0x1c, 0x20] {
@@ -1673,12 +1673,12 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
     records.dedup_by_key(|r| key(r));
     let falsa: [usize; 3] = [records.as_ptr() as usize, 0, records.len()];
     let midia = *(G_MEDIA as *const usize);
-    let minute = core::ptr::read_unaligned((m + 0x8ed0) as *const i16);
+    let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16);
     crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| {
         // 0: the real state; 1: with the news; 2: with the news at minute 31
         for cenario in 0..3 {
             *(G_MEDIA as *mut usize) = if cenario == 0 { midia } else { falsa.as_ptr() as usize };
-            core::ptr::write_unaligned((m + 0x8ed0) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
+            core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, if cenario == 2 { 31 * 11 } else { minute });
             for lado in 0..2u32 {
                 let notas: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
                 let guardadas = crate::comparacao::Memoria::ler(&notas);
@@ -1701,7 +1701,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
             }
         }
         *(G_MEDIA as *mut usize) = midia;
-        core::ptr::write_unaligned((m + 0x8ed0) as *mut i16, minute);
+        core::ptr::write_unaligned((m + engine::CLOCK) as *mut i16, minute);
     }));
     state.escrever();
 }

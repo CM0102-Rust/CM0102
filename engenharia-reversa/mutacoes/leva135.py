@@ -2,7 +2,7 @@
 MUTACOES = [
     ('r_quinze', "[t - *w(0x1d2) as i32 > 0xa5, t - *w(0x1d4) as i32 > 0xa5]", "[t - *w(0x1d2) as i32 > 0x50, t - *w(0x1d4) as i32 > 0xa5]"),
     ('r_sem_folego', "if minute > 0x3c && sortear(6) == 0 {", "if minute > 0x3c && sortear(7) == 0 {", "reinicio sem folego"),
-    ('r_folego', "read_f32_at(j + 0x4d) < 6750.0", "read_f32_at(j + 0x4d) < 6000.0", "reinicio sem folego"),
+    ('r_folego', "read_f32_at(j + match_player::STAMINA) < 6750.0", "read_f32_at(j + match_player::STAMINA) < 6000.0", "reinicio sem folego"),
     ('r_postura', "if new != velha || *w(0x8ed0) <= 1 {", "if new != velha || *w(0x8ed0) <= 2 {"),
     ('r_acrescimo', "let r = sortear(10) as i8 as i32;", "let r = sortear(11) as i8 as i32;", "reinicio acrescimo"),
     ('r_cansar', "cansar(j, (r as f64 * read_f64_at(0x96d3d8) + 1.0) as f32);", "cansar(j, (r as f64 * read_f64_at(0x96d3d8) + 1.1) as f32);", "reinicio acrescimo"),

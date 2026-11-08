@@ -1782,11 +1782,11 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if u(pl, 0x115) != 0 {
         mark(0x10);
     }
-    if *((engine + 0x8eb2) as *const u8) != 0 {
+    if *((engine + engine::RESTART_TYPE) as *const u8) != 0 {
         mark(0x80);
     }
     let r = u(p, 0x5f);
-    if *((engine + 0x8ed0) as *const i16) as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
+    if *((engine + engine::CLOCK) as *const i16) as i32 / 11 > *((r + 0x4d) as *const i16) as i32 {
         *state |= 4;
         por(pl, 0x109, (0x226 - 50 * *((u(p, 0x5f) + 0x51) as *const i16) as i32) as u32);
     }

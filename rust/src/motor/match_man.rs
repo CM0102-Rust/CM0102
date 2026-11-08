@@ -71,7 +71,7 @@ pub(crate) unsafe extern "C" fn pick(
             let mut j = *((comissao + 0x23) as *const usize);
             let mut found = 0usize;
             for _ in 0..20 {
-                if *((j + 0x69) as *const usize) == pes(k) {
+                if *((j + match_player::STAFF) as *const usize) == pes(k) {
                     found = j;
                     break;
                 }
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "C" fn pick(
         }
         let mut j = *((comissao + 0x23) as *const usize);
         for _ in 0..20 {
-            if *((j + 0x69) as *const usize) == p {
+            if *((j + match_player::STAFF) as *const usize) == p {
                 return j;
             }
             j += 0x1be;
@@ -552,7 +552,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
             h *= 0.3;
         }
     }
-    let factor = (m + 0x476a + 4 * lu) as *mut f32;
+    let factor = (m + engine::STANCE_FACTOR + 4 * lu) as *mut f32;
     let tempo = w(m, 0x8ed4);
     if tt > 85.0 - h * 10.0 && tempo == 0x3de && (x11 as i32 + 1 == x12 as i32 || (x17 != 0 && x14 == 0 && x16 == 0 && x11 == x12)) {
         *factor = 10.0;
@@ -999,7 +999,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             continue;
         }
         let f = u(j, 0x6d);
-        let pos_j = *((j + 0x19) as *const u8) as u32;
+        let pos_j = *((j + match_player::POSITION) as *const u8) as u32;
         let a = |k: u32| attr(u(j, 0x69), k) as i32;
         let tb = || table(j);
         let fb = |o: usize| byte(u(j, 0x6d), o);
@@ -1030,7 +1030,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                 pos(t(), byte(j, 0x19) as u8 as u32, 0x440, 1);
             }
         }
-        let fl = |v: f32| *((j + 0x4d) as *const f32) as f64 > v as f64;
+        let fl = |v: f32| *((j + match_player::STAMINA) as *const f32) as f64 > v as f64;
         if (tb() & 2 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0)
             && fl(8250.0)
             && fb(0x3c) > 12
@@ -1039,7 +1039,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             && f38 * 40.0 < (a(0x14) + (tc(0x15) as i32 - 10) * 3) as f64
         {
             mark(t(), pos_j, 0x200000, 0);
-            if (*((j + 0x4d) as *const f32) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
+            if (*((j + match_player::STAMINA) as *const f32) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
                 mark(t(), byte(j, 0x19) as u8 as u32, 0x4000, 0);
             }
         } else {
@@ -1058,7 +1058,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         }
         if (tb() & 8 != 0 || tb() & 0x10 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && f38 * 16.0 > a(7) as f64 {
             dois_ou_quatro();
-            let r = who_marks(m, *((j + 0x27) as *const u8) as u32, byte(j, 0x19) as u8 as u32);
+            let r = who_marks(m, *((j + match_player::SIDE) as *const u8) as u32, byte(j, 0x19) as u8 as u32);
             if r != -1 {
                 let side = (byte(j, 0x19) == 0) as usize;
                 let o = m + 0x1be * (r as isize as usize).wrapping_add(20 * side) + 0x4796;
@@ -1163,7 +1163,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             let f28 = f38 * 14.0;
             let te4 = tc(0xe) as i32 / 4;
             let pj = || byte(j, 0x19) as u8 as u32;
-            let fl8000 = || *((j + 0x4d) as *const f32) as f64;
+            let fl8000 = || *((j + match_player::STAMINA) as *const f32) as f64;
             if f28 - (te4 as f64) < a(0x14) as f64 && f28 - ((tc(0xe) as i32 / 4) as f64) < a(0xc) as f64 && fl8000() > 8000.0 {
                 mark(t(), pj(), 0x800000, 0);
             } else {
@@ -1330,7 +1330,7 @@ pub(crate) unsafe fn substitution_order_ends(a: usize, b: usize) -> Option<i32> 
 ///
 /// [pt] +0x35 (curto) + +0x4d (float), truncado.
 pub(crate) unsafe fn match_condition(j: usize) -> i32 {
-    match_pl_ftol(*((j + 0x35) as *const i16) as f64 + *((j + 0x4d) as *const f32) as f64)
+    match_pl_ftol(*((j + match_player::MATCH_RATING) as *const i16) as f64 + *((j + match_player::STAMINA) as *const f32) as f64)
 }
 
 /// qsort comparator for substitutions: compares two match players by condition (+0x35 + +0x4d), weighted by the first
@@ -2174,8 +2174,8 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
 ///
 /// [pt] Minuto do relogio (+0x8ed0 / 11), no maximo o fim do periodo (+0x8ed4: 45, 90, 105, 120).
 pub(crate) unsafe fn minute_in_period(m: usize) -> i8 {
-    let min = (*((m + 0x8ed0) as *const i16) as i32 / 11) as i8;
-    match *((m + 0x8ed4) as *const i16) {
+    let min = (*((m + engine::CLOCK) as *const i16) as i32 / 11) as i8;
+    match *((m + engine::PERIOD_END) as *const i16) {
         0x1ef => min.min(0x2d),
         0x3de => min.min(0x5a),
         0x483 => min.min(0x69),
@@ -2343,7 +2343,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         let mut j = u(0x23);
         let mut found = false;
         for _ in 0..20 {
-            if *((j + 0x69) as *const usize) == fichas[i] {
+            if *((j + match_player::STAFF) as *const usize) == fichas[i] {
                 found = true;
                 break;
             }
@@ -2353,19 +2353,19 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
             *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             continue;
         }
-        let slot = (0..slots).find(|&k| place[k] == *((j + 0x69) as *const usize));
+        let slot = (0..slots).find(|&k| place[k] == *((j + match_player::STAFF) as *const usize));
         match slot {
             Some(k) => {
                 if byte(j, 0x19) == -1 {
                     *((c + 0x17) as *mut i8) = byte(c, 0x17).wrapping_sub(1);
                     entrar(m, j);
-                    *((j + 0x1f) as *mut i8) = minute_in_period(m);
+                    *((j + match_player::MINUTE_ON) as *mut i8) = minute_in_period(m);
                     entraram[ne] = j;
                     ne += 1;
                 }
                 let e = byte(j, 0x19);
                 if e >= 0 || e == -1 {
-                    *((j + 0x19) as *mut i8) = pos[k];
+                    *((j + match_player::POSITION) as *mut i8) = pos[k];
                 }
             }
             None => {
@@ -2373,9 +2373,9 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
                     continue;
                 }
                 remove(m, j, -1);
-                *((j + 0x19) as *mut i8) = -4;
-                *((j + 0x1e) as *mut u8) = 1;
-                *((j + 0x20) as *mut i8) = minute_in_period(m);
+                *((j + match_player::POSITION) as *mut i8) = -4;
+                *((j + match_player::SUBSTITUTED_OFF) as *mut u8) = 1;
+                *((j + match_player::MINUTE_OFF) as *mut i8) = minute_in_period(m);
                 sairam[ns] = j;
                 ns += 1;
             }
@@ -2383,7 +2383,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
     }
     recompor(m, byte(c, 0x18));
     keep(m, byte(c, 0x18));
-    let commentator = *((m + 0x8f7a) as *const usize);
+    let commentator = *((m + engine::COMMENTATOR) as *const usize);
     let side_c = byte(c, 0x18) as u8 as u32;
     let code = match ne {
         0 => return,
@@ -2505,7 +2505,7 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
     for k in 0..20 {
         let j = u(0x23) + k * 0x1be;
         if byte(j, 0x19) >= 0 {
-            fichas[n] = *((j + 0x69) as *const usize);
+            fichas[n] = *((j + match_player::STAFF) as *const usize);
             n += 1;
         }
     }
@@ -2513,7 +2513,7 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
         request_buffers(&[(fichas.as_ptr() as usize, 44)], &[]);
         if call(FN_MATCH_MAN_CHOOSE_COMPUTER_TACTIC, c, [fichas.as_ptr() as u32, 0xb, 0x8c1, 2, 0]) as u8 != 0 {
             let m = u(0x12);
-            call(FN_MATCH_EVENTS_ADD_EVENT, *((m + 0x8f7a) as *const usize), [0x2007, m as u32, u32::MAX, byte(c, 0x18) as u8 as u32, u32::MAX]);
+            call(FN_MATCH_EVENTS_ADD_EVENT, *((m + engine::COMMENTATOR) as *const usize), [0x2007, m as u32, u32::MAX, byte(c, 0x18) as u8 as u32, u32::MAX]);
         }
     }
     let mut pos = [0i8; 20];
@@ -2532,7 +2532,7 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
         tab_b[n] = table_b(j);
         mark[n] = marks(u(0x2b), byte(j, 0x19));
         bpos[n] = byte_pos(u(0x2b), byte(j, 0x19));
-        fichas[n] = *((j + 0x69) as *const usize);
+        fichas[n] = *((j + match_player::STAFF) as *const usize);
         n += 1;
     }
     let clube = u(0x2f);
@@ -2558,7 +2558,7 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
         let mut j = u(0x23);
         let mut found = false;
         for _ in 0..20 {
-            if *((j + 0x69) as *const usize) == fichas[i] {
+            if *((j + match_player::STAFF) as *const usize) == fichas[i] {
                 found = true;
                 break;
             }
@@ -2567,9 +2567,9 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
         if !found {
             j = 0;
         }
-        let f = *((j + 0x69) as *const usize);
+        let f = *((j + match_player::STAFF) as *const usize);
         if let Some(k) = (0..n).find(|&k| place[k] == f) {
-            *((j + 0x19) as *mut i8) = pos[k];
+            *((j + match_player::POSITION) as *mut i8) = pos[k];
             desempenho(j, 0);
         }
     }
@@ -4199,7 +4199,7 @@ pub(crate) unsafe fn injury_history_penalty_2c(p: usize, l4c: i32) -> i32 {
 /// -2000); em campo, os minutos jogados (minuto - +0x1f) abaixo de 60 x 40.
 pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
     let m = *((reg + 0x19e) as *const usize);
-    let human = if core::ptr::read_unaligned((m + 0x8ed4) as *const i16) == 0x1ef {
+    let human = if core::ptr::read_unaligned((m + engine::PERIOD_END) as *const i16) == 0x1ef {
         true
     } else {
         let side = *((reg + 0x27) as *const i8);
@@ -4214,7 +4214,7 @@ pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
             if g9a01(tecnicos, t) != 0 {
                 false
             } else if *((base + 0x904b) as *const u8) != 0 {
-                let c = *((*((m + 0x4792) as *const usize) + if side == 0 { 0x1c } else { 0x20 }) as *const usize);
+                let c = *((*((m + engine::MATCH) as *const usize) + if side == 0 { 0x1c } else { 0x20 }) as *const usize);
                 let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
                 if national_team(c) != 0 {
                     true
@@ -4229,7 +4229,7 @@ pub(crate) unsafe fn match_fatigue_offset(reg: usize, goalkeeper: i32) -> i32 {
     };
     let extra = if human && *(reg as *const i8) < 0xb { -2000 } else { 0 };
     let state = *((reg + 0x19) as *const i8);
-    let minute = core::ptr::read_unaligned((m + 0x8ed0) as *const i16) as i32 / 11;
+    let minute = core::ptr::read_unaligned((m + engine::CLOCK) as *const i16) as i32 / 11;
     if state == -1 {
         let e = extra + ((60 - minute) * 150).min(3000);
         if goalkeeper > 1 { e + 0xdac } else { e.max(-2000) }
@@ -4406,7 +4406,7 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
     *d(0xe) = 0;
     *d(0xa) = 0;
     *d(6) = 0;
-    *d(0x2b) = m + 0x91e2 + (side as u8 as i8 as isize * 0x18e3) as usize;
+    *d(0x2b) = m + engine::TACTICS + (side as u8 as i8 as isize * 0x18e3) as usize;
     *d(0x33) = other;
     let home = (clube == u(jogo, 0x1c) && byte(jogo, 0x40) == 0) || (clube == u(jogo, 0x20) && byte(jogo, 0x41) == 0);
     if home {

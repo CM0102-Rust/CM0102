@@ -10,6 +10,6 @@ MUTACOES = [
     ('d_chao', "tackle bola espirra\");\n            call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(j, 0x102), ub(j, 0x103), 1 | zero(j) << 8, 0, 0]);\n            if byte(m, 0x8eb2) == 0 {\n                let mut k = 3;", "tackle bola espirra\");\n            call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(j, 0x102), ub(j, 0x103), 1 | zero(j) << 8, 0, 0]);\n            if byte(m, 0x8eb2) == 0 {\n                let mut k = 2;"),
     ('d_ganho', "let gain: i16 = if dominou { 0x78 } else { 0xc8 };\n        *w(e, 0x35)", "let gain: i16 = if dominou { 0x78 } else { 0xc7 };\n        *w(e, 0x35)"),
     ('d_passa', "*w(j, 0x19c) = (*w(j, 0x19c)).wrapping_add(at.wrapping_sub(nota)).clamp(-200, 200);", "*w(j, 0x19c) = (*w(j, 0x19c)).wrapping_add(at.wrapping_sub(nota)).clamp(-199, 200);"),
-    ('d_cresce', "tackle cresce\");\n        let p = read_f32_at(j + 0x1a2) as f64 * 1.0499999523162842;", "tackle cresce\");\n        let p = read_f32_at(j + 0x1a2) as f64 * 1.06;"),
+    ('d_cresce', "tackle cresce\");\n        let p = read_f32_at(j + match_player::CONFIDENCE) as f64 * 1.0499999523162842;", "tackle cresce\");\n        let p = read_f32_at(j + match_player::CONFIDENCE) as f64 * 1.06;"),
     ('d_zera', "    *b(m, 0x8ea9) = 0;\n}\n\n/// Despacho real", "    *b(m, 0x8ea9) = 1;\n}\n\n/// Despacho real"),
 ]

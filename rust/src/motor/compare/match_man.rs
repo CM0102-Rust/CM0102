@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stance(c: usize) -> u8 {
     let m = *((c + 0x12) as *const usize);
     // the active ones (engine+4/+5, 0x6cbbb0), the factor of both sides, the dates (0x54cdb0) and the pointer of the
     // table that the league search (0x4a4850) sorts
-    let reg = [(m + 4, 2), (m + 0x476a, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
+    let reg = [(m + 4, 2), (m + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
     let (r, rr, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(c), || stance(c));
     PLACAR.registrar(igual && r == rr, || format!("stance(lado {}) original={} rust={} {:x?} x {:x?}", byte(c, 0x18), r, rr, mo, mr));
     r
