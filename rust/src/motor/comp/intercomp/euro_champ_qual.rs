@@ -43,6 +43,8 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     1
 }
 
+/// EuroChampQual::set_up_rules hook entry: sets the European Championship qualifying rules (points, two legs,
+/// tiebreaks, one direct and one play-off place, draw date) and builds the round table (see set_up_rules); returns 1.
 pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize) -> u32 {
     set_up_rules(this)
 }
@@ -97,6 +99,8 @@ pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
     }
 }
 
+/// EuroChampQual::get_group_team_count(g): number of nations in qualifying group g of the European Championship (6 or 5
+/// depending on the format at +0xf6; see group_team_count).
 pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32) -> i16 {
     group_team_count(this, g)
 }
@@ -125,6 +129,8 @@ pub(crate) unsafe fn qualification_status(this: usize, clube: usize) -> i16 {
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: a situação pela estatística 0x12
 }
 
+/// EuroChampQual::get_qualification_status(club): the club's qualification status in the European Championship
+/// qualifiers, from its competition stat 0x12 (Comp_Stats): -2 if that value (low byte, signed) is below 14, else -3.
 pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clube: usize) -> i16 {
     qualification_status(this, clube)
 }
@@ -138,7 +144,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_qualification_status(this: u
     r
 }
 
-/// { 0x57e7e0 } (thiscall, ret 0, euro_champ_qual.cpp; do sorteio, 2002-067): `EuroChampQual::init_group_one_table()`: o
+/// EuroChampQual::init_group_one_table(): sets up group 1 of the European Championship qualifiers (the cup itself):
+/// stores the group size (+0x3e), allocates the league table (one 0x3b-byte row per team at +0xb1), sets the cached
+/// match count (+0xa7) to (teams - 1) x rounds (+0x3c), fills one table row per national team from the list at +0xf7
+/// and sends the group-draw news. Returns 1, or 0 out of memory.
+///
+/// [pt] { 0x57e7e0 } (thiscall, ret 0, euro_champ_qual.cpp; do sorteio, 2002-067): `EuroChampQual::init_group_one_table()`: o
 /// grupo 1 é a própria copa: +0x3e = o tamanho do grupo −1 (0x57d9d0: push −1; mov ecx -> thiscall, ret 4; o byte 0xff
 /// não é grupo de 6: 5); a tabela (0x944e46 de +0x3e × 0x3b em +0xb1; sem memória, a caixa da linha 0x2d2 e 0); +0xa7 =
 /// (+0x3e − 1) × +0x3c (words: as rodadas, ida e volta); cada seleção da lista +0xf7 (na ordem) na linha i

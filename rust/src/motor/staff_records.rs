@@ -185,7 +185,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         }
     }
     let n = ((read_i16(obj + 0x3e) as i32) - 1).wrapping_mul(read_i16(obj + 0x3c) as i32);
-    let limiar = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois)
+    let limiar = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // o ftol fica no word (movsx word depois); 0x968f78 = 0.33
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, clube
         if r != 0 {
             core::ptr::write_unaligned((r + 0x8a) as *mut i16, read_i16(r + 0x8a).wrapping_add(1));
             // fild peso; fld 4,0; _CIpow (base em st1); fmul 0,5; ftol
-            let v = match_pl_ftol(game_pow(read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: o peso do título
+            let v = match_pl_ftol(game_pow(read_i16(comp + competition::CLUB_COMP_REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: o peso do título; 0x968938 = 4, 0x968968 = 0.5
             write_i32(r + 0xb6, read_i32(r + 0xb6).wrapping_add(v));
             write_i32(r + 0xca, read_i32(r + 0xca).wrapping_add(v));
             if is_national_team(clube) != 0 {
@@ -792,7 +792,7 @@ pub(crate) unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 
 /// [pt] Uma nota do lado do clube na partida (palavra em `a`): soma ftol(peso × k × [0x96ff88]) (produto em 32 bits) e fica
 /// no piso peso × k (16 bits) quando está abaixo dele, senão no máximo 10000 (comparações com sinal em 16 bits).
 pub(crate) unsafe fn raise_side_rating(a: usize, peso: i16, k: i32) {
-    let soma = match_pl_ftol((peso as i32).wrapping_mul(k) as f64 * read_f64_at(0x96ff88));
+    let soma = match_pl_ftol((peso as i32).wrapping_mul(k) as f64 * read_f64_at(0x96ff88)); // 0x96ff88 = 0.1639344262
     let x = read_i16(a).wrapping_add(soma as i16);
     write_i16(a, x);
     let piso = peso.wrapping_mul(k as i16);

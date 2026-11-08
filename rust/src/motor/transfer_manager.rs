@@ -816,7 +816,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usiz
                 melhor_atracao = atracao[i];
             }
             let v = valor(opcoes[i], 0, 0, 1, 1, 1);
-            if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido
+            if v as f64 * read_f64_at(0x969520) < pedido_f && troca_recusada == 0 { // cqe1: a opção × 0,85 abaixo do pedido; 0x969520 = 0.85
                 crate::comparacao::ramo("cqe_1 aceita");
                 if ensaio == 0 {
                     aceitar(this, vaga, 0);
@@ -839,15 +839,15 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, vaga: usiz
         let pedido_f = pedido as f64;
         let v = valor(melhor, 0, 0, 0, 0, 1);
         let tipo = read_u32_as_usize(o + 0x31) & 0xf;
-        if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta
+        if v as f64 * read_f64_at(0x969040) < pedido_f && tipo != 1 && tipo != 2 && ensaio == 0 { // cqe1: a contraproposta; 0x969040 = 0.75
             crate::comparacao::ramo("cqe_1 contraproposta");
             write_u8(melhor + 0x30, (read_u8(melhor + 0x30) & 0xf0) | (read_u8(o + 0x30) & 0xf));
             negociar(this, o, melhor, 0);
         } else {
             let w = read_u32_as_usize(alvo + 0x52) as i32;
             let (tf, wf) = (total as f64, w as f64);
-            if (tf < wf * read_f64_at(0x96a5d8) && w.wrapping_sub(total) > 2000000)
-                || (tf < wf * read_f64_at(0x967880) && w.wrapping_sub(total) > 100000 && ensaio == 0)
+            if (tf < wf * read_f64_at(0x96a5d8) && w.wrapping_sub(total) > 2000000) // 0x96a5d8 = 0.55
+                || (tf < wf * read_f64_at(0x967880) && w.wrapping_sub(total) > 100000 && ensaio == 0) // 0x967880 = 0.1
             {
                 motivo = 10;
             }
@@ -1059,7 +1059,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, comprad
     crate::comparacao::ramo("cqe_2 opção montada");
     *atracao = 0x32; // cqe2: a atração da opção
     write_u32_from_usize(nova + 0x1b, valor as u32 as usize); // cqe2: o preço da opção
-    let mut teto = match_pl_ftol(valor as f64 * read_f64_at(0x9689c0));
+    let mut teto = match_pl_ftol(valor as f64 * read_f64_at(0x9689c0)); // 0x9689c0 = 1.1
     // ponytail: a posição, a nota base, as marcas e o estatuto ficam de uma vaga para a outra (a original os deixa na
     // pilha sem valor até a primeira vaga com ficha +0x61; candidato sem ficha não acontece: começam em zero). As marcas
     // fora de 0..4 do alcance (que a 0x5408c0 não devolve) seriam o ebp anterior, de início o ponteiro da oferta.
@@ -1157,7 +1157,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, comprad
                         ((i as i32 * 0x25) as u32 & 0xffff_ff00) | estatuto_da_vaga(i) as u32
                     };
                     let r = interesse(read_u32_as_usize(this + 0x856), x, vendedor, 1, 0, st, 0);
-                    if !(r >= read_f64_at(0x968e58)) { // cqe2: o interesse abaixo de 3,15
+                    if !(r >= read_f64_at(0x968e58)) { // cqe2: o interesse abaixo de 3,15; 0x968e58 = 3.15
                         break 'jogador;
                     }
                     crate::comparacao::ramo("cqe_2 interesse");
@@ -1171,7 +1171,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, comprad
                     if nx == 0 || base == 0 {
                         break 'jogador;
                     }
-                    if !(nx as f64 / base as f64 > read_f64_at(0x9689d8)) { // cqe2: a nota até 0,9 da base
+                    if !(nx as f64 / base as f64 > read_f64_at(0x9689d8)) { // cqe2: a nota até 0,9 da base; 0x9689d8 = 0.9
                         break 'jogador;
                     }
                     crate::comparacao::ramo("cqe_2 nota da troca");
@@ -4902,16 +4902,16 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     // ponytail: a original empurra o dword da vaga onde guardou o byte (o resto é sobra de pilha); a 0x846920 só lê o
     // byte
     let x = interesse(listas, p, comprador, 1, 0, e as u32, 0);
-    let pw = game_pow(x, read_f64_at(0x968938));
-    let a = x * read_f64_at(0x96a6b0);
+    let pw = game_pow(x, read_f64_at(0x968938)); // 0x968938 = 4
+    let a = x * read_f64_at(0x96a6b0); // 0x96a6b0 = 300
     let v = if !(pw >= a) { pw } else { a };
-    let mut n = match_pl_ftol(game_pow(read_i8_as_i32(p + 0x5d) as f64, read_f64_at(0x968950)) * read_f64_at(0x968f10) - read_f64_at(0x96a590)) as i16;
+    let mut n = match_pl_ftol(game_pow(read_i8_as_i32(p + 0x5d) as f64, read_f64_at(0x968950)) * read_f64_at(0x968f10) - read_f64_at(0x96a590)) as i16; // 0x968950 = 2, 0x968f10 = 8, 0x96a590 = 1600
     let ficha = read_usize(p + 0x61);
     n = n.wrapping_sub((read_i16(ficha + 0xb) as i32 / 40) as i16);
     n = n.wrapping_sub(match_pl_ftol(v) as i16);
-    n = n.wrapping_sub(match_pl_ftol(game_pow(read_i8_as_i32(p + 0x57) as f64, read_f64_at(0x968950))) as i16);
-    n = n.wrapping_add(match_pl_ftol(game_pow(read_i8_as_i32(p + 0x5b) as f64, read_f64_at(0x968930))) as i16);
-    n = n.wrapping_add(match_pl_ftol(game_pow(read_i8_as_i32(p + 0x59) as f64, read_f64_at(0x968930))) as i16);
+    n = n.wrapping_sub(match_pl_ftol(game_pow(read_i8_as_i32(p + 0x57) as f64, read_f64_at(0x968950))) as i16); // 0x968950 = 2
+    n = n.wrapping_add(match_pl_ftol(game_pow(read_i8_as_i32(p + 0x5b) as f64, read_f64_at(0x968930))) as i16); // 0x968930 = 3
+    n = n.wrapping_add(match_pl_ftol(game_pow(read_i8_as_i32(p + 0x59) as f64, read_f64_at(0x968930))) as i16); // 0x968930 = 3
     if c2 == 0 {
         return;
     }
@@ -4920,7 +4920,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
         n = n.wrapping_add((-2000i32).wrapping_sub(sortear(0x1770)) as i16); // cpx2: o desconto do listado
     }
     crate::comparacao::ramo("cpx_2 interesse avaliado");
-    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo
+    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo; 0x96d298 = 5.5
         return;
     }
     if n as i32 >= -sortear(0x2bc) {
@@ -4935,8 +4935,8 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     let valor: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
     let preco: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_ASKING_PRICE);
     let ponderado: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_WEIGHTED_VALUE);
-    let a1 = match_pl_ftol(valor(read_usize(G_CONTRACT_MANAGER), p, do_contrato, 0, -1, 0) as f64 * read_f64_at(0x968940));
-    let b1 = match_pl_ftol(preco(read_usize(G_CONTRACT_MANAGER), do_contrato, comprador, p, 0, 1, 1) as f64 * read_f64_at(0x9689b0));
+    let a1 = match_pl_ftol(valor(read_usize(G_CONTRACT_MANAGER), p, do_contrato, 0, -1, 0) as f64 * read_f64_at(0x968940)); // 0x968940 = 1.5
+    let b1 = match_pl_ftol(preco(read_usize(G_CONTRACT_MANAGER), do_contrato, comprador, p, 0, 1, 1) as f64 * read_f64_at(0x9689b0)); // 0x9689b0 = 0.8
     let pond = ponderado(o, 0, 0, 0, 1, 1);
     let menor = if a1 < b1 { a1 } else { b1 };
     if pond < menor {
@@ -4968,7 +4968,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
             }
         }
     }
-    if x > read_f64_at(0x9688b0) || n < -5000 || (menor as f64) < pond as f64 * read_f64_at(0x969040) {
+    if x > read_f64_at(0x9688b0) || n < -5000 || (menor as f64) < pond as f64 * read_f64_at(0x969040) { // 0x9688b0 = 10, 0x969040 = 0.75
         let desafeto: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_STAFF_ADD_DISLIKED_STAFF);
         desafeto(p, read_usize(do_contrato + 0xcf), 1);
     }
@@ -8287,11 +8287,11 @@ pub(crate) unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, o
         let fv = financas(tabela(), vendedor);
         if fc != 0 {
             let s = (fc + 0x1c) as *mut i32;
-            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970420)));
+            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970420))); // 0x970420 = -0.2380952381
         }
         if fv != 0 {
             let s = (fv + 0x1c) as *mut i32;
-            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970418)));
+            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970418))); // 0x970418 = 0.2380952381
         }
         por_na_lista(this + 0x872, r.as_ptr(), 0xd);
     }
@@ -8372,7 +8372,7 @@ pub(crate) unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(
     }
     if estrito != 0 {
         let w2 = ponderado(oferta, 0, 0, 1, 0, 1);
-        if !((pedido as f64) < w2 as f64 * read_f64_at(0x968de8)) {
+        if !((pedido as f64) < w2 as f64 * read_f64_at(0x968de8)) { // 0x968de8 = 1.3
             return 0;
         }
     }
@@ -9121,9 +9121,9 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, ofe
             && estatuto > 0
         {
             let interesse: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f64 = core::mem::transmute(FN_SHORTLIST_MANAGER_STAFF_INTEREST_IN_JOINING_CLUB);
-            if interesse(read_usize(this + 0x856), p, comprador, 0, 0, 1, 0) > read_f64_at(0x968e58) {
-                let x = prazo as i32 as f64 * read_f64_at(0x968e18);
-                let teto = read_f64_at(0x968dd8);
+            if interesse(read_usize(this + 0x856), p, comprador, 0, 0, 1, 0) > read_f64_at(0x968e58) { // 0x968e58 = 3.15
+                let x = prazo as i32 as f64 * read_f64_at(0x968e18); // 0x968e18 = 2.5
+                let teto = read_f64_at(0x968dd8); // 0x968dd8 = 30
                 valor = Some(match_pl_ftol(if teto < x || x.is_nan() { teto } else { x }) as u8);
             }
         }
@@ -9682,7 +9682,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_veto(_this: usize, oferta: us
         crate::comparacao::ramo("cpl_2 veto da diretoria valores");
         for k in [0xb, 9, 0xd] {
             let p = (read_usize(jogador + 0x61) + k) as *mut i16;
-            core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%
+            core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%; 0x9689d8 = 0.9
         }
         return 1;
     }
@@ -9746,7 +9746,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_check_board_veto(this: usize, of
     let m0 = if motivo.is_null() { 0 } else { *motivo };
     let r = o(this, oferta, comprador, vendedor, jogador, decide, motivo);
     let depois = ler();
-    let a_90 = antes.map(|v| match_pl_ftol(v as f64 * read_f64_at(0x9689d8)) as i16);
+    let a_90 = antes.map(|v| match_pl_ftol(v as f64 * read_f64_at(0x9689d8)) as i16); // 0x9689d8 = 0.9
     let m = if motivo.is_null() { 0 } else { *motivo };
     let ok = match (r, motivo.is_null()) {
         (0, false) => m == m0 && depois == antes,

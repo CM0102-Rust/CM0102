@@ -431,7 +431,7 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
         if t < 10 {
             return (t as u8).wrapping_sub(2);
         }
-        return match_pl_ftol(t as f64 * read_f64_at(0x9689b0)) as u8;
+        return match_pl_ftol(t as f64 * read_f64_at(0x9689b0)) as u8; // 0x9689b0 = 0.8
     }
     t as u8
 }
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
         for k in 0..3usize { // cpt5: as três medidas
             let p = read_usize(this + 4) + i * 4 + k;
             let r = friendly_random(100);
-            *(p as *mut u8) = match_pl_ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * read_f64_at(0x968968)) as u8;
+            *(p as *mut u8) = match_pl_ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * read_f64_at(0x968968)) as u8; // 0x968968 = 0.5
             let p = read_usize(this + 4) + i * 4 + k;
             let v = *(p as *const i8);
             if v < 0 {
@@ -717,7 +717,7 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         for j in 0..3usize {
             let a = friendly_random(100);
             let b = friendly_random(100); // cpt7: o segundo sorteio da medida
-            *((read_usize(this + 4) + k * 4 + j) as *mut u8) = match_pl_ftol(a.wrapping_add(b) as f64 * read_f64_at(0x968968)) as u8;
+            *((read_usize(this + 4) + k * 4 + j) as *mut u8) = match_pl_ftol(a.wrapping_add(b) as f64 * read_f64_at(0x968968)) as u8; // 0x968968 = 0.5
         }
         let v = friendly_random(3); // cpt7: o vento inicial
         *((read_usize(this + 4) + k * 4 + 3) as *mut u8) = v as u8;

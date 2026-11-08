@@ -1,14 +1,21 @@
 use super::*;
 
-/// { 0x544410 }: x = (palavra +4 da pessoa + 2 x `nivel`) x 0,05 + 10; (x + 0,1 x^2) x (1/3) + 0,5,
+/// Computes a 1..20 value from the person's word +4 and `nivel`: x = (w + 2 x nivel) x 0.05 + 10, then (x + 0.1 x^2) /
+/// 3 + 0.5, clamped to 1..20 and truncated [inference: how well the person's attribute is known, fog of war].
+///
+/// [pt] { 0x544410 }: x = (palavra +4 da pessoa + 2 x `nivel`) x 0,05 + 10; (x + 0,1 x^2) x (1/3) + 0,5,
 /// limitado a 1..20 (NaN vira 1) e truncado.
 pub(crate) unsafe extern "C" fn chance_to_know(pessoa: usize, nivel: i8) -> i32 {
     let x = (*((pessoa + 4) as *const i16) as f64 + (nivel as f64 + nivel as f64)) * 0.05 + 10.0;
-    let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5;
+    let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5; // 0x968a80 = 0.3333333333
     match_pl_ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
 }
 
-/// { 0x5b09d0 } (ret 8, fog_of_war.cpp): o que se sabe da pessoa (registros de 9 bytes em [this],
+/// Fog of war: records knowledge of `pessoa` (9-byte records in [this], by id): stamps today's date at +1 and raises
+/// the knowledge level (+0). Without a scout/observer (`fonte` +0x69) the level becomes 3 (fully known); with one,
+/// below level 3 a roll on the observer's judging rating decides whether the level goes up by one, jumps to 2 or to 3.
+///
+/// [pt] { 0x5b09d0 } (ret 8, fog_of_war.cpp): o que se sabe da pessoa (registros de 9 bytes em [this],
 /// pelo id): grava a data de hoje (0xae2c90) em +1; sem observador (`fonte` +0x69) o nivel (+0)
 /// vai a 3. Com ele e nivel abaixo de 3: c = 0x544410(observador, byte +0x17), sorteio(c) (byte);
 /// c < 15 e sorteio 0: nivel + 1; senao nivel 0 e sorteio < 6: 2; senao 3.
@@ -41,7 +48,11 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, pessoa: usize, f
     };
 }
 
-/// { 0x5afe00 } (stdcall, fog_of_war.cpp): depois da partida, para cada lado (clube em +0x20 e
+/// After a match (attribute masking / fog of war): for each side whose club is controlled by a human manager that has a
+/// knowledge map, every valid player among the 20 lineup slots of the match data (substitutes only if used, +0x32 !=
+/// 0xff) becomes known to that manager (0x5b09d0).
+///
+/// [pt] { 0x5afe00 } (stdcall, fog_of_war.cpp): depois da partida, para cada lado (clube em +0x20 e
 /// +0x1c) controlado por humano (0x600a50) com tecnico e quadro de conhecimento (0xae2a60, pelo
 /// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).

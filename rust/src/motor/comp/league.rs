@@ -1,6 +1,11 @@
 use super::*;
 
-/// { 0x6854a0 } (ret 8, league.cpp): a fase (this) com a partida (`partida`, +0x42 = 0xff) ja decide
+/// Has `clube` already clinched first place in this league stage (`this`) after match `partida`? Only for counting
+/// competitions, with bit 1 of +0xd9 and round +0xa9 >= 24: on a copy of the table updated with the match and sorted,
+/// the club must be top and no other club can reach its points (+0x19) with its remaining games (+0xa7 - +0x11) times
+/// points per win (+0xc2). Returns 1 if decided, else 0.
+///
+/// [pt] { 0x6854a0 } (ret 8, league.cpp): a fase (this) com a partida (`partida`, +0x42 = 0xff) ja decide
 /// o clube? So nas competicoes que contam (0x4b0700), com o bit 1 de +0xd9 e a rodada +0xa9 >= 24:
 /// a linha do clube (+0xb1, 0x3b bytes, +0x3e linhas) sem situacao +0x37 de 5, 2, 3, -2, -4 ou -5;
 /// numa copia da tabela (0x687710) preenchida (0x685f60) e ordenada (0x6827d0), o clube tem de estar
@@ -115,14 +120,14 @@ pub(crate) unsafe fn comment_standing_with(this: usize, lado: u32, chamar: Chama
             // sem nenhum titular a media seria o que estivesse no argumento (nao acontece)
             let media = if n != 0 { (soma / n as f64) as f32 as f64 } else { 0.0 };
             let forca = |o: usize| *((*((t() + o) as *const usize) + 0x80) as *const i16) as f64;
-            let x = media * read_f64_at(0x968968) - read_f64_at(0x968950);
+            let x = media * read_f64_at(0x968968) - read_f64_at(0x968950); // 0x968968 = 0.5, 0x968950 = 2
             if bl == 0 {
-                if media < read_f64_at(0x968988) && x * forca(0x20) < forca(0x1c) {
+                if media < read_f64_at(0x968988) && x * forca(0x20) < forca(0x1c) { // 0x968988 = 7
                     fala(chamar, 0x2121, 0);
                 }
                 return;
             }
-            if media < read_f64_at(0x96d2e8) && x * forca(0x1c) < forca(0x20) * read_f64_at(0x9689b0) {
+            if media < read_f64_at(0x96d2e8) && x * forca(0x1c) < forca(0x20) * read_f64_at(0x9689b0) { // 0x96d2e8 = 6.67, 0x9689b0 = 0.8
                 fala(chamar, 0x2121, lado);
             }
         }
@@ -143,7 +148,10 @@ pub(crate) unsafe fn comment_standing_with(this: usize, lado: u32, chamar: Chama
     fala(chamar, 0x2001, 0);
 }
 
-/// { 0x6be120 } (ret 4, match_eng.cpp): ver `comment_standing_with`.
+/// Adds the match commentary about side `lado`'s qualification situation (group decided, tie already resolved, ahead on
+/// aggregate, game still open); thin wrapper over comment_standing_with with the real commentary call.
+///
+/// [pt] { 0x6be120 } (ret 4, match_eng.cpp): ver `comment_standing_with`.
 pub(crate) unsafe extern "thiscall" fn narrate_qualification(this: usize, lado: u32) {
     comment_standing_with(this, lado, &mut |t, a| add_match_event(t, a))
 }
@@ -2325,9 +2333,9 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
         let n = read_i16(this + 0x3e);
         qsort(buf, n as i32 as u32, 0xe, 0x68afb0);
         let c = *((this + 0xc2) as *const i8) as f64;
-        let a = (c * read_f64_at(0x96d0e8)) as f32; // fstp no local: o primeiro arredonda para float
+        let a = (c * read_f64_at(0x96d0e8)) as f32; // fstp no local: o primeiro arredonda para float; 0x96d0e8 = 0.83
         normal = a.to_bits();
-        let b = c * read_f64_at(0x96d0e0);
+        let b = c * read_f64_at(0x96d0e0); // 0x96d0e0 = 0.23
         if n > 0 {
             let d = a as f64 - b;
             let step_towards = d / n as f64;
@@ -2348,12 +2356,12 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
     qsort(buf, read_i16(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     if let Some(k) = projection_position(buf, read_i16(this + 0x3e), clube) {
         normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // a posição na forma normal
-        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x968940)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x968940)) as u32; // 0x968940 = 1.5
     }
     qsort(buf, read_i16(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     if let Some(k) = projection_position(buf, read_i16(this + 0x3e), clube) {
         melhor = (melhor & !0xff) | (k as u8).wrapping_add(1) as u32;
-        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x96d0d8)) as u32;
+        pior = apply_form_factor(this, projection_entry(buf, k), read_f64_at(0x96d0d8)) as u32; // 0x96d0d8 = 0.4444444444
     }
     qsort(buf, read_i16(this + 0x3e) as i32 as u32, 0xe, 0x68afd0);
     for k in 0..read_i16(this + 0x3e) as i32 {

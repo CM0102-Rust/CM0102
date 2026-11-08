@@ -109,21 +109,21 @@ pub(crate) unsafe fn injure_with(m: usize, tipo: u32, chance: u32, p: usize, o: 
         *b(p, 0x1c) = 1;
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
-        local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32;
+        local = sortear(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
         *folego = (*folego as f64 - local as f64) as f32;
-        let r = sortear(match_pl_ftol(local as f64 * read_f32_at(0x968f18) as f64));
+        let r = sortear(match_pl_ftol(local as f64 * read_f32_at(0x968f18) as f64)); // 0x968f18 = 0.5
         *((p + 0x59) as *mut f32) = r as f32;
         let d5 = (p + 0xd5) as *mut f32;
-        *d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32;
+        *d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32; // 0x968f18 = 0.5
     }
-    if !(*folego as f64 >= read_f64_at(0x9688e8)) {
+    if !(*folego as f64 >= read_f64_at(0x9688e8)) { // 0x9688e8 = 5000
         crate::comparacao::ramo("lesao sem folego");
         *b(m, 0x8eb5) = 1;
         *b(p, 0x1d) = 1;
         *b(p, 0x1c) = 1;
     } else {
         let pessoa = *((p + 0x6d) as *const usize);
-        let v = (byte(pessoa, 0x2d) as i32 * 25) as f64 + read_f64_at(0x96d458);
+        let v = (byte(pessoa, 0x2d) as i32 * 25) as f64 + read_f64_at(0x96d458); // 0x96d458 = 7100
         if v > *folego as f64 {
             crate::comparacao::ramo("lesao para 5");
             write_2b(p, 5);
@@ -131,7 +131,7 @@ pub(crate) unsafe fn injure_with(m: usize, tipo: u32, chance: u32, p: usize, o: 
             *b(p, 0x1d) = 1;
         } else {
             write_2b(p, 3);
-            if local >= read_f32_at(0x96d1a8) && *b(p, 0x1c) != 0 {
+            if local >= read_f32_at(0x96d1a8) && *b(p, 0x1c) != 0 { // 0x96d1a8 = 500
                 crate::comparacao::ramo("lesao para 3 e sai");
                 *b(m, 0x8eb5) = 1;
                 *b(p, 0x1d) = 1;
@@ -139,10 +139,10 @@ pub(crate) unsafe fn injure_with(m: usize, tipo: u32, chance: u32, p: usize, o: 
         }
     }
     let x = *folego as f64;
-    if !(x >= read_f64_at(0x967890)) {
-        *folego = read_f64_at(0x967890) as f32;
-    } else if x > read_f64_at(0x968910) {
-        *folego = read_f64_at(0x968910) as f32;
+    if !(x >= read_f64_at(0x967890)) { // 0x967890 = 1
+        *folego = read_f64_at(0x967890) as f32; // 0x967890 = 1
+    } else if x > read_f64_at(0x968910) { // 0x968910 = 10000
+        *folego = read_f64_at(0x968910) as f32; // 0x968910 = 10000
     }
     if *b(m, 0x8eb5) != 0 {
         *w(0xf639) = (*w(0xf639)).wrapping_add(1);
@@ -323,13 +323,20 @@ pub(crate) unsafe extern "thiscall" fn comparar_player_highlight(p: usize, codig
     r
 }
 
-/// { 0x62ec00 } (ret 4, injury.cpp): o byte de gravidade do tipo de lesao `tipo` (tabela de 13 bytes
+/// Returns the severity byte of injury type `tipo` from the injury types table (13 bytes per type at 0x9e7ad9); `this`
+/// (the injury manager) is unused.
+///
+/// [pt] { 0x62ec00 } (ret 4, injury.cpp): o byte de gravidade do tipo de lesao `tipo` (tabela de 13 bytes
 /// por tipo em 0x9e7ad9).
 pub(crate) unsafe extern "thiscall" fn injury_severity(_lesoes: usize, tipo: i8) -> u8 {
     *((0x9e7ad9 + tipo as isize as usize * 13) as *const u8)
 }
 
-/// { 0x62ece0 } (ret 4, injury.cpp): o grau da lesao da pessoa (registro de 31 bytes por id na
+/// Returns the severity grade of the person's injury (31-byte record per id in the injury table `lesoes`, +0x13, at
+/// least 1), or 0 without a person, without a player record (+0x61), with the id out of range or with no injury (+0x12
+/// negative).
+///
+/// [pt] { 0x62ece0 } (ret 4, injury.cpp): o grau da lesao da pessoa (registro de 31 bytes por id na
 /// tabela das lesoes, +0x13, pelo menos 1), ou 0 sem pessoa, sem ficha (+0x61), id fora da tabela
 /// (0xae2364) ou sem lesao (+0x12 negativo).
 pub(crate) unsafe extern "thiscall" fn injury_grade(lesoes: usize, pessoa: usize) -> u8 {
@@ -781,7 +788,7 @@ pub(crate) fn injury_type_offset(tipo: i8) -> usize {
 /// [0x967898], fimul, _ftol 0x945640; x87 em dupla precisão), no máximo 60 dias antes do fim.
 pub(crate) unsafe fn return_to_training_days(tipo: i8, dias: i16) -> i16 {
     let pct = read_i8_as_i32(0x9e7adf + injury_type_offset(tipo));
-    let x = match_pl_ftol(pct as f64 * read_f64_at(0x967898) * dias as f64) as i16;
+    let x = match_pl_ftol(pct as f64 * read_f64_at(0x967898) * dias as f64) as i16; // 0x967898 = 0.01
     if (x as i32) + 0x3c < dias as i32 { dias.wrapping_sub(0x3c) } else { x }
 }
 
@@ -1801,7 +1808,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: us
                 crate::comparacao::ramo("cpv_8 metade");
                 v = (v as i16 as i32) / 2; // cpv8: sem a marca do jogo, a metade
             } else if read_i8(pessoa + staff::YEAR_OF_BIRTH) as i32 > sorteio(3) + 0x21 {
-                v = ((v as i16 as i32) as f64 * read_f64_at(0x968928)) as i32;
+                v = ((v as i16 as i32) as f64 * read_f64_at(0x968928)) as i32; // 0x968928 = 1.25
             } else if (read_i8(pessoa + staff::YEAR_OF_BIRTH) as i32) < 0x17 - sorteio(5) {
                 crate::comparacao::ramo("cpv_8 jovem");
                 v = v.wrapping_add(v); // cpv8: o jovem em dobro
@@ -2964,7 +2971,7 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
     let e = (r + 0xc) as *mut i16;
     let v = core::ptr::read_unaligned(e);
     if v < -1000 {
-        let x = (v as f64 * read_f64_at(0x96bac0) - read_f64_at(0x968e18)) * ritmo as f64;
+        let x = (v as f64 * read_f64_at(0x96bac0) - read_f64_at(0x968e18)) * ritmo as f64; // 0x96bac0 = -0.0035, 0x968e18 = 2.5
         core::ptr::write_unaligned(e, (x as i32).wrapping_add(v as i32) as i16);
         return;
     }
@@ -3023,7 +3030,7 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, jogador: usize
         100
     };
     if em_porcento != 0 {
-        c = match_pl_ftol(c as i16 as f64 * read_f32_at(0x96bac8) as f64 + read_f64_at(0x968968));
+        c = match_pl_ftol(c as i16 as f64 * read_f32_at(0x96bac8) as f64 + read_f64_at(0x968968)); // 0x96bac8 = 0.009999999776, 0x968968 = 0.5
         if c as i16 > 100 {
             c = 100;
         }
@@ -3295,9 +3302,9 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa
     // a condição de jogo, pelo fator do cansaço (+0xc)
     let cansaco = read_i16(rec + 0xc);
     let mc = read_i16(rec + 0xa) as i32;
-    let teto_k = read_f64_at(0x9689d0);
+    let teto_k = read_f64_at(0x9689d0); // 0x9689d0 = 0.95
     let k = if cansaco > 1000 {
-        let kv = read_f64_at(0x968dc0) - cansaco as f64 * read_f64_at(0x96a608);
+        let kv = read_f64_at(0x968dc0) - cansaco as f64 * read_f64_at(0x96a608); // 0x968dc0 = 1.4, 0x96a608 = 0.0004
         if !(kv > teto_k) {
             kv
         } else if l3c > 0 {
@@ -3308,7 +3315,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa
     } else if l3c > 0 {
         teto_k
     } else {
-        read_f64_at(0x967890)
+        read_f64_at(0x967890) // 0x967890 = 1
     };
     let r1 = match_pl_ftol(l38.wrapping_mul(500) as f64 * k);
     let r2 = match_pl_ftol(l3c.wrapping_mul(250) as f64 * k);

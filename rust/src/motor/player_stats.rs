@@ -17,8 +17,8 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, qual: i8, p
     let b = |o: usize| *r.add(o) as f64;
     let w = |o: usize| core::ptr::read_unaligned(r.add(o) as *const i16) as f64;
     let jogos = *r;
-    let cem = read_f32_at(0x968960) as f64;
-    let vinte_avos = read_f32_at(0x96d61c) as f64;
+    let cem = read_f32_at(0x968960) as f64; // 0x968960 = 100
+    let vinte_avos = read_f32_at(0x96d61c) as f64; // 0x96d61c = 0.05000000075
     match qual {
         1 => b(0),
         2..=4 => b(qual as usize),
@@ -44,11 +44,11 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, qual: i8, p
         }
         20 => {
             if jogos == 0 {
-                return read_f32_at(0x96b004) as f64;
+                return read_f32_at(0x96b004) as f64; // 0x96b004 = 1.5
             }
             let nota = (*r.add(9) as i32 * 2 - *r.add(10) as i32 + jogos as i32) as f64;
             if jogos < 20 {
-                (nota + (20 - jogos as i32) as f64 * read_f64_at(0x968940)) * vinte_avos
+                (nota + (20 - jogos as i32) as f64 * read_f64_at(0x968940)) * vinte_avos // 0x968940 = 1.5
             } else {
                 nota / jogos as f64
             }

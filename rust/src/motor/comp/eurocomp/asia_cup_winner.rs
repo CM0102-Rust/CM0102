@@ -21,7 +21,12 @@ pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
     read_u32_as_usize(linha(grupo, p))
 }
 
-/// { 0x402090 } (thiscall, ret 0, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// AfricanNations::create_knockout_stage: builds the quarter-finals of the African Nations Cup (called by advance_stage
+/// on reaching stage 3): the 8 teams taken from the group tables by the fixed CQT13_QUARTAS pairings, the round dates
+/// from virtual +0x3c, a new Cup_Stage stored in stage slot 3 (+0xc), then sets up the first round and sets the current
+/// stage (+0x30) to 3. Out of memory or no stage: error box and return.
+///
+/// [pt] { 0x402090 } (thiscall, ret 0, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AfricanNations::create_knockout_stage()`, as quartas da Copa Africana (da fase seguinte 0x401e10, ao chegar
 /// a 3): a lista dos 8 (0x944e46(0x20): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x311 e volta) pelos
 /// cruzamentos de CQT13_QUARTAS, na ordem das chamadas; a tabela das rodadas pela virtual +0x3c (push 0; push &id; push
@@ -93,7 +98,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_
     PLACAR.registrar(igual, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
 }
 
-/// { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
+/// AsiaCupWinner::advance_stage(): moves the Asian Cup Winners' Cup to its next stage (+0x30); on reaching stage 1
+/// (after both zones' knockouts) it creates the finals. Shows the original error box if already at the last stage.
+///
+/// [pt] { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x328; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), as finais (0x40e030: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
@@ -147,7 +155,11 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: usize) -> [usize; 4] {
     v
 }
 
-/// { 0x40e030 } (thiscall, ret 0, asia_cup_winner.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// AsiaCupWinner::create_finals_stage(): builds the 4-team finals stage of the Asian Cup Winners' Cup from its
+/// finalists, gets the round table from the cup's virtual +0x3c, constructs the Cup_Stage in stage slot 1 (cup +0xc)
+/// and draws its round 0. Out of memory or a failed stage shows the error box and returns.
+///
+/// [pt] { 0x40e030 } (thiscall, ret 0, asia_cup_winner.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AsiaCupWinner::create_finals_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem
 /// memória, a caixa da linha 0x34b e volta) de asian_cup_winners_finalists; a tabela das rodadas pela virtual +0x3c (push 0; push
 /// &id; push &rodadas; push 1; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 -> cdecl;

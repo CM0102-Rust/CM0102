@@ -1,6 +1,9 @@
 use super::*;
 
-/// { 0x5b2ae0 } (ret 8, formation.cpp): a casa da vaga 0..10 (palavra +0x12d, ou +0x14e com
+/// Returns the tactical grid cell code of formation slot 0..10 (word array +0x12d, or the second set at +0x14e when
+/// `segunda` is set). Out-of-range slots go to the original routine (error box).
+///
+/// [pt] { 0x5b2ae0 } (ret 8, formation.cpp): a casa da vaga 0..10 (palavra +0x12d, ou +0x14e com
 /// `segunda`). Vaga fora da faixa: a original (caixa de erro e 1). Devolve so `ax`: no caminho +0x12d
 /// a original deixa em cima de `eax` o que o chamador tinha ali.
 pub(crate) unsafe extern "thiscall" fn slot_code(this: usize, vaga: i8, segunda: u32) -> u16 {
@@ -11,7 +14,11 @@ pub(crate) unsafe extern "thiscall" fn slot_code(this: usize, vaga: i8, segunda:
     core::ptr::read_unaligned((this + base + 2 * vaga as usize) as *const u16)
 }
 
-/// { 0x4bff70 } (comp_util.cpp): com a palavra baixa de `b` (ou, sem ela, a de `a`), o resultado
+/// Returns a grammatical attribute of a competition name [inference: its gender]: from the stage name id in the low
+/// word of `b` (or else of `a`) via the comp_util name routine 0x4ba8f0; without either, the byte +0x37 (when `tipo` is
+/// 1) or +0x52 of the competition record; with no record, 1.
+///
+/// [pt] { 0x4bff70 } (comp_util.cpp): com a palavra baixa de `b` (ou, sem ela, a de `a`), o resultado
 /// de 0x4ba8f0(palavra, 0); senao o byte +0x37 (`tipo` 1) ou +0x52 do registro; sem registro, 1.
 pub(crate) unsafe extern "C" fn competition_criterion(registro: usize, a: u32, b: u32, tipo: u8) -> u8 {
     let texto: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME_GENDER);
@@ -27,7 +34,10 @@ pub(crate) unsafe extern "C" fn competition_criterion(registro: usize, a: u32, b
     *((registro + if tipo == 1 { 0x37 } else { 0x52 }) as *const u8)
 }
 
-/// { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
+/// With attribute masking enabled and a valid person, resets that person's knowledge level (9-byte record) in each of
+/// the 16 knowledge maps of `this` that exist and are active (+4), so every manager forgets him.
+///
+/// [pt] { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
 /// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
 pub(crate) unsafe extern "thiscall" fn forget_person(this: usize, pessoa: usize) {
     let valida = || *(pessoa as *const i32) < *(G_STAFF_COUNT as *const i32) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
@@ -42,7 +52,10 @@ pub(crate) unsafe extern "thiscall" fn forget_person(this: usize, pessoa: usize)
     }
 }
 
-/// { 0x5afde0 } (ret 4, fog_of_war.cpp): o quadro do tecnico, [this + (0xae2364 - id) x 4 - 4];
+/// Fog of war: returns the knowledge map of manager `tecnico` (pointer table indexed backwards from the staff count:
+/// [this + (staff_count - id) x 4 - 4]); 0 with no manager.
+///
+/// [pt] { 0x5afde0 } (ret 4, fog_of_war.cpp): o quadro do tecnico, [this + (0xae2364 - id) x 4 - 4];
 /// sem tecnico, 0.
 pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, tecnico: usize) -> usize {
     if tecnico == 0 {
@@ -52,7 +65,11 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, tecnico: usize
     *(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize)
 }
 
-/// { 0x5b2e80 } (ret 8, formation.cpp): a primeira das 11 casas (+0x12d) com o setor da mascara
+/// Splits the position mask into sector and side (0x5b73a0), finds the first of the 11 formation slots (+0x12d) of that
+/// sector flagged 0x200 and returns 0 if none; with no player list returns 1, otherwise 1 if any of the 20 players
+/// (0x1be-byte records, slot in +0x19, or +0x1a when +0x19 is 0xfe) occupies that slot.
+///
+/// [pt] { 0x5b2e80 } (ret 8, formation.cpp): a primeira das 11 casas (+0x12d) com o setor da mascara
 /// (0x5b73a0) e o bit 0x200; sem ela, 0. Sem `jogadores`, 1; senao 1 se algum dos 20 (+0x19, ou
 /// +0x1a com 0xfe em +0x19) esta naquela vaga.
 pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mascara: u32, jogadores: usize) -> u32 {
@@ -74,7 +91,10 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mascara: u
     }) as u32
 }
 
-/// { 0x5b2f10 } (ret 4, formation.cpp): a vaga (0..10) da casa `codigo` entre as 11 de +0x12d; 0xff
+/// Formation: returns the slot (0..10) whose 16-bit position code among the 11 at +0x12d equals `codigo`, or 0xff if
+/// none.
+///
+/// [pt] { 0x5b2f10 } (ret 4, formation.cpp): a vaga (0..10) da casa `codigo` entre as 11 de +0x12d; 0xff
 /// se nao estiver.
 pub(crate) unsafe extern "thiscall" fn slot_of_code(this: usize, codigo: u16) -> u32 {
     (0..11u32).find(|&k| core::ptr::read_unaligned((this + 0x12d + 2 * k as usize) as *const u16) == codigo).unwrap_or(0xff)
@@ -123,7 +143,10 @@ pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
     v
 }
 
-/// { 0x5b58e0 } (formation.cpp): a pessoa designada para a posicao (indice em +0x5bf + 4 x posicao,
+/// Formation: returns the person record designated for position `posicao` (index at +0x5bf + 4 x position into the
+/// person table at 0xae23bc, 110 bytes each), or 0 when the index is negative.
+///
+/// [pt] { 0x5b58e0 } (formation.cpp): a pessoa designada para a posicao (indice em +0x5bf + 4 x posicao,
 /// no vetor de pessoas de 0xae23bc, 110 bytes cada); indice negativo: 0.
 pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, posicao: i8) -> usize {
     let i = *((this as isize + 0x5bf + 4 * posicao as isize) as *const i32);
@@ -135,7 +158,12 @@ pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, posi
 }
 
 
-/// { 0x5b5290 } (formation.cpp): liga o bit `mascara` (um so) na mascara de casas da posicao
+/// Formation: sets one instruction bit `mascara` in the 64-bit instruction mask of position `posicao` (+0x188b + 8 x
+/// position), first clearing the mutually exclusive bits of its group, and clears the changed flag (+0x187f). Returns
+/// 1; position outside 0..=10 or unknown bit: clears the mouse-button global and returns 0 (the original also shows an
+/// error box).
+///
+/// [pt] { 0x5b5290 } (formation.cpp): liga o bit `mascara` (um so) na mascara de casas da posicao
 /// (+0x188b + 8 x posicao, 64 bits), apagando antes o grupo dele (bits que se excluem), e zera
 /// +0x187f. Posicao fora de 0..=10 ou bit desconhecido: o original mostra uma caixa de erro (sem a
 /// caixa aqui), zera 0xb67a34 e devolve 0.
@@ -166,7 +194,11 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, posicao: i8, masc
     1
 }
 
-/// { 0x6d10a0 } (match_eng.cpp): marca (bit 0x800000 da formacao do lado, 0x5b5290) os jogadores
+/// Marks the standout players of side `lado` in the side's formation (instruction bit 0x800000): each active outfield
+/// player scores 10 x (three person attributes +0x43, +0x33, +0x27) plus current form (+0x4d), adjusted by role
+/// (defenders down, attacking roles up); those above 8500 are flagged. Goalkeepers are skipped.
+///
+/// [pt] { 0x6d10a0 } (match_eng.cpp): marca (bit 0x800000 da formacao do lado, 0x5b5290) os jogadores
 /// ativos cuja nota passa de 8500: 10 x (+0x43 + +0x33 + +0x27 da pessoa) + forma (+0x4d), com o
 /// papel (0x717410): goleiro fica de fora; 2 +500; 4 -1000 (-500 com 0x800 ou 0x80); 8 -300 (sem
 /// 0x800 e 0x80); 0x10 +1000; 0x20 +2000.
@@ -1122,7 +1154,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_slot_position(this: usize, c
     r
 }
 
-/// { 0x5b57c0 }: byte `i` de uma tabela em +0x5b4 (por posicao; ver 0x6f4600).
+/// Formation: returns byte `i` of the per-position table at +0x5b4 [inference: the role flags of position `i`; bit 1
+/// marks the goalkeeper].
+/// Original: `position_byte` (0x5b57c0, formation.cpp).
+///
+/// [pt] { 0x5b57c0 }: byte `i` de uma tabela em +0x5b4 (por posicao; ver 0x6f4600).
 pub(crate) unsafe extern "thiscall" fn position_byte(this: usize, i: i8) -> u8 {
     *((this as isize + 0x5b4 + i as isize) as *const u8)
 }

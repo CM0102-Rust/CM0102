@@ -5,6 +5,6 @@
 MUTACOES = [
     ('cj_89', "                    let s = match_pl_ftol(f(j, 0x89) - f(j, 0xad) * read_f32_at(0x968f18) as f64) as i16;", "                    let s = match_pl_ftol(f(j, 0x8d) - f(j, 0xad) * read_f32_at(0x968f18) as f64) as i16;"),
     ('cj_40', "                    if table_a(this, j) & 0x40 == 0 {", "                    if table_a(this, j) & 0x20 == 0 {"),
-    ('cj_075', "                        match_pl_ftol(s as f64 * read_f64_at(0x969040)) as i16\n                    } else {\n                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16", "                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16\n                    } else {\n                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16"),
+    ('cj_075', "                        match_pl_ftol(s as f64 * read_f64_at(0x969040)) as i16 // 0x969040 = 0.75\n                    } else {\n                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16", "                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16\n                    } else {\n                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16"),
     ('cj_falta', "let mut s = (byte(pd, 0x29) as i16).wrapping_mul(5)", "let mut s = (byte(pd, 0x29) as i16).wrapping_mul(1)"),
 ]

@@ -33,7 +33,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], marca: &
     crate::comparacao::ramo("cpt_6 dezembro");
     if (*marca as i8) < 0xc {
         crate::comparacao::ramo("cpt_6 bonus de dezembro");
-        h[5] = read_i16(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro
+        h[5] = read_i16(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro; 0x967888 = 0.05, 0x968930 = 3
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -93,8 +93,8 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         loop {
             let e = vetor + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
-            let s = read_f64(na + 0xc0) * read_f64_at(0x968e48) + read_f64(na + 0xb8) * read_f64_at(0x968e00) + read_f64(na + 0xb0) * read_f64_at(0x968918)
-                + read_f64(na + 0xc8) * read_f64_at(0x9689b0) + read_f64(na + 0xd8) + read_f64(na + 0xd0);
+            let s = read_f64(na + 0xc0) * read_f64_at(0x968e48) + read_f64(na + 0xb8) * read_f64_at(0x968e00) + read_f64(na + 0xb0) * read_f64_at(0x968918) // 0x968e48 = 0.6, 0x968e00 = 0.4, 0x968918 = 0.2
+                + read_f64(na + 0xc8) * read_f64_at(0x9689b0) + read_f64(na + 0xd8) + read_f64(na + 0xd0); // 0x9689b0 = 0.8
             write_f64(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);
@@ -801,8 +801,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_training_manager_get_player_entr
 pub(crate) unsafe extern "thiscall" fn game_average(t: usize, segunda: u8) -> f64 {
     let d = |o: usize| core::ptr::read_unaligned((t + o) as *const f64);
     let (n, q) = if segunda != 0 { (d(0x20), d(0x28)) } else { (d(0x10), d(0x18)) };
-    if q == read_f64_at(0x9689a0) || q.is_nan() {
-        return read_f64_at(0x968998);
+    if q == read_f64_at(0x9689a0) || q.is_nan() { // 0x9689a0 = 0
+        return read_f64_at(0x968998); // 0x968998 = 6.8
     }
     n / q
 }

@@ -806,7 +806,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         }
         let media = estatistica(reg, 0x11, 6.5);
         // fcomp com o −1.0 (double) e fcom com o float guardado: passa só com a média maior
-        if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 {
+        if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 { // 0x968948 = -1
             crate::comparacao::ramo("cpm_6 recorde de nota da temporada");
             *nota = media as f32;
             *((r + 0x20d) as *mut u8) = jogou;
@@ -1092,7 +1092,7 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, ofer
     if valor < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // abaixo do mínimo pela reputação
     }
-    if exigir != 0 && valor < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) {
+    if exigir != 0 && valor < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) { // 0x967880 = 0.1
         return 0;
     }
     (valor != 0 && valor > read_usize(rec + 0x313) as i32) as u8

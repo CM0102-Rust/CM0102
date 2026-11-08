@@ -1,6 +1,9 @@
 use super::*;
 
-/// { 0x7751e0 } (ret 4, national_teams.cpp): a competicao (0xae23d0, 107 bytes) do indice +4 do
+/// Returns the competition (107-byte records) indexed by +4 of the person's 110-byte record in the national-teams table
+/// ([this+4]); 0 without a person or with a negative index.
+///
+/// [pt] { 0x7751e0 } (ret 4, national_teams.cpp): a competicao (0xae23d0, 107 bytes) do indice +4 do
 /// registro da pessoa em [this+4] (110 bytes); sem pessoa ou indice negativo, 0.
 pub(crate) unsafe extern "thiscall" fn person_competition(this: usize, pessoa: usize) -> usize {
     if pessoa == 0 {
@@ -33,17 +36,23 @@ pub(crate) unsafe fn national_block_byte(this: usize, clube: usize, flag: u32, o
     *((*((this + 4) as *const usize)).wrapping_add((nacao as usize).wrapping_mul(110)).wrapping_add(classe * 20 + o) as *const u8)
 }
 
-/// { 0x7754c0 } (ret 8): o byte +0x42 do bloco da selecao do clube.
+/// Returns byte +0x42 of the national-team block of the club's nation (class by `flag` and second team).
+///
+/// [pt] { 0x7754c0 } (ret 8): o byte +0x42 do bloco da selecao do clube.
 pub(crate) unsafe extern "thiscall" fn national_side_byte_42(this: usize, clube: usize, flag: u32) -> u8 {
     national_block_byte(this, clube, flag, 0x42)
 }
 
-/// { 0x775520 } (ret 8): o byte +0x43 do bloco da selecao do clube.
+/// Returns byte +0x43 of the national-team block for the club's nation and class (see national_block_byte).
+///
+/// [pt] { 0x775520 } (ret 8): o byte +0x43 do bloco da selecao do clube.
 pub(crate) unsafe extern "thiscall" fn national_side_byte_43(this: usize, clube: usize, flag: u32) -> u8 {
     national_block_byte(this, clube, flag, 0x43)
 }
 
-/// { 0x775790 } (stdcall): selecao (0x53b900) ou um dos clubes de 0x9d00a4 e 0x9d00a8?
+/// Returns 1 if the club is a national team (0x53b900) or one of the two MLS All-Stars clubs (East/West), else 0.
+///
+/// [pt] { 0x775790 } (stdcall): selecao (0x53b900) ou um dos clubes de 0x9d00a4 e 0x9d00a8?
 pub(crate) unsafe extern "stdcall" fn national_or_special(clube: usize) -> u32 {
     let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if is_national_team(clube) != 0 {
@@ -53,7 +62,9 @@ pub(crate) unsafe extern "stdcall" fn national_or_special(clube: usize) -> u32 {
     (id == *(G_KEY_CLUB_MLS_ALL_STARS_EAST as *const u32) || id == *(G_KEY_CLUB_MLS_ALL_STARS_WEST as *const u32)) as u32
 }
 
-/// { 0x776380 } (stdcall): a pessoa nao gosta (0x547d30) da selecao principal (0x53b3d0) da nacao +0x1a?
+/// Tells whether person `pessoa` dislikes the main national team of his nation (+0x1a). Returns 1/0.
+///
+/// [pt] { 0x776380 } (stdcall): a pessoa nao gosta (0x547d30) da selecao principal (0x53b3d0) da nacao +0x1a?
 pub(crate) unsafe extern "stdcall" fn dislikes_national_side(pessoa: usize) -> u32 {
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_NATIONAL_TEAM);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_DISLIKES_CLUB);
@@ -61,7 +72,9 @@ pub(crate) unsafe extern "stdcall" fn dislikes_national_side(pessoa: usize) -> u
     (nao_gosta(pessoa, s) != 0) as u32
 }
 
-/// { 0x777590 } (ret 4): copia a data (0x417c10) e o byte +8 de `origem`; devolve `this`.
+/// Copies the date and the byte +8 from `origem` into this record. Returns `this`.
+///
+/// [pt] { 0x777590 } (ret 4): copia a data (0x417c10) e o byte +8 de `origem`; devolve `this`.
 pub(crate) unsafe extern "thiscall" fn copy_date_and_mark(this: usize, origem: usize) -> usize {
     let mut tmp = [0u8; 8];
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -79,22 +92,31 @@ pub(crate) unsafe fn person_block(this: usize, pessoa: usize, k: i8) -> usize {
         .wrapping_add((k as isize * 20) as usize)
 }
 
-/// { 0x76c0f0 } (ret 8): liga (1) o byte +0x44 do bloco `k` da pessoa.
+/// Sets byte +0x44 of block `k` of the person's national-teams record to 1.
+///
+/// [pt] { 0x76c0f0 } (ret 8): liga (1) o byte +0x44 do bloco `k` da pessoa.
 pub(crate) unsafe extern "thiscall" fn set_person_44(this: usize, pessoa: usize, k: i8) {
     *((person_block(this, pessoa, k) + 0x44) as *mut u8) = 1;
 }
 
-/// { 0x76e010 } (ret 8): o byte +0x44 do bloco `k` da pessoa, com sinal.
+/// Returns signed byte +0x44 of block `k` (20 bytes) of person `pessoa`'s 110-byte record in [this+4].
+///
+/// [pt] { 0x76e010 } (ret 8): o byte +0x44 do bloco `k` da pessoa, com sinal.
 pub(crate) unsafe extern "thiscall" fn person_byte_44(this: usize, pessoa: usize, k: i8) -> i32 {
     *((person_block(this, pessoa, k) + 0x44) as *const i8) as i32
 }
 
-/// { 0x76e040 } (ret 8): o endereco do campo +0x3a do bloco `k` da pessoa.
+/// Returns the address of field +0x3a of block `k` of the person's 110-byte record.
+///
+/// [pt] { 0x76e040 } (ret 8): o endereco do campo +0x3a do bloco `k` da pessoa.
 pub(crate) unsafe extern "thiscall" fn person_field_3a(this: usize, pessoa: usize, k: i8) -> usize {
     person_block(this, pessoa, k) + 0x3a
 }
 
-/// { 0x76e070 } (stdcall): sem selecao (+0x24), 0xff; segunda selecao (0x5409b0), 2; senao o bit 3
+/// Classifies a person by national side: 0xff with no national job (+0x24), 2 if it is a second national team, else bit
+/// 3 of the PlayingSquad byte (+0x5e). Returns only the low byte.
+///
+/// [pt] { 0x76e070 } (stdcall): sem selecao (+0x24), 0xff; segunda selecao (0x5409b0), 2; senao o bit 3
 /// do byte +0x5e. Devolve so `al`.
 pub(crate) unsafe extern "stdcall" fn class_by_national_side(pessoa: usize) -> u8 {
     let selecao = *((pessoa + staff::NATIONAL_JOB) as *const usize);

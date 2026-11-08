@@ -313,7 +313,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
         team_strength(m, 1);
         for o in [0x1da, 0x1de, 0x1e2, 0x1e6] {
             let (a, x) = (*w(o) as f64, *w(o + 2) as f64);
-            let meio = x * read_f64_at(0x968968);
+            let meio = x * read_f64_at(0x968968); // 0x968968 = 0.5
             if !(a >= meio) {
                 *w(o) = match_pl_ftol(meio) as i16;
             } else if a > x + x {
@@ -345,7 +345,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
                     break;
                 }
                 let p = jog(lado, i);
-                let f = (read_f32_at(p + 0xc5) as f64 + read_f32_at(0x96afb0) as f64) as f32;
+                let f = (read_f32_at(p + 0xc5) as f64 + read_f32_at(0x96afb0) as f64) as f32; // 0x96afb0 = 20
                 let r = sortear((palavra(0x1da, outro) + 200) / 19);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5e4 + lado * 0x36));
@@ -362,7 +362,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
                     break 'rodadas;
                 }
                 let p = jog(lado, c as i8);
-                let f = (read_f32_at(p + 0xdd) as f64 + read_f32_at(0x96b020) as f64) as f32;
+                let f = (read_f32_at(p + 0xdd) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
                 let r = sortear(palavra(0x1de, outro) / 5);
                 if !(r as f64 >= f as f64) {
                     somar(p, 0x28);
@@ -386,7 +386,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
                     }
                 };
                 let p = jog(lado, i);
-                let f = (read_f32_at(p + 0xad) as f64 + read_f32_at(0x96b020) as f64) as f32;
+                let f = (read_f32_at(p + 0xad) as f64 + read_f32_at(0x96b020) as f64) as f32; // 0x96b020 = 15
                 let r = sortear((palavra(0x1f2, outro) + 100) / 7);
                 if !(r as f64 >= f as f64) {
                     mais16(w(0xf5ec + lado * 0x36));
@@ -399,7 +399,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
                 mais(b(0xf5c8 + lado * 0x36));
             }
             let p = jog(lado, choose_by_role(m, lado as u32) as i8);
-            let v = match_pl_ftol(read_f32_at(p + 0xb9) as f64 + read_f32_at(0x96afb0) as f64);
+            let v = match_pl_ftol(read_f32_at(p + 0xb9) as f64 + read_f32_at(0x96afb0) as f64); // 0x96afb0 = 20
             if sortear(v) < sortear(2) {
                 somar(p, -0xf);
                 mais(b(0xf5ca + lado * 0x36));
@@ -469,16 +469,16 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
             let x = if saldo + d > 3 {
                 d as f64
             } else if gols(lado) + gols(outro) != 0 {
-                read_f32_at(0x968e70) as f64
+                read_f32_at(0x968e70) as f64 // 0x968e70 = 1
             } else if *w(0x8ed0) > 0x3c {
-                read_f32_at(0x96d320) as f64
+                read_f32_at(0x96d320) as f64 // 0x96d320 = 0.6499999762
             } else {
-                read_f32_at(0x96d248) as f64
+                read_f32_at(0x96d248) as f64 // 0x96d248 = 0.75
             };
             let (v, repartir_outro): (f64, unsafe extern "thiscall" fn(usize, i8, i16)) = if c20 {
-                (palavra(0x1f2, outro) as f64 * x * read_f64_at(0x96d310), split_c)
+                (palavra(0x1f2, outro) as f64 * x * read_f64_at(0x96d310), split_c) // 0x96d310 = 6.1
             } else {
-                (palavra(0x1da, outro) as f64 * x * read_f64_at(0x96d318), split_b)
+                (palavra(0x1da, outro) as f64 * x * read_f64_at(0x96d318), split_b) // 0x96d318 = 4.8
             };
             let r1 = sortear(match_pl_ftol(v));
             let l24 = sortear(palavra(0x1de, lado)).wrapping_sub(r1) as i16;
@@ -678,9 +678,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
                 }
                 let f = read_f32_at(p + 0x4d);
                 let mut cl = (byte(pessoa, 0x2d) as u8).wrapping_mul(2).wrapping_add(5);
-                if !(f >= read_f32_at(0x96d30c)) {
+                if !(f >= read_f32_at(0x96d30c)) { // 0x96d30c = 6750
                     cl = cl.wrapping_add(0xf);
-                } else if !(f >= read_f32_at(0x96d308)) {
+                } else if !(f >= read_f32_at(0x96d308)) { // 0x96d308 = 8000
                     cl = cl.wrapping_add(5);
                 }
                 if sortear(cl as i8 as i32) < sortear(400) {
@@ -710,12 +710,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, chamar: &mut dyn FnMut(usiz
             if *(pt() as *const i32) == -2 && i < 11 {
                 crate::comparacao::ramo("simulacao rapida nota do amistoso");
                 let clube = if s != 0 { u(pt(), 0x20) } else { u(pt(), 0x1c) };
-                let a = (*((p + 0x3b) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8);
-                let r = *((clube + club::REPUTATION) as *const i16) as f64 * read_f64_at(0x969018) - read_f64_at(0x96d300);
-                let v = match_pl_ftol(((a - r) * read_f64_at(0x96d2f8) + read_f64_at(0x967890)) * *q as f64) as i16;
+                let a = (*((p + 0x3b) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8); // 0x968e30 = 40, 0x968ff8 = 50
+                let r = *((clube + club::REPUTATION) as *const i16) as f64 * read_f64_at(0x969018) - read_f64_at(0x96d300); // 0x969018 = 1.6, 0x96d300 = 6000
+                let v = match_pl_ftol(((a - r) * read_f64_at(0x96d2f8) + read_f64_at(0x967890)) * *q as f64) as i16; // 0x96d2f8 = 2e-05, 0x967890 = 1
                 *q = v.clamp(0xdac, 0x2ee0);
             }
-            let n = (match_pl_ftol((*q as i32 + 0x1770) as f64 * read_f64_at(0x96a608) + read_f64_at(0x96d2f0)) as i8).clamp(1, 10);
+            let n = (match_pl_ftol((*q as i32 + 0x1770) as f64 * read_f64_at(0x96a608) + read_f64_at(0x96d2f0)) as i8).clamp(1, 10); // 0x96a608 = 0.0004, 0x96d2f0 = 1.83
             *((p + 0x1b) as *mut i8) = n;
             *((p + 0x51) as *mut u32) = *((p + 0x4d) as *const u32);
         }
@@ -745,7 +745,11 @@ pub(crate) unsafe fn tactics_row_of_club(this: usize, clube: usize, humano: u32)
     (l != -1).then(|| (*((this + 0x601) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)))
 }
 
-/// { 0x897590 } (tactics.cpp): a vaga (0..20) cuja pessoa (indice em +2 + 4 x vaga, no vetor de
+/// Returns the squad slot (0..19) of the club's tactics row whose person id matches the id stored at +0x52 of the row
+/// (the designated player, captain per the function map [inference]); none: -1 with `menos_um`, else 0; no row: 0. A
+/// null club calls the original (error box).
+///
+/// [pt] { 0x897590 } (tactics.cpp): a vaga (0..20) cuja pessoa (indice em +2 + 4 x vaga, no vetor de
 /// 0xae23bc) tem o id guardado em +0x52 da linha; sem nenhuma: -1 com `menos_um`, senao 0. Linha
 /// -1: 0. Clube nulo: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, clube: usize, humano: u32, menos_um: u32) -> i8 {
@@ -763,7 +767,11 @@ pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, clube: usize, hu
     -((menos_um != 0) as i8)
 }
 
-/// { 0x897760 } (tactics.cpp): guarda em +0x52 da linha o indice da pessoa da vaga (0..20); 1 se
+/// Sets the captain in the club's tactic: stores in the tactics row (+0x52) the person index of slot `vaga` (0..19).
+/// Returns 1 if the slot was filled, 0 if empty (-1) or the row is missing; a null club or bad slot goes to the
+/// original (error box).
+///
+/// [pt] { 0x897760 } (tactics.cpp): guarda em +0x52 da linha o indice da pessoa da vaga (0..20); 1 se
 /// havia alguem (-1 = vazia). Linha -1: 0. Clube nulo ou vaga fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, clube: usize, vaga: i8, humano: u32) -> u32 {
     if clube == 0 || !(0..20).contains(&vaga) {
@@ -778,7 +786,11 @@ pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, clube: usize, vaga
     1
 }
 
-/// { 0x897dc0 } (tactics.cpp): a pessoa (vetor de 0xae23bc, 110 bytes cada) do indice em +0x56 +
+/// Returns the person (staff table 0xae23bc, 110 bytes each) referenced by the club's tactics row at +0x56 + 4 x `qual`
+/// (0 or 1); 0 when the index is negative or the club has no row. Null club or `qual` out of range go to the original
+/// (error box).
+///
+/// [pt] { 0x897dc0 } (tactics.cpp): a pessoa (vetor de 0xae23bc, 110 bytes cada) do indice em +0x56 +
 /// 4 x `qual` (0 ou 1) da linha; indice negativo ou linha -1: 0. Clube nulo ou `qual` fora: a
 /// original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn row_person(this: usize, clube: usize, qual: i8, humano: u32) -> usize {
@@ -793,7 +805,11 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, clube: usize, qua
     (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
 }
 
-/// { 0x8982b0 } (tactics.cpp; o `this` nao e usado, ret 8): a linha do clube na tabela tatica.
+/// Returns the club's row in the tactics table: for a human-managed club with `humano` set, -1 for a second national
+/// team, else the human manager's row after the clubs (staff count - manager id - 1, +15 for a national team; out of
+/// range: the original); in other cases the club id.
+///
+/// [pt] { 0x8982b0 } (tactics.cpp; o `this` nao e usado, ret 8): a linha do clube na tabela tatica.
 /// Clube dirigido por humano (0x600a50 com 1, 1) e `humano` ligado: segunda selecao, -1; senao a
 /// linha do tecnico, depois dos clubes (0xae235c): quantidade de pessoas (0xae2364) - id do tecnico
 /// (+0xcf) - 1, ou + 15 numa selecao (0x53b900), fora da faixa: a original (caixa de erro). Nos
@@ -821,7 +837,11 @@ pub(crate) unsafe extern "stdcall" fn tactics_row(clube: usize, humano: u32) -> 
     *(clube as *const i32)
 }
 
-/// { 0x898040 } (tactics.cpp): byte `pos` (0..=10) da linha tatica do clube (0x8982b0) na tabela
+/// Returns byte `pos` (0..10) of the club's tactics row (index from 0x8982b0, for the human manager when `humano`) in
+/// the table at +0x601 (0x91 bytes per row, from +0x86); row -1: 0. Null club or position out of range: falls back to
+/// the original (error box).
+///
+/// [pt] { 0x898040 } (tactics.cpp): byte `pos` (0..=10) da linha tatica do clube (0x8982b0) na tabela
 /// em +0x601 (0x91 bytes por linha, a partir de +0x86); linha -1: 0. Clube nulo ou posicao fora:
 /// a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, clube: usize, pos: i8, humano: u32) -> u8 {

@@ -1,6 +1,11 @@
 use super::*;
 
-/// { 0x4b0700 } (comp_util.cpp): a competicao `id` conta? As tres de 0x9cf6b0, 0x9cf5d8 e 0x9cf548
+/// Does club competition `id` count (for deciding a group/league early)? Returns 1 for three fixed lower divisions
+/// (Spanish lower division, French CFA, French lower division); 0 if the competition record (107 bytes, +0x5d) is not
+/// flagged; otherwise 1 only if its stage object is at stage 2 (+0x43), has rounds (+0x3e) and the first table row's
+/// club (+0x57 or +0x60) is the stage's competition (+4).
+///
+/// [pt] { 0x4b0700 } (comp_util.cpp): a competicao `id` conta? As tres de 0x9cf6b0, 0x9cf5d8 e 0x9cf548
 /// sim; sem o +0x5d do registro (0xae23d0, 107 bytes) nao; senao so a do objeto em 0xadadfc com
 /// fase 2 (+0x43), rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60.
 pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
@@ -24,18 +29,26 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
     (*((primeira + 0x57) as *const i32) == alvo || *((primeira + 0x60) as *const i32) == alvo) as u32
 }
 
-/// { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
+/// qsort comparator: orders records by the signed byte at +0x5f, descending (second minus first; a null pointer counts
+/// as 0).
+///
+/// [pt] { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
 pub(crate) unsafe extern "C" fn order_by_5f(a: *const usize, b: *const usize) -> i32 {
     let v = |p: usize| if p == 0 { 0 } else { *((p + 0x5f) as *const i8) as i32 };
     v(*b) - v(*a)
 }
 
-/// { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
+/// qsort comparator: sorts records in descending order of their signed 16-bit word at +0x80 (b minus a).
+///
+/// [pt] { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
 pub(crate) unsafe extern "C" fn order_by_80(a: *const usize, b: *const usize) -> i32 {
     *((*b + 0x80) as *const i16) as i32 - *((*a + 0x80) as *const i16) as i32
 }
 
-/// { 0x4b07d0 } (comparacao do qsort): como 0x4b07b0, com os nulos no fim (primeiro nulo: 1 se o
+/// qsort comparator for club pointers: sorts by the club's word at +0x80 (reputation) in descending order, with null
+/// entries placed last.
+///
+/// [pt] { 0x4b07d0 } (comparacao do qsort): como 0x4b07b0, com os nulos no fim (primeiro nulo: 1 se o
 /// segundo nao for; segundo nulo: -1).
 pub(crate) unsafe extern "C" fn order_by_80_desc(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
@@ -48,7 +61,10 @@ pub(crate) unsafe extern "C" fn order_by_80_desc(a: *const usize, b: *const usiz
     *((y + 0x80) as *const i16) as i32 - *((x + 0x80) as *const i16) as i32
 }
 
-/// { 0x4b0810 } (comparacao do qsort): como 0x4b07d0, em ordem crescente.
+/// qsort comparator: orders records by their 16-bit word at +0x80 (the club reputation) in ascending order, null
+/// entries last.
+///
+/// [pt] { 0x4b0810 } (comparacao do qsort): como 0x4b07d0, em ordem crescente.
 pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
     if x == 0 {
@@ -60,7 +76,10 @@ pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize
     *((x + 0x80) as *const i16) as i32 - *((y + 0x80) as *const i16) as i32
 }
 
-/// { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
+/// Returns the units digit of round code `n` (n % 10) when `n` is below 1000, else 0; used to read the round variant
+/// from a fixture's round code.
+///
+/// [pt] { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
 pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
     if n < 1000 {
         (n % 10) as u8
@@ -69,7 +88,10 @@ pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
     }
 }
 
-/// { 0x5c6710 } (friendly.cpp): a competicao e amistosa? E a guardada em +4 do objeto, ou o id dela
+/// Tells whether competition `comp` is a friendly: it is the one stored at +4 of the friendly manager `this`, or its id
+/// (+0) is among the last 127 club competitions (count at 0xae2378). Returns 1/0.
+///
+/// [pt] { 0x5c6710 } (friendly.cpp): a competicao e amistosa? E a guardada em +4 do objeto, ou o id dela
 /// (+0) esta entre as 127 ultimas competicoes de clubes (quantidade em 0xae2378).
 pub(crate) unsafe extern "thiscall" fn is_friendly(this: usize, comp: usize) -> u32 {
     if comp == *((this + 4) as *const usize) {
@@ -78,7 +100,11 @@ pub(crate) unsafe extern "thiscall" fn is_friendly(this: usize, comp: usize) -> 
     (*(comp as *const i32) >= (*(G_CLUB_COMP_COUNT as *const i32)).wrapping_sub(0x7f)) as u32
 }
 
-/// { 0x4cf5a0 } (contract_manager.cpp): contrato da pessoa (registros de 80 bytes a partir de +0
+/// Returns the person's contract inside a contract list: `this` points to an array of 80-byte contract records, and the
+/// index comes from the person's 79-byte staff-state record (table 0xae2d0c, indexed by person id). Returns 0 when
+/// there is no person, the id is out of range (person count 0xae2364) or the index is negative.
+///
+/// [pt] { 0x4cf5a0 } (contract_manager.cpp): contrato da pessoa (registros de 80 bytes a partir de +0
 /// do objeto), pelo indice na tabela 0xae2d0c (79 bytes por pessoa; quantidade em 0xae2364).
 /// Sem pessoa, id fora da tabela ou indice negativo: 0.
 pub(crate) unsafe extern "thiscall" fn contract_of(this: usize, pessoa: usize) -> usize {
@@ -97,7 +123,11 @@ pub(crate) unsafe extern "thiscall" fn contract_of(this: usize, pessoa: usize) -
     (*(this as *const usize)).wrapping_add((80 * i) as usize)
 }
 
-/// { 0x53b900 } (Database.cpp): o clube e uma selecao? Os ids das selecoes vem depois dos clubes
+/// Returns 1 if the club is a national team: national-team ids come after the clubs, so the id must be at least the
+/// club count minus twice the nation count. A null club returns 0 and clears the global at 0xb67a34 (the original also
+/// shows an error box, skipped here).
+///
+/// [pt] { 0x53b900 } (Database.cpp): o clube e uma selecao? Os ids das selecoes vem depois dos clubes
 /// (total de clubes em 0xae235c menos 2 x nacoes em 0xae2350). Clube nulo: o original mostra uma
 /// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
 pub(crate) unsafe extern "C" fn is_national_team(clube: usize) -> u32 {
@@ -462,13 +492,13 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_sort_and_shuffle_top_clubs(cl
 /// [pt] A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
 /// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
 pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
-    let (mut p, mut k73, mut k72) = (read_f64_at(0x968968), 1.0f64, 1.0f64);
+    let (mut p, mut k73, mut k72) = (read_f64_at(0x968968), 1.0f64, 1.0f64); // 0x968968 = 0.5
     let jogos = read_u8(e + 4);
     if jogos < 0x19 {
         let v = jogos as f64;
-        p = v * read_f64_at(0x968a98);
-        k73 = v * read_f64_at(0x968a90);
-        k72 = read_f64_at(0x968938) - v * read_f64_at(0x968a88);
+        p = v * read_f64_at(0x968a98); // 0x968a98 = 0.02
+        k73 = v * read_f64_at(0x968a90); // 0x968a90 = 0.04
+        k72 = read_f64_at(0x968938) - v * read_f64_at(0x968a88); // 0x968938 = 4, 0x968a88 = 0.1200480192
     }
     let s = read_u8(e + 0x75) as f64 * p + read_u8(e + 0x72) as f64 * k72 + b73 * k73 + read_u8(e + 0x74) as f64 * p;
     s / (p + p + k72 + k73)
@@ -506,7 +536,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     }
     let (a73, b73) = (read_u8(ea + 0x73) as i32, read_u8(eb + 0x73) as i32);
     let clubes = core::ptr::read_unaligned((liga + 0x3e) as *const i16) as i32;
-    if (a73 - b73).abs() > match_pl_ftol(clubes as f64 * read_f64_at(0x9689e0)) as i16 as i32 {
+    if (a73 - b73).abs() > match_pl_ftol(clubes as f64 * read_f64_at(0x9689e0)) as i16 as i32 { // 0x9689e0 = 0.25
         return 0;
     }
     let (na, nb) = (league_stats_rating(ea, a73 as f64), league_stats_rating(eb, b73 as f64));
@@ -518,14 +548,14 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     // as comparações do x87: NaN conta como "menor" (C0) e "menor ou igual" (C0|C3)
     let cruzadas = !(a74 > nb) && !(b74 > na);
     if virtual98() == 0 {
-        let t = clubes as f64 * read_f64_at(0x968a80);
+        let t = clubes as f64 * read_f64_at(0x968a80); // 0x968a80 = 0.3333333333
         if !(na >= t) && !(nb >= t) && cruzadas {
             return 1; // briga pelo título
         }
     }
     let be = read_u8(liga + 0xbe) as i8 as f64;
     if virtual98() != 0 {
-        let t = clubes as f64 * read_f64_at(0x968918) + be;
+        let t = clubes as f64 * read_f64_at(0x968918) + be; // 0x968918 = 0.2
         if !(na > t) && !(nb > t) && cruzadas {
             return 3;
         }
@@ -537,7 +567,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if bf == 0 {
         return 0;
     }
-    let t = clubes as f64 * read_f64_at(0x968918) + be + bf as f64;
+    let t = clubes as f64 * read_f64_at(0x968918) + be + bf as f64; // 0x968918 = 0.2
     if !(na > t) && !(nb > t) && cruzadas {
         3
     } else {

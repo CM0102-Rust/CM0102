@@ -5,7 +5,7 @@ MUTACOES = [
     ('e_cerco', "        v1c = v1c.wrapping_add((5 - n_i) * 400);", "        v1c = v1c.wrapping_add((5 - n_i) * 401);"),
     ('e_pow', "            v1c = v1c.wrapping_add(match_pl_ftol(game_pow((3 - n_i) as f64, read_f64_at(0x968930)) * read_f64_at(0x9688a8)));", "            v1c = v1c.wrapping_add(match_pl_ftol(game_pow(read_f64_at(0x968930), (3 - n_i) as f64) * read_f64_at(0x9688a8)));"),
     ('e_k7c', "            k7c = k7c.wrapping_mul(k7c).wrapping_add(1);", "            k7c = k7c.wrapping_mul(k7c).wrapping_add(2);"),
-    ('e_zera', "            if v < read_f64_at(0x9689a0) || v.is_nan() {\n                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));", "            if (*d58 as f64) < read_f64_at(0x9689a0) || v.is_nan() {\n                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));"),
+    ('e_zera', "            if v < read_f64_at(0x9689a0) || v.is_nan() { // 0x9689a0 = 0\n                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));", "            if (*d58 as f64) < read_f64_at(0x9689a0) || v.is_nan() {\n                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));"),
     ('e_100', "        v1c = v1c.wrapping_add(match_pl_ftol(d58 as f64 * d58 as f64 * read_f32_at(0x968960) as f64));", "        v1c = v1c.wrapping_add(match_pl_ftol(d58 as f64 * d58 as f64 * read_f32_at(0x969560) as f64));"),
     ('e_4d', "                tipo = 0x3d;\n                nota = base;", "                tipo = 0x3e;\n                nota = base;"),
     ('e_tipo1e', "                    nota = v30b;\n                    tipo = 0x1e;", "                    nota = v30b + 1;\n                    tipo = 0x1e;"),

@@ -1281,7 +1281,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
                     1
                 };
                 if marcado != 0 {
-                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
+                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8; // 0x9689b0 = 0.8
                     band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);
@@ -1497,15 +1497,15 @@ pub(crate) unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
     let o = other_friendly_club(m);
     let (na, no) = (read_usize(a + 0x53), read_usize(o + 0x53));
     let segundo = o == read_usize(m + 0x10);
-    let mut f = if segundo { read_f64_at(0x96af38) } else { read_f64_at(0x96af20) };
+    let mut f = if segundo { read_f64_at(0x96af38) } else { read_f64_at(0x96af20) }; // 0x96af38 = 1.32, 0x96af20 = 1.65
     if no != na {
-        f *= read_f64_at(0x96af30);
+        f *= read_f64_at(0x96af30); // 0x96af30 = 0.925
     }
     if read_u8(no + 0x76) != read_u8(na + 0x76) {
-        f *= read_f64_at(0x969520);
+        f *= read_f64_at(0x969520); // 0x969520 = 0.85
     }
     if read_i32(no + 0x71) != read_i32(na + 0x71) {
-        f *= read_f64_at(0x969520);
+        f *= read_f64_at(0x969520); // 0x969520 = 0.85
     }
     if segundo {
         let (fa, fo) = (read_usize(a + 0x69), read_usize(o + 0x69));
@@ -1518,7 +1518,7 @@ pub(crate) unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
             let dx = read_f64_at(sa + 0x2b) - read_f64_at(so + 0x2b);
             let dy = read_f64_at(sa + 0x23) - read_f64_at(so + 0x23);
             let i = read_i32(a + 0x77) as f64;
-            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890);
+            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890); // 0x96a5d8 = 0.55, 0x967890 = 1, 0x96af28 = 40000
             f *= v; // cqa2: o fator da distância
         }
     }
@@ -1527,7 +1527,7 @@ pub(crate) unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
         crate::comparacao::ramo("cqa_2 decisao do amistoso");
     }
     // fcompp/test ah, 1: o C0 vale para "menor" e para "sem ordem" (NaN): os >= abaixo dão o mesmo caminho
-    let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
+    let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação; 0x96a690 = 600
     if aceita { 3 } else { 4 }
 }
 

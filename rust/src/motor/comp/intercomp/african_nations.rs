@@ -3,7 +3,13 @@ use super::*;
 
 
 
-/// { 0x4025a0 } (thiscall, ret 8, african_nations.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
+/// AfricanNations::update_for_date(today, full): the daily update of the African Nations Cup. With `full`, before the
+/// draw date (day +0xb6, year +0xb8 + +0x40) it returns 0; on the draw date, if not drawn yet (+0x45 = 0), it draws the
+/// 16 finalists, sets predicted positions, builds group A's table, fixtures and sorted table (error box and 0 on
+/// failure), creates groups B to D, frees the list at +0xee and marks the draw done. Then runs the normal league day
+/// (League::update_for_date) and returns its result.
+///
+/// [pt] { 0x4025a0 } (thiscall, ret 8, african_nations.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
 /// `AfricanNations::update_for_date(hoje, completo)`, o dia da Copa Africana. Sem `completo`, só o dia de liga. Com ele:
 /// a data do sorteio é a de 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8,
 /// pura); antes dela (o ano de hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0
@@ -170,6 +176,9 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     1
 }
 
+/// AfricanNations::draw_finalists(): hook entry that delegates to draw_african_nations_finalists, which takes the hosts
+/// plus the best-reputed African nations and draws the 16 finalists into 4 groups of 4 by pots; returns 1 on success, 0
+/// with fewer than 16 nations or out of memory.
 pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
     draw_african_nations_finalists(this)
 }
@@ -209,7 +218,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_draw_finalists(this: usize) -> u
     a
 }
 
-/// { 0x401ea0 } (thiscall, ret 4, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
+/// AfricanNations::create_group_stage(g): on draw day, creates the league stage of group g + 1 (B to D) of the African
+/// Nations Cup with the 4 drawn teams (draw slots 4g+4 to 4g+7), using the round table from the cup's virtual +0x3c,
+/// stores it in [+0xc][g], sets the current stage (+0x30) to g and sends the group news. Returns 1, or 0 after the
+/// error box when allocation fails.
+///
+/// [pt] { 0x401ea0 } (thiscall, ret 4, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AfricanNations::create_group_stage(g)`, a fase do grupo g + 1 (B a D, g = 0..2, do dia do sorteio). Os
 /// times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x2dc e 0):
 /// os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push

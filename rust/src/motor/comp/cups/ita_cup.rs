@@ -51,7 +51,10 @@ pub(crate) unsafe fn compare_first_group_table(nome: &str, this: usize, n: i16, 
     r
 }
 
-/// { 0x63f250 } (thiscall, ret 0, ita_cup.cpp; do construtor): `ItaCup::create_first_group_table()`: o grupo 1 da Copa
+/// ItaCup::create_first_group_table: creates group 1 of the Coppa Italia with 4 teams (via the shared
+/// create_first_group_table, error box at line 0x19e of ita_cup.cpp); returns 1, or 0 when out of memory.
+///
+/// [pt] { 0x63f250 } (thiscall, ret 0, ita_cup.cpp; do construtor): `ItaCup::create_first_group_table()`: o grupo 1 da Copa
 /// da Itália com 4 times (`create_first_group_table`; a caixa do ita_cup.cpp na linha 0x19e).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_first_group_table(this: usize) -> u32 {
     create_first_group_table(this, 4, 0x9ea23c, 0x19e, "cqr_7 grupo 1 da copa da italia")
@@ -63,7 +66,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_first_group_table
     compare_first_group_table("ita_cup_create_first_group_table", this, 4, || o(this))
 }
 
-/// { 0x63d5e0 } (thiscall, ret 0, ita_c_cup.cpp; do construtor): `ItaCCup::init_first_group()`: o grupo 1 da Copa da
+/// ItaCCup::init_first_group(), called from the constructor: builds the table of group 1 of the Italian Serie C cup
+/// with 5 teams (via create_first_group_table). Returns 1, or 0 when memory runs out.
+///
+/// [pt] { 0x63d5e0 } (thiscall, ret 0, ita_c_cup.cpp; do construtor): `ItaCCup::init_first_group()`: o grupo 1 da Copa da
 /// Itália da Série C com 5 times (`create_first_group_table`; a caixa do ita_c_cup.cpp na linha 0x1a0).
 pub(crate) unsafe extern "thiscall" fn init_first_group(this: usize) -> u32 {
     create_first_group_table(this, 5, 0x9ea204, 0x1a0, "cqr_7 grupo 1 da copa da serie c") // cqr7: 5 times no grupo 1 da Série C
@@ -107,7 +113,11 @@ pub(crate) unsafe fn ita_cup_compare_advance_stage(nome: &str, this: usize, orig
     PLACAR.registrar(depois == if ultima { antes } else { antes + 1 }, || format!("{}({:#x}) fase {} -> {}", nome, this, antes, depois));
 }
 
-/// { 0x63f5b0 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x28): `ItaCup::advance_stage()`: a fase seguinte
+/// ItaCup::advance_stage: moves the Italian Cup to its next stage (shared `advance_cup_stage`, error box at ita_cup.cpp
+/// line 0x23e); after the group stages (stage 7) it builds the knockout rounds (ItaCup::create_knockout_stage
+/// 0x63f870).
+///
+/// [pt] { 0x63f5b0 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x28): `ItaCup::advance_stage()`: a fase seguinte
 /// (`advance_cup_stage`; a caixa do ita_cup.cpp na linha 0x23e); depois da fase 6 (os 8 grupos: o grupo 1 e as fases
 /// 0..6), o mata-mata da Copa da Itália (ItaCup::create_knockout_stage 0x63f870).
 pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage(this: usize) {
@@ -120,7 +130,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_advance_stage(this: usiz
     ita_cup_compare_advance_stage("ita_cup_advance_stage", this, || o(this))
 }
 
-/// { 0x63d950 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x28): `ItaCCup::advance_stage()`: a fase seguinte
+/// ItaCCup::advance_stage() (virtual +0x28) for the Italian Serie C cup: moves the cup to its next stage (error box at
+/// the last stage) and, once the 14 group stages are over, builds the knockout stage (ItaCCup::create_knockout_stage,
+/// 0x63dc10).
+///
+/// [pt] { 0x63d950 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x28): `ItaCCup::advance_stage()`: a fase seguinte
 /// (`advance_cup_stage`; a caixa do ita_c_cup.cpp na linha 0x240); depois da fase 14 (os 16 grupos), o mata-mata da Copa
 /// da Série C (ItaCCup::create_knockout_stage 0x63dc10).
 pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize) {
@@ -266,7 +280,11 @@ pub(crate) unsafe fn compare_group_stage(nome: &str, this: usize, g: u32, origin
     r
 }
 
-/// { 0x63f640 } (thiscall, ret 4, ita_cup.cpp): `ItaCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
+/// ItaCup::create_group_stage(g): creates the league stage of group g of the Italian Cup from the entrants still
+/// waiting, stores it in the cup's stage list and sends the group draw news. Returns 1, or 0 (after the original error
+/// box) when allocation fails.
+///
+/// [pt] { 0x63f640 } (thiscall, ret 4, ita_cup.cpp): `ItaCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
 /// (`ita_cup_create_group_stage_cqr8_fase_do_grupo`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
     ita_cup_create_group_stage_cqr8_fase_do_grupo(this, g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
@@ -278,7 +296,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_group_stage(this:
     compare_group_stage("ita_cup_create_group_stage", this, g, || o(this, g))
 }
 
-/// { 0x63d9e0 } (thiscall, ret 4, ita_c_cup.cpp): `ItaCCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
+/// ItaCCup::create_group_stage(g): builds the stage of group `g` of the Serie C Italian Cup through the shared
+/// group-stage builder (error boxes at ita_c_cup.cpp lines 0x265 and 0x27e). Returns the builder's result.
+///
+/// [pt] { 0x63d9e0 } (thiscall, ret 4, ita_c_cup.cpp): `ItaCCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
 /// da Série C (`ita_cup_create_group_stage_cqr8_fase_do_grupo`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
     ita_cup_create_group_stage_cqr8_fase_do_grupo(this, g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
@@ -366,7 +387,12 @@ pub(crate) unsafe fn create_knockout_stage(this: usize, n: u32, times: usize, fa
     sortear(f, 0);
 }
 
-/// { 0x63f870 } (thiscall, ret 0, ita_cup.cpp; da fase seguinte, depois da fase 6; quadro SEH só para o new, sem
+/// ItaCup::create_knockout_stage(): builds the 24-team knockout stage (stage 7) of the Italian Cup from the 8 group
+/// winners (top row of each group table) followed by the 16 seeded clubs that enter directly, with seed 3 for the group
+/// winners and 2/1 for the direct entrants [inference: the draw pot of each slot]. Out of memory shows the error box
+/// and returns.
+///
+/// [pt] { 0x63f870 } (thiscall, ret 0, ita_cup.cpp; da fase seguinte, depois da fase 6; quadro SEH só para o new, sem
 /// destrutor): `ItaCup::create_knockout_stage()`: o mata-mata da Copa da Itália com 24 times: um vetor de 24 ponteiros
 /// (0x944e46 de 0x60; sem memória, a caixa da linha 0x29c) com os 8 campeões dos grupos (a primeira linha da tabela de
 /// cada grupo, `group_table`) e, nas vagas 8 a 23, os 16 cabeças de chave que entram direto (`take_direct_entrants`); a fase 7
@@ -417,7 +443,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage(th
     ita_cup_compare_knockout_stage("ita_cup_create_knockout_stage", this, 7, 16, || o(this))
 }
 
-/// { 0x63dc10 } (thiscall, ret 0, ita_c_cup.cpp; da fase seguinte, depois da fase 14; quadro SEH só para os dois new, sem
+/// ItaCCup::create_knockout_stage: builds the 32-team knockout of the Italian Serie C cup: ranks the 16 group
+/// runners-up in a temporary league table, takes the 16 group winners plus the 6 best runners-up (marking each one's
+/// group +0xbe = 2 and row +0x37 = 6), adds the 10 seeded direct entrants and creates knockout stage 15 unseeded.
+///
+/// [pt] { 0x63dc10 } (thiscall, ret 0, ita_c_cup.cpp; da fase seguinte, depois da fase 14; quadro SEH só para os dois new, sem
 /// destrutor no caminho normal): `ItaCCup::create_knockout_stage()`: o mata-mata da Copa da Itália da Série C com 32
 /// times. 1) A classificação dos segundos colocados: uma liga provisória (0x944cf1(0xee); League_Stage 0x68b100,
 /// thiscall, ret 0x58: a copa, 16, 0, 0, +4, 0, 0, +0xc2, +0xc3, 0, &{1, 2, 3, 0} (os critérios de desempate), &+0xbe, o

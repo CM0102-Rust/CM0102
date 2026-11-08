@@ -905,7 +905,7 @@ pub(crate) unsafe fn set_coach_attributes(p: usize, f: usize, nj: usize, k: f64,
     core::ptr::write_unaligned((nj + 0xa) as *mut u16, coach_attribute_capped(q, read_i16(f + 0xb) as f64, k, tetos[0]));
     let q = game_pow(r, 2.0);
     core::ptr::write_unaligned((nj + 8) as *mut u16, coach_attribute_capped(q, read_i16(f + 9) as f64, k, tetos[1]));
-    let q = game_pow(r, 2.0) * read_f64_at(0x969040);
+    let q = game_pow(r, 2.0) * read_f64_at(0x969040); // 0x969040 = 0.75
     core::ptr::write_unaligned((nj + 0xc) as *mut u16, coach_attribute_capped(q, read_i16(f + 0xd) as f64, k, tetos[2]));
 }
 
@@ -958,11 +958,11 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: usize) {
     let f = read_u32_as_usize(p + 0x61);
     let nj = read_u32_as_usize(p + 0x69);
     if read_i16(f + 0xb) > 0x1d4c {
-        set_coach_attributes(p, f, nj, read_f64_at(0x9689d8), [read_f64_at(0x9690b8), read_f64_at(0x9690b8), read_f64_at(0x96e298)]);
+        set_coach_attributes(p, f, nj, read_f64_at(0x9689d8), [read_f64_at(0x9690b8), read_f64_at(0x9690b8), read_f64_at(0x96e298)]); // 0x9689d8 = 0.9, 0x9690b8 = 7500, 0x96e298 = 5750
     } else if friendly_random(read_i8(p + 0x57) as i32) != 0 {
-        set_coach_attributes(p, f, nj, read_f64_at(0x969040), [read_f64_at(0x96d300), read_f64_at(0x96d300), read_f64_at(0x96e290)]);
+        set_coach_attributes(p, f, nj, read_f64_at(0x969040), [read_f64_at(0x96d300), read_f64_at(0x96d300), read_f64_at(0x96e290)]); // 0x969040 = 0.75, 0x96d300 = 6000, 0x96e290 = 3750
     } else {
-        set_coach_attributes(p, f, nj, read_f64_at(0x968968), [read_f64_at(0x96e288), read_f64_at(0x96e288), read_f64_at(0x967890)]);
+        set_coach_attributes(p, f, nj, read_f64_at(0x968968), [read_f64_at(0x96e288), read_f64_at(0x96e288), read_f64_at(0x967890)]); // 0x968968 = 0.5, 0x96e288 = 4500, 0x967890 = 1
     }
 }
 
@@ -1370,7 +1370,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
         if t != 0 {
             let r = friendly_random(0x9c4);
             let v = r.wrapping_add(read_i16(c + 0x80) as i32 / 2);
-            let x = match_pl_ftol(v as f64 + read_i8(c + 0x7f) as f64 * read_f64_at(0x96afc8));
+            let x = match_pl_ftol(v as f64 + read_i8(c + 0x7f) as f64 * read_f64_at(0x96afc8)); // 0x96afc8 = 12.5
             // ponytail: a original empurra o eax inteiro do _ftol e o da primeira vista; a 0x6e86d0 lê a palavra
             let a = vista(t, j, c, 2, x as i16);
             let b = vista(t, j, c, 1, a);
@@ -1924,7 +1924,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
         if idade <= lim {
             return 0;
         }
-        let f = match_pl_ftol(read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x967880)) as i16;
+        let f = match_pl_ftol(read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x967880)) as i16; // 0x967890 = 1, 0x967880 = 0.1
         let v = match_pl_ftol(f as f64 * read_i16(j + 0xb) as f64) as i16;
         if idade > 0x2d {
             break 'm 1;
@@ -2023,7 +2023,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 }
             }
         }
-        let v = match_pl_ftol((read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x96a730)) * read_i16(j + 0xb) as f64) as i16;
+        let v = match_pl_ftol((read_f64_at(0x967890) - (idade as i32 - lim as i32) as f64 * read_f64_at(0x96a730)) * read_i16(j + 0xb) as f64) as i16; // 0x967890 = 1, 0x96a730 = 0.075
         if idade > 0x2d {
             break 'm 1;
         }
@@ -2048,7 +2048,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 }
                 if read_i8(pessoa + staff::AMBITION) as i32 > sortear(20) {
                     let (cur, pot) = (read_i16(j + 5) as f64, read_i16(j + 7) as f64);
-                    if !(pot * read_f64_at(0x969520) <= cur) {
+                    if !(pot * read_f64_at(0x969520) <= cur) { // 0x969520 = 0.85
                         break 'm 1;
                     }
                 }

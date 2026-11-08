@@ -1,6 +1,12 @@
 use super::*;
 
-/// { 0x48db80 } (comp.cpp): o clube esta na competicao? Antes, pela nacao: selecao (id a partir
+/// Tells whether club `clube` takes part in competition `this` (returns 1/0). National teams from another continent
+/// than the competition's (+4 -> +0x59) and clubs of nations from another continent are rejected, a club of the host
+/// nation whose division (+0x57) is the competition itself is accepted; otherwise it searches the competition and its
+/// stages (+0xc, count +0x30): the participant list of the latest group stage (type 2 at +0x43, table at +0xb1,
+/// 0x3b-byte rows) or of the current stage (+0xa7, 6-byte entries), with the entry count at +0x3e.
+///
+/// [pt] { 0x48db80 } (comp.cpp): o clube esta na competicao? Antes, pela nacao: selecao (id a partir
 /// de clubes - nacoes) de outro continente que o da competicao (+4 -> +0x59): nao. Clube da nacao
 /// da competicao (+4 -> +0x5d) e da propria divisao (+0x57): sim; de nacao de outro continente: nao.
 /// Depois percorre a competicao (-1) e as fases (+0xc, ate +0x30): a ultima de tipo 2 (+0x43, com
@@ -49,7 +55,11 @@ pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, clube: u
     0
 }
 
-/// { 0x76d940 } (ret 4): o clube e um dos nove guardados em 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac,
+/// Returns 1 if the club's id matches one of the nine fixed international-tournament keys (World Cup, Olympic
+/// tournament, European Championship, Copa America, African Cup of Nations, Asian Cup, Oceania Nations Cup, Asian Games
+/// tournament, Confederations Cup), else 0; a null club gives 0.
+///
+/// [pt] { 0x76d940 } (ret 4): o clube e um dos nove guardados em 0x9cf78c, 0x9cf790, 0x9cf79c..0x9cf7ac,
 /// 0x9cf8a0 e 0x9cf964 (pelo id)?
 pub(crate) unsafe extern "stdcall" fn special_club(clube: usize) -> u32 {
     if clube == 0 {

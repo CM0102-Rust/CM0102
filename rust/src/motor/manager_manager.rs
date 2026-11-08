@@ -1914,7 +1914,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                     }
                 }
                 let c = n();
-                if sorteio(match_pl_ftol(game_pow(c as f64, read_f64_at(0x968930)) + read_f64_at(0x9688a8))) == 0 {
+                if sorteio(match_pl_ftol(game_pow(c as f64, read_f64_at(0x968930)) + read_f64_at(0x9688a8))) == 0 { // 0x968930 = 3, 0x9688a8 = 100
                     return 0x2000;
                 }
                 let a = sorteio(n());
@@ -1941,7 +1941,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     if tipo == 1 || tipo == 3 || read_usize(j + 0x39) == 0 || humano(clube, 1, 1, 0, 0) == 0 {
         return 0;
     }
-    let x = read_i16(clube + club::REPUTATION) as f64 * read_f64_at(0x968918);
+    let x = read_i16(clube + club::REPUTATION) as f64 * read_f64_at(0x968918); // 0x968918 = 0.2
     let mut limit = match_pl_ftol(x * x);
     if limit < 0x249f0 {
         limit = 0x249f0;
@@ -1975,10 +1975,10 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         if p > v + v && mais > 0x19 {
             add_board_confidence(this, clube, 6, -0x4e2);
             add_board_confidence(this, clube, 0x14, -0x4e2);
-        } else if pedido > 0x4c4b40 && mais > 0 && p > v * read_f64_at(0x968e18) {
+        } else if pedido > 0x4c4b40 && mais > 0 && p > v * read_f64_at(0x968e18) { // 0x968e18 = 2.5
             add_board_confidence(this, clube, 6, -0x4e2);
             add_board_confidence(this, clube, 0x14, -0x4e2);
-        } else if p > v * read_f64_at(0x969000) {
+        } else if p > v * read_f64_at(0x969000) { // 0x969000 = 6
             add_board_confidence(this, clube, 6, -500);
             add_board_confidence(this, clube, 0x14, -500);
             add_board_confidence(this, clube, 0x16, -0xfa);
@@ -2008,12 +2008,12 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     }
     let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
     let k = match band(fin) {
-        2 => read_f64_at(0x96d1f8),
-        1 => read_f64_at(0x96d1f0),
-        _ => read_f64_at(0x968ea0),
+        2 => read_f64_at(0x96d1f8), // 0x96d1f8 = 1250000
+        1 => read_f64_at(0x96d1f0), // 0x96d1f0 = 650000
+        _ => read_f64_at(0x968ea0), // 0x968ea0 = 65000
     };
-    let teto = match_pl_ftol(limit as f64 * read_f64_at(0x96a5d0) + menor as f64 + k);
-    if !(valor as f64 * read_f64_at(0x96d1e8) > teto as f64) {
+    let teto = match_pl_ftol(limit as f64 * read_f64_at(0x96a5d0) + menor as f64 + k); // 0x96a5d0 = 0.65
+    if !(valor as f64 * read_f64_at(0x96d1e8) > teto as f64) { // 0x96d1e8 = 0.275
         return 0;
     }
     crate::comparacao::ramo("cpy_12 diretoria acha caro");
@@ -3901,7 +3901,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     *(((board_row_by_id(this, id)) + 2) as *mut u8) |= 1;
     let lista = read_u32(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize + 0xdc) as usize;
     *(lista.wrapping_add((id as usize).wrapping_mul(9)) as *mut u8).add(4) = 2;
-    let k = read_f64_at(0x967880); // 0,1
+    let k = read_f64_at(0x967880); // 0,1; 0x967880 = 0.1
     let rep = read_i16(clube + club::REPUTATION) as i32;
     let tecnico = read_u32(clube + club::MANAGER) as usize;
     let ficha = read_u32(tecnico + 0x69) as usize;
@@ -3919,26 +3919,26 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     let ficha = read_u32(read_u32(clube + club::MANAGER) as usize + 0x69) as usize;
     let v = read_i16(ficha + 0xa) as i32;
     let mut atual = v as f32; // fst dword
-    let zero = read_f32_at(0x968970) as f64;
+    let zero = read_f32_at(0x968970) as f64; // 0x968970 = 0
     if v as f64 == zero {
         let r = read_i16(clube + club::REPUTATION) as i32;
         atual = if r != 0 { (r / 2) as f32 } else { 5000.0 };
-    } else if (atual as f64) < read_f32_at(0x96d1a8) as f64 {
+    } else if (atual as f64) < read_f32_at(0x96d1a8) as f64 { // 0x96d1a8 = 500
         atual = (sortear(0x3e8) + 0x1f4) as f32;
     }
     let d = read_i16(clube + club::REPUTATION) as i32;
     let divisor = if d as f64 == zero {
         atual as f64
-    } else if (d as f64) < read_f32_at(0x96d1a8) as f64 {
+    } else if (d as f64) < read_f32_at(0x96d1a8) as f64 { // 0x96d1a8 = 500
         (sortear(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
-    let mut q = ((atual as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword
-    if q as f64 > read_f64_at(0x96d1b0) {
+    let mut q = ((atual as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword; 0x96d1a4 = 7500
+    if q as f64 > read_f64_at(0x96d1b0) { // 0x96d1b0 = 5.811479333e-315
         crate::comparacao::ramo("cpp_3 base no teto");
         q = 10000.0;
-    } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) {
+    } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) { // 0x96d1ac = 6500
         q = 6500.0;
     }
     // a confiança e os humores, cada um com os seus limites

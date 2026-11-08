@@ -3,7 +3,11 @@ use super::*;
 
 
 
-/// { 0x40c070 } (thiscall, ret 0, asia_club_champ.cpp; a virtual +0x28): `AsiaClubChamp::advance_stage()`: na última
+/// AsiaClubChamp::advance_stage: moves the Asian Club Championship to its next stage (+0x30); at the last stage (+0x30
+/// >= +0x2c - 1) it shows the error box instead. Reaching stage 1 (after the two zonal knockouts) it creates the two
+/// groups (0x40c110); reaching stage 3 (after the groups) it creates the semi-finals (0x40c3d0).
+///
+/// [pt] { 0x40c070 } (thiscall, ret 0, asia_club_champ.cpp; a virtual +0x28): `AsiaClubChamp::advance_stage()`: na última
 /// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x355; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
 /// das duas zonas), os dois grupos (0x40c110), chegando a 3 (depois dos grupos), as semifinais (0x40c3d0); as duas mov
 /// ecx, this -> thiscall, ret 0.
@@ -122,7 +126,11 @@ pub(crate) unsafe fn create_asia_group(this: usize, g: u32, times: *const usize,
     read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4)
 }
 
-/// { 0x40c110 } (thiscall, ret 0, asia_club_champ.cpp; quadro SEH só para o new das fases: sem destrutor no caminho
+/// AsiaClubChamp::create_group_stages: takes the 8 survivors of the two zones, creates group 1 (the first 4) and group
+/// 2 (the next 4) of the Asian Club Championship, sends the group-draw news for each, and sets the current stage
+/// (+0x30) to 2; shows an error box and stops if a stage cannot be created.
+///
+/// [pt] { 0x40c110 } (thiscall, ret 0, asia_club_champ.cpp; quadro SEH só para o new das fases: sem destrutor no caminho
 /// normal): `AsiaClubChamp::create_group_stages()`: os 8 vivos das duas zonas (group_stage_qualifiers); o grupo 1 (fase 1, os 4
 /// primeiros, o 17º argumento 2; sem fase, a caixa da linha 0x39e e volta) e a notícia dele (0x684230 na fase, thiscall,
 /// ret 0); o grupo 2 (fase 2, os 4 seguintes, o 17º argumento 1; sem fase, a caixa da linha 0x3b4 e volta), a notícia e
@@ -182,7 +190,11 @@ pub(crate) unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1º do 1 × 2º do 2, 1º do 2 × 2º do 1
 }
 
-/// { 0x40c3d0 } (thiscall, ret 0, asia_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
+/// AsiaClubChamp::create_semi_final_stage(): builds the 4-team semi-final stage of the Asian Club Championship from
+/// asia_semi_finalists, gets the round table from the cup's virtual +0x3c, constructs the Cup_Stage in stage slot 3
+/// (cup +0xc) and draws its round 0. Out of memory or a failed stage shows the error box and returns.
+///
+/// [pt] { 0x40c3d0 } (thiscall, ret 0, asia_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
 /// `AsiaClubChamp::create_semi_final_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a
 /// caixa da linha 0x3d1 e volta), os cruzamentos de asia_semi_finalists; a tabela das rodadas pela virtual +0x3c (push
 /// 0; push &id; push &rodadas; push 3; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 ->

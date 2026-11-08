@@ -122,6 +122,8 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     1
 }
 
+/// UefaCup::build_entrants hook entry: builds and sorts the 118-club UEFA Cup entrants list and the Intertoto list (see
+/// uefa_cup_build_entrants); returns 1, 0 or -1.
 pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
     uefa_cup_build_entrants(this)
 }

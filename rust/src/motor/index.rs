@@ -271,7 +271,11 @@ pub(crate) unsafe extern "C" fn set_key_ids() -> u32 {
     set_fixed_key_ids(u32::MAX, true)
 }
 
-/// { 0x603834 } (cdecl, só no cm0102-1080.exe): a mesma rotina pela entrada do 1080 (a chamada de 0x52d8fa vai para
+/// The cm0102-1080.exe entry of set_key_ids: resets the fixed key globals to -1 over the whole ranges
+/// 0x9cf178..0x9d0527 and 0xb63c9c..0xb63d03, then gives each fixed key (colours, continents, nations, competitions,
+/// awards, clubs) its database row by name, reporting missing ones. Returns 1.
+///
+/// [pt] { 0x603834 } (cdecl, só no cm0102-1080.exe): a mesma rotina pela entrada do 1080 (a chamada de 0x52d8fa vai para
 /// ela): o -1 nas faixas inteiras 0x9cf178..0x9d0527 e 0xb63c9c..0xb63d03 (também as 4 globais que a original não toca)
 /// e o mesmo miolo. Devolve 1.
 pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {

@@ -1540,7 +1540,7 @@ pub(crate) unsafe fn is_regen_entry_due(e: usize) -> bool {
 /// [pt] Uma nota do técnico refeito (um dos blocos da 0x7a65d0): P = pow(+0x22 da pessoa, 0x968950) (vezes `fator`, quando
 /// há), o maior entre P e o valor `v` da ficha, vezes `k`, no máximo `teto` (f64 em 0x...), truncado.
 pub(crate) unsafe fn rebuilt_coach_rating(pessoa: usize, v: i16, fator: Option<usize>, k: usize, teto: usize) -> u16 {
-    let mut p = game_pow(*((pessoa + staff::INT_APPS) as *const u8) as f64, read_f64_at(0x968950));
+    let mut p = game_pow(*((pessoa + staff::INT_APPS) as *const u8) as f64, read_f64_at(0x968950)); // 0x968950 = 2
     if let Some(f) = fator {
         p *= read_f64_at(f);
     }
@@ -1695,16 +1695,16 @@ pub(crate) unsafe fn damp_confidence_change(v: i32, gosta: bool, nao_gosta: bool
     let mut v = v;
     if gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) < 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) };
+        v = if (v as i16) < 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) }; // 0x968968 = 0.5
     } else if nao_gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) > 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) };
+        v = if (v as i16) > 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) }; // 0x968968 = 0.5
     }
     let x = v as i16 as i32;
     if x < -1000 {
-        v = match_pl_ftol((x + 1000) as f64 * read_f64_at(0x968918) - read_f64_at(0x968908));
+        v = match_pl_ftol((x + 1000) as f64 * read_f64_at(0x968918) - read_f64_at(0x968908)); // 0x968918 = 0.2, 0x968908 = 1000
     } else if x > 1000 {
-        v = match_pl_ftol((x - 1000) as f64 * read_f64_at(0x968918) + read_f64_at(0x968908));
+        v = match_pl_ftol((x - 1000) as f64 * read_f64_at(0x968918) + read_f64_at(0x968908)); // 0x968918 = 0.2, 0x968908 = 1000
     }
     v as i16
 }
@@ -1719,9 +1719,9 @@ pub(crate) unsafe fn fan_confidence_change(clube: usize, alvo: u32) -> i16 {
     let favorito: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
     let conf = if clube != 0 { read_i16(manager_manager_row(clube) + 8) as i32 } else { 0 };
-    let t = match_pl_ftol((conf - 5000) as f64 * read_f64_at(0x96d280));
+    let t = match_pl_ftol((conf - 5000) as f64 * read_f64_at(0x96d280)); // 0x96d280 = -0.05
     let d = (alvo as i32).wrapping_sub(t) as i16;
-    let v = match_pl_ftol(d as f64 * read_f64_at(0x969040));
+    let v = match_pl_ftol(d as f64 * read_f64_at(0x969040)); // 0x969040 = 0.75
     let tecnico = read_usize(clube + club::MANAGER);
     let fav = favorito(tecnico, clube) != 0;
     let rej = !fav && rejeitado(tecnico, clube) != 0;
@@ -1738,7 +1738,7 @@ pub(crate) unsafe fn board_confidence_change(clube: usize, alvo: u32) -> i16 {
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let conf = if clube != 0 { read_i16(manager_manager_row(clube) + 6) as i32 } else { 0 };
     let s = ((conf - 6000) / 20).wrapping_add(alvo as i32) as i16;
-    let v = match_pl_ftol(s as f64 * read_f64_at(0x969040));
+    let v = match_pl_ftol(s as f64 * read_f64_at(0x969040)); // 0x969040 = 0.75
     let (tecnico, presidente) = (read_usize(clube + club::MANAGER), read_usize(clube + club::CHAIRMAN));
     let g = gosta(tecnico, presidente) != 0;
     let n = !g && nao_gosta(tecnico, presidente) != 0;
@@ -1923,9 +1923,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
         let notas = ratings_average(base, read_usize(sujeito + 0x61)) as i8 as f64;
         let base = read_usize(G_PLAYER_STATS);
         let y = read_f64_at(base + 0x18);
-        let c0 = read_f64_at(0x9689a0);
-        let media = if !(y < c0 || y > c0) { read_f64_at(0x968998) } else { read_f64_at(base + 0x10) / y }; // sem jogos: 6,8
-        if notas > media * read_f64_at(0x9688a0) {
+        let c0 = read_f64_at(0x9689a0); // 0x9689a0 = 0
+        let media = if !(y < c0 || y > c0) { read_f64_at(0x968998) } else { read_f64_at(base + 0x10) / y }; // sem jogos: 6,8; 0x968998 = 6.8
+        if notas > media * read_f64_at(0x9688a0) { // 0x9688a0 = 5
             m = 1;
         }
     }

@@ -1,6 +1,12 @@
 use super::*;
 
-/// { 0x600a50 } (human_manager.cpp): o clube e dirigido por um tecnico humano que decide por ele?
+/// Is the club run by a human manager who decides for it? The manager (`pessoa`, or the club's manager +0xcf) must be
+/// the club's and one of the 16 human managers; unless `sem_tatica`, managers letting the computer decide (+0x9ace or
+/// +0x9a01) are excluded; `forcar` or `qualquer` then means yes, else the national-team or reserve-team control flag
+/// decides. If not and the club is a second national team, repeats with its nation's main national team. Returns 1 or
+/// 0.
+///
+/// [pt] { 0x600a50 } (human_manager.cpp): o clube e dirigido por um tecnico humano que decide por ele?
 /// O tecnico (`pessoa`, ou o do clube em +0xcf) tem de ser o do clube e um dos 16 humanos. Sem
 /// `sem_tatica`: ficam de fora os que tem 0x9ace (0x5fe040) ou +0x9a01 no registro. Com `forcar` ou
 /// `qualquer`: sim. Senao, selecao: 0x5fd6b0; clube: 0x5fd480. Se nao, e o clube e do segundo
@@ -56,7 +62,10 @@ pub(crate) unsafe fn person_and_human_record(this: usize, pessoa: usize) -> Opti
     human_manager_record_checked(this, p).ok().map(|r| (p, r))
 }
 
-/// { 0x5fe040 } (human_manager.cpp): campo +0x9ace do registro do tecnico humano da pessoa.
+/// Returns the +0x9ace field (computer-controlled flag) of the human manager record for the person. Without a person or
+/// out of range, falls back to the original (error box, returns 0).
+///
+/// [pt] { 0x5fe040 } (human_manager.cpp): campo +0x9ace do registro do tecnico humano da pessoa.
 /// Sem pessoa nenhuma ou fora da faixa: a original (caixa de erro, zera 0xb67a34, 0).
 pub(crate) unsafe extern "thiscall" fn manager_9ace(this: usize, pessoa: usize) -> u32 {
     match person_and_human_record(this, pessoa) {
@@ -65,7 +74,11 @@ pub(crate) unsafe extern "thiscall" fn manager_9ace(this: usize, pessoa: usize) 
     }
 }
 
-/// { 0x5fd6b0 } (human_manager.cpp): byte +0x9a06 do registro do tecnico humano e diferente de
+/// Human manager: tells whether byte +0x9a06 of the human manager record of `pessoa` is set [inference: an on/off
+/// option]. If the person's club (+0x24) belongs to a nation whose +0x88 is below 400, returns false and sets `*saida`
+/// = 1; `*saida` otherwise starts at 0. Invalid person: falls back to the original (error box).
+///
+/// [pt] { 0x5fd6b0 } (human_manager.cpp): byte +0x9a06 do registro do tecnico humano e diferente de
 /// zero? Se a pessoa tem clube (+0x24) de nacao com +0x88 abaixo de 400: falso, e `saida` = 1.
 /// `saida` (se houver) comeca em 0. Erros como em `manager_9ace`.
 pub(crate) unsafe extern "thiscall" fn manager_9a06(this: usize, pessoa: usize, saida: *mut u32) -> u8 {
@@ -111,7 +124,10 @@ pub(crate) unsafe fn human_manager_record_checked(this: usize, pessoa: usize) ->
     Ok((*(this as *const usize)).wrapping_add((42735 * i) as usize))
 }
 
-/// { 0x5fd210 } (human_manager.cpp): campo +0x9a01 do registro do tecnico humano da pessoa (0 fora
+/// Returns the dword at +0x9a01 of the human manager record of `pessoa` (0 out of range) [inference: a human manager
+/// setting]. With no person at all, clears the mouse-button global (the original shows an error box) and returns 0.
+///
+/// [pt] { 0x5fd210 } (human_manager.cpp): campo +0x9a01 do registro do tecnico humano da pessoa (0 fora
 /// da faixa). Sem pessoa nenhuma: o original mostra uma caixa de erro e zera 0xb67a34.
 pub(crate) unsafe extern "thiscall" fn manager_9a01(this: usize, pessoa: usize) -> u32 {
     match human_manager_record_checked(this, pessoa) {
@@ -125,7 +141,10 @@ pub(crate) unsafe extern "thiscall" fn manager_9a01(this: usize, pessoa: usize) 
     }
 }
 
-/// { 0x5fd480 } (human_manager.cpp): byte +0x9a05 do registro do tecnico humano da pessoa e diferente
+/// Is the byte +0x9a05 of the person's human-manager record set? Returns 1 or 0; with no valid person, clears 0xb67a34
+/// and returns 0 (the original also shows an error box). Meaning of the flag unknown.
+///
+/// [pt] { 0x5fd480 } (human_manager.cpp): byte +0x9a05 do registro do tecnico humano da pessoa e diferente
 /// de zero? Sem pessoa nenhuma ou fora da faixa: o original mostra uma caixa de erro e zera 0xb67a34.
 pub(crate) unsafe extern "thiscall" fn manager_9a05(this: usize, pessoa: usize) -> u32 {
     match human_manager_record_checked(this, pessoa) {
@@ -137,7 +156,10 @@ pub(crate) unsafe extern "thiscall" fn manager_9a05(this: usize, pessoa: usize) 
     }
 }
 
-/// { 0x5b5a60 } (formation.cpp): bit da mascara de formacao pelo codigo da casa tatica (byte alto:
+/// Converts a tactical cell code (high byte = row 1/2/4/8..., low byte = column) into its bit in the formation mask,
+/// using a table copied from the game; unknown codes give 0.
+///
+/// [pt] { 0x5b5a60 } (formation.cpp): bit da mascara de formacao pelo codigo da casa tatica (byte alto:
 /// linha 1, 2, 4, 8; byte baixo: coluna). Tabela tirada do proprio jogo; 0x802 e 0x804 dao o mesmo
 /// bit no original. Codigo desconhecido: 0.
 pub(crate) unsafe extern "stdcall" fn square_bit(codigo: i16) -> u32 {
@@ -151,7 +173,11 @@ pub(crate) unsafe extern "stdcall" fn square_bit(codigo: i16) -> u32 {
     }
 }
 
-/// { 0x5b73a0 } (formation.cpp): separa a mascara em setor (o primeiro de 1, 2, 4 ... 0x40, em
+/// Formation: splits a position mask `m` into its zone (first set bit among 1, 2, 4 ... 0x40, written to `setor`) and
+/// its side (0x80, 0x100, 0x200 (also for bit 1), 0x400, 0x800, written to `lado`). Returns 1, or 0 if either part is
+/// missing (clearing the mouse-button global; the original shows an error box).
+///
+/// [pt] { 0x5b73a0 } (formation.cpp): separa a mascara em setor (o primeiro de 1, 2, 4 ... 0x40, em
 /// `setor`) e lado (0x80, 0x100, 0x200 (tambem com o bit 1), 0x400, 0x800, nessa ordem, em `lado`).
 /// Sem uma das partes: o original mostra uma caixa de erro, zera 0xb67a34 e devolve 0.
 pub(crate) unsafe extern "C" fn split_mask(m: u32, setor: *mut u16, lado: *mut u16) -> u32 {

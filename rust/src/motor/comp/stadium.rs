@@ -519,59 +519,59 @@ pub(crate) unsafe fn apply_side_factor_floor(jogo: usize, lado: u8, f: &mut [f64
         let a = read_i16(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x1676) {
-                piso(&mut f[k], read_f64_at(0x9690a8));
+                piso(&mut f[k], read_f64_at(0x9690a8)); // 0x9690a8 = 2.75
             } else {
-                piso(&mut f[k], read_f64_at(0x968e38));
+                piso(&mut f[k], read_f64_at(0x968e38)); // 0x968e38 = 3.5
             }
-        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
+        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) { // 0x968e18 = 2.5
             if alto(0x1676) {
-                piso(&mut f[k], read_f64_at(0x968ec8));
+                piso(&mut f[k], read_f64_at(0x968ec8)); // 0x968ec8 = 2.25
             } else {
-                piso(&mut f[k], read_f64_at(0x968930));
+                piso(&mut f[k], read_f64_at(0x968930)); // 0x968930 = 3
             }
         } else if lado > 1 || rep(lado) >= 0x1676 {
-            piso(&mut f[k], read_f64_at(0x9689b8));
+            piso(&mut f[k], read_f64_at(0x9689b8)); // 0x9689b8 = 1.05
         } else if rep(lado) >= 0x109a {
-            piso(&mut f[k], read_f64_at(0x968928));
+            piso(&mut f[k], read_f64_at(0x968928)); // 0x968928 = 1.25
         } else {
-            piso(&mut f[k], read_f64_at(0x968f98));
+            piso(&mut f[k], read_f64_at(0x968f98)); // 0x968f98 = 1.75
         }
     }
     if t == 6 {
         let a = read_i16(jogo + 0x30) as u16;
         if a == 0x96 {
             if alto(0x109a) {
-                piso(&mut f[k], read_f64_at(0x9690a8));
+                piso(&mut f[k], read_f64_at(0x9690a8)); // 0x9690a8 = 2.75
             } else {
-                piso(&mut f[k], read_f64_at(0x968e38));
+                piso(&mut f[k], read_f64_at(0x968e38)); // 0x968e38 = 3.5
             }
-        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) {
-            f[k] = read_f64_at(0x968e18);
+        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) { // 0x968e18 = 2.5
+            f[k] = read_f64_at(0x968e18); // 0x968e18 = 2.5
         } else {
-            piso(&mut f[k], read_f64_at(0x968928));
+            piso(&mut f[k], read_f64_at(0x968928)); // 0x968928 = 1.25
         }
     } else if read_i16(jogo + 0x30) as u16 == 0x96 && t == 5 {
         if alto(0x109a) {
-            piso(&mut f[k], read_f64_at(0x9690a8));
+            piso(&mut f[k], read_f64_at(0x9690a8)); // 0x9690a8 = 2.75
         } else {
-            piso(&mut f[k], read_f64_at(0x968e38));
+            piso(&mut f[k], read_f64_at(0x968e38)); // 0x968e38 = 3.5
         }
     } else if read_i16(jogo + 0x32) as u16 == 0xa0 && t == 5 {
         if lado == 0 {
-            if rep(0) < 0x109a && f[0] < read_f64_at(0x96fe20) {
-                f[0] = read_f64_at(0x96fe20);
+            if rep(0) < 0x109a && f[0] < read_f64_at(0x96fe20) { // 0x96fe20 = 3.25
+                f[0] = read_f64_at(0x96fe20); // 0x96fe20 = 3.25
             } else {
-                piso(&mut f[0], read_f64_at(0x968e18));
+                piso(&mut f[0], read_f64_at(0x968e18)); // 0x968e18 = 2.5
             }
         } else {
-            piso(&mut f[k], read_f64_at(0x968e18));
+            piso(&mut f[k], read_f64_at(0x968e18)); // 0x968e18 = 2.5
         }
-    } else if t == 10 && f[k] < read_f64_at(0x968928) {
-        f[k] = read_f64_at(0x968928);
-    } else if t == 9 && f[k] < read_f64_at(0x9689b0) {
-        f[k] = read_f64_at(0x9689b0);
+    } else if t == 10 && f[k] < read_f64_at(0x968928) { // 0x968928 = 1.25
+        f[k] = read_f64_at(0x968928); // 0x968928 = 1.25
+    } else if t == 9 && f[k] < read_f64_at(0x9689b0) { // 0x9689b0 = 0.8
+        f[k] = read_f64_at(0x9689b0); // 0x9689b0 = 0.8
     } else {
-        piso(&mut f[k], read_f64_at(0x967880));
+        piso(&mut f[k], read_f64_at(0x967880)); // 0x967880 = 0.1
     }
 }
 
@@ -627,7 +627,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         let comp = read_u32_as_usize(jogo + 0x14);
         if comp != 0 {
             f[k] = read_i16(comp + competition::CLUB_COMP_REPUTATION) as i32 as f64;
-            if f[k] < read_f64_at(0x967890) {
+            if f[k] < read_f64_at(0x967890) { // 0x967890 = 1
                 f[k] = 1.0;
             }
         } else {
@@ -635,22 +635,22 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         }
         let t = read_u8(jogo + 0x3a);
         if t == 8 || t == 10 || t == 6 {
-            f[k] += read_f64_at(0x968950);
+            f[k] += read_f64_at(0x968950); // 0x968950 = 2
         }
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-        let mut ajuste = read_f64_at(0x9689a0);
+        let mut ajuste = read_f64_at(0x9689a0); // 0x9689a0 = 0
         if amistoso(read_u32_as_usize(G_FRIENDLY), comp) == 0 && read_u32_as_usize(G_COMP_OBJECT_TABLE) != 0 && read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4) != 0 && read_u32_as_usize(G_RESERVE_COMP) != 0 {
             let grupo: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if grupo(read_u32_as_usize(jogo + 0x14)) == 0 {
                 let liga = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(read_u32_as_usize(jogo + 0x14)) * 4);
                 if read_u8(liga + 0x43) != 2 {
                     let x = (read_u8(jogo + 0x34).wrapping_sub(read_u8(liga + 0x3c)) as i8) as i32 as f64;
-                    ajuste = if x < read_f64_at(0x96fe28) {
-                        read_f64_at(0x96fe28)
-                    } else if x <= read_f64_at(0x9688a0) {
+                    ajuste = if x < read_f64_at(0x96fe28) { // 0x96fe28 = -6
+                        read_f64_at(0x96fe28) // 0x96fe28 = -6
+                    } else if x <= read_f64_at(0x9688a0) { // 0x9688a0 = 5
                         x
                     } else {
-                        read_f64_at(0x9688a0)
+                        read_f64_at(0x9688a0) // 0x9688a0 = 5
                     };
                 }
             }
@@ -664,19 +664,19 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
                 f[k] = outro as i32 as f64 / eu as i32 as f64 * v;
             }
             if outro > 0x11 {
-                f[k] *= read_f64_at(0x9689c0);
+                f[k] *= read_f64_at(0x9689c0); // 0x9689c0 = 1.1
             }
             if outro > 0xc && eu < 0xe {
-                f[k] *= read_f64_at(0x968928);
+                f[k] *= read_f64_at(0x968928); // 0x968928 = 1.25
             }
             let _ = clube;
             let lg = read_u32_as_usize(read_u32_as_usize(jogo + if lado == 0 { 0x1c } else { 0x20 }) + 0x57);
             if lg != 0 && read_i16(lg + 0x69) != 0 {
                 f[k] /= read_i16(lg + 0x69) as i32 as f64;
             } else if read_u8(jogo + 0x3a) == 0xa {
-                f[k] *= read_f64_at(0x968918);
+                f[k] *= read_f64_at(0x968918); // 0x968918 = 0.2
             } else {
-                f[k] *= read_f64_at(0x967888); // cqo2: o fator sem a liga do clube
+                f[k] *= read_f64_at(0x967888); // cqo2: o fator sem a liga do clube; 0x967888 = 0.05
             }
         }
         apply_side_factor_floor(jogo, lado, &mut f);
@@ -691,15 +691,15 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
         let c_fora = stadium_city(read_u32_as_usize(fora + 0x69));
         let fator: unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64 = core::mem::transmute(FN_STADIUM_GET_TRAVEL_DISTANCE_FACTOR);
         let mut d = fator(this, jogo, c_est, c_casa, f[0]);
-        if d < read_f64_at(0x968f20) {
-            d = read_f64_at(0x968f20);
+        if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
+            d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
         pc = match_pl_ftol(read_i32(casa + 0x73) as f64 * f[0] * d);
         let mut d = fator(this, jogo, c_est, c_fora, f[1]);
-        if d < read_f64_at(0x968f20) {
-            d = read_f64_at(0x968f20);
+        if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
+            d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
-        pf = match_pl_ftol(read_i32(fora + 0x77).wrapping_add(read_i32(fora + 0x73)) as f64 * f[1] * d * read_f64_at(0x968968));
+        pf = match_pl_ftol(read_i32(fora + 0x77).wrapping_add(read_i32(fora + 0x73)) as f64 * f[1] * d * read_f64_at(0x968968)); // 0x968968 = 0.5
         let comp = read_u32_as_usize(jogo + 0x14);
         if comp != 0 && casa != 0 && read_u32_as_usize(casa + 0x57) == comp {
             let liga = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4);
@@ -736,7 +736,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
                             } else if cl < 4 {
                                 2
                             } else {
-                                match_pl_ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16
+                                match_pl_ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16 // 0x9689e0 = 0.25
                             };
                         }
                         let m = if bl < 4 && dl == 1 { 25 } else { 15 };
@@ -770,16 +770,16 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
     let rival = |a: usize, b: usize| read_u32_as_usize(a + 0xb3) == b || read_u32_as_usize(a + 0xb7) == b || read_u32_as_usize(a + 0xbb) == b;
     if rival(casa, fora) {
         crate::comparacao::ramo("cqo_2 classico");
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico; 0x968940 = 1.5
     } else if read_u32_as_usize(casa + 0x69) != 0 && read_u32_as_usize(fora + 0x69) != 0 && read_u32_as_usize(read_u32_as_usize(casa + 0x69) + 0x38) == read_u32_as_usize(read_u32_as_usize(fora + 0x69) + 0x38) {
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588));
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
     }
     if rival(fora, casa) {
-        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969588));
+        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
     }
     if read_u8(jogo + 0x3c) == 0 && read_u8(jogo + 0x3b) != 0xff {
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x9689b8));
-        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520));
+        pc = match_pl_ftol(pc as f64 * read_f64_at(0x9689b8)); // 0x9689b8 = 1.05
+        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520)); // 0x969520 = 0.85
     }
     let comp = read_u32_as_usize(jogo + 0x14);
     if comp != 0 && casa != 0 && read_u32_as_usize(casa + 0x57) == comp && read_u8(casa + 0x6d) != 0 {
@@ -804,7 +804,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             if pc < n * 250 {
                 pc = n * 250;
             } else if pc > n * 1500 {
-                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30));
+                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30)); // 0x968f30 = -0.2
             }
         }
     }
@@ -822,9 +822,9 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, j
             let vis = if read_u8(jogo + 0x3c) == 0 {
                 let a = lot as f64;
                 let x = a - read_i32(read_u32_as_usize(jogo + 0x20) + 0x73) as f64 * f[0];
-                let y = a * read_f64_at(0x968f20);
+                let y = a * read_f64_at(0x968f20); // 0x968f20 = 0.15
                 let z = if x < y { x } else { y };
-                let w = a * read_f64_at(0x967888);
+                let w = a * read_f64_at(0x967888); // 0x967888 = 0.05
                 match_pl_ftol(if w > z { w } else { z })
             } else {
                 lot / 2
@@ -892,7 +892,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_calculate_match_attendance(this:
 pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
     let dx = (read_f64(a + 0x23) - read_f64(b + 0x23)).abs();
     let dy = (read_f64(a + 0x2b) - read_f64(b + 0x2b)).abs();
-    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40))
+    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40)) // 0x96fe40 = 44.44444444
 }
 
 /// the English national stadium before 2004 scores 0; the score starts at 100000, changes with the city distances (flag
@@ -940,8 +940,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
                 }
             } else {
                 let (f1, f2, f3) = (d1 as f64, d2 as f64, d3 as f64);
-                let perto = f1 * read_f64_at(0x96fe38);
-                let longe = f1 * read_f64_at(0x969088);
+                let perto = f1 * read_f64_at(0x96fe38); // 0x96fe38 = 0.5882352941
+                let longe = f1 * read_f64_at(0x969088); // 0x969088 = 0.8333333333
                 if f2 < perto && f3 < perto {
                     nota = 200000;
                 } else if !(f2 < longe && f3 < longe) {
@@ -977,27 +977,27 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             }
         }
         if lugares > esperado {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968978));
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968978)); // 0x968978 = 1.2
         }
         let (l, e) = (lugares as f64, esperado as f64);
-        let t = e * read_f64_at(0x968940);
+        let t = e * read_f64_at(0x968940); // 0x968940 = 1.5
         if l > t {
-            nota = match_pl_ftol(nota as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890)));
-        } else if l < e * read_f64_at(0x968e80) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x967880));
-        } else if l < e * read_f64_at(0x968968) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e80));
-        } else if l < e * read_f64_at(0x968e40) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e40));
-        } else if l < e * read_f64_at(0x9689d8) {
-            nota = match_pl_ftol(nota as f64 * read_f64_at(0x9689d8));
+            nota = match_pl_ftol(nota as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890))); // 0x96fe30 = 8.333333333e-05, 0x967890 = 1
+        } else if l < e * read_f64_at(0x968e80) { // 0x968e80 = 0.3
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x967880)); // 0x967880 = 0.1
+        } else if l < e * read_f64_at(0x968968) { // 0x968968 = 0.5
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e80)); // 0x968e80 = 0.3
+        } else if l < e * read_f64_at(0x968e40) { // 0x968e40 = 0.7
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x968e40)); // 0x968e40 = 0.7
+        } else if l < e * read_f64_at(0x9689d8) { // 0x9689d8 = 0.9
+            nota = match_pl_ftol(nota as f64 * read_f64_at(0x9689d8)); // 0x9689d8 = 0.9
         }
     } else if m & 4 != 0 {
         nota = friendly_random(lugares);
     }
     crate::comparacao::ramo("cpt_7 nota do estadio");
     let r = friendly_random(100); // cpt7: o sorteio da nota
-    match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * nota as f64)
+    match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * nota as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
 }
 
 // ponytail: sorteia (e, com a marca 4, sorteia os lugares): só a original; a cópia leva o ramo.
@@ -1024,30 +1024,30 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     let mut d = (dx * dx + dy * dy).sqrt();
     let tipo = *((jogo + 0x3a) as *const u8);
     if core::ptr::read_unaligned((jogo + 0x30) as *const u16) == 0xa0 && tipo == 5 {
-        d *= read_f64_at(0x968968);
+        d *= read_f64_at(0x968968); // 0x968968 = 0.5
     }
-    let mut f = read_f64_at(0x967890) - d * read_f64_at(0x96afe0);
+    let mut f = read_f64_at(0x967890) - d * read_f64_at(0x96afe0); // 0x967890 = 1, 0x96afe0 = 0.1333333333
     if *((jogo + 0x3c) as *const u8) == 0 {
         f *= f;
     }
-    if d > read_f64_at(0x9689a0) && r > read_f64_at(0x9689a0) {
-        let q = r + read_f64_at(0x967890);
+    if d > read_f64_at(0x9689a0) && r > read_f64_at(0x9689a0) { // 0x9689a0 = 0
+        let q = r + read_f64_at(0x967890); // 0x967890 = 1
         f /= q * q;
     }
-    if base > read_f64_at(0x969558) {
-        let minimo = read_f64_at(0x967890) - (read_f64_at(0x968ea8) - base) * read_f64_at(0x968f20);
+    if base > read_f64_at(0x969558) { // 0x969558 = 14
+        let minimo = read_f64_at(0x967890) - (read_f64_at(0x968ea8) - base) * read_f64_at(0x968f20); // 0x967890 = 1, 0x968ea8 = 20, 0x968f20 = 0.15
         if f < minimo {
             return minimo;
         }
     }
-    if tipo == 0xa && f < read_f64_at(0x968918) {
-        return read_f64_at(0x968918);
+    if tipo == 0xa && f < read_f64_at(0x968918) { // 0x968918 = 0.2
+        return read_f64_at(0x968918); // 0x968918 = 0.2
     }
-    if f < read_f64_at(0x967888) && read_usize(read_usize(jogo + 0x1c) + 0x53) == nacao {
-        return read_f64_at(0x967888);
+    if f < read_f64_at(0x967888) && read_usize(read_usize(jogo + 0x1c) + 0x53) == nacao { // 0x967888 = 0.05
+        return read_f64_at(0x967888); // 0x967888 = 0.05
     }
-    if f < read_f64_at(0x96d2c8) {
-        return read_f64_at(0x96d2c8);
+    if f < read_f64_at(0x96d2c8) { // 0x96d2c8 = 0.03
+        return read_f64_at(0x96d2c8); // 0x96d2c8 = 0.03
     }
     f
 }

@@ -15,24 +15,27 @@ pub(crate) unsafe fn read_f64_at(a: usize) -> f64 {
     *(a as *const f64)
 }
 
-/// { 0x6f56c0 } (match_pl.cpp): desgaste do jogador, float em 0x4d (nunca abaixo de zero).
+/// Drains the match player's stamina (+0x4d, float, never below 0): code -1 subtracts `x` times a factor by the current
+/// band (12, 10, 8 or 6 / 11); other codes subtract (200 - 8.5 x float +0xd5) times a per-code factor.
+///
+/// [pt] { 0x6f56c0 } (match_pl.cpp): desgaste do jogador, float em 0x4d (nunca abaixo de zero).
 /// codigo -1: `x` x (12, 10, 8 ou 6 pela faixa do valor atual: acima de 9500, 8750, 7750) / 11.
 /// Outros codigos: (200 - 8,5 x float de 0xd5) x fator do codigo (switch do original).
 pub(crate) unsafe extern "thiscall" fn tire_fatigue(this: usize, x: f32, codigo: i16) {
     let campo = (this + 0x4d) as *mut f32;
     let v = *campo;
-    let zero = read_f32_at(0x968970) as f64;
+    let zero = read_f32_at(0x968970) as f64; // 0x968970 = 0
     if codigo == -1 {
-        let k = if v > read_f32_at(0x96d78c) {
+        let k = if v > read_f32_at(0x96d78c) { // 0x96d78c = 9500
             0x96d690
-        } else if v > read_f32_at(0x96d788) {
+        } else if v > read_f32_at(0x96d788) { // 0x96d788 = 8750
             0x968a78
-        } else if v > read_f32_at(0x96b040) {
+        } else if v > read_f32_at(0x96b040) { // 0x96b040 = 7750
             0x96d784
         } else {
             0x969084
         };
-        let t = x as f64 * read_f32_at(k) as f64 * read_f32_at(0x96d780) as f64;
+        let t = x as f64 * read_f32_at(k) as f64 * read_f32_at(0x96d780) as f64; // 0x96d780 = 0.09090909362
         *campo = (v as f64 - t) as f32;
         if (*campo as f64) < zero {
             *campo = 0.0; // mov dword ptr [ecx + 0x4d], 0
@@ -43,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn tire_fatigue(this: usize, x: f32, codigo:
             21 | 36 | 46 => 0x96d778,
             _ => 0x96d768,
         };
-        let t = (read_f64_at(0x96a648) - read_f32_at(this + 0xd5) as f64 * read_f64_at(0x96a790)) * read_f64_at(fator);
+        let t = (read_f64_at(0x96a648) - read_f32_at(this + 0xd5) as f64 * read_f64_at(0x96a790)) * read_f64_at(fator); // 0x96a648 = 200, 0x96a790 = 8.5
         let r = v as f64 - t;
         *campo = r as f32;
         if r < zero {
@@ -64,7 +67,10 @@ pub(crate) fn match_pl_ftol(x: f64) -> i32 {
     }
 }
 
-/// { 0x6fa140 } (match_pl.cpp): o jogador esta virado para (a, b)? Compara a direcao dele (0x19a)
+/// Is the player facing cell (a, b)? Compares his direction (+0x19a) with the table angle to the target, with a
+/// tolerance of +0x10c x 2.25 + 45 degrees. Returns 1 or 0 (0 for his own cell).
+///
+/// [pt] { 0x6fa140 } (match_pl.cpp): o jogador esta virado para (a, b)? Compara a direcao dele (0x19a)
 /// com o angulo da tabela, com tolerancia de 0x10c x 2,25 + 45 graus.
 pub(crate) unsafe extern "thiscall" fn facing(this: usize, a: i8, b: i8) -> u8 {
     let (dl, dc) = (a.wrapping_sub(byte(this, 0x102)), b.wrapping_sub(byte(this, 0x103)));
@@ -76,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn facing(this: usize, a: i8, b: i8) -> u8 {
     if dir == alvo {
         return 1;
     }
-    let tolerancia = match_pl_ftol(byte(this, 0x10c) as f64 * read_f64_at(0x968ec8) + read_f64_at(0x968d68)) as i16;
+    let tolerancia = match_pl_ftol(byte(this, 0x10c) as f64 * read_f64_at(0x968ec8) + read_f64_at(0x968d68)) as i16; // 0x968ec8 = 2.25, 0x968d68 = 45
     let mut d = (dir as i32 - alvo as i32).abs();
     if d as i16 > 0xb4 {
         d = 0x168 - d;
@@ -95,7 +101,9 @@ pub(crate) unsafe fn distance_table_cell(dl: i32, dc: i32) -> f32 {
     *((0xa15e44 + 4 * (lin * 9 + col)) as *const f32)
 }
 
-/// { 0x6f09b0 } (match_pl.cpp): distancia (tabela) do jogador ao ponto (a, b).
+/// Match player: the distance (from the distance table) from the player's cell (+0x102, +0x103) to cell (a, b).
+///
+/// [pt] { 0x6f09b0 } (match_pl.cpp): distancia (tabela) do jogador ao ponto (a, b).
 pub(crate) unsafe extern "thiscall" fn distance_to_point(this: usize, a: i8, b: i8) -> f32 {
     distance_table_cell(byte(this, 0x103) as i32 - b as i32, byte(this, 0x102) as i32 - a as i32)
 }
@@ -109,7 +117,11 @@ pub(crate) unsafe extern "thiscall" fn distance_to_goal(this: usize) -> f32 {
     distance_table_cell(byte(this, 0x103) as i32 - alvo, byte(this, 0x102) as i32 - 4)
 }
 
-/// { 0x6cb780 } (match_eng.cpp): 0 se o jogador esta impedido de seguir (0x70dfa0, marca do
+/// Match engine: for player `j`, returns 0 if he is in his own half or his cell is marked, or if an active opposing
+/// outfield player is at least as close to goal as his limit (his distance to goal + 0.5, + 1.0 outside the box); 2 if
+/// a team-mate is strictly closer; otherwise 1.
+///
+/// [pt] { 0x6cb780 } (match_eng.cpp): 0 se o jogador esta impedido de seguir (0x70dfa0, marca do
 /// motor na casa dele) ou se algum adversario ativo esta a distancia do gol <= limite; 2 se algum
 /// colega ativo esta estritamente mais perto; senao 1. Limite: distancia dele ao gol + 0,5, e mais
 /// 1,0 fora da area (arredondado para float a cada passo, como o `fstp` do original). Os blocos
@@ -129,9 +141,9 @@ pub(crate) unsafe extern "thiscall" fn closest_to_goal(this: usize, j: usize) ->
     if *(casa as *const u8) != 0 {
         return 0;
     }
-    let mut limit = (f6fa1e0(j) as f64 + read_f64_at(0x968968)) as f32;
+    let mut limit = (f6fa1e0(j) as f64 + read_f64_at(0x968968)) as f32; // 0x968968 = 0.5
     if f6f4650(j) == 0 {
-        limit = (limit as f64 + read_f64_at(0x967890)) as f32;
+        limit = (limit as f64 + read_f64_at(0x967890)) as f32; // 0x967890 = 1
     }
     let linha: i8 = if s == 0 { 0xb } else { 0 };
     let bloco = |l: isize| (this as isize + 8920 * l + 0x4796) as usize;
@@ -150,7 +162,9 @@ pub(crate) unsafe extern "thiscall" fn closest_to_goal(this: usize, j: usize) ->
     1
 }
 
-/// { 0x5b5270 }: marcas taticas (64 bits) de uma posicao: [this + 0x188b + 8 x posicao].
+/// Returns the 64-bit tactical instruction mask of position `posicao` ([this + 0x188b + 8 x position]).
+///
+/// [pt] { 0x5b5270 }: marcas taticas (64 bits) de uma posicao: [this + 0x188b + 8 x posicao].
 pub(crate) unsafe extern "thiscall" fn position_marks(this: usize, posicao: i8) -> u64 {
     *((this as isize + 0x188b + 8 * posicao as isize) as *const u64)
 }
@@ -209,7 +223,12 @@ pub(crate) unsafe extern "thiscall" fn defending_role(j: usize) -> u8 {
     }
 }
 
-/// { 0x6c2be0 } (match_eng.cpp): onde o jogador deve se posicionar (saidas x e y). Pela bola
+/// Works out where player `j` should stand (writes x and y): from the ball's cell, his side and whether his team is
+/// attacking, it reads the target cell from the side's formation table; during set pieces (+0x8eb1 > 0) some roles keep
+/// their current place; otherwise the side's tactical flags move him a step forward or back or make him follow the
+/// ball's line.
+///
+/// [pt] { 0x6c2be0 } (match_eng.cpp): onde o jogador deve se posicionar (saidas x e y). Pela bola
 /// (0x8ea7/0x8ea8, limitada a 9 x 12), pelo lado e se o time dele esta atacando, le a casa na
 /// tabela de formacao do lado (x no meio byte baixo, y no alto). Com 0x8eb1 > 0, a posicao atual
 /// quando o papel (ataque ou defesa) manda ficar, e tudo limitado a grade. Senao, ajustes pelas
@@ -354,7 +373,7 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
     }
     // 0x6f4abc: float 0x1a2
     let f1a2 = (this + 0x1a2) as *mut f32;
-    let mut st = *f1a2 as f64 * read_f32_at(0x96d364) as f64;
+    let mut st = *f1a2 as f64 * read_f32_at(0x96d364) as f64; // 0x96d364 = 0.8500000238
     *f1a2 = st as f32;
     let pessoa = *((this + 0x69) as *const usize);
     let piso = ((0x19 - *((pessoa + staff::TEMPERAMENT) as *const i8) as i32) * 2) as f32;
@@ -362,14 +381,14 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
         st = piso as f64;
     }
     *f1a2 = st as f32;
-    if st > read_f64_at(0x9688a8) {
+    if st > read_f64_at(0x9688a8) { // 0x9688a8 = 100
         *f1a2 = f32::from_bits(0x42c80000);
     }
     // 0x6f4b18
     if (u(0x10) as i32 + u(0xc) as i32) < 2 && u(6) < 7 && u(3) < 4 && u(0x11) < 6 {
         let edi = *w35 as i32;
         if edi > sortear(0x5dc) + 0x203a {
-            *w35 = match_pl_ftol((edi - 0x203a) as f64 * read_f64_at(0x96d5c0) + read_f64_at(0x96d760)) as i16;
+            *w35 = match_pl_ftol((edi - 0x203a) as f64 * read_f64_at(0x96d5c0) + read_f64_at(0x96d760)) as i16; // 0x96d5c0 = 0.96, 0x96d760 = 8250
         }
     }
     // 0x6f4b78
@@ -380,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
         let a2 = u(2) as i32;
         if a2 != 0 {
             let razao = a1 as f64 / a2 as f64;
-            if razao > read_f64_at(0x969040) && razao * read_f32_at(0x96d2dc) as f64 + read_f32_at(0x96d75c) as f64 > cx as f64 {
+            if razao > read_f64_at(0x969040) && razao * read_f32_at(0x96d2dc) as f64 + read_f32_at(0x96d75c) as f64 > cx as f64 { // 0x969040 = 0.75, 0x96d2dc = 1000, 0x96d75c = 5850
                 cx = cx.wrapping_add(5);
                 *w35 = cx;
             }
@@ -509,14 +528,14 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
             let mut aa = ((u(5) as i32 + u(8) as i32) as f64 / (a4 + a7) as f64) as f32;
             let s96 = u(9) as i32 + u(6) as i32;
             if s96 != 0 {
-                aa = (s96 as f64 * read_f64_at(0x967878) + aa as f64) as f32;
+                aa = (s96 as f64 * read_f64_at(0x967878) + aa as f64) as f32; // 0x967878 = 0.025
             }
             let ajustar = |aa: f32, num: i32, den: i32, fator_forte: usize| -> f32 {
                 let st = num as f64 / den as f64;
                 let guardado = st as f32;
-                if st < read_f64_at(0x96a5d0) || st.is_nan() {
+                if st < read_f64_at(0x96a5d0) || st.is_nan() { // 0x96a5d0 = 0.65
                     let k = if engine_player_role(motor, this) & 0x880 != 0 { fator_forte } else { 0x9689e0 };
-                    (aa as f64 - (guardado as f64 - read_f64_at(0x96a5d0)) * read_f64_at(k)) as f32
+                    (aa as f64 - (guardado as f64 - read_f64_at(0x96a5d0)) * read_f64_at(k)) as f32 // 0x96a5d0 = 0.65
                 } else {
                     aa
                 }
@@ -537,11 +556,11 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
                 cx = cx.wrapping_add((u(0x10) as i16).wrapping_mul(0xfa));
             }
             let a = aa as f64;
-            if a < read_f64_at(0x968fe0) || a.is_nan() {
+            if a < read_f64_at(0x968fe0) || a.is_nan() { // 0x968fe0 = 0.625
                 if *w35 > cx {
                     *w35 = cx;
                 }
-            } else if a > read_f64_at(0x96afb8) && *w35 < cx {
+            } else if a > read_f64_at(0x96afb8) && *w35 < cx { // 0x96afb8 = 0.825
                 *w35 = cx;
             }
         }
@@ -560,7 +579,7 @@ pub(crate) unsafe extern "thiscall" fn update_player(this: usize) {
                     return;
                 }
                 let r = u(1) as i32 as f64 / a2 as f64;
-                if !(r > read_f64_at(0x969040)) {
+                if !(r > read_f64_at(0x969040)) { // 0x969040 = 0.75
                     ate(0x1676, 1);
                     return;
                 }
@@ -671,17 +690,24 @@ gravador!(gravar_8ea7, 0x8ea7); // { 0x700360 }
 gravador!(gravar_8ea8, 0x8ea8); // { 0x700370 }
 gravador!(gravar_8eaa, 0x8eaa); // { 0x700390 }
 
-/// { 0x7003a0 }: grava a palavra 0x8ed8.
+/// Stores the engine word +0x8ed8 [inference: the ball's direction angle].
+///
+/// [pt] { 0x7003a0 }: grava a palavra 0x8ed8.
 pub(crate) unsafe extern "thiscall" fn write_8ed8(this: usize, v: u16) {
     *((this + 0x8ed8) as *mut u16) = v;
 }
 
-/// { 0x700410 }: le o ponteiro 0x8f7a.
+/// Match engine: returns the 32-bit field +0x8f7a.
+///
+/// [pt] { 0x700410 }: le o ponteiro 0x8f7a.
 pub(crate) unsafe extern "thiscall" fn read_8f7a(this: usize) -> u32 {
     *((this + 0x8f7a) as *const u32)
 }
 
-/// { 0x7003b0 } (match_pl.cpp): registra o lado com a posse (0x8eab). Exceto -1, soma 1 ao
+/// Records side `v` as having possession (engine +0x8eab); unless -1, adds 1 to that side's counter (+0x8d46 + side)
+/// and takes 10 from the other side's counter if positive.
+///
+/// [pt] { 0x7003b0 } (match_pl.cpp): registra o lado com a posse (0x8eab). Exceto -1, soma 1 ao
 /// contador do lado (0x8d46 + lado) e tira 10 do contador do outro (0x8d46 + (lado == 0)), se positivo.
 pub(crate) unsafe extern "thiscall" fn record_possession(this: usize, v: i8) {
     *((this + 0x8eab) as *mut i8) = v;
@@ -696,7 +722,9 @@ pub(crate) unsafe extern "thiscall" fn record_possession(this: usize, v: i8) {
     }
 }
 
-/// { 0x714c60 } (match_pl.cpp): o ponteiro esta na lista do objeto (0x1ae, quantidade em 0x101)?
+/// Is the pointer in the match player's list (+0x1ae, count at +0x101)? Returns 1 or 0.
+///
+/// [pt] { 0x714c60 } (match_pl.cpp): o ponteiro esta na lista do objeto (0x1ae, quantidade em 0x101)?
 pub(crate) unsafe extern "thiscall" fn in_list(this: usize, alvo: usize) -> u8 {
     let n = *((this + 0x101) as *const i8);
     (0..n.max(0) as usize).any(|k| *((this + 0x1ae + 4 * k) as *const usize) == alvo) as u8
@@ -739,7 +767,9 @@ pub(crate) unsafe extern "thiscall" fn direction(this: usize) -> u16 {
     *((this + 0x19a) as *const u16)
 }
 
-/// { 0x6ce0f0 } (match_eng.cpp): zera o guardado do lado (0xf59e para o lado 0, senao 0xf5a2).
+/// Clears the side's stored player pointer (engine +0xf59e for side 0, +0xf5a2 otherwise).
+///
+/// [pt] { 0x6ce0f0 } (match_eng.cpp): zera o guardado do lado (0xf59e para o lado 0, senao 0xf5a2).
 pub(crate) unsafe extern "thiscall" fn clear_stored(this: usize, lado_b: u8) {
     *((this + if lado_b == 0 { 0xf59e } else { 0xf5a2 }) as *mut u32) = 0;
 }
@@ -774,12 +804,18 @@ pub(crate) unsafe extern "thiscall" fn side_of_move(this: usize) -> u8 {
     (byte(p, 0x27) == 0) as u8
 }
 
-/// { 0x6c2fe0 } (match_eng.cpp): endereco do jogador `k` do bloco do `lado`.
+/// Returns the address of player `k` of side `lado_b` in the match engine's player block (+0x4796, 0x1be bytes per
+/// player, 20 per side).
+///
+/// [pt] { 0x6c2fe0 } (match_eng.cpp): endereco do jogador `k` do bloco do `lado`.
 pub(crate) unsafe extern "thiscall" fn player_in_block(this: usize, lado_b: i8, k: i8) -> usize {
     (this as isize + 0x4796 + 0x1be * (lado_b as isize * 20 + k as isize)) as usize
 }
 
-/// { 0x6c3920 } (match_eng.cpp): como `table_a`, pela posicao em 0x1a.
+/// Match engine: the role code of player `jogador`'s reserve position (+0x1a, 0..10) from his side's formation table
+/// (+0x8ebc + 4 x side); 0 if out of range.
+///
+/// [pt] { 0x6c3920 } (match_eng.cpp): como `table_a`, pela posicao em 0x1a.
 pub(crate) unsafe extern "thiscall" fn table_a_1a(this: usize, jogador: usize) -> u16 {
     let posicao = byte(jogador, 0x1a);
     if !(0..=10).contains(&posicao) {
@@ -800,24 +836,33 @@ pub(crate) unsafe extern "thiscall" fn marked_moment(this: usize) -> u32 {
     (m != 0x1ef && m != 0x3de && byte(partida, 0x38) as u8 & 0x80 != 0) as u32
 }
 
-/// { 0x6f4a40 } (match_pl.cpp): estado do proprio lado (lado 0: 0xf5bd; outros: 0xf5f3).
+/// Returns the state byte of the match player's own side (engine +0xf5bd for side 0, +0xf5f3 otherwise).
+///
+/// [pt] { 0x6f4a40 } (match_pl.cpp): estado do proprio lado (lado 0: 0xf5bd; outros: 0xf5f3).
 pub(crate) unsafe extern "thiscall" fn side_state(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
     byte(motor, if lado(this) != 0 { 0xf5f3 } else { 0xf5bd }) as u8
 }
 
-/// { 0x6f4a70 } (match_pl.cpp): estado do outro lado.
+/// Match player: returns the state byte of the other side (engine +0xf5bd for side 0, +0xf5f3 for side 1) [inference:
+/// team mentality/state].
+///
+/// [pt] { 0x6f4a70 } (match_pl.cpp): estado do outro lado.
 pub(crate) unsafe extern "thiscall" fn opponent_state(this: usize) -> u8 {
     let motor = *((this + 0x19e) as *const usize);
     byte(motor, if lado(this) != 0 { 0xf5bd } else { 0xf5f3 }) as u8
 }
 
-/// { 0x70a890 } (match_pl.cpp): grava 0x19c limitado a -200..=200.
+/// Writes the match player's word +0x19c, clamped to -200..200.
+///
+/// [pt] { 0x70a890 } (match_pl.cpp): grava 0x19c limitado a -200..=200.
 pub(crate) unsafe extern "thiscall" fn write_19c(this: usize, v: i16) {
     *((this + 0x19c) as *mut i16) = v.clamp(-200, 200);
 }
 
-/// { 0x70a8c0 } (match_pl.cpp, sem `this`): codigos 12, 13, 21, 37, 46 e 59.
+/// Returns 1 if move code `c` is a set-piece code (12, 13, 21, 37, 46 or 59).
+///
+/// [pt] { 0x70a8c0 } (match_pl.cpp, sem `this`): codigos 12, 13, 21, 37, 46 e 59.
 pub(crate) unsafe extern "stdcall" fn set_piece_code(c: i16) -> u8 {
     matches!(c, 12 | 13 | 21 | 37 | 46 | 59) as u8
 }
@@ -846,7 +891,9 @@ pub(crate) unsafe extern "thiscall" fn clear_move(this: usize) {
     }
 }
 
-/// { 0x6cf710 } (match_eng.cpp): soma `delta` a disposicao (0x35) de todos os ativos do lado.
+/// Adds `delta` to the disposition word (+0x35) of every active player of side `lado_b`.
+///
+/// [pt] { 0x6cf710 } (match_eng.cpp): soma `delta` a disposicao (0x35) de todos os ativos do lado.
 pub(crate) unsafe extern "thiscall" fn add_disposition(this: usize, lado_b: i8, delta: i16) {
     for k in 0..20 {
         let p = side_player_slot(this, lado_b, k);
@@ -865,13 +912,17 @@ pub(crate) unsafe extern "thiscall" fn read_1bc(this: usize) -> u16 {
     *((this + 0x1bc) as *const u16)
 }
 
-/// { 0x7160d0 }: soma ao byte 0x2b do jogador.
+/// Adds `v` to the match player's busy counter (+0x2b).
+///
+/// [pt] { 0x7160d0 }: soma ao byte 0x2b do jogador.
 pub(crate) unsafe extern "thiscall" fn add_2b(this: usize, v: u8) {
     let b = (this + 0x2b) as *mut u8;
     *b = (*b).wrapping_add(v);
 }
 
-/// { 0x7160e0 }: grava o byte 0x2b do jogador.
+/// Match player: writes byte +0x2b.
+///
+/// [pt] { 0x7160e0 }: grava o byte 0x2b do jogador.
 pub(crate) unsafe extern "thiscall" fn write_2b(this: usize, v: u8) {
     *((this + 0x2b) as *mut u8) = v;
 }
@@ -888,17 +939,24 @@ pub(crate) unsafe fn call_engine_routine<R>(j: usize, rotina: usize) -> Option<R
     Some(f(motor, j))
 }
 
-/// { 0x717430 }: `table_a_1a` (0x6c3920) do motor do jogador, ou 0.
+/// Match player: the role code of his reserve position (+0x1a) from his engine's formation table (`table_a_1a`), or 0
+/// without an engine.
+///
+/// [pt] { 0x717430 }: `table_a_1a` (0x6c3920) do motor do jogador, ou 0.
 pub(crate) unsafe extern "thiscall" fn player_table_a_1a(this: usize) -> u16 {
     call_engine_routine(this, 0x6c3920).unwrap_or(0)
 }
 
-/// { 0x717450 }: `table_b` (0x6c38f0) do motor do jogador, ou 0.
+/// Returns table_b (0x6c38f0) of the player's match engine for this player, or 0 without an engine.
+///
+/// [pt] { 0x717450 }: `table_b` (0x6c38f0) do motor do jogador, ou 0.
 pub(crate) unsafe extern "thiscall" fn player_table_b(this: usize) -> u16 {
     call_engine_routine(this, 0x6c38f0).unwrap_or(0)
 }
 
-/// { 0x715f30 }: `player_difference` (0x6c4130) do motor do jogador, ou 0xff.
+/// Returns the match engine's player_difference (0x6c4130) for this match player, or 0xff when there is no engine.
+///
+/// [pt] { 0x715f30 }: `player_difference` (0x6c4130) do motor do jogador, ou 0xff.
 pub(crate) unsafe extern "thiscall" fn difference_of_player(this: usize) -> u8 {
     call_engine_routine(this, 0x6c4130).unwrap_or(0xff)
 }
@@ -973,13 +1031,18 @@ pub(crate) unsafe extern "thiscall" fn release_ball(this: usize) {
     *((this + 0x19c) as *mut u16) = 0;
 }
 
-/// { 0x6e1cd0 }: o jogador (dos 20 a partir de [this + 0x23]) com a ficha dada, ou 0.
+/// Returns the match player (among the 20 starting at [this + 0x23]) whose player record (+0x69) is `ficha`, or 0.
+///
+/// [pt] { 0x6e1cd0 }: o jogador (dos 20 a partir de [this + 0x23]) com a ficha dada, ou 0.
 pub(crate) unsafe extern "thiscall" fn player_by_record(this: usize, ficha: usize) -> usize {
     let base = *((this + 0x23) as *const usize);
     (0..20).map(|k| base + 0x1be * k).find(|&p| *((p + 0x69) as *const usize) == ficha).unwrap_or(0)
 }
 
-/// { 0x6d5cd0 } (sem `this`): byte da tabela de 18 bytes por codigo em 0xb68788 (codigos
+/// Returns the first byte of the 18-byte record for commentary code `c` (0x1f40..0x21e4, bit 15 ignored) in the table
+/// at 0xb68788; 0 outside the range.
+///
+/// [pt] { 0x6d5cd0 } (sem `this`): byte da tabela de 18 bytes por codigo em 0xb68788 (codigos
 /// 0x1f40..0x21e4, bit 15 ignorado); fora, 0.
 pub(crate) unsafe extern "stdcall" fn code_byte(c: u32) -> i32 {
     let i = ((c & 0x7fff) as i32 - 0x1f40) as i16;
@@ -989,7 +1052,12 @@ pub(crate) unsafe extern "stdcall" fn code_byte(c: u32) -> i32 {
     *((0xb68788 + 18 * i as usize) as *const i8) as i32
 }
 
-/// { 0x715f50 }: valor ajustado pelo papel e pela pessoa (0x6d). Papel 1, ou 2 x 0x10a >=
+/// Match player: a value adjusted by role and by the person's attributes (+0x6d): for a goalkeeper, or when 2 x byte
+/// +0x10a >= random(21), just `base`; otherwise the average of three parts, each `base` or a fixed value per side when
+/// one of the person's attributes (+0x18, +0x19, +0x17) beats random(41) and the role allows it [inference: preferred
+/// flank/column].
+///
+/// [pt] { 0x715f50 }: valor ajustado pelo papel e pela pessoa (0x6d). Papel 1, ou 2 x 0x10a >=
 /// sorteio(21): o proprio `base`. Senao soma tres parcelas (cada uma `base`, ou um valor fixo por
 /// lado quando o atributo da pessoa vence sorteio(41) e o papel nao o impede) e divide por 3.
 pub(crate) unsafe extern "thiscall" fn adjusted_rating(this: usize, base: i8) -> i32 {
@@ -1012,7 +1080,10 @@ pub(crate) unsafe extern "thiscall" fn adjusted_rating(this: usize, base: i8) ->
     v as i32 / 3
 }
 
-/// { 0x7172d0 }: ajusta o byte 0x17 do jogador por `delta` (com sorteios perto do limite 10), com
+/// Adjusts the match player's morale (byte +0x17) by `delta`, with random draws near the midpoint 10, a floor from
+/// disposition (+0x35 >= 7500) and the range 1..20. Returns 1 if it changed.
+///
+/// [pt] { 0x7172d0 }: ajusta o byte 0x17 do jogador por `delta` (com sorteios perto do limite 10), com
 /// piso pela disposicao (0x35 >= 7500) e faixa 1..=20; devolve se mudou. Com `delta` 0 e 0x477a
 /// do motor em -1, so age se a disposicao passar de 7500 e o byte estiver abaixo de 10.
 pub(crate) unsafe extern "thiscall" fn adjust_17(this: usize, delta: i8) -> u8 {
@@ -1035,7 +1106,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_17(this: usize, delta: i8) -> u8 {
     let disp = *((this + 0x35) as *const i16);
     if disp >= 0x1d4c {
         let x = a as f64;
-        let y = disp as f64 * read_f64_at(0x968d60) - read_f64_at(0x96d868);
+        let y = disp as f64 * read_f64_at(0x968d60) - read_f64_at(0x96d868); // 0x968d60 = 0.004, 0x96d868 = 20.5
         a = match_pl_ftol(if x > y { x } else { y }) as i8;
     }
     let a = a.clamp(1, 20);
@@ -1144,14 +1215,19 @@ pub(crate) unsafe fn defence_roll(j: usize, b: i16) -> i32 {
     let r = sortear(*((j + 0x3b) as *const i16) as i32);
     if r > sortear(0x11d) {
         let x = b as f64;
-        let t = sortear(match_pl_ftol(x * read_f64_at(0x968e40)));
-        match_pl_ftol(t as f64 + x * read_f64_at(0x968e80))
+        let t = sortear(match_pl_ftol(x * read_f64_at(0x968e40))); // 0x968e40 = 0.7
+        match_pl_ftol(t as f64 + x * read_f64_at(0x968e80)) // 0x968e80 = 0.3
     } else {
         sortear(b as i32)
     }
 }
 
-/// { 0x700420 } (match_pl.cpp): valor da defesa do goleiro (papel 1, 0x2b <= 1) contra o lance
+/// Save value of the goalkeeper (`this`, role 1, +0x2b <= 1) against a shot to (a, b) with code `codigo` (`a3` picks
+/// the base word +0x16a or +0x168, + 220), adjusted by distance to the ball; writes `saida` (1 wrong side, 3 out of the
+/// area, 2 out of reach, 4 for codes 26/27) and `rebote` when the final roll fails. Returns the save value, 0 when not
+/// a goalkeeper.
+///
+/// [pt] { 0x700420 } (match_pl.cpp): valor da defesa do goleiro (papel 1, 0x2b <= 1) contra o lance
 /// para (a, b) com `codigo`. Base pela palavra 0x16a (com `a3`) ou 0x168, + 220; a distancia a bola
 /// (tabela 12 x 9) entra no fim. `saida`: 1 fora do lado, 3 fora da area, 2 sem alcance, 4 nos
 /// codigos 26/27; `rebote` quando o sorteio final perde. Devolve ftol(base / 6 + v x c + c').
@@ -1171,8 +1247,8 @@ pub(crate) unsafe extern "thiscall" fn goalkeeper_save(this: usize, a: i8, b: i8
     if tabela(motor, this) != 1 {
         return 0;
     }
-    let longe = |e: i32| if dist > read_f64_at(0x96d700) { e + 10 - match_pl_ftol(*((this + 0x3b) as *const i16) as f64 * read_f64_at(0x96d7c8)) } else { e };
-    let perto = |e: i32| if !(dist >= read_f64_at(0x967890)) { e + 100 } else { e };
+    let longe = |e: i32| if dist > read_f64_at(0x96d700) { e + 10 - match_pl_ftol(*((this + 0x3b) as *const i16) as f64 * read_f64_at(0x96d7c8)) } else { e }; // 0x96d700 = 2.1, 0x96d7c8 = -0.35
+    let perto = |e: i32| if !(dist >= read_f64_at(0x967890)) { e + 100 } else { e }; // 0x967890 = 1
     let e: i32 = if codigo == 0x33 {
         let b0 = base as i32;
         let v = sortear(b0);
@@ -1214,15 +1290,15 @@ pub(crate) unsafe extern "thiscall" fn goalkeeper_save(this: usize, a: i8, b: i8
         }
     };
     let motor = *((this + 0x19e) as *const usize);
-    let r1 = sortear(match_pl_ftol(read_f32_at(this + 0xd1) as f64 * 2.0 + *((this + 0xf) as *const u8) as f64 + read_f64_at(0x9688b0)));
-    let r2 = sortear(match_pl_ftol((read_f64_at(0x968950) - dist) * byte(motor, 0x8eaa) as f64 * read_f64_at(0x9688b0)));
+    let r1 = sortear(match_pl_ftol(read_f32_at(this + 0xd1) as f64 * 2.0 + *((this + 0xf) as *const u8) as f64 + read_f64_at(0x9688b0))); // 0x9688b0 = 10
+    let r2 = sortear(match_pl_ftol((read_f64_at(0x968950) - dist) * byte(motor, 0x8eaa) as f64 * read_f64_at(0x9688b0))); // 0x968950 = 2, 0x9688b0 = 10
     let v = if r1 > r2 {
         e as i16
     } else {
         *rebote = 1;
         defence_roll(this, e as i16) as i16
     };
-    match_pl_ftol((w as i32 / 6) as f64 + v as f64 * read_f64_at(0x96d698) + read_f64_at(0x968ea8)) as u16
+    match_pl_ftol((w as i32 / 6) as f64 + v as f64 * read_f64_at(0x96d698) + read_f64_at(0x968ea8)) as u16 // 0x96d698 = 0.5714285714, 0x968ea8 = 20
 }
 
 /// Address of grid cell (x, y) in the engine occupancy grid (90 bytes per cell from +0x215e).
@@ -1233,7 +1309,11 @@ pub(crate) fn occupancy_grid_cell(motor: usize, x: i8, y: i8) -> isize {
     motor as isize + 0x215e + 90 * (12 * x as isize + y as isize)
 }
 
-/// { 0x6f46b0 } (match_pl.cpp): move o jogador para (x, y): tira da lista do lado na casa antiga
+/// Moves the match player to grid cell (x, y): removes him from his side's list in the old cell (the last one takes his
+/// slot +0x28), appends him to the new cell's list, updates his position (+0x102/+0x103) and, if he has the ball, the
+/// ball's position. Nothing happens when already there.
+///
+/// [pt] { 0x6f46b0 } (match_pl.cpp): move o jogador para (x, y): tira da lista do lado na casa antiga
 /// (o ultimo da lista ocupa a vaga dele, 0x28) e poe no fim da lista da casa nova; atualiza a bola
 /// se ele for o dono. Na mesma casa, nada. Estados impossiveis do original (lista vazia ao tirar,
 /// mais de 11 ao por) mostram erro (e, no segundo, encerram); aqui, o primeiro so volta e o segundo
@@ -1293,7 +1373,12 @@ pub(crate) unsafe fn is_in_own_box(j: usize) -> bool {
     (2..=6).contains(&x) && area.contains(&y)
 }
 
-/// { 0x70d690 } (match_pl.cpp): valor do dominio do lance `codigo` (palavra do jogador por codigo,
+/// Computes how well the player controls move `codigo`: his per-move skill word minus a fitness-based draw (+0x4d), the
+/// difficulty of a loose ball's direction, the holder's +0x19c and, for some moves, 20 x (engine +0x8eaa - 1)^3. Far
+/// from goal the move may fail outright (-20); a goalkeeper in his own box switches the move code, and weak moves
+/// 19/33/34 may become 45. Sets the outputs `a`, `b` by the final code and returns the value.
+///
+/// [pt] { 0x70d690 } (match_pl.cpp): valor do dominio do lance `codigo` (palavra do jogador por codigo,
 /// menos o sorteio pela condicao fisica 0x4d, a dificuldade pela direcao da bola sem dono, a
 /// palavra 0x19c do dono e, em alguns codigos, 20 x (0x8eaa - 1)^3). Fora da area, sem o codigo
 /// 0x15/0x25, a distancia ao gol pode fazer perder na hora (-20). O goleiro na propria area troca
@@ -1310,7 +1395,7 @@ pub(crate) unsafe extern "thiscall" fn control_of_move(this: usize, codigo: *mut
         let dy = (if lado(this) == 1 { y - 0xb } else { y }).abs() as i8 as isize;
         let dx = (x - 4).abs() as i8 as isize;
         let t = read_f32_at((0xa15e44 + 4 * (dy * 9 + dx)) as usize) as f64;
-        let r1 = sortear(match_pl_ftol(read_f32_at(this + 0x75) as f64 + read_f32_at(0x9689a8) as f64));
+        let r1 = sortear(match_pl_ftol(read_f32_at(this + 0x75) as f64 + read_f32_at(0x9689a8) as f64)); // 0x9689a8 = 2
         if r1 < sortear(match_pl_ftol(t + t)) {
             *b = 0;
             *a = 0;
@@ -1418,7 +1503,9 @@ pub(crate) unsafe fn commentary_two_blank(this: usize, a1: u32, a2: u32, a3: u32
     chamar(this, [a1, a2, a3, a4, u32::MAX, u32::MAX, a5]);
 }
 
-/// { 0x7002f0 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com dois campos -1.
+/// Queues a match commentary event (MATCH_EVENTS::add_event) with arguments a1..a5 and two fields set to -1.
+///
+/// [pt] { 0x7002f0 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com dois campos -1.
 pub(crate) unsafe extern "thiscall" fn commentary_a(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) {
     commentary_two_blank(this, a1, a2, a3, a4, a5, &mut |t, a| add_match_event(t, a))
 }
@@ -1430,7 +1517,9 @@ pub(crate) unsafe fn commentary_three_blank(this: usize, a1: u32, a2: u32, a3: u
     chamar(this, [a1, a2, u32::MAX, a3, u32::MAX, u32::MAX, a4]);
 }
 
-/// { 0x70a860 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com tres campos -1.
+/// Queues a match commentary event with the given fields and three fields set to -1.
+///
+/// [pt] { 0x70a860 } (match_pl.cpp): enfileira um comentario (0x6d6f70) com tres campos -1.
 pub(crate) unsafe extern "thiscall" fn commentary_b(this: usize, a1: u32, a2: u32, a3: u32, a4: u32) {
     commentary_three_blank(this, a1, a2, a3, a4, &mut |t, a| add_match_event(t, a))
 }
@@ -1902,7 +1991,10 @@ pub(crate) unsafe fn dispatch_tackle_calls(rotina: usize, this: usize, a: [u32; 
     0
 }
 
-/// { 0x70ec80 } (ret 4, match_pl.cpp): ver `tackle_injected`.
+/// Hook entry for 0x70ec80 (tackle_injected): the tackle contest on ball holder `j` (`forte` = a hard tackle): decides
+/// who wins, fouls and penalties, ball deflection, stamina changes, possession and commentary.
+///
+/// [pt] { 0x70ec80 } (ret 4, match_pl.cpp): ver `tackle_injected`.
 pub(crate) unsafe extern "thiscall" fn tackle(j: usize, forte: u32) {
     tackle_injected(j, forte as u8, &mut |rotina, this, a| dispatch_tackle_calls(rotina, this, a))
 }
@@ -2353,7 +2445,11 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, forca: i16, tipo_in: i8, p4
     1
 }
 
-/// { 0x6f5c30 } (ret 0x10, match_pl.cpp): ver `contest_ball_injected`.
+/// The match player contests the ball (tackle, interception or challenge with strength `forca`): may lead to a foul and
+/// its punishment, winning the ball or losing it; thin wrapper over contest_ball_injected with the real calls. Returns
+/// its result.
+///
+/// [pt] { 0x6f5c30 } (ret 0x10, match_pl.cpp): ver `contest_ball_injected`.
 pub(crate) unsafe extern "thiscall" fn respond(j: usize, forca: u32, tipo: u32, p4: u32, conta: u32) -> u8 {
     contest_ball_injected(j, forca as i16, tipo as i8, f32::from_bits(p4), conta as u8, &mut |rotina, this, a| dispatch_tackle_calls(rotina, this, a))
 }
@@ -2478,7 +2574,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, forca_in: i16, x_in: i8, y_in: i8,
             tipo = byte(m, 0x8ea9);
             ((byte(j, 0x10c) as i16 - 20).wrapping_mul(10).wrapping_add(*w(j, 0x132)), 0xc)
         } else {
-            let v = match_pl_ftol(((read_f32_at(j + 0x1a2) as f64 * read_f64_at(0x967898) + 0.75) * byte(j, 0xff) as f64 + 5.0) * 0.5) as i8;
+            let v = match_pl_ftol(((read_f32_at(j + 0x1a2) as f64 * read_f64_at(0x967898) + 0.75) * byte(j, 0xff) as f64 + 5.0) * 0.5) as i8; // 0x967898 = 0.01
             let r1 = sortear(byte(j, 0x24) as i32 * 80 + na_propria as i32 * 1500 + 0x46);
             if sortear(v as i32) > r1 { (*w(j, 0x176), 0x2e) } else { (*w(j, 0x144), 0x15) }
         }
@@ -2826,7 +2922,7 @@ pub(crate) unsafe fn shoot_injected(j: usize, forca_in: i16, x_in: i8, y_in: i8,
     chamar(0x6f0630, j, [0; 5]);
     mais(w(j, 0x35), 4);
     *w(j, 0x198) = lance as i16;
-    let v = match_pl_ftol(nota_chute as f64 * read_f64_at(0x96d7a0));
+    let v = match_pl_ftol(nota_chute as f64 * read_f64_at(0x96d7a0)); // 0x96d7a0 = -0.1818181818
     let posse = |o: usize| *((m + o) as *mut i32) = (*((m + o) as *const i32)).wrapping_sub(v);
     posse(0x4782);
     posse(0x4786);
@@ -3003,7 +3099,7 @@ pub(crate) unsafe fn shot_outcome_injected(p: usize, f_in: f32, chamar: &mut dyn
         let b = (q + 0x2b) as *mut u8;
         *b = (*b).wrapping_add(d);
     };
-    let f = if f_in as f64 == read_f64_at(0x9689a0) { 1.0f32 } else { f_in };
+    let f = if f_in as f64 == read_f64_at(0x9689a0) { 1.0f32 } else { f_in }; // 0x9689a0 = 0
     let fator = byte(m, 0x8eaa);
     let r1 = sortear(0x7d0);
     let r2 = sortear(0x3e8);
@@ -3414,7 +3510,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: usize, f_in: f32, chamar: &mut dyn
         *b = (*b).wrapping_add(d);
     };
     let (p2e, p27) = (byte(p, 0x2e) as u8 as u32, lado as u8);
-    let f = if f_in as f64 == read_f64_at(0x9689a0) { 1.0f32 } else { f_in };
+    let f = if f_in as f64 == read_f64_at(0x9689a0) { 1.0f32 } else { f_in }; // 0x9689a0 = 0
     let fator = byte(m, 0x8eaa);
     let r1 = sortear(0x7d0);
     let r2 = sortear(0x3e8);
@@ -3870,7 +3966,7 @@ pub(crate) unsafe fn player_move_injected(p: usize, x: i8, y: i8, codigo: i16, c
         let d = 10000 - match_pl_ftol(read_f32_at(p + 0x4d) as f64) as i16 as i32;
         let folego = sortear(d.wrapping_mul(d) / 50000) as i16;
         if conduz != 0 {
-            let v = match_pl_ftol(read_f32_at(p + 0x99) as f64 + read_f64_at(0x968ea8)) as i16;
+            let v = match_pl_ftol(read_f32_at(p + 0x99) as f64 + read_f64_at(0x968ea8)) as i16; // 0x968ea8 = 20
             fixar_19c(p, (*w(p, 0x19c)).wrapping_add(v));
         }
         let base = *w(p, match codigo {
@@ -3903,7 +3999,7 @@ pub(crate) unsafe fn player_move_injected(p: usize, x: i8, y: i8, codigo: i16, c
                 } else {
                     distance_to_point(p, 4, 0)
                 };
-                match_pl_ftol(t as f64 * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8
+                match_pl_ftol(t as f64 * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 // 0x96d754 = 9, 0x968e18 = 2.5
             };
             let v = valor();
             let n = if (v as i32 / 5) * 5 < 1 { 1i8 } else { (((valor() as i32 / 5) as u8).wrapping_mul(5)) as i8 };
@@ -3985,7 +4081,7 @@ pub(crate) unsafe fn player_move_injected(p: usize, x: i8, y: i8, codigo: i16, c
         if byte(p, 0x1d) != 0 {
             perdeu = true;
         } else if modo != 4 && at16 < 1 {
-            let r = sortear(match_pl_ftol(read_f32_at(p + 0xe5) as f64 * read_f32_at(0x968990) as f64 + read_f32_at(0x96d750) as f64));
+            let r = sortear(match_pl_ftol(read_f32_at(p + 0xe5) as f64 * read_f32_at(0x968990) as f64 + read_f32_at(0x96d750) as f64)); // 0x968990 = 5, 0x96d750 = 75
             if r == 0 && (e == 0 || nota < at16) {
                 perdeu = true;
             }
@@ -4019,12 +4115,12 @@ pub(crate) unsafe fn player_move_injected(p: usize, x: i8, y: i8, codigo: i16, c
         crate::comparacao::ramo("movimento passa");
         if !is_in_attacked_box(lado, byte(p, 0x102), byte(p, 0x103)) && sortear(*w(p, 0x31) as i32) < -10 {
             crate::comparacao::ramo("movimento cresce");
-            let v = read_f32_at(p + 0x1a2) as f64 * read_f32_at(0x96d3b8) as f64;
+            let v = read_f32_at(p + 0x1a2) as f64 * read_f32_at(0x96d3b8) as f64; // 0x96d3b8 = 1.049999952
             *((p + 0x1a2) as *mut f32) = v as f32;
             let minimo = ((25 - byte(u(p, 0x69), 0x5d) as i32) * 2) as f32;
             let v = if v > minimo as f64 { v } else { minimo as f64 };
             *((p + 0x1a2) as *mut f32) = v as f32;
-            if v > read_f64_at(0x9688a8) {
+            if v > read_f64_at(0x9688a8) { // 0x9688a8 = 100
                 *((p + 0x1a2) as *mut f32) = 100.0;
             }
             narrar(chamar, 0x211d, u32::MAX, outro as u32, u32::MAX, 0);
@@ -4042,7 +4138,7 @@ pub(crate) unsafe fn player_move_injected(p: usize, x: i8, y: i8, codigo: i16, c
         *q = (*q).wrapping_add(5);
         let limite_nota = (nota as i32 + 0x32).max(0xfa);
         let v = (at16 as i32 - limite_nota) as f64 + (read_f32_at(p + 0xe5) as f64 * read_f32_at(p + 0x95) as f64);
-        let delta = if (read_f32_at(0x968970) as f64) < v { 0 } else { match_pl_ftol(v) as i16 };
+        let delta = if (read_f32_at(0x968970) as f64) < v { 0 } else { match_pl_ftol(v) as i16 }; // 0x968970 = 0
         fixar_19c(p, (*w(p, 0x19c)).wrapping_add(delta));
         let casa = (m as isize + outro as isize + 0x21b6 + ((byte(p, 0x103) as isize) + byte(p, 0x102) as isize * 0xc) * 0x5a) as *const u8;
         if *casa == 0 {
@@ -4108,7 +4204,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: usize, p: usize, e: usiz
     let com_desafiante = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
         let cod = if !tabela1(e) {
             let v = read_f32_at(p + 0x71);
-            let forte = v > read_f32_at(0x96b020) || (v as f64 - read_f32_at(e + 0x71) as f64) > read_f32_at(0x968a78) as f64;
+            let forte = v > read_f32_at(0x96b020) || (v as f64 - read_f32_at(e + 0x71) as f64) > read_f32_at(0x968a78) as f64; // 0x96b020 = 15, 0x968a78 = 10
             if forte && sortear(match_pl_ftol(read_f32_at(p + 0x95) as f64)) < sortear(0x1e) { 0x2173 } else { 0x1f4a }
         } else if is_in_attacked_box(lado, px, py) {
             0x1f55
@@ -4183,14 +4279,14 @@ pub(crate) unsafe fn move_action_commentary_injected(m: usize, p: usize, e: usiz
                 crate::comparacao::ramo("movimento 0x11 modo 4");
                 narrar(chamar, if *((p + 0x198) as *const i16) != 0xf { 0x2009 } else { 0x20d2 }, u32::MAX);
             } else if e == 0 {
-                if conduz == 0 || !(smallest_distance(m, outro as i8, px, py, 1) as f64 > read_f64_at(0x968940)) {
+                if conduz == 0 || !(smallest_distance(m, outro as i8, px, py, 1) as f64 > read_f64_at(0x968940)) { // 0x968940 = 1.5
                     sem_desafiante(chamar);
                 } else {
                     narrar(chamar, if defesa_400() { 0x20de } else { 0x1f45 }, u32::MAX);
                 }
             } else {
                 com_desafiante(chamar);
-                if conduz != 0 && smallest_distance(m, outro as i8, px, py, 1) as f64 > read_f64_at(0x968940) {
+                if conduz != 0 && smallest_distance(m, outro as i8, px, py, 1) as f64 > read_f64_at(0x968940) { // 0x968940 = 1.5
                     narrar(chamar, if defesa_400() { 0x20de } else { 0x1f45 }, u32::MAX);
                 }
             }
@@ -4203,7 +4299,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: usize, p: usize, e: usiz
                 com_desafiante(chamar);
                 if conduz != 0
                     && ((lado == 1 && py < 3) || (lado == 0 && py > 8))
-                    && smallest_distance(m, outro as i8, px, py, 1) as f64 > read_f64_at(0x968940)
+                    && smallest_distance(m, outro as i8, px, py, 1) as f64 > read_f64_at(0x968940) // 0x968940 = 1.5
                 {
                     if defesa_400() && sortear(2) == 0 {
                         narrar(chamar, 0x20de, u32::MAX);
@@ -4326,7 +4422,7 @@ pub(crate) unsafe fn challenger_wins_injected(m: usize, p: usize, e: usize, lanc
         if minuto > (sortear(0x14) + sorteio) as u8 as i8 {
             let gols = byte(m, if byte(e, 0x27) != 0 { 0xf5bd } else { 0xf5f3 });
             let tentativas = if lance == 0x15 { ub(e, 8) > 3 && byte(e, 9) != 0 } else { ub(e, 6) > 1 };
-            if gols == 0 && media as f64 > read_f64_at(0x96a6a0) && tentativas && *w(e, 0x35) > 0x1a5e && byte(e, 0xfd) == 0 {
+            if gols == 0 && media as f64 > read_f64_at(0x96a6a0) && tentativas && *w(e, 0x35) > 0x1a5e && byte(e, 0xfd) == 0 { // 0x96a6a0 = 0.725
                 crate::comparacao::ramo("movimento media de acertos");
                 narrar(chamar, if lance == 0x15 { 0x21ce } else { 0x21cd }, ub(e, 0x2e), ub(e, 0x27), par(p));
                 *b(e, 0xfd) = 1;
@@ -4347,12 +4443,12 @@ pub(crate) unsafe fn challenger_wins_injected(m: usize, p: usize, e: usize, lanc
         _ => false,
     };
     if !na_linha {
-        ganho = match_pl_ftol(ganho as f64 * read_f64_at(0x969520)) as i16;
+        ganho = match_pl_ftol(ganho as f64 * read_f64_at(0x969520)) as i16; // 0x969520 = 0.85
     }
     *w(e, 0x35) = (*w(e, 0x35)).wrapping_add(ganho);
     let alvo = if byte(e, 0x27) != 0 { 0xb } else { 0 };
     let i = ((byte(e, 0x103) as i32 - alvo).abs() as i8 as i32) * 9 + (byte(e, 0x102) as i32 - 4).abs() as i8 as i32;
-    let perto = !(read_f32_at(0xa15e44 + i as usize * 4) as f64 > read_f64_at(0x967890));
+    let perto = !(read_f32_at(0xa15e44 + i as usize * 4) as f64 > read_f64_at(0x967890)); // 0x967890 = 1
     if conduz != 0 || perto || behind_the_extreme(mm, e) != 0 {
         crate::comparacao::ramo("movimento desafiante bonus");
         *w(e, 0x35) = (*w(e, 0x35)).wrapping_add(300);
@@ -4605,15 +4701,15 @@ pub(crate) unsafe fn grid_step_injected(m: usize, p: usize, ox: i8, oy: i8, nx: 
             _ => 1.0,
         };
         match byte(m, 0x4756) {
-            3 => k = (k as f64 * read_f32_at(0x96d3b8) as f64) as f32,
-            4 => k = (k as f64 * read_f32_at(0x96a33c) as f64) as f32,
+            3 => k = (k as f64 * read_f32_at(0x96d3b8) as f64) as f32, // 0x96d3b8 = 1.049999952
+            4 => k = (k as f64 * read_f32_at(0x96a33c) as f64) as f32, // 0x96a33c = 1.100000024
             _ => {}
         }
         let dy = (byte(p, 0x103) as i32 - oy as i32).abs() as i8 as i32;
         let dx = (byte(p, 0x102) as i32 - ox as i32).abs() as i8 as i32;
         let t = read_f32_at(0xa15e44 + (dy * 9 + dx) as usize * 4) as f64;
         let d5 = read_f32_at(p + 0xd5) as f64;
-        let f = (read_f64_at(0x9688a0) - (d5 * read_f64_at(0x968968) + read_f64_at(0x968e08)) * read_f64_at(0x96a7a8)) + read_f64_at(0x968950);
+        let f = (read_f64_at(0x9688a0) - (d5 * read_f64_at(0x968968) + read_f64_at(0x968e08)) * read_f64_at(0x96a7a8)) + read_f64_at(0x968950); // 0x9688a0 = 5, 0x968968 = 0.5, 0x968e08 = 15, 0x96a7a8 = 0.1666666667, 0x968950 = 2
         k = (t * f * k as f64) as f32;
         let papel_b = if m != 0 { table_b(m, p) } else { 0 };
         let papel = if m != 0 { player_table(p) } else { 0 };
@@ -4644,12 +4740,12 @@ pub(crate) unsafe fn grid_step_injected(m: usize, p: usize, ox: i8, oy: i8, nx: 
             } else {
                 0x968980
             };
-            k = ((read_f64_at(kk) - d5 * read_f64_at(0x968ef0)) * k as f64) as f32;
+            k = ((read_f64_at(kk) - d5 * read_f64_at(0x968ef0)) * k as f64) as f32; // 0x968ef0 = 0.005
         }
         let tatica = m + 0x91e2 + lado as usize * 0x18e3;
         let marcas = position_marks(tatica, byte(p, 0x19));
         if marcas & 0x8000 != 0 || (position_marks(tatica, byte(p, 0x19)) & 0x2000 != 0 && *((m + lado as usize * 0x18e3 + 0x9766) as *const u32) & 0x100 != 0) {
-            k = ((read_f64_at(0x96d748) - d5 * read_f64_at(0x967878)) * k as f64) as f32;
+            k = ((read_f64_at(0x96d748) - d5 * read_f64_at(0x967878)) * k as f64) as f32; // 0x96d748 = 1.55, 0x967878 = 0.025
         }
         tire_fatigue(p, k, -1);
     }
@@ -4956,9 +5052,9 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             }
             6 | 7 => {
                 *b(m, 0x8eb2) = 0;
-                if c == 6 && (2..=6).contains(&x0()) && ff < read_f64_at(0x96d3e8) {
+                if c == 6 && (2..=6).contains(&x0()) && ff < read_f64_at(0x96d3e8) { // 0x96d3e8 = 3.1
                     let bl = byte(p, 0x109) as i32;
-                    let n = (sortear(match_pl_ftol(fl(0xa1) + read_f32_at(0x96afb0) as f64)) + bl) / 3;
+                    let n = (sortear(match_pl_ftol(fl(0xa1) + read_f32_at(0x96afb0) as f64)) + bl) / 3; // 0x96afb0 = 20
                     if (n as f64) > ff {
                         crate::comparacao::ramo("conducao falta direta");
                         *b(m, 0x8eb1) = 6;
@@ -5019,17 +5115,17 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                     chamar(0x68d0d0, l, [q as u32, 0x1be, 0, 0, 0]);
                 }) as i8;
                 if l49 == 0 {
-                    if l60 as f64 > read_f64_at(0x968e38) {
+                    if l60 as f64 > read_f64_at(0x968e38) { // 0x968e38 = 3.5
                         l60 = 3.5;
                     }
-                    *w(p, 0x29) = match_pl_ftol(l60 as f64 * read_f32_at(0x96d7b0) as f64 + read_f32_at(0x96d844) as f64) as i16;
+                    *w(p, 0x29) = match_pl_ftol(l60 as f64 * read_f32_at(0x96d7b0) as f64 + read_f32_at(0x96d844) as f64) as i16; // 0x96d7b0 = 60, 0x96d844 = 57
                 } else {
                     if l70 < 0 {
                         l70 = 0;
                     }
                     let s = l70 as i32;
                     let k = (l49 as i32).wrapping_mul(s).wrapping_mul(s);
-                    l58 = match_pl_ftol(-(k as f64 * read_f64_at(0x969040)));
+                    l58 = match_pl_ftol(-(k as f64 * read_f64_at(0x969040))); // 0x969040 = 0.75
                     if l58 < -500 {
                         l58 = sortear((l58 + 500) / 3) - 500;
                         if l58 < -2000 {
@@ -5038,7 +5134,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                     } else if l58 > 32000 {
                         l58 = 32000;
                     }
-                    *w(p, 0x29) = match_pl_ftol(l58 as f64 * read_f64_at(0x969040)) as i16;
+                    *w(p, 0x29) = match_pl_ftol(l58 as f64 * read_f64_at(0x969040)) as i16; // 0x969040 = 0.75
                 }
             }
             if is_in_attacking_half(lado, y0()) {
@@ -5058,13 +5154,13 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
         }
         // a nota do chute
         if byte(m, 0x8ea9) == 4 {
-            if ff < read_f64_at(0x967890) || ((y0() == 0 || y0() == 0xb) && (x0() as i32 - 4).abs() == 1) {
-                l10 = match_pl_ftol(fl(0xa9) * read_f32_at(0x96d750) as f64 + read_f32_at(0x968dac) as f64 - (400 * l27 as i32) as f64);
+            if ff < read_f64_at(0x967890) || ((y0() == 0 || y0() == 0xb) && (x0() as i32 - 4).abs() == 1) { // 0x967890 = 1
+                l10 = match_pl_ftol(fl(0xa9) * read_f32_at(0x96d750) as f64 + read_f32_at(0x968dac) as f64 - (400 * l27 as i32) as f64); // 0x96d750 = 75, 0x968dac = 2500
             } else {
                 l10 = -5000;
             }
-        } else if ff <= read_f64_at(0x968940) {
-            l10 = match_pl_ftol(fl(0x99) * read_f32_at(0x968960) as f64 + read_f32_at(0x96d408) as f64 - (400 * l27 as i32) as f64 + *w(p, 0x29) as f64 * read_f64_at(0x968978));
+        } else if ff <= read_f64_at(0x968940) { // 0x968940 = 1.5
+            l10 = match_pl_ftol(fl(0x99) * read_f32_at(0x968960) as f64 + read_f32_at(0x96d408) as f64 - (400 * l27 as i32) as f64 + *w(p, 0x29) as f64 * read_f64_at(0x968978)); // 0x968960 = 100, 0x96d408 = 3000, 0x968978 = 1.2
         } else {
             let bl = byte(p, 0x109) as i32;
             let n = bl / 7 + sortear(3) + 3;
@@ -5074,13 +5170,13 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                 crate::comparacao::ramo("conducao shot de longe");
                 let v = shot_value(p, &mut l88, &mut l64) as i16 as i32;
                 let k = byte(p, 0x106) as i32 * 4;
-                let r1 = sortear(match_pl_ftol(ff * read_f32_at(0x96d750) as f64 - k as f64));
-                let t2 = match_pl_ftol(k as f64 - ff * read_f32_at(0x96d750) as f64);
+                let r1 = sortear(match_pl_ftol(ff * read_f32_at(0x96d750) as f64 - k as f64)); // 0x96d750 = 75
+                let t2 = match_pl_ftol(k as f64 - ff * read_f32_at(0x96d750) as f64); // 0x96d750 = 75
                 la4 = sortear(-(r1.wrapping_add(t2))).wrapping_add(v);
                 l37 = true;
                 if v > 0 {
                     let div = if byte(p, 0x109) < 1 { 1 } else { byte(p, 0x109) as i32 };
-                    l10 = match_pl_ftol((v * v) as f64 * read_f64_at(0x968a80) - ff * ff * read_f32_at(0x96d40c) as f64 / div as f64 - (700 * l27 as i32) as f64);
+                    l10 = match_pl_ftol((v * v) as f64 * read_f64_at(0x968a80) - ff * ff * read_f32_at(0x96d40c) as f64 / div as f64 - (700 * l27 as i32) as f64); // 0x968a80 = 0.3333333333, 0x96d40c = 4000
                 } else {
                     l10 = ((byte(p, 0x10b) as i32 + byte(p, 0x106) as i32) * 4 + 2) * v;
                 }
@@ -5099,21 +5195,21 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             l10 = l10.wrapping_add((dif + 2) * 3000);
             l30 = l30.wrapping_mul(2);
         }
-        if byte(m, 0x8ea9) < 4 && ff > read_f32_at(0x968970) as f64 {
+        if byte(m, 0x8ea9) < 4 && ff > read_f32_at(0x968970) as f64 { // 0x968970 = 0
             if l68 == 2 {
-                let pw = game_pow(match_pl_ftol(ff) as f64, read_f64_at(0x968930));
+                let pw = game_pow(match_pl_ftol(ff) as f64, read_f64_at(0x968930)); // 0x968930 = 3
                 let q = fl(0x95);
                 let r = sortear(4) + 1;
-                let k = match_pl_ftol((q * q + read_f64_at(0x967890)) * read_f64_at(0x968968)) as i16 as i32;
+                let k = match_pl_ftol((q * q + read_f64_at(0x967890)) * read_f64_at(0x968968)) as i16 as i32; // 0x967890 = 1, 0x968968 = 0.5
                 l14 = l14.wrapping_add(match_pl_ftol((r * k) as f64 * pw));
             }
-            if distance_table_cell_yx(y0() as i32 - byte(g, 0x103) as i32, x0() as i32 - byte(g, 0x102) as i32) as f64 == read_f64_at(0x9689a0)
+            if distance_table_cell_yx(y0() as i32 - byte(g, 0x103) as i32, x0() as i32 - byte(g, 0x102) as i32) as f64 == read_f64_at(0x9689a0) // 0x9689a0 = 0
                 && byte(m, 0x21b6 + (y0() as isize + x0() as isize * 12) as usize * 0x5a + (lado == 0) as usize) == 1
             {
                 crate::comparacao::ramo("conducao cara a cara");
-                let r1 = sortear(match_pl_ftol(fl(0x99) * read_f32_at(0x968a78) as f64));
-                let r2 = sortear(match_pl_ftol(fl(0x95) * read_f32_at(0x968a78) as f64));
-                l14 = l14.wrapping_add(match_pl_ftol((r2 - r1) as f64 * (ff * read_f32_at(0x969560) as f64 + read_f32_at(0x96d840) as f64)));
+                let r1 = sortear(match_pl_ftol(fl(0x99) * read_f32_at(0x968a78) as f64)); // 0x968a78 = 10
+                let r2 = sortear(match_pl_ftol(fl(0x95) * read_f32_at(0x968a78) as f64)); // 0x968a78 = 10
+                l14 = l14.wrapping_add(match_pl_ftol((r2 - r1) as f64 * (ff * read_f32_at(0x969560) as f64 + read_f32_at(0x96d840) as f64))); // 0x969560 = 50, 0x96d840 = 150
                 l4c = true;
             }
         }
@@ -5138,12 +5234,12 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                 }
             }
         }
-        if ff < read_f64_at(0x968930) && l10 > 0 {
+        if ff < read_f64_at(0x968930) && l10 > 0 { // 0x968930 = 3
             l44 = l44.wrapping_add(l10 / -5);
         }
         if m != 0 && table_a(m, p) == 1 {
             if byte(p, 0x10a) != 0 {
-                l14 = l14.wrapping_add(match_pl_ftol(fl(0x9d) * read_f32_at(0x96d210) as f64 - read_f32_at(0x968db0) as f64));
+                l14 = l14.wrapping_add(match_pl_ftol(fl(0x9d) * read_f32_at(0x96d210) as f64 - read_f32_at(0x968db0) as f64)); // 0x96d210 = 250, 0x968db0 = 5000
             }
             if is_in_defending_half(lado, y0()) {
                 l10 = l10.wrapping_sub(25000);
@@ -5154,33 +5250,33 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             let t = if u(g, 0x19e) != 0 { table_a(u(g, 0x19e), g) } else { 0 };
             if t & 1 == 0 {
                 l10 = l10.wrapping_add(5000);
-            } else if byte(g, 0x2b) != 0 && byte(p, 0x10b) as i32 + 5 > sortear(match_pl_ftol(ff * read_f32_at(0x96afb0) as f64)) {
+            } else if byte(g, 0x2b) != 0 && byte(p, 0x10b) as i32 + 5 > sortear(match_pl_ftol(ff * read_f32_at(0x96afb0) as f64)) { // 0x96afb0 = 20
                 l10 = l10.wrapping_add(1500);
             }
             let (gx, gy) = (byte(g, 0x102), byte(g, 0x103));
             if !is_in_attacked_box(lado, gx, gy) {
                 if byte(p, 0x10b) as i32 + 5 > sortear(match_pl_ftol(ff)) {
-                    l10 = l10.wrapping_sub(match_pl_ftol(fl(0x95) * read_f32_at(0x968960) as f64 - read_f32_at(0x968dac) as f64));
+                    l10 = l10.wrapping_sub(match_pl_ftol(fl(0x95) * read_f32_at(0x968960) as f64 - read_f32_at(0x968dac) as f64)); // 0x968960 = 100, 0x968dac = 2500
                 }
             } else if gx == 4 && gy == if byte(g, 0x27) == 1 { 0xb } else { 0 } {
-                if reaches_the_point(g, x0(), y0()) == 0 && byte(p, 0x10b) as i32 > sortear(match_pl_ftol(ff * read_f32_at(0x968a78) as f64)) {
+                if reaches_the_point(g, x0(), y0()) == 0 && byte(p, 0x10b) as i32 > sortear(match_pl_ftol(ff * read_f32_at(0x968a78) as f64)) { // 0x968a78 = 10
                     crate::comparacao::ramo("conducao goleiro no gol");
-                    l10 = l10.wrapping_sub(match_pl_ftol(fl(0x95) * read_f32_at(0x96d664) as f64 - read_f32_at(0x96d2dc) as f64));
+                    l10 = l10.wrapping_sub(match_pl_ftol(fl(0x95) * read_f32_at(0x96d664) as f64 - read_f32_at(0x96d2dc) as f64)); // 0x96d664 = 40, 0x96d2dc = 1000
                 }
             } else {
                 let e17 = byte(p, 0x17) as i32;
-                let r = sortear(match_pl_ftol(ff * ff * read_f32_at(0x969584) as f64));
+                let r = sortear(match_pl_ftol(ff * ff * read_f32_at(0x969584) as f64)); // 0x969584 = 3
                 if byte(p, 0x10b) as i32 + e17 - 10 > r {
                     crate::comparacao::ramo("conducao goleiro adiantado");
-                    l10 = l10.wrapping_sub(match_pl_ftol(fl(0x95) * read_f32_at(0x96d664) as f64 - read_f32_at(0x96d3e4) as f64));
+                    l10 = l10.wrapping_sub(match_pl_ftol(fl(0x95) * read_f32_at(0x96d664) as f64 - read_f32_at(0x96d3e4) as f64)); // 0x96d664 = 40, 0x96d3e4 = 1500
                 }
                 if x0() == gx && y0() == gy {
-                    l14 = l14.wrapping_add(match_pl_ftol((e17 as f64 + fl(0x95)) * read_f32_at(0x968960) as f64 - read_f32_at(0x96d408) as f64));
+                    l14 = l14.wrapping_add(match_pl_ftol((e17 as f64 + fl(0x95)) * read_f32_at(0x968960) as f64 - read_f32_at(0x96d408) as f64)); // 0x968960 = 100, 0x96d408 = 3000
                 }
             }
         }
-        if byte(m, 0x8ea9) == 4 && ff > read_f64_at(0x967890) {
-            l10 = l10.wrapping_add(match_pl_ftol(ff * ff * read_f64_at(0x96d838)));
+        if byte(m, 0x8ea9) == 4 && ff > read_f64_at(0x967890) { // 0x967890 = 1
+            l10 = l10.wrapping_add(match_pl_ftol(ff * ff * read_f64_at(0x96d838))); // 0x96d838 = -750
         } else if (4..=6).contains(&x0()) && ((lado == 1 && y0() == 0) || (lado == 0 && y0() == 0xb)) {
             l10 = l10.wrapping_add(5000 - (x0() as i32 - 4).abs() * 2000);
         }
@@ -5193,9 +5289,9 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             chamar(0x6fa490, p, [byte(m, 0x8ea9) as u8 as u32, 1, 0, 0, 0]);
             break 'fim;
         }
-        let perto = (is_in_defended_box(lado, x0(), y0()) && l60 as f64 <= read_f64_at(0x968940)) || (limit((lado == 0) as u8, y0()) != 0 && (l60 as f64) < read_f64_at(0x967890));
+        let perto = (is_in_defended_box(lado, x0(), y0()) && l60 as f64 <= read_f64_at(0x968940)) || (limit((lado == 0) as u8, y0()) != 0 && (l60 as f64) < read_f64_at(0x967890)); // 0x968940 = 1.5, 0x967890 = 1
         if perto {
-            let r1 = sortear(match_pl_ftol(read_f32_at(0x96d408) as f64 - l60 as f64 * read_f32_at(0x96d2dc) as f64));
+            let r1 = sortear(match_pl_ftol(read_f32_at(0x96d408) as f64 - l60 as f64 * read_f32_at(0x96d2dc) as f64)); // 0x96d408 = 3000, 0x96d2dc = 1000
             if r1 > sortear(l30 + 2000) && byte(m, 0x8ea9) != -1 && modo != 4 {
                 crate::comparacao::ramo("conducao alivio");
                 chamar(0x6fa490, p, [byte(m, 0x8ea9) as u8 as u32, 0, 0, 0, 0]);
@@ -5218,9 +5314,9 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             }
         } else {
             l44 -= 5000;
-            l14 = l14.wrapping_add(match_pl_ftol(ff * read_f32_at(0x96d3e4) as f64 - read_f32_at(0x96d3e4) as f64));
+            l14 = l14.wrapping_add(match_pl_ftol(ff * read_f32_at(0x96d3e4) as f64 - read_f32_at(0x96d3e4) as f64)); // 0x96d3e4 = 1500
             if modo == 4 {
-                l14 = l14.wrapping_add(match_pl_ftol(ff * read_f32_at(0x96d404) as f64 - read_f32_at(0x96d3e4) as f64));
+                l14 = l14.wrapping_add(match_pl_ftol(ff * read_f32_at(0x96d404) as f64 - read_f32_at(0x96d3e4) as f64)); // 0x96d404 = 2000, 0x96d3e4 = 1500
             }
             if is_in_defending_half(lado, y0()) {
                 l10 -= 3000;
@@ -5231,9 +5327,9 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             }
         }
         if table_a(m, p) == 1 || is_in_defended_box(lado, x0(), y0()) {
-            l44 = l44.wrapping_add(match_pl_ftol(l60 as f64 * read_f32_at(0x96d1a8) as f64 - read_f32_at(0x96a588) as f64));
+            l44 = l44.wrapping_add(match_pl_ftol(l60 as f64 * read_f32_at(0x96d1a8) as f64 - read_f32_at(0x96a588) as f64)); // 0x96d1a8 = 500, 0x96a588 = 1200
         } else {
-            l14 = l14.wrapping_add(match_pl_ftol((fl(0x95) - read_f32_at(0x96afb0) as f64 + l60 as f64 * read_f64_at(0x968eb0)) * read_f64_at(0x96afe8)));
+            l14 = l14.wrapping_add(match_pl_ftol((fl(0x95) - read_f32_at(0x96afb0) as f64 + l60 as f64 * read_f64_at(0x968eb0)) * read_f64_at(0x96afe8))); // 0x96afb0 = 20, 0x968eb0 = 7.5, 0x96afe8 = 120
         }
         if !na_boca() && !consegue() && is_in_attacking_half(lado, y0()) {
             l14 = l14.wrapping_add(2000 - l30);
@@ -5259,12 +5355,12 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
         } else if (2..=6).contains(&x0()) || fundo {
             l14 -= 3000;
         } else {
-            let k = (byte(p, 0x109) as f64 + fl(0x95)) * read_f32_at(0x968a78) as f64;
+            let k = (byte(p, 0x109) as f64 + fl(0x95)) * read_f32_at(0x968a78) as f64; // 0x968a78 = 10
             if table_a(m, p) & 0x38 != 0 && ta(p) & 0x880 != 0 && tb(p) & 0x880 != 0 && !((lado == 0 && y0() < 3) || (lado == 1 && y0() > 8)) {
                 crate::comparacao::ramo("conducao ponta de lanca");
                 l14 = l14.wrapping_add(match_pl_ftol(k));
             } else if table_a(m, p) & 0x38 != 0 && table_a(m, p) & 0x880 != 0 {
-                l14 = l14.wrapping_add(match_pl_ftol(k - read_f32_at(0x96d210) as f64));
+                l14 = l14.wrapping_add(match_pl_ftol(k - read_f32_at(0x96d210) as f64)); // 0x96d210 = 250
             } else {
                 l14 -= 3000;
             }
@@ -5275,12 +5371,12 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
         if (2..=6).contains(&x0()) && !in_the_box && byte(m, 0x8ea9) != 4 {
             let t = table_a(m, p);
             let bl = byte(p, 0x109) as i32;
-            let r = sortear(match_pl_ftol((l27 as i32 + 1) as f64 * (ff + read_f32_at(0x968e70) as f64) * ff * ff * ff * read_f32_at(0x96d834) as f64));
+            let r = sortear(match_pl_ftol((l27 as i32 + 1) as f64 * (ff + read_f32_at(0x968e70) as f64) * ff * ff * ff * read_f32_at(0x96d834) as f64)); // 0x968e70 = 1, 0x96d834 = 200
             l10 = l10.wrapping_add(if t & 0x40 != 0 { bl * 500 } else { bl * 325 } - r);
         } else if in_the_box {
-            l10 = l10.wrapping_add(match_pl_ftol((byte(p, 0x109) as f64 + fl(0x99) - fl(0xe1)) * (read_f32_at(0x96afb0) as f64 - ff * read_f32_at(0x96d228) as f64)));
+            l10 = l10.wrapping_add(match_pl_ftol((byte(p, 0x109) as f64 + fl(0x99) - fl(0xe1)) * (read_f32_at(0x96afb0) as f64 - ff * read_f32_at(0x96d228) as f64))); // 0x96afb0 = 20, 0x96d228 = 4
         } else if is_in_attacking_half(lado, y0()) {
-            l10 = l10.wrapping_sub(match_pl_ftol(ff * read_f32_at(0x96d20c) as f64 - (byte(p, 0x109) as i32 * 75) as f64));
+            l10 = l10.wrapping_sub(match_pl_ftol(ff * read_f32_at(0x96d20c) as f64 - (byte(p, 0x109) as i32 * 75) as f64)); // 0x96d20c = 300
         }
         let marcas = |q: usize| position_marks(m + 0x91e2 + byte(q, 0x27) as isize as usize * 0x18e3, byte(q, 0x19));
         'nota: {
@@ -5288,23 +5384,23 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                 crate::comparacao::ramo("conducao folego");
                 if !(is_in_defending_half(lado, y0()) && (byte(p, 0x106) != 0 || byte(p, 0x10b) != 0)) {
                     let bl = is_in_defended_box(lado, x0(), y0()) as i32;
-                    let pw = game_pow(fl(0x95), read_f64_at(0x968930));
+                    let pw = game_pow(fl(0x95), read_f64_at(0x968930)); // 0x968930 = 3
                     l14 = l14.wrapping_add(match_pl_ftol(pw + (1000 - bl * 1000) as f64));
                 }
-                if ff >= read_f64_at(0x968950) && ff < read_f64_at(0x96afa0) && (2..=6).contains(&x0()) {
+                if ff >= read_f64_at(0x968950) && ff < read_f64_at(0x96afa0) && (2..=6).contains(&x0()) { // 0x968950 = 2, 0x96afa0 = 4.5
                     if byte(p, 0x109) != 0 {
                         let r = sortear(match_pl_ftol(fl(0xb1)));
                         l10 = l10.wrapping_add(*w(p, 0x29) as i32 * 2 + r * 400 + 2500);
                     }
                 } else if in_the_box {
-                    l10 = l10.wrapping_add(match_pl_ftol((read_f32_at(0x96afb0) as f64 - ff * read_f32_at(0x96d228) as f64) * (byte(p, 0x109) as f64 + fl(0x99))));
+                    l10 = l10.wrapping_add(match_pl_ftol((read_f32_at(0x96afb0) as f64 - ff * read_f32_at(0x96d228) as f64) * (byte(p, 0x109) as f64 + fl(0x99)))); // 0x96afb0 = 20, 0x96d228 = 4
                 }
                 break 'nota;
             }
             if modo == 4 {
                 break 'nota;
             }
-            if marcas(p) & 0x2000000 != 0 && !is_in_defended_box(lado, x0(), y0()) && l49 < 2 && ff >= read_f64_at(0x968950) {
+            if marcas(p) & 0x2000000 != 0 && !is_in_defended_box(lado, x0(), y0()) && l49 < 2 && ff >= read_f64_at(0x968950) { // 0x968950 = 2
                 let segue = if l70 != 0 && is_in_defending_half(lado, y0()) { (sortear(byte(p, 0x106) as i32 * 2 + 20) as f64) < ff } else { true };
                 if segue {
                     crate::comparacao::ramo("conducao armador");
@@ -5319,40 +5415,40 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             if marcas(p) & 0x8000000 != 0 && is_in_attacking_half(lado, y0()) && !na_boca() && !consegue() {
                 l44 += 3500;
             }
-            if marcas(p) & 0x20000000 != 0 && ff >= read_f64_at(0x968950) && ff < read_f64_at(0x96afa0) {
+            if marcas(p) & 0x20000000 != 0 && ff >= read_f64_at(0x968950) && ff < read_f64_at(0x96afa0) { // 0x968950 = 2, 0x96afa0 = 4.5
                 let r = sortear(match_pl_ftol(fl(0xb1)));
                 l10 = l10.wrapping_add((*w(p, 0x29) as i32 + r * 200) * 2);
             }
         }
         // o lance de efeito e a pressao
         let c = byte(m, 0x8ea9);
-        if c < 2 || (ff > read_f64_at(0x96d7a8) && c < 4) {
+        if c < 2 || (ff > read_f64_at(0x96d7a8) && c < 4) { // 0x96d7a8 = 1.41
             let mut saida = 0u16;
-            let r = classify_move(p, 0x16, x0(), y0(), 4, if lado == 1 { 0 } else { 0xb }, (ff + read_f64_at(0x967890)) as f32, &mut saida);
+            let r = classify_move(p, 0x16, x0(), y0(), 4, if lado == 1 { 0 } else { 0xb }, (ff + read_f64_at(0x967890)) as f32, &mut saida); // 0x967890 = 1
             if r != 2 && r != byte(p, 0x2c) as u8 && l68 == 0 {
                 l10 = l10.wrapping_sub(sortear(byte(p, 0x2d) as i32 * 300));
             }
         }
-        if ff < read_f64_at(0x9688a0) {
+        if ff < read_f64_at(0x9688a0) { // 0x9688a0 = 5
             let s = l70 as i32;
-            l10 = l10.wrapping_sub(match_pl_ftol(s.wrapping_mul(s).wrapping_mul(s) as f64 / (read_f64_at(0x9688b0) - ff)));
+            l10 = l10.wrapping_sub(match_pl_ftol(s.wrapping_mul(s).wrapping_mul(s) as f64 / (read_f64_at(0x9688b0) - ff))); // 0x9688b0 = 10
         }
         if byte(m, 0x8ea9) == 3 {
             l10 -= 2000;
         }
         let e = (l43 as i32 - l2f as i8 as i32) * 100;
-        let t = match_pl_ftol((read_f32_at(0x96d830) as f64 - fl(0x9d) * read_f32_at(0x96b020) as f64) * l90 as f64 * l90 as f64);
+        let t = match_pl_ftol((read_f32_at(0x96d830) as f64 - fl(0x9d) * read_f32_at(0x96b020) as f64) * l90 as f64 * l90 as f64); // 0x96d830 = 400, 0x96b020 = 15
         l44 = l44.wrapping_add(e);
         l14 = l14.wrapping_add(e - t);
         let bl = byte(p, 0x109) as i32;
-        if !(ff < read_f64_at(0x967890)) && bl * bl * bl * bl > sortear(match_pl_ftol(ff * read_f32_at(0x96d1b0) as f64)) {
-            if !is_in_defended_box(lado, x0(), y0()) && ff >= read_f64_at(0x968950) && l49 < 2 && !(is_in_defending_half(lado, y0()) && (byte(p, 0x106) != 0 || byte(p, 0x10b) != 0)) {
-                let pw = game_pow(fl(0x95), read_f64_at(0x968930));
+        if !(ff < read_f64_at(0x967890)) && bl * bl * bl * bl > sortear(match_pl_ftol(ff * read_f32_at(0x96d1b0) as f64)) { // 0x967890 = 1, 0x96d1b0 = 10000
+            if !is_in_defended_box(lado, x0(), y0()) && ff >= read_f64_at(0x968950) && l49 < 2 && !(is_in_defending_half(lado, y0()) && (byte(p, 0x106) != 0 || byte(p, 0x10b) != 0)) { // 0x968950 = 2
+                let pw = game_pow(fl(0x95), read_f64_at(0x968930)); // 0x968930 = 3
                 l14 = l14.wrapping_add(sortear(match_pl_ftol(pw + (*w(p, 0x29) as i32 * 3) as f64 + (10000 - l30) as f64)));
             }
-            if byte(m, 0x8ea9) < 4 && l27 < 2 && (ff < read_f64_at(0x9688a0) || (ff < read_f64_at(0x968988) && sortear(500) == 0)) {
+            if byte(m, 0x8ea9) < 4 && l27 < 2 && (ff < read_f64_at(0x9688a0) || (ff < read_f64_at(0x968988) && sortear(500) == 0)) { // 0x9688a0 = 5, 0x968988 = 7
                 crate::comparacao::ramo("conducao shot colocado");
-                let mut r = sortear(match_pl_ftol(ff * read_f32_at(0x968a78) as f64)) as i8;
+                let mut r = sortear(match_pl_ftol(ff * read_f32_at(0x968a78) as f64)) as i8; // 0x968a78 = 10
                 if r < 10 {
                     r = 10;
                 }
@@ -5360,7 +5456,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
             }
             l44 -= 10000;
         } else if !is_in_defended_box(lado, x0(), y0()) {
-            let e = sortear(match_pl_ftol(byte(p, 0x106) as f64 * read_f64_at(0x968dd8)));
+            let e = sortear(match_pl_ftol(byte(p, 0x106) as f64 * read_f64_at(0x968dd8))); // 0x968dd8 = 30
             if e > sortear(200) {
                 // os adversarios na mesma casa
                 let casa = m + 0x215e + (y0() as isize + x0() as isize * 12) as usize * 90;
@@ -5369,16 +5465,16 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                 while i < *((casa + outro + 0x58) as *const i8) {
                     let q = *((casa + outro * 44 + i as usize * 4) as *const usize);
                     if byte(q, 0x24) != 0 {
-                        l14 = l14.wrapping_add(sortear(match_pl_ftol((byte(p, 0x17) as i32 * 100) as f64 + fl(0x95) * read_f32_at(0x96d7c0) as f64)));
+                        l14 = l14.wrapping_add(sortear(match_pl_ftol((byte(p, 0x17) as i32 * 100) as f64 + fl(0x95) * read_f32_at(0x96d7c0) as f64))); // 0x96d7c0 = 125
                     }
                     i += 1;
                 }
             }
         }
         // o desconto da conducao (ebx do original)
-        let k = match_pl_ftol(game_pow(byte(m, 0x8ea9) as f64, read_f64_at(0x968930)) * read_f64_at(0x96d828));
+        let k = match_pl_ftol(game_pow(byte(m, 0x8ea9) as f64, read_f64_at(0x968930)) * read_f64_at(0x96d828)); // 0x968930 = 3, 0x96d828 = -200
         let mut nc = (-(*w(p, 0x29) as i32) - *w(p, 0x19c) as i32 * 10) * 10;
-        nc = nc.wrapping_sub(match_pl_ftol((read_f32_at(0x96d1b0) as f64 - fl(0x4d)) * read_f32_at(0x96d820) as f64)).wrapping_sub(k);
+        nc = nc.wrapping_sub(match_pl_ftol((read_f32_at(0x96d1b0) as f64 - fl(0x4d)) * read_f32_at(0x96d820) as f64)).wrapping_sub(k); // 0x96d1b0 = 10000, 0x96d820 = -0.200000003
         if l58 != 0 && l30 > 0 && matches!(l8c as u8, 0x5e | 8 | 7 | 6) {
             nc = nc.wrapping_add(l30);
         } else if marcas(p) & 0x4_0000_0000 != 0 && ta(p) & 0x880 != 0 && tb(p) & 0x880 != 0 {
@@ -5388,7 +5484,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                 // nada
             } else if fundo {
                 l14 += 2000;
-            } else if ff < read_f64_at(0x9688a0) {
+            } else if ff < read_f64_at(0x9688a0) { // 0x9688a0 = 5
                 l14 += 6000;
             }
         }
@@ -5451,7 +5547,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                 if !na_boca() && !consegue() {
                     match byte(m, 0x8ea9) {
                         3 => {
-                            if !(byte(p, 0x109) as i32 > sortear(0xf) && ff < read_f64_at(0x96d700)) {
+                            if !(byte(p, 0x109) as i32 > sortear(0xf) && ff < read_f64_at(0x96d700)) { // 0x96d700 = 2.1
                                 acao = 2;
                                 break 'acao;
                             }
@@ -5467,7 +5563,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                     }
                 }
                 let c = byte(m, 0x8ea9);
-                if (c == 4 && !(ff < read_f64_at(0x968950))) || c == -1 {
+                if (c == 4 && !(ff < read_f64_at(0x968950))) || c == -1 { // 0x968950 = 2
                     acao = 1;
                     break 'acao;
                 }
@@ -5481,7 +5577,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
                     acao = 1;
                     break 'acao;
                 }
-                if (m != 0 && byte(m, 0x8ea9) >= 3) || l60 as f64 <= read_f64_at(0x968940) {
+                if (m != 0 && byte(m, 0x8ea9) >= 3) || l60 as f64 <= read_f64_at(0x968940) { // 0x968940 = 1.5
                     crate::comparacao::ramo("conducao alivia de longe");
                     chamar(0x6fa490, p, [byte(m, 0x8ea9) as u8 as u32, 0, 0, 0, 0]);
                     break 'fim;
@@ -5859,7 +5955,7 @@ pub(crate) unsafe fn pass_intercepted_injected(m: usize, p: usize, e: usize, lan
             0x2a | 0x2b => 0x1f64,
             0x15 | 0x2e => {
                 let r = sortear(6);
-                if (r as f64 + read_f32_at(e + 0xad) as f64 + read_f32_at(0x969584) as f64) < read_f32_at(p + 0xad) as f64 { 0x2164 } else { 0x1f5d }
+                if (r as f64 + read_f32_at(e + 0xad) as f64 + read_f32_at(0x969584) as f64) < read_f32_at(p + 0xad) as f64 { 0x2164 } else { 0x1f5d } // 0x969584 = 3
             }
             _ => 0,
         };
@@ -5904,7 +6000,7 @@ pub(crate) unsafe fn pass_intercepted_injected(m: usize, p: usize, e: usize, lan
             let me = u(e, 0x19e);
             let gols = byte(me, if byte(e, 0x27) != 0 { 0xf5bd } else { 0xf5f3 });
             let tentativas = if lance == 0x15 { ub(e, 8) > 3 && byte(e, 9) != 0 } else { ub(e, 6) > 1 };
-            if gols == 0 && media as f64 > read_f64_at(0x96a6a0) && tentativas && *w(e, 0x35) > 0x1a5e && byte(e, 0xfd) == 0 {
+            if gols == 0 && media as f64 > read_f64_at(0x96a6a0) && tentativas && *w(e, 0x35) > 0x1a5e && byte(e, 0xfd) == 0 { // 0x96a6a0 = 0.725
                 crate::comparacao::ramo("passe media de acertos");
                 narrar(chamar, if lance == 0x15 { 0x21ce } else { 0x21cd }, ub(e, 0x2e), ub(e, 0x27), par(p));
                 *b(e, 0xfd) = 1;
@@ -5919,7 +6015,7 @@ pub(crate) unsafe fn pass_intercepted_injected(m: usize, p: usize, e: usize, lan
     *w(e, 0x35) = (*w(e, 0x35)).wrapping_add(if longe { ganho << 1 } else { ganho });
     *b(p, 0x2b) = (*b(p, 0x2b)).wrapping_add(a);
     let alvo = if byte(e, 0x27) != 0 { 0xb } else { 0 };
-    let perto = !(distance_table_cell_yx(byte(e, 0x103) as i32 - alvo, byte(e, 0x102) as i32 - 4) as f64 > read_f64_at(0x967890));
+    let perto = !(distance_table_cell_yx(byte(e, 0x103) as i32 - alvo, byte(e, 0x102) as i32 - 4) as f64 > read_f64_at(0x967890)); // 0x967890 = 1
     if (perto || behind_the_extreme(me, e) != 0) && *w(p, 0x29) > 0 {
         *b(e, 6) = (*b(e, 6)).wrapping_add(1);
     }
@@ -6145,15 +6241,15 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
         v * v / 50000
     }) as i16 as i32;
     let mut d = distance_between(x, y, tx, ty);
-    let k = if (read_f32_at(p + 0xc5) as f64) < read_f32_at(0x968e70) as f64 { read_f32_at(0x968e70) as f64 } else { read_f32_at(p + 0xc5) as f64 };
-    let mut l14 = sortear(match_pl_ftol(d as f64 * d as f64 * d as f64 * d as f64 * read_f32_at(0x96d228) as f64 / k));
+    let k = if (read_f32_at(p + 0xc5) as f64) < read_f32_at(0x968e70) as f64 { read_f32_at(0x968e70) as f64 } else { read_f32_at(p + 0xc5) as f64 }; // 0x968e70 = 1
+    let mut l14 = sortear(match_pl_ftol(d as f64 * d as f64 * d as f64 * d as f64 * read_f32_at(0x96d228) as f64 / k)); // 0x96d228 = 4
     if receptor == 0 {
         l14 = sortear(l14 as i16 as i32);
     }
-    if (d as f64) < read_f64_at(0x968950) && tipo != 0x3d && tipo != 0x5c {
-        l14 = l14.wrapping_add(match_pl_ftol(read_f32_at(0x96d210) as f64 - d as f64 * read_f32_at(0x96d7c0) as f64));
+    if (d as f64) < read_f64_at(0x968950) && tipo != 0x3d && tipo != 0x5c { // 0x968950 = 2
+        l14 = l14.wrapping_add(match_pl_ftol(read_f32_at(0x96d210) as f64 - d as f64 * read_f32_at(0x96d7c0) as f64)); // 0x96d210 = 250, 0x96d7c0 = 125
     }
-    let cinco = |v: f64| ((match_pl_ftol(v * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 5) * 5) as i8;
+    let cinco = |v: f64| ((match_pl_ftol(v * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 5) * 5) as i8; // 0x96d754 = 9, 0x968e18 = 2.5
     let mut l12: i8 = 1;
     let c5 = cinco(d as f64);
     if c5 as i32 >= 1 {
@@ -6163,7 +6259,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
         *b(m, 0x1a5 + lado as isize as usize) = 1;
     }
     let mut saida_lance = 0u16;
-    classify_move(p, tipo as i16, x, y, tx, ty, (d as f64 + read_f64_at(0x967890)) as f32, &mut saida_lance);
+    classify_move(p, tipo as i16, x, y, tx, ty, (d as f64 + read_f64_at(0x967890)) as f32, &mut saida_lance); // 0x967890 = 1
     let l20 = sortear(saida_lance as i16 as i32);
     // a nota do passe pelo tipo
     let mut l13 = false;
@@ -6187,7 +6283,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
         0x5d => wp(0x130).wrapping_sub(l20 as i16).wrapping_sub(l14 as i16),
         _ => wp(0x11a + (tipo as isize * 2) as usize).wrapping_sub(l20 as i16).wrapping_sub(l14 as i16),
     };
-    if byte(m, 0x8ea9) == 5 && d as f64 > read_f64_at(0x96d700) {
+    if byte(m, 0x8ea9) == 5 && d as f64 > read_f64_at(0x96d700) { // 0x96d700 = 2.1
         let (n, c) = match byte(m, 0x4756) {
             1 => (7, 0x9689d0),
             2 => (5, 0x96af30),
@@ -6237,14 +6333,14 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
     if !is_in_attacked_box(lado, byte(p, 0x102), byte(p, 0x103)) && sortear(*w(p, 0x31) as i32) < -10 {
         crate::comparacao::ramo("passe sem folego");
         let pessoa = u(p, 0x69);
-        let mut v = read_f32_at(p + 0x1a2) as f64 * read_f32_at(0x96d3b8) as f64;
+        let mut v = read_f32_at(p + 0x1a2) as f64 * read_f32_at(0x96d3b8) as f64; // 0x96d3b8 = 1.049999952
         *((p + 0x1a2) as *mut f32) = v as f32;
         let lim = ((25 - byte(pessoa, 0x5d) as i32) * 2) as f32;
         if !(v > lim as f64) {
             v = lim as f64;
         }
         *((p + 0x1a2) as *mut f32) = v as f32;
-        if v > read_f64_at(0x9688a8) {
+        if v > read_f64_at(0x9688a8) { // 0x9688a8 = 100
             *((p + 0x1a2) as *mut f32) = 100.0;
         }
         narrar7(chamar, 0x211d, u32::MAX, (lado == 0) as u32, 0xff, 0xff, 0);
@@ -6278,7 +6374,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
     *b(m, 0x8eb9) = x as u8;
     *b(m, 0x8ea6) = y as u8;
     // a precisao do passe
-    let mut fator = (byte(m, 0x8ea9) as f64 * read_f64_at(0x968e80) + read_f64_at(0x967890)) as f32;
+    let mut fator = (byte(m, 0x8ea9) as f64 * read_f64_at(0x968e80) + read_f64_at(0x967890)) as f32; // 0x968e80 = 0.3, 0x967890 = 1
     let c = match byte(m, 0x4756) {
         1 => 0x96d7bc,
         2 => 0x96d3d4,
@@ -6289,10 +6385,10 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
     if c != 0 {
         fator = (fator as f64 * read_f32_at(c) as f64) as f32;
     }
-    let r = sortear(match_pl_ftol(fator as f64 * fator as f64 * read_f32_at(0x968a78) as f64));
+    let r = sortear(match_pl_ftol(fator as f64 * fator as f64 * read_f32_at(0x968a78) as f64)); // 0x968a78 = 10
     if (l44 as i32 - nota as i32) < r {
         crate::comparacao::ramo("passe impreciso");
-        let e8 = match_pl_ftol((fator as f64 * d as f64 + read_f64_at(0x967890)) * read_f64_at(0x968968)) as i8 as i32;
+        let e8 = match_pl_ftol((fator as f64 * d as f64 + read_f64_at(0x967890)) * read_f64_at(0x968968)) as i8 as i32; // 0x967890 = 1, 0x968968 = 0.5
         let s1 = sortear(e8);
         let s2 = sortear(e8);
         let nx = (tx as u8).wrapping_sub(s1 as u8).wrapping_add(s2 as u8) as i8;
@@ -6417,9 +6513,9 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
                 f |= 0x40;
             }
         }
-        if lado == 0 && tx == 4 && ty == 0xc && (d as f64) < read_f64_at(0x968950) {
+        if lado == 0 && tx == 4 && ty == 0xc && (d as f64) < read_f64_at(0x968950) { // 0x968950 = 2
             tipo = if tipo != 0x3d { 0x5d } else { 0x5c };
-        } else if lado == 1 && tx == 4 && ty == -1 && (d as f64) < read_f64_at(0x968950) {
+        } else if lado == 1 && tx == 4 && ty == -1 && (d as f64) < read_f64_at(0x968950) { // 0x968950 = 2
             tipo = if tipo != 0x3d { 0x5d } else { 0x5c };
         } else if byte(m, 0x8ea9) < 4 && tipo != 0x5d && tipo != 0x5c && tx == 4 && (ty == -1 || ty == 0xc) {
             l54 = 0x211f;
@@ -6494,7 +6590,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
             }
         }
         0x34 => {
-            if (d as f64) < read_f64_at(0x968930) {
+            if (d as f64) < read_f64_at(0x968930) { // 0x968930 = 3
                 n(chamar, 0x2130);
             } else {
                 n(chamar, if band((lado == 0) as u8, tx, ty) == 0 { 0x2131 } else { 0x1f80 });
@@ -6535,7 +6631,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
             let area: unsafe extern "thiscall" fn(usize, u8) -> u32 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
             if bl & 0x80 != 0 && bl & 1 == 0 {
                 nr(chamar, 0x214a, 0);
-            } else if area(receptor, (lado == 0) as u8) as u8 != 0 && area(p, (lado == 0) as u8) as u8 != 0 && (d as f64) < read_f64_at(0x968950) {
+            } else if area(receptor, (lado == 0) as u8) as u8 != 0 && area(p, (lado == 0) as u8) as u8 != 0 && (d as f64) < read_f64_at(0x968950) { // 0x968950 = 2
                 nr(chamar, 0x2021, l12);
             } else {
                 let c = grupo(*saida, l24, [
@@ -6585,7 +6681,7 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
     // a bola parada seguinte (+0x8ea9) e o tempo dela (+0x8eaa)
     let (v, t): (i8, i8) = match tipo {
         0x34 | 0x37 => {
-            let v = if (d as f64) < read_f64_at(0x968930) && band((lado == 0) as u8, tx, ty) == 0 {
+            let v = if (d as f64) < read_f64_at(0x968930) && band((lado == 0) as u8, tx, ty) == 0 { // 0x968930 = 3
                 0
             } else if sortear(0x28) != 0 {
                 4
@@ -6654,8 +6750,8 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
         }
     }
     let v = byte(m, 0x8eaa) as i32;
-    let k = if (v as f64 + read_f64_at(0x968918)) < read_f64_at(0x967890) { read_f64_at(0x967890) } else { byte(m, 0x8eaa) as f64 + read_f64_at(0x968918) };
-    *b(m, 0x1c5) = match_pl_ftol((d as f64 + d as f64) / k + read_f64_at(0x968968)) as u8;
+    let k = if (v as f64 + read_f64_at(0x968918)) < read_f64_at(0x967890) { read_f64_at(0x967890) } else { byte(m, 0x8eaa) as f64 + read_f64_at(0x968918) }; // 0x968918 = 0.2, 0x967890 = 1
+    *b(m, 0x1c5) = match_pl_ftol((d as f64 + d as f64) / k + read_f64_at(0x968968)) as u8; // 0x968968 = 0.5
     *b(m, 0x1c6) = tx as u8;
     *b(m, 0x1c7) = ty as u8;
     *b(m, 0x1c8) = *b(p, 0x102);
@@ -6933,12 +7029,21 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, chamar: &mut dyn
     }
 }
 
-/// { 0x70dfd0 } (ret 0x10, match_pl.cpp): ver `play_with`.
+/// A player challenges for the ball (tackle) with strength `forca`, height `altura`, style `estilo` and `forte`: rolls
+/// the contest, possible foul and referee decision, and the outcome (win, ball deflects); calls play_with with the
+/// game's real calls. Returns its result.
+///
+/// [pt] { 0x70dfd0 } (ret 0x10, match_pl.cpp): ver `play_with`.
 pub(crate) unsafe extern "thiscall" fn play(j: usize, forca: u32, altura: u32, estilo: u32, forte: u32) -> u8 {
     play_with(j, forca as i16, f32::from_bits(altura), estilo as i8, forte as u8, &mut |rotina, this, a| dispatch_tackle_calls(rotina, this, a))
 }
 
-/// { 0x6f5810 } (ret 4, match_pl.cpp): recupera o folego (+0x4d) e o teto dele (+0x51), sem sortear.
+/// Recovers the match player's stamina (+0x4d) or, with `teto`, sets its ceiling (+0x51), without rolls: amounts from
+/// the player's natural fitness (+0x34) scaled by an injury/fatigue factor, different on the pitch, off the bench and
+/// on the bench; the ceiling may be raised to 6500 by condition, adds +0x59 and caps at 10000. Nothing without player
+/// data (+0x6d).
+///
+/// [pt] { 0x6f5810 } (ret 4, match_pl.cpp): recupera o folego (+0x4d) e o teto dele (+0x51), sem sortear.
 /// Sem ficha (+0x6d) nada muda. O fator e 1, ou 1,4 - 0,0004 x lesao (0x62c3d0) acima de 1000.
 /// Sem `teto`: em campo (0x6c38c0 = 1) soma 10 x (ritmo +0x34 da ficha + 15) x fator; senao, fora
 /// do banco (+0x19 >= 0), soma 12 x ritmo + 325 (com +0x1f = -1) ou o mesmo 10 x (ritmo + 15); o
@@ -6960,7 +7065,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, teto: u8) {
     let mut fator = 1.0f64;
     let v = lesao(lesoes, *(pessoa as *const u32));
     if v > 1000 {
-        fator = read_f64_at(0x968dc0) - v as f64 * read_f64_at(0x96a608);
+        fator = read_f64_at(0x968dc0) - v as f64 * read_f64_at(0x96a608); // 0x968dc0 = 1.4, 0x96a608 = 0.0004
     }
     let ritmo = byte(ficha, 0x34) as i32;
     if teto == 0 {
@@ -6977,7 +7082,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, teto: u8) {
         if let Some(base) = base {
             let x = base as f64 * fator + *f(0x4d) as f64;
             *f(0x4d) = x as f32;
-            if x > read_f64_at(0x968910) {
+            if x > read_f64_at(0x968910) { // 0x968910 = 10000
                 *f(0x4d) = 10000.0;
             }
         }
@@ -6987,7 +7092,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, teto: u8) {
         if marca < 0 && byte(j, 0x19) < 0 {
             *f(0x51) = *f(0x4d);
         } else {
-            let v = if marca > 0x2d && marca < 0x41 { (marca as f64 * read_f64_at(0x96d798) - read_f64_at(0x96d790)) * k as f64 } else { k as f64 };
+            let v = if marca > 0x2d && marca < 0x41 { (marca as f64 * read_f64_at(0x96d798) - read_f64_at(0x96d790)) * k as f64 } else { k as f64 }; // 0x96d798 = 5.56, 0x96d790 = 255.76
             *f(0x51) = (v * fator + *f(0x4d) as f64) as f32;
             if byte(j, 0x1c) == 0 && pessoa != 0 {
                 let l = limit(lesoes, pessoa, 0).min(0x1964);
@@ -6999,7 +7104,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, teto: u8) {
     }
     let x = *f(0x59) as f64 + *f(0x51) as f64;
     *f(0x51) = x as f32;
-    if x > read_f64_at(0x968910) {
+    if x > read_f64_at(0x968910) { // 0x968910 = 10000
         *f(0x51) = 10000.0;
     }
 }
@@ -7054,7 +7159,11 @@ pub(crate) unsafe fn save_shot_injected(j: usize, forca: i16, chamar: &mut dyn F
     0
 }
 
-/// { 0x70d430 } (ret 4, match_pl.cpp): ver `save_shot_injected`. A bola desviada vai com `cansa` 1.
+/// Match player `j` (the goalkeeper) tries to save a shot of strength `forca`: returns 1 if not saved, 0 if saved
+/// (parried or pushed away, possibly losing condition or attributes); the deflected ball moves with tiredness flag 1.
+/// Wrapper of `save_shot_injected` with the real outside calls.
+///
+/// [pt] { 0x70d430 } (ret 4, match_pl.cpp): ver `save_shot_injected`. A bola desviada vai com `cansa` 1.
 pub(crate) unsafe extern "thiscall" fn save_shot(j: usize, forca: i16) -> u32 {
     save_shot_injected(j, forca, &mut |rotina, this, a| match rotina {
         0x6cd770 => {
@@ -7146,7 +7255,7 @@ pub(crate) unsafe fn long_ball_injected(j: usize, modo: i8, refinar: u8, chamar:
     let x = byte(j, 0x102);
     // fcomp + test ah,1: perto do gol quando a distancia e menor (NaN conta como menor)
     let refina;
-    if !(d as f64 >= read_f64_at(0x9688a0)) && !(2..=6).contains(&x) && modo != 4 {
+    if !(d as f64 >= read_f64_at(0x9688a0)) && !(2..=6).contains(&x) && modo != 4 { // 0x9688a0 = 5
         tipo = 0x5e;
         ty = if dir == 0 { 11i8.wrapping_sub(s(2)) } else { s(2) };
         tx = s(3).wrapping_add(3);
@@ -7270,7 +7379,11 @@ pub(crate) unsafe fn long_ball_injected(j: usize, modo: i8, refinar: u8, chamar:
     }
 }
 
-/// { 0x6fa490 } (ret 8, match_pl.cpp): ver `long_ball_injected`.
+/// Match player `j` plays a long ball or cross depending on `modo` and his position, aiming at a target cell (refined
+/// unless `refinar`), executes the pass and checks offside and ball out of play. Wrapper of `long_ball_injected` with
+/// the real outside calls.
+///
+/// [pt] { 0x6fa490 } (ret 8, match_pl.cpp): ver `long_ball_injected`.
 pub(crate) unsafe extern "thiscall" fn long_ball(j: usize, modo: i8, refinar: u8) {
     long_ball_injected(j, modo, refinar, &mut |rotina, this, a| match rotina {
         0x6fad40 => {
@@ -7363,7 +7476,11 @@ pub(crate) unsafe fn pass_ball_injected(j: usize, tipo: u8, receptor: usize, a4:
     }
 }
 
-/// { 0x6fa250 } (ret 0x14, match_pl.cpp): ver `pass_ball_injected`. O 3o argumento e a saida da 0x6fad40.
+/// Hook entry for 0x6fa250 (pass_ball_injected): player `j` passes to `receptor` (0x6fad40), with the offside check and
+/// commentary, possession count and the receiver's immediate decision (0x7103e0); `a3` is the in/out argument of
+/// 0x6fad40.
+///
+/// [pt] { 0x6fa250 } (ret 0x14, match_pl.cpp): ver `pass_ball_injected`. O 3o argumento e a saida da 0x6fad40.
 pub(crate) unsafe extern "thiscall" fn pass_ball(j: usize, tipo: u8, receptor: usize, mut a3: u32, a4: u32, a5: u32) {
     pass_ball_injected(j, tipo, receptor, a4, a5, &mut |rotina, this, a| match rotina {
         0x6fad40 => {
@@ -7441,7 +7558,7 @@ pub(crate) unsafe fn player_decide_injected(j: usize, chamar: &mut dyn FnMut(usi
             let r1 = sortear(0x41);
             let r2 = sortear(10);
             // fcomp + test ah,0x41: segue so se passar do sorteio (NaN desliga)
-            if !(r2 as f64 + v4d as f64 * read_f64_at(0x96d818) > r1 as f64) {
+            if !(r2 as f64 + v4d as f64 * read_f64_at(0x96d818) > r1 as f64) { // 0x96d818 = 0.0078125
                 marcados(chamar);
                 *w(0x198) = 0x67;
                 return;
@@ -7684,7 +7801,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, chamar: &mut dyn FnMut(usi
                 let d = dist_tabela(bx, by);
                 let r1 = sortear(match_pl_ftol(*((j + 0xdd) as *const f32) as f64));
                 let v = r1 + b(0x10d) as i32;
-                if v > sortear(match_pl_ftol(d as f64 * read_f32_at(0x96d784) as f64)) {
+                if v > sortear(match_pl_ftol(d as f64 * read_f32_at(0x96d784) as f64)) { // 0x96d784 = 8
                     rep(chamar, bx, by, 0x100);
                     *w(0x198) = 0x100;
                     return;
@@ -7740,23 +7857,23 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, chamar: &mut dyn FnMut(usi
     let (mut px, mut py) = (0i8, 0i8);
     let mut pressiona = false;
     if ae != -1 && t & 1 == 0 {
-        let limiar: f64 = if sortear(match_pl_ftol(*((j + 0xe1) as *const f32) as f64 + read_f64_at(0x968968))) == 0 {
-            read_f64_at(0x9689a0)
+        let limiar: f64 = if sortear(match_pl_ftol(*((j + 0xe1) as *const f32) as f64 + read_f64_at(0x968968))) == 0 { // 0x968968 = 0.5
+            read_f64_at(0x9689a0) // 0x9689a0 = 0
         } else {
             let mut f = f64::from_bits(0x3ff8_0000_0000_0000);
             if b(0x10d) as i32 > sortear(10) {
                 f = f64::from_bits(0x3fff_eb85_1eb8_51ec);
             }
             if b(0x106) == 0 {
-                f *= read_f64_at(0x968ee0);
+                f *= read_f64_at(0x968ee0); // 0x968ee0 = 1.33
             }
             if b(0x10a) == 0 {
-                f *= read_f64_at(0x968ee0);
+                f *= read_f64_at(0x968ee0); // 0x968ee0 = 1.33
             }
             let a2 = *((j + 0x1a2) as *const f32);
             let r3 = sortear(0x96) + 0x1e;
             if !(r3 as f64 >= a2 as f64) {
-                f * read_f64_at(0x968ee0)
+                f * read_f64_at(0x968ee0) // 0x968ee0 = 1.33
             } else {
                 f
             }
@@ -7792,13 +7909,13 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, chamar: &mut dyn FnMut(usi
             return;
         }
         // test ah,0x41 / je: segue quando a distancia nao passa do limite (NaN tambem segue)
-        if do_lado(m, j) != 0 && !(dist_tabela(bx, by) as f64 > read_f64_at(0x968940)) {
+        if do_lado(m, j) != 0 && !(dist_tabela(bx, by) as f64 > read_f64_at(0x968940)) { // 0x968940 = 1.5
             if band(dir as u8, bx, by) != 0 && !(ae != -1 && (b(0x106) != 0 || b(0x10a) != 0)) {
                 *w(0x198) = 0x103;
                 rep(chamar, bx, by, 0x100);
                 return;
             }
-            if ae == -1 && (menor_dist(m, (dir == 0) as i8, bx, by, 1) as f64 > read_f64_at(0x968e18) || (b(0x106) == 0 && b(0x10a) == 0)) {
+            if ae == -1 && (menor_dist(m, (dir == 0) as i8, bx, by, 1) as f64 > read_f64_at(0x968e18) || (b(0x106) == 0 && b(0x10a) == 0)) { // 0x968e18 = 2.5
                 if (0..=8).contains(&bx) && (0..=11).contains(&by) {
                     *w(0x198) = 0x103;
                     rep(chamar, bx, by, 0x100);
@@ -7835,7 +7952,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: usize, chamar: &mut dyn FnMut(usi
     }
     let vai_a_bola = do_lado(m, j) != 0
         && if ae == -1 {
-            (dir == 1 && y >= 6) || (dir == 0 && y < 6) || (b(0x10d) != 0 && !(dist_entre(bx, by, px, py) as f64 >= read_f32_at(0x9689a8) as f64))
+            (dir == 1 && y >= 6) || (dir == 0 && y < 6) || (b(0x10d) != 0 && !(dist_entre(bx, by, px, py) as f64 >= read_f32_at(0x9689a8) as f64)) // 0x9689a8 = 2
         } else {
             b(0x10d) != 0
         };
@@ -7992,7 +8109,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, chamar: &mut dyn FnMut(u
     let arrancar = |c: &mut dyn FnMut(usize, [u32; 5]) -> u32| -> bool {
         let t = byte(j, 0x107);
         let n = if ta() & 0x40 != 0 { 20 } else { 50 };
-        let chance = ((read_f64_at(0x968e18) - *((j + 0x35) as *const i16) as f64 * read_f64_at(0x96a600)) * (byte(j, 0x101) as i32 * t as i32) as f64) as f32;
+        let chance = ((read_f64_at(0x968e18) - *((j + 0x35) as *const i16) as f64 * read_f64_at(0x96a600)) * (byte(j, 0x101) as i32 * t as i32) as f64) as f32; // 0x968e18 = 2.5, 0x96a600 = 0.0002
         let r = sortear(n);
         !(r as f64 >= chance as f64) && subir(c, 4, 0x6a, true)
     };
@@ -8005,7 +8122,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, chamar: &mut dyn FnMut(u
             let lin = (y as i32 - byte(m, 0x8ea8) as i32).abs() as i8 as isize;
             let col = (x as i32 - byte(m, 0x8ea7) as i32).abs() as i8 as isize;
             // fcomp + test ah,0x41: so passa se a distancia for maior que 2 (NaN nao)
-            read_f32_at((0xa15e44 + 4 * (lin * 9 + col)) as usize) as f64 > read_f64_at(0x968950)
+            read_f32_at((0xa15e44 + 4 * (lin * 9 + col)) as usize) as f64 > read_f64_at(0x968950) // 0x968950 = 2
         };
         if longe {
             decidido = arrancar(chamar);
@@ -8134,7 +8251,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, chamar: &mut dyn FnMut(u
         }
         return;
     }
-    let n = match_pl_ftol(*((j + 0xe1) as *const f32) as f64 + read_f32_at(0x968a78) as f64);
+    let n = match_pl_ftol(*((j + 0xe1) as *const f32) as f64 + read_f32_at(0x968a78) as f64); // 0x968a78 = 10
     if byte(j, 0x109) as i32 > sortear(n) && livre(chamar, &subir) {
         return;
     }
@@ -8142,7 +8259,11 @@ pub(crate) unsafe fn off_ball_decide_injected(j: usize, chamar: &mut dyn FnMut(u
     reposicionar(chamar, ax, ay, -1);
 }
 
-/// { 0x713fc0 } (ret 4, match_pl.cpp): ver `off_ball_decide_injected`. O argumento nao e lido.
+/// Decides an off-ball player's movement (formation cell, set-piece mark, runs forward, wing or full-back runs,
+/// following his marked man, dropping back); calls off_ball_decide_injected with the game's move routines. The argument
+/// is not read.
+///
+/// [pt] { 0x713fc0 } (ret 4, match_pl.cpp): ver `off_ball_decide_injected`. O argumento nao e lido.
 pub(crate) unsafe extern "thiscall" fn decide_off_ball(j: usize, _a: u32) {
     off_ball_decide_injected(j, &mut |rotina, a| match rotina {
         0x6f46b0 => {
@@ -8187,7 +8308,11 @@ pub(crate) unsafe fn advance_row_injected(this: usize, direto: u8, chamar: &mut 
     chamar(0x6f09f0, [x as u8 as u32, y as u8 as u32, u32::MAX, 0, 0])
 }
 
-/// { 0x6f5b80 } (ret 4, match_pl.cpp): ver `advance_row_injected`.
+/// Hook entry for 0x6f5b80 (advance_row_injected): the player moves one row towards his side's attack, straight to the
+/// ball row when `direto` (0x6f46b0), otherwise by repositioning (0x6f09f0); returns the callee's eax (ignored by
+/// callers).
+///
+/// [pt] { 0x6f5b80 } (ret 4, match_pl.cpp): ver `advance_row_injected`.
 pub(crate) unsafe extern "thiscall" fn advance_row(this: usize, direto: u8) -> u32 {
     advance_row_injected(this, direto, &mut |rotina, a| {
         if rotina == 0x6f46b0 {
@@ -8225,23 +8350,28 @@ pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
     if *(f(0x59) as *const u32) == 0x3f80_0000 {
         *(f(0x59) as *mut u32) = 0;
     } else {
-        *f(0x59) = (*f(0x59) as f64 * read_f64_at(0x968968)) as f32;
+        *f(0x59) = (*f(0x59) as f64 * read_f64_at(0x968968)) as f32; // 0x968968 = 0.5
     }
     let b1 = *((this + 1) as *const u8);
     if b1 > 50 {
-        let v = game_pow((b1 as i32 - 50) as f64, read_f64_at(0x968928)) * read_f32_at(0x96d22c) as f64;
+        let v = game_pow((b1 as i32 - 50) as f64, read_f64_at(0x968928)) * read_f32_at(0x96d22c) as f64; // 0x968928 = 1.25, 0x96d22c = 0.25
         // fcom + test ah,0x41: so passa de 25 quando maior (NaN fica)
-        let v = if v > read_f64_at(0x968890) { read_f32_at(0x96af88) as f64 } else { v };
+        let v = if v > read_f64_at(0x968890) { read_f32_at(0x96af88) as f64 } else { v }; // 0x968890 = 25, 0x96af88 = 25
         *f(0x4d) = (*f(0x4d) as f64 - v) as f32;
     }
-    if !(*f(0x4d) as f64 >= read_f64_at(0x967890)) {
+    if !(*f(0x4d) as f64 >= read_f64_at(0x967890)) { // 0x967890 = 1
         *f(0x4d) = 1.0;
-    } else if *f(0x4d) as f64 > read_f64_at(0x968910) {
+    } else if *f(0x4d) as f64 > read_f64_at(0x968910) { // 0x968910 = 10000
         *f(0x4d) = 10000.0;
     }
 }
 
-/// { 0x6b61e0 } (match_day.cpp): a partida interessa a algum dos 16 tecnicos humanos (as ultimas
+/// Does the match interest any of the 16 human managers? Decided by competition: friendlies and reserve games only via
+/// flagged national teams, B/U21 internationals never, friendly competitions when a human's club takes part, Intertoto
+/// only in round 150, national competitions when a human's club is from that nation, and international ones via the
+/// managers' national teams or continent. Returns 1 or 0.
+///
+/// [pt] { 0x6b61e0 } (match_day.cpp): a partida interessa a algum dos 16 tecnicos humanos (as ultimas
 /// pessoas, tipo +0x5f = 1)? Pela competicao (+0x14): as duas de 0x9cf668/0x9cf684 so pelas selecoes
 /// dos clubes (+0x11c da nacao); as de 0x9cf794/0x9cf798 nunca; amistoso (0x5c6710 de 0xae2c74): o
 /// clube do tecnico (+0x39) esta nela (0x48db80); a de 0x9cf6f8 so na rodada 150 (0x4b0870 de +0x30);
@@ -8343,7 +8473,12 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
     0
 }
 
-/// { 0x6eecb0 } (ret 4, match_pl.cpp, ~6,4 KB): desempenho do jogador na partida. Atualiza os
+/// Computes the player's in-match performance: recalculates match attributes, the positional penalty word +0x37
+/// (tactical tables A and B against the position ratings +0x10..+0x1a of his player data; with `marcar`, counts on the
+/// engine side byte +0xaf), the bytes +0x10e..+0x117 and the derived words +0x11a..+0x196, then rolls the moment
+/// attributes.
+///
+/// [pt] { 0x6eecb0 } (ret 4, match_pl.cpp, ~6,4 KB): desempenho do jogador na partida. Atualiza os
 /// atributos (0x6ec010), calcula a palavra +0x37 (posicao nas tabelas taticas A e B contra os
 /// bytes de +0x10 a +0x1a da ficha; com `marcar`, conta no byte +0xaf do lado do motor), os bytes
 /// +0x10e..+0x117 e as palavras derivadas de +0x11a a +0x196 (63 delas ajustadas por +0x37 numa
@@ -9363,20 +9498,24 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
     match_pl_ftol(e * y - (n * n + 5.0) * 0.1 + forma + c + 0.5)
 }
 
-/// { 0x7164b0 } (match_pl.cpp): teste pela condicao fisica (0x1a2). v = condicao^2 (truncado);
+/// Match player: a test by physical condition (+0x1a2): code 1 passes if random(110 - condition) < limit; codes 2..5 if
+/// random(K / condition^2) < limit with K = 400,000, 2, 4 and 8 million; the limit is 8 when `alvo` is the player
+/// stored at +0x1a6, else 1. Other codes: 0. Returns 1/0.
+///
+/// [pt] { 0x7164b0 } (match_pl.cpp): teste pela condicao fisica (0x1a2). v = condicao^2 (truncado);
 /// limite 8 se `alvo` for o guardado em 0x1a6, senao 1. Codigo 1: sorteio(110 - condicao) < limite;
 /// 2 a 5: sorteio(K / v) < limite, K = 400 mil, 2, 4 e 8 milhoes (mais condicao, mais chance).
 /// Outros codigos: 0.
 pub(crate) unsafe extern "thiscall" fn condition_test(this: usize, codigo: i8, alvo: usize) -> u8 {
     let limit: i32 = if alvo != 0 && alvo == *((this + 0x1a6) as *const usize) { 8 } else { 1 };
     let c = read_f32_at(this + 0x1a2) as f64;
-    let v = match_pl_ftol(game_pow(c, read_f64_at(0x968950))) as f64;
+    let v = match_pl_ftol(game_pow(c, read_f64_at(0x968950))) as f64; // 0x968950 = 2
     let n = match codigo {
         1 => 0x6e - match_pl_ftol(c) as i8 as i32,
-        2 => match_pl_ftol(read_f64_at(0x96d860) / v),
-        3 => match_pl_ftol(read_f64_at(0x96aff8) / v),
-        4 => match_pl_ftol(read_f64_at(0x96d858) / v),
-        5 => match_pl_ftol(read_f64_at(0x96d850) / v),
+        2 => match_pl_ftol(read_f64_at(0x96d860) / v), // 0x96d860 = 400000
+        3 => match_pl_ftol(read_f64_at(0x96aff8) / v), // 0x96aff8 = 2000000
+        4 => match_pl_ftol(read_f64_at(0x96d858) / v), // 0x96d858 = 4000000
+        5 => match_pl_ftol(read_f64_at(0x96d850) / v), // 0x96d850 = 8000000
         _ => return 0,
     };
     (sortear(n) < limit) as u8
@@ -9428,7 +9567,11 @@ pub(crate) unsafe fn player_role_word(j: usize) -> Option<u16> {
     call_engine_routine::<u16>(j, 0x6c38c0)
 }
 
-/// { 0x700bd0 } (match_pl.cpp, `MATCH_PLAYER::get_shot_score`): escolhe o tipo do chute (quando
+/// MATCH_PLAYER::get_shot_score: chooses the shot type (when `*tipo` < 0) from the situation and attributes, computes
+/// the shot value from per-type words (+0x11a + 2 x type), condition, the opposing goalkeeper, angle and distance to
+/// goal, stores the quality part at +0x39 and the commentary code in `som`. Returns the value.
+///
+/// [pt] { 0x700bd0 } (match_pl.cpp, `MATCH_PLAYER::get_shot_score`): escolhe o tipo do chute (quando
 /// `tipo` < 0) pela situacao e pelos atributos (palavras 0x146..0x154), calcula o valor (palavras
 /// por tipo em 0x11a + 2 x tipo, condicao fisica, goleiro adversario, angulo, distancia ao gol com
 /// pow 8 e 7) e grava em 0x39 a parte "de qualidade" e em `som` o comentario. Devolve o valor.
@@ -9450,7 +9593,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
         b13 = (byte(j, 0x10b) as u8).wrapping_add(5).wrapping_mul(2) as i8;
     }
     let dgk = distance_table_cell_yx(byte(j, 0x103) as i32 - gy as i32, byte(j, 0x102) as i32 - byte(gk, 0x102) as i32);
-    if !(dgk >= read_f32_at(0x968e70)) && player_role_word(gk) == Some(1) {
+    if !(dgk >= read_f32_at(0x968e70)) && player_role_word(gk) == Some(1) { // 0x968e70 = 1
         b13 = (b13 as u8).wrapping_sub(byte(j, 0x10b) as u8) as i8;
     }
     let (x, y) = (byte(j, 0x102) as i32, byte(j, 0x103) as i32);
@@ -9490,14 +9633,14 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
                     let t1 = if lado(gk) == 1 { distance_table_cell_yx(gy - 0xb, gx - 4) } else { distance_table_cell_yx(gy, gx - 4) };
                     // goleiro longe da propria meta (>= 2) e do atacante (>= 1): cobertura direta;
                     // senao, sorteio(0x29) contra sorteio(2000) e distancia ao gol < 1,5
-                    let longe_da_meta = t1 as f64 >= read_f64_at(0x968950);
+                    let longe_da_meta = t1 as f64 >= read_f64_at(0x968950); // 0x968950 = 2
                     let direta = longe_da_meta && {
                         let t2 = distance_table_cell_yx(gy - byte(j, 0x103) as i32, gx - byte(j, 0x102) as i32);
-                        t2 as f64 >= read_f64_at(0x967890)
+                        t2 as f64 >= read_f64_at(0x967890) // 0x967890 = 1
                     };
                     direta || {
                         let r1 = sortear(w(0x29) as i32);
-                        r1 > sortear(0x7d0) && !(dist >= read_f64_at(0x968940))
+                        r1 > sortear(0x7d0) && !(dist >= read_f64_at(0x968940)) // 0x968940 = 1.5
                     }
                 };
                 if cobertura {
@@ -9523,7 +9666,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
                 let mut v = sortear(w(0x146) as i32) as i16;
                 *tipo = 0x16;
                 maior(&mut v, sortear(w(0x14e) as i32 + 20 * b13 as i32), 0x1a, tipo);
-                if dist >= read_f64_at(0x968940) {
+                if dist >= read_f64_at(0x968940) { // 0x968940 = 1.5
                     maior(&mut v, sortear(w(0x152) as i32), 0x1c, tipo);
                 }
                 let a = sortear(0x1f4);
@@ -9607,8 +9750,8 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
         let atributos = |bp: &mut u16| {
             for o in [0x79, 0x81, 0xe5] {
                 let a = read_f32_at(j + o);
-                if !(a >= read_f32_at(0x96b020)) {
-                    let v = match_pl_ftol(a as f64 * read_f32_at(0x96d7e0) as f64 - read_f32_at(0x96d1b0) as f64);
+                if !(a >= read_f32_at(0x96b020)) { // 0x96b020 = 15
+                    let v = match_pl_ftol(a as f64 * read_f32_at(0x96d7e0) as f64 - read_f32_at(0x96d1b0) as f64); // 0x96d7e0 = 667, 0x96d1b0 = 10000
                     *bp = bp.wrapping_add(sortear(v) as u16);
                 }
             }
@@ -9622,7 +9765,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
             atributos(&mut bp);
             bp = bp.wrapping_add((byte(j, 0x109) as i16 as u16).wrapping_sub(15).wrapping_mul(20));
         } else if t == 0x39 {
-            let v = (read_f64_at(0x96a648) - read_f32_at(j + 0x79) as f64 * read_f64_at(0x968eb0)) * (3 - c as i32) as f64;
+            let v = (read_f64_at(0x96a648) - read_f32_at(j + 0x79) as f64 * read_f64_at(0x968eb0)) * (3 - c as i32) as f64; // 0x96a648 = 200, 0x968eb0 = 7.5
             let r = sortear(match_pl_ftol(v));
             bp = bp.wrapping_sub(r as u16);
             *q39 = (*q39).wrapping_sub(r as u16);
@@ -9643,14 +9786,14 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
         } else if l == 1 {
             (byte(j, 0x103) as i32 + 1) as f64 / ((4 - x as i32) as f64).abs()
         } else {
-            read_f32_at(0x968970) as f64
+            read_f32_at(0x968970) as f64 // 0x968970 = 0
         };
         a *= a;
-        if a < read_f64_at(0x968e80) {
+        if a < read_f64_at(0x968e80) { // 0x968e80 = 0.3
             angulo_fechado = true;
         }
-        a = read_f32_at(0x96d7d8) as f64 - a * read_f32_at(0x96d7dc) as f64;
-        let minimo = read_f32_at(0x96af88) as f64;
+        a = read_f32_at(0x96d7d8) as f64 - a * read_f32_at(0x96d7dc) as f64; // 0x96d7d8 = 740, 0x96d7dc = 2160
+        let minimo = read_f32_at(0x96af88) as f64; // 0x96af88 = 25
         if minimo > a {
             a = minimo;
         }
@@ -9661,12 +9804,12 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
         let e5 = read_f32_at(j + 0xe5) as f64;
         let f = if !(e5 >= 1.0) { 1.0 } else { e5 };
         let m = k as i16 as i32;
-        e -= sortear(match_pl_ftol(m as f64 * read_f64_at(0x9688a0) / f));
+        e -= sortear(match_pl_ftol(m as f64 * read_f64_at(0x9688a0) / f)); // 0x9688a0 = 5
         *q39 = (*q39).wrapping_add((-(m / 2)) as u16);
     }
     // chute de longe (fora da area, distancia > 2,2): variacao pelo vento/gramado do motor
     let mut longe = false;
-    if dist > read_f64_at(0x96d7d0) {
+    if dist > read_f64_at(0x96d7d0) { // 0x96d7d0 = 2.2
         let (x, y) = (byte(j, 0x102), byte(j, 0x103));
         let area = if lado(j) == 0 { 10..=11 } else { 0..=1 };
         if !((2..=6).contains(&x) && area.contains(&y)) {
@@ -9710,8 +9853,8 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
     let t = *tipo;
     let x = byte(j, 0x102);
     let canto = (byte(j, 0x103) == 0 || byte(j, 0x103) == 0xb) && (x as i32 - 4).abs() == 1;
-    if (t == 3 || t == 0x39) && dist >= read_f64_at(0x967890) && !canto {
-        let mut v = match_pl_ftol(game_pow(dist + read_f64_at(0x968950), read_f64_at(0x968f10)) * read_f64_at(0x968a80));
+    if (t == 3 || t == 0x39) && dist >= read_f64_at(0x967890) && !canto { // 0x967890 = 1
+        let mut v = match_pl_ftol(game_pow(dist + read_f64_at(0x968950), read_f64_at(0x968f10)) * read_f64_at(0x968a80)); // 0x968950 = 2, 0x968f10 = 8, 0x968a80 = 0.3333333333
         if v > 0x3a98 {
             v = 0x3a98;
         }
@@ -9730,19 +9873,19 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, tipo: *mut i8, so
     } else if dist == 1.0 {
         e += 0x64;
         *q39 = (*q39).wrapping_add(0x64);
-    } else if dist > read_f64_at(0x968940) {
-        let mut c = match_pl_ftol(game_pow(dist * read_f64_at(0x968e48) + read_f64_at(0x968940), read_f64_at(0x968988)));
+    } else if dist > read_f64_at(0x968940) { // 0x968940 = 1.5
+        let mut c = match_pl_ftol(game_pow(dist * read_f64_at(0x968e48) + read_f64_at(0x968940), read_f64_at(0x968988))); // 0x968e48 = 0.6, 0x968940 = 1.5, 0x968988 = 7
         if c > 0x7530 {
             c = 0x7530;
         }
         let (k, mut f) = match *tipo {
-            0x3a => (c / 20, (byte(j, 0x109) as f64 + read_f32_at(j + 0xb1) as f64) * read_f64_at(0x967878)),
-            0x35 => (c / 15, read_f32_at(j + 0xa1) as f64 * read_f64_at(0x967888)),
-            _ => (c / 2, (byte(j, 0x109) as f64 + read_f32_at(j + 0xb1) as f64) * read_f64_at(0x967878)),
+            0x3a => (c / 20, (byte(j, 0x109) as f64 + read_f32_at(j + 0xb1) as f64) * read_f64_at(0x967878)), // 0x967878 = 0.025
+            0x35 => (c / 15, read_f32_at(j + 0xa1) as f64 * read_f64_at(0x967888)), // 0x967888 = 0.05
+            _ => (c / 2, (byte(j, 0x109) as f64 + read_f32_at(j + 0xb1) as f64) * read_f64_at(0x967878)), // 0x967878 = 0.025
         };
-        f = read_f64_at(0x967890) - f;
-        if f < read_f64_at(0x968918) {
-            f = read_f64_at(0x968918);
+        f = read_f64_at(0x967890) - f; // 0x967890 = 1
+        if f < read_f64_at(0x968918) { // 0x968918 = 0.2
+            f = read_f64_at(0x968918); // 0x968918 = 0.2
         }
         *q39 = (*q39).wrapping_add((-(k / 2)) as u16);
         let mut r = match_pl_ftol(k as f64 * f);
@@ -9942,7 +10085,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_match_player(j: usize)
     r
 }
 
-/// { 0x70dfa0 } (match_pl.cpp)
+/// Returns 1 if the player is in his own half (side 1 with row +0x103 >= 6, side 0 with row < 6), else 0 [inference:
+/// meaning taken from the attack directions].
+/// Original: `player_condition` (0x70dfa0, match_pl.cpp).
+///
+/// [pt] { 0x70dfa0 } (match_pl.cpp)
 pub(crate) unsafe extern "thiscall" fn player_condition(this: usize) -> u8 {
     let (lado, v) = (byte(this, 0x27), byte(this, 0x103));
     (if lado == 1 && v >= 6 { true } else { lado == 0 && v < 6 }) as u8
@@ -9962,13 +10109,20 @@ pub(crate) unsafe extern "thiscall" fn player_table(jogador: usize) -> u16 {
     f(motor, jogador)
 }
 
-/// { 0x70df40 } (match_pl.cpp): como `limite`, com o lado e o valor do proprio jogador.
+/// Is the match player in his attacking end (side 1 with y < 3, side 0 with y > 8)? Returns 1 or 0.
+/// Original: `player_limit` (0x70df40, match_pl.cpp).
+///
+/// [pt] { 0x70df40 } (match_pl.cpp): como `limite`, com o lado e o valor do proprio jogador.
 pub(crate) unsafe extern "thiscall" fn player_limit(this: usize) -> u8 {
     let (s, v) = (byte(this, 0x27), byte(this, 0x103));
     (if s == 1 && v < 3 { true } else { s == 0 && v > 8 }) as u8
 }
 
-/// { 0x6f5b20 } (match_pl.cpp): como `faixa`, com os campos 0x102/0x103 do jogador. Devolve eax inteiro.
+/// Is the match player inside the goal-area band (x 2..6) at the end of the pitch belonging to side `lado` (y 10..11
+/// for side 1, 0..1 otherwise)? Returns 1 or 0.
+/// Original: `player_band` (0x6f5b20, match_pl.cpp).
+///
+/// [pt] { 0x6f5b20 } (match_pl.cpp): como `faixa`, com os campos 0x102/0x103 do jogador. Devolve eax inteiro.
 pub(crate) unsafe extern "thiscall" fn player_band(this: usize, lado: u8) -> u32 {
     let (b, c) = (byte(this, 0x102), byte(this, 0x103));
     let alvo = if lado == 1 { 10..=11 } else { 0..=1 };
@@ -9987,7 +10141,12 @@ pub(crate) unsafe extern "thiscall" fn field_by_position(this: usize) -> u8 {
     if f(bloco, byte(this, 0x19)) & 2 != 0 { byte(this, 0x10a) as u8 } else { byte(this, 0x108) as u8 }
 }
 
-/// { 0x6f4920 } (match_pl.cpp): direcao do jogador em graus, campo 0x19a (0..=359), de (a, b)
+/// Sets the match player's facing direction in degrees (+0x19a, 0..=359) from cell (a, b) towards (c, d) (same cell:
+/// random, except two fixed goal cases 0 and 180), plus a random deviation of up to +-30 when +0x10c x +0x105 <
+/// random(120), plus twice the difference of two player-data attributes (+0x3b - +0x30).
+/// Original: `aim (set facing direction)` (0x6f4920, match_pl.cpp).
+///
+/// [pt] { 0x6f4920 } (match_pl.cpp): direcao do jogador em graus, campo 0x19a (0..=359), de (a, b)
 /// para (c, d). Mesmo ponto: sorteia 0..359 (salvo dois casos fixos: 0 e 180 graus). Depois
 /// um desvio sorteado (+-30) quando 0x10c x 0x105 < sorteio(120), e a diferenca de dois
 /// atributos do registro da pessoa (0x3b - 0x30, vezes 2).

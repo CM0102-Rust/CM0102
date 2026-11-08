@@ -1,6 +1,9 @@
 use super::*;
 
-/// { 0x6b59a0 } (match_day.cpp): o clube tem jogo na lista do dia ([this + 0x19], quantidade em
+/// Does the club play in today's fixture list ([this+0x19], count at +0x21, 0x69 bytes per match, home at +0x20 and
+/// away at +0x24)? With `so_marcados`, only fixtures with +0x5b set count. Returns 1 or 0 (0 for a null club).
+///
+/// [pt] { 0x6b59a0 } (match_day.cpp): o clube tem jogo na lista do dia ([this + 0x19], quantidade em
 /// 0x21, 0x69 bytes por jogo; mandante em 0x20, visitante em 0x24)? Com `so_marcados`, so os jogos
 /// com 0x5b preenchido. Clube nulo: o original mostra uma caixa de erro e devolve 0 (aqui, so 0).
 pub(crate) unsafe extern "thiscall" fn has_match(this: usize, clube: u32, so_marcados: u32) -> u32 {
@@ -21,7 +24,11 @@ pub(crate) unsafe extern "thiscall" fn has_match(this: usize, clube: u32, so_mar
     0
 }
 
-/// { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penaltis (0x49/0x4a),
+/// Did the club win the match? Decides on penalties (+0x49/+0x4a), else extra time (+0x47/+0x48), else normal time
+/// (+0x43/+0x44), using the first score that is not -1. Returns 1 or 0; a null match or club, or a club not in the
+/// match, gives 0.
+///
+/// [pt] { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penaltis (0x49/0x4a),
 /// senao pela prorrogacao (0x47/0x48), senao pelo tempo normal (0x43/0x44); placar -1 nao conta.
 /// Jogo ou clube nulo, ou clube fora do jogo: o original mostra uma caixa de erro e devolve 0.
 pub(crate) unsafe extern "C" fn won_the_match(jogo: usize, clube: u32) -> u8 {
@@ -1012,7 +1019,13 @@ pub(crate) unsafe fn match_day_marked_regions(d: usize) -> Vec<(usize, usize)> {
     v
 }
 
-/// { 0x6b5040 } (thiscall, match_day.cpp): marca no dia de jogos `d` o que interessa ao humano.
+/// Marks on match day `d` what interests the human managers: clears the counters (+0x29 groups, +0x2a competitions,
+/// +0x2b any), then for each group and competition flags the competition (+0xc) when one of the 16 human managers'
+/// clubs (+0x39 or +0x24) plays in it, and flags each fixture (+0x53) involving a human club or watched by a human,
+/// counting the groups and competitions with such fixtures; other fixtures of human interest (0x6b61e0) only flag the
+/// competition. Any flag sets +0x2b. Returns 1.
+///
+/// [pt] { 0x6b5040 } (thiscall, match_day.cpp): marca no dia de jogos `d` o que interessa ao humano.
 /// Primeiro a lista dos humanos (0x5fe8d0 em [0xb63c98]); zera +0x29, +0x2a e +0x2b. Para cada grupo
 /// (+1, de 0x18 em 0x18, quantos em +9) e cada competicao dele (+4 a +8; em +0xd, de 0x54 em 0x54):
 /// a competicao interessa (+0xc) se um dos 16 humanos no fim da tabela de pessoas tem o clube (+0x39)
@@ -1125,7 +1138,13 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
     v
 }
 
-/// { 0x6b66a0 } (cdecl, match_day.cpp): 1 se a `partida` nao envolve o humano, pela 0x7f9720. Antes,
+/// Decides whether a fixture can be played without the human (quick simulation): returns 0 when a human-managed or
+/// linked club plays, for certain fixed competitions (world club competitions, Welsh Premier Cup with England/Wales
+/// flagged), when a human manages a club of the same nation, in some cases when the clubs' reputations (+0x80) add up
+/// to more than 12000, or when the competition's national team is flagged for a human; otherwise 1 if no scouted player
+/// is involved (0x7f9720). First marks the human managers' national teams once.
+///
+/// [pt] { 0x6b66a0 } (cdecl, match_day.cpp): 1 se a `partida` nao envolve o humano, pela 0x7f9720. Antes,
 /// uma vez ([0xa15704]), marca as selecoes dos humanos em 0xb67a58. Sem [0xdd7118]: 1. Devolve 0 se:
 /// algum dos clubes (+0x1c, +0x20) e de humano (0x600a50), ou o clube ligado a ele (0x540a50); a
 /// competicao (+0) e uma de duas fixas ([0x9cf7bc], [0x9cf6e4]); e a de [0x9cf958] com um dos dois
@@ -1342,17 +1361,27 @@ pub(crate) unsafe fn post_match_club_with(clube: usize, outro: usize, partida: u
     }
 }
 
-/// { 0x6b74a0 }: ver `post_match_events_injected`.
+/// After a match, processes the post-match events of `partida` (injuries, news, morale and contract effects per event
+/// type); thin wrapper over post_match_events_injected with the real calls.
+///
+/// [pt] { 0x6b74a0 }: ver `post_match_events_injected`.
 pub(crate) unsafe extern "C" fn post_match_events(partida: usize) {
     post_match_events_injected(partida, &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
-/// { 0x6b6cc0 }: ver `post_match_players_with`.
+/// After a match: updates the players and staff of team `t` in fixture `partida` (form and ratings copied to the player
+/// records, possible contract clauses, the manager's and assistants' stats and the club's reputation +0x80). Wrapper of
+/// `post_match_players_with` with the real outside calls.
+///
+/// [pt] { 0x6b6cc0 }: ver `post_match_players_with`.
 pub(crate) unsafe extern "C" fn post_match_players(partida: usize, t: usize) {
     post_match_players_with(partida, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
-/// { 0x6b79a0 }: ver `post_match_club_with`.
+/// Post-match news for `clube` after the match `partida` against `outro` (turnaround story for a senior player, or a
+/// pleased youngster favouring the club); calls post_match_club_with with the game's real calls.
+///
+/// [pt] { 0x6b79a0 }: ver `post_match_club_with`.
 pub(crate) unsafe extern "C" fn post_match_club(clube: usize, outro: usize, partida: usize, n: u32, t: usize) {
     post_match_club_with(clube, outro, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
