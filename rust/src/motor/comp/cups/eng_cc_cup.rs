@@ -18,21 +18,21 @@ use super::*;
 /// eles, +0x5c/+0x60/+0x64 os prêmios (chegar, vencer, perder).
 #[derive(Clone, Copy)]
 pub(crate) struct EngCcCupCupRound {
-    pub(crate) sorteio: (u32, u32, u32, u32),
-    pub(crate) jogo: (u32, u32, u32, u32, u32, u32),
-    pub(crate) codigo: u16,
+    pub(crate) draw: (u32, u32, u32, u32),
+    pub(crate) game: (u32, u32, u32, u32, u32, u32),
+    pub(crate) code: u16,
     pub(crate) bits: (u16, u16, u16),
-    pub(crate) categoria: u8,
-    pub(crate) times: (u16, u16, u16, u16),
-    pub(crate) confronto: (u8, u8, u8),
-    pub(crate) premios: (u32, u32, u32),
+    pub(crate) category: u8,
+    pub(crate) teams: (u16, u16, u16, u16),
+    pub(crate) tie: (u8, u8, u8),
+    pub(crate) prizes: (u32, u32, u32),
 }
 
 /// A linha da tabela: (sorteio), (jogo), nome, (bits do sorteio, desempate, desempate de ida e volta), categoria,
 /// (times, jogos, novos, inscritos), (replay, jogos por confronto, dias entre eles), (prêmios).
 pub(crate) const fn cql10r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
     times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> EngCcCupCupRound {
-    EngCcCupCupRound { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
+    EngCcCupCupRound { draw: sorteio, game: jogo, code: codigo, bits, category: categoria, teams: times, tie: confronto, prizes: premios }
 }
 
 /// Writes round i of a cup round table: draw and match dates (0x521e60, 0x521eb0) and the round fields (code, bits,
@@ -43,27 +43,27 @@ pub(crate) const fn cql10r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
 pub(crate) unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &EngCcCupCupRound, year: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, year);
-    jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, year, r.jogo.5);
+    sorteio(t, i, r.draw.0, r.draw.1, r.draw.2, r.draw.3, year);
+    jogo(t, i, r.game.0, r.game.1, r.game.2, r.game.3, r.game.4, year, r.game.5);
     let e = t + i as usize * 0x68;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((e + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((e + o) as *mut u32, v);
-    w(7, r.codigo);
+    w(7, r.code);
     w(9, i as u16);
     w(0xb, r.bits.0);
     w(0xd, r.bits.1);
     w(0xf, r.bits.2);
-    *((e + 0x17) as *mut u8) = r.categoria;
-    w(0x18, r.times.0);
-    w(0x1a, r.times.1);
-    w(0x1c, r.times.2);
-    w(0x1e, r.times.3);
-    *((e + 0x20) as *mut u8) = r.confronto.0;
-    *((e + 0x21) as *mut u8) = r.confronto.1;
-    *((e + 0x22) as *mut u8) = r.confronto.2;
-    d(0x5c, r.premios.0);
-    d(0x60, r.premios.1);
-    d(0x64, r.premios.2);
+    *((e + 0x17) as *mut u8) = r.category;
+    w(0x18, r.teams.0);
+    w(0x1a, r.teams.1);
+    w(0x1c, r.teams.2);
+    w(0x1e, r.teams.3);
+    *((e + 0x20) as *mut u8) = r.tie.0;
+    *((e + 0x21) as *mut u8) = r.tie.1;
+    *((e + 0x22) as *mut u8) = r.tie.2;
+    d(0x5c, r.prizes.0);
+    d(0x60, r.prizes.1);
+    d(0x64, r.prizes.2);
 }
 
 /// Common body of virtual `+0x3c` (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) for
@@ -139,10 +139,10 @@ pub(crate) const LEAGUE_CUP_ROUNDS: [EngCcCupCupRound; 7] = [
 pub(crate) fn league_cup_rounds(b: i16) -> [EngCcCupCupRound; 7] {
     let mut t = LEAGUE_CUP_ROUNDS;
     let x = |v: i16| v as u16;
-    t[0].times = (x(b.wrapping_mul(2).wrapping_add(0x38)), x(b.wrapping_add(0x1c)), x(b.wrapping_mul(2).wrapping_add(0x38)), 0);
-    t[1].times = (x(0x20i16.wrapping_sub(b).wrapping_mul(2)), x(0x20i16.wrapping_sub(b)), x(0xci16.wrapping_sub(b).wrapping_mul(3)), x(b.wrapping_mul(2).wrapping_add(0x38)));
-    t[2].times.2 = x(b);
-    t[2].times.3 = x(0x5ci16.wrapping_sub(b));
+    t[0].teams = (x(b.wrapping_mul(2).wrapping_add(0x38)), x(b.wrapping_add(0x1c)), x(b.wrapping_mul(2).wrapping_add(0x38)), 0);
+    t[1].teams = (x(0x20i16.wrapping_sub(b).wrapping_mul(2)), x(0x20i16.wrapping_sub(b)), x(0xci16.wrapping_sub(b).wrapping_mul(3)), x(b.wrapping_mul(2).wrapping_add(0x38)));
+    t[2].teams.2 = x(b);
+    t[2].teams.3 = x(0x5ci16.wrapping_sub(b));
     t
 }
 
@@ -207,17 +207,17 @@ pub(crate) fn fa_cup_rounds(b: i16, entry: u8, entrants: i16) -> [EngCcCupCupRou
     let mut t = FA_CUP_ROUNDS;
     let x = |v: i16| v as u16;
     if entry == 1 {
-        t[2].times = (0x28, 0x13, 0, 0);
-        t[3].times = (0x40, 0x20, 0x2b, 0x6c);
+        t[2].teams = (0x28, 0x13, 0, 0);
+        t[3].teams = (0x40, 0x20, 0x2b, 0x6c);
     } else {
-        t[2].times = (x(b.wrapping_mul(6).wrapping_add(0x28)), x(b.wrapping_mul(3).wrapping_add(0x14)), x(b.wrapping_mul(6)), 0x6c);
-        t[3].times = (x(0x10i16.wrapping_sub(b).wrapping_mul(4)), x(0x10i16.wrapping_sub(b).wrapping_mul(2)), x(0x2ci16.wrapping_sub(b.wrapping_mul(7))),
+        t[2].teams = (x(b.wrapping_mul(6).wrapping_add(0x28)), x(b.wrapping_mul(3).wrapping_add(0x14)), x(b.wrapping_mul(6)), 0x6c);
+        t[3].teams = (x(0x10i16.wrapping_sub(b).wrapping_mul(4)), x(0x10i16.wrapping_sub(b).wrapping_mul(2)), x(0x2ci16.wrapping_sub(b.wrapping_mul(7))),
             x(b.wrapping_add(0x12).wrapping_mul(6)));
     }
-    t[4].times.0 = x(0x10i16.wrapping_sub(b).wrapping_mul(2));
-    t[4].times.1 = x(0x10i16.wrapping_sub(b));
-    t[5].times.2 = x(b);
-    t[5].times.3 = x(entrants.wrapping_sub(b));
+    t[4].teams.0 = x(0x10i16.wrapping_sub(b).wrapping_mul(2));
+    t[4].teams.1 = x(0x10i16.wrapping_sub(b));
+    t[5].teams.2 = x(b);
+    t[5].teams.3 = x(entrants.wrapping_sub(b));
     t
 }
 

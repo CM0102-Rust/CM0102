@@ -6,14 +6,14 @@ use super::*;
 pub(crate) struct LeagueDivision {
     pub(crate) vtabela: usize,
     /// a regra de disciplina (+0x50): 0xc a francesa, 0x1a a espanhola
-    pub(crate) disciplina: u8,
-    pub(crate) regras: usize,
-    pub(crate) tabela: usize,
-    pub(crate) arquivo: usize,
+    pub(crate) discipline: u8,
+    pub(crate) rules: usize,
+    pub(crate) table: usize,
+    pub(crate) file: usize,
     /// as caixas: regras, tabela, jogos, ordem, estatísticas
-    pub(crate) linhas: [u32; 5],
+    pub(crate) rows: [u32; 5],
     /// a Primera cria no fim a divisão de baixo espanhola (+0xee)
-    pub(crate) baixo: bool,
+    pub(crate) low: bool,
 }
 
 /// The body of the four league constructors (thiscall(this, ano, registro), ret 8, SEH frame only for the operator new
@@ -46,15 +46,15 @@ pub(crate) struct LeagueDivision {
 /// (operator new de 0xee; SpaLower::SpaLower 0x851020: push ano; mov ecx, novo -> thiscall, ret 4) vai para +0xee
 /// (0 sem memória); com o bit, +0xee = 0. Devolve this.
 pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &LeagueDivision) -> usize {
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.tabela);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SPALOWER_SPALOWER);
     exe::new_league(this);
     write_usize(this + 4, registro);
     write_usize(this, p.vtabela);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, ano as u16);
-    *((this + league::DISCIPLINE_RULE) as *mut u8) = p.disciplina;
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = p.discipline;
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
@@ -64,30 +64,30 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     write_usize(this + league::STAGE_COUNT, 0);
     write_usize(this + league::STAGES, 0);
     if regras(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[0]);
+        show_error_at(p.file, p.rows[0]);
         return this;
     }
     if tabela(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[1]);
+        show_error_at(p.file, p.rows[1]);
         return this;
     }
     if exe::league_create_fixtures(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[2]);
+        show_error_at(p.file, p.rows[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        show_error_at(p.arquivo, p.linhas[3]);
+        show_error_at(p.file, p.rows[3]);
         return this;
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
     write_usize(this + 8, s);
     if s == 0 {
-        show_error_at(p.arquivo, p.linhas[4]);
+        show_error_at(p.file, p.rows[4]);
         return this;
     }
     exe::league_set_predicted_positions(this);
-    if p.baixo {
+    if p.low {
         let nacao = read_usize(read_usize(this + 4) + 0x5d);
         if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 divisao de baixo espanhola");
@@ -105,39 +105,39 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
 
 pub(crate) const FRENCH_SECOND_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96ac2c,
-    disciplina: 0xc, // cqm5: the French discipline rule
-    regras: 0x5bf0a0,
-    tabela: 0x5bef10,
-    arquivo: 0x9ccc0c,
-    linhas: [0x43, 0x4a, 0x51, 0x5a, 0x61],
-    baixo: false,
+    discipline: 0xc, // cqm5: the French discipline rule
+    rules: 0x5bf0a0,
+    table: 0x5bef10,
+    file: 0x9ccc0c,
+    rows: [0x43, 0x4a, 0x51, 0x5a, 0x61],
+    low: false,
 };
 pub(crate) const FRENCH_THIRD_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96ad80,
-    disciplina: 0xc,
-    regras: 0x5c0700,
-    tabela: 0x5c05d0,
-    arquivo: 0x9ccc80,
-    linhas: [0x42, 0x49, 0x50, 0x59, 0x60],
-    baixo: false,
+    discipline: 0xc,
+    rules: 0x5c0700,
+    table: 0x5c05d0,
+    file: 0x9ccc80,
+    rows: [0x42, 0x49, 0x50, 0x59, 0x60],
+    low: false,
 };
 pub(crate) const SPANISH_SEGUNDA: LeagueDivision = LeagueDivision {
     vtabela: 0x96fbd0,
-    disciplina: 0x1a, // cqm5: the Spanish discipline rule
-    regras: 0x855cc0,
-    tabela: 0x855b40,
-    arquivo: 0xa828bc,
-    linhas: [0x46, 0x4d, 0x54, 0x5b, 0x62],
-    baixo: false,
+    discipline: 0x1a, // cqm5: the Spanish discipline rule
+    rules: 0x855cc0,
+    table: 0x855b40,
+    file: 0xa828bc,
+    rows: [0x46, 0x4d, 0x54, 0x5b, 0x62],
+    low: false,
 };
 pub(crate) const SPAIN_PRIMERA_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96fa68,
-    disciplina: 0x1a,
-    regras: 0x84fdf0,
-    tabela: 0x84fc70,
-    arquivo: 0xa82844,
-    linhas: [0x47, 0x4e, 0x55, 0x5c, 0x63],
-    baixo: true,
+    discipline: 0x1a,
+    rules: 0x84fdf0,
+    table: 0x84fc70,
+    file: 0xa82844,
+    rows: [0x47, 0x4e, 0x55, 0x5c, 0x63],
+    low: true,
 };
 
 /// the French second division: discipline rule 0xc (the French one), only the league; with no saved state, the rules,
@@ -159,10 +159,10 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u
 pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
-        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == p.disciplina;
+        && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == p.discipline;
     if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
         ok = ok && read_usize(this + league::STAGE_COUNT) == 0 && read_usize(this + league::STAGES) == 0;
-        if p.baixo {
+        if p.low {
             let nation = read_usize(read_usize(this + 4) + 0x5d);
             let has = read_usize(this + 0xee) != 0;
             ok = ok && has == (*((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0);

@@ -46,11 +46,11 @@ pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, year: u32, first: i3
 /// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct SpaSecondChristmasSchedule {
     pub(crate) comeco: &'static [SpaSecondScheduleRound],
-    pub(crate) referencia: usize,
-    pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [SpaSecondScheduleRound]; 8],
-    pub(crate) fim: &'static [SpaSecondScheduleRound],
-    pub(crate) linha: u32,
+    pub(crate) reference: usize,
+    pub(crate) adjust: i32,
+    pub(crate) cases: [&'static [SpaSecondScheduleRound]; 8],
+    pub(crate) end: &'static [SpaSecondScheduleRound],
+    pub(crate) row: u32,
 }
 
 /// Writes the opening rounds, then picks the middle block by how many days a reference round falls after 1 December
@@ -59,17 +59,17 @@ pub(crate) unsafe fn set_rounds_with_christmas(t: usize, year: u32, n: &SpaSecon
     spa_second_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
-    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
-        show_error_at(file, n.linha);
+        show_error_at(file, n.row);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[case];
+    let middle = n.cases[case];
     spa_second_set_league_rounds(t, year, n.comeco.len() as i32, middle);
-    spa_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
+    spa_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.end);
 }
 
 /// a Segunda espanhola: as rodadas antes do Natal (ano par)
@@ -207,7 +207,7 @@ pub(crate) const SEGUNDA_ODD_ALL_ROUNDS: [SpaSecondScheduleRound; 42] = [
     (4, 5, 1, 6, 1, &[(-1, -1, -1)]), // 41: 4/jun (+1 ano)
 ];
 
-pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = SpaSecondChristmasSchedule { comeco: &SEGUNDA_EVEN_YEAR_EARLY_ROUNDS, referencia: 16, ajuste: 17, casos: [&SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_0, &SEGUNDA_EVEN_YEAR_CHRISTMAS_1, &SEGUNDA_EVEN_CHRISTMAS_ROUNDS_2, &SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_3, &SEGUNDA_EVEN_YEAR_CHRISTMAS_4, &SEGUNDA_EVEN_CHRISTMAS_ROUNDS_5, &SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_6, &SEGUNDA_EVEN_YEAR_CHRISTMAS_DEFAULT], fim: &SEGUNDA_EVEN_YEAR_END, linha: 0x146 };
+pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = SpaSecondChristmasSchedule { comeco: &SEGUNDA_EVEN_YEAR_EARLY_ROUNDS, reference: 16, adjust: 17, cases: [&SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_0, &SEGUNDA_EVEN_YEAR_CHRISTMAS_1, &SEGUNDA_EVEN_CHRISTMAS_ROUNDS_2, &SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_3, &SEGUNDA_EVEN_YEAR_CHRISTMAS_4, &SEGUNDA_EVEN_CHRISTMAS_ROUNDS_5, &SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_6, &SEGUNDA_EVEN_YEAR_CHRISTMAS_DEFAULT], end: &SEGUNDA_EVEN_YEAR_END, row: 0x146 };
 
 /// the Segunda schedule: 42 rounds (22 clubs), nearly all on Sunday (day 6); in odd years (2001/02) a fixed table from
 /// 22 August to 4 June, with one TV slot; in even years, from 30 August to 6 June, with three TV slots and one

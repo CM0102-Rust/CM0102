@@ -46,11 +46,11 @@ pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, year: u32, first: i32
 /// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct EngFirstChristmasSchedule {
     pub(crate) comeco: &'static [EngFirstScheduleRound],
-    pub(crate) referencia: usize,
-    pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [EngFirstScheduleRound]; 8],
-    pub(crate) fim: &'static [EngFirstScheduleRound],
-    pub(crate) linha: u32,
+    pub(crate) reference: usize,
+    pub(crate) adjust: i32,
+    pub(crate) cases: [&'static [EngFirstScheduleRound]; 8],
+    pub(crate) end: &'static [EngFirstScheduleRound],
+    pub(crate) row: u32,
 }
 
 /// Sets the rounds around Christmas: start rounds, the middle block chosen by the weekday of the reference date, and
@@ -59,17 +59,17 @@ pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, year: u32, n: &Eng
     eng_first_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
-    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
-        show_error_at(file, n.linha);
+        show_error_at(file, n.row);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[case];
+    let middle = n.cases[case];
     eng_first_set_league_rounds(t, year, n.comeco.len() as i32, middle);
-    eng_first_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
+    eng_first_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.end);
 }
 
 /// a primeira divisão inglesa: as rodadas antes do Natal
@@ -292,10 +292,10 @@ pub(crate) const PREMIERSHIP_LATE_ROUNDS: [EngFirstScheduleRound; 16] = [
     (20, 4, 1, 6, 1, &[(-1, -1, -1)]), // 37: 20/mai (+1 ano)
 ];
 
-pub(crate) const DIVISION_ONE_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChristmasSchedule { comeco: &FIRST_DIVISION_START, referencia: 22, ajuste: 13, casos: [&FIRST_DIVISION_CHRISTMAS_0, &FIRST_DIVISION_CHRISTMAS_ROUNDS_1, &DIVISION_ONE_CHRISTMAS_ROUNDS_2, &FIRST_DIVISION_CHRISTMAS_3, &FIRST_DIVISION_CHRISTMAS_ROUNDS_4, &DIVISION_ONE_CHRISTMAS_ROUNDS_5, &FIRST_DIVISION_CHRISTMAS_6, &FIRST_DIVISION_CHRISTMAS_ROUNDS_DEFAULT], fim: &FIRST_DIVISION_LATE_ROUNDS, linha: 0x17c };
+pub(crate) const DIVISION_ONE_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChristmasSchedule { comeco: &FIRST_DIVISION_START, reference: 22, adjust: 13, cases: [&FIRST_DIVISION_CHRISTMAS_0, &FIRST_DIVISION_CHRISTMAS_ROUNDS_1, &DIVISION_ONE_CHRISTMAS_ROUNDS_2, &FIRST_DIVISION_CHRISTMAS_3, &FIRST_DIVISION_CHRISTMAS_ROUNDS_4, &DIVISION_ONE_CHRISTMAS_ROUNDS_5, &FIRST_DIVISION_CHRISTMAS_6, &FIRST_DIVISION_CHRISTMAS_ROUNDS_DEFAULT], end: &FIRST_DIVISION_LATE_ROUNDS, row: 0x17c };
 pub(crate) const DIVISION_ONE_PLAYOFF_0: EngCcCupCupRound = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
 pub(crate) const FIRST_DIVISION_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1, 3), (0x1c, 4, 1, 0, 2, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
-pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChristmasSchedule { comeco: &PREMIERSHIP_EARLY_ROUNDS, referencia: 17, ajuste: 13, casos: [&PREMIERSHIP_CHRISTMAS_ROUNDS_0, &PREMIERSHIP_CHRISTMAS_ROUNDS_1, &PREMIERSHIP_CHRISTMAS_2, &PREMIERSHIP_CHRISTMAS_ROUNDS_3, &PREMIERSHIP_CHRISTMAS_ROUNDS_4, &PREMIERSHIP_CHRISTMAS_5, &PREMIERSHIP_CHRISTMAS_ROUNDS_6, &PREMIERSHIP_CHRISTMAS_ROUNDS_DEFAULT], fim: &PREMIERSHIP_LATE_ROUNDS, linha: 0x173 };
+pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChristmasSchedule { comeco: &PREMIERSHIP_EARLY_ROUNDS, reference: 17, adjust: 13, cases: [&PREMIERSHIP_CHRISTMAS_ROUNDS_0, &PREMIERSHIP_CHRISTMAS_ROUNDS_1, &PREMIERSHIP_CHRISTMAS_2, &PREMIERSHIP_CHRISTMAS_ROUNDS_3, &PREMIERSHIP_CHRISTMAS_ROUNDS_4, &PREMIERSHIP_CHRISTMAS_5, &PREMIERSHIP_CHRISTMAS_ROUNDS_6, &PREMIERSHIP_CHRISTMAS_ROUNDS_DEFAULT], end: &PREMIERSHIP_LATE_ROUNDS, row: 0x173 };
 
 /// the Division One schedule: the same 46 dates as Division Two, with TV slots (usually one or two matches on day 6 or
 /// 4, slot 1 or 2); the same Christmas by the day of the 16 December round. The promotion play-offs (stage 0):

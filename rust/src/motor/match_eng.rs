@@ -4038,15 +4038,15 @@ pub(crate) struct ShotLocals {
     pub(crate) p: usize,
     pub(crate) m: usize,
     pub(crate) g: usize,
-    pub(crate) lado: i8,
-    pub(crate) tipo: u8,
+    pub(crate) side: i8,
+    pub(crate) kind: u8,
     pub(crate) a1: u32,
     pub(crate) v: i32,
     pub(crate) v0: u32,
-    pub(crate) som: u32,
-    pub(crate) modo: u8,
-    pub(crate) conta: i8,
-    pub(crate) lista: usize,
+    pub(crate) sound: u32,
+    pub(crate) mode: u8,
+    pub(crate) count: i8,
+    pub(crate) list: usize,
     pub(crate) d: f32,
     pub(crate) l10: u8,
     pub(crate) l11: u8,
@@ -4060,7 +4060,7 @@ pub(crate) struct ShotLocals {
     pub(crate) l20: u8,
     pub(crate) l25: u8,
     pub(crate) l28: i8,
-    pub(crate) l38_antes: i16,
+    pub(crate) l38_before: i16,
     pub(crate) l40: i16,
     pub(crate) l50: i8,
     pub(crate) l54: i8,
@@ -4462,8 +4462,8 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
     let ganho = if l38 < 0 { l38 as f64 / fator } else { l38 as f64 * fator };
     *dw(m, engine::MOMENTUM_B) = (*dw(m, engine::MOMENTUM_B)).wrapping_add(ftol(ganho));
     let c = ShotLocals {
-        p, m, g, lado, tipo, a1, v, v0, som, modo, conta: a5 as u8 as i8, lista: a6, d, l10, l11, l14, l16,
-        l17: 0, l18, l19, l1a, l1b, l20, l25, l28, l38_antes, l40, l50, l54, l58, l5c, l60, l64, l68,
+        p, m, g, side: lado, kind: tipo, a1, v, v0, sound: som, mode: modo, count: a5 as u8 as i8, list: a6, d, l10, l11, l14, l16,
+        l17: 0, l18, l19, l1a, l1b, l20, l25, l28, l38_before: l38_antes, l40, l50, l54, l58, l5c, l60, l64, l68,
         e, l8c, l12, l13, l15: 0, l26, l4e, l4f,
     };
     if no_alvo {
@@ -4755,7 +4755,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let dw = |q: usize, o: usize| (q + o) as *mut i32;
-    let (p, m, g, lado) = (c.p, c.m, c.g, c.lado);
+    let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
     let na = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a7: i8| narrate_packed7(chamar, m, codigo, a3, a4, 0xff, 0xff, a7);
     let tg = || if read_usize(g + match_player::ENGINE) != 0 { table_a(read_usize(g + match_player::ENGINE), g) } else { 0 };
@@ -4765,7 +4765,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
         }
     };
     // the goal by the ratio shot / (save + shot)
-    let l6c = (c.l38_antes as i32).wrapping_add(c.v as i16 as i32);
+    let l6c = (c.l38_before as i32).wrapping_add(c.v as i16 as i32);
     let mut razao: f32;
     let gol = if l6c != 0 {
         razao = ((c.v as i16 as i32).wrapping_mul(100) as f64 / l6c as f64) as f32;
@@ -4798,13 +4798,13 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
     }
     // o gol (0x706dfd)
     crate::comparison::branch("shot gol");
-    let modo = c.modo;
+    let modo = c.mode;
     if modo == 1 {
         if side_of_move(m) as i8 > -1 {
             clear_move(m);
         }
         let k = read_usize(m + engine::FOULED_PLAYER);
-        if c.tipo == 0x33 && k != 0 && k != p {
+        if c.kind == 0x33 && k != 0 && k != p {
             *b(k, match_player::ASSISTS) = (*b(k, match_player::ASSISTS)).wrapping_add(1);
         }
         let base = m + (lado as isize * 0x36) as usize;
@@ -4817,7 +4817,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
         if marked_moment(m) as u8 != 0 {
             *b(m, engine::GOLDEN_GOAL_SCORED) = 1;
         }
-        if c.tipo == 0x33 {
+        if c.kind == 0x33 {
             *b(p, match_player::PENALTIES_SCORED) = (*b(p, match_player::PENALTIES_SCORED)).wrapping_add(1);
         }
     } else if modo == 3 || modo == 4 {
@@ -4834,7 +4834,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
     }
     if modo == 1 {
         if c.l11 == 0 {
-            if c.tipo == 0x33 {
+            if c.kind == 0x33 {
                 *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(0x2bc);
             } else {
                 *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(0x28a);
@@ -4869,7 +4869,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
                 *b(g, match_player::FRUSTRATION) = (*b(g, match_player::FRUSTRATION)).wrapping_add(soma);
                 match_performance(g, 0);
             }
-            if c.tipo != 0x33 {
+            if c.kind != 0x33 {
                 *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_sub(500);
             }
             let di = *w(g, match_player::MATCH_RATING);
@@ -4893,11 +4893,11 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
         }
     }
     // 0x70717c: the goal commentary
-    if c.tipo != 0x33 && c.tipo != 0x3a && c.l14 == 0 && random(0x32) == 0 && c.l20 == 0 && tg() == 1 {
-        na(chamar, if c.tipo == 0x1a { 0x21d2 } else { 0x20d6 }, (read_u8(g + match_player::COMMENTARY_ID) as u32), (read_u8(g + match_player::SIDE) as u32), 0);
+    if c.kind != 0x33 && c.kind != 0x3a && c.l14 == 0 && random(0x32) == 0 && c.l20 == 0 && tg() == 1 {
+        na(chamar, if c.kind == 0x1a { 0x21d2 } else { 0x20d6 }, (read_u8(g + match_player::COMMENTARY_ID) as u32), (read_u8(g + match_player::SIDE) as u32), 0);
     }
     na(chamar, 0x1fff, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
-    if c.tipo == 0x33 {
+    if c.kind == 0x33 {
         na(chamar, if modo == 1 { 0x1fcf } else { 0x20f8 }, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
     } else {
         *dw(m, engine::MOMENTUM_A) = (*dw(m, engine::MOMENTUM_A)).wrapping_sub(*dw(m, engine::MOMENTUM_B));
@@ -4916,7 +4916,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
 pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let w = |q: usize, o: usize| (q + o) as *mut i16;
     let dw = |q: usize, o: usize| (q + o) as *mut i32;
-    let (p, m, g, lado) = (c.p, c.m, c.g, c.lado);
+    let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
     let na = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a7: i8| narrate_packed7(call, m, code, a3, a4, 0xff, 0xff, a7);
     let n7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a6: u32| narrate_packed7(call, m, code, a3, a4, a5, a6, 0);
@@ -4936,7 +4936,7 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
     };
     let l4786 = *dw(m, engine::MOMENTUM_B);
     let l4782 = || *dw(m, engine::MOMENTUM_A) as f64;
-    if side_of_move(m) as i8 > -1 || c.modo == 6 || c.modo == 5 {
+    if side_of_move(m) as i8 > -1 || c.mode == 6 || c.mode == 5 {
         // 0x707c86
         if c.l11 == 0 {
             na(call, 0x20f9, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
@@ -4970,7 +4970,7 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
     }
     if c.l18 && c.l11 != 0 {
         na(call, 0x201c, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
-        quem_bloqueou(call, if c.modo == 1 { 0x1fcd } else { 0x20fa });
+        quem_bloqueou(call, if c.mode == 1 { 0x1fcd } else { 0x20fa });
         let r = random(6);
         adjust(p, r);
         return;
@@ -4987,7 +4987,7 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
         adjust(p, r);
         return;
     }
-    if c.modo != 1 {
+    if c.mode != 1 {
         // 0x707bcb
         if c.l11 != 0 {
             quem_bloqueou(call, 0x20fa);
@@ -5011,13 +5011,13 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
     // quem marcava o artilheiro
     let markers = how_many_mark(m, p);
     c.l16 = markers as i8;
-    if c.tipo != 0x35 && markers != 0 {
+    if c.kind != 0x35 && markers != 0 {
         let mk = who_marks(m, p);
         if mk == 0 {
             return;
         }
         let minute = (*w(m, engine::CLOCK) as i32 / 11) as i8;
-        if c.conta == 0 {
+        if c.count == 0 {
             if c.e != 0 {
                 return;
             }
@@ -5034,7 +5034,7 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
         if c.e == 0 || pe == 0 || me == 0 || *w(p, match_player::MATCH_RATING) <= 0x1a5e || *w(mk, match_player::MATCH_RATING) >= 0x1c52 || mk != c.e {
             return;
         }
-        if (c.tipo == 3 || c.tipo == 0x39) && byte(pe, player_sheet::JUMPING) > 10 && byte(pe, player_sheet::JUMPING) as i32 - byte(me, player_sheet::JUMPING) as i32 > 3 {
+        if (c.kind == 3 || c.kind == 0x39) && byte(pe, player_sheet::JUMPING) > 10 && byte(pe, player_sheet::JUMPING) as i32 - byte(me, player_sheet::JUMPING) as i32 > 3 {
             n7(call, 0x21c4, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, (read_u8(mk + match_player::COMMENTARY_ID) as u32), (read_u8(mk + match_player::SIDE) as u32));
         } else if matches!(c.l8c, 0x70 | 0x6a | 0x69 | 0x12) && byte(pe, player_sheet::PLAYER_PACE) > 10 && byte(pe, player_sheet::PLAYER_PACE) as i32 - byte(me, player_sheet::PLAYER_PACE) as i32 > 3 {
             n7(call, 0x21c5, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, (read_u8(mk + match_player::COMMENTARY_ID) as u32), (read_u8(mk + match_player::SIDE) as u32));
@@ -5120,14 +5120,14 @@ pub(crate) unsafe fn retake_shot_with(c: &ShotLocals, apply: bool, desfazer: boo
     if apply {
         apply_to_team(m, p, f32::from_bits(0x3fb9999a));
     }
-    narrate_packed7(call, m, 0x20f7, byte(p, match_player::COMMENTARY_ID) as u8 as u32, c.lado as u8 as u32, 0xff, 0xff, 0);
+    narrate_packed7(call, m, 0x20f7, byte(p, match_player::COMMENTARY_ID) as u8 as u32, c.side as u8 as u32, 0xff, 0xff, 0);
     *((p + match_player::SHOT_QUALITY) as *mut i16) = c.l58;
     if desfazer {
         undo_goal_stats(p);
     }
     call(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL, p, [c.l50 as u8 as u32, c.l54 as u8 as u32, 0, 0, 0]);
     call(FN_MATCH_PLAYER_TAKE_POSSESSION, p, [0; 5]);
-    call(FN_MATCH_PLAYER_TAKE_SHOT, p, [c.a1, c.v0, c.som, 1, 0]);
+    call(FN_MATCH_PLAYER_TAKE_SHOT, p, [c.a1, c.v0, c.sound, 1, 0]);
 }
 
 /// Decrements the goal counters of player p (+0x3d..+0x45 words and the +0xc byte) when a goal is disallowed or
@@ -5150,22 +5150,22 @@ pub(crate) unsafe fn undo_goal_stats(p: usize) {
 /// 0x2154 com o primeiro, 2 (1 em 2) 0x2155 com os dois, senao 0x2132; depois os destaques deles.
 /// Com `assistencia`, a de quem marcava (0x21c6) entra como na 0x704d4b.
 pub(crate) unsafe fn narrate_pressure_teammates_with(c: &ShotLocals, k: i32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> bool {
-    let (p, m, lado) = (c.p, c.m, c.lado);
-    let n = c.conta as i32;
+    let (p, m, lado) = (c.p, c.m, c.side);
+    let n = c.count as i32;
     if random(n * n + k) == 0 {
         return false;
     }
     let zero = (lado == 0) as u32;
-    let reiniciar = || core::ptr::write_unaligned((c.lista + 0xa) as *mut u32, core::ptr::read_unaligned((c.lista + 2) as *const u32));
+    let reiniciar = || core::ptr::write_unaligned((c.list + 0xa) as *mut u32, core::ptr::read_unaligned((c.list + 2) as *const u32));
     if n == 1 {
         reiniciar();
-        let r1 = next_list_item(c.lista) as usize;
+        let r1 = next_list_item(c.list) as usize;
         narrate_packed7(call, m, 0x2154, (read_u8(p + match_player::COMMENTARY_ID) as u32), lado as u8 as u32, (read_u8(r1 + match_player::COMMENTARY_ID) as u32), zero, 0);
         narrate_first_highlight(call, m, r1, zero, &HIGHLIGHTS_R);
     } else if n == 2 && random(2) != 0 {
         reiniciar();
-        let r1 = next_list_item(c.lista) as usize;
-        let r2 = next_list_item(c.lista) as usize;
+        let r1 = next_list_item(c.list) as usize;
+        let r2 = next_list_item(c.list) as usize;
         narrate_packed7(call, m, 0x2155, (read_u8(r1 + match_player::COMMENTARY_ID) as u32), zero, (read_u8(r2 + match_player::COMMENTARY_ID) as u32), zero, 0);
         if !narrate_first_highlight(call, m, r1, zero, &HIGHLIGHTS_R) {
             narrate_first_highlight(call, m, r2, zero, &HIGHLIGHTS_R);
@@ -5185,9 +5185,9 @@ pub(crate) unsafe fn is_assist_against_marker(c: &ShotLocals, r: usize) -> bool 
     let (p, m) = (c.p, c.m);
     let mk = who_marks(m, p);
     mk != 0
-        && c.tipo != 0x33
-        && c.tipo != 0x35
-        && c.modo == 1
+        && c.kind != 0x33
+        && c.kind != 0x35
+        && c.mode == 1
         && byte(p, match_player::GOALS) == 0
         && byte(p, match_player::ASSISTS) == 0
         && byte(p, 3) == 0
@@ -5209,11 +5209,11 @@ pub(crate) unsafe fn is_assist_against_marker(c: &ShotLocals, r: usize) -> bool 
 pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
     let w = |q: usize, o: usize| (q + o) as *mut i16;
-    let (p, m, g, lado) = (c.p, c.m, c.g, c.lado);
+    let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
     let na = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a7: i8| narrate_packed7(chamar, m, codigo, a3, a4, 0xff, 0xff, a7);
     let ng = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32| narrate_packed7(chamar, m, codigo, (read_u8(g + match_player::COMMENTARY_ID) as u32), (read_u8(g + match_player::SIDE) as u32), 0xff, 0xff, 0);
-    let modo = c.modo;
+    let modo = c.mode;
     let classe = if razao as f64 > read_f32_at(rdata::F32_61) as f64 {
         1
     } else if razao as f64 > read_f32_at(rdata::F32_51) as f64 {
@@ -5228,7 +5228,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
     });
     if classe == 3 {
         *b(g, match_player::BUSY) = (*b(g, match_player::BUSY)).wrapping_add(random(3) as u8);
-        *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_add(if c.tipo != 0x33 { 200 } else { 1300 });
+        *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_add(if c.kind != 0x33 { 200 } else { 1300 });
     }
     // the start of the commentary: set piece, penalties or free kick
     let mut a_2122 = false;
@@ -5239,7 +5239,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
         } else {
             na(chamar, 0x2174, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
         }
-    } else if c.tipo == 0x33 {
+    } else if c.kind == 0x33 {
         if modo == 1 {
             na(chamar, 0x1fce, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
         }
@@ -5249,7 +5249,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
         c.l15 = 1;
         ng(chamar, 0x2122);
     } else {
-        let tipo_1a = c.tipo == 0x1a && (classe != 3 || c.l20 == 0);
+        let tipo_1a = c.kind == 0x1a && (classe != 3 || c.l20 == 0);
         if c.l1a {
             ng(chamar, if classe == 3 { 0x2112 } else { 0x2111 });
             narrate_first_highlight(chamar, m, g, (read_u8(g + match_player::SIDE) as u32), &HIGHLIGHTS_R);
@@ -5258,7 +5258,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
         } else {
             match classe {
                 1 => ng(chamar, 0x1fe6),
-                2 => ng(chamar, if c.tipo == 0x1a { 0x21d0 } else { 0x1fe4 }),
+                2 => ng(chamar, if c.kind == 0x1a { 0x21d0 } else { 0x1fe4 }),
                 _ => {
                     ng(chamar, if tipo_1a { 0x21d0 } else { 0x1fe5 });
                     narrate_first_highlight(chamar, m, p, lp, &HIGHLIGHTS_P);
@@ -5274,13 +5274,13 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
             return;
         }
         if modo != 2 {
-            *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_add(if c.tipo != 0x33 { 140 } else { 1000 });
+            *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_add(if c.kind != 0x33 { 140 } else { 1000 });
         }
         if modo != 1 && modo != 2 {
             return;
         }
         *b(g, match_player::BUSY) = (*b(g, match_player::BUSY)).wrapping_add((random(3) + 1) as u8);
-        chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(m + engine::BALL_X) as u32), (read_u8(m + engine::BALL_Y) as u32), ((lado == 0) as u32) << 8, ((c.tipo == 0x33) as u32) << 8, 0]);
+        chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(m + engine::BALL_X) as u32), (read_u8(m + engine::BALL_Y) as u32), ((lado == 0) as u32) << 8, ((c.kind == 0x33) as u32) << 8, 0]);
         *b(m, engine::SHOT_REBOUND) = 1;
         if c.l15 != 0 || byte(m, engine::RESTART_TYPE) == 0 || modo == 4 {
             return;
@@ -5304,7 +5304,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
                 na(chamar, 0x2020, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
             }
             if !matches!(modo, 5 | 6 | 2) {
-                *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_add(if c.tipo != 0x33 { 120 } else { 1000 });
+                *w(g, match_player::MATCH_RATING) = (*w(g, match_player::MATCH_RATING)).wrapping_add(if c.kind != 0x33 { 120 } else { 1000 });
             }
         }
         if modo == 4 || modo == 3 {
@@ -5323,10 +5323,10 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
             na(chamar, 0x2020, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
         } else {
             let limit = 0x12c + if c.l1a { 0x190 } else { 0 } + if c.l19 { 0xc8 } else { 0 };
-            if *w(p, match_player::SHOT_QUALITY) as i32 > limit || c.tipo == 0x3a {
+            if *w(p, match_player::SHOT_QUALITY) as i32 > limit || c.kind == 0x3a {
                 na(chamar, 0x1fdd, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, byte(p, match_player::GOALS));
             }
-            if c.l40 < -0x87 && c.tipo != 0x3a {
+            if c.l40 < -0x87 && c.kind != 0x3a {
                 narrate_pressure_teammates_with(&c, 3, chamar);
             }
         }
@@ -5344,7 +5344,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, razao: f32, chamar:
 /// [pt] Escanteio para o adversario (0x70961e): a bola na linha de fundo do lado de quem chutou, a
 /// reposicao 3 com a bola do lado dele e a narracao 0x1f75.
 pub(crate) unsafe fn corner_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let (p, m, lado) = (c.p, c.m, c.lado);
+    let (p, m, lado) = (c.p, c.m, c.side);
     let b = |o: usize| (m + o) as *mut u8;
     match lado {
         1 => *b(engine::BALL_Y) = 0xff,
@@ -5367,11 +5367,11 @@ pub(crate) unsafe fn corner_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize
 /// [pt] O gol nos penaltis e na cobranca (0x707db2): +1 na conta do lado (+0xf5bc), 0x2000 e, nos
 /// penaltis, 0x212e.
 pub(crate) unsafe fn shootout_goal_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let (p, m, lado) = (c.p, c.m, c.lado);
+    let (p, m, lado) = (c.p, c.m, c.side);
     let k = (m + engine::SIDE_STATS + (lado as isize * 0x36) as usize) as *mut u8;
     *k = (*k).wrapping_add(1);
     narrate_packed7(call, m, 0x2000, byte(p, match_player::COMMENTARY_ID) as u8 as u32, lado as u8 as u32, 0xff, 0xff, 0);
-    if c.modo == 3 {
+    if c.mode == 3 {
         narrate_packed7(call, m, 0x212e, byte(p, match_player::COMMENTARY_ID) as u8 as u32, lado as u8 as u32, 0xff, 0xff, 0);
     }
 }
@@ -5383,7 +5383,7 @@ pub(crate) unsafe fn shootout_goal_with(c: &ShotLocals, call: &mut dyn FnMut(usi
 /// lado, 0x20df, talvez 0x20d9 e fator 3; senao, empatado ou um a frente, 1 em 40 0x20d9, fator
 /// 1,45. Quem chutou leva o fator (0x6bb8d0) e cansa (0x716e10); as contas do gol sao desfeitas.
 pub(crate) unsafe fn disallowed_goal_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let (p, m, lado) = (c.p, c.m, c.lado);
+    let (p, m, lado) = (c.p, c.m, c.side);
     let nb = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| narrate_packed7(call, m, code, 0xff, lado as u8 as u32, 0xff, 0xff, 0);
     crate::comparison::branch("shot gol anulado");
     nb(call, 0x20ed);
@@ -5417,9 +5417,9 @@ pub(crate) unsafe fn disallowed_goal_with(c: &ShotLocals, call: &mut dyn FnMut(u
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
-    let (p, m, g, lado) = (c.p, c.m, c.g, c.lado);
+    let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
-    let modo = c.modo;
+    let modo = c.mode;
     let na = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a3: u32, a4: u32, a7: i8| narrate_packed7(chamar, m, codigo, a3, a4, 0xff, 0xff, a7);
     let nb = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a7: i8| narrate_packed7(chamar, m, codigo, 0xff, lp, 0xff, 0xff, a7);
     let tg = || if read_usize(g + match_player::ENGINE) != 0 { table_a(read_usize(g + match_player::ENGINE), g) } else { 0 };
@@ -5624,9 +5624,9 @@ pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, chamar: &mut dyn FnMut
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |q: usize, o: usize| (q + o) as *mut u8;
-    let (p, m, g, lado) = (c.p, c.m, c.g, c.lado);
+    let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
-    let modo = c.modo;
+    let modo = c.mode;
     let na = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, codigo: u32, a7: i8| narrate_packed7(chamar, m, codigo, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0xff, 0xff, a7);
     let tg = || if read_usize(g + match_player::ENGINE) != 0 { table_a(read_usize(g + match_player::ENGINE), g) } else { 0 };
     if c.l11 == 2 {
@@ -5639,7 +5639,7 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut
         }
         if modo == 4 || modo == 3 {
             na(chamar, 0x2008, 0);
-        } else if c.tipo == 0x33 && modo == 1 {
+        } else if c.kind == 0x33 && modo == 1 {
             na(chamar, 0x1fce, 0);
         }
         if modo == 5 || modo == 6 {
@@ -5659,15 +5659,15 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut
         if modo == 4 {
             na(chamar, 0x2174, 0);
         }
-    } else if c.tipo == 0x33 {
+    } else if c.kind == 0x33 {
         na(chamar, 0x1fce, 0);
     }
     let goleiro = |chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
-        if c.tipo != 0x33 && c.tipo != 0x3a && c.l14 == 0 && random(0x32) == 0 && c.l20 == 0 && tg() == 1 {
-            narrate_packed7(chamar, m, if c.tipo == 0x1a { 0x21d2 } else { 0x20d6 }, (read_u8(g + match_player::COMMENTARY_ID) as u32), (read_u8(g + match_player::SIDE) as u32), 0xff, 0xff, 0);
+        if c.kind != 0x33 && c.kind != 0x3a && c.l14 == 0 && random(0x32) == 0 && c.l20 == 0 && tg() == 1 {
+            narrate_packed7(chamar, m, if c.kind == 0x1a { 0x21d2 } else { 0x20d6 }, (read_u8(g + match_player::COMMENTARY_ID) as u32), (read_u8(g + match_player::SIDE) as u32), 0xff, 0xff, 0);
         }
     };
-    if c.tipo == 0x33 {
+    if c.kind == 0x33 {
         match c.l10 {
             2 | 5 | 8 | 3 | 4 | 6 | 7 | 9 => {
                 na(chamar, if matches!(c.l10, 2 | 5 | 8) { 0x2126 } else { 0x2125 }, c.l28);
@@ -5726,7 +5726,7 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut
                 narrate_packed7(chamar, m, 0x20d5, (read_u8(g + match_player::COMMENTARY_ID) as u32), (read_u8(g + match_player::SIDE) as u32), 0xff, 0xff, 0);
             }
             let l = if c.l11 != 0 { (lado == 0) as u32 } else { lp };
-            chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(m + engine::BALL_X) as u32), (read_u8(m + engine::BALL_Y) as u32), 2 | l << 8, 1 | ((c.tipo == 0x33) as u32) << 8, 0]);
+            chamar(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(m + engine::BALL_X) as u32), (read_u8(m + engine::BALL_Y) as u32), 2 | l << 8, 1 | ((c.kind == 0x33) as u32) << 8, 0]);
             if tg() == 1 {
                 *b(g, match_player::BUSY) = (*b(g, match_player::BUSY)).wrapping_add(random(3) as u8);
             }
@@ -5734,7 +5734,7 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut
         }
         2..=4 => {
             crate::comparison::branch("shot fraco para fora");
-            if c.tipo != 0x33 {
+            if c.kind != 0x33 {
                 narrate_weak_miss_with(c, chamar);
             }
             for codigo in [0x21a1, 0x21a2] {
@@ -5746,7 +5746,7 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut
         }
         _ => {
             crate::comparison::branch("shot para fora");
-            if c.tipo != 0x33 {
+            if c.kind != 0x33 {
                 narrate_miss_with(c, chamar);
             }
             goal_kick_from_shot(c, chamar);
@@ -5759,12 +5759,12 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, chamar: &mut dyn FnMut
 /// [pt] A bola saiu pela linha de fundo (0x705d15 e 0x706c5d): a linha do outro lado e a bola fora.
 pub(crate) unsafe fn goal_kick_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = c.m;
-    match c.lado {
+    match c.side {
         1 => *((m + engine::BALL_Y) as *mut u8) = 0xff,
         0 => *((m + engine::BALL_Y) as *mut u8) = 0xc,
         _ => {}
     }
-    call(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, m, [c.lado as u8 as u32, 0, 0, 0, 0]);
+    call(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, m, [c.side as u8 as u32, 0, 0, 0, 0]);
 }
 
 /// Commentary for a weak shot wide (classes 2 to 4, 0x704c6d..0x705cb2).
@@ -5772,12 +5772,12 @@ pub(crate) unsafe fn goal_kick_from_shot(c: &ShotLocals, call: &mut dyn FnMut(us
 /// [pt] As narracoes do chute fraco para fora (classes 2 a 4, 0x704c6d a 0x705cb2).
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let (p, m, lado) = (c.p, c.m, c.lado);
+    let (p, m, lado) = (c.p, c.m, c.side);
     let lp = lado as u8 as u32;
     let zero = (lado == 0) as u32;
     let na = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a7: i8| narrate_packed7(call, m, code, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0xff, 0xff, a7);
     let n_21c6 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, r: usize| narrate_packed7(call, m, 0x21c6, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, (read_u8(r + match_player::COMMENTARY_ID) as u32), (read_u8(r + match_player::SIDE) as u32), 0);
-    let reiniciar = || core::ptr::write_unaligned((c.lista + 0xa) as *mut u32, core::ptr::read_unaligned((c.lista + 2) as *const u32));
+    let reiniciar = || core::ptr::write_unaligned((c.list + 0xa) as *mut u32, core::ptr::read_unaligned((c.list + 2) as *const u32));
     if c.l18 && c.l11 == 0 {
         let q = free_teammate(m, p);
         if q != 0 && byte(read_usize(p + match_player::PLAYER), 0x3f) < 10 && {
@@ -5795,15 +5795,15 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
     }
     if (*((m + engine::MOMENTUM_A) as *const i32) as f64) > read_f64_at(rdata::F64_1680) {
         if c.l40 >= -0x87 {
-            if c.tipo == 0x3a && c.conta == 0 {
+            if c.kind == 0x3a && c.count == 0 {
                 na(call, 0x219a, 0);
             }
-        } else if c.tipo != 0x3a {
-            let n = c.conta as i32;
+        } else if c.kind != 0x3a {
+            let n = c.count as i32;
             if random(n * n + 4) != 0 {
                 if n == 1 {
                     reiniciar();
-                    let r1 = next_list_item(c.lista) as usize;
+                    let r1 = next_list_item(c.list) as usize;
                     if c.l25 != 0 {
                         if is_assist_against_marker(c, r1) {
                             n_21c6(call, r1);
@@ -5817,8 +5817,8 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
                         na(call, 0x2132, 0);
                     } else {
                         reiniciar();
-                        let r1 = next_list_item(c.lista) as usize;
-                        let r2 = next_list_item(c.lista) as usize;
+                        let r1 = next_list_item(c.list) as usize;
+                        let r2 = next_list_item(c.list) as usize;
                         if c.l25 != 0 {
                             if r2 != 0 && is_assist_against_marker(c, r2) {
                                 n_21c6(call, r2);
@@ -5852,31 +5852,31 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
         na(call, 0x1fde, byte(p, match_player::GOALS));
         if !narrate_first_highlight(call, m, p, lp, &HIGHLIGHTS_P) && c.l25 != 0 {
             reiniciar();
-            let r1 = next_list_item(c.lista) as usize;
+            let r1 = next_list_item(c.list) as usize;
             if is_assist_against_marker(c, r1) {
                 n_21c6(call, r1);
             }
         }
         return;
     }
-    if c.l40 >= -0x87 || c.tipo == 0x3a {
+    if c.l40 >= -0x87 || c.kind == 0x3a {
         return;
     }
-    let n = c.conta as i32;
+    let n = c.count as i32;
     if random(n * n + 4) == 0 {
         return;
     }
     if n == 1 {
         reiniciar();
-        let r1 = next_list_item(c.lista) as usize;
+        let r1 = next_list_item(c.list) as usize;
         narrate_packed7(call, m, 0x2154, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, (read_u8(r1 + match_player::COMMENTARY_ID) as u32), zero, 0);
         if !narrate_first_highlight(call, m, r1, zero, &HIGHLIGHTS_R) && c.l25 != 0 && is_assist_against_marker(c, r1) {
             n_21c6(call, r1);
         }
     } else if n == 2 && random(2) != 0 {
         reiniciar();
-        let r1 = next_list_item(c.lista) as usize;
-        let r2 = next_list_item(c.lista) as usize;
+        let r1 = next_list_item(c.list) as usize;
+        let r2 = next_list_item(c.list) as usize;
         narrate_packed7(call, m, 0x2155, (read_u8(r1 + match_player::COMMENTARY_ID) as u32), zero, (read_u8(r2 + match_player::COMMENTARY_ID) as u32), zero, 0);
         if !narrate_first_highlight(call, m, r1, zero, &HIGHLIGHTS_R) {
             narrate_first_highlight(call, m, r2, zero, &HIGHLIGHTS_R);
@@ -5890,12 +5890,12 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
 ///
 /// [pt] As narracoes do chute para fora (classes 5 a 0xb, 0x705d52 a 0x706c5c).
 pub(crate) unsafe fn narrate_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let (p, m, g, lado) = (c.p, c.m, c.g, c.lado);
+    let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
     let na = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a7: i8| narrate_packed7(call, m, code, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0xff, 0xff, a7);
     let tg = || if read_usize(g + match_player::ENGINE) != 0 { table_a(read_usize(g + match_player::ENGINE), g) } else { 0 };
     let companheiros = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
-        if c.l40 < -0x87 && c.tipo != 0x3a {
+        if c.l40 < -0x87 && c.kind != 0x3a {
             narrate_pressure_teammates_with(c, 4, call);
         }
     };
@@ -5910,7 +5910,7 @@ pub(crate) unsafe fn narrate_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usiz
         return;
     }
     let x39 = *((p + match_player::SHOT_QUALITY) as *const i16);
-    let k3a = c.tipo == 0x3a;
+    let k3a = c.kind == 0x3a;
     if (x39 > 0x15e && !k3a) || (x39 > 0xaf && k3a) {
         na(call, if byte(p, match_player::GOALS) != 2 { 0x1fdd } else { 0x1fdf }, byte(p, match_player::GOALS));
         narrate_first_highlight(call, m, p, lp, &HIGHLIGHTS_P);

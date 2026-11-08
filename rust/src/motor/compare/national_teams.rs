@@ -401,12 +401,12 @@ pub(crate) unsafe extern "thiscall" fn compare_set_current_competition(this: usi
         return o(this, nation, comp);
     }
     let p = current_comp_plan(this, nation, comp);
-    let (atual, fila) = (read_usize(p.vaga) as u32, read_usize(p.fila) as u32);
+    let (atual, fila) = (read_usize(p.slot) as u32, read_usize(p.queue) as u32);
     o(this, nation, comp);
-    let (atual2, fila2) = (read_usize(p.vaga) as u32, read_usize(p.fila) as u32);
-    let ok = atual2 == p.nova.unwrap_or(atual) && fila2 == p.na_fila.unwrap_or(fila);
+    let (atual2, fila2) = (read_usize(p.slot) as u32, read_usize(p.queue) as u32);
+    let ok = atual2 == p.new.unwrap_or(atual) && fila2 == p.in_queue.unwrap_or(fila);
     SCOREBOARD.record(ok, || format!("set_current_competition(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
-        read_usize(nation), read_usize(comp), atual, atual2, p.nova, fila, fila2, p.na_fila));
+        read_usize(nation), read_usize(comp), atual, atual2, p.new, fila, fila2, p.in_queue));
 }
 
 /// Comparer for `mark_clubs_with_fixtures`.

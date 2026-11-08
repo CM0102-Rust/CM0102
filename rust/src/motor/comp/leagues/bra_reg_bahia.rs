@@ -12,12 +12,12 @@ use super::*;
 /// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
 pub(crate) struct BraRegBahiaStateChampionship {
     pub(crate) vtabela: usize,
-    pub(crate) fases: u32,
-    pub(crate) regras: usize,
-    pub(crate) tabela: usize,
-    pub(crate) previstas: usize,
-    pub(crate) arquivo: usize,
-    pub(crate) linhas: [u32; 5],
+    pub(crate) stages: u32,
+    pub(crate) rules: usize,
+    pub(crate) table: usize,
+    pub(crate) predicted: usize,
+    pub(crate) file: usize,
+    pub(crate) rows: [u32; 5],
 }
 
 /// The constructor of a Brazilian state league: League base, vtable, year, discipline; then either loads the saved
@@ -48,10 +48,10 @@ pub(crate) struct BraRegBahiaStateChampionship {
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
+    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
     core::ptr::write_unaligned(this as *mut usize, e.vtabela);
@@ -64,30 +64,30 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: usize, ano: u32,
     *((this + league::IMPORTANCE) as *mut u8) = 0xf;
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
-    core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, e.fases);
-    let v = exe::crt_malloc(e.fases * 4);
+    core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, e.stages);
+    let v = exe::crt_malloc(e.stages * 4);
     core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     if regras(this) == 0 {
-        show_error_at(e.arquivo, e.linhas[0]);
+        show_error_at(e.file, e.rows[0]);
         return this;
     }
     if tabela(this) == 0 {
-        show_error_at(e.arquivo, e.linhas[1]);
+        show_error_at(e.file, e.rows[1]);
         return this;
     }
     if exe::league_create_fixtures(this) == 0 {
-        show_error_at(e.arquivo, e.linhas[2]);
+        show_error_at(e.file, e.rows[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        show_error_at(e.arquivo, e.linhas[3]);
+        show_error_at(e.file, e.rows[3]);
         return this;
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
-        show_error_at(e.arquivo, e.linhas[4]);
+        show_error_at(e.file, e.rows[4]);
         return this;
     }
     if previstas_sim {
@@ -107,7 +107,7 @@ pub(crate) unsafe fn bra_reg_bahia_compare_state_league_ctor(name: &str, this: u
     let mut ok = r == this && read_usize(this) == e.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
         && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 7;
     if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
-        ok = ok && read_usize(this + league::STAGE_COUNT) == e.fases as usize && read_usize(this + league::STAGES) != 0 && *((this + league::IMPORTANCE) as *const u8) == 0xf;
+        ok = ok && read_usize(this + league::STAGE_COUNT) == e.stages as usize && read_usize(this + league::STAGES) != 0 && *((this + league::IMPORTANCE) as *const u8) == 0xf;
     }
     SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this, r, read_usize(this), read_usize(this + league::STAGE_COUNT), read_usize(this + league::STAGES), read_usize(this + 8)));
     r
@@ -115,32 +115,32 @@ pub(crate) unsafe fn bra_reg_bahia_compare_state_league_ctor(name: &str, this: u
 
 pub(crate) const BAHIA_CHAMPIONSHIP: BraRegBahiaStateChampionship = BraRegBahiaStateChampionship {
     vtabela: 0x967fb4,
-    fases: 1,
-    regras: 0x43bc70,
-    tabela: 0x42fd10,
-    previstas: 0x430340,
-    arquivo: 0x98acac,
-    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+    stages: 1,
+    rules: 0x43bc70,
+    table: 0x42fd10,
+    predicted: 0x430340,
+    file: 0x98acac,
+    rows: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
 
 pub(crate) const CENTRO_OESTE_STATE_CHAMPIONSHIP: BraRegBahiaStateChampionship = BraRegBahiaStateChampionship {
     vtabela: 0x968068,
-    fases: 1,
-    regras: 0x430ff0,
-    tabela: 0x430ef0,
-    previstas: 0x431610,
-    arquivo: 0x98ae10,
-    linhas: [0x4c, 0x53, 0x59, 0x60, 0x67],
+    stages: 1,
+    rules: 0x430ff0,
+    table: 0x430ef0,
+    predicted: 0x431610,
+    file: 0x98ae10,
+    rows: [0x4c, 0x53, 0x59, 0x60, 0x67],
 };
 
 pub(crate) const GAUCHO_STATE_LEAGUE: BraRegBahiaStateChampionship = BraRegBahiaStateChampionship {
     vtabela: 0x96811c,
-    fases: 1,
-    regras: 0x4322d0,
-    tabela: 0x4321d0,
-    previstas: 0x432980,
-    arquivo: 0x98ae50,
-    linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
+    stages: 1,
+    rules: 0x4322d0,
+    table: 0x4321d0,
+    predicted: 0x432980,
+    file: 0x98ae50,
+    rows: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
 
 /// The Bahia state league at career creation: the year and the database competition, disciplinary rule 7 and, with no

@@ -36,7 +36,7 @@ MUTACOES = [
     ('cpo12_idioma_sem_aumento', 'let f = (*((r + language_entry::FLUENCY) as *const u8)).wrapping_add(aumento as u8);', 'let f = *((r + language_entry::FLUENCY) as *const u8); // mutacao: sem o aumento', 'cpo_12 idioma melhorado'),
     ('cpo12_idioma_novo_pela_metade', '*((r + language_entry::FLUENCY) as *mut u8) = if (f as i8) > 10 { 10 } else { f };', '*((r + language_entry::FLUENCY) as *mut u8) = (if (f as i8) > 10 { 10 } else { f }) / 2; // mutacao: metade da fluencia', 'cpo_12 idioma novo'),
     ('cpo12_idiomas_sem_ordem', 'exe::crt_qsort(read_usize(this + player_stats_fields::LANGUAGES), read_usize(this + player_stats_fields::LANGUAGE_COUNT) as u32, 6, 0x7c6d40);', 'let _ = &qsort; // mutacao: sem ordenar', 'cpo_12 idiomas ordenados'),
-    ('cpo13_competicao_atual_parada', 'write_u32(p.vaga, nova);', 'let _ = nova; // mutacao: a competicao atual nao muda', 'cpo_13 competicao atual'),
+    ('cpo13_competicao_atual_parada', 'write_u32(p.slot, nova);', 'let _ = nova; // mutacao: a competicao atual nao muda', 'cpo_13 competicao atual'),
     ('cpo13_mandante_sem_marca', 'mark_club_code(this, casa, n, code); // o mandante', '// mutacao: o mandante sem marca', 'cpo_13 clubes com jogo'),
     ('cpo13_visitante_sem_marca', 'mark_club_code(this, fora, n, code); // o visitante', '// mutacao: o visitante sem marca', 'cpo_13 clubes com jogo'),
 ]

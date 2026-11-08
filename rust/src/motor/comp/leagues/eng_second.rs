@@ -46,11 +46,11 @@ pub(crate) unsafe fn eng_second_set_league_rounds(t: usize, year: u32, first: i3
 /// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct EngSecondChristmasSchedule {
     pub(crate) comeco: &'static [EngSecondScheduleRound],
-    pub(crate) referencia: usize,
-    pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [EngSecondScheduleRound]; 8],
-    pub(crate) fim: &'static [EngSecondScheduleRound],
-    pub(crate) linha: u32,
+    pub(crate) reference: usize,
+    pub(crate) adjust: i32,
+    pub(crate) cases: [&'static [EngSecondScheduleRound]; 8],
+    pub(crate) end: &'static [EngSecondScheduleRound],
+    pub(crate) row: u32,
 }
 
 /// Sets the rounds around Christmas: start rounds, the middle block chosen by the weekday of the reference date, and
@@ -59,17 +59,17 @@ pub(crate) unsafe fn eng_second_set_christmas_rounds(t: usize, year: u32, n: &En
     eng_second_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
-    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
-        show_error_at(file, n.linha);
+        show_error_at(file, n.row);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[case];
+    let middle = n.cases[case];
     eng_second_set_league_rounds(t, year, n.comeco.len() as i32, middle);
-    eng_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
+    eng_second_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.end);
 }
 
 /// a segunda e a terceira divisões inglesas (as mesmas datas): as rodadas antes do Natal
@@ -250,10 +250,10 @@ pub(crate) const THIRD_DIVISION_CHRISTMAS_DEFAULT: [EngSecondScheduleRound; 4] =
     (5, 0, 1, -1, 2, &[(-1, -1, -1)]), // 26: 5/jan (+1 ano)
 ];
 
-pub(crate) const DIVISION_TWO_CHRISTMAS: EngSecondChristmasSchedule = EngSecondChristmasSchedule { comeco: &SECOND_DIVISION_START, referencia: 22, ajuste: 13, casos: [&SECOND_DIVISION_CHRISTMAS_0, &SECOND_DIVISION_CHRISTMAS_ROUNDS_1, &DIVISION_TWO_CHRISTMAS_ROUNDS_2, &SECOND_DIVISION_CHRISTMAS_3, &SECOND_DIVISION_CHRISTMAS_ROUNDS_4, &DIVISION_TWO_CHRISTMAS_ROUNDS_5, &SECOND_DIVISION_CHRISTMAS_6, &SECOND_DIVISION_CHRISTMAS_ROUNDS_DEFAULT], fim: &SECOND_DIVISION_LATE_ROUNDS, linha: 0x15c };
+pub(crate) const DIVISION_TWO_CHRISTMAS: EngSecondChristmasSchedule = EngSecondChristmasSchedule { comeco: &SECOND_DIVISION_START, reference: 22, adjust: 13, cases: [&SECOND_DIVISION_CHRISTMAS_0, &SECOND_DIVISION_CHRISTMAS_ROUNDS_1, &DIVISION_TWO_CHRISTMAS_ROUNDS_2, &SECOND_DIVISION_CHRISTMAS_3, &SECOND_DIVISION_CHRISTMAS_ROUNDS_4, &DIVISION_TWO_CHRISTMAS_ROUNDS_5, &SECOND_DIVISION_CHRISTMAS_6, &SECOND_DIVISION_CHRISTMAS_ROUNDS_DEFAULT], end: &SECOND_DIVISION_LATE_ROUNDS, row: 0x15c };
 pub(crate) const DIVISION_TWO_PLAYOFF_0: EngCcCupCupRound = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
 pub(crate) const SECOND_DIVISION_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1, 3), (0x1b, 4, 1, 6, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
-pub(crate) const THIRD_DIVISION_CHRISTMAS_SCHEDULE: EngSecondChristmasSchedule = EngSecondChristmasSchedule { comeco: &SECOND_DIVISION_START, referencia: 22, ajuste: 13, casos: [&DIVISION_THREE_CHRISTMAS_ROUNDS_0, &THIRD_DIVISION_CHRISTMAS_1, &THIRD_DIVISION_CHRISTMAS_ROUNDS_2, &DIVISION_THREE_CHRISTMAS_ROUNDS_3, &THIRD_DIVISION_CHRISTMAS_4, &THIRD_DIVISION_CHRISTMAS_ROUNDS_5, &DIVISION_THREE_CHRISTMAS_ROUNDS_6, &THIRD_DIVISION_CHRISTMAS_DEFAULT], fim: &SECOND_DIVISION_LATE_ROUNDS, linha: 0x161 };
+pub(crate) const THIRD_DIVISION_CHRISTMAS_SCHEDULE: EngSecondChristmasSchedule = EngSecondChristmasSchedule { comeco: &SECOND_DIVISION_START, reference: 22, adjust: 13, cases: [&DIVISION_THREE_CHRISTMAS_ROUNDS_0, &THIRD_DIVISION_CHRISTMAS_1, &THIRD_DIVISION_CHRISTMAS_ROUNDS_2, &DIVISION_THREE_CHRISTMAS_ROUNDS_3, &THIRD_DIVISION_CHRISTMAS_4, &THIRD_DIVISION_CHRISTMAS_ROUNDS_5, &DIVISION_THREE_CHRISTMAS_ROUNDS_6, &THIRD_DIVISION_CHRISTMAS_DEFAULT], end: &SECOND_DIVISION_LATE_ROUNDS, row: 0x161 };
 pub(crate) const THIRD_DIVISION_PLAYOFF_SEMIFINAL: EngCcCupCupRound = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
 pub(crate) const DIVISION_THREE_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1, 3), (0x1a, 4, 1, 5, 1, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
 

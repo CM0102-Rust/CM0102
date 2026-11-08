@@ -46,11 +46,11 @@ pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, year: u32, first: i32
 /// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct SpaLowerChristmasSchedule {
     pub(crate) comeco: &'static [SpaLowerLeagueRound],
-    pub(crate) referencia: usize,
-    pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [SpaLowerLeagueRound]; 8],
-    pub(crate) fim: &'static [SpaLowerLeagueRound],
-    pub(crate) linha: u32,
+    pub(crate) reference: usize,
+    pub(crate) adjust: i32,
+    pub(crate) cases: [&'static [SpaLowerLeagueRound]; 8],
+    pub(crate) end: &'static [SpaLowerLeagueRound],
+    pub(crate) row: u32,
 }
 
 /// Writes the start rounds, then a middle block chosen by the weekday offset of a reference round from a December date
@@ -59,17 +59,17 @@ pub(crate) unsafe fn set_rounds_around_christmas(t: usize, year: u32, n: &SpaLow
     spa_lower_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
-    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
-        show_error_at(file, n.linha);
+        show_error_at(file, n.row);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[case];
+    let middle = n.cases[case];
     spa_lower_set_league_rounds(t, year, n.comeco.len() as i32, middle);
-    spa_lower_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
+    spa_lower_set_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.end);
 }
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano par)
@@ -250,8 +250,8 @@ pub(crate) const LOWER_ODD_YEAR_LATE_ROUNDS: [SpaLowerLeagueRound; 21] = [
     (16, 4, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 41: 16/mai (+1 ano)
 ];
 
-pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_EVEN_YEAR_START, referencia: 16, ajuste: 17, casos: [&LOWER_EVEN_YEAR_CHRISTMAS_0, &LOWER_EVEN_CHRISTMAS_ROUNDS_1, &LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_2, &LOWER_EVEN_YEAR_CHRISTMAS_3, &LOWER_EVEN_CHRISTMAS_ROUNDS_4, &LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_5, &LOWER_EVEN_YEAR_CHRISTMAS_6, &LOWER_EVEN_CHRISTMAS_ROUNDS_DEFAULT], fim: &LOWER_EVEN_LATE_ROUNDS, linha: 0x128 };
-pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_ODD_EARLY_ROUNDS, referencia: 19, ajuste: 17, casos: [&LOWER_ODD_CHRISTMAS_ROUNDS_0, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_1, &LOWER_ODD_YEAR_CHRISTMAS_2, &LOWER_ODD_CHRISTMAS_ROUNDS_3, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_4, &LOWER_ODD_YEAR_CHRISTMAS_5, &LOWER_ODD_CHRISTMAS_ROUNDS_6, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_DEFAULT], fim: &LOWER_ODD_YEAR_LATE_ROUNDS, linha: 0x237 };
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_EVEN_YEAR_START, reference: 16, adjust: 17, cases: [&LOWER_EVEN_YEAR_CHRISTMAS_0, &LOWER_EVEN_CHRISTMAS_ROUNDS_1, &LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_2, &LOWER_EVEN_YEAR_CHRISTMAS_3, &LOWER_EVEN_CHRISTMAS_ROUNDS_4, &LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_5, &LOWER_EVEN_YEAR_CHRISTMAS_6, &LOWER_EVEN_CHRISTMAS_ROUNDS_DEFAULT], end: &LOWER_EVEN_LATE_ROUNDS, row: 0x128 };
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_ODD_EARLY_ROUNDS, reference: 19, adjust: 17, cases: [&LOWER_ODD_CHRISTMAS_ROUNDS_0, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_1, &LOWER_ODD_YEAR_CHRISTMAS_2, &LOWER_ODD_CHRISTMAS_ROUNDS_3, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_4, &LOWER_ODD_YEAR_CHRISTMAS_5, &LOWER_ODD_CHRISTMAS_ROUNDS_6, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_DEFAULT], end: &LOWER_ODD_YEAR_LATE_ROUNDS, row: 0x237 };
 
 /// the Spanish lower division schedule (background): 42 rounds, nearly all on Sunday (day 6); in odd years (2001/02)
 /// from 16 August to 16 May, in even years from 30 August to 6 June; in each, one fixed-date Christmas round chosen by

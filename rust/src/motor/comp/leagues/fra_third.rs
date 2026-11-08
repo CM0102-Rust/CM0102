@@ -55,11 +55,11 @@ pub(crate) unsafe fn written_league_round_bytes(t: usize, guia: usize, n: usize)
 
 /// O que muda entre as ligas de fase única.
 pub(crate) struct FraThirdSingleStageLeague {
-    pub(crate) rodadas: i16,
-    pub(crate) arquivo: usize,
-    pub(crate) linha: u32,
-    pub(crate) tabela: &'static [FraThirdLeagueRound],
-    pub(crate) ramo: &'static str,
+    pub(crate) rounds: i16,
+    pub(crate) file: usize,
+    pub(crate) row: u32,
+    pub(crate) table: &'static [FraThirdLeagueRound],
+    pub(crate) branch: &'static str,
 }
 
 /// The common create_schedule body (thiscall(league, stage, &rounds, &extra, &é_liga), ret 0x10; no saved state): only
@@ -79,16 +79,16 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
     if !liga.is_null() {
         *liga = 1;
     }
-    *rodadas = p.rodadas;
+    *rodadas = p.rounds;
     *extra = 0;
-    let t = exe::crt_malloc(p.rodadas as u32 * 0x41);
+    let t = exe::crt_malloc(p.rounds as u32 * 0x41);
     if t == 0 {
-        show_error_at(p.arquivo, p.linha);
+        show_error_at(p.file, p.row);
         return 0;
     }
-    crate::comparison::branch(p.ramo);
+    crate::comparison::branch(p.branch);
     let ano = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
-    fra_third_write_league_rounds(t, ano, 0, p.tabela);
+    fra_third_write_league_rounds(t, ano, 0, p.table);
     t
 }
 
@@ -222,9 +222,9 @@ pub(crate) const LOWER_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (20, 4, 1, 5, 2, &[(5, 1, 1), (-1, -1, -1)]), // 37: 20/mai (+1 ano)
 ];
 
-pub(crate) const FRENCH_THIRD_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rodadas: 0x26, arquivo: 0x9ccc80, linha: 0xa6, tabela: &FRENCH_THIRD_DIVISION_ROUNDS, ramo: "cqo_4 calendario da terceira francesa" };
-pub(crate) const FRENCH_SECOND_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rodadas: 0x26, arquivo: 0x9ccc0c, linha: 0xa7, tabela: &SECOND_DIVISION_ROUNDS, ramo: "cqo_4 calendario da segunda francesa" };
-pub(crate) const LOWER_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rodadas: 0x26, arquivo: 0x9ccbd0, linha: 0xa9, tabela: &LOWER_DIVISION_ROUNDS, ramo: "cqo_4 calendario da divisao de baixo francesa" };
+pub(crate) const FRENCH_THIRD_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rounds: 0x26, file: 0x9ccc80, row: 0xa6, table: &FRENCH_THIRD_DIVISION_ROUNDS, branch: "cqo_4 calendario da terceira francesa" };
+pub(crate) const FRENCH_SECOND_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rounds: 0x26, file: 0x9ccc0c, row: 0xa7, table: &SECOND_DIVISION_ROUNDS, branch: "cqo_4 calendario da segunda francesa" };
+pub(crate) const LOWER_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rounds: 0x26, file: 0x9ccbd0, row: 0xa9, table: &LOWER_DIVISION_ROUNDS, branch: "cqo_4 calendario da divisao de baixo francesa" };
 
 /// the National schedule: 38 rounds (home and away with 20 clubs), from 7 August to 20 May of the next year, mostly at
 /// weekends and some midweek; round 21 already on 7 January; no TV slots (no match moves day); main stage only

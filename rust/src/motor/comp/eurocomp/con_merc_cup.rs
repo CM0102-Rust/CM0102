@@ -168,18 +168,18 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
 ///
 /// [pt] Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
 pub(crate) struct NationClubList {
-    pub(crate) clubes: [usize; 30],
+    pub(crate) clubs: [usize; 30],
     pub(crate) n: u8,
 }
 
 impl NationClubList {
     fn novo() -> Self {
-        NationClubList { clubes: [0; 30], n: 0 }
+        NationClubList { clubs: [0; 30], n: 0 }
     }
 
     fn por(&mut self, c: usize) {
         if self.n < 0x1e {
-            self.clubes[self.n as usize] = c;
+            self.clubs[self.n as usize] = c;
             self.n += 1;
         }
     }
@@ -268,24 +268,24 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         c += 0x245;
     }
     crate::comparison::branch("cqs_11 convidados da merconorte");
-    exe::comp_util_sort_and_shuffle_top_clubs(mexico.clubes.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: the 4 from Mexico
-    exe::comp_util_sort_and_shuffle_top_clubs(colombia.clubes.as_mut_ptr() as usize, colombia.n as u32, 5);
-    exe::comp_util_sort_and_shuffle_top_clubs(peru.clubes.as_mut_ptr() as usize, peru.n as u32, 3);
-    exe::comp_util_sort_and_shuffle_top_clubs(bolivia.clubes.as_mut_ptr() as usize, bolivia.n as u32, 2);
+    exe::comp_util_sort_and_shuffle_top_clubs(mexico.clubs.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: the 4 from Mexico
+    exe::comp_util_sort_and_shuffle_top_clubs(colombia.clubs.as_mut_ptr() as usize, colombia.n as u32, 5);
+    exe::comp_util_sort_and_shuffle_top_clubs(peru.clubs.as_mut_ptr() as usize, peru.n as u32, 3);
+    exe::comp_util_sort_and_shuffle_top_clubs(bolivia.clubs.as_mut_ptr() as usize, bolivia.n as u32, 2);
     exe::comp_util_sort_and_shuffle_top_clubs(mls.as_mut_ptr() as usize, n_mls as i16 as u16 as u32, 2);
     let slot = |k: usize, v: usize| write_usize(read_usize(this + 0xee) + k * 4, v);
-    slot(2, mexico.clubes[0]);
-    slot(3, mexico.clubes[1]);
-    slot(4, mexico.clubes[2]);
-    slot(5, mexico.clubes[3]);
+    slot(2, mexico.clubs[0]);
+    slot(3, mexico.clubs[1]);
+    slot(4, mexico.clubs[2]);
+    slot(5, mexico.clubs[3]);
     for k in 0..5 {
-        slot(6 + k, colombia.clubes[k]);
+        slot(6 + k, colombia.clubs[k]);
     }
     for k in 0..3 {
-        slot(11 + k, peru.clubes[k]);
+        slot(11 + k, peru.clubs[k]);
     }
-    slot(14, bolivia.clubes[0]);
-    slot(15, bolivia.clubes[1]);
+    slot(14, bolivia.clubs[0]);
+    slot(15, bolivia.clubs[1]);
     if americana == 0 {
         slot(0, mls[0]);
         slot(1, mls[1]);
@@ -562,6 +562,6 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize,
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqj_11 regras da merconorte");
-    apply_cup_rules(this, &MERCONORTE_RULES, MERCONORTE_RULES.dia, 3)
+    apply_cup_rules(this, &MERCONORTE_RULES, MERCONORTE_RULES.day, 3)
 }
 

@@ -33,11 +33,11 @@ pub(crate) unsafe fn ita_ser_a_set_league_rounds(t: usize, year: u32, first: i32
 
 /// O que muda entre as ligas de fase única.
 pub(crate) struct ItaSerASingleStageLeague {
-    pub(crate) rodadas: i16,
-    pub(crate) arquivo: usize,
-    pub(crate) linha: u32,
-    pub(crate) tabela: &'static [ItaSerALeagueRound],
-    pub(crate) ramo: &'static str,
+    pub(crate) rounds: i16,
+    pub(crate) file: usize,
+    pub(crate) row: u32,
+    pub(crate) table: &'static [ItaSerALeagueRound],
+    pub(crate) branch: &'static str,
 }
 
 /// The common create_schedule body (thiscall(league, stage, &rounds, &extra, &é_liga), ret 0x10; no saved state): only
@@ -57,16 +57,16 @@ pub(crate) unsafe fn build_league_schedule(this: usize, fase: u32, rodadas: *mut
     if !liga.is_null() {
         *liga = 1;
     }
-    *rodadas = p.rodadas;
+    *rodadas = p.rounds;
     *extra = 0;
-    let t = exe::crt_malloc(p.rodadas as u32 * 0x41);
+    let t = exe::crt_malloc(p.rounds as u32 * 0x41);
     if t == 0 {
-        show_error_at(p.arquivo, p.linha);
+        show_error_at(p.file, p.row);
         return 0;
     }
-    crate::comparison::branch(p.ramo);
+    crate::comparison::branch(p.branch);
     let ano = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
-    ita_ser_a_set_league_rounds(t, ano, 0, p.tabela);
+    ita_ser_a_set_league_rounds(t, ano, 0, p.table);
     t
 }
 
@@ -196,8 +196,8 @@ pub(crate) const FRENCH_FIRST_DIVISION_ROUNDS: [(bool, ItaSerALeagueRound); 38] 
     (false, (20, 4, 1, 5, 2, &[(-1, -1, -1)])), // 37: 20/mai (+1 ano)
 ];
 
-pub(crate) const SERIE_A_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rodadas: 0x22, arquivo: 0x9ea2a8, linha: 0xb0, tabela: &SERIE_A_ROUNDS, ramo: "cqo_6 calendario da serie a" };
-pub(crate) const SERIE_B_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rodadas: 0x26, arquivo: 0x9ea384, linha: 0xa8, tabela: &SERIE_B_ROUNDS, ramo: "cqo_6 calendario da serie b" };
+pub(crate) const SERIE_A_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rounds: 0x22, file: 0x9ea2a8, row: 0xb0, table: &SERIE_A_ROUNDS, branch: "cqo_6 calendario da serie a" };
+pub(crate) const SERIE_B_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rounds: 0x26, file: 0x9ea384, row: 0xa8, table: &SERIE_B_ROUNDS, branch: "cqo_6 calendario da serie b" };
 
 /// The play-off match of the Italian leagues (stage 0, one 0x68-byte cup round, `eng_cc_cup_write_cup_round`; the year
 /// +0x40 signed).
@@ -220,10 +220,10 @@ pub(crate) fn italian_playoff_round(sorteio: (u32, u32, u32, u32), game: (u32, u
 
 /// O que muda entre a Série A e a Série B.
 pub(crate) struct ItalianLeagueWithTiebreak {
-    pub(crate) liga: &'static ItaSerASingleStageLeague,
-    pub(crate) sorteio: (u32, u32, u32, u32),
-    pub(crate) jogo: (u32, u32, u32, u32, u32, u32),
-    pub(crate) linha_desempate: u32,
+    pub(crate) league: &'static ItaSerASingleStageLeague,
+    pub(crate) draw: (u32, u32, u32, u32),
+    pub(crate) game: (u32, u32, u32, u32, u32, u32),
+    pub(crate) row_tiebreak: u32,
 }
 
 /// The shared create_schedule body of the two Italian leagues (thiscall(league, stage, &rounds, &extra, &é_liga), ret
@@ -238,7 +238,7 @@ pub(crate) struct ItalianLeagueWithTiebreak {
 /// bytes (malloc 0x944e46; sem memória: a caixa e 0); as outras devolvem 0 sem gravar nada. Devolve a tabela.
 pub(crate) unsafe fn italian_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &ItalianLeagueWithTiebreak) -> usize {
     match fase as u8 {
-        0xff => build_league_schedule(this, fase, rodadas, extra, liga, p.liga),
+        0xff => build_league_schedule(this, fase, rodadas, extra, liga, p.league),
         0 => {
             if !liga.is_null() {
                 *liga = 0;
@@ -247,20 +247,20 @@ pub(crate) unsafe fn italian_schedule(this: usize, fase: u32, rodadas: *mut i16,
             *extra = 0;
             let t = exe::crt_malloc(0x68);
             if t == 0 {
-                show_error_at(p.liga.arquivo, p.linha_desempate);
+                show_error_at(p.league.file, p.row_tiebreak);
                 return 0;
             }
             crate::comparison::branch("cqo_6 jogo-desempate italiano");
             let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
-            eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.sorteio, p.jogo, *((this + 0xee) as *const i8)), ano);
+            eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.draw, p.game, *((this + 0xee) as *const i8)), ano);
             t
         }
         _ => 0,
     }
 }
 
-pub(crate) const SERIE_A_WITH_PLAYOFF: ItalianLeagueWithTiebreak = ItalianLeagueWithTiebreak { liga: &SERIE_A_LEAGUE, sorteio: (0xd, 4, 1, 0), jogo: (0x13, 4, 1, 6, 1, 0), linha_desempate: 0x226 };
-pub(crate) const SERIE_B_WITH_TIEBREAK: ItalianLeagueWithTiebreak = ItalianLeagueWithTiebreak { liga: &SERIE_B_LEAGUE, sorteio: (0xf, 4, 1, 0), jogo: (0x15, 4, 1, 6, 1, 0), linha_desempate: 0x170 };
+pub(crate) const SERIE_A_WITH_PLAYOFF: ItalianLeagueWithTiebreak = ItalianLeagueWithTiebreak { league: &SERIE_A_LEAGUE, draw: (0xd, 4, 1, 0), game: (0x13, 4, 1, 6, 1, 0), row_tiebreak: 0x226 };
+pub(crate) const SERIE_B_WITH_TIEBREAK: ItalianLeagueWithTiebreak = ItalianLeagueWithTiebreak { league: &SERIE_B_LEAGUE, draw: (0xf, 4, 1, 0), game: (0x15, 4, 1, 6, 1, 0), row_tiebreak: 0x170 };
 
 /// the Serie A schedule: 34 rounds (18 clubs), from 28 August to 12 May of the next year, all on the same weekday (6)
 /// except two (6 January, 30 March); in nearly all, two matches go to each of two TV slots (days 6 and 5, slot 2)
@@ -560,18 +560,18 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
 pub(crate) struct ItalianDivision {
     pub(crate) vtabela: usize,
     /// a Série A e a Série B gravam +0xee = 0 (o campo próprio da classe [inferência: o desempate em curso]) e +0x4c = 1
-    pub(crate) serie: bool,
+    pub(crate) series: bool,
     /// fases além da liga (+0x2c): 0 na A e na B; 2 na C1 (o play-off e o play-out; o vetor [+0xc] = malloc de 8)
-    pub(crate) fases: u32,
-    pub(crate) regras: usize,
-    pub(crate) tabela: usize,
+    pub(crate) stages: u32,
+    pub(crate) rules: usize,
+    pub(crate) table: usize,
     /// The real 2001/02 calendar by club names (set_up_fixed_fixtures; mov ecx, this -> thiscall, ret 0).
     ///
     /// [pt] o calendário real de 2001/02 pelo nome dos clubes (set_up_fixed_fixtures; mov ecx, this -> thiscall, ret 0)
-    pub(crate) fixos: usize,
-    pub(crate) arquivo: usize,
+    pub(crate) fixed: usize,
+    pub(crate) file: usize,
     /// as caixas: regras, tabela, jogos, ordem, estatísticas
-    pub(crate) linhas: [u32; 5],
+    pub(crate) rows: [u32; 5],
 }
 
 /// The body of the four Italian division constructors (thiscall(this, year, record), ret 8, SEH frame only for the
@@ -599,9 +599,9 @@ pub(crate) struct ItalianDivision {
 /// liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas (0x68a850: mov ecx -> thiscall, ret 0).
 /// Devolve this.
 pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: &ItalianDivision) -> usize {
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.tabela);
-    let fixos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(p.fixos);
+    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
+    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
+    let fixos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(p.fixed);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     exe::new_league(this);
     write_usize(this + 4, registro);
@@ -612,41 +612,41 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
         return this;
     }
     crate::comparison::branch("cqm_4 divisao italiana nova");
-    if p.serie {
+    if p.series {
         *((this + 0xee) as *mut u8) = 0;
         write_usize(this + league::SEASON_CLOSED, 1); // cqm4: the history mark of A and B
     }
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
-    write_usize(this + league::STAGE_COUNT, p.fases as usize);
-    if p.fases != 0 {
-        let v = exe::crt_malloc(p.fases * 4);
+    write_usize(this + league::STAGE_COUNT, p.stages as usize);
+    if p.stages != 0 {
+        let v = exe::crt_malloc(p.stages * 4);
         write_usize(this + league::STAGES, v);
     } else {
         write_usize(this + league::STAGES, 0);
     }
     if regras(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[0]);
+        show_error_at(p.file, p.rows[0]);
         return this;
     }
     if tabela(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[1]);
+        show_error_at(p.file, p.rows[1]);
         return this;
     }
     fixos(this); // cqm4: the real 2001/02 calendar
     if exe::league_create_fixtures(this) == 0 {
-        show_error_at(p.arquivo, p.linhas[2]);
+        show_error_at(p.file, p.rows[2]);
         return this;
     }
     if ordenar(this, 0) == 0 {
-        show_error_at(p.arquivo, p.linhas[3]);
+        show_error_at(p.file, p.rows[3]);
         return this;
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
     write_usize(this + 8, s);
     if s == 0 {
-        show_error_at(p.arquivo, p.linhas[4]);
+        show_error_at(p.file, p.rows[4]);
         return this;
     }
     exe::league_set_predicted_positions(this); // cqm4: the expected positions
@@ -655,43 +655,43 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
 
 pub(crate) const SERIE_A: ItalianDivision = ItalianDivision {
     vtabela: 0x96c3cc,
-    serie: true,
-    fases: 0,
-    regras: 0x641640,
-    tabela: 0x641510,
-    fixos: 0x642a70,
-    arquivo: 0x9ea2a8,
-    linhas: [0x53, 0x5a, 0x64, 0x6d, 0x74],
+    series: true,
+    stages: 0,
+    rules: 0x641640,
+    table: 0x641510,
+    fixed: 0x642a70,
+    file: 0x9ea2a8,
+    rows: [0x53, 0x5a, 0x64, 0x6d, 0x74],
 };
 pub(crate) const SERIE_B_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c480,
-    serie: true,
-    fases: 0,
-    regras: 0x6468a0,
-    tabela: 0x646780,
-    fixos: 0x647230,
-    arquivo: 0x9ea384,
-    linhas: [0x4b, 0x52, 0x5c, 0x65, 0x6c],
+    series: true,
+    stages: 0,
+    rules: 0x6468a0,
+    table: 0x646780,
+    fixed: 0x647230,
+    file: 0x9ea384,
+    rows: [0x4b, 0x52, 0x5c, 0x65, 0x6c],
 };
 pub(crate) const SERIE_C1A_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c534,
-    serie: false,
-    fases: 2, // cqm4: the C1/A play-off and play-out
-    regras: 0x64b770,
-    tabela: 0x64b670,
-    fixos: 0x64be90,
-    arquivo: 0x9ea474,
-    linhas: [0x49, 0x50, 0x5a, 0x63, 0x6a],
+    series: false,
+    stages: 2, // cqm4: the C1/A play-off and play-out
+    rules: 0x64b770,
+    table: 0x64b670,
+    fixed: 0x64be90,
+    file: 0x9ea474,
+    rows: [0x49, 0x50, 0x5a, 0x63, 0x6a],
 };
 pub(crate) const SERIE_C1B_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c5e8,
-    serie: false,
-    fases: 2,
-    regras: 0x64f920,
-    tabela: 0x64f820,
-    fixos: 0x650100,
-    arquivo: 0x9ea558,
-    linhas: [0x4a, 0x51, 0x5b, 0x64, 0x6b],
+    series: false,
+    stages: 2,
+    rules: 0x64f920,
+    table: 0x64f820,
+    fixed: 0x650100,
+    file: 0x9ea558,
+    rows: [0x4a, 0x51, 0x5b, 0x64, 0x6b],
 };
 
 /// Serie A: discipline rule 0x11 (the Italian leagues one), only the league (the tie-break is born at season end); with
@@ -716,8 +716,8 @@ pub(crate) unsafe fn compare_italian_constructor(name: &str, this: usize, year: 
     let mut ok = r == this && read_usize(this) == p.vtabela && core::ptr::read_unaligned((this + league::YEAR) as *const u16) == year as u16
         && read_usize(this + 4) == record && *((this + league::DISCIPLINE_RULE) as *const u8) == 0x11;
     if *((this + league::STAGE_INDEX) as *const u8) == 0xff && read_usize(this + 8) != 0 {
-        ok = ok && read_usize(this + league::STAGE_COUNT) == p.fases as usize && (read_usize(this + league::STAGES) != 0) == (p.fases != 0);
-        if p.serie {
+        ok = ok && read_usize(this + league::STAGE_COUNT) == p.stages as usize && (read_usize(this + league::STAGES) != 0) == (p.stages != 0);
+        if p.series {
             ok = ok && *((this + 0xee) as *const u8) == 0;
         }
     }

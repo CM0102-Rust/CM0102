@@ -2443,10 +2443,10 @@ pub(crate) unsafe fn is_major_finals(id: u32) -> bool {
 /// [pt] O que a 0x775220 grava: a competição atual da nação ([this+4] + id × 110 + 4), a da fila ([this+8] + id × 4) e se
 /// avisa o gerenciador dos técnicos.
 pub(crate) struct NationCurrentCompUpdate {
-    pub(crate) vaga: usize,
-    pub(crate) nova: Option<u32>,
-    pub(crate) fila: usize,
-    pub(crate) na_fila: Option<u32>,
+    pub(crate) slot: usize,
+    pub(crate) new: Option<u32>,
+    pub(crate) queue: usize,
+    pub(crate) in_queue: Option<u32>,
     pub(crate) avisa: bool,
 }
 
@@ -2462,14 +2462,14 @@ pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -
     let fila = read_usize(this + national_teams_fields::NEXT_COMPETITIONS).wrapping_add(id.wrapping_mul(4));
     let atual = read_usize(vaga) as u32;
     let nova = read_usize(comp) as u32;
-    let mut p = NationCurrentCompUpdate { vaga, nova: Some(nova), fila, na_fila: None, avisa: read_usize(G_MANAGER_MANAGER) != 0 };
+    let mut p = NationCurrentCompUpdate { slot: vaga, new: Some(nova), queue: fila, in_queue: None, avisa: read_usize(G_MANAGER_MANAGER) != 0 };
     if atual != 0xffff_ffff {
         let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add((atual as usize).wrapping_mul(107)); // 107-byte records
         if r != 0 && is_major_finals(read_usize(r) as u32) {
-            return NationCurrentCompUpdate { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
+            return NationCurrentCompUpdate { slot: vaga, new: None, queue: fila, in_queue: Some(nova), avisa: false };
         }
         if is_major_finals(nova) {
-            p.na_fila = Some(atual);
+            p.in_queue = Some(atual);
         }
     }
     p
@@ -2489,15 +2489,15 @@ pub(crate) unsafe extern "thiscall" fn set_current_competition(this: usize, nati
         return;
     }
     let p = current_comp_plan(this, nation, comp);
-    if let Some(f) = p.na_fila {
-        write_u32(p.fila, f);
+    if let Some(f) = p.in_queue {
+        write_u32(p.queue, f);
     }
-    let Some(nova) = p.nova else {
+    let Some(nova) = p.new else {
         crate::comparison::branch("cpo_13 fase final fica");
         return;
     };
     crate::comparison::branch("cpo_13 competicao atual");
-    write_u32(p.vaga, nova);
+    write_u32(p.slot, nova);
     let g = read_usize(G_MANAGER_MANAGER);
     if g != 0 {
         exe::manager_manager_set_season_expectations(g, exe::database_get_national_team(nation), 1);

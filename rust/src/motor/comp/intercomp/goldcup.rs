@@ -460,15 +460,15 @@ pub(crate) use GoldcupScheduleOp::{B as Cqp12B, D as Cqp12D, E as Cqp12E, J as C
 /// sem gravar nada.
 #[derive(Clone, Copy)]
 pub(crate) struct GoldcupStagePlan {
-    pub(crate) liga: i32,
-    pub(crate) rodadas: i16,
+    pub(crate) league: i32,
+    pub(crate) rounds: i16,
     pub(crate) extra: i16,
-    pub(crate) extra_checa: bool,
-    pub(crate) tamanho: u32,
-    pub(crate) linha: u32,
+    pub(crate) extra_check: bool,
+    pub(crate) size: u32,
+    pub(crate) row: u32,
     pub(crate) ops: &'static [GoldcupScheduleOp],
     pub(crate) ops2: &'static [GoldcupScheduleOp],
-    pub(crate) nome: &'static str,
+    pub(crate) name: &'static str,
 }
 
 /// Builds the round table of tournament phase `f`, or returns 0 without it.
@@ -486,18 +486,18 @@ pub(crate) unsafe fn build_phase_table(this: usize, f: Option<GoldcupStagePlan>,
         None => return 0,
     };
     if !liga.is_null() {
-        *liga = f.liga;
+        *liga = f.league;
     }
-    *rodadas = f.rodadas;
-    if !f.extra_checa || !extra.is_null() {
+    *rodadas = f.rounds;
+    if !f.extra_check || !extra.is_null() {
         *extra = f.extra;
     }
-    let t = exe::crt_malloc(f.tamanho);
+    let t = exe::crt_malloc(f.size);
     if t == 0 {
-        show_error_at(arquivo, f.linha);
+        show_error_at(arquivo, f.row);
         return 0;
     }
-    crate::comparison::branch(f.nome);
+    crate::comparison::branch(f.name);
     let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
@@ -718,11 +718,11 @@ pub(crate) fn copa_america_phase(fase: u32) -> Option<GoldcupStagePlan> {
             1 => &COPA_AMERICA_GROUP_C_OPS,
             _ => &[],
         };
-        Some(GoldcupStagePlan { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x420), extra_checa: false, tamanho: 0xc3, linha: 0x9c,
-            ops: &COPA_AMERICA_GROUP_DATE_OPS, ops2: jogos, nome: "cqp_12 grupos da copa america" })
+        Some(GoldcupStagePlan { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x420), extra_check: false, size: 0xc3, row: 0x9c,
+            ops: &COPA_AMERICA_GROUP_DATE_OPS, ops2: jogos, name: "cqp_12 grupos da copa america" })
     } else if f == 2 {
-        Some(GoldcupStagePlan { liga: 0, rodadas: 4, extra: 0, extra_checa: false, tamanho: 0x1a0, linha: 0xd6,
-            ops: &COPA_AMERICA_KNOCKOUT_OPS, ops2: &[], nome: "cqp_12 mata-mata da copa america" })
+        Some(GoldcupStagePlan { league: 0, rounds: 4, extra: 0, extra_check: false, size: 0x1a0, row: 0xd6,
+            ops: &COPA_AMERICA_KNOCKOUT_OPS, ops2: &[], name: "cqp_12 mata-mata da copa america" })
     } else {
         None
     }
@@ -755,11 +755,11 @@ pub(crate) fn african_nations_phase(fase: u32) -> Option<GoldcupStagePlan> {
             2 => &AFRICAN_NATIONS_GROUP_D_OPS,
             _ => &[],
         };
-        Some(GoldcupStagePlan { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x3e9), extra_checa: false, tamanho: 0xc3, linha: 0x9e,
-            ops: &AFRICAN_NATIONS_GROUP_ROUNDS, ops2: jogos, nome: "cqp_12 grupos da copa africana" })
+        Some(GoldcupStagePlan { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x3e9), extra_check: false, size: 0xc3, row: 0x9e,
+            ops: &AFRICAN_NATIONS_GROUP_ROUNDS, ops2: jogos, name: "cqp_12 grupos da copa africana" })
     } else if f == 3 {
-        Some(GoldcupStagePlan { liga: 0, rodadas: 4, extra: 0, extra_checa: false, tamanho: 0x1a0, linha: 0xe0,
-            ops: &AFRICAN_NATIONS_KNOCKOUT_OPS, ops2: &[], nome: "cqp_12 mata-mata da copa africana" })
+        Some(GoldcupStagePlan { league: 0, rounds: 4, extra: 0, extra_check: false, size: 0x1a0, row: 0xe0,
+            ops: &AFRICAN_NATIONS_KNOCKOUT_OPS, ops2: &[], name: "cqp_12 mata-mata da copa africana" })
     } else {
         None
     }
@@ -777,11 +777,11 @@ pub(crate) fn confed_cup_phase(fase: u32) -> Option<GoldcupStagePlan> {
             0 => &CONFED_CUP_GROUP_GAMES,
             _ => &[],
         };
-        Some(GoldcupStagePlan { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x3e9), extra_checa: false, tamanho: 0xc3, linha: 0x95,
-            ops: &CONFED_CUP_GROUP_ROUNDS, ops2: jogos, nome: "cqp_12 grupos da copa das confederacoes" })
+        Some(GoldcupStagePlan { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x3e9), extra_check: false, size: 0xc3, row: 0x95,
+            ops: &CONFED_CUP_GROUP_ROUNDS, ops2: jogos, name: "cqp_12 grupos da copa das confederacoes" })
     } else if f == 1 {
-        Some(GoldcupStagePlan { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0xc7,
-            ops: &CONFED_CUP_KNOCKOUT, ops2: &[], nome: "cqp_12 mata-mata da copa das confederacoes" })
+        Some(GoldcupStagePlan { league: 0, rounds: 3, extra: 0, extra_check: false, size: 0x138, row: 0xc7,
+            ops: &CONFED_CUP_KNOCKOUT, ops2: &[], name: "cqp_12 mata-mata da copa das confederacoes" })
     } else {
         None
     }

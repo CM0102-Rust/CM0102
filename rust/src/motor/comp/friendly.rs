@@ -302,8 +302,8 @@ pub(crate) unsafe fn list_item_ids(list: usize) -> Vec<u32> {
 #[derive(Clone)]
 pub(crate) struct FriendlyComparerTrial {
     pub(crate) usadas: Vec<u8>,
-    pub(crate) antes: std::rc::Rc<Vec<Vec<u32>>>,
-    pub(crate) novos: Vec<Vec<u32>>,
+    pub(crate) before: std::rc::Rc<Vec<Vec<u32>>>,
+    pub(crate) new: Vec<Vec<u32>>,
 }
 
 /// The dry run's tape: the random draws the original routine made (n, answer), the next one, and whether an n did not
@@ -350,13 +350,13 @@ impl FriendlyComparerTrial {
         self.usadas[id] = 1;
     }
     fn por(&mut self, q: usize, item: u32) {
-        if q >= self.novos.len() {
-            self.novos.resize(q + 1, Vec::new());
+        if q >= self.new.len() {
+            self.new.resize(q + 1, Vec::new());
         }
-        self.novos[q].push(item);
+        self.new[q].push(item);
     }
     fn tem(&self, q: usize, item: u32) -> bool {
-        self.antes.get(q).is_some_and(|v| v.contains(&item)) || self.novos.get(q).is_some_and(|v| v.contains(&item))
+        self.before.get(q).is_some_and(|v| v.contains(&item)) || self.new.get(q).is_some_and(|v| v.contains(&item))
     }
 }
 

@@ -33,9 +33,9 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
         }
         let s = j.suspensao;
         let (jogos, contador, dias) = (*(s as *const u8), *((s + ban_record::MATCHES_SERVED) as *const u8), read_i16(s + ban_record::DAYS));
-        let ok = if j.cumprida { jogos == 0xff && dias == -1 } else { contador == j.contador.unwrap_or(*before) };
+        let ok = if j.cumprida { jogos == 0xff && dias == -1 } else { contador == j.counter.unwrap_or(*before) };
         if !ok && error.is_none() {
-            error = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.contador, before, j.cumprida, jogos, dias));
+            error = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.counter, before, j.cumprida, jogos, dias));
         }
     }
     SCOREBOARD.record(error.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", team, plan.len(), error.clone().unwrap_or_default()));
@@ -54,8 +54,8 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, 
     }
     let s = r.suspensao;
     let (jogos, dias) = (*(s as *const u8), read_i16(s + ban_record::DAYS));
-    let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.jogos && dias == r.dias };
-    SCOREBOARD.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.jogos, r.dias, r.solta));
+    let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.games && dias == r.days };
+    SCOREBOARD.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.games, r.days, r.solta));
 }
 
 /// Comparer for `get_slot_text`.
@@ -92,12 +92,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
     original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_ADD_BAN)(this, id, ban);
     let (ok, detalhe) = match plan {
         SuspensionPlan::Caixa => return,
-        SuspensionPlan::Estender { s, jogos, dias } => {
+        SuspensionPlan::Estender { s, games: jogos, days: dias } => {
             let ok = *(s as *const u8) == jogos && read_i16(s + ban_record::DAYS) == dias && *((s + ban_record::FLAGS) as *const u8) & 1 == 1
                 && *((ban + ban_record::FLAGS) as *const u8) & 1 == 1;
             (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, read_i16(s + ban_record::DAYS), dias))
         }
-        SuspensionPlan::Nova { vaga, conta } => {
+        SuspensionPlan::Nova { slot: vaga, count: conta } => {
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
             let mut ok = read_i16(this + discipline_fields::BAN_COUNT) == conta && *(s as *const u8) == *(ban as *const u8) && read_i16(s + ban_record::DAYS) == read_i16(ban + ban_record::DAYS);
             for k in 0..4usize {
@@ -187,14 +187,14 @@ pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, pe
     for (k, b) in &p.guardadas {
         expected[k * 5..k * 5 + 5].copy_from_slice(b);
     }
-    let mut ok = read_usize(G_CONTRACT_LOOKUP_RESULT) == p.contrato;
+    let mut ok = read_usize(G_CONTRACT_LOOKUP_RESULT) == p.contract;
     for (k, e) in &p.soltas {
         expected[k * 5..k * 5 + 5].copy_from_slice(&[0xff; 5]);
         ok &= read_usize(*e) as u32 == 0xffff_ffff;
     }
-    expected[0x1c] = p.resto;
+    expected[0x1c] = p.rest;
     ok &= after == expected;
-    SCOREBOARD.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.clube, expected, after));
+    SCOREBOARD.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.club, expected, after));
 }
 
 /// Comparer for `update_ban_progress`.
@@ -211,13 +211,13 @@ pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, 
     let s = j.suspensao;
     let (jogos, contador, dias) = (*(s as *const u8), *((s + ban_record::MATCHES_SERVED) as *const u8), read_i16(s + ban_record::DAYS));
     let ok = if j.cumprida {
-        jogos == 0xff && dias == -1 && read_i16(j.entrada + ruling_body_entry::BAN_INDEX) == -1
+        jogos == 0xff && dias == -1 && read_i16(j.entry + ruling_body_entry::BAN_INDEX) == -1
     } else {
-        contador == j.contador.unwrap_or(before)
+        contador == j.counter.unwrap_or(before)
     };
     SCOREBOARD.record(ok, || {
         format!("update_ban_progress({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
-            id, rule as u8, count, contador, j.contador, before, j.cumprida, jogos, dias, read_i16(j.entrada + ruling_body_entry::BAN_INDEX))
+            id, rule as u8, count, contador, j.counter, before, j.cumprida, jogos, dias, read_i16(j.entry + ruling_body_entry::BAN_INDEX))
     });
 }
 

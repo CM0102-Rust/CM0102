@@ -204,13 +204,13 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
 ///
 /// [pt] Os clubes de uma origem para a Oceania: até 20, na ordem da tabela de clubes.
 pub(crate) struct SourceClubList {
-    pub(crate) clubes: [usize; 20],
+    pub(crate) clubs: [usize; 20],
     pub(crate) n: i16,
 }
 
 impl SourceClubList {
     fn novo() -> Self {
-        SourceClubList { clubes: [0; 20], n: 0 }
+        SourceClubList { clubs: [0; 20], n: 0 }
     }
 
     /// Adds the club if it fits (the count is a signed word, < 20).
@@ -221,7 +221,7 @@ impl SourceClubList {
     }
 
     fn por(&mut self, c: usize) {
-        self.clubes[self.n as usize] = c;
+        self.clubs[self.n as usize] = c;
         self.n += 1;
     }
 
@@ -234,7 +234,7 @@ impl SourceClubList {
     /// push a conta; push lista; add esp -> cdecl; sorteia).
     unsafe fn ordenar(&mut self, quantos: u32) {
         let f: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
-        f(self.clubes.as_mut_ptr() as usize, self.n as u16 as u32, quantos);
+        f(self.clubs.as_mut_ptr() as usize, self.n as u16 as u32, quantos);
     }
 
     /// The first club of the list and the first one after it from another nation (+0x53), as in the original.
@@ -245,7 +245,7 @@ impl SourceClubList {
     /// vazia não conta como primeiro.
     unsafe fn dois_de_nacoes_diferentes(&self) -> (usize, usize) {
         let (mut a, mut b) = (0usize, 0usize);
-        for &c in self.clubes.iter().take(self.n.max(0) as usize) {
+        for &c in self.clubs.iter().take(self.n.max(0) as usize) {
             if a == 0 {
                 a = c;
             } else if b == 0 && read_usize(c + 0x53) != read_usize(a + 0x53) {
@@ -347,13 +347,13 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     crate::comparison::branch("cqt_11 clubes da oceania");
     if champion == 0 {
         aus.ordenar(1);
-        champion = aus.clubes[0];
+        champion = aus.clubs[0];
     }
     nz.ordenar(1);
-    place_pot_pair(this, 0, champion, nz.clubes[0], exe::utils_random(2)); // cqt11: the Australian and New Zealand champions
+    place_pot_pair(this, 0, champion, nz.clubs[0], exe::utils_random(2)); // cqt11: the Australian and New Zealand champions
     fij.ordenar(1);
     tai.ordenar(1);
-    place_pot_pair(this, 1, fij.clubes[0], tai.clubes[0], exe::utils_random(2)); // cqt11: Fiji e Taiti
+    place_pot_pair(this, 1, fij.clubs[0], tai.clubs[0], exe::utils_random(2)); // cqt11: Fiji e Taiti
     mel.ordenar(2);
     let (a, b) = mel.dois_de_nacoes_diferentes();
     place_pot_pair(this, 2, a, b, exe::utils_random(2)); // cqt11: os dois melanésios
@@ -507,15 +507,15 @@ pub(crate) use OceaniaClubChampScheduleOp::{B as Cqq12B, D as Cqq12D, E as Cqq12
 /// sem gravar nada.
 #[derive(Clone, Copy)]
 pub(crate) struct OceaniaStage {
-    pub(crate) liga: i32,
-    pub(crate) rodadas: i16,
+    pub(crate) league: i32,
+    pub(crate) rounds: i16,
     pub(crate) extra: i16,
-    pub(crate) extra_checa: bool,
-    pub(crate) tamanho: u32,
-    pub(crate) linha: u32,
+    pub(crate) extra_check: bool,
+    pub(crate) size: u32,
+    pub(crate) row: u32,
     pub(crate) ops: &'static [OceaniaClubChampScheduleOp],
     pub(crate) ops2: &'static [OceaniaClubChampScheduleOp],
-    pub(crate) nome: &'static str,
+    pub(crate) name: &'static str,
 }
 
 /// Runs stage `f` (or returns 0 without it): the outputs, the table (0x944e46; out of memory, the box `linha` of source
@@ -533,18 +533,18 @@ pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rod
         None => return 0,
     };
     if !liga.is_null() {
-        *liga = f.liga;
+        *liga = f.league;
     }
-    *rodadas = f.rodadas;
-    if !f.extra_checa || !extra.is_null() {
+    *rodadas = f.rounds;
+    if !f.extra_check || !extra.is_null() {
         *extra = f.extra;
     }
-    let t = exe::crt_malloc(f.tamanho);
+    let t = exe::crt_malloc(f.size);
     if t == 0 {
-        show_error_at(arquivo, f.linha);
+        show_error_at(arquivo, f.row);
         return 0;
     }
-    crate::comparison::branch(f.nome);
+    crate::comparison::branch(f.name);
     let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
@@ -673,11 +673,11 @@ pub(crate) fn oceania_stage_spec(fase: u32) -> Option<OceaniaStage> {
             0 => &OCEANIA_GROUP_B_OPS,
             _ => &[],
         };
-        Some(OceaniaStage { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x420), extra_checa: false, tamanho: 0xc3, linha: 0x93,
-            ops: &OCEANIA_CLUB_GROUP_OPS, ops2: jogos, nome: "cqq_12 grupos da oceania" })
+        Some(OceaniaStage { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x420), extra_check: false, size: 0xc3, row: 0x93,
+            ops: &OCEANIA_CLUB_GROUP_OPS, ops2: jogos, name: "cqq_12 grupos da oceania" })
     } else if f == 1 {
-        Some(OceaniaStage { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0xc5,
-            ops: &OCEANIA_CLUB_KNOCKOUT_OPS, ops2: &[], nome: "cqq_12 mata-mata da oceania" })
+        Some(OceaniaStage { league: 0, rounds: 3, extra: 0, extra_check: false, size: 0x138, row: 0xc5,
+            ops: &OCEANIA_CLUB_KNOCKOUT_OPS, ops2: &[], name: "cqq_12 mata-mata da oceania" })
     } else {
         None
     }

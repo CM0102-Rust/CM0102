@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     write_usize(fx + fixture::STADIUM, 0);
     write_usize(fx + fixture::STADIUM_ID, u32::MAX as usize);
     let ano = *((fx + fixture::YEAR) as *const u16);
-    let d = crate::date::Data { dia: *((fx + fixture::DAY) as *const i16), ano, is_leap_year: crate::date::is_leap_year(ano) };
+    let d = crate::date::Data { day: *((fx + fixture::DAY) as *const i16), year: ano, is_leap_year: crate::date::is_leap_year(ano) };
     let pd = &d as *const crate::date::Data as usize;
     let fixar = |st: usize| {
         write_usize(fx + fixture::STADIUM, st);
@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         step_towards = 1;
     } else if f == 0 {
         let casa = read_usize(fx + fixture::HOME_CLUB);
-        if d.ano < 0x7d3 && fin_prm_is_national_team(casa) && read_usize(read_usize(casa + club::NATION)) == read_usize(KEY_NATION_ENGLAND) {
+        if d.year < 0x7d3 && fin_prm_is_national_team(casa) && read_usize(read_usize(casa + club::NATION)) == read_usize(KEY_NATION_ENGLAND) {
             f = 0x20;
         }
         let casa = read_usize(fx + fixture::HOME_CLUB);
@@ -332,7 +332,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                 let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
                 let mut chave = [0u32; 3];
                 chave[0] = read_usize(st) as u32;
-                chave[1] = (d.dia as u16 as u32) | ((d.ano as u32) << 16);
+                chave[1] = (d.day as u16 as u32) | ((d.year as u32) << 16);
                 chave[2] = d.is_leap_year as u32;
                 livre = buscar(chave.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380) == 0;
             }

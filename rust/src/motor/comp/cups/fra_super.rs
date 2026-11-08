@@ -18,21 +18,21 @@ use super::*;
 /// eles, +0x5c/+0x60/+0x64 os prêmios (chegar, vencer, perder).
 #[derive(Clone, Copy)]
 pub(crate) struct FraSuperCupRound {
-    pub(crate) sorteio: (u32, u32, u32, u32),
-    pub(crate) jogo: (u32, u32, u32, u32, u32, u32),
-    pub(crate) codigo: u16,
+    pub(crate) draw: (u32, u32, u32, u32),
+    pub(crate) game: (u32, u32, u32, u32, u32, u32),
+    pub(crate) code: u16,
     pub(crate) bits: (u16, u16, u16),
-    pub(crate) categoria: u8,
-    pub(crate) times: (u16, u16, u16, u16),
-    pub(crate) confronto: (u8, u8, u8),
-    pub(crate) premios: (u32, u32, u32),
+    pub(crate) category: u8,
+    pub(crate) teams: (u16, u16, u16, u16),
+    pub(crate) tie: (u8, u8, u8),
+    pub(crate) prizes: (u32, u32, u32),
 }
 
 /// A linha da tabela: (sorteio), (jogo), nome, (bits do sorteio, desempate, desempate de ida e volta), categoria,
 /// (times, jogos, novos, inscritos), (replay, jogos por confronto, dias entre eles), (prêmios).
 pub(crate) const fn cql12r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
     times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> FraSuperCupRound {
-    FraSuperCupRound { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
+    FraSuperCupRound { draw: sorteio, game: jogo, code: codigo, bits, category: categoria, teams: times, tie: confronto, prizes: premios }
 }
 
 /// Writes round i of a cup round table: draw and match dates and the round fields.
@@ -42,27 +42,27 @@ pub(crate) const fn cql12r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
 pub(crate) unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCupRound, year: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
-    sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, year);
-    jogo(t, i, r.jogo.0, r.jogo.1, r.jogo.2, r.jogo.3, r.jogo.4, year, r.jogo.5);
+    sorteio(t, i, r.draw.0, r.draw.1, r.draw.2, r.draw.3, year);
+    jogo(t, i, r.game.0, r.game.1, r.game.2, r.game.3, r.game.4, year, r.game.5);
     let e = t + i as usize * 0x68;
     let w = |o: usize, v: u16| core::ptr::write_unaligned((e + o) as *mut u16, v);
     let d = |o: usize, v: u32| core::ptr::write_unaligned((e + o) as *mut u32, v);
-    w(7, r.codigo);
+    w(7, r.code);
     w(9, i as u16);
     w(0xb, r.bits.0);
     w(0xd, r.bits.1);
     w(0xf, r.bits.2);
-    *((e + 0x17) as *mut u8) = r.categoria;
-    w(0x18, r.times.0);
-    w(0x1a, r.times.1);
-    w(0x1c, r.times.2);
-    w(0x1e, r.times.3);
-    *((e + 0x20) as *mut u8) = r.confronto.0;
-    *((e + 0x21) as *mut u8) = r.confronto.1;
-    *((e + 0x22) as *mut u8) = r.confronto.2;
-    d(0x5c, r.premios.0);
-    d(0x60, r.premios.1);
-    d(0x64, r.premios.2);
+    *((e + 0x17) as *mut u8) = r.category;
+    w(0x18, r.teams.0);
+    w(0x1a, r.teams.1);
+    w(0x1c, r.teams.2);
+    w(0x1e, r.teams.3);
+    *((e + 0x20) as *mut u8) = r.tie.0;
+    *((e + 0x21) as *mut u8) = r.tie.1;
+    *((e + 0x22) as *mut u8) = r.tie.2;
+    d(0x5c, r.prizes.0);
+    d(0x60, r.prizes.1);
+    d(0x64, r.prizes.2);
 }
 
 /// Shared body of virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) for
@@ -133,7 +133,7 @@ pub(crate) unsafe fn french_super_cup_venue(this: usize) -> u32 {
 /// a caixa da linha 0x97 sem memória.
 pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     fra_super_create_single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_SUPER_CUP_ROUNDS, 0x9ccc48, 0x97, "cql_12 tabela da supercopa da franca",
-        |r| r.jogo.5 = french_super_cup_venue(this))
+        |r| r.game.5 = french_super_cup_venue(this))
 }
 
 // simplification: outside 2001 the original rolls home advantage (0x90cfc0): only it runs in that case.

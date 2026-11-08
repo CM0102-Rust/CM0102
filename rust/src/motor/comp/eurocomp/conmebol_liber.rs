@@ -195,11 +195,11 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
 /// gravados (deslocamento, tamanho 1 ou 2, valor), a data de começo (0x549f70: dia, mês, ano da competição +0x40, dia da
 /// semana; −1 = qualquer) e o fundo de prêmios (+0x28), quando há.
 pub(crate) struct ContinentalGroupRules {
-    pub(crate) campos: &'static [(usize, u8, u32)],
-    pub(crate) dia: u32,
-    pub(crate) mes: u32,
-    pub(crate) semana: u32,
-    pub(crate) premio: Option<u32>,
+    pub(crate) fields: &'static [(usize, u8, u32)],
+    pub(crate) day: u32,
+    pub(crate) month: u32,
+    pub(crate) week: u32,
+    pub(crate) prize: Option<u32>,
 }
 
 /// Writes the rule fields of `g` and the round table; returns 1.
@@ -214,7 +214,7 @@ pub(crate) struct ContinentalGroupRules {
 /// rodadas da virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba.
 /// Devolve 1.
 pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day: u32, win: u8) -> u32 {
-    for &(o, n, v) in g.campos {
+    for &(o, n, v) in g.fields {
         let v = if o == 0xc2 { win as u32 } else { v };
         if n == 1 {
             *((this + o) as *mut u8) = v as u8;
@@ -226,10 +226,10 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
     }
     let mut d = [0u8; 8];
     // simplification: the year goes in a register that may have garbage in the high 16 bits; 0x549f70 reads it as a word
-    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
+    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, g.month, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.week);
     core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, core::ptr::read_unaligned(d.as_ptr() as *const u16));
     core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
-    if let Some(p) = g.premio {
+    if let Some(p) = g.prize {
         core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut u32, p);
     }
     let vt = core::ptr::read_unaligned(this as *const usize);
@@ -246,12 +246,12 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
 pub(crate) unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
-    data(d.as_mut_ptr(), g.dia, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
+    data(d.as_mut_ptr(), g.day, g.month, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.week);
     let palavra = core::ptr::read_unaligned(d.as_ptr() as *const u16);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
-    for &(off, n, v) in g.campos {
+    for &(off, n, v) in g.fields {
         let lido = match n {
             1 => *((this + off) as *const u8) as u32,
             2 => core::ptr::read_unaligned((this + off) as *const u16) as u32,
@@ -265,27 +265,27 @@ pub(crate) unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGro
     }
     let b6 = core::ptr::read_unaligned((this + league::NEXT_DRAW_DAY) as *const u16);
     let b8 = core::ptr::read_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *const u16);
-    let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const u32) == p);
+    let premio = g.prize.map_or(true, |p| core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const u32) == p);
     SCOREBOARD.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this, r, &errados[..k], b6, palavra, b8, premio));
     r
 }
 
 pub(crate) const LIBERTADORES_RULES: ContinentalGroupRules = ContinentalGroupRules {
-    campos: &[(0x3c, 2, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0x42, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0xc3, 1, 1), (0xc4, 1, 7),
+    fields: &[(0x3c, 2, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0x42, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0xc3, 1, 1), (0xc4, 1, 7),
         (0xc5, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x1c, 4, 0xffff_ffff), (0x20, 4, 0xffff_ffff), (0x49, 1, 7)],
-    dia: 0xf, mes: 0, semana: 0xffff_ffff, premio: Some(0x1e8480),
+    day: 0xf, month: 0, week: 0xffff_ffff, prize: Some(0x1e8480),
 };
 
 pub(crate) const MERCONORTE_RULES: ContinentalGroupRules = ContinentalGroupRules {
-    campos: &[(0x3c, 2, 2), (0xc6, 1, 2), (0x42, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0xc3, 1, 1), (0xc4, 1, 7), (0xc5, 1, 1), (0xbe, 1, 1),
+    fields: &[(0x3c, 2, 2), (0xc6, 1, 2), (0x42, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0xc3, 1, 1), (0xc4, 1, 7), (0xc5, 1, 1), (0xbe, 1, 1),
         (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x1c, 4, 0xffff_ffff), (0x20, 4, 0xffff_ffff)],
-    dia: 1, mes: 7, semana: 0xffff_ffff, premio: Some(0x1e8480),
+    day: 1, month: 7, week: 0xffff_ffff, prize: Some(0x1e8480),
 };
 
 pub(crate) const OCEANIA_RULES: ContinentalGroupRules = ContinentalGroupRules {
-    campos: &[(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0x49, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1), (0xc4, 1, 8),
+    fields: &[(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0x49, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1), (0xc4, 1, 8),
         (0xc5, 1, 1), (0xc7, 1, 4), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0xd9, 2, 0x28)],
-    dia: 0x14, mes: 7, semana: 5, premio: None,
+    day: 0x14, month: 7, week: 5, prize: None,
 };
 
 /// rule: the Libertadores groups are home and away (double round robin), 3 points a win and 1 a draw, tiebreak by codes

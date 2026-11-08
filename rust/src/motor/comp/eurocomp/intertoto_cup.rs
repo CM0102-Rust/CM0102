@@ -67,14 +67,14 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     let mut t = [UEFA_CUP_PRELIMINARY_ROUND; 9];
     let (b, m) = (b as i32, b as i32 / 2);
     let mut u = UEFA_CUP_ROUNDS;
-    u[0].times.2 = (0x52 - m) as u16;
-    u[0].times.3 = b as u16;
-    u[1].times.3 = (m + 0x52) as u16;
-    u[3].times.3 = (m + 0x89) as u16;
+    u[0].teams.2 = (0x52 - m) as u16;
+    u[0].teams.3 = b as u16;
+    u[1].teams.3 = (m + 0x52) as u16;
+    u[3].teams.3 = (m + 0x89) as u16;
     let mut n = 0;
     if b > 0 {
         crate::comparison::branch("cqq_10 preliminar da uefa");
-        t[0].times = (b as u16, m as u16, b as u16, 0);
+        t[0].teams = (b as u16, m as u16, b as u16, 0);
         n = 1;
     }
     for r in u {

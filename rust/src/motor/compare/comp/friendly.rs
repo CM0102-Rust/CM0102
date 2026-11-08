@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_arrange_international_friendlies(
     let nacoes = read_usize(G_NATION_COUNT) as i32;
     let k = nacoes.max(read_usize(this + friendly::SORTED_NATION_COUNT) as i32).max(0) as usize;
     let antes: Vec<Vec<u32>> = (0..k).map(|q| list_item_ids(nation_friendly_list(this, q))).collect();
-    let mut e = FriendlyComparerTrial { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
+    let mut e = FriendlyComparerTrial { usadas: vec![0u8; nacoes.max(0) as usize], before: std::rc::Rc::new(antes), new: vec![Vec::new(); k] };
     link_nations_near_date(this, datas, 0, Some(&mut e));
     let ((), tape_lock) = crate::rng::trace(|| o(this, datas, n));
     let quantos = tape_lock.len();
@@ -100,10 +100,10 @@ pub(crate) unsafe extern "thiscall" fn compare_arrange_international_friendlies(
     let (pos, falhou) = { let f = &*core::ptr::addr_of!(FRIENDLY_TAPE); (f.1, f.2) };
     *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (Vec::new(), 0, false);
     let mut dif = Vec::new();
-    for q in 0..k.max(e.novos.len()) {
+    for q in 0..k.max(e.new.len()) {
         let mut depois = if q < k { list_item_ids(nation_friendly_list(this, q)) } else { Vec::new() };
         let mut falta = false;
-        for x in e.antes.get(q).map(|v| v.as_slice()).unwrap_or(&[]) {
+        for x in e.before.get(q).map(|v| v.as_slice()).unwrap_or(&[]) {
             match depois.iter().position(|y| y == x) {
                 Some(p) => {
                     depois.remove(p);
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_arrange_international_friendlies(
                 None => falta = true,
             }
         }
-        let mut esperado = e.novos.get(q).cloned().unwrap_or_default();
+        let mut esperado = e.new.get(q).cloned().unwrap_or_default();
         depois.sort_unstable();
         esperado.sort_unstable();
         if falta || depois != esperado {

@@ -1068,18 +1068,18 @@ pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
 /// das rodadas. Desempates: os quatro códigos de +0xc5..+0xc8 (docs/.md §2.7).
 #[derive(Clone, Copy)]
 pub(crate) struct GroupStageRules {
-    pub(crate) vitoria: u8,     // +0xc2: points per win
-    pub(crate) empate: u8,      // +0xc3: pontos por empate
-    pub(crate) categoria: u8,   // +0xc4: the category of each match (goes to the match’s +0x3a)
-    pub(crate) desempate: [u8; 4], // +0xc5..+0xc8
-    pub(crate) vagas: u8,       // +0xbe: top places (qualified per group)
-    pub(crate) premio: Option<u32>, // +0x28: the prize fund (the Champions Cup does not write it)
+    pub(crate) win: u8,     // +0xc2: points per win
+    pub(crate) draw: u8,      // +0xc3: pontos por empate
+    pub(crate) category: u8,   // +0xc4: the category of each match (goes to the match’s +0x3a)
+    pub(crate) tiebreak: [u8; 4], // +0xc5..+0xc8
+    pub(crate) slots: u8,       // +0xbe: top places (qualified per group)
+    pub(crate) prize: Option<u32>, // +0x28: the prize fund (the Champions Cup does not write it)
     pub(crate) bits: Option<u16>,   // +0xd9: the rule bit word (only the Champions Cup writes it: 8)
 }
 
-pub(crate) const ITALIAN_CUP_GROUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0xc3500), bits: None };
-pub(crate) const SERIE_C_CUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0x493e0), bits: None };
-pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 0x17, desempate: [3, 1, 2, 4], vagas: 2, premio: None, bits: Some(8) };
+pub(crate) const ITALIAN_CUP_GROUP_RULES: GroupStageRules = GroupStageRules { win: 3, draw: 1, category: 4, tiebreak: [4, 1, 2, 0], slots: 1, prize: Some(0xc3500), bits: None };
+pub(crate) const SERIE_C_CUP_RULES: GroupStageRules = GroupStageRules { win: 3, draw: 1, category: 4, tiebreak: [4, 1, 2, 0], slots: 1, prize: Some(0x493e0), bits: None };
+pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { win: 3, draw: 1, category: 0x17, tiebreak: [3, 1, 2, 4], slots: 2, prize: None, bits: Some(8) };
 
 /// Writes rules `g` into league `this` and builds its round table; returns 1.
 ///
@@ -1092,13 +1092,13 @@ pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { vitori
 /// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, rounds: i16) -> u32 {
     let b = |o: usize, v: u8| *((this + o) as *mut u8) = v;
-    b(0xc2, g.vitoria);
-    b(0xc3, g.empate);
-    b(0xc4, g.categoria);
-    for (k, &v) in g.desempate.iter().enumerate() {
+    b(0xc2, g.win);
+    b(0xc3, g.draw);
+    b(0xc4, g.category);
+    for (k, &v) in g.tiebreak.iter().enumerate() {
         b(0xc5 + k, v);
     }
-    b(0xbe, g.vagas);
+    b(0xbe, g.slots);
     b(0xbf, 0);
     b(0xc0, 0);
     b(0xc1, 0);
@@ -1106,7 +1106,7 @@ pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, roun
     core::ptr::write_unaligned((this + league::UPPER_DIVISION_ID) as *mut i32, -1);
     core::ptr::write_unaligned((this + league::LOWER_DIVISION_ID) as *mut i32, -1);
     core::ptr::write_unaligned((this + league::LEGS) as *mut i16, rounds);
-    if let Some(p) = g.premio {
+    if let Some(p) = g.prize {
         core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut u32, p);
     }
     if let Some(w) = g.bits {
@@ -1126,8 +1126,8 @@ pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupSt
     let lido = (read_u8(this + league::WIN_POINTS), read_u8(this + league::DRAW_POINTS), read_u8(this + league::MATCH_CATEGORY), [read_u8(this + league::TIEBREAKS), read_u8(this + 0xc6), read_u8(this + 0xc7), read_u8(this + 0xc8)], read_u8(this + league::PROMOTED_COUNT), [read_u8(this + league::PROMOTION_PLAYOFF_COUNT), read_u8(this + league::RELEGATION_PLAYOFF_COUNT), read_u8(this + league::RELEGATED_COUNT)], read_u8(this + league::CLUB_SIDES),
         core::ptr::read_unaligned((this + league::UPPER_DIVISION_ID) as *const i32), core::ptr::read_unaligned((this + league::LOWER_DIVISION_ID) as *const i32),
         core::ptr::read_unaligned((this + league::LEGS) as *const i16));
-    let previsto = (g.vitoria, g.empate, g.categoria, g.desempate, g.vagas, [0u8; 3], 1u8, -1i32, -1i32, 1i16);
-    let premio = g.premio.map_or(true, |p| core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const u32) == p);
+    let previsto = (g.win, g.draw, g.category, g.tiebreak, g.slots, [0u8; 3], 1u8, -1i32, -1i32, 1i16);
+    let premio = g.prize.map_or(true, |p| core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const u32) == p);
     let bits = g.bits.map_or(true, |w| core::ptr::read_unaligned((this + league::LEAGUE_FLAGS) as *const u16) == w);
     SCOREBOARD.record(r == 1 && lido == previsto && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", nome, this, r, lido, previsto, premio, bits));
 }
@@ -1143,8 +1143,8 @@ pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupSt
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
     crate::comparison::branch("cqi_12 regras da copa da italia");
     let mut g = ITALIAN_CUP_GROUP_RULES;
-    g.vitoria = 3; // cqi12: the win in the Coppa Italia groups
-    g.categoria = 4; // cqi12: the category of the Coppa Italia matches
+    g.win = 3; // cqi12: the win in the Coppa Italia groups
+    g.category = 4; // cqi12: the category of the Coppa Italia matches
     set_cup_league_rules(this, &g, 1)
 }
 

@@ -258,14 +258,14 @@ pub(crate) use AsiaClubChampScheduleOp::{B as Cqp11B, D as Cqp11D, E as Cqp11E, 
 /// memória, as operações e o nome do contador. `None`: a fase devolve 0 sem gravar nada.
 #[derive(Clone, Copy)]
 pub(crate) struct ScheduleStage {
-    pub(crate) liga: i32,
-    pub(crate) rodadas: i16,
+    pub(crate) league: i32,
+    pub(crate) rounds: i16,
     pub(crate) extra: i16,
-    pub(crate) extra_checa: bool,
-    pub(crate) tamanho: u32,
-    pub(crate) linha: u32,
+    pub(crate) extra_check: bool,
+    pub(crate) size: u32,
+    pub(crate) row: u32,
     pub(crate) ops: &'static [AsiaClubChampScheduleOp],
-    pub(crate) nome: &'static str,
+    pub(crate) name: &'static str,
 }
 
 /// Runs stage description `f` (or returns 0 if there is none): sets the outputs, allocates the round table and applies
@@ -285,18 +285,18 @@ pub(crate) unsafe fn create_round_table(this: usize, f: Option<ScheduleStage>, r
         None => return 0,
     };
     if !liga.is_null() {
-        *liga = f.liga;
+        *liga = f.league;
     }
-    *rodadas = f.rodadas;
-    if !f.extra_checa || !extra.is_null() {
+    *rodadas = f.rounds;
+    if !f.extra_check || !extra.is_null() {
         *extra = f.extra;
     }
-    let t = exe::crt_malloc(f.tamanho);
+    let t = exe::crt_malloc(f.size);
     if t == 0 {
-        show_error_at(arquivo, f.linha);
+        show_error_at(arquivo, f.row);
         return 0;
     }
-    crate::comparison::branch(f.nome);
+    crate::comparison::branch(f.name);
     let ano16 = core::ptr::read_unaligned((this + cup::YEAR) as *const u16) as u32;
     let ano = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for op in f.ops {
@@ -486,12 +486,12 @@ pub(crate) const LDV_VANS_TROPHY_FINAL: [AsiaClubChampScheduleOp; 18] = [
 pub(crate) fn asian_club_champ_stage(fase: u32) -> Option<ScheduleStage> {
     let f = fase as u8 as i8;
     match f {
-        -1 | 0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0xd0, linha: 0xc5,
-            ops: &ASIAN_CHAMPIONS_LEAGUE_ZONE_KNOCKOUT_OPS, nome: "cqp_11 eliminatorias da liga dos campeoes asiatica" }),
-        1 | 2 => Some(ScheduleStage { liga: 1, rodadas: 3, extra: 0x482 + (f != 1) as i16, extra_checa: false, tamanho: 0xc3, linha: 0x103,
-            ops: &ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS, nome: "cqp_11 grupos da liga dos campeoes asiatica" }),
-        3 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0, extra_checa: true, tamanho: 0x138, linha: 0x125,
-            ops: &ASIAN_CHAMPIONS_LEAGUE_FINALS, nome: "cqp_11 final da liga dos campeoes asiatica" }),
+        -1 | 0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0x480 + (f != -1) as i16, extra_check: false, size: 0xd0, row: 0xc5,
+            ops: &ASIAN_CHAMPIONS_LEAGUE_ZONE_KNOCKOUT_OPS, name: "cqp_11 eliminatorias da liga dos campeoes asiatica" }),
+        1 | 2 => Some(ScheduleStage { league: 1, rounds: 3, extra: 0x482 + (f != 1) as i16, extra_check: false, size: 0xc3, row: 0x103,
+            ops: &ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS, name: "cqp_11 grupos da liga dos campeoes asiatica" }),
+        3 => Some(ScheduleStage { league: 0, rounds: 3, extra: 0, extra_check: true, size: 0x138, row: 0x125,
+            ops: &ASIAN_CHAMPIONS_LEAGUE_FINALS, name: "cqp_11 final da liga dos campeoes asiatica" }),
         _ => None,
     }
 }
@@ -517,10 +517,10 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_round_table(this: 
 pub(crate) fn asian_cup_winners_stage(fase: u32) -> Option<ScheduleStage> {
     let f = fase as u8 as i8;
     match f {
-        -1 | 0 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0x138, linha: 0xc6,
-            ops: &ASIAN_CUP_WINNERS_KNOCKOUT_OPS, nome: "cqp_11 eliminatorias da recopa asiatica" }),
-        1 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0, extra_checa: true, tamanho: 0x138, linha: 0x112,
-            ops: &ASIAN_CUP_WINNERS_CUP_FINALS, nome: "cqp_11 final da recopa asiatica" }),
+        -1 | 0 => Some(ScheduleStage { league: 0, rounds: 3, extra: 0x480 + (f != -1) as i16, extra_check: false, size: 0x138, row: 0xc6,
+            ops: &ASIAN_CUP_WINNERS_KNOCKOUT_OPS, name: "cqp_11 eliminatorias da recopa asiatica" }),
+        1 => Some(ScheduleStage { league: 0, rounds: 3, extra: 0, extra_check: true, size: 0x138, row: 0x112,
+            ops: &ASIAN_CUP_WINNERS_CUP_FINALS, name: "cqp_11 final da recopa asiatica" }),
         _ => None,
     }
 }
@@ -532,10 +532,10 @@ pub(crate) fn asian_cup_winners_stage(fase: u32) -> Option<ScheduleStage> {
 pub(crate) fn ldv_trophy_stage(fase: u32) -> Option<ScheduleStage> {
     let f = fase as u8 as i8;
     match f {
-        -1 | 0 => Some(ScheduleStage { liga: 0, rodadas: 5, extra: 0x41d + (f != -1) as i16, extra_checa: false, tamanho: 0x208, linha: 0xca,
-            ops: &LDV_VANS_TROPHY_SECTION_OPS, nome: "cqp_11 chaves do trofeu" }),
-        1 => Some(ScheduleStage { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13d,
-            ops: &LDV_VANS_TROPHY_FINAL, nome: "cqp_11 final do trofeu" }),
+        -1 | 0 => Some(ScheduleStage { league: 0, rounds: 5, extra: 0x41d + (f != -1) as i16, extra_check: false, size: 0x208, row: 0xca,
+            ops: &LDV_VANS_TROPHY_SECTION_OPS, name: "cqp_11 chaves do trofeu" }),
+        1 => Some(ScheduleStage { league: 0, rounds: 1, extra: 0, extra_check: false, size: 0x68, row: 0x13d,
+            ops: &LDV_VANS_TROPHY_FINAL, name: "cqp_11 final do trofeu" }),
         _ => None,
     }
 }

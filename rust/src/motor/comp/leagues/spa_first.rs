@@ -46,11 +46,11 @@ pub(crate) unsafe fn spa_first_write_league_rounds(t: usize, year: u32, first: i
 /// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct SpaFirstChristmasSchedule {
     pub(crate) comeco: &'static [SpaFirstLeagueRound],
-    pub(crate) referencia: usize,
-    pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [SpaFirstLeagueRound]; 8],
-    pub(crate) fim: &'static [SpaFirstLeagueRound],
-    pub(crate) linha: u32,
+    pub(crate) reference: usize,
+    pub(crate) adjust: i32,
+    pub(crate) cases: [&'static [SpaFirstLeagueRound]; 8],
+    pub(crate) end: &'static [SpaFirstLeagueRound],
+    pub(crate) row: u32,
 }
 
 /// Writes the league round table with a winter break: start rounds, a middle block chosen by the day offset from 1
@@ -59,17 +59,17 @@ pub(crate) unsafe fn write_rounds_winter_break(t: usize, year: u32, n: &SpaFirst
     spa_first_write_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
-    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
+    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
-        show_error_at(file, n.linha);
+        show_error_at(file, n.row);
         7
     } else {
         k as usize
     };
-    let middle = n.casos[case];
+    let middle = n.cases[case];
     spa_first_write_league_rounds(t, year, n.comeco.len() as i32, middle);
-    spa_first_write_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.fim);
+    spa_first_write_league_rounds(t, year, (n.comeco.len() + middle.len()) as i32, n.end);
 }
 
 /// Side-by-side comparer for create_round_table at all stages: the original routine with the caller's outputs, the copy
@@ -277,8 +277,8 @@ pub(crate) const PRIMERA_ODD_LATE_ROUNDS: [SpaFirstLeagueRound; 21] = [
     (21, 4, 1, 6, 1, &[(-1, -1, -1)]), // 37: 21/mai (+1 ano)
 ];
 
-pub(crate) const PRIMERA_EVEN_CHRISTMAS_SCHEDULE: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_EVEN_YEAR_EARLY_ROUNDS, referencia: 14, ajuste: 17, casos: [&PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_0, &PRIMERA_EVEN_YEAR_CHRISTMAS_1, &PRIMERA_EVEN_CHRISTMAS_ROUNDS_2, &PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_3, &PRIMERA_EVEN_YEAR_CHRISTMAS_4, &PRIMERA_EVEN_CHRISTMAS_ROUNDS_5, &PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_6, &PRIMERA_EVEN_YEAR_CHRISTMAS_DEFAULT], fim: &PRIMERA_EVEN_YEAR_END, linha: 0x11b };
-pub(crate) const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_ODD_YEAR_START, referencia: 15, ajuste: 16, casos: [&PRIMERA_ODD_YEAR_CHRISTMAS_0, &PRIMERA_ODD_CHRISTMAS_ROUNDS_1, &PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_2, &PRIMERA_ODD_YEAR_CHRISTMAS_3, &PRIMERA_ODD_CHRISTMAS_ROUNDS_4, &PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_5, &PRIMERA_ODD_YEAR_CHRISTMAS_6, &PRIMERA_ODD_CHRISTMAS_ROUNDS_DEFAULT], fim: &PRIMERA_ODD_LATE_ROUNDS, linha: 0x1e1 };
+pub(crate) const PRIMERA_EVEN_CHRISTMAS_SCHEDULE: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_EVEN_YEAR_EARLY_ROUNDS, reference: 14, adjust: 17, cases: [&PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_0, &PRIMERA_EVEN_YEAR_CHRISTMAS_1, &PRIMERA_EVEN_CHRISTMAS_ROUNDS_2, &PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_3, &PRIMERA_EVEN_YEAR_CHRISTMAS_4, &PRIMERA_EVEN_CHRISTMAS_ROUNDS_5, &PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_6, &PRIMERA_EVEN_YEAR_CHRISTMAS_DEFAULT], end: &PRIMERA_EVEN_YEAR_END, row: 0x11b };
+pub(crate) const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_ODD_YEAR_START, reference: 15, adjust: 16, cases: [&PRIMERA_ODD_YEAR_CHRISTMAS_0, &PRIMERA_ODD_CHRISTMAS_ROUNDS_1, &PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_2, &PRIMERA_ODD_YEAR_CHRISTMAS_3, &PRIMERA_ODD_CHRISTMAS_ROUNDS_4, &PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_5, &PRIMERA_ODD_YEAR_CHRISTMAS_6, &PRIMERA_ODD_CHRISTMAS_ROUNDS_DEFAULT], end: &PRIMERA_ODD_LATE_ROUNDS, row: 0x1e1 };
 
 /// the Primera schedule: 38 rounds (20 clubs), nearly all on Sunday (day 6) with one TV slot (one match on day 5); two
 /// tables, by the parity of the year: in odd years (2001/02) from 22 August to 21 May, in even years from 30 August to
