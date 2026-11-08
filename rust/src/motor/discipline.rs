@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_serve_international_bans(this: u
 
 /// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
 /// [this+4]), os valores novos de +0 (jogos) ou +2 (dias) e se ela é solta.
-pub(crate) struct Cqb9Recurso {
+pub(crate) struct AppealPlan {
     pub(crate) orgao: usize,
     pub(crate) entrada: usize,
     pub(crate) suspensao: usize,
@@ -110,11 +110,11 @@ pub(crate) struct Cqb9Recurso {
 
 /// Plan of a discipline appeal for person id under a rule: finds the entry and ban, computes reduced matches/days and
 /// whether the ban is lifted.
-pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> Cqb9Recurso {
+pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> AppealPlan {
     let achar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_RULINGBODY_FIND_OR_ADD_DISCIPLINE_ENTRY);
     let orgao = read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
     let entrada = achar(orgao, id, 0);
-    let mut r = Cqb9Recurso { orgao, entrada, suspensao: 0, jogos: 0, dias: 0, solta: false };
+    let mut r = AppealPlan { orgao, entrada, suspensao: 0, jogos: 0, dias: 0, solta: false };
     if entrada == 0 || read_i16(entrada + 6) == -1 {
         return r;
     }
@@ -456,7 +456,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
 
 /// O que a 0x556570 vai fazer, lido antes (a lista das guardadas perde e libera os itens): o contrato e o clube, os
 /// itens guardados da pessoa (a vaga e os 5 bytes) e, depois deles, as vagas 0..2 não devolvidas que o clube não cobre.
-pub(crate) struct Cpo11Devolver {
+pub(crate) struct ContractReturnPlan {
     pub(crate) contrato: usize,
     pub(crate) clube: usize,
     pub(crate) guardadas: Vec<(usize, [u8; 5])>,
@@ -468,13 +468,13 @@ pub(crate) struct Cpo11Devolver {
 /// for bodies not covering the club.
 ///
 /// [pt] O plano da 0x556570 (o cursor da lista é zerado pela original na entrada; a busca sem criar só lê).
-pub(crate) unsafe fn return_bans_plan(this: usize, pessoa: usize) -> Cpo11Devolver {
+pub(crate) unsafe fn return_bans_plan(this: usize, pessoa: usize) -> ContractReturnPlan {
     let id = read_u32_as_usize(pessoa) as u32;
     let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let contrato = contract_of(read_u32_as_usize(G_CONTRACT_MANAGER), pessoa);
     let clube = if contrato == 0 { 0 } else { read_u32_as_usize(G_CLUB_TABLE).wrapping_add(read_u32_as_usize(contrato + 4).wrapping_mul(club::SIZE)) };
-    let mut p = Cpo11Devolver { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
+    let mut p = ContractReturnPlan { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
     let lista = this + 0x1c;
     write_u32(lista + 0xa, read_u32_as_usize(this + 0x1e) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -573,7 +573,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: us
 
 /// O caminho da 0x556940, lido antes: a suspensão velha estendida (e os valores novos dela), ou a vaga da nova e a
 /// conta do vetor depois; `None` nas caixas (capacidade no máximo).
-pub(crate) enum Cpo11Plano {
+pub(crate) enum SuspensionPlan {
     Estender { s: usize, jogos: u8, dias: i16 },
     Nova { vaga: i16, conta: i16 },
     Caixa,
@@ -581,7 +581,7 @@ pub(crate) enum Cpo11Plano {
 
 /// Plan for adding a ban: extend an existing one for the same body, reuse a free ban slot, append, or error box when
 /// full.
-pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plano {
+pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> SuspensionPlan {
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
         if regra == 0xff {
@@ -592,9 +592,9 @@ pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plan
             let s = read_u32_as_usize(this + 4).wrapping_add((read_i16(e + 6) as i32 as usize).wrapping_mul(20));
             let (jogos, novos) = (*(s as *const u8), *(ban as *const u8));
             return if jogos != 0xff && novos != 0xff {
-                Cpo11Plano::Estender { s, jogos: novos.wrapping_add(jogos), dias: read_i16(s + 2) }
+                SuspensionPlan::Estender { s, jogos: novos.wrapping_add(jogos), dias: read_i16(s + 2) }
             } else {
-                Cpo11Plano::Estender { s, jogos, dias: read_i16(s + 2).wrapping_add(read_i16(ban + 2)) }
+                SuspensionPlan::Estender { s, jogos, dias: read_i16(s + 2).wrapping_add(read_i16(ban + 2)) }
             };
         }
     }
@@ -602,13 +602,13 @@ pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plan
     for i in 0..n.max(0) {
         let s = read_u32_as_usize(this + 4).wrapping_add(i as usize * 20);
         if *(s as *const u8) == 0xff && read_i16(s + 2) == -1 {
-            return Cpo11Plano::Nova { vaga: i, conta: n };
+            return SuspensionPlan::Nova { vaga: i, conta: n };
         }
     }
     if n < read_i16(this + 8) || read_i16(this + 8) < 0x7d00 {
-        return Cpo11Plano::Nova { vaga: n, conta: n.wrapping_add(1) };
+        return SuspensionPlan::Nova { vaga: n, conta: n.wrapping_add(1) };
     }
-    Cpo11Plano::Caixa
+    SuspensionPlan::Caixa
 }
 
 /// Comparer for `add_ban` (comparison mode: see the header of motor.rs).
@@ -623,13 +623,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ba
     core::ptr::copy_nonoverlapping((ban + 0xc) as *const u8, regras.as_mut_ptr(), 4);
     original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_ADD_BAN)(this, id, ban);
     let (ok, detalhe) = match plano {
-        Cpo11Plano::Caixa => return,
-        Cpo11Plano::Estender { s, jogos, dias } => {
+        SuspensionPlan::Caixa => return,
+        SuspensionPlan::Estender { s, jogos, dias } => {
             let ok = *(s as *const u8) == jogos && read_i16(s + 2) == dias && *((s + 0x13) as *const u8) & 1 == 1
                 && *((ban + 0x13) as *const u8) & 1 == 1;
             (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, read_i16(s + 2), dias))
         }
-        Cpo11Plano::Nova { vaga, conta } => {
+        SuspensionPlan::Nova { vaga, conta } => {
             let s = read_u32_as_usize(this + 4).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
             let mut ok = read_i16(this + 0xa) == conta && *(s as *const u8) == *(ban as *const u8) && read_i16(s + 2) == read_i16(ban + 2);
             for k in 0..4usize {
@@ -766,7 +766,7 @@ pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
 
 /// O que a 0x556e90 faz com o jogo: a entrada no órgão, a suspensão (20 bytes em [this+4]), o contador novo de jogos
 /// cumpridos (+1) e se a suspensão termina.
-pub(crate) struct Cpm4Jogo {
+pub(crate) struct SuspensionMatchUpdate {
     pub(crate) entrada: usize,
     pub(crate) suspensao: usize,
     pub(crate) contador: Option<u8>,
@@ -780,8 +780,8 @@ pub(crate) struct Cpm4Jogo {
 /// pessoa no órgão da `regra`; por jogos (+0 ≠ 0xff): a partir do começo (dia +4, ano +6; hoje [0xae2c90]: dia +0,
 /// ano +2), com `conta`, +1 no contador (+1), e termina ao chegar em +0; por dias (+0 = 0xff): termina quando hoje
 /// chega ao começo + dias (+2) (0x54c5b0).
-pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, regra: u32, conta: u32) -> Cpm4Jogo {
-    let mut j = Cpm4Jogo { entrada: 0, suspensao: 0, contador: None, cumprida: false };
+pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, regra: u32, conta: u32) -> SuspensionMatchUpdate {
+    let mut j = SuspensionMatchUpdate { entrada: 0, suspensao: 0, contador: None, cumprida: false };
     let e = ruling_body_entry(ruling_body_for_rule(this, regra as u8), id);
     if e == 0 || read_i16(e + 6) == -1 {
         return j;

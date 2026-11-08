@@ -364,8 +364,8 @@ unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usize, clube: u
 
 /// As marcas do contrato que a saída do técnico apaga: lidas pela 0x8676f0 (+0x40; a 0x10000000 é apagada pela
 /// 0x8674e0, que mexe no +0x45) e lidas no +0x45 (apagadas pela 0x8674e0, que também atualiza a pessoa).
-const CPQ1_PELA_LEITURA: [(u32, usize); 3] = [(0x1000_0000, 0x8674e0), (0x80, 0x8676d0), (0x100, 0x8676d0)];
-const CPQ1_NO_45: [u32; 8] = [0x800_0000, 8, 0x200, 0x400, 0x2000, 0x1_0000, 0x8_0000, 0x80_0000];
+const CONTRACT_FLAGS_BY_READER: [(u32, usize); 3] = [(0x1000_0000, 0x8674e0), (0x80, 0x8676d0), (0x100, 0x8676d0)];
+const CONTRACT_FLAGS_AT_45: [u32; 8] = [0x800_0000, 8, 0x200, 0x400, 0x2000, 0x1_0000, 0x8_0000, 0x80_0000];
 
 /// O técnico do clube no cargo (pelo +0x39 do clube contratado, cargo +0x3d; ou pelo +0x24 da seleção, cargo +0x28):
 /// (técnico, cargo).
@@ -445,13 +445,13 @@ unsafe extern "thiscall" fn remove_club_manager(this: usize, clube: usize, tipo:
         if ct == 0 {
             continue;
         }
-        for (m, f) in CPQ1_PELA_LEITURA {
+        for (m, f) in CONTRACT_FLAGS_BY_READER {
             if marcas(ct) & m != 0 {
                 let apagar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(f);
                 apagar(ct, m);
             }
         }
-        for m in CPQ1_NO_45 {
+        for m in CONTRACT_FLAGS_AT_45 {
             if cpq1_d(ct + 0x45) as u32 & m != 0 {
                 queixa(ct, m);
             }

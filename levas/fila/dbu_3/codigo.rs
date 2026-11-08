@@ -19,7 +19,7 @@ unsafe fn dbu3_copiar(destino: usize, origem: usize) {
 
 /// Os nomes das regiões 1..14 da 0x616f20 (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
 /// 3 (Caribe) tem textos próprios.
-const DBU3_REGIOES: [(usize, usize); 14] = [
+const REGION_NAMES: [(usize, usize); 14] = [
     (0x9e20bc, 0x9d9458), // African / Africa
     (0x9e20b4, 0x9d9450), // Asian / Asia
     (0, 0),               // Caribbean (à parte)
@@ -82,7 +82,7 @@ unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, tamanho: u32, fo
             formatar(texto, 0x9e2080, 0xad9c64usize); // Caribbean<%s COMMENT Regionality as in European>
         }
     } else {
-        let (adj, nome) = DBU3_REGIOES[r as usize - 1];
+        let (adj, nome) = REGION_NAMES[r as usize - 1];
         // nos idiomas do grupo o adjetivo vem com a forma 0xff; nos outros, com as outras formas
         let usa_adjetivo = if grupo { fb == 0xff } else { fb != 0xff }; // (dbu)
         formatar(texto, if usa_adjetivo { adj } else { nome });
@@ -106,7 +106,7 @@ unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usize, tamanho
 /// Os adjetivos dos continentes da 0x6177f0 por idioma (imediatos do código, pelos endereços no exe; levantados
 /// seguindo os desvios da original): linhas África [0x9cfa08], Ásia [0x9cfa0c], Europa [0x9cfa10], América do Norte
 /// [0x9cfa14], Oceania [0x9cfa18] e os outros; colunas a forma do adjetivo 0, 1, 2, 3 e as outras.
-const DBU3_CONTINENTES_9: [[usize; 5]; 6] = [
+const CONTINENT_ADJECTIVES: [[usize; 5]; 6] = [
     [0x9d1064, 0x9d104c, 0x9d0d44, 0x9d0d38, 0x9d0d38],
     [0x9d0d2c, 0x9d0d20, 0x9d0d14, 0x9d0d08, 0x9d0d08],
     [0x9e2120, 0x9e2114, 0x9e2108, 0x9e20fc, 0x9e20fc],
@@ -114,7 +114,7 @@ const DBU3_CONTINENTES_9: [[usize; 5]; 6] = [
     [0x9d0b50, 0x9d0b44, 0x9d0b38, 0x9d0b2c, 0x9d0b2c],
     [0x9d0ae4, 0x9d0ad4, 0x9d0ac4, 0x9d0ab4, 0x9d0ab4],
 ];
-const DBU3_CONTINENTES_5: [[usize; 5]; 6] = [
+const CONTINENT_ADJECTIVES_LANG5: [[usize; 5]; 6] = [
     [0x9d1064, 0x9d1064, 0x9d104c, 0x9d0d44, 0x9d0d38],
     [0x9d0d2c, 0x9d0d2c, 0x9d0d20, 0x9d0d14, 0x9d0d08],
     [0x9e20f4, 0x9e20f4, 0x9e20ec, 0x9e20e0, 0x9e20d4],
@@ -122,7 +122,7 @@ const DBU3_CONTINENTES_5: [[usize; 5]; 6] = [
     [0x9d0890, 0x9d0890, 0x9d0884, 0x9d0878, 0x9d086c],
     [0x9d085c, 0x9d085c, 0x9d084c, 0x9d083c, 0x9d082c],
 ];
-const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
+const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
     [0x9d1064, 0x9d1058, 0x9d104c, 0x9d1040, 0x9d1040],
     [0x9d1034, 0x9d1028, 0x9d101c, 0x9d1010, 0x9d1010],
     [0x9e20f4, 0x9e20cc, 0x9e20ec, 0x9e20c4, 0x9e20c4],
@@ -149,9 +149,9 @@ unsafe extern "C" fn get_continent_adjective(continente: usize, texto: usize, ta
         None
     } else {
         match idioma() {
-            9 => Some((&DBU3_CONTINENTES_9, 9)),
-            5 => Some((&DBU3_CONTINENTES_5, 5)),
-            4 => Some((&DBU3_CONTINENTES_4, 4)),
+            9 => Some((&CONTINENT_ADJECTIVES, 9)),
+            5 => Some((&CONTINENT_ADJECTIVES_LANG5, 5)),
+            4 => Some((&CONTINENT_NAMES_LANGUAGE_4, 4)),
             _ => None,
         }
     };

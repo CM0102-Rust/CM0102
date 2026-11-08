@@ -16,7 +16,7 @@ pub(crate) unsafe fn brazil_rules_construct_transfer_rules(this: usize, a: [u32;
 
 
 /// A janela do Brasil: de 11 de dezembro (andando para a quarta-feira [inferência]) a 8 de novembro (andando para a sexta-feira [inferência]).
-pub(crate) const CQK3_BRASIL: [[u8; 6]; 2] = [
+pub(crate) const BRAZIL_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x04, 0x00, 0x03, 0x0b, 0x0b, 0x01], // cqk3: o Brasil abre em dezembro
     [0x04, 0x00, 0x05, 0x08, 0x0a, 0x00], // cqk3: o Brasil fecha em novembro
 ];
@@ -27,10 +27,10 @@ pub(crate) const CQK3_BRASIL: [[u8; 6]; 2] = [
 /// Original: `BRAZIL_RULES::BRAZIL_RULES` (0x43f0e0, brazil_rules.cpp, thiscall, ret 0x14).
 ///
 /// [pt] { 0x43f0e0 } (thiscall, ret 0x14, brazil_rules.cpp, `BRAZIL_RULES::BRAZIL_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
-/// transferência do Brasil (regra 4): a base (0x8e84a0), a vtable 0x968838, 1 janela(s) de `CQK3_BRASIL` e o +0x13 = 3 (o padrão da base é 50) [inferência: o limite de estrangeiros contratados]. Devolve o objeto.
+/// transferência do Brasil (regra 4): a base (0x8e84a0), a vtable 0x968838, 1 janela(s) de `BRAZIL_TRANSFER_WINDOWS` e o +0x13 = 3 (o padrão da base é 50) [inferência: o limite de estrangeiros contratados]. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparacao::ramo("cqk_3 brasil");
-    brazil_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x968838, 1, &CQK3_BRASIL, 0x98b104, 0x50);
+    brazil_rules_construct_transfer_rules(this, [a1, a2, a3, a4, a5], 0x968838, 1, &BRAZIL_TRANSFER_WINDOWS, 0x98b104, 0x50);
     *((this + 0x13) as *mut u8) = 3; // cqk3: o limite do Brasil
     this
 }
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_brazil_rules(this: usi
 }
 
 /// As janelas da Alemanha: de 1º de julho a 15 de agosto e de 1º de julho a 15 de janeiro.
-pub(crate) const CQK3_ALEMANHA: [[u8; 6]; 4] = [
+pub(crate) const GERMANY_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x0a, 0x00, 0xff, 0x01, 0x06, 0x01],
     [0x0a, 0x00, 0xff, 0x0f, 0x07, 0x00],
     [0x0a, 0x01, 0xff, 0x01, 0x06, 0x01],
@@ -60,10 +60,10 @@ pub(crate) const CQK3_ALEMANHA: [[u8; 6]; 4] = [
 /// Original: `GERMANY_RULES::init_transfer_windows` (0x5dffe0, germany_rules.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5dffe0 } (thiscall, ret 0, germany_rules.cpp, `GERMANY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Alemanha (regra 10), depois da base e da vtable): as
-/// 2 janelas de transferência de `CQK3_ALEMANHA`.
+/// 2 janelas de transferência de `GERMANY_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn brazil_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqk_3 alemanha");
-    set_transfer_windows(this, 2, &CQK3_ALEMANHA, 0x9cd538, 0x4d);
+    set_transfer_windows(this, 2, &GERMANY_TRANSFER_WINDOWS, 0x9cd538, 0x4d);
 }
 
 /// Comparer for `brazil_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_brazil_rules_init_transfer_windo
 }
 
 /// A janela da Escócia: de 30 de maio (andando para o sábado [inferência]) a 30 de março (andando para a quinta-feira [inferência]).
-pub(crate) const CQK3_ESCOCIA: [[u8; 6]; 2] = [
+pub(crate) const SCOTLAND_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x15, 0x00, 0x06, 0x1e, 0x04, 0x01],
     [0x15, 0x00, 0x04, 0x1e, 0x02, 0x00],
 ];

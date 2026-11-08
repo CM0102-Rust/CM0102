@@ -21,7 +21,7 @@ unsafe fn national_team_of_nation_id(id: usize) -> usize {
 
 /// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
 /// 10; C nas 2, 5, 8 e 11): os globais dos ids das nações.
-const CQS12_DE_2001: [usize; 12] = [
+const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
     0x9cf29c, 0x9cf260, 0x9cf2a8, 0x9cf294, // cqs12: as vagas 0 a 3 (a Colômbia na 0)
     0x9cf3d0, 0x9cf33c, 0x9cf2d4, 0x9cf428, // cqs12: as vagas 4 a 7 (o México na 4, o Peru na 7)
     0x9cf4f4, 0x9cf504, 0x9cf420, 0x9cf254, // cqs12: as vagas 8 a 11 (a Bolívia na 11)
@@ -29,7 +29,7 @@ const CQS12_DE_2001: [usize; 12] = [
 
 /// { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
 /// push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x37b e devolve 0). Em 2001 (+0x40 = 0x7d1): as 12 fixas
-/// (CQS12_DE_2001, cada uma pela 0x53b3d0) e devolve 1, sem ordenar. Nos outros anos: as sedes da Copa América
+/// (COPA_AMERICA_2001_NATIONS, cada uma pela 0x53b3d0) e devolve 1, sem ordenar. Nos outros anos: as sedes da Copa América
 /// ([0x9cf7a8]) no ano (0x5fa730 HostCountry::find_hosts em [0xb5e134]: push 1; push &segunda; push &primeira; push ano;
 /// push competição -> thiscall, ret 0x14; as duas começam em −1; devolve quantas, byte com sinal) na frente; depois,
 /// pela ordem das nações ([0xae23a8], [0xae2350] delas, i como palavra) e enquanto a lista não enche (+0xf2), as do
@@ -51,7 +51,7 @@ unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     let ano = cqs12_w(this + 0x40) as u16;
     if ano == 0x7d1 {
         crate::comparacao::ramo("cqs_12 selecoes de 2001");
-        for (k, &g) in CQS12_DE_2001.iter().enumerate() {
+        for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
             cqs12_pd(cqs12_d(this + 0xee) + k * 4, national_team_of_nation_id(cqs12_d(g)));
         }
         return 1;
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) -> u32 {
 }
 
 /// As posições previstas da Copa América, pela ordem de reputação das 12.
-const CQS12_PREVISTAS: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
+const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
 
 /// { 0x5e2340 } (thiscall, ret 0, goldcup.cpp; a virtual +0x5c): `GoldCup::set_predicted_positions()`: sem estatística
 /// (+8), a caixa da linha 0x419 e volta; uma cópia da lista (0x944e46(+0xf2 × 4); sem memória, a caixa da linha 0x421 e
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
     core::ptr::copy_nonoverlapping(cqs12_d(this + 0xee) as *const u8, v as *mut u8, n);
     ordenar(v, cqs12_d(this + 0xf2) as u32, 4, 0x4b07d0);
     crate::comparacao::ramo("cqs_12 previstas da copa america");
-    for (k, &p) in CQS12_PREVISTAS.iter().enumerate() {
+    for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         posicao(cqs12_d(this + 8), cqs12_d(v + k * 4), p);
     }
     soltar(v);
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(this: usize
     o(this);
     let errado = (0..12).find(|&k| {
         let e = if v[k] != 0 { achar(cqs12_d(this + 8), v[k]) } else { 0 };
-        e == 0 || *((e + 0x72) as *const u8) as u32 != CQS12_PREVISTAS[k]
+        e == 0 || *((e + 0x72) as *const u8) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
     PLACAR.registrar(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }

@@ -5,12 +5,12 @@
 # ficam colados no efeito.
 MUTACOES = [
     ('cqo13_libertadores_semana_antes',
-     'const CQO13_LIBERTADORES_GRUPOS: [Cqo13G; 6] = [(0x19, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // cqo13: os grupos da Libertadores',
-     'const CQO13_LIBERTADORES_GRUPOS: [Cqo13G; 6] = [(0x12, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // mutacao: 18/2',
+     'const LIBERTADORES_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x19, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // cqo13: os grupos da Libertadores',
+     'const LIBERTADORES_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x12, 1, 2, 2), (4, 2, 2, 2), (0xb, 2, 2, 2), (0x12, 2, 2, 2), (0x19, 2, 2, 2), (1, 3, 2, 2)]; // mutacao: 18/2',
      'cqo_13 grupos da libertadores'),
     ('cqo13_mercosul_semana_antes',
-     'const CQO13_MERCOSUL_GRUPOS: [Cqo13G; 6] = [(0x1d, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // cqo13: os grupos da Mercosul',
-     'const CQO13_MERCOSUL_GRUPOS: [Cqo13G; 6] = [(0x16, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // mutacao: 22/7',
+     'const MERCOSUR_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x1d, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // cqo13: os grupos da Mercosul',
+     'const MERCOSUR_GROUP_ROUNDS: [ConmebolMercGroupRound; 6] = [(0x16, 6, 2, 2), (0x13, 7, 2, 2), (2, 8, 2, 2), (0x10, 8, 2, 2), (0x1e, 8, 2, 2), (0xe, 9, 2, 2)]; // mutacao: 22/7',
      'cqo_13 grupos da mercosul'),
     ('cqo13_convidados_embaralhados_como_19',
      'embaralhar(cqo13_d(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados',

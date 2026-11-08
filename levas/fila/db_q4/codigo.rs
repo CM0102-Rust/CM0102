@@ -28,7 +28,7 @@ unsafe extern "C" fn database_compare_comp_history_rows(a: usize, b: usize) -> i
 
 /// As 54 primeiras células do vetor de atributos (0x53a610), na ordem em que a original grava:
 /// (deslocamento no registro de jogador, peso). Peso 0 = o zero do começo.
-const CELULAS_DO_VETOR: [(u8, u8); 54] = [
+const ATTRIBUTE_VECTOR_CELLS: [(u8, u8); 54] = [
     (0x0f, 0), (0x10, 0), (0x11, 0), (0x12, 0), (0x13, 0), (0x14, 0), (0x15, 0), (0x16, 0), (0x1a, 0),
     (0x17, 0), (0x18, 0), (0x19, 0),
     (0x30, 0), (0x3b, 0), (0x1e, 0), (0x23, 2), (0x24, 0), (0x26, 2), (0x27, 2), (0x2a, 1), (0x2b, 2),
@@ -41,7 +41,7 @@ const CELULAS_DO_VETOR: [(u8, u8); 54] = [
 
 /// { 0x53a610 } (cdecl, Database.cpp): estende os bytes do registro de `jogador` num vetor de 63
 /// células de 3 bytes (palavra com sinal + peso): zera os 63 pesos; células 0..53 pela tabela
-/// `CELULAS_DO_VETOR` (posições 0..8, lados 9..11, depois os atributos, peso 2 nos que contam e 1 no
+/// `ATTRIBUTE_VECTOR_CELLS` (posições 0..8, lados 9..11, depois os atributos, peso 2 nos que contam e 1 no
 /// +0x2a); a célula 54 é o byte +0x58 da `pessoa`. Os fins de grupo vão às saídas não nulas:
 /// posições 9, lados 0xc, ponderados 0x20. Devolve o vetor (eax).
 unsafe extern "C" fn database_player_to_attribute_vector(jogador: usize, pessoa: usize, vetor: usize, fim_dos_lados: *mut u8,
@@ -49,7 +49,7 @@ unsafe extern "C" fn database_player_to_attribute_vector(jogador: usize, pessoa:
     for i in 0..0x3f {
         *((vetor + 3 * i + 2) as *mut u8) = 0;
     }
-    for (i, &(d, peso)) in CELULAS_DO_VETOR.iter().enumerate() {
+    for (i, &(d, peso)) in ATTRIBUTE_VECTOR_CELLS.iter().enumerate() {
         core::ptr::write_unaligned((vetor + 3 * i) as *mut i16, *((jogador + d as usize) as *const i8) as i16);
         *((vetor + 3 * i + 2) as *mut u8) = peso;
         match i {

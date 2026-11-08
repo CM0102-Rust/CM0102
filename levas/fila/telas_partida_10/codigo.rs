@@ -1,8 +1,8 @@
 // ---------- %%LEVA%%a leva: as telas da partida (10): os painéis das zonas de ação e do relatório da partida e a tela dos jogos do dia (match_screens.cpp) ----------
 
-type LinhaDoDisplay = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
-type CaixaDoGerente = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
-type TextoDoGerente = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+type DisplayLineFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+type ManagerBoxFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+type ManagerTextFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
 
 /// A cor (u16) em `a` com os 16 bits de cima de `x`: onde a original troca só o `ax`/`cx`/`dx` de um
 /// registrador que tem um valor conhecido (a devolução de uma chamada, uma conta) e o empurra inteiro.
@@ -32,12 +32,12 @@ unsafe fn show_panel_empty_message(topo: *mut i32, base: *mut i32, texto_id: usi
 /// 0x19, `*base` no 0xc e os valores (0x720320).
 unsafe extern "C" fn draw_action_zones_panel(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das zonas de acao");
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+    let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
+    let txt: ManagerTextFn = core::mem::transmute(0x803fd0usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let guarda = 0xb6b7b4 as *mut u8;
@@ -151,11 +151,11 @@ unsafe extern "C" fn draw_action_zones_panel(topo: *mut i32, base: *mut i32) {
 /// sem memória: a original (caixa de erro).
 unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const SEM_RELATORIO: usize = 0xa16900;
 
@@ -305,10 +305,10 @@ unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
 /// parâmetro 2 e a marca de vista do humano da vez no grupo (+0x14 + 4h).
 unsafe extern "C" fn build_day_fixtures_screen() {
     crate::comparacao::ramo("telas montar os jogos do dia");
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+    let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
     let sem_selo = |c: usize| {
@@ -317,7 +317,7 @@ unsafe extern "C" fn build_day_fixtures_screen() {
     };
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rd32 = |a: usize| core::ptr::read_unaligned(a as *const i32);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let mut colunas: [u8; 9] = [3, 2, 0x12, 1, 4, 1, 0x12, 2, 3];

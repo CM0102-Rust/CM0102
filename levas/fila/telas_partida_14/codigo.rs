@@ -3,23 +3,23 @@
 /// Os 25 registros de aba (0xd4 bytes: +4 o título, +0xcc a marca, +0xd0 o valor) que a barra de abas
 /// (0x5ed780) lê, construídos (0x4568f0) e destruídos (0x5a53c0) pelos iteradores do runtime
 /// (0x9463af/0x9462bb) como na original.
-type AbasDaPartida = [u32; 0x14b4 / 4];
+type MatchTabs = [u32; 0x14b4 / 4];
 
-unsafe fn construct_match_tabs(abas: &mut AbasDaPartida) {
+unsafe fn construct_match_tabs(abas: &mut MatchTabs) {
     let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
     vetor(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x4568f0, 0x5a53c0);
 }
 
-unsafe fn destruct_match_tabs(abas: &mut AbasDaPartida) {
+unsafe fn destruct_match_tabs(abas: &mut MatchTabs) {
     let fim_do_vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(0x9462bbusize);
     fim_do_vetor(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x5a53c0);
 }
 
 /// O título da aba `k` (texto em +4) e a marca e o valor dela.
-unsafe fn match_tab_title(abas: &mut AbasDaPartida, k: usize) -> usize {
+unsafe fn match_tab_title(abas: &mut MatchTabs, k: usize) -> usize {
     abas.as_mut_ptr() as usize + k * 0xd4 + 4
 }
-unsafe fn set_match_tab_flags(abas: &mut AbasDaPartida, k: usize, marca: u32, valor: u32) {
+unsafe fn set_match_tab_flags(abas: &mut MatchTabs, k: usize, marca: u32, valor: u32) {
     abas[k * 53 + 51] = marca;
     abas[k * 53 + 52] = valor;
 }
@@ -97,7 +97,7 @@ unsafe fn format_match_team_name(time: usize, so_o_nome: u8) {
 /// ordem) no `eax` que sobrou de 0x5fcff0 (os 16 bits de cima conhecidos) e as outras em registradores
 /// sujos (aqui estendidas); `sujo` diz qual, (marcada, não marcada).
 unsafe fn add_commentary_speed_row(lista: usize, valor: u16, v: u32, sujo: (usize, usize)) -> usize {
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
     let marcada = v as u16 == valor;
     let k = if marcada { sujo.0 } else { sujo.1 };
     let enderecos = [0xae31aausize, 0xaebdec, 0xaebdea];
@@ -122,17 +122,17 @@ unsafe fn add_commentary_speed_row(lista: usize, valor: u16, v: u32, sujo: (usiz
 /// narração (com o lance do parâmetro 7 narrado por 0x6d7b00) no parâmetro 8.
 unsafe extern "C" fn build_match_screen() {
     crate::comparacao::ramo("telas montar a partida");
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MENOS1: usize = usize::MAX;
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto_do_gerente: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+    let texto_do_gerente: ManagerTextFn = core::mem::transmute(0x803fd0usize);
+    let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
+    let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let cores: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -144,7 +144,7 @@ unsafe extern "C" fn build_match_screen() {
     };
     let gravar_item = |k: u32, r: usize| set_screen_param(k, r as i16 as isize as usize);
 
-    let mut abas: AbasDaPartida = [0; 0x14b4 / 4];
+    let mut abas: MatchTabs = [0; 0x14b4 / 4];
     construct_match_tabs(&mut abas);
     *((ficha(0) + 0xea) as *mut u32) = 1;
     free_match_snapshot();
@@ -415,7 +415,7 @@ unsafe extern "C" fn build_match_screen() {
 /// 0x25). Por fim −11 com [0xb6b7b0] ou o redesenho (0x802d00) com [0xb6b7a8].
 unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
     crate::comparacao::ramo("telas respond a partida");
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let g = |a: usize| *(a as *const u32);
     let por = |a: usize, v: u32| *(a as *mut u32) = v;
@@ -807,12 +807,12 @@ unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
 /// botões de voltar e avançar e o painel da aba (parâmetro 2).
 unsafe extern "C" fn build_match_details_screen() {
     crate::comparacao::ramo("telas montar os detalhes");
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let texto_do_gerente: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
+    let texto_do_gerente: ManagerTextFn = core::mem::transmute(0x803fd0usize);
+    let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
     let cores: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
     let novo: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x944cf1usize);
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
@@ -820,7 +820,7 @@ unsafe extern "C" fn build_match_details_screen() {
     let rb = |a: usize| *(a as *const u8);
     let sx = |a: usize| *(a as *const i8) as i32;
 
-    let mut abas: AbasDaPartida = [0; 0x14b4 / 4];
+    let mut abas: MatchTabs = [0; 0x14b4 / 4];
     construct_match_tabs(&mut abas);
     free_match_snapshot();
     let aba = get_screen_param(2) as u8;
@@ -933,8 +933,8 @@ unsafe extern "C" fn build_match_details_screen() {
 unsafe fn comparar_montagem_da_partida(nome: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.push((0xb6b7a8, 12));
-    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
+    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
+    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco != 0 {
         reg.push((bloco, 0xb4));
         reg.push((bloco + 0xb8, 0x200 - 0xb8));

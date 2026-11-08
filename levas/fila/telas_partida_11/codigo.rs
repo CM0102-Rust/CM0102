@@ -48,9 +48,9 @@ unsafe fn displayed_match_state(p0: usize) -> usize {
     }
 }
 
-const TEXTO_VAZIO: usize = 0xad9c64;
-const FORMATO_D: usize = 0x98806c; // "%d"
-const FORMATO_PCT: usize = 0x98e8d4; // "%d%%"
+const EMPTY_TEXT: usize = 0xad9c64;
+const FORMAT_D: usize = 0x98806c; // "%d"
+const FORMAT_PCT: usize = 0x98e8d4; // "%d%%"
 
 /// { 0x71e750 } (cdecl, match_screens.cpp): passa às células das estatísticas da partida (a partir do
 /// item do parâmetro 9) os valores do estado que mudaram desde a cópia do parâmetro 0x1d (sem cópia,
@@ -60,7 +60,7 @@ const FORMATO_PCT: usize = 0x98e8d4; // "%d%%"
 unsafe extern "C" fn refresh_match_stats_values() {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let texto: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x801c70usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let p0 = get_screen_param(0);
@@ -71,13 +71,13 @@ unsafe extern "C" fn refresh_match_stats_values() {
     let i16_ = |b: usize, k: usize| core::ptr::read_unaligned((b + k) as *const i16) as i32;
     let byte = |k: usize, d: u32| {
         if copia == 0 || u8_(e, k) != u8_(copia, k) {
-            formatar(BUF, FORMATO_D, u8_(e, k));
+            formatar(BUF, FORMAT_D, u8_(e, k));
             texto(sm, item.wrapping_add(d), BUF);
         }
     };
     let diferenca = |a: usize, b: usize, d: u32| {
         if copia == 0 || u8_(e, a) - u8_(e, b) != u8_(copia, a) - u8_(copia, b) {
-            formatar(BUF, FORMATO_D, u8_(e, a) - u8_(e, b));
+            formatar(BUF, FORMAT_D, u8_(e, a) - u8_(e, b));
             texto(sm, item.wrapping_add(d), BUF);
         }
     };
@@ -87,7 +87,7 @@ unsafe extern "C" fn refresh_match_stats_values() {
                 *(BUF as *mut [u8; 2]) = *b"-\0";
             } else {
                 let x = i16_(e, num) * 100 / i16_(e, den);
-                formatar(BUF, FORMATO_PCT, if inverter { 100 - x } else { x });
+                formatar(BUF, FORMAT_PCT, if inverter { 100 - x } else { x });
             }
             texto(sm, item.wrapping_add(d), BUF);
         }
@@ -132,7 +132,7 @@ unsafe extern "C" fn refresh_action_zones_values() {
     let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801350usize);
     let estilo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801fc0usize);
     let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(0x53b640usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let p0 = get_screen_param(0);
@@ -159,12 +159,12 @@ unsafe extern "C" fn refresh_action_zones_values() {
     if copia == 0 || s(e, 0xc) != s(copia, 0xc) || s(e, 0x16) != s(copia, 0x16) || s(e, 0x20) != s(copia, 0x20) {
         let total = || s(e, 0xc) + s(e, 0x16) + s(e, 0x20);
         let a = if total() == 0 { 0 } else { (s(e, 0xc) * 100 / total()) as i8 as i32 };
-        formatar(BUF, FORMATO_PCT, a);
+        formatar(BUF, FORMAT_PCT, a);
         texto(sm, b, BUF);
         let c = if total() == 0 { 0 } else { (s(e, 0x20) * 100 / total()) as i8 as i32 };
-        formatar(BUF, FORMATO_PCT, c);
+        formatar(BUF, FORMAT_PCT, c);
         texto(sm, it(2), BUF);
-        formatar(BUF, FORMATO_PCT, if total() == 0 { 0 } else { 100 - c - a });
+        formatar(BUF, FORMAT_PCT, if total() == 0 { 0 } else { 100 - c - a });
         texto(sm, it(1), BUF);
     }
     if copia == 0 || s(e, 0x2a) != s(copia, 0x2a) {
@@ -205,11 +205,11 @@ unsafe extern "C" fn refresh_action_zones_values() {
     }
     if mudou(0x13e) {
         let p = pct(0x13e, 0x763);
-        formatar(BUF, FORMATO_PCT, p);
+        formatar(BUF, FORMAT_PCT, p);
         let w = (p * 0x1d2 / 100) as i32 + 0xd4;
         retangulo(sm, it(0x15), 0xd4, altura - 0x23, w, altura - 0x14);
         texto(sm, it(0x15), BUF);
-        formatar(BUF, FORMATO_PCT, 100u32.wrapping_sub(p));
+        formatar(BUF, FORMAT_PCT, 100u32.wrapping_sub(p));
         retangulo(sm, it(0x16), w, altura - 0x23, 0x2a6, altura - 0x14);
         texto(sm, it(0x16), BUF);
         fundo(sm, it(0x17), cor(p));
@@ -232,7 +232,7 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
     let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801040usize);
     let margem: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x800d30usize);
     let cor_do_texto: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801960usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let p0 = get_screen_param(0);
@@ -256,9 +256,9 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
                 if c == 0 {
                     margem(sm, i, 1);
                     margem(sm, i + 1, 1);
-                    texto(sm, i + 3, TEXTO_VAZIO);
-                    texto(sm, i + 4, TEXTO_VAZIO);
-                    texto(sm, i + 5, TEXTO_VAZIO);
+                    texto(sm, i + 3, EMPTY_TEXT);
+                    texto(sm, i + 4, EMPTY_TEXT);
+                    texto(sm, i + 5, EMPTY_TEXT);
                 }
             } else {
                 if difere(&[0x2c, 0x2d]) {
@@ -300,26 +300,26 @@ unsafe extern "C" fn refresh_player_ratings_rows() {
                             cor_do_texto(sm, i + 3, colour_word(cor) as u32);
                             texto(sm, i + 3, BUF);
                         }
-                        None => texto(sm, i + 3, TEXTO_VAZIO),
+                        None => texto(sm, i + 3, EMPTY_TEXT),
                     }
                 }
                 if lin >= 0x323 && m(0x32) < 0 {
                     // o reserva que não entrou: só limpa, e só sem cópia
                     if c == 0 {
-                        texto(sm, i + 4, TEXTO_VAZIO);
-                        texto(sm, i + 5, TEXTO_VAZIO);
+                        texto(sm, i + 4, EMPTY_TEXT);
+                        texto(sm, i + 5, EMPTY_TEXT);
                     }
                 } else {
                     if difere(&[0x35, 0x32]) {
-                        formatar(BUF, FORMATO_D, er(0x35) as i32);
+                        formatar(BUF, FORMAT_D, er(0x35) as i32);
                         texto(sm, i + 4, BUF);
                     }
                     if difere(&[0x21, 0x32]) {
                         if er(0x21) != 0 {
-                            formatar(BUF, FORMATO_D, er(0x21) as i32);
+                            formatar(BUF, FORMAT_D, er(0x21) as i32);
                             texto(sm, i + 5, BUF);
                         } else {
-                            texto(sm, i + 5, TEXTO_VAZIO);
+                            texto(sm, i + 5, EMPTY_TEXT);
                         }
                     }
                 }

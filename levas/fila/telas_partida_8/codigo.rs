@@ -1,8 +1,8 @@
 // ---------- %%LEVA%%a leva: as telas da partida (8): os painéis das estatísticas do time, das notas dos jogadores e das estatísticas da partida (match_screens.cpp) ----------
 
-type CelulaDaLista = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
-type TextoDaCelulaDaLista = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
-type ListaDoDisplay = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+type ListCellFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+type ListCellTextFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
+type DisplayListFn = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
 
 /// O `Display` do humano da vez ([0xb74c4c + 0x300 x (i16)[0xb77c7a]]).
 unsafe fn current_human_display() -> usize {
@@ -26,12 +26,12 @@ unsafe fn colour_word(a: usize) -> usize {
 /// preenchimento (0x721cd0).
 unsafe extern "C" fn draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das estatisticas do time");
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
+    let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let pagina = get_screen_param(0x1c) as u8;
@@ -122,15 +122,15 @@ unsafe extern "C" fn draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut
 /// senão texto; vazio (0xfb em +0x1d) sem nome; e as três células da nota. No fim, 0x723350.
 unsafe extern "C" fn draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das notas dos jogadores");
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
+    let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let cor_reserva: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(0x5e4800usize);
     let nome_da_pessoa: unsafe extern "C" fn(u32, u32, u32, usize, u32, u32, i32) = core::mem::transmute(0x53e140usize);
     let pessoa_vale: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x53e990usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let mut colunas: [u8; 16] = [0xe, 1, 5, 1, 0x46, 0x15, 7, 7, 0xe, 1, 5, 1, 0x46, 0x15, 7, 7];
@@ -201,7 +201,7 @@ unsafe extern "C" fn draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
 }
 
 /// Os rótulos das 13 linhas das estatísticas da partida e as cores deles.
-const ROTULOS_DAS_ESTATISTICAS_DA_PARTIDA: [(usize, usize); 13] = [
+const MATCH_STATS_LABELS: [(usize, usize); 13] = [
     (0xa16870, 0xae3184), // Shots On Goal
     (0xa16864, 0xae3184), // On Target
     (0xa16858, 0xae3184), // Off Target
@@ -222,15 +222,15 @@ const ROTULOS_DAS_ESTATISTICAS_DA_PARTIDA: [(usize, usize); 13] = [
 /// o item da primeira no parâmetro 9) e o rótulo no meio; depois os valores (0x71e750).
 unsafe extern "C" fn draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
     crate::comparacao::ramo("telas painel das estatisticas da partida");
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let mut colunas: [u8; 3] = [1, 5, 1];
     let tabela = lista(current_human_display(), 0x6e, *topo as usize, 0x30c, *base as usize, 3, colunas.as_mut_ptr() as usize, 0xd, 0, 2, 0, usize::MAX);
-    for (k, &(rotulo, cor)) in ROTULOS_DAS_ESTATISTICAS_DA_PARTIDA.iter().enumerate() {
+    for (k, &(rotulo, cor)) in MATCH_STATS_LABELS.iter().enumerate() {
         let r = texto_da_celula(sm, tabela, 0, k, 0x30, colour_word(0xaebe04), 0xc, 3, colour_word(0xaebde8), 0);
         if k == 0 {
             set_screen_param(9, r as u16 as i16 as i32 as usize);

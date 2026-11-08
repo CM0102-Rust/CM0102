@@ -12,7 +12,7 @@ pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
 
 /// As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
 /// primeiro que é seleção, 0x53b900): (mexicanos, centro-americanos, caribenhos, da MLS) com as contagens.
-pub(crate) struct Cqi11Listas {
+pub(crate) struct ConcacafClubLists {
     pub(crate) mex: [usize; 200],
     pub(crate) centro: [usize; 200],
     pub(crate) caribe: [usize; 200],
@@ -22,11 +22,11 @@ pub(crate) struct Cqi11Listas {
 
 /// The four club lists of 0x4c11a0 in database order (Mexican, Central American, Caribbean, MLS) with their counts,
 /// stopping at the first national team.
-pub(crate) unsafe fn concacaf_club_lists() -> Cqi11Listas {
+pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     // ponytail: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
     // o comparador manda esse caso para a original sozinha)
-    let mut l = Cqi11Listas { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
+    let mut l = ConcacafClubLists { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
     let (mut a, mut b, mut c, mut m) = (0u8, 0u8, 0u8, 0i8);
     let mut clube = read_u32_as_usize(G_CLUB_TABLE);
     let mut i = 0i32;
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     crate::comparacao::ramo("cqp_13 tabela da concacaf");
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    for (i, r) in CQP13_CONCACAF.iter().enumerate() {
+    for (i, r) in CONCACAF_CHAMPIONS_CUP_ROUNDS.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, ano);
         if i < 2 {
             elo(t, i as i32, 0, -1, -1, -1, 0);

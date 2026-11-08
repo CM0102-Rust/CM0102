@@ -146,11 +146,11 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
 
 /// As posições previstas da Série C, na ordem da lista dos 56 depois de ordenada: 1, 2, 3, 3, 5, 5, 7, 7, oito vezes 9
 /// (as faixas do mata-mata) e, para os outros quarenta, a faixa de oito em oito: 16, 24, 32, 40 e 48.
-pub(crate) const CQS4_LUGARES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
+pub(crate) const SERIE_C_PREDICTED_PLACES: [u8; 16] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 9, 9, 9, 9, 9, 9, 9]; // cqs4: as posições previstas do mata-mata
 
-/// Place for index k: from CQS4_LUGARES below 16, else 16 + 8 x ((k - 16) / 8) [inference].
+/// Place for index k: from SERIE_C_PREDICTED_PLACES below 16, else 16 + 8 x ((k - 16) / 8) [inference].
 pub(crate) fn place_for_index(k: usize) -> u8 {
-    if k < 16 { CQS4_LUGARES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
+    if k < 16 { SERIE_C_PREDICTED_PLACES[k] } else { (16 + 8 * ((k - 16) / 8)) as u8 }
 }
 
 /// The Series C predicted positions: the 56 ordered by reputation; the favourite 1st, the second 2nd, the next two 3rd
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_nat_third_set_predicted_posi
 
 
 #[allow(clippy::type_complexity)]
-pub(crate) type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
+pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
 
 /// 0x42ee80 BraNatThird::create_group_stage(g): round table, the 7 clubs of group g, League_Stage in slot g, +0x30 = g.
 ///
@@ -258,7 +258,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let construir: Cqs3Fase = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
+    let construir: LeagueStageCtorFn = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, g, &mut rodadas, &mut extra, 0);
@@ -298,8 +298,8 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: us
     bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
 
-/// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
-pub(crate) const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
+/// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `SECOND_ROUND_SEEDS[k]` da lista dos dezesseis.
+pub(crate) const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
 
 /// The Series C second round: the sixteen (the top two of each group) seeded by first-round points (ties go to the
 /// earlier one: the league, then groups 0 to 6, first before second), in a knockout where the best meets the 16th, the
@@ -312,7 +312,7 @@ pub(crate) const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 1
 /// 2) Os dois primeiros de cada um dos oito grupos (a tabela da liga e as das fases 0 a 6, nessa ordem), em registros de
 ///    6 bytes (o clube e os pontos, +0x19 da linha).
 /// 3) Dezesseis vezes: o registro de mais pontos (o primeiro, no empate) entre os que ainda têm clube sai (o clube vira
-///    0) e o clube vai à vaga `CQS3_SEMENTES[k]`: o melhor contra o 16º, o 2º contra o 15º... (sem nenhum: a caixa da
+///    0) e o clube vai à vaga `SECOND_ROUND_SEEDS[k]`: o melhor contra o 16º, o 2º contra o 15º... (sem nenhum: a caixa da
 ///    linha 0x30b; a original lê então o endereço 0 e cai).
 /// 4) A tabela das rodadas pela virtual +0x3c (thiscall(this, 7, &rodadas, &extra, 0), ret 0x10); a fase (operator new
 ///    0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 16, a lista, as rodadas, +4, a
@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
                 core::ptr::read_volatile(core::ptr::null::<usize>()) // ponytail: a original lê o endereço 0 aqui e cai
             }
         };
-        core::ptr::write_unaligned((lista + 4 * CQS3_SEMENTES[k] as usize) as *mut usize, c);
+        core::ptr::write_unaligned((lista + 4 * SECOND_ROUND_SEEDS[k] as usize) as *mut usize, c);
     }
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_second_round_stage(this: 
             }
         }
         if let Some(m) = melhor {
-            plano[CQS3_SEMENTES[k] as usize] = r[m].0;
+            plano[SECOND_ROUND_SEEDS[k] as usize] = r[m].0;
             r[m].0 = 0;
         }
     }

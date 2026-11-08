@@ -16,14 +16,14 @@ unsafe fn caixa_do_banco_dbn2(linha: u32) {
 }
 
 /// As tabelas do banco: (ponteiro, quantidade, bytes por linha).
-const TABELAS_DO_BANCO_DBN2: [(usize, usize, usize); 12] = [
+const DATABASE_TABLES: [(usize, usize, usize); 12] = [
     (0xae23b4, 0xae235c, 581), (0xae23a8, 0xae2350, 0x122), (0xae23e8, 0xae2390, 0x2b), (0xae23b0, 0xae2358, 0x4e),
     (0xae23c8, 0xae2370, 0x34), (0xae23c0, 0xae2368, 0x44), (0xae23bc, 0xae2364, 0x6e), (0xae23e0, 0xae2388, 0x65),
     (0xae23cc, 0xae2374, 0x11), (0xae23ac, 0xae2354, 0x38), (0xae23d4, 0xae237c, 0x1a), (0xae23d0, 0xae2378, 0x6b),
 ];
 
 /// Os campos de pessoa que, fora da faixa, abrem a caixa na 0x5315a0: (campo, teto, tabela, bytes, texto, linha).
-const PESSOA_COM_CAIXA_DBN2: [(usize, usize, usize, usize, usize, u32); 3] = [
+const PERSON_RANGE_CHECK_FIELDS: [(usize, usize, usize, usize, usize, u32); 3] = [
     (0x61, 0xae236c, 0xae23c4, 0x46, 0x9b60b4, 0x18f6), // jogador
     (0x65, 0xae2370, 0xae23c8, 0x34, 0x9b6088, 0x1907), // preferências
     (0x69, 0xae2368, 0xae23c0, 0x44, 0x9b605c, 0x1918), // não jogador
@@ -181,7 +181,7 @@ unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
         {
             a(e + d, base, tam);
         }
-        for &(d, teto, base, tam, texto, linha) in PESSOA_COM_CAIXA_DBN2.iter() {
+        for &(d, teto, base, tam, texto, linha) in PERSON_RANGE_CHECK_FIELDS.iter() {
             if let Some(v) = c(e + d, teto, base, tam) {
                 formatar(0xde1f64, texto, i, v);
                 caixa_do_banco_dbn2(linha);
@@ -252,12 +252,12 @@ unsafe extern "C" fn comparar_resolve_database_indexes(leniente: u32) {
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| *(a as *const usize);
     let (pessoas, n) = (rd(0xae23bc), gi(0xae2364));
-    let caixa = (0..n.max(0) as usize).any(|i| PESSOA_COM_CAIXA_DBN2.iter().any(|&(d, teto, ..)| gi(pessoas + i * 0x6e + d) >= gi(teto)));
+    let caixa = (0..n.max(0) as usize).any(|i| PERSON_RANGE_CHECK_FIELDS.iter().any(|&(d, teto, ..)| gi(pessoas + i * 0x6e + d) >= gi(teto)));
     if caixa {
         return o(leniente);
     }
     let mut regioes = vec![(0xde1f64usize, 0x80usize)];
-    for &(p, cont, tam) in TABELAS_DO_BANCO_DBN2.iter() {
+    for &(p, cont, tam) in DATABASE_TABLES.iter() {
         if rd(p) != 0 && gi(cont) > 0 {
             regioes.push((rd(p), gi(cont) as usize * tam));
         }

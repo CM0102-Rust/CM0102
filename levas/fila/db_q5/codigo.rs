@@ -1,14 +1,14 @@
 // ---------- %%LEVA%%a leva: se o clube é basco e se a pessoa está na lista de transferências do clube ou na de empréstimos (Database.cpp) ----------
 
 /// Os 23 clubes bascos de 0x53d7f0 (ponteiros fixos da área 0x9d00a4..), na ordem da original.
-const CLUBES_BASCOS: [usize; 23] = [
+const BASQUE_CLUBS: [usize; 23] = [
     0x9d0120, 0x9d0134, 0x9d02e4, 0x9d02e8, 0x9d02ec, 0x9d02f0, 0x9d02f4, 0x9d02f8, 0x9d02fc, 0x9d0304, 0x9d0308,
     0x9d030c, 0x9d0310, 0x9d0314, 0x9d0318, 0x9d031c, 0x9d0320, 0x9d0324, 0x9d0328, 0x9d032c, 0x9d0330, 0x9d0334,
     0x9d0338,
 ];
 
 /// { 0x53d7f0 } (cdecl, Database.cpp): 1 se o `clube` é da Espanha ([0x9cf488], nação +0x53) e o id
-/// dele é um dos 23 clubes bascos (`CLUBES_BASCOS`). Clube ou nação nulos: 0.
+/// dele é um dos 23 clubes bascos (`BASQUE_CLUBS`). Clube ou nação nulos: 0.
 unsafe extern "C" fn database_is_basque_club(clube: usize) -> u32 {
     let g = |a: usize| *(a as *const u32);
     if clube == 0 {
@@ -19,7 +19,7 @@ unsafe extern "C" fn database_is_basque_club(clube: usize) -> u32 {
         return 0; // fora da Espanha
     }
     let id = g(clube);
-    CLUBES_BASCOS.iter().any(|&a| id == g(a)) as u32
+    BASQUE_CLUBS.iter().any(|&a| id == g(a)) as u32
 }
 
 /// O vínculo (0x4cf5f0) da `pessoa` (não nula) com o `clube` e o clube usado: sem clube, o do contrato

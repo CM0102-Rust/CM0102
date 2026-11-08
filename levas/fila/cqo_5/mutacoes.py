@@ -3,15 +3,15 @@
 # carreira).
 MUTACOES = [
     ('cqo5_cfa_primeira_rodada_em_outro_dia',
-     'const CQO5_CFA: [Cqo5Rodada; 34] = [\n    (31, 6, 0, 5,',
-     'const CQO5_CFA: [Cqo5Rodada; 34] = [\n    (31, 6, 0, 2,',
+     'const CFA_ROUNDS: [FraCfaScheduleRound; 34] = [\n    (31, 6, 0, 5,',
+     'const CFA_ROUNDS: [FraCfaScheduleRound; 34] = [\n    (31, 6, 0, 2,',
      'cqo_5 calendario da cfa'),
     ('cqo5_c1_primeira_rodada_em_outro_dia',
-     'const CQO5_C1: [Cqo5Rodada; 34] = [\n    (5, 8, 0, 6,',
-     'const CQO5_C1: [Cqo5Rodada; 34] = [\n    (5, 8, 0, 2,',
+     'const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [\n    (5, 8, 0, 6,',
+     'const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [\n    (5, 8, 0, 2,',
      'cqo_5 calendario da c1'),
     ('cqo5_semifinais_uma_semana_antes',
-     'const CQO5_SEMIFINAIS: Cql10R = cql10r((8, 4, 1, 0), (0x15,',
-     'const CQO5_SEMIFINAIS: Cql10R = cql10r((8, 4, 1, 0), (0xe,',
+     'const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15,',
+     'const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0xe,',
      'cqo_5 play-offs da c1'),
 ]

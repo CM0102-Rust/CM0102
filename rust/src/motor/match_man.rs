@@ -25,7 +25,7 @@ pub(crate) unsafe extern "C" fn pick(
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let nota_fn: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
         core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_ROLE);
-    let recursiva: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    let recursiva: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let tecnico: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_GET_SAVED_LINEUP);
     let n = a2 as u8 as i8 as i32;
     let m = a4 as u8 as i8 as i32;
@@ -329,7 +329,7 @@ pub(crate) unsafe extern "C" fn pick(
 ///
 /// [pt] { 0x6df460 } (thiscall, match_man.cpp): a postura que a comissao `c` (+0x12 motor, +0x18 lado,
 /// +0x1f tecnico, +0x2f clube, +0x33 adversario, +0x37 partida) pede ao time: 1 ataque total, 2
-/// ataque, 3 equilibrio, 4 defesa, 5 retranca. Parte da forca dos dois lados (com o motor rodando
+/// ataque, 3 equilibrio, 4 defesa, 5 retranca. RoleBitEffect da forca dos dois lados (com o motor rodando
 /// (+0x8ea5), a soma das notas 0x6e86d0 dos que estao em campo * 50 / 11; senao a reputacao +0x80
 /// dos clubes), da posse (+0x1fc/+0x206/+0x210), do tempo (+0x8ed0), dos expulsos (+0x1ad) e do
 /// placar agregado (0x6ce310), e ajusta pela liga (posicoes na tabela, 0x4a4850), pelo tecnico e pelo
@@ -1282,7 +1282,7 @@ pub(crate) unsafe extern "thiscall" fn put_in_place(c: usize, pos: u32, pessoa: 
 
 // Porta de 0x6eaea0 (inicia o jogador na vaga): unidade da fita na comparacao.
 pub(crate) static mut PORTA_6EAEA0: usize = 0;
-pub(crate) const PROLOGO_6EAEA0: Prologo = Prologo { endereco: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] };
+pub(crate) const PROLOGUE_6EAEA0: Prologo = Prologo { endereco: 0x6eaea0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] };
 
 /// Hook entry for 0x6eaea0 (initialise match player): runs the original directly, or records it as a tape unit while
 /// recording.
@@ -1510,7 +1510,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, outro: usi
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let melhor: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_MATCH_MAN_CHOOSE_CAPTAIN);
-    let pick: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let consultar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
     let opcao: unsafe extern "thiscall" fn(usize, u32, usize) -> u8 = core::mem::transmute(FN_HUMAN_MANAGER_GET_HOLIDAY_OPTION);
     let store_instructions: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_TACTICS_CLEAR_OR_RESTORE_SELECTION);
@@ -2428,7 +2428,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
         }
         let cod = if byte(sai, 0x22) > -1 { 0x20d7 } else { 0x1f5b };
         let a = [cod, m as u32, byte(entra, 0x2e) as u8 as u32, byte(entra, 0x27) as u8 as u32, byte(sai, 0x2e) as u8 as u32];
-        PROXIMO_SEXTO.store(byte(sai, 0x27) as u8 as u32, std::sync::atomic::Ordering::Relaxed);
+        NEXT_SIXTH_ARG.store(byte(sai, 0x27) as u8 as u32, std::sync::atomic::Ordering::Relaxed);
         chamar(0x6d6f70, narrador, a);
     }
     // o capitao
@@ -2449,7 +2449,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goleiro: u8, chamar: &mut dyn FnM
 }
 
 /// O 6o argumento da proxima narracao (o lado de quem sai em 0x20d7/0x1f5b; -1 nas outras).
-pub(crate) static PROXIMO_SEXTO: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(u32::MAX);
+pub(crate) static NEXT_SIXTH_ARG: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(u32::MAX);
 
 /// Makes the AI substitutions for a side (choosing who comes on and off, reassigning positions, commentary, new
 /// captain); thin wrapper over substitute_with with the real calls.
@@ -2459,7 +2459,7 @@ pub(crate) unsafe extern "thiscall" fn substitute(c: usize, goleiro: u32) {
     substitute_with(c, goleiro as u8, &mut |rotina, this, a| {
         match rotina {
             0x6e2000 => {
-                let f: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+                let f: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
                 let v = *(a[0] as usize as *const [usize; 15]);
                 return f(v[0], v[1] as u32, v[2], v[3] as u32, v[4] as u32, v[5], v[6] as u32, v[7], v[8], v[9] as u32, v[10] as u32, v[11], v[12], v[13] as u32, v[14]);
             }
@@ -2472,7 +2472,7 @@ pub(crate) unsafe extern "thiscall" fn substitute(c: usize, goleiro: u32) {
                 f(this);
             }
             _ => {
-                let sexto = PROXIMO_SEXTO.swap(u32::MAX, std::sync::atomic::Ordering::Relaxed);
+                let sexto = NEXT_SIXTH_ARG.swap(u32::MAX, std::sync::atomic::Ordering::Relaxed);
                 add_match_event(this, [a[0], a[1], a[2], a[3], a[4], sexto, 0]);
             }
         }
@@ -2481,7 +2481,7 @@ pub(crate) unsafe extern "thiscall" fn substitute(c: usize, goleiro: u32) {
 }
 
 /// Argumentos da 0x6e2000 (escalar: distribui as pessoas pelas posicoes, recursiva, aloca), cdecl.
-pub(crate) type Escalar = unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u32;
+pub(crate) type AssignPositionsFn = unsafe extern "C" fn(usize, u32, usize, u32, u32, usize, u32, usize, usize, u32, u32, usize, usize, u32, usize) -> u32;
 
 /// Port of 0x6e1aa0 with calls injected: rebuilds the team (formation check, selection, new positions and ratings for
 /// each player).
@@ -2596,7 +2596,7 @@ pub(crate) unsafe extern "thiscall" fn redo_team(c: usize) {
             f(this, a[0] as usize, a[1], a[2], a[3]) as u32
         }
         0x6e2000 => {
-            let f: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+            let f: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
             let v = *(a[0] as usize as *const [usize; 15]);
             f(v[0], v[1] as u32, v[2], v[3] as u32, v[4] as u32, v[5], v[6] as u32, v[7], v[8], v[9] as u32, v[10] as u32, v[11], v[12], v[13] as u32, v[14])
         }
@@ -2770,7 +2770,7 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
     if r(0) == 0 || r(5) >= r(4) {
         return;
     }
-    let pick: Escalar = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
+    let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
     let nota: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
         core::mem::transmute(FN_MATCH_MAN_SCORE_PLAYER_FOR_ROLE);
     let restrito = |p: usize| -> bool {

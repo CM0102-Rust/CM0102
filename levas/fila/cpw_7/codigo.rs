@@ -373,7 +373,7 @@ unsafe fn awol_club_of_contract(k: usize) -> usize {
 /// da original, pela game_check_players_missing_training (0x5d6aa0), a chamada anterior que alcança essa altura é a 0x54cdb0 (dias desde a
 /// chegada), que guarda ali o seu `this`, a data do jogo 0xae2c90: o byte baixo é 0x90. A cópia usa esse valor (um caso
 /// repetido); o comparador não o compara (o da original é resíduo de verdade).
-const CPW7_BYTE_DO_CASO: u8 = 0x90;
+const AWOL_RESIDUE_BYTE: u8 = 0x90;
 
 /// { 0x41a360 } (thiscall, ret 4, awol.cpp, SEH só com a data local, sem destrutor): `AWOL::miss_training(pessoa)`,
 /// pelas faltas ao treino do dia (0x5d6aa0) e pela awol_daily_update. Jogador (+0x61) dentro da conta, com contrato
@@ -443,7 +443,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
     let mut reg = [0u8; 13];
     reg[..4].copy_from_slice(&cpw7_i(pessoa).to_le_bytes());
     reg[4..12].copy_from_slice(core::slice::from_raw_parts(0xae2c90 as *const u8, 8));
-    reg[12] = CPW7_BYTE_DO_CASO;
+    reg[12] = AWOL_RESIDUE_BYTE;
     let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
     acrescentar(cpw7_d(this + 4), reg.as_ptr() as usize, 0xd);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);

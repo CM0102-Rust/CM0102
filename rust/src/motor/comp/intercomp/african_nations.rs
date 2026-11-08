@@ -629,7 +629,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_african_nations_create_schedule(
 pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa africana");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa Africana
-    goldcup_write_rule_fields(this, &CQK10_AFRICANA, vitoria);
+    goldcup_write_rule_fields(this, &AFRICAN_NATIONS_RULE_FIELDS, vitoria);
     let dia = 5; // cqk10: o dia da data da Copa Africana
     let palavra = competition_date_word(this, dia, 9, -1, 5);
     finish_rules_setup(this, palavra, 0xffff)
@@ -638,5 +638,5 @@ pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize)
 /// Comparer for `african_nations_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_african_nations_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_AFRICAN_NATIONS_SET_UP_RULES);
-    check_set_up_rules("african_nations_set_up_rules", this, &CQK10_AFRICANA, (5, 9, -1, 5), 0xffff, || o(this))
+    check_set_up_rules("african_nations_set_up_rules", this, &AFRICAN_NATIONS_RULE_FIELDS, (5, 9, -1, 5), 0xffff, || o(this))
 }

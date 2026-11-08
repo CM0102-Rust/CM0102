@@ -2,7 +2,7 @@
 
 /// As cores fixas (chaves do index.cpp em 0x9cf178..0x9cf1fc, ids) e a família de cada uma, na ordem
 /// das comparações de 0x540520.
-const FAMILIAS_DAS_CORES: [(usize, u8); 34] = [
+const COLOUR_FAMILIES: [(usize, u8); 34] = [
     (0x9cf1e4, 10), (0x9cf1e8, 10), (0x9cf178, 1), (0x9cf1d0, 1), (0x9cf17c, 2), (0x9cf180, 3), (0x9cf184, 3),
     (0x9cf188, 3), (0x9cf18c, 8), (0x9cf190, 8), (0x9cf194, 8), (0x9cf198, 8), (0x9cf19c, 9), (0x9cf1a0, 9),
     (0x9cf1f0, 4), (0x9cf1a4, 4), (0x9cf1a8, 4), (0x9cf1fc, 4), (0x9cf1ac, 5), (0x9cf1b0, 5), (0x9cf1b4, 5),
@@ -13,11 +13,11 @@ const FAMILIAS_DAS_CORES: [(usize, u8); 34] = [
 /// A família da `cor` pela tabela; None se o id não está em nenhuma chave (caixa na original).
 unsafe fn colour_family(cor: usize) -> Option<u8> {
     let id = *(cor as *const u32);
-    FAMILIAS_DAS_CORES.iter().find(|&&(a, _)| *(a as *const u32) == id).map(|&(_, f)| f)
+    COLOUR_FAMILIES.iter().find(|&&(a, _)| *(a as *const u32) == id).map(|&(_, f)| f)
 }
 
 /// { 0x540520 } (cdecl, Database.cpp): a família (1..10) da `cor` pelo id (+0), comparado com as chaves
-/// de cor em `FAMILIAS_DAS_CORES` (a primeira que casa). Cor fora da lista: a original (caixa "Error",
+/// de cor em `COLOUR_FAMILIES` (a primeira que casa). Cor fora da lista: a original (caixa "Error",
 /// [0xb67a34] = 0 e 2).
 unsafe extern "C" fn database_get_colour_family(cor: usize) -> u8 {
     match colour_family(cor) {

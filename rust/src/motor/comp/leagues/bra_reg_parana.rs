@@ -282,13 +282,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_parana_set_up_rules(this
 ///
 /// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, ano, registro, &CQT3_PARANAENSE, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
+    bra_reg_northeast_construct_state_league(this, ano, registro, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: a disciplina e as posições previstas do Paranaense
 }
 
 /// Comparer for `construct_bra_reg_parana` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_parana(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PARANA);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_parana", this, ano, registro, &CQT3_PARANAENSE, || o(this, ano, registro))
+    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_parana", this, ano, registro, &PARANA_CHAMPIONSHIP, || o(this, ano, registro))
 }
 
 /// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the

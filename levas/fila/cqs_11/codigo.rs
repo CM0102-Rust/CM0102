@@ -9,14 +9,14 @@ unsafe fn cqs11_pd(a: usize, v: usize) {
 }
 
 /// Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
-struct Cqs11Nacao {
+struct NationClubList {
     clubes: [usize; 30],
     n: u8,
 }
 
-impl Cqs11Nacao {
+impl NationClubList {
     fn novo() -> Self {
-        Cqs11Nacao { clubes: [0; 30], n: 0 }
+        NationClubList { clubes: [0; 30], n: 0 }
     }
 
     fn por(&mut self, c: usize) {
@@ -57,7 +57,7 @@ unsafe fn select_invited_clubs(this: usize) -> u32 {
         show_error_at(0x9a7d6c, 0x262);
         return 0;
     }
-    let (mut mexico, mut colombia, mut peru, mut bolivia) = (Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo());
+    let (mut mexico, mut colombia, mut peru, mut bolivia) = (NationClubList::novo(), NationClubList::novo(), NationClubList::novo(), NationClubList::novo());
     let mut mls = [0usize; 12];
     let mut n_mls = 0i8;
     let mut i = 0i32;

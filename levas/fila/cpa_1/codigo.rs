@@ -14,7 +14,7 @@ unsafe fn cpa1_b(a: usize) -> u8 {
 
 /// Linhas da tabela: 0x3b bytes; +0 clube, +4 posição, +5 confrontos diretos (entradas de 14 bytes), +9 histórico
 /// das posições (um byte por rodada), +0x11 jogos e, a cada 14 bytes por coluna (+0xad), os pontos em +0x19.
-const CPA1_LINHA: usize = 0x3b;
+const LEAGUE_TABLE_ROW_SIZE: usize = 0x3b;
 
 /// { 0x6827d0 } (thiscall, league.cpp): `League::sort_table(linhas)`: ordena a tabela (`linhas` nula: a da liga,
 /// +0xb1). Antes acerta o total de rodadas +0xa7 (−1: (+0x3e − 1) × +0x3c, com clubes e +0x45). A regra 6 (+0xc5,
@@ -55,11 +55,11 @@ unsafe extern "thiscall" fn sort_table(liga: usize, linhas: usize) -> u32 {
         }
     }
     if so_ordenar {
-        qsort(linhas, n() as i32, CPA1_LINHA as u32, 0x683210);
+        qsort(linhas, n() as i32, LEAGUE_TABLE_ROW_SIZE as u32, 0x683210);
     } else {
         *(0xb67a00 as *mut usize) = cpa1_d(liga + 0xa3);
         if confronto {
-            qsort(linhas, n() as i32, CPA1_LINHA as u32, 0x683410);
+            qsort(linhas, n() as i32, LEAGUE_TABLE_ROW_SIZE as u32, 0x683410);
             loop {
                 let mut trocou = false;
                 if n() as i32 - 1 <= 0 {
@@ -67,13 +67,13 @@ unsafe extern "thiscall" fn sort_table(liga: usize, linhas: usize) -> u32 {
                 }
                 let mut i: i8 = 0;
                 loop {
-                    let (oa, ob) = (CPA1_LINHA * i as i32 as usize, CPA1_LINHA * (i as i32 + 1) as usize);
+                    let (oa, ob) = (LEAGUE_TABLE_ROW_SIZE * i as i32 as usize, LEAGUE_TABLE_ROW_SIZE * (i as i32 + 1) as usize);
                     let (a, b) = (cpa1_d(liga + 0xb1) + oa, cpa1_d(liga + 0xb1) + ob);
                     let col = cpa1_d(*(0xb679fc as *const usize) + 0xad);
                     let decidir = cpa1_d(a) == 0 || cpa1_d(b) == 0 || is_sort_tie(a, b, col);
                     if decidir && ordem(cpa1_d(liga + 0xb1) + oa, cpa1_d(liga + 0xb1) + ob) > 0 {
                         let t = cpa1_d(liga + 0xb1);
-                        core::ptr::swap_nonoverlapping((t + oa) as *mut u8, (t + ob) as *mut u8, CPA1_LINHA); // a troca das linhas
+                        core::ptr::swap_nonoverlapping((t + oa) as *mut u8, (t + ob) as *mut u8, LEAGUE_TABLE_ROW_SIZE); // a troca das linhas
                         trocou = true;
                     }
                     i = i.wrapping_add(1);
@@ -86,13 +86,13 @@ unsafe extern "thiscall" fn sort_table(liga: usize, linhas: usize) -> u32 {
                 }
             }
         } else {
-            qsort(linhas, n() as i32, CPA1_LINHA as u32, 0x683210);
+            qsort(linhas, n() as i32, LEAGUE_TABLE_ROW_SIZE as u32, 0x683210);
         }
     }
     if cpa1_b(liga + 0x44) != 0xfe && cpa1_d(liga + 0xad) == 0 && n() > 0 {
         let mut c: i8 = 0;
         loop {
-            let r = linhas + CPA1_LINHA * c as i32 as usize;
+            let r = linhas + LEAGUE_TABLE_ROW_SIZE * c as i32 as usize;
             *((r + 4) as *mut i8) = c; // a posição
             let hist = cpa1_d(r + 9);
             let rodada = cpa1_b(r + 0x11) as i8;
@@ -162,10 +162,10 @@ unsafe fn sort_regions(liga: usize, linhas: usize) -> Vec<(usize, usize)> {
     if linhas == 0 {
         return reg;
     }
-    reg.push((linhas, CPA1_LINHA * n));
+    reg.push((linhas, LEAGUE_TABLE_ROW_SIZE * n));
     let propria = cpa1_d(liga + 0xb1);
     if propria != 0 && propria != linhas {
-        reg.push((propria, CPA1_LINHA * n));
+        reg.push((propria, LEAGUE_TABLE_ROW_SIZE * n));
     }
     let mut total = cpa1_w(liga + 0xa7);
     if total == -1 && n > 0 && cpa1_d(liga + 0x45) != 0 {
@@ -174,7 +174,7 @@ unsafe fn sort_regions(liga: usize, linhas: usize) -> Vec<(usize, usize)> {
     let tam = total.clamp(0, 127) as usize;
     if tam > 0 {
         for i in 0..n {
-            let hist = cpa1_d(linhas + CPA1_LINHA * i + 9);
+            let hist = cpa1_d(linhas + LEAGUE_TABLE_ROW_SIZE * i + 9);
             if hist != 0 {
                 reg.push((hist, tam));
             }
@@ -196,15 +196,15 @@ unsafe extern "thiscall" fn comparar_sort_table(liga: usize, linhas: usize) -> u
 /// pontos (+0x19), a soma do confronto direto contra ele (entrada de +5: bytes +4..+7 em +0x11..+0x14, palavras
 /// +8/+0xa/+0xc em +0x15/+0x17/+0x19); ordena com 0x6834f0 e grava em +4 de cada linha a posição, que começa no
 /// número de clubes e desce a cada par da minitabela que a 0x6834f0 separa. Solta a minitabela (0x9452ca). Sem
-/// memória: a original (a caixa do league.cpp). Chamada pela 0x6827d0 na regra 4.
+/// memória: a original (a caixa do league.cpp). TapeCall pela 0x6827d0 na regra 4.
 unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usize) {
     let n = || cpa1_w(liga + 0x3e);
     let calloc: unsafe extern "C" fn(i32, u32) -> usize = core::mem::transmute(0x945501usize);
-    let t = calloc(n() as i32, CPA1_LINHA as u32);
+    let t = calloc(n() as i32, LEAGUE_TABLE_ROW_SIZE as u32);
     if t == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(liga, linhas); // caixa: só a original
     }
-    let linha = |base: usize, i: i16| base + CPA1_LINHA * i as i32 as usize;
+    let linha = |base: usize, i: i16| base + LEAGUE_TABLE_ROW_SIZE * i as i32 as usize;
     let mut i: i16 = 0;
     if n() > 0 {
         loop {
@@ -246,7 +246,7 @@ unsafe extern "thiscall" fn build_h2h_table(liga: usize, linhas: usize) {
         }
     }
     let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-    qsort(t, n() as i32, CPA1_LINHA as u32, 0x6834f0);
+    qsort(t, n() as i32, LEAGUE_TABLE_ROW_SIZE as u32, 0x6834f0);
     let separa: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x6834f0usize);
     let mut pos = n() as u8;
     let mut a: i16 = 0;
@@ -279,7 +279,7 @@ unsafe extern "thiscall" fn comparar_build_h2h_table(liga: usize, linhas: usize)
     if linhas == 0 {
         return o(liga, linhas);
     }
-    let reg = [(linhas, CPA1_LINHA * cpa1_w(liga + 0x3e).max(0) as usize)];
+    let reg = [(linhas, LEAGUE_TABLE_ROW_SIZE * cpa1_w(liga + 0x3e).max(0) as usize)];
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&reg, || o(liga, linhas), || build_h2h_table(liga, linhas));
     PLACAR.registrar(igual, || format!("build_h2h_table({:x}, {:x}) {:x?} x {:x?}", liga, linhas, mo, mr));
 }
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn free_table(liga: usize, tabela: usize) {
         if cpa1_d(t + campo) != 0 {
             let mut i = 0usize;
             while (i as i32) < cpa1_w(liga + 0x3e) as i32 {
-                let p = cpa1_d(t + campo + CPA1_LINHA * i);
+                let p = cpa1_d(t + campo + LEAGUE_TABLE_ROW_SIZE * i);
                 if p != 0 {
                     free(p);
                 }
@@ -337,7 +337,7 @@ unsafe extern "thiscall" fn league_check_complete(liga: usize, fases: u32, avisa
         }
         let rodadas = cpa1_w(liga + 0xa7);
         for i in 0..cpa1_w(liga + 0x3e).max(0) as usize {
-            if ((cpa1_b(tab + CPA1_LINHA * i + 0x11) as i8) as i16) < rodadas { // ainda falta jogar
+            if ((cpa1_b(tab + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rodadas { // ainda falta jogar
                 return 0;
             }
         }

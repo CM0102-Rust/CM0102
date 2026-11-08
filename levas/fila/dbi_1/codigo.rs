@@ -14,7 +14,7 @@ unsafe fn free_database_table(tabela: usize) {
 
 /// { 0x527ee0 } (cdecl, Database.cpp): `database_free_staff_history_table()`: com a tabela do histórico de
 /// pessoas ([0xae23cc], 17 bytes) presente, solta (0x9670f4 ou 0x9452ca, pelo modo do banco) e zera o ponteiro
-/// e a contagem [0xae2374]. Chamada por PlayerStats::PlayerStats (0x7c0ccd): o histórico passa a viver no
+/// e a contagem [0xae2374]. TapeCall por PlayerStats::PlayerStats (0x7c0ccd): o histórico passa a viver no
 /// `player stats history.tmp`. Sem quadro de pilha.
 unsafe extern "C" fn database_free_staff_history_table() {
     let tabela = *(0xae23cc as *const usize);
@@ -34,7 +34,7 @@ unsafe extern "C" fn comparar_database_free_staff_history_table() {
 }
 
 /// { 0x527f20 } (cdecl, Database.cpp): `database_free_staff_comp_history_table()`: o mesmo para o histórico
-/// de prêmios ([0xae23e4], 58 bytes; contagem [0xae238c]). Chamada por AWARD_MANAGER::AWARD_MANAGER (0x413360).
+/// de prêmios ([0xae23e4], 58 bytes; contagem [0xae238c]). TapeCall por AWARD_MANAGER::AWARD_MANAGER (0x413360).
 unsafe extern "C" fn database_free_staff_comp_history_table() {
     let tabela = *(0xae23e4 as *const usize);
     if tabela == 0 {
@@ -55,7 +55,7 @@ unsafe extern "C" fn comparar_database_free_staff_comp_history_table() {
 /// { 0x527f60 } (cdecl, Database.cpp): `database_grow_comp_history_table(n)`: `realloc` 0x945667 do histórico de
 /// competições ([0xae23d4], 26 bytes) para [0xae237c] + `n` linhas; sem memória devolve 0 e nada muda. Senão soma
 /// `n` à contagem, guarda o bloco, refaz o ponteiro da parte das seleções [0xae23dc] (a partir da linha [0xae2384])
-/// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. Chamada por
+/// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. TapeCall por
 /// comp_util_add_history_record (0x4afd2c), no fim de competição. Sem quadro de pilha.
 unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
     crate::comparacao::ramo("banco crescer histórico de competições");

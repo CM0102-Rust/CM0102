@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, termos: usi
         todas.push((l, 0xe));
     }
     let n_cmp = todas.len();
-    todas.extend(CPQ5_ESTATICAS);
+    todas.extend(TRANSFER_MANAGER_DATE_STATICS);
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&todas);
     CPW4_ENSAIO = true;

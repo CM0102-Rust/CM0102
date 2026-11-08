@@ -2,10 +2,10 @@
 
 /// Competição (107 bytes) no club_comp.dat / nation_comp.dat versão 1 (104 no arquivo): `(deslocamento,
 /// tamanho, quantos)` na ordem do arquivo; buracos em +0x37 e +0x52; tamanho 0 = a reputação num byte, u16 em +0x69.
-const COMPETICAO_V1: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33, 1), (0x38, 0x1a, 1), (0x53, 4, 1), (0x57, 1, 2), (0x59, 4, 4), (0x69, 0, 1)];
+const COMPETITION_V1_LAYOUT: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33, 1), (0x38, 0x1a, 1), (0x53, 4, 1), (0x57, 1, 2), (0x59, 4, 4), (0x69, 0, 1)];
 
 /// { 0x54ffd0 } (cdecl, Db_files.cpp): `db_files_read_comps_v1(stream, use_zip, registros, n)`: para cada um dos
-/// `n` registros de 107 bytes, os campos de `COMPETICAO_V1`, cada um lido sozinho (tamanho, 1) por `zread`
+/// `n` registros de 107 bytes, os campos de `COMPETITION_V1_LAYOUT`, cada um lido sozinho (tamanho, 1) por `zread`
 /// 0x932c30 (use_zip ≠ 0) ou `fread` 0x945bfe; a reputação lida num byte (a original o lê num argumento da
 /// própria pilha, já usado) vira u16 sem conta. A primeira leitura que não vem dá 0 (o que já veio fica); tudo,
 /// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
@@ -16,7 +16,7 @@ unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registr
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
     for i in 0..n as usize {
         let r = registros + i * 107;
-        for &(o, t, q) in &COMPETICAO_V1 {
+        for &(o, t, q) in &COMPETITION_V1_LAYOUT {
             for k in 0..q {
                 if t == 0 {
                     let mut b = 0u8;
@@ -145,7 +145,7 @@ pub unsafe fn autoteste_dbj_2() {
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let (t0, d0) = PLACAR.contagem();
     let mut s = Sorteio(0x5631_4442_4a32);
-    let v1: usize = COMPETICAO_V1.iter().map(|&(_, t, q)| t.max(1) as usize * q).sum();
+    let v1: usize = COMPETITION_V1_LAYOUT.iter().map(|&(_, t, q)| t.max(1) as usize * q).sum();
     for caso in 0..64u64 {
         let n = 1 + (s.proximo() % 6) as usize;
         let total = n * v1;

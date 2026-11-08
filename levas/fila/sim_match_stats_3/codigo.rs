@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as estatísticas da partida: ler e gravar o registro no arquivo temporário e registrar a partida (match_stats.cpp) ----------
 
 /// Os registros de estatística da partida têm 0xd7a bytes no "match_stats_matches.tmp" de CM3_TEMP.
-const REGISTRO_DA_PARTIDA: u32 = 0xd7a;
+const MATCH_STATS_RECORD_SIZE: u32 = 0xd7a;
 
 /// { 0x729600 } (thiscall, ret 8, match_stats.cpp): lê o registro `k` (0xd7a bytes, na posição
 /// k × 0xd7a) do "match_stats_matches.tmp" (CM3_TEMP, "rb") para `saida`. Índice −1: devolve 0 calado;
@@ -22,12 +22,12 @@ unsafe extern "thiscall" fn read_match_record(estat: usize, k: i32, saida: usize
         show_error_at(0xa17ba0, 0x128);
         return 0;
     }
-    if buscar(f, k.wrapping_mul(REGISTRO_DA_PARTIDA as i32), 0) != 0 {
+    if buscar(f, k.wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
         show_error_at(0xa17ba0, 0x12f);
         fechar(f);
         return 0;
     }
-    if ler(saida, REGISTRO_DA_PARTIDA, 1, f) != 1 {
+    if ler(saida, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {
         show_error_at(0xa17ba0, 0x137);
         fechar(f);
         return 0;
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
     }
     let vaga = *j(8);
     if vaga != -1 {
-        if buscar(f, vaga.wrapping_mul(REGISTRO_DA_PARTIDA as i32), 0) != 0 {
+        if buscar(f, vaga.wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
             show_error_at(0xa17ba0, 0x17f);
             fechar(f);
             return 0;
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
     } else {
         let b = balde(estat, jogo, r) as i8 as isize;
         let cursor = d(8 + 4 * b as usize);
-        if buscar(f, (*cursor).wrapping_mul(REGISTRO_DA_PARTIDA as i32), 0) != 0 {
+        if buscar(f, (*cursor).wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
             show_error_at(0xa17ba0, 0x18d);
             fechar(f);
             return 0;
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
             *cursor = c - total / 4;
         }
     }
-    if escrever(r, REGISTRO_DA_PARTIDA, 1, f) != 1 {
+    if escrever(r, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {
         show_error_at(0xa17ba0, 0x1a3);
         fechar(f);
         return 0;

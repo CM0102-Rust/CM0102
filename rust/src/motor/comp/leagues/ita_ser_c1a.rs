@@ -92,8 +92,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_578330
 
 /// As linhas dos 4 clubes do play-off de acesso (2º contra 5º, 3º contra 4º: a lista é 5º, 2º, 4º, 3º) e do play-out
 /// (14º contra 17º, 15º contra 16º: 17º, 14º, 16º, 15º), na ordem da lista que vai para a fase.
-pub(crate) const CQL5_PLAYOFF: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso
-pub(crate) const CQL5_PLAYOUT: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out
+pub(crate) const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso
+pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out
 
 /// Creates the end-of-league stages: champion to the Serie C1 Super Cup, play-off and play-out Cup_Stages with their
 /// first-round draw.
@@ -102,7 +102,7 @@ pub(crate) const CQL5_PLAYOUT: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas
 /// 1) o campeão (a linha 0) vai para a Supercopa da Série C1 (a competição [[0xadadfc] + [0x9cf938] × 4], a lista de
 ///    inscritos [+0xa7] de 6 bytes): na vaga 0 se vazia, senão na vaga 1;
 /// 2) a lista de 4 clubes (malloc 0x944e46 de 0x10: push; add esp, 4 -> cdecl; sem memória: a caixa da linha
-///    `linhas[0]` e volta) com os da faixa do play-off (CQL5_PLAYOFF);
+///    `linhas[0]` e volta) com os da faixa do play-off (PROMOTION_PLAYOFF_ROWS);
 /// 3) o calendário da fase 0 (a virtual +0x3c: push 0; push &extra; push &rodadas; push 0; mov ecx, this -> thiscall,
 ///    ret 0x10; devolve o gabarito, `rodadas` e `extra` são palavras);
 /// 4) a fase (operator new 0x944cf1 de 0xb2: push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00: 15 argumentos
@@ -111,7 +111,7 @@ pub(crate) const CQL5_PLAYOUT: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas
 ///    dos 4 na tabela (registro local de 4 bytes: 4, 1, 3, 2)) vai para [+0xc][0]; sem fase: a caixa da linha
 ///    `linhas[1]` e volta; senão o sorteio da primeira rodada (Cup::set_up_round 0x51c800: push 0; mov ecx, fase ->
 ///    thiscall, ret 4) e solta o gabarito (0x9452ca: push; add esp, 4 -> cdecl);
-/// 5) a mesma coisa com a fase 1 e os do play-out (CQL5_PLAYOUT; as posições 16, 13, 15, 14 no registro local e
+/// 5) a mesma coisa com a fase 1 e os do play-out (PLAYOUT_ROWS; as posições 16, 13, 15, 14 no registro local e
 ///    1, 1 nos dois bytes) em [+0xc][1]; solta a lista e o gabarito (na ordem `lista_primeiro`); sem fase: a caixa da
 ///    linha `linhas[2]`; senão o sorteio da primeira rodada e +0x30 = 1.
 /// Os bits de cima das palavras que a original empurra como dupla (os clubes, as rodadas, o ano e o `extra`) são lixo
@@ -139,7 +139,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, arquivo: usize, li
         show_error_at(arquivo, linhas[0]);
         return;
     }
-    for (k, &i) in CQL5_PLAYOFF.iter().enumerate() {
+    for (k, &i) in PROMOTION_PLAYOFF_ROWS.iter().enumerate() {
         write_u32_from_usize(lista + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let clubes = *((this + 0xbf) as *const i8) as i16 as u16 as u32;
@@ -162,7 +162,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, arquivo: usize, li
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let gabarito = calendario(this, 1, &mut rodadas, &mut extra, 0);
-    for (k, &i) in CQL5_PLAYOUT.iter().enumerate() {
+    for (k, &i) in PLAYOUT_ROWS.iter().enumerate() {
         write_u32_from_usize(lista + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let posicoes: [u8; 4] = [0x10, 0xd, 0xf, 0xe];
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_play_off_stages(this: usi
 /// [pt] { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a chave A da Série C1. Fonte 0x9ea474, linhas 0xab, 0x155, 0x18f.
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_c1_schedule(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
+    create_c1_schedule(this, fase, rodadas, extra, liga, &C1BracketVariant { arquivo: 0x9ea474, linhas: [0xab, 0x155, 0x18f] })
 }
 
 /// Comparer for `ita_ser_c1a_create_schedule` (comparison mode: see the header of motor.rs).
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_club_progress(th
 /// [pt] { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures_body(this, &CQN6_C1A, 0x9ea474, 0x3fd)
+    set_up_fixed_fixtures_body(this, &C1A_FIXTURES, 0x9ea474, 0x3fd)
 }
 
 /// Comparer for `ita_ser_c1a_set_up_fixed_fixtures` (comparison mode: see the header of motor.rs).
@@ -294,13 +294,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_c1a_set_up_fixed_fixture
 /// [pt] { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
 /// (o play-off de acesso e o play-out).
 pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_C1A)
+    construct_italian_division(this, ano, registro, &SERIE_C1A_DIVISION)
 }
 
 /// Comparer for `construct_ita_ser_c1a` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1A);
-    compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &SERIE_C1A_DIVISION, || o(this, ano, registro))
 }
 
 /// Serie C1/A (18): the champion goes up to B, 2nd to 5th go to the promotion play-off, 14th to 17th to the relegation

@@ -6,7 +6,7 @@ unsafe fn cqn3_d(a: usize) -> u32 {
 
 /// As três copas europeias da inscrição, na ordem: a Liga dos Campeões, a Copa da UEFA e a Recopa [inferência] (as
 /// chaves dos ids das competições).
-const CQN3_COPAS: [usize; 3] = [0x9cf6e8, 0x9cf6f0, 0x9cf6f8];
+const EUROPEAN_REGISTRATION_CUPS: [usize; 3] = [0x9cf6e8, 0x9cf6f0, 0x9cf6f8];
 
 /// Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
 /// lista alocada é solta pela 0x9452ca depois de `cada` passar por todos.
@@ -26,7 +26,7 @@ unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl FnMut(usize
 /// { 0x85a9b0 } (thiscall, ret 4, squad_manager.cpp, `SQUAD_MANAGER::process_euro_registration`): a etapa `etapa`
 /// (byte) da inscrição nas copas europeias. Na etapa 1, o ano das inscrições (+0, word) fica o ano do jogo e a marca de
 /// inscrição (+0x6d) de todas as pessoas com contrato (registros de 0x6e bytes em [0xae23bc]) é zerada. Depois, em cada
-/// uma das três copas (`CQN3_COPAS`; a competição pela tabela [0xadadfc]), cada clube da lista (o método +0x58 com a
+/// uma das três copas (`EUROPEAN_REGISTRATION_CUPS`; a competição pela tabela [0xadadfc]), cada clube da lista (o método +0x58 com a
 /// etapa) que está nela (+0x1db = o id): com técnico humano (0x7875e0, ecx = [0xb7431c]) recebe a notícia da inscrição
 /// (0x85b020(this, clube, id, etapa), original); senão a inscrição é feita (0x85aae0(clube, etapa, 0), com ecx =
 /// [0xdd7ef0]).
@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
             i += 1;
         }
     }
-    for &chave in CQN3_COPAS.iter() {
+    for &chave in EUROPEAN_REGISTRATION_CUPS.iter() {
         let id = cqn3_d(chave);
         let comp = cqn3_d(cqn3_d(0xadadfc) as usize + 4 * id as usize) as usize;
         if comp == 0 {
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn comparar_process_euro_registration(this: usize, etap
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I0%%);
     let humano: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7875e0usize);
     let mut tem_humano = false;
-    for &chave in CQN3_COPAS.iter() {
+    for &chave in EUROPEAN_REGISTRATION_CUPS.iter() {
         let id = cqn3_d(chave);
         let comp = cqn3_d(cqn3_d(0xadadfc) as usize + 4 * id as usize) as usize;
         if comp != 0 {

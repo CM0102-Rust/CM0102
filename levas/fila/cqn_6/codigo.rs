@@ -71,13 +71,13 @@ unsafe fn set_up_fixed_fixtures_body(this: usize, tabela: &[(u8, u8, u16, u32, u
 /// { 0x64be90 } (thiscall, ret 0, ita_ser_c1a.cpp, 11.650 bytes): `ItaSerC1a::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/A 2001/02 (34 rodadas de 9). Fonte 0x9ea474, linha 0x3fd.
 unsafe extern "thiscall" fn ita_ser_c1a_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures_body(this, &CQN6_C1A, 0x9ea474, 0x3fd)
+    set_up_fixed_fixtures_body(this, &C1A_FIXTURES, 0x9ea474, 0x3fd)
 }
 
 /// { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
 unsafe extern "thiscall" fn fra_first_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures_body(this, &CQN6_C1B, 0x9ea558, 0x404)
+    set_up_fixed_fixtures_body(this, &SERIE_C1B_FIXTURES, 0x9ea558, 0x404)
 }
 /// O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
 /// cada jogo com os dois clubes achados), ou foi derrubada (+0xea = 0).
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn comparar_stub_return_one_ret4(this: usize, a: u32) -
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
 /// exe; na ordem da original (extraídos da desmontagem e conferidos: os lugares do vetor vão de 16 em 16).
-const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
+const C1A_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (2, 8, 2001, 0x9ea540, 0x9ea54c), // Albinoleffe × Carrarese
     (2, 8, 2001, 0x9ea530, 0x9ea538), // Alzano × Arezzo
     (2, 8, 2001, 0x9ea520, 0x9ea528), // Cesena × Livorno
@@ -437,7 +437,7 @@ const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
     (5, 4, 2002, 0x9ea54c, 0x9ea4b0), // Carrarese × Varese
 ];
 
-const CQN6_C1B: [(u8, u8, u16, u32, u32); 306] = [
+const SERIE_C1B_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (2, 8, 2001, 0x9ea638, 0x9ea640), // Ascoli × Castel di Sangro
     (2, 8, 2001, 0x9ea620, 0x9ea62c), // Avellino × L'Aquila
     (2, 8, 2001, 0x9ea60c, 0x9ea614), // Catania × Benevento

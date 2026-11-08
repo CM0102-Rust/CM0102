@@ -9,7 +9,7 @@ unsafe fn cql6_pd(a: usize, v: usize) {
 }
 
 /// O que muda de uma divisão inglesa para outra no construtor.
-struct Cql6Divisao {
+struct EnglishDivision {
     /// a vtable da classe derivada
     vtabela: usize,
     /// a capacidade mínima do estádio (+0xe2) e os lugares sentados mínimos (+0xe4), quando a divisão os grava
@@ -34,7 +34,7 @@ struct Cql6Divisao {
 /// Comp_Stats::Comp_Stats 0x49ee70: push liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas
 /// (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0). Cada passo que falha mostra a caixa da
 /// sua linha e encerra. Devolve this.
-unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &Cql6Divisao) -> usize {
+unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &EnglishDivision) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -94,7 +94,7 @@ unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: 
     this
 }
 
-const CQL6_PREMIER: Cql6Divisao = Cql6Divisao {
+const PREMIER_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969d1c,
     estadio: Some((0x2710, 0x2710)),
     fases: 0,
@@ -103,7 +103,7 @@ const CQL6_PREMIER: Cql6Divisao = Cql6Divisao {
     arquivo: 0x9c43b0,
     linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
-const CQL6_FIRST: Cql6Divisao = Cql6Divisao {
+const FIRST_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969c68,
     estadio: None,
     fases: 1, // cql6: o play-off da First Division
@@ -112,7 +112,7 @@ const CQL6_FIRST: Cql6Divisao = Cql6Divisao {
     arquivo: 0x9c4374,
     linhas: [0x49, 0x50, 0x57, 0x60, 0x68],
 };
-const CQL6_SECOND: Cql6Divisao = Cql6Divisao {
+const ENG_SECOND_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969dd0,
     estadio: None,
     fases: 1, // cql6: o play-off da Second Division
@@ -121,7 +121,7 @@ const CQL6_SECOND: Cql6Divisao = Cql6Divisao {
     arquivo: 0x9c43e8,
     linhas: [0x4a, 0x51, 0x58, 0x61, 0x68],
 };
-const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
+const THIRD_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969e84,
     estadio: Some((0x1770, 0x3e8)),
     fases: 1,
@@ -134,31 +134,31 @@ const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
 /// { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
 /// (+0x2c = 0, +0xc = 0) e o estádio mínimo de 10.000 lugares, todos sentados.
 unsafe extern "thiscall" fn construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_PREMIER)
+    construct_english_division(this, ano, registro, &PREMIER_DIVISION)
 }
 
 /// { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
 /// liga (o play-off de acesso), sem estádio mínimo.
 unsafe extern "thiscall" fn construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_FIRST)
+    construct_english_division(this, ano, registro, &FIRST_DIVISION)
 }
 
 /// { 0x5754a0 } (thiscall, ret 8, eng_second.cpp): `EngSecond::EngSecond(ano, registro)`. A Second Division: 1 fase além
 /// da liga (o play-off), sem estádio mínimo.
 unsafe extern "thiscall" fn construct_eng_second(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_SECOND)
+    construct_english_division(this, ano, registro, &ENG_SECOND_DIVISION)
 }
 
 /// { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
 /// liga (o play-off) e o estádio mínimo de 6.000 lugares, 1.000 sentados.
 unsafe extern "thiscall" fn construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_THIRD)
+    construct_english_division(this, ano, registro, &THIRD_DIVISION)
 }
 
 /// O comparador dos quatro: alocam (as estatísticas, a tabela, os jogos): só a original, conferindo o que ela grava:
 /// a devolução, a vtable, o ano, o registro e a regra de disciplina; na liga nova (+0x44 = 0xff), +0x2c, o vetor das
 /// fases, a fase atual −1 e as estatísticas em +8.
-unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &Cql6Divisao, original: impl FnOnce() -> usize) -> usize {
+unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && cql6_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && cql6_d(this + 4) == registro && *((this + 0x50) as *const u8) == 9;
@@ -174,20 +174,20 @@ unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registr
 
 unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    compare_english_constructor("construct_eng_prm", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_prm", this, ano, registro, &PREMIER_DIVISION, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    compare_english_constructor("construct_eng_first", this, ano, registro, &CQL6_FIRST, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_first", this, ano, registro, &FIRST_DIVISION, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_eng_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    compare_english_constructor("construct_eng_second", this, ano, registro, &CQL6_SECOND, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_second", this, ano, registro, &ENG_SECOND_DIVISION, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
-    compare_english_constructor("construct_eng_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_third", this, ano, registro, &THIRD_DIVISION, || o(this, ano, registro))
 }

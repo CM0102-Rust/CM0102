@@ -24,7 +24,7 @@ unsafe fn copy_c_string(destino: usize, origem: usize) {
 /// (sobrenome primeiro), 4 "%s, %c"; senão o sobrenome, senão o nome. 5: o comum, o sobrenome ou o nome. 6: as
 /// iniciais ("%c" do comum, "%c %c" do nome e do sobrenome, "%c" do sobrenome ou do nome). 7: "%s %s" primeiro, depois
 /// o comum, o sobrenome ou o nome. Sem nada: o texto vazio. Devolve 1. Texto nulo, tamanho (palavra) < 0x69 ou forma
-/// fora de 1..7: a original (caixa; as locais de 0x200 bytes só servem a ela). Chamada pela 0x53e140 (já em Rust, pelo
+/// fora de 1..7: a original (caixa; as locais de 0x200 bytes só servem a ela). TapeCall pela 0x53e140 (já em Rust, pelo
 /// endereço do jogo: o desvio vale também lá), pelas telas do clube (0x45ccf0) e pelo manager_manager.
 unsafe extern "C" fn database_format_name_from_strings(nome: usize, sobrenome: usize, comum: usize, texto: usize, tamanho: u32, forma: u32) -> u32 {
     let f = forma as u8;
@@ -96,7 +96,7 @@ unsafe extern "C" fn comparar_database_format_name_from_strings(nome: usize, sob
 /// Os textos dos cargos 0..0x11 da 0x53ad00 (imediatos do código, pelos endereços no exe): curto minúsculo, curto
 /// maiúsculo, inteiro minúsculo, inteiro maiúsculo e o gênero com o idioma 4 (0: não grava). Os curtos levam o
 /// vazio 0xad9c64 ("<%s - COMMENT - short name>"); dos inteiros, só o do jogador (11). O 14 não existe (0).
-const DBU1_CARGOS: [(usize, usize, usize, usize, u8); 18] = [
+const JOB_TITLE_TEXTS: [(usize, usize, usize, usize, u8); 18] = [
     (0x9b6b10, 0x9b6b38, 0x9b6af8, 0x9b6b04, 1), // unemployed
     (0x9b6ab0, 0x9b6ad4, 0x9b6aa4, 0x9b1234, 1), // chairman
     (0x9b6a54, 0x9b6a7c, 0x9b6a2c, 0x9b6a40, 4), // managing director
@@ -130,7 +130,7 @@ unsafe extern "C" fn database_get_job_name(cargo: u32, curto: u32, maiuscula: u3
     }
     let idioma: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x66f4d0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let (cm, cg, im, ig, g) = DBU1_CARGOS[j as usize];
+    let (cm, cg, im, ig, g) = JOB_TITLE_TEXTS[j as usize];
     if curto != 0 {
         formatar(0xae19b4, if maiuscula != 0 { cg } else { cm }, 0xad9c64usize);
     } else if j == 11 {
@@ -157,7 +157,7 @@ unsafe extern "C" fn comparar_database_get_job_name(cargo: u32, curto: u32, maiu
 
 /// Os nomes dos idiomas 1..64 da 0x53cee0 (imediatos do código, pelos endereços no exe; o 34 repete o albanês),
 /// todos com o vazio 0xad9c64 ("<%s - COMMENT - language>").
-const DBU1_IDIOMAS: [usize; 64] = [
+const LANGUAGE_NAMES: [usize; 64] = [
     0x9b73dc, 0x9b73bc, 0x9b7398, 0x9b7374, 0x9b7350, 0x9b7330, 0x9b7310, 0x9b72ec, // Albanian .. English
     0x9b72c8, 0x9b72a8, 0x9b7288, 0x9b7268, 0x9b7248, 0x9b7224, 0x9b7200, 0x9b71dc, // Finnish .. Japanese
     0x9b71bc, 0x9b719c, 0x9b7178, 0x9b7154, 0x9b7130, 0x9b710c, 0x9b70e8, 0x9b70c4, // Korean .. Spanish
@@ -174,7 +174,7 @@ const DBU1_IDIOMAS: [usize; 64] = [
 unsafe extern "C" fn database_get_language_name(idioma: u32) -> usize {
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let x = idioma as u8 as i8;
-    let s = if (1..=64).contains(&x) { DBU1_IDIOMAS[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)
+    let s = if (1..=64).contains(&x) { LANGUAGE_NAMES[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)
     formatar(0xae21d4, s, 0xad9c64usize);
     0xae21d4
 }

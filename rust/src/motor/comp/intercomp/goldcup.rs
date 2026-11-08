@@ -14,7 +14,7 @@ pub(crate) unsafe fn national_team_of_nation_id(id: usize) -> usize {
 
 /// As 12 da Copa América de 2001, na ordem da lista (os grupos intercalados: A nas vagas 0, 3, 6 e 9; B nas 1, 4, 7 e
 /// 10; C nas 2, 5, 8 e 11): os globais dos ids das nações.
-pub(crate) const CQS12_DE_2001: [usize; 12] = [
+pub(crate) const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
     KEY_NATION_COLOMBIA, KEY_NATION_BRAZIL, KEY_NATION_COSTA_RICA, KEY_NATION_CHILE, // cqs12: as vagas 0 a 3 (a Colômbia na 0)
     KEY_NATION_MEXICO, KEY_NATION_HONDURAS, KEY_NATION_ECUADOR, KEY_NATION_PERU, // cqs12: as vagas 4 a 7 (o México na 4, o Peru na 7)
     KEY_NATION_URUGUAY, KEY_NATION_VENEZUELA, KEY_NATION_PARAGUAY, KEY_NATION_BOLIVIA, // cqs12: as vagas 8 a 11 (a Bolívia na 11)
@@ -25,7 +25,7 @@ pub(crate) const CQS12_DE_2001: [usize; 12] = [
 ///
 /// [pt] { 0x5e1cd0 } (thiscall, ret 0, goldcup.cpp): `GoldCup::set_up_team_list()`: +0xf2 = 12 e a lista +0xee (0x944e46(0x30):
 /// push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x37b e devolve 0). Em 2001 (+0x40 = 0x7d1): as 12 fixas
-/// (CQS12_DE_2001, cada uma pela 0x53b3d0) e devolve 1, sem ordenar. Nos outros anos: as sedes da Copa América
+/// (COPA_AMERICA_2001_NATIONS, cada uma pela 0x53b3d0) e devolve 1, sem ordenar. Nos outros anos: as sedes da Copa América
 /// ([0x9cf7a8]) no ano (0x5fa730 HostCountry::find_hosts em [0xb5e134]: push 1; push &segunda; push &primeira; push ano;
 /// push competição -> thiscall, ret 0x14; as duas começam em −1; devolve quantas, byte com sinal) na frente; depois,
 /// pela ordem das nações ([0xae23a8], [0xae2350] delas, i como palavra) e enquanto a lista não enche (+0xf2), as do
@@ -47,7 +47,7 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     let ano = read_i16(this + 0x40) as u16;
     if ano == 0x7d1 {
         crate::comparacao::ramo("cqs_12 selecoes de 2001");
-        for (k, &g) in CQS12_DE_2001.iter().enumerate() {
+        for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
             write_u32_from_usize(read_u32_as_usize(this + 0xee) + k * 4, national_team_of_nation_id(read_u32_as_usize(g)));
         }
         return 1;
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_up_team_list(this: usize) ->
 }
 
 /// As posições previstas da Copa América, pela ordem de reputação das 12.
-pub(crate) const CQS12_PREVISTAS: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
+pub(crate) const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5, 5, 9, 0xa, 0xa, 0xa];
 
 /// rule: the Copa América predicted positions by reputation: 1, 2, 3, 3, four 5ths, 9 and three 10ths
 /// Original: `GoldCup::set_predicted_positions` (0x5e2340, goldcup.cpp, thiscall, ret 0).
@@ -164,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
     core::ptr::copy_nonoverlapping(read_u32_as_usize(this + 0xee) as *const u8, v as *mut u8, n);
     ordenar(v, read_u32_as_usize(this + 0xf2) as u32, 4, 0x4b07d0);
     crate::comparacao::ramo("cqs_12 previstas da copa america");
-    for (k, &p) in CQS12_PREVISTAS.iter().enumerate() {
+    for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         posicao(read_u32_as_usize(this + 8), read_u32_as_usize(v + k * 4), p);
     }
     soltar(v);
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_predicted_positions(
     o(this);
     let errado = (0..12).find(|&k| {
         let e = if v[k] != 0 { achar(read_u32_as_usize(this + 8), v[k]) } else { 0 };
-        e == 0 || *((e + 0x72) as *const u8) as u32 != CQS12_PREVISTAS[k]
+        e == 0 || *((e + 0x72) as *const u8) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
     PLACAR.registrar(errado.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", errado));
 }
@@ -512,7 +512,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_group_stage(this:
 /// anos, dia da semana, horário, mando), `E` um dia do confronto (0x521f10: rodada, vaga, dia da semana, horário,
 /// código, mando) e `B`/`W`/`X` a gravação de um byte/palavra/dword no deslocamento dado da tabela.
 #[derive(Clone, Copy)]
-pub(crate) enum Cqp12Op {
+pub(crate) enum GoldcupScheduleOp {
     D(i32, i32, i32, i32, i32, i32, i32),
     L(i32, i32, i32, i32, i32, u32),
     S(u32, u32, u32, u32, u32),
@@ -522,22 +522,22 @@ pub(crate) enum Cqp12Op {
     W(usize, u16),
     X(usize, u32),
 }
-pub(crate) use Cqp12Op::{B as Cqp12B, D as Cqp12D, E as Cqp12E, J as Cqp12J, L as Cqp12L, S as Cqp12S, W as Cqp12W, X as Cqp12X};
+pub(crate) use GoldcupScheduleOp::{B as Cqp12B, D as Cqp12D, E as Cqp12E, J as Cqp12J, L as Cqp12L, S as Cqp12S, W as Cqp12W, X as Cqp12X};
 
 /// Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
 /// rodadas, o extra (só se o ponteiro não é nulo, quando `extra_checa`), o tamanho da tabela, a linha da caixa sem
 /// memória, as operações comuns e as da fase (os jogos de cada grupo) e o nome do contador. `None`: a fase devolve 0
 /// sem gravar nada.
 #[derive(Clone, Copy)]
-pub(crate) struct Cqp12Fase {
+pub(crate) struct GoldcupStagePlan {
     pub(crate) liga: i32,
     pub(crate) rodadas: i16,
     pub(crate) extra: i16,
     pub(crate) extra_checa: bool,
     pub(crate) tamanho: u32,
     pub(crate) linha: u32,
-    pub(crate) ops: &'static [Cqp12Op],
-    pub(crate) ops2: &'static [Cqp12Op],
+    pub(crate) ops: &'static [GoldcupScheduleOp],
+    pub(crate) ops2: &'static [GoldcupScheduleOp],
     pub(crate) nome: &'static str,
 }
 
@@ -547,7 +547,7 @@ pub(crate) struct Cqp12Fase {
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-pub(crate) unsafe fn build_phase_table(this: usize, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn build_phase_table(this: usize, f: Option<GoldcupStagePlan>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -599,7 +599,7 @@ pub(crate) unsafe fn build_phase_table(this: usize, f: Option<Cqp12Fase>, rodada
 /// The bytes the phase operations write into table t, in operation order.
 ///
 /// [pt] Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
-pub(crate) unsafe fn phase_table_written_bytes(ops: &[Cqp12Op], ops2: &[Cqp12Op], t: usize) -> Vec<u8> {
+pub(crate) unsafe fn phase_table_written_bytes(ops: &[GoldcupScheduleOp], ops2: &[GoldcupScheduleOp], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
     for op in ops.iter().chain(ops2.iter()) {
@@ -628,7 +628,7 @@ pub(crate) unsafe fn phase_table_written_bytes(ops: &[Cqp12Op], ops2: &[Cqp12Op]
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-pub(crate) unsafe fn compare_phase_table(nome: &str, fase: u32, f: Option<Cqp12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn compare_phase_table(nome: &str, fase: u32, f: Option<GoldcupStagePlan>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -654,27 +654,27 @@ pub(crate) unsafe fn compare_phase_table(nome: &str, fase: u32, f: Option<Cqp12F
 }
 
 /// A Copa América, as três rodadas de cada grupo (6, 10 e 13 de julho, código 1, valor 1) com o jogo 2 vazio.
-pub(crate) const CQP12_COPA_AMERICA_GRUPOS: [Cqp12Op; 6] = [
+pub(crate) const COPA_AMERICA_GROUP_DATE_OPS: [GoldcupScheduleOp; 6] = [
     Cqp12D(0, 6, 6, 0, 3, 1, 1), Cqp12L(0, 2, -1, -1, -1, 0), Cqp12D(1, 0xa, 6, 0, 0, 1, 1),
     Cqp12L(1, 2, -1, -1, -1, 0), Cqp12D(2, 0xd, 6, 0, 3, 1, 1), Cqp12L(2, 2, -1, -1, -1, 0),
 ];
 /// A Copa América, os jogos do grupo da fase −1.
-pub(crate) const CQP12_COPA_AMERICA_GRUPO_A: [Cqp12Op; 6] = [
+pub(crate) const COPA_AMERICA_GROUP_GAMES: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 2, 2, 3, 4), Cqp12L(0, 1, 3, 2, 3, 0x80), Cqp12L(1, 0, 6, 1, 3, 0x100), Cqp12L(1, 1, 6, 2, 3, 0x40),
     Cqp12L(2, 0, 2, 1, 3, 4), Cqp12L(2, 1, 2, 2, 3, 0x80),
 ];
 /// A Copa América, os jogos do grupo da fase 0.
-pub(crate) const CQP12_COPA_AMERICA_GRUPO_B: [Cqp12Op; 6] = [
+pub(crate) const COPA_AMERICA_GROUP_B_MATCHES: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 4, 1, 3, 0x40), Cqp12L(0, 1, 4, 2, 3, 0x100), Cqp12L(1, 0, 0, 1, 3, 4), Cqp12L(1, 1, 0, 2, 3, 0x80),
     Cqp12L(2, 0, 3, 1, 3, 0x40), Cqp12L(2, 1, 3, 2, 3, 0x100),
 ];
 /// A Copa América, os jogos do grupo da fase 1.
-pub(crate) const CQP12_COPA_AMERICA_GRUPO_C: [Cqp12Op; 6] = [
+pub(crate) const COPA_AMERICA_GROUP_C_OPS: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 5, 1, 3, 0x80), Cqp12L(0, 1, 5, 2, 3, 4), Cqp12L(1, 0, 1, 1, 3, 0x100), Cqp12L(1, 1, 1, 2, 3, 0x40),
     Cqp12L(2, 0, 4, 1, 3, 4), Cqp12L(2, 1, 4, 2, 3, 0x80),
 ];
 /// A Copa América, o mata-mata em jogo único: quartas em 16/7 (com os confrontos fixos), semifinal em 19/7, final em 23/7 e terceiro lugar em 22/7.
-pub(crate) const CQP12_COPA_AMERICA_MATA: [Cqp12Op; 80] = [
+pub(crate) const COPA_AMERICA_KNOCKOUT_OPS: [GoldcupScheduleOp; 80] = [
     Cqp12S(0, 0xf, 6, 0, 5), Cqp12J(0, 0x10, 6, 0, 6, 1, 1), Cqp12E(0, 0, 6, 2, 3, 4), Cqp12E(0, 1, 6, 1, 3, 0x40),
     Cqp12E(0, 2, 0, 1, 3, 0x100), Cqp12E(0, 3, 0, 2, 3, 0x80), Cqp12E(0, 4, -1, -1, -1, 0), Cqp12W(0x7, 0x78),
     Cqp12W(0x9, 0), Cqp12W(0xb, 0), Cqp12W(0xd, 0x103), Cqp12B(0x17, 0xa), Cqp12W(0x18, 8), Cqp12W(0x1a, 4),
@@ -692,32 +692,32 @@ pub(crate) const CQP12_COPA_AMERICA_MATA: [Cqp12Op; 80] = [
     Cqp12B(0x158, 0), Cqp12B(0x159, 1), Cqp12B(0x15a, 0), Cqp12X(0x194, 0), Cqp12X(0x198, 0), Cqp12X(0x19c, 0),
 ];
 /// A Copa Africana, as três rodadas de cada grupo (8, 12 e 16 de fevereiro) com o jogo 2 vazio.
-pub(crate) const CQP12_AFRICANA_GRUPOS: [Cqp12Op; 6] = [
+pub(crate) const AFRICAN_NATIONS_GROUP_ROUNDS: [GoldcupScheduleOp; 6] = [
     Cqp12D(0, 8, 1, 0, 6, 1, 1), Cqp12L(0, 2, -1, -1, -1, 0), Cqp12D(1, 0xc, 1, 0, 3, 1, 1),
     Cqp12L(1, 2, -1, -1, -1, 0), Cqp12D(2, 0x10, 1, 0, 0, 1, 1), Cqp12L(2, 2, -1, -1, -1, 0),
 ];
 /// A Copa Africana, os jogos do grupo da fase −1.
-pub(crate) const CQP12_AFRICANA_GRUPO_A: [Cqp12Op; 6] = [
+pub(crate) const AFRICAN_NATIONS_GROUP_A_OPS: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 5, 1, 3, 4), Cqp12L(0, 1, 6, 1, 3, 0x40), Cqp12L(1, 0, 2, 1, 3, 4), Cqp12L(1, 1, 2, 2, 3, 0x40),
     Cqp12L(2, 0, 6, 1, 3, 4), Cqp12L(2, 1, 6, 1, 3, 0x40),
 ];
 /// A Copa Africana, os jogos do grupo da fase 0.
-pub(crate) const CQP12_AFRICANA_GRUPO_B: [Cqp12Op; 6] = [
+pub(crate) const AFRICAN_NATIONS_GROUP_GAMES: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 0, 1, 3, 4), Cqp12L(0, 1, 0, 2, 3, 0x40), Cqp12L(1, 0, 3, 1, 3, 4), Cqp12L(1, 1, 3, 2, 3, 0x40),
     Cqp12L(2, 0, 0, 1, 3, 4), Cqp12L(2, 1, 0, 1, 3, 0x40),
 ];
 /// A Copa Africana, os jogos do grupo da fase 1.
-pub(crate) const CQP12_AFRICANA_GRUPO_C: [Cqp12Op; 6] = [
+pub(crate) const AFRICAN_NATIONS_GROUP_C_MATCHES: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 6, 1, 3, 0x80), Cqp12L(0, 1, 6, 2, 3, 0x80), Cqp12L(1, 0, 2, 2, 3, 0x80),
     Cqp12L(1, 1, 3, 2, 3, 0x80), Cqp12L(2, 0, 0, 2, 3, 0x80), Cqp12L(2, 1, 0, 2, 3, 0x40),
 ];
 /// A Copa Africana, os jogos do grupo da fase 2.
-pub(crate) const CQP12_AFRICANA_GRUPO_D: [Cqp12Op; 6] = [
+pub(crate) const AFRICAN_NATIONS_GROUP_D_OPS: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 0, 2, 3, 0x80), Cqp12L(0, 1, 1, 2, 3, 0x80), Cqp12L(1, 0, 4, 1, 3, 0x80),
     Cqp12L(1, 1, 4, 2, 3, 0x80), Cqp12L(2, 0, 1, 1, 3, 0x40), Cqp12L(2, 1, 1, 1, 3, 0x80),
 ];
 /// A Copa Africana, o mata-mata em jogo único: quartas em 21/2, semifinal em 25/2, final em 28/2 e terceiro lugar em 27/2.
-pub(crate) const CQP12_AFRICANA_MATA: [Cqp12Op; 80] = [
+pub(crate) const AFRICAN_NATIONS_KNOCKOUT_OPS: [GoldcupScheduleOp; 80] = [
     Cqp12S(0, 0x12, 1, 0, 2), Cqp12J(0, 0x15, 1, 0, 5, 1, 1), Cqp12E(0, 0, 4, 2, 3, 0x80), Cqp12E(0, 1, 5, 1, 3, 4),
     Cqp12E(0, 2, 5, 2, 3, 0x40), Cqp12E(0, 3, 6, 1, 3, 0x40), Cqp12E(0, 4, -1, -1, -1, 0), Cqp12W(0x7, 0x78),
     Cqp12W(0x9, 0), Cqp12W(0xb, 0), Cqp12W(0xd, 0x303), Cqp12B(0x17, 0xa), Cqp12W(0x18, 8), Cqp12W(0x1a, 4),
@@ -735,22 +735,22 @@ pub(crate) const CQP12_AFRICANA_MATA: [Cqp12Op; 80] = [
     Cqp12B(0x158, 0), Cqp12B(0x159, 1), Cqp12B(0x15a, 0), Cqp12X(0x194, 0), Cqp12X(0x198, 0), Cqp12X(0x19c, 0),
 ];
 /// A Copa das Confederações, as três rodadas de cada grupo (29 de julho, 1º e 4 de agosto) com o jogo 2 vazio.
-pub(crate) const CQP12_CONFED_GRUPOS: [Cqp12Op; 6] = [
+pub(crate) const CONFED_CUP_GROUP_ROUNDS: [GoldcupScheduleOp; 6] = [
     Cqp12D(0, 0x1d, 6, 0, 5, 2, 1), Cqp12L(0, 2, -1, -1, -1, 0), Cqp12D(1, 1, 7, 0, 1, 1, 1),
     Cqp12L(1, 2, -1, -1, -1, 0), Cqp12D(2, 4, 7, 0, 4, 2, 1), Cqp12L(2, 2, -1, -1, -1, 0),
 ];
 /// A Copa das Confederações, os jogos do grupo da fase −1.
-pub(crate) const CQP12_CONFED_GRUPO_A: [Cqp12Op; 6] = [
+pub(crate) const CONFED_CUP_GROUP_A_OPS: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 6, 1, 3, 4), Cqp12L(0, 1, 6, 2, 3, 0x40), Cqp12L(1, 0, 1, 1, 3, 4), Cqp12L(1, 1, 1, 2, 3, 0x40),
     Cqp12L(2, 0, 3, 1, 3, 4), Cqp12L(2, 1, 3, 2, 3, 0x40),
 ];
 /// A Copa das Confederações, os jogos do grupo da fase 0.
-pub(crate) const CQP12_CONFED_GRUPO_B: [Cqp12Op; 6] = [
+pub(crate) const CONFED_CUP_GROUP_GAMES: [GoldcupScheduleOp; 6] = [
     Cqp12L(0, 0, 5, 1, 3, 0x40), Cqp12L(0, 1, 5, 2, 3, 4), Cqp12L(1, 0, 2, 1, 3, 0x40), Cqp12L(1, 1, 2, 2, 3, 4),
     Cqp12L(2, 0, 4, 1, 3, 4), Cqp12L(2, 1, 4, 2, 3, 0x40),
 ];
 /// A Copa das Confederações, o mata-mata em jogo único: semifinal em 6/8, final em 9/8 e terceiro lugar em 8/8.
-pub(crate) const CQP12_CONFED_MATA: [Cqp12Op; 57] = [
+pub(crate) const CONFED_CUP_KNOCKOUT: [GoldcupScheduleOp; 57] = [
     Cqp12S(0, 5, 7, 0, 5), Cqp12J(0, 6, 7, 0, 6, 1, 1), Cqp12E(0, 0, 6, 1, 3, 0x40), Cqp12E(0, 1, 6, 1, 3, 4),
     Cqp12E(0, 2, -1, -1, -1, 0), Cqp12W(0x7, 0x82), Cqp12W(0x9, 0), Cqp12W(0xb, 0), Cqp12W(0xd, 0x383),
     Cqp12B(0x17, 0xa), Cqp12W(0x18, 4), Cqp12W(0x1a, 2), Cqp12W(0x1c, 4), Cqp12W(0xf, 0), Cqp12W(0x1e, 0),
@@ -768,20 +768,20 @@ pub(crate) const CQP12_CONFED_MATA: [Cqp12Op; 57] = [
 ///
 /// [pt] A fase da Copa América pelo byte com sinal: abaixo de 2 os grupos (id 0x420 + fase; os jogos de cada grupo para −1,
 /// 0 e 1), 2 o mata-mata, acima nada.
-pub(crate) fn copa_america_phase(fase: u32) -> Option<Cqp12Fase> {
+pub(crate) fn copa_america_phase(fase: u32) -> Option<GoldcupStagePlan> {
     let f = fase as u8 as i8;
     if f < 2 {
-        let jogos: &'static [Cqp12Op] = match f {
-            -1 => &CQP12_COPA_AMERICA_GRUPO_A,
-            0 => &CQP12_COPA_AMERICA_GRUPO_B,
-            1 => &CQP12_COPA_AMERICA_GRUPO_C,
+        let jogos: &'static [GoldcupScheduleOp] = match f {
+            -1 => &COPA_AMERICA_GROUP_GAMES,
+            0 => &COPA_AMERICA_GROUP_B_MATCHES,
+            1 => &COPA_AMERICA_GROUP_C_OPS,
             _ => &[],
         };
-        Some(Cqp12Fase { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x420), extra_checa: false, tamanho: 0xc3, linha: 0x9c,
-            ops: &CQP12_COPA_AMERICA_GRUPOS, ops2: jogos, nome: "cqp_12 grupos da copa america" })
+        Some(GoldcupStagePlan { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x420), extra_checa: false, tamanho: 0xc3, linha: 0x9c,
+            ops: &COPA_AMERICA_GROUP_DATE_OPS, ops2: jogos, nome: "cqp_12 grupos da copa america" })
     } else if f == 2 {
-        Some(Cqp12Fase { liga: 0, rodadas: 4, extra: 0, extra_checa: false, tamanho: 0x1a0, linha: 0xd6,
-            ops: &CQP12_COPA_AMERICA_MATA, ops2: &[], nome: "cqp_12 mata-mata da copa america" })
+        Some(GoldcupStagePlan { liga: 0, rodadas: 4, extra: 0, extra_checa: false, tamanho: 0x1a0, linha: 0xd6,
+            ops: &COPA_AMERICA_KNOCKOUT_OPS, ops2: &[], nome: "cqp_12 mata-mata da copa america" })
     } else {
         None
     }
@@ -811,21 +811,21 @@ pub(crate) unsafe extern "thiscall" fn comparar_goldcup_create_schedule(this: us
 ///
 /// [pt] A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
 /// mata-mata, acima nada.
-pub(crate) fn african_nations_phase(fase: u32) -> Option<Cqp12Fase> {
+pub(crate) fn african_nations_phase(fase: u32) -> Option<GoldcupStagePlan> {
     let f = fase as u8 as i8;
     if f < 3 {
-        let jogos: &'static [Cqp12Op] = match f {
-            -1 => &CQP12_AFRICANA_GRUPO_A,
-            0 => &CQP12_AFRICANA_GRUPO_B,
-            1 => &CQP12_AFRICANA_GRUPO_C,
-            2 => &CQP12_AFRICANA_GRUPO_D,
+        let jogos: &'static [GoldcupScheduleOp] = match f {
+            -1 => &AFRICAN_NATIONS_GROUP_A_OPS,
+            0 => &AFRICAN_NATIONS_GROUP_GAMES,
+            1 => &AFRICAN_NATIONS_GROUP_C_MATCHES,
+            2 => &AFRICAN_NATIONS_GROUP_D_OPS,
             _ => &[],
         };
-        Some(Cqp12Fase { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x3e9), extra_checa: false, tamanho: 0xc3, linha: 0x9e,
-            ops: &CQP12_AFRICANA_GRUPOS, ops2: jogos, nome: "cqp_12 grupos da copa africana" })
+        Some(GoldcupStagePlan { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x3e9), extra_checa: false, tamanho: 0xc3, linha: 0x9e,
+            ops: &AFRICAN_NATIONS_GROUP_ROUNDS, ops2: jogos, nome: "cqp_12 grupos da copa africana" })
     } else if f == 3 {
-        Some(Cqp12Fase { liga: 0, rodadas: 4, extra: 0, extra_checa: false, tamanho: 0x1a0, linha: 0xe0,
-            ops: &CQP12_AFRICANA_MATA, ops2: &[], nome: "cqp_12 mata-mata da copa africana" })
+        Some(GoldcupStagePlan { liga: 0, rodadas: 4, extra: 0, extra_checa: false, tamanho: 0x1a0, linha: 0xe0,
+            ops: &AFRICAN_NATIONS_KNOCKOUT_OPS, ops2: &[], nome: "cqp_12 mata-mata da copa africana" })
     } else {
         None
     }
@@ -837,19 +837,19 @@ pub(crate) fn african_nations_phase(fase: u32) -> Option<Cqp12Fase> {
 ///
 /// [pt] A fase da Copa das Confederações: abaixo de 1 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1 e 0), 1 o
 /// mata-mata, acima nada.
-pub(crate) fn confed_cup_phase(fase: u32) -> Option<Cqp12Fase> {
+pub(crate) fn confed_cup_phase(fase: u32) -> Option<GoldcupStagePlan> {
     let f = fase as u8 as i8;
     if f < 1 {
-        let jogos: &'static [Cqp12Op] = match f {
-            -1 => &CQP12_CONFED_GRUPO_A,
-            0 => &CQP12_CONFED_GRUPO_B,
+        let jogos: &'static [GoldcupScheduleOp] = match f {
+            -1 => &CONFED_CUP_GROUP_A_OPS,
+            0 => &CONFED_CUP_GROUP_GAMES,
             _ => &[],
         };
-        Some(Cqp12Fase { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x3e9), extra_checa: false, tamanho: 0xc3, linha: 0x95,
-            ops: &CQP12_CONFED_GRUPOS, ops2: jogos, nome: "cqp_12 grupos da copa das confederacoes" })
+        Some(GoldcupStagePlan { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x3e9), extra_checa: false, tamanho: 0xc3, linha: 0x95,
+            ops: &CONFED_CUP_GROUP_ROUNDS, ops2: jogos, nome: "cqp_12 grupos da copa das confederacoes" })
     } else if f == 1 {
-        Some(Cqp12Fase { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0xc7,
-            ops: &CQP12_CONFED_MATA, ops2: &[], nome: "cqp_12 mata-mata da copa das confederacoes" })
+        Some(GoldcupStagePlan { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0xc7,
+            ops: &CONFED_CUP_KNOCKOUT, ops2: &[], nome: "cqp_12 mata-mata da copa das confederacoes" })
     } else {
         None
     }
@@ -922,7 +922,7 @@ pub(crate) unsafe fn check_set_up_rules(nome: &str, this: usize, campos: &[(usiz
     r
 }
 
-pub(crate) const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2),
+pub(crate) const COPA_AMERICA_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2),
     (0xc5, 1, 1), (0xc6, 1, 2), (0xc8, 1, 0), (0xbe, 1, 2), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
 /// rule: the Copa America groups are single round robin, 3 points a win and 1 a draw, tiebreak by codes 1, 2 and 3
@@ -938,7 +938,7 @@ pub(crate) const CQK10_COPA_AMERICA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da copa america");
     let vitoria = 3; // cqk10: a vitória nos grupos da Copa América
-    goldcup_write_rule_fields(this, &CQK10_COPA_AMERICA, vitoria);
+    goldcup_write_rule_fields(this, &COPA_AMERICA_RULE_FIELDS, vitoria);
     let dia = 0x14; // cqk10: o dia da data da Copa América
     let palavra = competition_date_word(this, dia, 2, 0, 5);
     finish_rules_setup(this, palavra, 0)
@@ -948,16 +948,16 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 
 /// Comparer for `goldcup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES);
-    check_set_up_rules("goldcup_set_up_rules", this, &CQK10_COPA_AMERICA, (0x14, 2, 0, 5), 0, || o(this))
+    check_set_up_rules("goldcup_set_up_rules", this, &COPA_AMERICA_RULE_FIELDS, (0x14, 2, 0, 5), 0, || o(this))
 }
 
-pub(crate) const CQK10_AFRICANA: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
+pub(crate) const AFRICAN_NATIONS_RULE_FIELDS: [(usize, u8, u32); 14] = [(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1),
     (0xc3, 1, 1), (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 
-pub(crate) const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
+pub(crate) const OCEANIA_RULE_FIELDS: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0x43, 1, 2), (0xc6, 1, 2), (0x3c, 2, 1), (0xc3, 1, 1),
     (0xc4, 1, 0xa), (0xc5, 1, 1), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
 /// rule: the Oceania qualifier groups are single round robin, 3/1 points, tiebreak 1, 2, 3, one qualifier per group (to
@@ -970,7 +970,7 @@ pub(crate) const CQK10_OCEANIA: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0xc7, 1
 /// do ano da competição num dia da semana 5.
 pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_10 regras da oceania");
-    goldcup_write_rule_fields(this, &CQK10_OCEANIA, 3);
+    goldcup_write_rule_fields(this, &OCEANIA_RULE_FIELDS, 3);
     let dia = 0xf; // cqk10: o dia do começo na Oceania
     let palavra = competition_date_word(this, dia, 0, 0, 5);
     finish_rules_setup(this, palavra, 0)
@@ -980,7 +980,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules_91ecf0(this: usize) 
 /// Comparer for `goldcup_set_up_rules_91ecf0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_goldcup_set_up_rules_91ecf0(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GOLDCUP_SET_UP_RULES_91ECF0);
-    check_set_up_rules("goldcup_set_up_rules_91ecf0", this, &CQK10_OCEANIA, (0xf, 0, 0, 5), 0, || o(this))
+    check_set_up_rules("goldcup_set_up_rules_91ecf0", this, &OCEANIA_RULE_FIELDS, (0xf, 0, 0, 5), 0, || o(this))
 }
 
 /// rule: the Copa América moves on one stage when the current one ends; after the 2 group stages (on reaching 2) it

@@ -19,14 +19,14 @@ unsafe fn cpo3_por(a: usize, v: usize) {
 /// O registro de pontos de cada técnico (Staff_Records +8): 0xd2 bytes por pessoa que não é jogador ([0xae2368]) e
 /// pelos 16 humanos. +0x86 id da pessoa (−1 vazio), +0xb6 pontos do ano, +0xba/+0xbe pontos na liga e na copa (+0xc2 e
 /// +0xc6 as competições deles, −1 sem), +0xca/+0xce os do mês.
-const CPO3_REGISTRO: usize = 0xd2;
+const MANAGER_RECORD_SIZE: usize = 0xd2;
 
 unsafe fn manager_record_count() -> i32 {
     cpo3_i(0xae2368).wrapping_add(0x10)
 }
 
 unsafe fn manager_record_at(this: usize, k: i32) -> usize {
-    cpo3_d(this + 8).wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO))
+    cpo3_d(this + 8).wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE))
 }
 
 /// A pessoa pelo id (registro de 0x6e bytes em [0xae23bc]; −1 dá o registro antes da tabela, como na original).
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize)
         let base = cpo3_d(this + 8);
         let n = manager_record_count();
         for k in 0..n.max(0) as usize {
-            let e = base.wrapping_add(k * CPO3_REGISTRO);
+            let e = base.wrapping_add(k * MANAGER_RECORD_SIZE);
             cpo3_por(e + 0xca, 0);
             cpo3_por(e + 0xce, 0); // os pontos do mês
         }
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn staff_records_daily_update(this: usize, data: usize)
         let hall: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x5ef270usize);
         let mut k = 0i32;
         while k < manager_record_count() {
-            let e = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO));
+            let e = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE));
             let id = cpo3_d(e + 0x86);
             if id as i32 != -1 {
                 hall(cpo3_d(0xb5ded8), staff_records_staff_by_id(id), cpo3_d(e + 0xb6));
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn staff_records_end_season_for_nation(this: usize, ent
     let base = cpo3_d(this + 8);
     let mut k = 0i32;
     while k < manager_record_count() {
-        let s = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO)) + 0xba;
+        let s = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE)) + 0xba;
         let copa = cpo3_i(s + 0xc);
         if cpo3_i(s + 8) == id {
             crate::comparacao::ramo("cpo_3 fim da liga");

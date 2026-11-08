@@ -34,7 +34,7 @@ MUTACOES = [
     ('cpu11_sem_dobro', 'dist = dist.wrapping_add(dist); // cpu11: o dobro', '// mutacao: sem o dobro', 'cpu_11 distância dobrada'),
     ('cpu11_sem_empate', 'if dist <= melhor[p] { // cpu11: o empate entra na lista', 'if dist < melhor[p] { // mutacao: sem empates', 'cpu_11 empate na lista'),
     ('cpu12_semente', 'semear((read_i16(this + 0x40) as i32).wrapping_add(*(G_GAME_RANDOM_SEED as *const i32)) as u32); // cpu12: a semente', 'semear((read_i16(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)).wrapping_add(1) as u32); // mutacao: semente + 1', 'cpu_12 ordem sorteada'),
-    ('cpu12_sem_troca', 'core::ptr::copy(tmp.as_ptr(), (tab() + b * CPU12_LINHA) as *mut u8, CPU12_LINHA); // cpu12: a troca', 'core::ptr::copy(tmp.as_ptr(), (tab() + a * CPU12_LINHA) as *mut u8, CPU12_LINHA); // mutacao: sem troca', 'cpu_12 ordem sorteada'),
+    ('cpu12_sem_troca', 'core::ptr::copy(tmp.as_ptr(), (tab() + b * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE); // cpu12: a troca', 'core::ptr::copy(tmp.as_ptr(), (tab() + a * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE); // mutacao: sem troca', 'cpu_12 ordem sorteada'),
     ('cpu12_ultima_vaga', 'if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre', 'if let Some(j) = (0..n().max(0) as usize).rev().find(|&j| *posto.add(j) == 0) { // mutacao: a ultima', 'cpu_12 clube na vaga livre'),
     ('cpu13_base_15', 'esi = soma / 16; // cpu13: a base', 'esi = soma / 15; // mutacao: / 15', 'cpu_13 base pela reputação'),
     ('cpu13_faixa_do_meio', 'esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio', 'esi.wrapping_mul(5).wrapping_sub(4900) // mutacao: 100 a mais', 'cpu_13 faixa de 3000 a 5000'),

@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as chaves fixas de clube e de nação pelo nome e a troca da chave de clube depois do corte da base (index.cpp) ----------
 
 /// As chaves de clube do index.cpp (0x6146b0), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
-static CHAVES_DE_CLUBE: &[&[(u32, u32)]] = &[
+static CLUB_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9e1f08, 0x9d00a4), // MLS All Stars East
@@ -389,7 +389,7 @@ static CHAVES_DE_CLUBE: &[&[(u32, u32)]] = &[
 ];
 
 /// As chaves de nação do index.cpp (0x60d810), na ordem do código: (texto do nome, global que recebe a linha), em 2 cadeias.
-static CHAVES_DE_NACAO: &[&[(u32, u32)]] = &[
+static NATION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9d9e30, 0x9cf200), // Afghanistan
@@ -615,8 +615,8 @@ static CHAVES_DE_NACAO: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// As globais de clube na ordem em que 0x60ba80 as compara (as mesmas 313 de CHAVES_DE_CLUBE).
-static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
+/// As globais de clube na ordem em que 0x60ba80 as compara (as mesmas 313 de CLUB_KEYS).
+static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
     0x9d00a4, // MLS All Stars East
     0x9d00a8, // MLS All Stars West
     0x9d00ac, // River Plate
@@ -933,14 +933,14 @@ static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
 ];
 
 /// { 0x6146b0 } (cdecl, index.cpp, match_club_key_id): casa o nome de clube da base com as chaves fixas
-/// do jogo (CHAVES_DE_CLUBE): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (CLUB_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_CLUBE.iter() {
+    for cadeia in CLUB_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
             r = stricmp(nome, texto as usize);
             if r == 0 {
@@ -953,10 +953,10 @@ unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u32 {
 }
 
 /// { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
-/// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CHAVES_DE_CLUBE_NA_TROCA) que
+/// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CLUB_KEYS_SWAP_ORDER) que
 /// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
 unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32 {
-    for &g in CHAVES_DE_CLUBE_NA_TROCA.iter() {
+    for &g in CLUB_KEYS_SWAP_ORDER.iter() {
         if *(g as *const u32) == antigo {
             *(g as *mut u32) = novo; // chave remapeada
             return 1;
@@ -966,14 +966,14 @@ unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32 {
 }
 
 /// { 0x60d810 } (cdecl, index.cpp, match_nation_key_id): casa o nome de nação da base com as chaves fixas
-/// do jogo (CHAVES_DE_NACAO): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (NATION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 unsafe extern "C" fn match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_NACAO.iter() {
+    for cadeia in NATION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
             r = stricmp(nome, texto as usize);
             if r == 0 {

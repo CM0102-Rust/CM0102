@@ -7,7 +7,7 @@ use super::*;
 /// [pt] { 0x669340 } (cdecl, key_nation.cpp): `key_nation_index_of_nation(nação)`: a primeira linha da tabela das 35
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
 /// 0x4cb250, pelas aposentadorias 0x7a7310, pelo amistoso livre 0x5c6b70, pelos prêmios do dia das nações e pelas vagas
-/// da UEFA. Chamada a cada jogador: sem contador.
+/// da UEFA. TapeCall a cada jogador: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
     for k in 0..0x23usize {
         if read_usize(G_LEAGUE_TABLE + 72 * k) == nacao {
@@ -145,7 +145,7 @@ pub(crate) unsafe fn write_date(dst: usize, dia: i16, ano: u16) {
 /// bits com sinal. Com a > c (temporada que vira o ano): t > a, (a, y) e (c, y+1), 1; t < c, (a, y−1) e (c, y), 1; senão
 /// (a, y) e (c, y), 0. Com a ≤ c: t < a, (a, y) e (c, y), 0; t > c, (a, y+1) e (c, y+1), 1; senão (a, y) e (c, y), 1. As
 /// datas vão para `início` e `fim` quando não nulos. Pelo clube na temporada 0x547770, pela forma física 0x62a920,
-/// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. Chamada a cada
+/// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. TapeCall a cada
 /// jogador: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_club_in_season(clube: usize, inicio: usize, fim: usize) -> u32 {
     let mut linha = G_LEAGUE_EUROPE_NATION;
@@ -269,11 +269,11 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_get_main_nation() -> usize {
 
 /// Os ids das competições da Copa do Mundo: a final e as seis eliminatórias (Europa [0x9cf780], África, Ásia,
 /// CONCACAF, Oceania, América do Sul).
-pub(crate) const CPT3_COPA: [usize; 7] = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT];
+pub(crate) const WORLD_CUP_COMPS: [usize; 7] = [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_ASIAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_CONCACAF_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_EUROPEAN_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION, KEY_CLUB_COMP_WORLD_CUP_SOUTH_AMERICAN_QUALIFYING_SECT];
 
 /// Os ids dos torneios de seleções fora da Copa do Mundo: Olimpíada, Eurocopa, eliminatórias da Eurocopa, Copa
 /// Africana [0x9cf7ac], Copa América, seleção B, sub-21, Copa da Oceania, Copa das Confederações e Copa da Ásia.
-pub(crate) const CPT3_INTERNACIONAIS: [usize; 10] = [KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_CONFEDERATIONS_CUP, KEY_CLUB_COMP_ASIAN_CUP];
+pub(crate) const INTERNATIONAL_TOURNAMENTS: [usize; 10] = [KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_EUROPEAN_CHAMPIONSHIP_QUALIFYING, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_CONFEDERATIONS_CUP, KEY_CLUB_COMP_ASIAN_CUP];
 
 /// 1 when the competition id is the World Cup or one of its six qualifying sections
 /// Original: `key_nation_is_world_cup_comp` (0x669a10, key_nation.cpp, cdecl).
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32
         return 0;
     }
     let id = read_usize(comp);
-    CPT3_COPA.iter().any(|&g| read_usize(g) == id) as u32
+    WORLD_CUP_COMPS.iter().any(|&g| read_usize(g) == id) as u32
 }
 
 /// Comparer for `key_nation_is_world_cup_comp` (comparison mode: see the header of motor.rs).
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
         return 0;
     }
     let id = read_usize(comp);
-    CPT3_INTERNACIONAIS.iter().any(|&g| read_usize(g) == id) as u32
+    INTERNATIONAL_TOURNAMENTS.iter().any(|&g| read_usize(g) == id) as u32
 }
 
 /// Comparer for `key_nation_is_international_comp` (comparison mode: see the header of motor.rs).
@@ -336,7 +336,7 @@ pub(crate) unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: 
 /// competição de nação (+0x5d): a linha dela na tabela das 35 nações-chave (0xb63d60, 72 bytes), ou 4. Sem nação: Copa
 /// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
-/// conferir a competição nula (o caso de erro nunca chega à caixa). Chamada a cada partida: sem contador.
+/// conferir a competição nula (o caso de erro nunca chega à caixa). TapeCall a cada partida: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let nacao = read_usize(comp + competition::CLUB_COMP_NATION);
     if nacao != 0 {

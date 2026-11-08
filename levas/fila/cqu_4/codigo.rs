@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: os calendários J2 (as datas e os jogos de cada rodada da fase de pontos corridos e do mata-mata) (jap_j2.cpp) ----------
 
 /// A J2, a liga: 44 rodadas (da 12/fev à 26/out), 2860 bytes, 88 operações.
-const CQU4_J2_0: [Cqp11Op; 88] = [
+const CQU4_J2_0: [AsiaClubChampScheduleOp; 88] = [
     Cqp11D(0, 0xc, 2, 0, 6, 1, 0), Cqp11L(0, 0, -1, -1, -1, 0), Cqp11D(1, 0x13, 2, 0, 6, 1, 0),
     Cqp11L(1, 0, -1, -1, -1, 0), Cqp11D(2, 0x1a, 2, 0, 6, 1, 0), Cqp11L(2, 0, -1, -1, -1, 0),
     Cqp11D(3, 2, 3, 0, 6, 1, 0), Cqp11L(3, 0, -1, -1, -1, 0), Cqp11D(4, 9, 3, 0, 6, 1, 0),
@@ -35,9 +35,9 @@ const CQU4_J2_0: [Cqp11Op; 88] = [
 ];
 
 /// As fases da tabela de rodadas da J2: a fase de pontos corridos (−1) (é liga): 44 rodadas, da 12/fev à 26/out.
-fn cqu4_j2_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqu4_j2_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 44, extra: 0, extra_checa: false, tamanho: 0xb2c, linha: 0x9d,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 44, extra: 0, extra_checa: false, tamanho: 0xb2c, linha: 0x9d,
             ops: &CQU4_J2_0, nome: "cqu_4 j2 liga" }),
         _ => None,
     }

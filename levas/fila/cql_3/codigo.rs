@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this: usize, li
     });
 }
 
-/// As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `CQL2_VAGAS`,
+/// As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS`,
 /// até a 19ª; a 20ª aqui é de goleiro).
 const CQL3_VAGAS: [u16; 25] = [
     0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os titulares
@@ -178,7 +178,7 @@ unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usiz
     let elenco: unsafe extern "C" fn(usize, *mut usize, u32) -> u32 = core::mem::transmute(0x541f90usize);
     let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let emprestimo: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf6d0usize);
-    let pick: Escalar = core::mem::transmute(0x6e2000usize);
+    let pick: AssignPositionsFn = core::mem::transmute(0x6e2000usize);
     let etapa = etapa as u8;
     let mut sq = [0usize; 50];
     elenco(c, sq.as_mut_ptr(), 0);

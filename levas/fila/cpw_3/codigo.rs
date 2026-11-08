@@ -166,7 +166,7 @@ unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: usize, joga
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(%%I0%%);
     let mut regioes = vec![(0xae1080usize, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    regioes.extend(CPQ5_ESTATICAS);
+    regioes.extend(TRANSFER_MANAGER_DATE_STATICS);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW3_ENSAIO = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| try_loan_offer_for_player(this, jogador, clube)));

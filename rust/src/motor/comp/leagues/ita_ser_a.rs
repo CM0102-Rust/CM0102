@@ -3,7 +3,7 @@ use super::*;
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-pub(crate) type Cqo6Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type ItaSerALeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Writes rounds starting at `primeira` into round table t: each round's date (0x68a160) and match slots (0x68a1c0),
 /// from a static table.
@@ -11,7 +11,7 @@ pub(crate) type Cqo6Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn ita_ser_a_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo6Rodada]) {
+pub(crate) unsafe fn ita_ser_a_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[ItaSerALeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -25,11 +25,11 @@ pub(crate) unsafe fn ita_ser_a_set_league_rounds(t: usize, ano: u32, primeira: i
 
 
 /// O que muda entre as ligas de fase única.
-pub(crate) struct Cqo6Liga {
+pub(crate) struct ItaSerASingleStageLeague {
     pub(crate) rodadas: i16,
     pub(crate) arquivo: usize,
     pub(crate) linha: u32,
-    pub(crate) tabela: &'static [Cqo6Rodada],
+    pub(crate) tabela: &'static [ItaSerALeagueRound],
     pub(crate) ramo: &'static str,
 }
 
@@ -40,7 +40,7 @@ pub(crate) struct Cqo6Liga {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn build_league_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo6Liga) -> usize {
+pub(crate) unsafe fn build_league_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &ItaSerASingleStageLeague) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -118,7 +118,7 @@ pub(crate) unsafe fn ita_ser_a_compare_schedule_all_stages(nome: &str, fase: u32
 }
 
 /// a Série A, 34 rodadas de 28/ago a 12/mai; quase todas com duas faixas de TV (dias 6 e 5, turno 2, 2 jogos cada)
-pub(crate) const CQO6_SERIE_A: [Cqo6Rodada; 34] = [
+pub(crate) const SERIE_A_ROUNDS: [ItaSerALeagueRound; 34] = [
     (28, 7, 0, 6, 1, &[(6, 2, 2), (5, 2, 2), (-1, -1, -1)]), // 0: 28/ago
     (9, 8, 0, 6, 1, &[(6, 2, 2), (5, 2, 2), (-1, -1, -1)]), // 1: 9/set
     (16, 8, 0, 6, 1, &[(6, 2, 2), (5, 2, 2), (-1, -1, -1)]), // 2: 16/set
@@ -156,7 +156,7 @@ pub(crate) const CQO6_SERIE_A: [Cqo6Rodada; 34] = [
 ];
 
 /// a Série B, 38 rodadas de 29/ago a 14/mai; quase todas com duas faixas de TV (dias 4 e 0, turno 2, 2 jogos cada)
-pub(crate) const CQO6_SERIE_B: [Cqo6Rodada; 38] = [
+pub(crate) const SERIE_B_ROUNDS: [ItaSerALeagueRound; 38] = [
     (29, 7, 0, 6, 1, &[(4, 2, 2), (0, 2, 2), (-1, -1, -1)]), // 0: 29/ago
     (5, 8, 0, 6, 1, &[(4, 2, 2), (0, 2, 2), (-1, -1, -1)]), // 1: 5/set
     (12, 8, 0, 6, 1, &[(4, 2, 2), (0, 2, 2), (-1, -1, -1)]), // 2: 12/set
@@ -199,7 +199,7 @@ pub(crate) const CQO6_SERIE_B: [Cqo6Rodada; 38] = [
 
 /// A primeira divisão francesa: as rodadas em ordem, cada uma marcada `true` se só entra com 38 rodadas (20 clubes; com
 /// 34, as de `false`, em sequência). O índice no comentário é o da temporada de 38.
-pub(crate) const CQO6_PRIMEIRA_FRANCESA: [(bool, Cqo6Rodada); 38] = [
+pub(crate) const FRENCH_FIRST_DIVISION_ROUNDS: [(bool, ItaSerALeagueRound); 38] = [
     (false, (31, 6, 0, 5, 2, &[(6, 1, 1), (6, 2, 1), (-1, -1, -1)])), // 0: 31/jul
     (false, (6, 7, 0, 4, 2, &[(-1, -1, -1)])), // 1: 6/ago
     (false, (14, 7, 0, 5, 2, &[(4, 1, 1), (4, 2, 1), (-1, -1, -1)])), // 2: 14/ago
@@ -240,8 +240,8 @@ pub(crate) const CQO6_PRIMEIRA_FRANCESA: [(bool, Cqo6Rodada); 38] = [
     (false, (20, 4, 1, 5, 2, &[(-1, -1, -1)])), // 37: 20/mai (+1 ano)
 ];
 
-pub(crate) const CQO6_LIGA_SERIE_A: Cqo6Liga = Cqo6Liga { rodadas: 0x22, arquivo: 0x9ea2a8, linha: 0xb0, tabela: &CQO6_SERIE_A, ramo: "cqo_6 calendario da serie a" };
-pub(crate) const CQO6_LIGA_SERIE_B: Cqo6Liga = Cqo6Liga { rodadas: 0x26, arquivo: 0x9ea384, linha: 0xa8, tabela: &CQO6_SERIE_B, ramo: "cqo_6 calendario da serie b" };
+pub(crate) const SERIE_A_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rodadas: 0x22, arquivo: 0x9ea2a8, linha: 0xb0, tabela: &SERIE_A_ROUNDS, ramo: "cqo_6 calendario da serie a" };
+pub(crate) const SERIE_B_LEAGUE: ItaSerASingleStageLeague = ItaSerASingleStageLeague { rodadas: 0x26, arquivo: 0x9ea384, linha: 0xa8, tabela: &SERIE_B_ROUNDS, ramo: "cqo_6 calendario da serie b" };
 
 /// Cup round record for the Italian playoff (stage 0): May draw and two-legged game, teams from league byte +0xee.
 ///
@@ -250,15 +250,15 @@ pub(crate) const CQO6_LIGA_SERIE_B: Cqo6Liga = Cqo6Liga { rodadas: 0x26, arquivo
 /// 21/mai), nome 0xa0, sem sorteio (0x200), desempate do confronto 3, categoria 5, ida e volta (+0x21 = 2) com 3 dias
 /// entre os jogos, sem prêmios; os times (2n, n jogos, 2n novos) pelo byte +0xee da liga (n, com sinal; as contas em 16
 /// bits como a original) [inferência: os confrontos de desempate pedidos].
-pub(crate) fn italian_playoff_round(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), n: i8) -> Cql10R {
+pub(crate) fn italian_playoff_round(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), n: i8) -> EngCcCupCupRound {
     let n = n as i16;
     let dois = n.wrapping_shl(1) as u16;
     cql10r(sorteio, jogo, 0xa0, (0, 0x200, 3), 5, (dois, n as u16, dois, 0), (0, 2, 3), (0, 0, 0))
 }
 
 /// O que muda entre a Série A e a Série B.
-pub(crate) struct Cqo6Italia {
-    pub(crate) liga: &'static Cqo6Liga,
+pub(crate) struct ItalianLeagueWithTiebreak {
+    pub(crate) liga: &'static ItaSerASingleStageLeague,
     pub(crate) sorteio: (u32, u32, u32, u32),
     pub(crate) jogo: (u32, u32, u32, u32, u32, u32),
     pub(crate) linha_desempate: u32,
@@ -270,7 +270,7 @@ pub(crate) struct Cqo6Italia {
 /// [pt] O corpo comum das duas (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): a fase −1 é a
 /// principal (`build_league_schedule`); a 0, o jogo-desempate: é_liga (se pedido) = 0, 1 rodada, extra 0, a tabela de 0x68
 /// bytes (malloc 0x944e46; sem memória: a caixa e 0); as outras devolvem 0 sem gravar nada. Devolve a tabela.
-pub(crate) unsafe fn italian_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo6Italia) -> usize {
+pub(crate) unsafe fn italian_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &ItalianLeagueWithTiebreak) -> usize {
     match fase as u8 {
         0xff => build_league_schedule(this, fase, rodadas, extra, liga, p.liga),
         0 => {
@@ -294,8 +294,8 @@ pub(crate) unsafe fn italian_schedule(this: usize, fase: u32, rodadas: *mut i16,
     }
 }
 
-pub(crate) const CQO6_SERIE_A_E_DESEMPATE: Cqo6Italia = Cqo6Italia { liga: &CQO6_LIGA_SERIE_A, sorteio: (0xd, 4, 1, 0), jogo: (0x13, 4, 1, 6, 1, 0), linha_desempate: 0x226 };
-pub(crate) const CQO6_SERIE_B_E_DESEMPATE: Cqo6Italia = Cqo6Italia { liga: &CQO6_LIGA_SERIE_B, sorteio: (0xf, 4, 1, 0), jogo: (0x15, 4, 1, 6, 1, 0), linha_desempate: 0x170 };
+pub(crate) const SERIE_A_WITH_PLAYOFF: ItalianLeagueWithTiebreak = ItalianLeagueWithTiebreak { liga: &SERIE_A_LEAGUE, sorteio: (0xd, 4, 1, 0), jogo: (0x13, 4, 1, 6, 1, 0), linha_desempate: 0x226 };
+pub(crate) const SERIE_B_WITH_TIEBREAK: ItalianLeagueWithTiebreak = ItalianLeagueWithTiebreak { liga: &SERIE_B_LEAGUE, sorteio: (0xf, 4, 1, 0), jogo: (0x15, 4, 1, 6, 1, 0), linha_desempate: 0x170 };
 
 /// the Serie A schedule: 34 rounds (18 clubs), from 28 August to 12 May of the next year, all on the same weekday (6)
 /// except two (6 January, 30 March); in nearly all, two matches go to each of two TV slots (days 6 and 5, slot 2)
@@ -305,10 +305,10 @@ pub(crate) const CQO6_SERIE_B_E_DESEMPATE: Cqo6Italia = Cqo6Italia { liga: &CQO6
 /// Original: `ItaSerA::create_schedule` (0x6409b0, ita_ser_a.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x6409b0 } (thiscall, ret 0x10, ita_ser_a.cpp, 2.901 bytes, método +0x3c): `ItaSerA::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: a Série A, 34 rodadas (`CQO6_SERIE_A`), e o jogo-desempate. Fonte 0x9ea2a8, linhas 0xb0
+/// &rodadas, &extra, &é_liga)`: a Série A, 34 rodadas (`SERIE_A_ROUNDS`), e o jogo-desempate. Fonte 0x9ea2a8, linhas 0xb0
 /// e 0x226.
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    italian_schedule(this, fase, rodadas, extra, liga, &CQO6_SERIE_A_E_DESEMPATE)
+    italian_schedule(this, fase, rodadas, extra, liga, &SERIE_A_WITH_PLAYOFF)
 }
 
 /// Comparer for `ita_ser_a_create_schedule` (comparison mode: see the header of motor.rs).
@@ -323,9 +323,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_create_schedule(this: 
 /// Original: `ItaSerB::create_schedule` (0x645af0, ita_ser_b.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x645af0 } (thiscall, ret 0x10, ita_ser_b.cpp, 3.215 bytes, método +0x3c): `ItaSerB::create_schedule`: a Série B,
-/// 38 rodadas (`CQO6_SERIE_B`), e o jogo-desempate. Fonte 0x9ea384, linhas 0xa8 e 0x170.
+/// 38 rodadas (`SERIE_B_ROUNDS`), e o jogo-desempate. Fonte 0x9ea384, linhas 0xa8 e 0x170.
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule_645af0(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    italian_schedule(this, fase, rodadas, extra, liga, &CQO6_SERIE_B_E_DESEMPATE)
+    italian_schedule(this, fase, rodadas, extra, liga, &SERIE_B_WITH_TIEBREAK)
 }
 
 /// Comparer for `ita_ser_a_create_schedule_645af0` (comparison mode: see the header of motor.rs).
@@ -707,7 +707,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_update_staff_records_f
 
 
 /// O que muda de uma divisão italiana para outra no construtor.
-pub(crate) struct Cqm4Divisao {
+pub(crate) struct ItalianDivision {
     pub(crate) vtabela: usize,
     /// a Série A e a Série B gravam +0xee = 0 (o campo próprio da classe [inferência: o desempate em curso]) e +0x4c = 1
     pub(crate) serie: bool,
@@ -735,7 +735,7 @@ pub(crate) struct Cqm4Divisao {
 /// estatísticas (operator new 0x944cf1 de 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push
 /// liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas (0x68a850: mov ecx -> thiscall, ret 0).
 /// Devolve this.
-pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: &Cqm4Divisao) -> usize {
+pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: &ItalianDivision) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -797,7 +797,7 @@ pub(crate) unsafe fn construct_italian_division(this: usize, ano: u32, registro:
     this
 }
 
-pub(crate) const CQM4_SERIE_A: Cqm4Divisao = Cqm4Divisao {
+pub(crate) const SERIE_A: ItalianDivision = ItalianDivision {
     vtabela: 0x96c3cc,
     serie: true,
     fases: 0,
@@ -807,7 +807,7 @@ pub(crate) const CQM4_SERIE_A: Cqm4Divisao = Cqm4Divisao {
     arquivo: 0x9ea2a8,
     linhas: [0x53, 0x5a, 0x64, 0x6d, 0x74],
 };
-pub(crate) const CQM4_SERIE_B: Cqm4Divisao = Cqm4Divisao {
+pub(crate) const SERIE_B_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c480,
     serie: true,
     fases: 0,
@@ -817,7 +817,7 @@ pub(crate) const CQM4_SERIE_B: Cqm4Divisao = Cqm4Divisao {
     arquivo: 0x9ea384,
     linhas: [0x4b, 0x52, 0x5c, 0x65, 0x6c],
 };
-pub(crate) const CQM4_C1A: Cqm4Divisao = Cqm4Divisao {
+pub(crate) const SERIE_C1A_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c534,
     serie: false,
     fases: 2, // cqm4: o play-off e o play-out da C1/A
@@ -827,7 +827,7 @@ pub(crate) const CQM4_C1A: Cqm4Divisao = Cqm4Divisao {
     arquivo: 0x9ea474,
     linhas: [0x49, 0x50, 0x5a, 0x63, 0x6a],
 };
-pub(crate) const CQM4_C1B: Cqm4Divisao = Cqm4Divisao {
+pub(crate) const SERIE_C1B_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c5e8,
     serie: false,
     fases: 2,
@@ -846,7 +846,7 @@ pub(crate) const CQM4_C1B: Cqm4Divisao = Cqm4Divisao {
 /// [pt] { 0x6406d0 } (thiscall, ret 8, ita_ser_a.cpp): `ItaSerA::ItaSerA(ano, registro)`: a Série A, só a liga (o jogo de
 /// desempate nasce no fim, pela 0x642880).
 pub(crate) unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_SERIE_A)
+    construct_italian_division(this, ano, registro, &SERIE_A)
 }
 
 /// Serie B: discipline 0x11, only the league, the real 2001/02 fixture list
@@ -854,7 +854,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, ano: u32
 ///
 /// [pt] { 0x645810 } (thiscall, ret 8, ita_ser_b.cpp): `ItaSerB::ItaSerB(ano, registro)`: a Série B, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_SERIE_B)
+    construct_italian_division(this, ano, registro, &SERIE_B_DIVISION)
 }
 
 
@@ -863,7 +863,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_b(this: usize, ano: u32
 ///
 /// [pt] { 0x64ec20 } (thiscall, ret 8, ita_ser_c1b.cpp): `ItaSerC1b::ItaSerC1b(ano, registro)`: a C1/B, como a C1/A.
 pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_C1B)
+    construct_italian_division(this, ano, registro, &SERIE_C1B_DIVISION)
 }
 
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline
@@ -872,7 +872,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1b(this: usize, ano: u
 /// [pt] O comparador dos quatro: alocam: só a original, conferindo o que ela grava: a devolução, a vtable, o ano, o
 /// registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das fases e, na A e na
 /// B, +0x4c = 1 e +0xee = 0.
-pub(crate) unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm4Divisao, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &ItalianDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 0x11;
@@ -889,20 +889,20 @@ pub(crate) unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u
 /// Comparer for `construct_ita_ser_a` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_A);
-    compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &CQM4_SERIE_A, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &SERIE_A, || o(this, ano, registro))
 }
 
 /// Comparer for `construct_ita_ser_b` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_B);
-    compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &CQM4_SERIE_B, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &SERIE_B_DIVISION, || o(this, ano, registro))
 }
 
 
 /// Comparer for `construct_ita_ser_c1b` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ITA_SER_C1B);
-    compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &CQM4_C1B, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &SERIE_C1B_DIVISION, || o(this, ano, registro))
 }
 
 
@@ -980,7 +980,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures(this: usize, tabela: &[(u8, u8, u16, 
 /// [pt] { 0x642a70 } (thiscall, ret 0, ita_ser_a.cpp, 11.650 bytes): `ItaSerA::create_fixed_fixtures()`: os 306 jogos da
 /// Série A 2001/02 (34 rodadas de 9, com o dia, o mês (0 = janeiro) e o ano que a original empurra). Fonte 0x9ea2a8, linha 0x60f.
 pub(crate) unsafe extern "thiscall" fn create_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures(this, &CQN5_SERIE_A, 0x9ea2a8, 0x60f)
+    set_up_fixed_fixtures(this, &SERIE_A_FIXED_FIXTURES, 0x9ea2a8, 0x60f)
 }
 
 /// the 2001/02 Serie B: the 380 matches (38 rounds of 10) fixed, with the same rule
@@ -989,7 +989,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixed_fixtures(this: usize) {
 /// [pt] { 0x647230 } (thiscall, ret 0, ita_ser_b.cpp, 14.388 bytes): `ItaSerB::set_up_fixed_fixtures()`: os 380 jogos da
 /// Série B 2001/02 (38 rodadas de 10). Fonte 0x9ea384, linha 0x39a.
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures(this, &CQN5_SERIE_B, 0x9ea384, 0x39a)
+    set_up_fixed_fixtures(this, &SERIE_B_FIXTURES, 0x9ea384, 0x39a)
 }
 
 /// Comparer: runs only the original and checks the fixed-fixture vector is either complete (count n, all clubs found)
@@ -1019,7 +1019,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_fixed_fixtures(
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
 /// exe; na ordem da original (extraídos da desmontagem e conferidos: os lugares do vetor vão de 16 em 16).
-pub(crate) const CQN5_SERIE_A: [(u8, u8, u16, u32, u32); 306] = [
+pub(crate) const SERIE_A_FIXED_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (28, 7, 2001, 0x9ea370, 0x9ea378), // Bologna × Atalanta
     (28, 7, 2001, 0x9ea360, 0x9ea368), // Brescia × Milan
     (28, 7, 2001, 0x9ea34c, 0x9ea358), // Fiorentina × Chievo
@@ -1328,7 +1328,7 @@ pub(crate) const CQN5_SERIE_A: [(u8, u8, u16, u32, u32); 306] = [
     (12, 4, 2002, 0x9ea31c, 0x9ea2e4), // Piacenza × Verona
 ];
 
-pub(crate) const CQN5_SERIE_B: [(u8, u8, u16, u32, u32); 380] = [
+pub(crate) const SERIE_B_FIXTURES: [(u8, u8, u16, u32, u32); 380] = [
     (26, 7, 2001, 0x9ea464, 0x9ea46c), // Ancona × Reggina
     (26, 7, 2001, 0x9ea450, 0x9ea45c), // Cagliari × Messina
     (26, 7, 2001, 0x9ea440, 0x9ea448), // Como × Crotone

@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_knockout_stage_63
 
 /// Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
 /// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
-pub(crate) type Cqo10G = (u32, u32, u32, u32);
+pub(crate) type ItaCupGroupRound = (u32, u32, u32, u32);
 
 /// Italian cups create_schedule (virtual +0x3c): group round table (0x41 bytes/round) below limit, knockout round
 /// table (0x68 bytes/round) at limit; returns the table or 0.
@@ -539,8 +539,8 @@ pub(crate) type Cqo10G = (u32, u32, u32, u32);
 /// memória, a caixa `linha_g` e devolve 0) com as datas de `grupos`. Na fase `limite`, o mata-mata: é_liga = 0, rodadas =
 /// o tamanho de `mata`, extra = 0; a tabela de 0x68 bytes por rodada (sem memória, a caixa `linha_m`), as rodadas pela
 /// `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal). Acima de `limite`: devolve 0 sem gravar nada.
-pub(crate) unsafe fn create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limit: i8, id: i16, grupos: &[Cqo10G],
-    mata: &[Cql10R], arquivo: usize, linha_g: u32, linha_m: u32, nome_g: &'static str, nome: &'static str) -> usize {
+pub(crate) unsafe fn create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limit: i8, id: i16, grupos: &[ItaCupGroupRound],
+    mata: &[EngCcCupCupRound], arquivo: usize, linha_g: u32, linha_m: u32, nome_g: &'static str, nome: &'static str) -> usize {
     let f = fase as u8 as i8;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if f < limit {
@@ -635,10 +635,10 @@ pub(crate) unsafe fn ita_cup_compare_schedule(nome: &str, fase: u32, rodadas: *m
 }
 
 /// A Copa da Itália, grupos: três rodadas em agosto (12 e 19, sábado [inferência: dia da semana 6], e 29, terça [2]).
-pub(crate) const CQO10_COPA_DA_ITALIA_GRUPOS: [Cqo10G; 3] = [(0xc, 7, 6, 1), (0x13, 7, 6, 1), (0x1d, 7, 2, 2)];
+pub(crate) const ITALIAN_CUP_GROUP_ROUNDS: [ItaCupGroupRound; 3] = [(0xc, 7, 6, 1), (0x13, 7, 6, 1), (0x1d, 7, 2, 2)];
 
 /// A Copa da Itália, mata-mata: cinco rodadas em ida e volta, de setembro a março do ano seguinte.
-pub(crate) const CQO10_COPA_DA_ITALIA: [Cql10R; 5] = [
+pub(crate) const ITALIAN_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 5] = [
     cql10r((0x1e, 7, 0, 3), (0x13, 8, 0, 2, 2, 0), 0xa, (0, 0x400, 3), 4, (0x10, 8, 0x10, 0), (0, 2, 0x23), (0, 0xffff_ffff, 0)), // cqo10: a 1ª rodada do mata-mata da Copa da Itália
     cql10r((0x19, 9, 0, 3), (0xb, 0xa, 0, 6, 1, 0), 0x14, (0, 0x400, 3), 4, (0x10, 8, 8, 0x10), (0, 2, 0x11), (0, 0xffff_ffff, 0)),
     cql10r((0x1d, 0xa, 0, 3), (0xc, 0xb, 0, 2, 2, 0), 0x78, (0, 0, 3), 6, (8, 4, 0, 0), (0, 2, 0x1c), (0, 0xffff_ffff, 0)),
@@ -657,7 +657,7 @@ pub(crate) const CQO10_COPA_DA_ITALIA: [Cql10R; 5] = [
 /// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (extra = fase + 0x3e9; a caixa da linha 0xc1), o mata-mata na
 /// fase 7 (a caixa da linha 0xe1).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_schedule(this, fase, rodadas, extra, liga, 7, 0x3e9, &CQO10_COPA_DA_ITALIA_GRUPOS, &CQO10_COPA_DA_ITALIA, 0x9ea23c, 0xc1, 0xe1,
+    create_schedule(this, fase, rodadas, extra, liga, 7, 0x3e9, &ITALIAN_CUP_GROUP_ROUNDS, &ITALIAN_CUP_KNOCKOUT_ROUNDS, 0x9ea23c, 0xc1, 0xe1,
         "cqo_10 grupos da copa da italia", "cqo_10 mata-mata da copa da italia")
 }
 
@@ -669,11 +669,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule(this: us
 }
 
 /// A Copa da Itália da Série C, grupos: cinco rodadas em agosto (12, 19, 22, 26 e 29).
-pub(crate) const CQO10_COPA_C_GRUPOS: [Cqo10G; 5] = [(0xc, 7, 6, 1), (0x13, 7, 6, 1), (0x16, 7, 2, 2), (0x1a, 7, 6, 1), (0x1d, 7, 2, 2)]; // cqo10: os grupos da Copa da Série C
+pub(crate) const SERIE_C_CUP_GROUP_ROUNDS: [ItaCupGroupRound; 5] = [(0xc, 7, 6, 1), (0x13, 7, 6, 1), (0x16, 7, 2, 2), (0x1a, 7, 6, 1), (0x1d, 7, 2, 2)]; // cqo10: os grupos da Copa da Série C
 
 /// A Copa da Itália da Série C, mata-mata: cinco rodadas em ida e volta, de setembro a maio do ano seguinte (as
 /// semifinais em abril).
-pub(crate) const CQO10_COPA_C: [Cql10R; 5] = [
+pub(crate) const SERIE_C_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 5] = [
     cql10r((0x1e, 7, 0, 3), (0xb, 9, 0, 2, 2, 0), 0x14, (0, 0, 3), 4, (0x20, 0x10, 0x20, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql10r((0x1a, 9, 0, 3), (1, 0xa, 0, 2, 2, 0), 0x1e, (0, 0, 3), 4, (0x10, 8, 0, 0), (0, 2, 7), (0, 0xffff_ffff, 0)),
     cql10r((9, 0xa, 0, 3), (0xf, 0xa, 0, 2, 2, 0), 0x78, (0, 0, 3), 6, (8, 4, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
@@ -691,7 +691,7 @@ pub(crate) const CQO10_COPA_C: [Cql10R; 5] = [
 /// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 0xf (extra = fase + 0x420; a caixa da linha 0xbc), o mata-mata na
 /// fase 0xf (a caixa da linha 0xe3).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_schedule_63cf90(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_schedule(this, fase, rodadas, extra, liga, 0xf, 0x420, &CQO10_COPA_C_GRUPOS, &CQO10_COPA_C, 0x9ea204, 0xbc, 0xe3,
+    create_schedule(this, fase, rodadas, extra, liga, 0xf, 0x420, &SERIE_C_CUP_GROUP_ROUNDS, &SERIE_C_CUP_KNOCKOUT_ROUNDS, 0x9ea204, 0xbc, 0xe3,
         "cqo_10 grupos da copa da serie c", "cqo_10 mata-mata da copa da serie c")
 }
 
@@ -704,7 +704,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_schedule_63cf90(t
 
 /// A Supercopa da Itália: um jogo único em 19 de agosto (sorteio em 5 de julho), mando neutro [inferência: o +0x13 da
 /// data fica 0], sem prêmios.
-pub(crate) const CQO10_SUPERCOPA: [Cql10R; 1] = [
+pub(crate) const ITALIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
     cql10r((5, 6, 0, 5), (0x13, 7, 0, 6, 1, 0), 0, (0, 0x203, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqo10: a Supercopa da Itália
 ];
 
@@ -715,7 +715,7 @@ pub(crate) const CQO10_SUPERCOPA: [Cql10R; 1] = [
 /// [pt] { 0x65f920 } (thiscall, ret 0x10, ita_super.cpp; a virtual +0x3c da Supercopa da Itália): `ItaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQO10_SUPERCOPA, 0x9eac34, 0x99, "cqo_10 tabela da supercopa")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &ITALIAN_SUPER_CUP, 0x9eac34, 0x99, "cqo_10 tabela da supercopa")
 }
 
 /// Comparer for `ita_cup_create_round_table` (comparison mode: see the header of motor.rs).
@@ -726,7 +726,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_create_round_table(this:
 }
 
 /// A Supercopa da Série C1: um jogo único em 21 de maio do ano seguinte (sorteio em 15 de maio), sem prêmios.
-pub(crate) const CQO10_SUPERCOPA_C1: [Cql10R; 1] = [
+pub(crate) const SERIE_C1_SUPER_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((0xf, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0, (0, 0x203, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)),
 ];
 
@@ -737,7 +737,7 @@ pub(crate) const CQO10_SUPERCOPA_C1: [Cql10R; 1] = [
 /// [pt] { 0x63c890 } (thiscall, ret 0x10, ita_c1_super.cpp; a virtual +0x3c da Supercopa da Série C1): `ItaC1Super::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_round_table_63c890(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQO10_SUPERCOPA_C1, 0x9ea1c8, 0x99, "cqo_10 tabela da supercopa c1")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &SERIE_C1_SUPER_CUP_ROUNDS, 0x9ea1c8, 0x99, "cqo_10 tabela da supercopa c1")
 }
 
 /// Comparer for `ita_cup_create_round_table_63c890` (comparison mode: see the header of motor.rs).
@@ -1140,7 +1140,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_init_team_list(this: usi
 /// As regras que a virtual +0x8c (set_up_rules) de uma copa com fase de grupos grava na liga do grupo, antes da tabela
 /// das rodadas. Desempates: os quatro códigos de +0xc5..+0xc8 (docs/.md §2.7).
 #[derive(Clone, Copy)]
-pub(crate) struct Cqi12Regras {
+pub(crate) struct GroupStageRules {
     pub(crate) vitoria: u8,     // +0xc2: pontos por vitória
     pub(crate) empate: u8,      // +0xc3: pontos por empate
     pub(crate) categoria: u8,   // +0xc4: a categoria de cada jogo (vai para o +0x3a da partida)
@@ -1150,9 +1150,9 @@ pub(crate) struct Cqi12Regras {
     pub(crate) bits: Option<u16>,   // +0xd9: a palavra de bits de regra (só a Copa dos Campeões grava: 8)
 }
 
-pub(crate) const CQI12_COPA_DA_ITALIA: Cqi12Regras = Cqi12Regras { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0xc3500), bits: None };
-pub(crate) const CQI12_COPA_DA_SERIE_C: Cqi12Regras = Cqi12Regras { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0x493e0), bits: None };
-pub(crate) const CQI12_COPA_DOS_CAMPEOES: Cqi12Regras = Cqi12Regras { vitoria: 3, empate: 1, categoria: 0x17, desempate: [3, 1, 2, 4], vagas: 2, premio: None, bits: Some(8) };
+pub(crate) const ITALIAN_CUP_GROUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0xc3500), bits: None };
+pub(crate) const SERIE_C_CUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 4, desempate: [4, 1, 2, 0], vagas: 1, premio: Some(0x493e0), bits: None };
+pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { vitoria: 3, empate: 1, categoria: 0x17, desempate: [3, 1, 2, 4], vagas: 2, premio: None, bits: Some(8) };
 
 /// Writes rules g into league this (no promotion/relegation, one leg, club type, no play-offs) and its round table from
 /// virtual +0x3c; returns 1.
@@ -1160,7 +1160,7 @@ pub(crate) const CQI12_COPA_DOS_CAMPEOES: Cqi12Regras = Cqi12Regras { vitoria: 3
 /// [pt] Grava as regras `g` na liga `this`: sobe/cai para nenhuma (+0x1c, +0x20 = −1), um turno (+0x3c = 1), o tipo 1
 /// (+0x42, clubes), sem play-offs nem rebaixamento (+0xbf, +0xc0, +0xc1 = 0); depois a tabela das rodadas da virtual
 /// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
-pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &Cqi12Regras, turnos: i16) -> u32 {
+pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &GroupStageRules, turnos: i16) -> u32 {
     let b = |o: usize, v: u8| *((this + o) as *mut u8) = v;
     b(0xc2, g.vitoria);
     b(0xc3, g.empate);
@@ -1192,7 +1192,7 @@ pub(crate) unsafe fn set_cup_league_rules(this: usize, g: &Cqi12Regras, turnos: 
 /// Checks after the original that the fields set_cup_league_rules writes have the planned values.
 ///
 /// [pt] O plano: os campos que `set_cup_league_rules` grava, lidos depois da original.
-pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &Cqi12Regras, r: u32) {
+pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupStageRules, r: u32) {
     let b = |o: usize| *((this + o) as *const u8);
     let lido = (b(0xc2), b(0xc3), b(0xc4), [b(0xc5), b(0xc6), b(0xc7), b(0xc8)], b(0xbe), [b(0xbf), b(0xc0), b(0xc1)], b(0x42),
         core::ptr::read_unaligned((this + 0x1c) as *const i32), core::ptr::read_unaligned((this + 0x20) as *const i32),
@@ -1213,7 +1213,7 @@ pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &Cqi12Re
 /// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa da italia");
-    let mut g = CQI12_COPA_DA_ITALIA;
+    let mut g = ITALIAN_CUP_GROUP_RULES;
     g.vitoria = 3; // cqi12: a vitória nos grupos da Copa da Itália
     g.categoria = 4; // cqi12: a categoria dos jogos da Copa da Itália
     set_cup_league_rules(this, &g, 1)
@@ -1223,7 +1223,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 
 /// Comparer for `ita_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_CUP_SET_UP_RULES)(this);
-    check_cup_league_rules("ita_cup_set_up_rules", this, &CQI12_COPA_DA_ITALIA, r);
+    check_cup_league_rules("ita_cup_set_up_rules", this, &ITALIAN_CUP_GROUP_RULES, r);
     r
 }
 
@@ -1236,14 +1236,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules(this: usize
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
     crate::comparacao::ramo("cqi_12 regras da copa da serie c");
     let turnos = 1i16; // cqi12: o turno único dos grupos da Série C
-    set_cup_league_rules(this, &CQI12_COPA_DA_SERIE_C, turnos)
+    set_cup_league_rules(this, &SERIE_C_CUP_RULES, turnos)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 /// Comparer for `ita_cup_set_up_rules_63d6e0` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_ita_cup_set_up_rules_63d6e0(this: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_ITA_CUP_SET_UP_RULES_63D6E0)(this);
-    check_cup_league_rules("ita_cup_set_up_rules_63d6e0", this, &CQI12_COPA_DA_SERIE_C, r);
+    check_cup_league_rules("ita_cup_set_up_rules_63d6e0", this, &SERIE_C_CUP_RULES, r);
     r
 }
 

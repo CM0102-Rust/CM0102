@@ -802,7 +802,7 @@ pub(crate) unsafe extern "C" fn comparar_player_setup_read_quoted_token(origem: 
 
 /// Os tipos de linha do player_setup.cfg (o texto no .rdata e o bit), na ordem da original (strncmp de 100); o último,
 /// AWOL (0xa6b2f8), dá 0x40, e nenhum, 0.
-pub(crate) const CQH9_TIPOS: [(usize, u32); 14] = [
+pub(crate) const PLAYER_SETUP_LINE_TYPES: [(usize, u32); 14] = [
     (0xa6b3a0, 1),      // INJURY
     (0xa6b390, 2),      // MANAGER_CONF
     (0xa6b384, 0x200),  // RETIREMENT
@@ -828,7 +828,7 @@ pub(crate) const CQH9_TIPOS: [(usize, u32); 14] = [
 /// MISCONDUCT 0x1000, FALSE_PASSPORT 0x800, ARSE 0x20, PRESET_TACTICS 0x2000, COLOURBLIND 0x400, GERMAN 0x80, AWOL 0x40;
 /// nenhum 0), pela aplicação das linhas (0x7a3a10) na criação do jogo.
 pub(crate) unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
-    for &(texto, bit) in CQH9_TIPOS.iter() {
+    for &(texto, bit) in PLAYER_SETUP_LINE_TYPES.iter() {
         if strncmp(nome, texto, 100) == 0 {
             crate::comparacao::ramo("cqh_9 tipo da linha");
             return bit;
@@ -3516,7 +3516,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_retire_record_assign(this: usize
 /// bate); nenhum: 0x4b. Pela aplicação das linhas (0x7a3a10) na criação do jogo. A devolução vale pelo al (a original
 /// deixa o resto do eax do strncmp).
 pub(crate) unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
-    for &(n, texto, tipo) in CQF9_LESOES.iter() {
+    for &(n, texto, tipo) in INJURY_NAMES.iter() {
         if strncmp(nome, texto, n) == 0 {
             crate::comparacao::ramo("cqf_9 lesao pelo nome");
             return tipo as u32; // cqf9: o tipo da lesão pelo nome

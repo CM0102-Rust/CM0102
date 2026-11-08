@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: os calendários Mineiro, Norte, Nordeste, Paranaense (as datas e os jogos de cada rodada da fase de pontos corridos e do mata-mata) (bra_reg_minas_gerais.cpp, bra_reg_north.cpp, bra_reg_northeast.cpp, bra_reg_parana.cpp) ----------
 
 /// O Mineiro, a liga: 22 rodadas (da 11/jan à 3/mai), 1430 bytes, 78 operações.
-const CQW2_MINEIRO_0: [Cqp11Op; 78] = [
+const CQW2_MINEIRO_0: [AsiaClubChampScheduleOp; 78] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -29,7 +29,7 @@ const CQW2_MINEIRO_0: [Cqp11Op; 78] = [
 ];
 
 /// O Mineiro, a fase 2: 1 rodadas (da 4/mai à 10/mai), 104 bytes, 18 operações.
-const CQW2_MINEIRO_1: [Cqp11Op; 18] = [
+const CQW2_MINEIRO_1: [AsiaClubChampScheduleOp; 18] = [
     Cqp11S(0, 4, 5, 0, 0), Cqp11J(0, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x18, 2), Cqp11W(0x1c, 2), Cqp11B(0x21, 2),
     Cqp11W(0x7, 0x96), Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x1a, 1),
     Cqp11W(0xf, 0x804), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0x55730),
@@ -37,11 +37,11 @@ const CQW2_MINEIRO_1: [Cqp11Op; 18] = [
 ];
 
 /// As fases da tabela de rodadas do Mineiro: a fase de pontos corridos (−1) (é liga): 22 rodadas, da 11/jan à 3/mai; a fase 2 (mata-mata ou fase final): 1 rodadas, da 4/mai à 10/mai.
-fn cqw2_mineiro_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw2_mineiro_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 22, extra: 0, extra_checa: false, tamanho: 0x596, linha: 0xa6,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 22, extra: 0, extra_checa: false, tamanho: 0x596, linha: 0xa6,
             ops: &CQW2_MINEIRO_0, nome: "cqw_2 mineiro liga" }),
-        2 => Some(Cqp11Fase { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13a,
+        2 => Some(ScheduleStage { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13a,
             ops: &CQW2_MINEIRO_1, nome: "cqw_2 mineiro fase 2" }),
         _ => None,
     }
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn comparar_cqw2_calendario_mineiro(this: usize, fase: 
 }
 
 /// O Norte, a liga: 18 rodadas (da 11/jan à 20/abr), 1170 bytes, 64 operações.
-const CQW2_NORTE_0: [Cqp11Op; 64] = [
+const CQW2_NORTE_0: [AsiaClubChampScheduleOp; 64] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -83,7 +83,7 @@ const CQW2_NORTE_0: [Cqp11Op; 64] = [
 ];
 
 /// O Norte, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW2_NORTE_1: [Cqp11Op; 36] = [
+const CQW2_NORTE_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -94,11 +94,11 @@ const CQW2_NORTE_1: [Cqp11Op; 36] = [
 ];
 
 /// As fases da tabela de rodadas do Norte: a fase de pontos corridos (−1) (é liga): 18 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw2_norte_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw2_norte_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
             ops: &CQW2_NORTE_0, nome: "cqw_2 norte liga" }),
-        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
+        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
             ops: &CQW2_NORTE_1, nome: "cqw_2 norte fase 0" }),
         _ => None,
     }
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn comparar_cqw2_calendario_norte(this: usize, fase: u3
 }
 
 /// O Nordeste, a liga: 15 rodadas (da 18/jan à 20/abr), 975 bytes, 56 operações.
-const CQW2_NORDESTE_0: [Cqp11Op; 56] = [
+const CQW2_NORDESTE_0: [AsiaClubChampScheduleOp; 56] = [
     Cqp11D(0, 0x12, 1, 0, 6, 2, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x19, 1, 0, 6, 1, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 4, 2, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0), Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0),
@@ -137,7 +137,7 @@ const CQW2_NORDESTE_0: [Cqp11Op; 56] = [
 ];
 
 /// O Nordeste, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW2_NORDESTE_1: [Cqp11Op; 36] = [
+const CQW2_NORDESTE_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -148,11 +148,11 @@ const CQW2_NORDESTE_1: [Cqp11Op; 36] = [
 ];
 
 /// As fases da tabela de rodadas do Nordeste: a fase de pontos corridos (−1) (é liga): 15 rodadas, da 18/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw2_nordeste_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw2_nordeste_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 15, extra: 0, extra_checa: false, tamanho: 0x3cf, linha: 0xa8,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 15, extra: 0, extra_checa: false, tamanho: 0x3cf, linha: 0xa8,
             ops: &CQW2_NORDESTE_0, nome: "cqw_2 nordeste liga" }),
-        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x118,
+        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x118,
             ops: &CQW2_NORDESTE_1, nome: "cqw_2 nordeste fase 0" }),
         _ => None,
     }
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn comparar_cqw2_calendario_nordeste(this: usize, fase:
 }
 
 /// O Paranaense, a liga: 22 rodadas (da 11/jan à 3/mai), 1430 bytes, 78 operações.
-const CQW2_PARANAENSE_0: [Cqp11Op; 78] = [
+const CQW2_PARANAENSE_0: [AsiaClubChampScheduleOp; 78] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -199,7 +199,7 @@ const CQW2_PARANAENSE_0: [Cqp11Op; 78] = [
 ];
 
 /// O Paranaense, a fase 2: 1 rodadas (da 4/mai à 10/mai), 104 bytes, 18 operações.
-const CQW2_PARANAENSE_1: [Cqp11Op; 18] = [
+const CQW2_PARANAENSE_1: [AsiaClubChampScheduleOp; 18] = [
     Cqp11S(0, 4, 5, 0, 0), Cqp11J(0, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x18, 2), Cqp11W(0x1c, 2), Cqp11B(0x21, 2),
     Cqp11W(0x7, 0x96), Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x1a, 1),
     Cqp11W(0xf, 0x804), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0x2ab98),
@@ -207,11 +207,11 @@ const CQW2_PARANAENSE_1: [Cqp11Op; 18] = [
 ];
 
 /// As fases da tabela de rodadas do Paranaense: a fase de pontos corridos (−1) (é liga): 22 rodadas, da 11/jan à 3/mai; a fase 2 (mata-mata ou fase final): 1 rodadas, da 4/mai à 10/mai.
-fn cqw2_paranaense_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw2_paranaense_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 22, extra: 0, extra_checa: false, tamanho: 0x596, linha: 0xa6,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 22, extra: 0, extra_checa: false, tamanho: 0x596, linha: 0xa6,
             ops: &CQW2_PARANAENSE_0, nome: "cqw_2 paranaense liga" }),
-        2 => Some(Cqp11Fase { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13a,
+        2 => Some(ScheduleStage { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13a,
             ops: &CQW2_PARANAENSE_1, nome: "cqw_2 paranaense fase 2" }),
         _ => None,
     }

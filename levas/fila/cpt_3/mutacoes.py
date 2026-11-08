@@ -3,7 +3,7 @@
 # a liga guardada na chave seguinte some da busca dos clubes (os jogos da liga nao saem) e o amistoso entre clubes da
 # mesma nacao tambem (os amistosos de pre-temporada e os marcados pela 0x5c2460). A Copa do Mundo na chave 1 continua
 # achada pelas selecoes (chaves 0 e 1): pega so pela simulacao rapida (0x6b66a0, quando ela chega a 0x48dd70) e pelo peso
-# dos pontos do ranking (fora da impressao) - pode escapar. Chamada a cada jogo procurado: sem contador.
+# dos pontos do ranking (fora da impressao) - pode escapar. TapeCall a cada jogo procurado: sem contador.
 MUTACOES = [
     ('cpt3_liga_na_chave_seguinte', 'Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: a nacao-chave da competicao',
      'Some(k) => (*((0xb63d74 + 72 * k) as *const u8)).wrapping_add(1), // mutacao: a chave seguinte'),

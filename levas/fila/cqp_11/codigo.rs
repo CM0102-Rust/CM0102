@@ -7,7 +7,7 @@
 /// anos, dia da semana, horário, mando), `E` um dia do confronto (0x521f10: rodada, vaga, dia da semana, horário,
 /// código, mando) e `B`/`W`/`X` a gravação de um byte/palavra/dword no deslocamento dado da tabela.
 #[derive(Clone, Copy)]
-enum Cqp11Op {
+enum AsiaClubChampScheduleOp {
     D(i32, i32, i32, i32, i32, i32, i32),
     L(i32, i32, i32, i32, i32, u32),
     S(u32, u32, u32, u32, u32),
@@ -17,27 +17,27 @@ enum Cqp11Op {
     W(usize, u16),
     X(usize, u32),
 }
-use Cqp11Op::{B as Cqp11B, D as Cqp11D, E as Cqp11E, J as Cqp11J, L as Cqp11L, S as Cqp11S, W as Cqp11W, X as Cqp11X};
+use AsiaClubChampScheduleOp::{B as Cqp11B, D as Cqp11D, E as Cqp11E, J as Cqp11J, L as Cqp11L, S as Cqp11S, W as Cqp11W, X as Cqp11X};
 
 /// Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
 /// rodadas, o extra (só se o ponteiro não é nulo, quando `extra_checa`), o tamanho da tabela, a linha da caixa sem
 /// memória, as operações e o nome do contador. `None`: a fase devolve 0 sem gravar nada.
 #[derive(Clone, Copy)]
-struct Cqp11Fase {
+struct ScheduleStage {
     liga: i32,
     rodadas: i16,
     extra: i16,
     extra_checa: bool,
     tamanho: u32,
     linha: u32,
-    ops: &'static [Cqp11Op],
+    ops: &'static [AsiaClubChampScheduleOp],
     nome: &'static str,
 }
 
 /// Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-unsafe fn create_round_table(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+unsafe fn create_round_table(this: usize, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -87,7 +87,7 @@ unsafe fn create_round_table(this: usize, f: Option<Cqp11Fase>, rodadas: *mut i1
 }
 
 /// Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
-unsafe fn written_round_table_bytes(ops: &[Cqp11Op], t: usize) -> Vec<u8> {
+unsafe fn written_round_table_bytes(ops: &[AsiaClubChampScheduleOp], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
     for op in ops {
@@ -114,7 +114,7 @@ unsafe fn written_round_table_bytes(ops: &[Cqp11Op], t: usize) -> Vec<u8> {
 /// Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<Cqp11Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -140,7 +140,7 @@ unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, f: Option<C
 }
 
 /// A Liga dos Campeões asiática, eliminatórias de cada zona: 1ª rodada sorteada em 1/8 e jogada em 23/8, 2ª em 14/9 e 20/9, ida e volta.
-const CQP11_ASIA_CLUBES_MATA: [Cqp11Op; 36] = [
+const ASIAN_CHAMPIONS_LEAGUE_ZONE_KNOCKOUT_OPS: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 1, 7, 0, 5), Cqp11J(0, 0x17, 7, 0, 2, 2, 0), Cqp11W(0x7, 0xa), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0), Cqp11B(0x17, 4), Cqp11W(0x18, 0x10), Cqp11W(0x1a, 8), Cqp11W(0x1c, 0x10), Cqp11W(0xf, 0x83),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 0x15), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -150,14 +150,14 @@ const CQP11_ASIA_CLUBES_MATA: [Cqp11Op; 36] = [
     Cqp11X(0xc8, 0), Cqp11X(0xcc, 0),
 ];
 /// A Liga dos Campeões asiática, grupos finais: 3 rodadas (21, 23 e 25 de março do ano seguinte, valor 1) com os jogos de cada rodada.
-const CQP11_ASIA_CLUBES_GRUPOS: [Cqp11Op; 12] = [
+const ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS: [AsiaClubChampScheduleOp; 12] = [
     Cqp11D(0, 0x15, 2, 1, 2, 1, 1), Cqp11L(0, 0, 2, 2, 3, 0x10), Cqp11L(0, 1, 2, 1, 3, 0x10),
     Cqp11L(0, 2, -1, -1, -1, 0), Cqp11D(1, 0x17, 2, 1, 4, 1, 1), Cqp11L(1, 0, 4, 2, 3, 0x10),
     Cqp11L(1, 1, 4, 1, 3, 0x10), Cqp11L(1, 2, -1, -1, -1, 0), Cqp11D(2, 0x19, 2, 1, 6, 1, 1),
     Cqp11L(2, 0, 6, 2, 3, 0x10), Cqp11L(2, 1, 6, 1, 3, 0x10), Cqp11L(2, 2, -1, -1, -1, 0),
 ];
 /// A Liga dos Campeões asiática, fase final em maio do ano seguinte: semifinal (com os confrontos 0x521f10), terceiro lugar e final.
-const CQP11_ASIA_CLUBES_FINAL: [Cqp11Op; 57] = [
+const ASIAN_CHAMPIONS_LEAGUE_FINALS: [AsiaClubChampScheduleOp; 57] = [
     Cqp11S(0, 0x1a, 2, 1, 0), Cqp11J(0, 0x18, 4, 1, 3, 2, 1), Cqp11E(0, 0, 3, 1, 3, 0x10),
     Cqp11E(0, 1, 3, 2, 3, 0x10), Cqp11E(0, 2, -1, -1, -1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x383), Cqp11B(0x17, 6), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0),
@@ -171,7 +171,7 @@ const CQP11_ASIA_CLUBES_FINAL: [Cqp11Op; 57] = [
     Cqp11X(0x12c, 0), Cqp11X(0x130, 0), Cqp11X(0x134, 0),
 ];
 /// A Recopa asiática, eliminatórias: 1ª rodada em 23/8, 2ª em 20/9, quartas em 24 de março do ano seguinte, ida e volta.
-const CQP11_ASIA_RECOPA_MATA: [Cqp11Op; 54] = [
+const ASIAN_CUP_WINNERS_KNOCKOUT_OPS: [AsiaClubChampScheduleOp; 54] = [
     Cqp11S(0, 1, 7, 0, 5), Cqp11J(0, 0x17, 7, 0, 2, 2, 0), Cqp11W(0x7, 0xa), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0), Cqp11B(0x17, 4), Cqp11W(0x18, 0x10), Cqp11W(0x1a, 8), Cqp11W(0x1c, 0x10), Cqp11W(0xf, 0x83),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 0x15), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -184,7 +184,7 @@ const CQP11_ASIA_RECOPA_MATA: [Cqp11Op; 54] = [
     Cqp11X(0x12c, 0), Cqp11X(0x130, 0), Cqp11X(0x134, 0),
 ];
 /// A Recopa asiática, fase final em maio do ano seguinte: semifinal, terceiro lugar e final (e a cauda comum +0x12c..+0x137).
-const CQP11_ASIA_RECOPA_FINAL: [Cqp11Op; 57] = [
+const ASIAN_CUP_WINNERS_CUP_FINALS: [AsiaClubChampScheduleOp; 57] = [
     Cqp11S(0, 0xf, 3, 1, 6), Cqp11J(0, 0x18, 4, 1, 3, 2, 1), Cqp11E(0, 0, 3, 1, 3, 0x10), Cqp11E(0, 1, 3, 2, 3, 0x10),
     Cqp11E(0, 2, -1, -1, -1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0x383),
     Cqp11B(0x17, 6), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0), Cqp11W(0x1e, 0),
@@ -198,7 +198,7 @@ const CQP11_ASIA_RECOPA_FINAL: [Cqp11Op; 57] = [
     Cqp11X(0x130, 0), Cqp11X(0x134, 0),
 ];
 /// O LDV Vans Trophy, cada chave: 5 rodadas de dezembro a março do ano seguinte, a última (a final da chave) em ida e volta.
-const CQP11_TROFEU_CHAVES: [Cqp11Op; 90] = [
+const LDV_VANS_TROPHY_SECTION_OPS: [AsiaClubChampScheduleOp; 90] = [
     Cqp11S(0, 7, 0xa, 0, 5), Cqp11J(0, 0xa, 0xb, 0, 1, 2, 0), Cqp11W(0x7, 0xa), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x83), Cqp11B(0x17, 4), Cqp11W(0x18, 0x18), Cqp11W(0x1a, 0xc), Cqp11W(0x1c, 0x18), Cqp11W(0xf, 0),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 1), Cqp11B(0x22, 0), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -217,7 +217,7 @@ const CQP11_TROFEU_CHAVES: [Cqp11Op; 90] = [
     Cqp11B(0x1c0, 0), Cqp11B(0x1c1, 2), Cqp11B(0x1c2, 7), Cqp11X(0x1fc, 0), Cqp11X(0x200, 0), Cqp11X(0x204, 0),
 ];
 /// O LDV Vans Trophy, a final: sorteio em 12/3 e jogo em 20/4 do ano seguinte, mando 4 (estádio neutro [inferência]).
-const CQP11_TROFEU_FINAL: [Cqp11Op; 18] = [
+const LDV_VANS_TROPHY_FINAL: [AsiaClubChampScheduleOp; 18] = [
     Cqp11S(0, 0xc, 2, 1, 3), Cqp11J(0, 0x14, 3, 1, 6, 1, 4), Cqp11W(0x7, 0x96), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x83), Cqp11B(0x17, 6), Cqp11W(0x18, 2), Cqp11W(0x1a, 1), Cqp11W(0x1c, 2), Cqp11W(0xf, 0),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 1), Cqp11B(0x22, 0), Cqp11X(0x5c, 0), Cqp11X(0x60, 0xffff_ffff),
@@ -227,15 +227,15 @@ const CQP11_TROFEU_FINAL: [Cqp11Op; 18] = [
 /// A Liga dos Campeões asiática [inferência: o Campeonato Asiático de Clubes], as fases: −1 e 0 as eliminatórias de
 /// cada zona (2 rodadas de ida e volta em agosto e setembro), 1 e 2 os grupos finais (3 rodadas em março), 3 a fase
 /// final (semifinal, terceiro lugar e final em maio).
-fn asian_club_champ_stage(fase: u32) -> Option<Cqp11Fase> {
+fn asian_club_champ_stage(fase: u32) -> Option<ScheduleStage> {
     let f = fase as u8 as i8;
     match f {
-        -1 | 0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0xd0, linha: 0xc5,
-            ops: &CQP11_ASIA_CLUBES_MATA, nome: "cqp_11 eliminatorias da liga dos campeoes asiatica" }),
-        1 | 2 => Some(Cqp11Fase { liga: 1, rodadas: 3, extra: 0x482 + (f != 1) as i16, extra_checa: false, tamanho: 0xc3, linha: 0x103,
-            ops: &CQP11_ASIA_CLUBES_GRUPOS, nome: "cqp_11 grupos da liga dos campeoes asiatica" }),
-        3 => Some(Cqp11Fase { liga: 0, rodadas: 3, extra: 0, extra_checa: true, tamanho: 0x138, linha: 0x125,
-            ops: &CQP11_ASIA_CLUBES_FINAL, nome: "cqp_11 final da liga dos campeoes asiatica" }),
+        -1 | 0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0xd0, linha: 0xc5,
+            ops: &ASIAN_CHAMPIONS_LEAGUE_ZONE_KNOCKOUT_OPS, nome: "cqp_11 eliminatorias da liga dos campeoes asiatica" }),
+        1 | 2 => Some(ScheduleStage { liga: 1, rodadas: 3, extra: 0x482 + (f != 1) as i16, extra_checa: false, tamanho: 0xc3, linha: 0x103,
+            ops: &ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS, nome: "cqp_11 grupos da liga dos campeoes asiatica" }),
+        3 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0, extra_checa: true, tamanho: 0x138, linha: 0x125,
+            ops: &ASIAN_CHAMPIONS_LEAGUE_FINALS, nome: "cqp_11 final da liga dos campeoes asiatica" }),
         _ => None,
     }
 }
@@ -254,13 +254,13 @@ unsafe extern "thiscall" fn comparar_asia_club_champ_create_round_table(this: us
 
 /// A Recopa asiática, as fases: −1 e 0 as eliminatórias de cada zona (3 rodadas de agosto a março), 1 a fase final
 /// (semifinal, terceiro lugar e final em maio).
-fn asian_cup_winners_stage(fase: u32) -> Option<Cqp11Fase> {
+fn asian_cup_winners_stage(fase: u32) -> Option<ScheduleStage> {
     let f = fase as u8 as i8;
     match f {
-        -1 | 0 => Some(Cqp11Fase { liga: 0, rodadas: 3, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0x138, linha: 0xc6,
-            ops: &CQP11_ASIA_RECOPA_MATA, nome: "cqp_11 eliminatorias da recopa asiatica" }),
-        1 => Some(Cqp11Fase { liga: 0, rodadas: 3, extra: 0, extra_checa: true, tamanho: 0x138, linha: 0x112,
-            ops: &CQP11_ASIA_RECOPA_FINAL, nome: "cqp_11 final da recopa asiatica" }),
+        -1 | 0 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0x480 + (f != -1) as i16, extra_checa: false, tamanho: 0x138, linha: 0xc6,
+            ops: &ASIAN_CUP_WINNERS_KNOCKOUT_OPS, nome: "cqp_11 eliminatorias da recopa asiatica" }),
+        1 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0, extra_checa: true, tamanho: 0x138, linha: 0x112,
+            ops: &ASIAN_CUP_WINNERS_CUP_FINALS, nome: "cqp_11 final da recopa asiatica" }),
         _ => None,
     }
 }
@@ -279,13 +279,13 @@ unsafe extern "thiscall" fn comparar_asia_cup_winner_create_round_table(this: us
 
 /// O LDV Vans Trophy (o troféu da liga inglesa de baixo), as fases: −1 e 0 as chaves do Norte e do Sul (5 rodadas em
 /// jogo único de dezembro a fevereiro e a final da chave em ida e volta em março), 1 a final (abril, mando 4).
-fn ldv_trophy_stage(fase: u32) -> Option<Cqp11Fase> {
+fn ldv_trophy_stage(fase: u32) -> Option<ScheduleStage> {
     let f = fase as u8 as i8;
     match f {
-        -1 | 0 => Some(Cqp11Fase { liga: 0, rodadas: 5, extra: 0x41d + (f != -1) as i16, extra_checa: false, tamanho: 0x208, linha: 0xca,
-            ops: &CQP11_TROFEU_CHAVES, nome: "cqp_11 chaves do trofeu" }),
-        1 => Some(Cqp11Fase { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13d,
-            ops: &CQP11_TROFEU_FINAL, nome: "cqp_11 final do trofeu" }),
+        -1 | 0 => Some(ScheduleStage { liga: 0, rodadas: 5, extra: 0x41d + (f != -1) as i16, extra_checa: false, tamanho: 0x208, linha: 0xca,
+            ops: &LDV_VANS_TROPHY_SECTION_OPS, nome: "cqp_11 chaves do trofeu" }),
+        1 => Some(ScheduleStage { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13d,
+            ops: &LDV_VANS_TROPHY_FINAL, nome: "cqp_11 final do trofeu" }),
         _ => None,
     }
 }

@@ -17,7 +17,7 @@ MUTACOES = [
     ('cqc12_reservas_em_fevereiro', '    if is_today(dma(pt, 1, 0, ano, u32::MAX), hoje) // cqc12: 1º de janeiro',
      '    if is_today(dma(pt, 1, 1, ano, u32::MAX), hoje) // mutacao: 1o de fevereiro',
      'cqc_12 refaz as reservas'),
-    ('cqc12_vaga23_goleiro', '            c[i] = CQC12_EXTRAS[i - 22]; // cqc12: as vagas da correção',
+    ('cqc12_vaga23_goleiro', '            c[i] = SQUAD_SLOTS_24_EXTRAS[i - 22]; // cqc12: as vagas da correção',
      '            c[i] = 1; // mutacao: goleiro',
      'cqc_12 correção do elenco de 23'),
     ('cqc12_idade_do_sub21', '    if t == 2 && cqc12_b(j + 0x18) as i8 > 0x17 { // cqc12: a idade do sub-21',

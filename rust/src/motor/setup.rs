@@ -77,7 +77,7 @@ pub(crate) unsafe fn convert_staff_state(fonte: usize, tam: usize, n: i32) {
 
 /// Como o construtor de um subsistema é chamado (thiscall, `this` = o `new`).
 #[derive(Clone, Copy)]
-pub(crate) enum ArgDaCarga {
+pub(crate) enum SubsystemCtorArg {
     /// (this, caminho do save)
     Caminho,
     /// (this)
@@ -95,56 +95,56 @@ pub(crate) enum ArgDaCarga {
 /// `Rotina(f, linha)`: cdecl() que dá erro na `linha` se devolver 0 (linha 0: sem conferência), ou
 /// `Objeto(tamanho do new, construtor, global, linha do erro se o global ficar 0, argumentos)`.
 #[derive(Clone, Copy)]
-pub(crate) enum PassoDaCarga {
+pub(crate) enum LoadStep {
     Rotina(usize, u32),
-    Objeto(u32, usize, usize, u32, ArgDaCarga),
+    Objeto(u32, usize, usize, u32, SubsystemCtorArg),
 }
 
 /// Os passos 4..=0x2d da carga, na ordem da original, e o último (PunditList), que repete o 0x2d.
-pub(crate) const PASSOS_DA_CARGA: [PassoDaCarga; 0x2b] = [
-    PassoDaCarga::Rotina(0x539750, 0),                                      // 4
-    PassoDaCarga::Rotina(0x667150, 0x2555),                                 // 5 nações-chave
-    PassoDaCarga::Rotina(0x669140, 0x256c),                                 // 6
-    PassoDaCarga::Objeto(0x609, 0x893dc0, G_TACTICS, 0x2581, ArgDaCarga::Caminho), // 7 Tactics
-    PassoDaCarga::Objeto(0x10, 0x5fb430, G_HUMAN_MANAGER, 0x2596, ArgDaCarga::Caminho),  // 8 HUMAN_MANAGER
-    PassoDaCarga::Objeto(0xe8, 0x7f6760, G_SCOUT_MANAGER, 0x25d0, ArgDaCarga::Caminho),  // 9 SCOUT_MANAGER
-    PassoDaCarga::Objeto(0x14, 0x785b20, G_NEWS, 0x25e5, ArgDaCarga::Caminho),  // 0xa News
-    PassoDaCarga::Objeto(0x3507, 0x5c1f80, G_FRIENDLY, 0x25fa, ArgDaCarga::Sozinho), // 0xb Friendly
-    PassoDaCarga::Objeto(0x698, 0x903360, G_UEFA_SEEDING, 0x260f, ArgDaCarga::Sozinho),  // 0xc UefaSeeding
-    PassoDaCarga::Objeto(0x75, 0x4c5fe0, G_CONMEBOL_SEEDING, 0x2624, ArgDaCarga::Sozinho),   // 0xd ConmebolSeeding
-    PassoDaCarga::Objeto(0x18, 0x868390, G_STAFF_RECORDS, 0x2639, ArgDaCarga::Caminho),   // 0xe Staff_Records
-    PassoDaCarga::Objeto(0x20, 0x729000, G_MATCH_STATS, 0x264e, ArgDaCarga::Estatisticas), // 0xf Match_Stats
-    PassoDaCarga::Objeto(0x30, 0x444520, G_CLUB_RECORDS, 0x2663, ArgDaCarga::Caminho),   // 0x10 Club_Records
-    PassoDaCarga::Objeto(0x48, 0x7bfd50, G_PLAYER_STATS, 0x2678, ArgDaCarga::Caminho),   // 0x11 PlayerStats
-    PassoDaCarga::Objeto(0x10, 0x442ab0, G_CLUB_HISTORY, 0x268d, ArgDaCarga::Caminho),   // 0x12 Club_History
-    PassoDaCarga::Objeto(6, 0x5f97c0, G_HOST_COUNTRY, 0x26a2, ArgDaCarga::Sozinho),      // 0x13 HostCountry
-    PassoDaCarga::Objeto(0x2a, 0x5554a0, G_DISCIPLINE, 0x26b7, ArgDaCarga::Caminho),   // 0x14 Discipline
-    PassoDaCarga::Objeto(0xe0, 0x413180, G_AWARD_MANAGER, 0x26cc, ArgDaCarga::Caminho),   // 0x15 AWARD_MANAGER
-    PassoDaCarga::Objeto(0xc, 0x5a4fc0, G_FINE, 0x26e0, ArgDaCarga::Caminho),    // 0x16 Fine
-    PassoDaCarga::Objeto(0x10, 0x418440, G_AWOL, 0x26f4, ArgDaCarga::Caminho),   // 0x17 AWOL
-    PassoDaCarga::Objeto(8, 0x5697e0, G_DISPUTE, 0x2708, ArgDaCarga::Caminho),      // 0x18 DISPUTE
-    PassoDaCarga::Objeto(0x1070, 0x794ad0, G_NOTES, 0x271b, ArgDaCarga::Caminho), // 0x19 Notes
-    PassoDaCarga::Objeto(0x2c, 0x62a680, G_INJURY, 0x272f, ArgDaCarga::Caminho),   // 0x1a Injury
-    PassoDaCarga::Objeto(0x3a, 0x76a4e0, G_NATIONAL_TEAMS, 0x2744, ArgDaCarga::Caminho),   // 0x1b NationalTeams
-    PassoDaCarga::Objeto(0x6a, 0x90d140, G_VIRTUAL_STAFF, 0x2759, ArgDaCarga::Sozinho),   // 0x1c VIRTUAL_STAFF
-    PassoDaCarga::Objeto(0x19, 0x85b670, G_STADIUM, 0x276e, ArgDaCarga::Sozinho),   // 0x1d Stadium
-    PassoDaCarga::Objeto(0x1184, 0x5a9cf0, G_FIXTURE_MANAGER, 0x2783, ArgDaCarga::Calendario), // 0x1e FIXTURE_MANAGER
-    PassoDaCarga::Rotina(0x669180, 0x2797),                                 // 0x1f competições (key_nation_create_all_comps)
-    PassoDaCarga::Rotina(0x8386f0, 0x27ab),                                 // 0x20 build_comp_object_table
-    PassoDaCarga::Objeto(2, 0x859aa0, G_SQUAD_MANAGER, 0x27c0, ArgDaCarga::Caminho),      // 0x21 SQUAD_MANAGER
-    PassoDaCarga::Objeto(0xab, 0x7e5fc0, G_RESERVE_COMP, 0x27d5, ArgDaCarga::Caminho),   // 0x22 (depois 0x7e61c0)
-    PassoDaCarga::Objeto(4, 0x59a370, G_FINANCE_TABLE, 0x27ed, ArgDaCarga::Caminho),      // 0x23 FinanceTable
-    PassoDaCarga::Objeto(0x3c, 0x4c7040, G_CONTRACT_MANAGER, 0x2802, ArgDaCarga::Caminho),   // 0x24 CONTRACT_MANAGER
-    PassoDaCarga::Objeto(0x94a, 0x8bba30, G_TRANSFER_MANAGER, 0x2817, ArgDaCarga::Caminho),  // 0x25 TRANSFER_MANAGER
-    PassoDaCarga::Objeto(0x60, 0x7a5380, G_PLAYER_REGEN, 0x282c, ArgDaCarga::Caminho),   // 0x26 PLAYER_REGEN
-    PassoDaCarga::Objeto(0x1c, 0x68dbf0, G_MANAGER_MANAGER, 0x2840, ArgDaCarga::Caminho),   // 0x27 MANAGER_MANAGER
-    PassoDaCarga::Objeto(0x18, 0x72b1d0, G_MEDIA, 0x2855, ArgDaCarga::Caminho),   // 0x28 Media
-    PassoDaCarga::Objeto(0x40, 0x5af630, G_FOG_OF_WAR, 0x286a, ArgDaCarga::Caminho),   // 0x29 FOG_OF_WAR (confere o de Media)
-    PassoDaCarga::Objeto(0x10, 0x79b580, G_OFFICIALS_MANAGER, 0x287f, ArgDaCarga::Caminho),   // 0x2a OfficialsManager
-    PassoDaCarga::Objeto(8, 0x84b940, G_SIMULATED_STATS, 0x2894, ArgDaCarga::Caminho),      // 0x2b SimulatedStats
-    PassoDaCarga::Objeto(0xc, 0x9226c0, G_WEATHER, 0x28a9, ArgDaCarga::Sozinho),    // 0x2c Weather
-    PassoDaCarga::Objeto(0x688f, 0x8b0ec0, G_TRAINING_MANAGER, 0x28be, ArgDaCarga::Caminho), // 0x2d TRAINING_MANAGER
-    PassoDaCarga::Objeto(0xa, 0x7da190, G_PUNDIT_LIST, 0x28d9, ArgDaCarga::Idioma),     // 0x2d de novo: PunditList
+pub(crate) const LOAD_STEPS: [LoadStep; 0x2b] = [
+    LoadStep::Rotina(0x539750, 0),                                      // 4
+    LoadStep::Rotina(0x667150, 0x2555),                                 // 5 nações-chave
+    LoadStep::Rotina(0x669140, 0x256c),                                 // 6
+    LoadStep::Objeto(0x609, 0x893dc0, G_TACTICS, 0x2581, SubsystemCtorArg::Caminho), // 7 Tactics
+    LoadStep::Objeto(0x10, 0x5fb430, G_HUMAN_MANAGER, 0x2596, SubsystemCtorArg::Caminho),  // 8 HUMAN_MANAGER
+    LoadStep::Objeto(0xe8, 0x7f6760, G_SCOUT_MANAGER, 0x25d0, SubsystemCtorArg::Caminho),  // 9 SCOUT_MANAGER
+    LoadStep::Objeto(0x14, 0x785b20, G_NEWS, 0x25e5, SubsystemCtorArg::Caminho),  // 0xa News
+    LoadStep::Objeto(0x3507, 0x5c1f80, G_FRIENDLY, 0x25fa, SubsystemCtorArg::Sozinho), // 0xb Friendly
+    LoadStep::Objeto(0x698, 0x903360, G_UEFA_SEEDING, 0x260f, SubsystemCtorArg::Sozinho),  // 0xc UefaSeeding
+    LoadStep::Objeto(0x75, 0x4c5fe0, G_CONMEBOL_SEEDING, 0x2624, SubsystemCtorArg::Sozinho),   // 0xd ConmebolSeeding
+    LoadStep::Objeto(0x18, 0x868390, G_STAFF_RECORDS, 0x2639, SubsystemCtorArg::Caminho),   // 0xe Staff_Records
+    LoadStep::Objeto(0x20, 0x729000, G_MATCH_STATS, 0x264e, SubsystemCtorArg::Estatisticas), // 0xf Match_Stats
+    LoadStep::Objeto(0x30, 0x444520, G_CLUB_RECORDS, 0x2663, SubsystemCtorArg::Caminho),   // 0x10 Club_Records
+    LoadStep::Objeto(0x48, 0x7bfd50, G_PLAYER_STATS, 0x2678, SubsystemCtorArg::Caminho),   // 0x11 PlayerStats
+    LoadStep::Objeto(0x10, 0x442ab0, G_CLUB_HISTORY, 0x268d, SubsystemCtorArg::Caminho),   // 0x12 Club_History
+    LoadStep::Objeto(6, 0x5f97c0, G_HOST_COUNTRY, 0x26a2, SubsystemCtorArg::Sozinho),      // 0x13 HostCountry
+    LoadStep::Objeto(0x2a, 0x5554a0, G_DISCIPLINE, 0x26b7, SubsystemCtorArg::Caminho),   // 0x14 Discipline
+    LoadStep::Objeto(0xe0, 0x413180, G_AWARD_MANAGER, 0x26cc, SubsystemCtorArg::Caminho),   // 0x15 AWARD_MANAGER
+    LoadStep::Objeto(0xc, 0x5a4fc0, G_FINE, 0x26e0, SubsystemCtorArg::Caminho),    // 0x16 Fine
+    LoadStep::Objeto(0x10, 0x418440, G_AWOL, 0x26f4, SubsystemCtorArg::Caminho),   // 0x17 AWOL
+    LoadStep::Objeto(8, 0x5697e0, G_DISPUTE, 0x2708, SubsystemCtorArg::Caminho),      // 0x18 DISPUTE
+    LoadStep::Objeto(0x1070, 0x794ad0, G_NOTES, 0x271b, SubsystemCtorArg::Caminho), // 0x19 Notes
+    LoadStep::Objeto(0x2c, 0x62a680, G_INJURY, 0x272f, SubsystemCtorArg::Caminho),   // 0x1a Injury
+    LoadStep::Objeto(0x3a, 0x76a4e0, G_NATIONAL_TEAMS, 0x2744, SubsystemCtorArg::Caminho),   // 0x1b NationalTeams
+    LoadStep::Objeto(0x6a, 0x90d140, G_VIRTUAL_STAFF, 0x2759, SubsystemCtorArg::Sozinho),   // 0x1c VIRTUAL_STAFF
+    LoadStep::Objeto(0x19, 0x85b670, G_STADIUM, 0x276e, SubsystemCtorArg::Sozinho),   // 0x1d Stadium
+    LoadStep::Objeto(0x1184, 0x5a9cf0, G_FIXTURE_MANAGER, 0x2783, SubsystemCtorArg::Calendario), // 0x1e FIXTURE_MANAGER
+    LoadStep::Rotina(0x669180, 0x2797),                                 // 0x1f competições (key_nation_create_all_comps)
+    LoadStep::Rotina(0x8386f0, 0x27ab),                                 // 0x20 build_comp_object_table
+    LoadStep::Objeto(2, 0x859aa0, G_SQUAD_MANAGER, 0x27c0, SubsystemCtorArg::Caminho),      // 0x21 SQUAD_MANAGER
+    LoadStep::Objeto(0xab, 0x7e5fc0, G_RESERVE_COMP, 0x27d5, SubsystemCtorArg::Caminho),   // 0x22 (depois 0x7e61c0)
+    LoadStep::Objeto(4, 0x59a370, G_FINANCE_TABLE, 0x27ed, SubsystemCtorArg::Caminho),      // 0x23 FinanceTable
+    LoadStep::Objeto(0x3c, 0x4c7040, G_CONTRACT_MANAGER, 0x2802, SubsystemCtorArg::Caminho),   // 0x24 CONTRACT_MANAGER
+    LoadStep::Objeto(0x94a, 0x8bba30, G_TRANSFER_MANAGER, 0x2817, SubsystemCtorArg::Caminho),  // 0x25 TRANSFER_MANAGER
+    LoadStep::Objeto(0x60, 0x7a5380, G_PLAYER_REGEN, 0x282c, SubsystemCtorArg::Caminho),   // 0x26 PLAYER_REGEN
+    LoadStep::Objeto(0x1c, 0x68dbf0, G_MANAGER_MANAGER, 0x2840, SubsystemCtorArg::Caminho),   // 0x27 MANAGER_MANAGER
+    LoadStep::Objeto(0x18, 0x72b1d0, G_MEDIA, 0x2855, SubsystemCtorArg::Caminho),   // 0x28 Media
+    LoadStep::Objeto(0x40, 0x5af630, G_FOG_OF_WAR, 0x286a, SubsystemCtorArg::Caminho),   // 0x29 FOG_OF_WAR (confere o de Media)
+    LoadStep::Objeto(0x10, 0x79b580, G_OFFICIALS_MANAGER, 0x287f, SubsystemCtorArg::Caminho),   // 0x2a OfficialsManager
+    LoadStep::Objeto(8, 0x84b940, G_SIMULATED_STATS, 0x2894, SubsystemCtorArg::Caminho),      // 0x2b SimulatedStats
+    LoadStep::Objeto(0xc, 0x9226c0, G_WEATHER, 0x28a9, SubsystemCtorArg::Sozinho),    // 0x2c Weather
+    LoadStep::Objeto(0x688f, 0x8b0ec0, G_TRAINING_MANAGER, 0x28be, SubsystemCtorArg::Caminho), // 0x2d TRAINING_MANAGER
+    LoadStep::Objeto(0xa, 0x7da190, G_PUNDIT_LIST, 0x28d9, SubsystemCtorArg::Idioma),     // 0x2d de novo: PunditList
 ];
 
 /// Looks for "<root>cm0102.exe" on each CD drive: with `exigir` (start of load, honouring no-CD patches in the exe)
@@ -234,7 +234,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
 ///   dos clubes ([0xae2d14], 6 × [0xae2d18] = [0xae235c]; |v| < 0x3e022: −1, 0, 0) e a reputação
 ///   ([0xae2d1c], 4 × [0xae235c]; |v| < 0x3e022 não lê e chama 0x53db40(1)). Leitura que falha: "Load
 ///   Game Error" com a linha e o texto do campo, item fechado; sem memória: "Error" e o jogo fecha.
-/// - Os passos 4..=0x2d (`PASSOS_DA_CARGA`, disco e memória antes de cada um): no 5, a data do jogo
+/// - Os passos 4..=0x2d (`LOAD_STEPS`, disco e memória antes de cada um): no 5, a data do jogo
 ///   (0x417c10 em 0xae2c90); antes do 9, os 16 últimos técnicos com +0x5f = 5 são desfeitos (News,
 ///   HUMAN_MANAGER, CONTRACT_MANAGER, NationalTeams, Staff_Records; nomes vazios, data 1/0/1966, +0x24 e
 ///   +0x39 = 0, 0x7ff990); depois do 0x22, 0x7e61c0; antes do último, |v| < 0x3e032 passa cada pessoa
@@ -437,12 +437,12 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
         }
     }
     fechar_item(&mut z);
-    for (i, step_towards) in PASSOS_DA_CARGA.iter().enumerate() {
+    for (i, step_towards) in LOAD_STEPS.iter().enumerate() {
         let k = (i as u32 + 4).min(0x2d);
         if k == 9 {
             undo_holiday_managers();
         }
-        if i == PASSOS_DA_CARGA.len() - 1 && v < 0x3e032 {
+        if i == LOAD_STEPS.len() - 1 && v < 0x3e032 {
             let acertar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_PLAYER_ATTRIBUTES);
             for p in 0..u(G_STAFF_COUNT) as i32 {
                 acertar(u(G_STAFF_TABLE) as usize + 0x6e * p as usize);
@@ -453,7 +453,7 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
         }
         barra(G_SCREEN_MANAGER, texto.as_ptr(), k, 0x2d, -1);
         match *step_towards {
-            PassoDaCarga::Rotina(f, linha) => {
+            LoadStep::Rotina(f, linha) => {
                 let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(f);
                 if f() == 0 && linha != 0 {
                     setup_warning(linha);
@@ -464,31 +464,31 @@ pub(crate) unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
                     copia_data(G_CURRENT_DATE, tmp.as_mut_ptr(), data_do_jogo.as_ptr() as usize);
                 }
             }
-            PassoDaCarga::Objeto(tam, construtor, global, linha, arg) => {
+            LoadStep::Objeto(tam, construtor, global, linha, arg) => {
                 let p = novo(tam);
                 let o = if p == 0 {
                     0
                 } else {
                     match arg {
-                        ArgDaCarga::Caminho => {
+                        SubsystemCtorArg::Caminho => {
                             let f: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(construtor);
                             f(p, caminho)
                         }
-                        ArgDaCarga::Sozinho => {
+                        SubsystemCtorArg::Sozinho => {
                             let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(construtor);
                             f(p)
                         }
-                        ArgDaCarga::Estatisticas => {
+                        SubsystemCtorArg::Estatisticas => {
                             let f: unsafe extern "thiscall" fn(usize, *const u8, u32) -> usize = core::mem::transmute(construtor);
                             f(p, caminho, 0x2710)
                         }
-                        ArgDaCarga::Calendario => {
+                        SubsystemCtorArg::Calendario => {
                             // a original empurra um dword com o ano nos 16 bits baixos e sobra de pilha nos
                             // altos; o construtor só usa a palavra (0x54cfe0 faz & 0xffff)
                             let f: unsafe extern "thiscall" fn(usize, u32, usize, u32) -> usize = core::mem::transmute(construtor);
                             f(p, *(G_CURRENT_DATE_YEAR as *const u16) as u32, 0, 1)
                         }
-                        ArgDaCarga::Idioma => {
+                        SubsystemCtorArg::Idioma => {
                             // a original empurra edx com o byte em dl (o resto é sobra); o construtor só lê o byte
                             let f: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(construtor);
                             f(p, *(G_DATABASE_NAMES_LANGUAGE as *const u8) as u32)
@@ -940,7 +940,7 @@ pub(crate) unsafe fn save_error_box(linha: u32, texto: usize, titulo: usize, cor
 /// [0xb6b7c8] (o de Media) e chama com [0xae2a60]. O passo 0x19 (0x6692f0, as competições) não
 /// tem global e devolve 0 quando falha.
 #[derive(Clone, Copy)]
-pub(crate) enum PassoDoSave {
+pub(crate) enum SaveStep {
     /// thiscall(this, caminho), ret 4
     Caminho(usize, usize),
     /// thiscall(this), sem argumento
@@ -955,42 +955,42 @@ pub(crate) enum PassoDoSave {
     Competicoes,
 }
 
-pub(crate) const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
-    PassoDoSave::Caminho(G_HUMAN_MANAGER, 0x5ff9e0), // 2 HUMAN_MANAGER
-    PassoDoSave::Caminho(G_SCOUT_MANAGER, 0x7f8020), // 3 SCOUT_MANAGER
-    PassoDoSave::Caminho(G_NEWS, 0x787c30), // 4 News
-    PassoDoSave::Virtual(G_FRIENDLY),           // 5 Friendly
-    PassoDoSave::Sozinho(G_UEFA_SEEDING, 0x905510), // 6 UefaSeeding
-    PassoDoSave::Sozinho(G_CONMEBOL_SEEDING, 0x4c6b70), // 7 ConmebolSeeding
-    PassoDoSave::Caminho(G_STAFF_RECORDS, 0x86ffd0), // 8 Staff_Records
-    PassoDoSave::Caminho(G_MATCH_STATS, 0x72adf0), // 9 Match_Stats
-    PassoDoSave::Caminho(G_PLAYER_STATS, 0x7c55a0), // 0xa PlayerStats
-    PassoDoSave::Caminho(G_CLUB_HISTORY, 0x443f50), // 0xb Club_History
-    PassoDoSave::Caminho(G_CLUB_RECORDS, 0x451ff0), // 0xc Club_Records
-    PassoDoSave::Caminho(G_TACTICS, 0x8995d0), // 0xd Tactics
-    PassoDoSave::Sozinho(G_HOST_COUNTRY, 0x5fb320), // 0xe HostCountry
-    PassoDoSave::Caminho(G_DISCIPLINE, 0x555dd0), // 0xf Discipline
-    PassoDoSave::Caminho(G_AWARD_MANAGER, 0x4141a0), // 0x10 AWARD_MANAGER
-    PassoDoSave::Caminho(G_FINE, 0x5a53d0), // 0x11 Fine
-    PassoDoSave::Caminho(G_AWOL, 0x418980), // 0x12 AWOL
-    PassoDoSave::Caminho(G_DISPUTE, 0x569ae0), // 0x13 DISPUTE
-    PassoDoSave::Caminho(G_NOTES, 0x794f00), // 0x14 Notes
-    PassoDoSave::Caminho(G_INJURY, 0x62b2d0), // 0x15 Injury
-    PassoDoSave::Caminho(G_NATIONAL_TEAMS, 0x776a20), // 0x16 NationalTeams
-    PassoDoSave::Sozinho(G_STADIUM, 0x85bea0), // 0x17 Stadium
-    PassoDoSave::Um(G_FIXTURE_MANAGER, 0x5ac060),      // 0x18 FIXTURE_MANAGER
-    PassoDoSave::Competicoes,                 // 0x19 key_nation_save_all_comps
-    PassoDoSave::Caminho(G_CONTRACT_MANAGER, 0x4dc3a0), // 0x1a CONTRACT_MANAGER
-    PassoDoSave::Caminho(G_FINANCE_TABLE, 0x59b3b0), // 0x1b FinanceTable
-    PassoDoSave::Caminho(G_TRANSFER_MANAGER, 0x8bd4b0), // 0x1c TRANSFER_MANAGER
-    PassoDoSave::Caminho(G_PLAYER_REGEN, 0x7ad7c0), // 0x1d PLAYER_REGEN
-    PassoDoSave::Caminho(G_MEDIA, 0x72b5f0), // 0x1e Media
-    PassoDoSave::Outro(G_MEDIA, G_FOG_OF_WAR, 0x5afad0), // 0x1f FOG_OF_WAR
-    PassoDoSave::Caminho(G_MANAGER_MANAGER, 0x68e920), // 0x20 MANAGER_MANAGER
-    PassoDoSave::Caminho(G_OFFICIALS_MANAGER, 0x79bb80), // 0x21 OfficialsManager
-    PassoDoSave::Caminho(G_SIMULATED_STATS, 0x84c680), // 0x22 SimulatedStats
-    PassoDoSave::Caminho(G_TRAINING_MANAGER, 0x8b1450), // 0x23 TRAINING_MANAGER
-    PassoDoSave::Caminho(G_SQUAD_MANAGER, 0x859cc0), // 0x24 SQUAD_MANAGER
+pub(crate) const SAVE_STEPS: [SaveStep; 0x23] = [
+    SaveStep::Caminho(G_HUMAN_MANAGER, 0x5ff9e0), // 2 HUMAN_MANAGER
+    SaveStep::Caminho(G_SCOUT_MANAGER, 0x7f8020), // 3 SCOUT_MANAGER
+    SaveStep::Caminho(G_NEWS, 0x787c30), // 4 News
+    SaveStep::Virtual(G_FRIENDLY),           // 5 Friendly
+    SaveStep::Sozinho(G_UEFA_SEEDING, 0x905510), // 6 UefaSeeding
+    SaveStep::Sozinho(G_CONMEBOL_SEEDING, 0x4c6b70), // 7 ConmebolSeeding
+    SaveStep::Caminho(G_STAFF_RECORDS, 0x86ffd0), // 8 Staff_Records
+    SaveStep::Caminho(G_MATCH_STATS, 0x72adf0), // 9 Match_Stats
+    SaveStep::Caminho(G_PLAYER_STATS, 0x7c55a0), // 0xa PlayerStats
+    SaveStep::Caminho(G_CLUB_HISTORY, 0x443f50), // 0xb Club_History
+    SaveStep::Caminho(G_CLUB_RECORDS, 0x451ff0), // 0xc Club_Records
+    SaveStep::Caminho(G_TACTICS, 0x8995d0), // 0xd Tactics
+    SaveStep::Sozinho(G_HOST_COUNTRY, 0x5fb320), // 0xe HostCountry
+    SaveStep::Caminho(G_DISCIPLINE, 0x555dd0), // 0xf Discipline
+    SaveStep::Caminho(G_AWARD_MANAGER, 0x4141a0), // 0x10 AWARD_MANAGER
+    SaveStep::Caminho(G_FINE, 0x5a53d0), // 0x11 Fine
+    SaveStep::Caminho(G_AWOL, 0x418980), // 0x12 AWOL
+    SaveStep::Caminho(G_DISPUTE, 0x569ae0), // 0x13 DISPUTE
+    SaveStep::Caminho(G_NOTES, 0x794f00), // 0x14 Notes
+    SaveStep::Caminho(G_INJURY, 0x62b2d0), // 0x15 Injury
+    SaveStep::Caminho(G_NATIONAL_TEAMS, 0x776a20), // 0x16 NationalTeams
+    SaveStep::Sozinho(G_STADIUM, 0x85bea0), // 0x17 Stadium
+    SaveStep::Um(G_FIXTURE_MANAGER, 0x5ac060),      // 0x18 FIXTURE_MANAGER
+    SaveStep::Competicoes,                 // 0x19 key_nation_save_all_comps
+    SaveStep::Caminho(G_CONTRACT_MANAGER, 0x4dc3a0), // 0x1a CONTRACT_MANAGER
+    SaveStep::Caminho(G_FINANCE_TABLE, 0x59b3b0), // 0x1b FinanceTable
+    SaveStep::Caminho(G_TRANSFER_MANAGER, 0x8bd4b0), // 0x1c TRANSFER_MANAGER
+    SaveStep::Caminho(G_PLAYER_REGEN, 0x7ad7c0), // 0x1d PLAYER_REGEN
+    SaveStep::Caminho(G_MEDIA, 0x72b5f0), // 0x1e Media
+    SaveStep::Outro(G_MEDIA, G_FOG_OF_WAR, 0x5afad0), // 0x1f FOG_OF_WAR
+    SaveStep::Caminho(G_MANAGER_MANAGER, 0x68e920), // 0x20 MANAGER_MANAGER
+    SaveStep::Caminho(G_OFFICIALS_MANAGER, 0x79bb80), // 0x21 OfficialsManager
+    SaveStep::Caminho(G_SIMULATED_STATS, 0x84c680), // 0x22 SimulatedStats
+    SaveStep::Caminho(G_TRAINING_MANAGER, 0x8b1450), // 0x23 TRAINING_MANAGER
+    SaveStep::Caminho(G_SQUAD_MANAGER, 0x859cc0), // 0x24 SQUAD_MANAGER
 ];
 
 /// saves the game: deletes the old file, the database (0x524d30), general.dat (16 fields and the summary), the
@@ -1014,7 +1014,7 @@ pub(crate) const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
 ///   o tamanho do banco, as datas e horas, as ligas, a nação padrão ou −1, os dados de execução de
 ///   pessoas, clubes e reputação); erro de escrita dá a caixa "Disk Space Error" com a linha do
 ///   campo e fecha o item.
-/// - Os passos 2..=0x24 (`PASSOS_DO_SAVE`): disco e memória (antes do 0x11, sem apagar e com
+/// - Os passos 2..=0x24 (`SAVE_STEPS`): disco e memória (antes do 0x11, sem apagar e com
 ///   memória < 25), a barra e o `save` do subsistema; 0x25: empacota os `*.tmp` (0x933610).
 /// - Hall da fama (0x5f00c0, fora do save), regras FIFA (0x8395b0); em rede, troca o save antigo
 ///   pelo novo (0x945ba4); [0xdd7130] = 1, [0xa801bc] = 0 e a data do último save (0xdd70a0).
@@ -1161,7 +1161,7 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
         return 0;
     }
     fechar_item(&mut z);
-    for (i, step_towards) in PASSOS_DO_SAVE.iter().enumerate() {
+    for (i, step_towards) in SAVE_STEPS.iter().enumerate() {
         let k = i as u32 + 2;
         // antes do passo 0x11 (depois do AWARD_MANAGER) a original não apaga o caminho e pede
         // memória >= 25 (e não >= 1)
@@ -1179,38 +1179,38 @@ pub(crate) unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u
         }
         barra(G_SCREEN_MANAGER, texto.as_ptr(), k, 0x25, -1);
         match *step_towards {
-            PassoDoSave::Caminho(g, f) => {
+            SaveStep::Caminho(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(f);
                     f(u(g) as usize, l);
                 }
             }
-            PassoDoSave::Sozinho(g, f) => {
+            SaveStep::Sozinho(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
                     f(u(g) as usize);
                 }
             }
-            PassoDoSave::Um(g, f) => {
+            SaveStep::Um(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(f);
                     f(u(g) as usize, 1);
                 }
             }
-            PassoDoSave::Virtual(g) => {
+            SaveStep::Virtual(g) => {
                 let o = u(g) as usize;
                 if o != 0 {
                     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(*((*(o as *const usize) + 0x1c) as *const usize));
                     f(o, 1);
                 }
             }
-            PassoDoSave::Outro(g, this, f) => {
+            SaveStep::Outro(g, this, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(f);
                     f(u(this) as usize, l);
                 }
             }
-            PassoDoSave::Competicoes => {
+            SaveStep::Competicoes => {
                 if competicoes() == 0 {
                     setup_warning(0x2baa);
                     return 0;

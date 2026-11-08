@@ -71,13 +71,13 @@ unsafe fn set_up_fixed_fixtures(this: usize, tabela: &[(u8, u8, u16, u32, u32)],
 /// { 0x642a70 } (thiscall, ret 0, ita_ser_a.cpp, 11.650 bytes): `ItaSerA::create_fixed_fixtures()`: os 306 jogos da
 /// Série A 2001/02 (34 rodadas de 9, com o dia, o mês (0 = janeiro) e o ano que a original empurra). Fonte 0x9ea2a8, linha 0x60f.
 unsafe extern "thiscall" fn create_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures(this, &CQN5_SERIE_A, 0x9ea2a8, 0x60f)
+    set_up_fixed_fixtures(this, &SERIE_A_FIXED_FIXTURES, 0x9ea2a8, 0x60f)
 }
 
 /// { 0x647230 } (thiscall, ret 0, ita_ser_b.cpp, 14.388 bytes): `ItaSerB::set_up_fixed_fixtures()`: os 380 jogos da
 /// Série B 2001/02 (38 rodadas de 10). Fonte 0x9ea384, linha 0x39a.
 unsafe extern "thiscall" fn ita_ser_a_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures(this, &CQN5_SERIE_B, 0x9ea384, 0x39a)
+    set_up_fixed_fixtures(this, &SERIE_B_FIXTURES, 0x9ea384, 0x39a)
 }
 
 /// O comparador das duas: alocam: só a original, conferindo o que ela garante: ou a lista ficou (+0xea com a conta n e
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn comparar_ita_ser_a_set_up_fixed_fixtures(this: usize
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
 /// exe; na ordem da original (extraídos da desmontagem e conferidos: os lugares do vetor vão de 16 em 16).
-const CQN5_SERIE_A: [(u8, u8, u16, u32, u32); 306] = [
+const SERIE_A_FIXED_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (28, 7, 2001, 0x9ea370, 0x9ea378), // Bologna × Atalanta
     (28, 7, 2001, 0x9ea360, 0x9ea368), // Brescia × Milan
     (28, 7, 2001, 0x9ea34c, 0x9ea358), // Fiorentina × Chievo
@@ -411,7 +411,7 @@ const CQN5_SERIE_A: [(u8, u8, u16, u32, u32); 306] = [
     (12, 4, 2002, 0x9ea31c, 0x9ea2e4), // Piacenza × Verona
 ];
 
-const CQN5_SERIE_B: [(u8, u8, u16, u32, u32); 380] = [
+const SERIE_B_FIXTURES: [(u8, u8, u16, u32, u32); 380] = [
     (26, 7, 2001, 0x9ea464, 0x9ea46c), // Ancona × Reggina
     (26, 7, 2001, 0x9ea450, 0x9ea45c), // Cagliari × Messina
     (26, 7, 2001, 0x9ea440, 0x9ea448), // Como × Crotone

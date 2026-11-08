@@ -427,9 +427,9 @@ pub(crate) unsafe fn contract_region(pessoa: usize, clube: usize) -> Option<(usi
 /// [pt] Uma rotina sem porta que por dentro chama unidades da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
 /// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
 /// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
-/// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
+/// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem RECORD_POST_MATCH) só chama.
 pub(crate) unsafe fn replay_inner_tape_calls<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
-    if !GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) {
+    if !RECORD_POST_MATCH.load(std::sync::atomic::Ordering::Relaxed) {
         return f();
     }
     let externa = tape_lock().replace((Vec::new(), Vec::new()));
@@ -801,7 +801,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(thi
 
 /// As respostas 1 e 2 de cada caso da tabela de saltos da 0x735160 (a 3ª, de todos, é "No Comment", 0xa27808); o caso
 /// vem da tabela de bytes do exe em 0x7356f4 (tipo − 3, até 0x7f; acima, o 21).
-pub(crate) const CQB8_RESPOSTAS: [(usize, usize); 22] = [
+pub(crate) const PRESS_ANSWERS: [(usize, usize); 22] = [
     (0xa27700, 0xa2771c), (0xa27670, 0xa2767c), (0xa27688, 0xa276a4), (0xa276e4, 0xa276f0), (0xa2773c, 0xa27770),
     (0xa2764c, 0xa2765c), (0xa27430, 0xa2743c), (0xa2762c, 0xa2763c), (0xa2744c, 0xa27460), (0xa275d0, 0xa27534),
     (0xa27554, 0xa27574), (0xa27510, 0xa27534), (0xa275b4, 0xa275c0), (0xa274e0, 0xa274f8), (0xa27588, 0xa275a0),
@@ -823,7 +823,7 @@ pub(crate) unsafe extern "stdcall" fn media_format_response_option_label(tipo: u
     }
     let k = (tipo as i16 as i32).wrapping_sub(3) as u32;
     let caso = if k > 0x7f { 21 } else { *((0x7356f4 + k as usize) as *const u8) as usize };
-    let (um, dois) = CQB8_RESPOSTAS[caso];
+    let (um, dois) = PRESS_ANSWERS[caso];
     let texto = match opcao as i8 {
         1 => um,
         2 => dois,
@@ -1985,14 +1985,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_adjust_board_confidence(this: us
 
 
 
-pub(crate) type Cpo7Gravar = unsafe extern "thiscall" fn(usize, i8, u32) -> u32;
+pub(crate) type NewsWriteFn = unsafe extern "thiscall" fn(usize, i8, u32) -> u32;
 
 /// Writes a person's id and three keys (+0x33 of +4, +8, +0xc) into news slots from k; the +0xc one may be missing (-1)
 /// when optional.
 ///
 /// [pt] Os dados da pessoa a partir de `k`: id e as três chaves +0x33 de +4, +8 e +0xc (a de +0xc pode faltar: −1, só
 /// quando `opcional`).
-pub(crate) unsafe fn set_person_slots_optional(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bool) {
+pub(crate) unsafe fn set_person_slots_optional(gravar: NewsWriteFn, n: usize, k: i8, p: usize, opcional: bool) {
     gravar(n, k, read_usize(p) as u32);
     gravar(n, k + 1, read_usize(read_usize(p + 4) + 0x33) as u32);
     gravar(n, k + 2, read_usize(read_usize(p + 8) + 0x33) as u32);
@@ -2003,7 +2003,7 @@ pub(crate) unsafe fn set_person_slots_optional(gravar: Cpo7Gravar, n: usize, k: 
 /// Returns the NEWSITEM constructor (0x77bbe0) and set_slot (0x785790) function pointers.
 ///
 /// [pt] A dupla de transmutes comum: construir a notícia (0x77bbe0) e gravar um dado (0x785790).
-pub(crate) unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, Cpo7Gravar) {
+pub(crate) unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, NewsWriteFn) {
     (core::mem::transmute(FN_NEWSITEM_NEWSITEM), core::mem::transmute(FN_NEWSITEM_SET_SLOT))
 }
 
@@ -2017,7 +2017,7 @@ pub(crate) unsafe fn days_since_arrival(p: usize) -> i32 {
 
 /// O sorteio da gratidão pelo tipo (índices da tabela de bytes 0x732fcc, saltos 0x732fb4): 0 os tipos 0, 6, 14 e 17; 1
 /// os 2 e 30 (sorteio(2)); 2 os 4, 9, 33, 34 e 37 (sorteio(3)); 3 os 5 e 7 (sorteio(4)); o resto 0.
-pub(crate) const CPO7_CASO: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 2, 2, 4, 5, 2];
+pub(crate) const GRATITUDE_DRAW_CASE: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 2, 2, 4, 5, 2];
 
 /// news 0xbda to the manager: the player, the club, the type (0x12/0x21 by a draw for a player on the media list or
 /// with a flagged contract, 0xc when injured), the variant, the type's draw (which may raise +0x44 of the player
@@ -2075,7 +2075,7 @@ pub(crate) unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, 
     let t = t as i16 as i32;
     gravar(n, 5, t as u32);
     gravar(n, 6, variante as i8 as i32 as u32);
-    let v = match if (t as u32) <= 0x25 { CPO7_CASO[t as usize] } else { 5 } {
+    let v = match if (t as u32) <= 0x25 { GRATITUDE_DRAW_CASE[t as usize] } else { 5 } {
         0 => {
             let ficha = read_usize(jogador + 0x61);
             if ficha != 0 && read_i8_as_i32(ficha + 0x44) < 10 {
@@ -2257,7 +2257,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_post_player_criticism_reaction_n
 
 
 /// A notícia guardada na caixa: 0xdf bytes (+0xd6 id).
-pub(crate) const CPN3_NOTICIA: usize = 0xdf;
+pub(crate) const MEDIA_NEWS_ITEM_SIZE: usize = 0xdf;
 
 /// Player reputation (min 2000) over club reputation (clamped 2000..7500).
 ///

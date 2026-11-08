@@ -38,13 +38,13 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
                 let ocupada: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7ffdd0usize);
                 let (mut n, mut lista) = (0i16, [0usize; 16]);
                 // a original empurra eax inteiro: os 16 bits altos são os da ficha devolvida por 0x765480
-                listar(GERENTE_DE_TELAS, lista.as_mut_ptr(), &mut n, (r as u32 & 0xffff_0000) | humano() as u16 as u32);
+                listar(SCREEN_MANAGER, lista.as_mut_ptr(), &mut n, (r as u32 & 0xffff_0000) | humano() as u16 as u32);
                 let mut i: i8 = 0;
                 if n > 0 {
                     loop {
                         let e = *lista.as_ptr().offset(i as isize);
                         if e != current_human_screen_person()
-                            && ocupada(GERENTE_DE_TELAS, e) == 0
+                            && ocupada(SCREEN_MANAGER, e) == 0
                             && core::ptr::read_unaligned((ficha(e) + 0xe2) as *const usize) == clube
                         {
                             core::ptr::write_unaligned(0xb77c4a as *mut usize, e);
@@ -57,14 +57,14 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
                     }
                 }
                 let esperando: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x803d80usize);
-                if esperando(GERENTE_DE_TELAS) == 0 {
+                if esperando(SCREEN_MANAGER) == 0 {
                     return -11;
                 }
                 let formatar_texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
                 formatar_texto(0xde1f64, 0xa16d94);
                 let aviso: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(0x802f80usize);
                 // ponytail: a original empurra ecx com 16 bits altos que sobram de 0x66f4e0 (imprevisíveis); aqui zero
-                aviso(GERENTE_DE_TELAS, 0xde1f64, 0, 0, humano() as u16 as u32);
+                aviso(SCREEN_MANAGER, 0xde1f64, 0, 0, humano() as u16 as u32);
                 let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x718aa0usize);
                 abrir_partida(current_human_screen_person(), clube);
                 return -4;
@@ -121,7 +121,7 @@ unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
 unsafe extern "C" fn match_screens_open_team_selection() {
     crate::comparacao::ramo("telas abrir a escalacao");
     let abrir: unsafe extern "thiscall" fn(usize, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe600usize);
-    if abrir(GERENTE_DE_TELAS, 0x7260f0, 0x727c30, 1, 0, 0) == 0 {
+    if abrir(SCREEN_MANAGER, 0x7260f0, 0x727c30, 1, 0, 0) == 0 {
         return;
     }
     const FONTE: usize = 0xa161d4; // match_screens.cpp

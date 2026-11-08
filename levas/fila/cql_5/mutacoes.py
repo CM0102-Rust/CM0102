@@ -5,12 +5,12 @@
 # - as posicoes do play-off (que o construtor da fase usa para o mando) trocadas.
 MUTACOES = [
     ('cql5_playoff_com_o_sexto',
-     'const CQL5_PLAYOFF: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso',
-     'const CQL5_PLAYOFF: [usize; 4] = [5, 1, 3, 2]; // mutacao: o 6o no lugar do 5o',
+     'const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso',
+     'const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [5, 1, 3, 2]; // mutacao: o 6o no lugar do 5o',
      'cql_5 fases do fim da liga'),
     ('cql5_playout_com_o_decimo_terceiro',
-     'const CQL5_PLAYOUT: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out',
-     'const CQL5_PLAYOUT: [usize; 4] = [16, 12, 15, 14]; // mutacao: o 13o no lugar do 14o',
+     'const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out',
+     'const PLAYOUT_ROWS: [usize; 4] = [16, 12, 15, 14]; // mutacao: o 13o no lugar do 14o',
      'cql_5 fases do fim da liga'),
     ('cql5_posicoes_trocadas',
      'let posicoes: [u8; 4] = [4, 1, 3, 2]; // cql5: as posições do play-off',

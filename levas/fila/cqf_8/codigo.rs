@@ -27,22 +27,22 @@ unsafe fn cqf8_pw(a: usize, v: u16) {
 /// O tamanho de uma entrada da tabela (uma categoria de uma temporada num clube): +0 o ano, +2 o id do clube (−1
 /// nenhum), +6..+0x26 os 32 bytes da categoria (+6 jogos, +7 ..., +0x14 a palavra), +0x26 o valor da transferência
 /// (−1 nenhum), +0x2a categoria × 8 e o tipo nos 3 bits de baixo. Seis entradas (categorias 1..6) por temporada.
-const CQF8_E: usize = 0x2b;
+const HISTORY_ENTRY_SIZE: usize = 0x2b;
 
 /// A entrada montada na pilha pela original (0x2b bytes, zerada antes de cada uma).
-struct Cqf8Reg([u8; CQF8_E]);
+struct PlayerStatsEntry([u8; HISTORY_ENTRY_SIZE]);
 
-impl Cqf8Reg {
-    fn nova(ano: u16, clube: u32, cat: u8, transf: u32) -> Cqf8Reg {
-        let mut r = [0u8; CQF8_E];
+impl PlayerStatsEntry {
+    fn nova(ano: u16, clube: u32, cat: u8, transf: u32) -> PlayerStatsEntry {
+        let mut r = [0u8; HISTORY_ENTRY_SIZE];
         r[0..2].copy_from_slice(&ano.to_le_bytes());
         r[2..6].copy_from_slice(&clube.to_le_bytes());
         r[0x26..0x2a].copy_from_slice(&transf.to_le_bytes());
         r[0x2a] = cat << 3;
-        Cqf8Reg(r)
+        PlayerStatsEntry(r)
     }
     unsafe fn gravar(&self, a: usize) {
-        core::ptr::copy_nonoverlapping(self.0.as_ptr(), a as *mut u8, CQF8_E);
+        core::ptr::copy_nonoverlapping(self.0.as_ptr(), a as *mut u8, HISTORY_ENTRY_SIZE);
     }
 }
 
@@ -53,7 +53,7 @@ unsafe fn show_player_stats_error(linha: u32) {
 
 /// A entrada `k` (contando de 1) a partir da conta `n`: buf + (n + k) × 0x2b − 0x2b.
 fn history_entry_at(buf: usize, n: i32, k: i32) -> usize {
-    buf.wrapping_add(((n + k) as isize * CQF8_E as isize - CQF8_E as isize) as usize)
+    buf.wrapping_add(((n + k) as isize * HISTORY_ENTRY_SIZE as isize - HISTORY_ENTRY_SIZE as isize) as usize)
 }
 
 /// { 0x7c3e40 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::build_career_history(pessoa, &conta)`: a tabela
@@ -98,12 +98,12 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     }
     let mut cap: i32 = 500;
     let clube = cqf8_d(p + 0x39);
-    let mut ultimo = Cqf8Reg::nova(0, 0, 0, 0);
+    let mut ultimo = PlayerStatsEntry::nova(0, 0, 0, 0);
     for cat in 1..=6u8 {
         let ano = ano_do_clube(clube);
         let id = if clube == 0 { 0xffff_ffff } else { cqf8_d(clube) as u32 }; // cqf8: o clube da temporada atual
         crate::comparacao::ramo("cqf_8 temporada atual");
-        let mut r = Cqf8Reg::nova(ano, id, cat, 0xffff_ffff);
+        let mut r = PlayerStatsEntry::nova(ano, id, cat, 0xffff_ffff);
         let c = categoria(this, f, cat as u32);
         if c != 0 {
             core::ptr::copy_nonoverlapping(c as *const u8, r.0.as_mut_ptr().add(6), 32);
@@ -129,9 +129,9 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                 ano_atual = ano_atual.wrapping_sub(1);
                 if ano_atual > cqf8_w(no) {
                     loop {
-                        let mut tam = cap as usize * CQF8_E;
+                        let mut tam = cap as usize * HISTORY_ENTRY_SIZE;
                         for cat in 1..=6u8 {
-                            let r = Cqf8Reg::nova(ano_atual, 0xffff_ffff, cat, 0xffff_ffff);
+                            let r = PlayerStatsEntry::nova(ano_atual, 0xffff_ffff, cat, 0xffff_ffff);
                             if *conta + cat as i32 - 1 >= cap {
                                 tam += 0x53fc;
                                 cap += 500;
@@ -153,11 +153,11 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                         }
                     }
                 }
-                let mut tam = cap as usize * CQF8_E;
+                let mut tam = cap as usize * HISTORY_ENTRY_SIZE;
                 let ano_no = cqf8_w(no); // cqf8: o ano do grupo do nó
                 let clube_no = cqf8_d(no + 2) as u32; // cqf8: o clube do grupo do nó
                 for cat in 1..=6u8 {
-                    let mut r = Cqf8Reg::nova(ano_no, clube_no, cat, cqf8_d(no + 0x26) as u32);
+                    let mut r = PlayerStatsEntry::nova(ano_no, clube_no, cat, cqf8_d(no + 0x26) as u32);
                     r.0[0x2a] = (cat << 3) | (tipo & 7);
                     crate::comparacao::ramo("cqf_8 temporada do historico");
                     if *conta + cat as i32 - 1 >= cap {
@@ -177,13 +177,13 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
             }
             if (tipo >> 3) as i32 - 1 + *conta >= cap {
                 cap += 500;
-                buf = realloc(buf, cap as usize * CQF8_E);
+                buf = realloc(buf, cap as usize * HISTORY_ENTRY_SIZE);
                 if buf == 0 {
                     show_player_stats_error(0xc41);
                     return 0;
                 }
             }
-            core::ptr::copy_nonoverlapping(no as *const u8, history_entry_at(buf, *conta, (tipo >> 3) as i32) as *mut u8, CQF8_E);
+            core::ptr::copy_nonoverlapping(no as *const u8, history_entry_at(buf, *conta, (tipo >> 3) as i32) as *mut u8, HISTORY_ENTRY_SIZE);
             no = anterior(lista);
         }
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
@@ -195,10 +195,10 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     // (3) a transferência e o tipo descem do grupo seguinte
     let n = *conta;
     for i in 0..n {
-        let e = buf + i as usize * CQF8_E;
+        let e = buf + i as usize * HISTORY_ENTRY_SIZE;
         if i + 6 < n {
-            cqf8_pd(e + 0x26, cqf8_d(e + 6 * CQF8_E + 0x26) as u32);
-            *((e + 0x2a) as *mut u8) = (cqf8_b(e + 0x2a) & 0xf8) | (cqf8_b(e + 6 * CQF8_E + 0x2a) & 7);
+            cqf8_pd(e + 0x26, cqf8_d(e + 6 * HISTORY_ENTRY_SIZE + 0x26) as u32);
+            *((e + 0x2a) as *mut u8) = (cqf8_b(e + 0x2a) & 0xf8) | (cqf8_b(e + 6 * HISTORY_ENTRY_SIZE + 0x2a) & 7);
         } else {
             cqf8_pd(e + 0x26, 0xffff_ffff);
             *((e + 0x2a) as *mut u8) = cqf8_b(e + 0x2a) & 0xf8;
@@ -207,10 +207,10 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     // (4) as entradas iguais do grupo seguinte somam e a de cima some
     let mut k = 6i32;
     while k - 6 < *conta {
-        let ei = buf + (k - 6) as usize * CQF8_E;
+        let ei = buf + (k - 6) as usize * HISTORY_ENTRY_SIZE;
         let mut j = k;
         while j < *conta {
-            let ej = buf + j as usize * CQF8_E;
+            let ej = buf + j as usize * HISTORY_ENTRY_SIZE;
             if cqf8_w(ei) == cqf8_w(ej)
                 && cqf8_b(ej + 0x2a) & 7 != 1
                 && cqf8_i(ej + 0x26) == -1
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     // (5) os grupos vazios somem (ano 0)
     let mut g = 0i32;
     while g < *conta {
-        let e = buf + g as usize * CQF8_E;
+        let e = buf + g as usize * HISTORY_ENTRY_SIZE;
         let zerar = if cqf8_b(e + 6) == 0
             && cqf8_b(e + 7) == 0
             && cqf8_b(e + 0xdd) == 0
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
         };
         if zerar {
             for t in 0..6 {
-                cqf8_pw(e + t * CQF8_E, 0); // cqf8: o grupo some
+                cqf8_pw(e + t * HISTORY_ENTRY_SIZE, 0); // cqf8: o grupo some
             }
         }
         g += 6;
@@ -309,13 +309,13 @@ unsafe extern "thiscall" fn comparar_build_career_history(this: usize, p: usize,
         r == t && *conta == n
     } else {
         *conta == n
-            && core::slice::from_raw_parts(r as *const u8, n.max(0) as usize * CQF8_E)
-                == core::slice::from_raw_parts(t as *const u8, n.max(0) as usize * CQF8_E)
+            && core::slice::from_raw_parts(r as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
+                == core::slice::from_raw_parts(t as *const u8, n.max(0) as usize * HISTORY_ENTRY_SIZE)
     };
     PLACAR.registrar(igual, || {
         let k = (*conta).max(n).max(0) as usize;
         let dif = (0..k).find(|&i| {
-            r == 0 || t == 0 || core::slice::from_raw_parts((r + i * CQF8_E) as *const u8, CQF8_E) != core::slice::from_raw_parts((t + i * CQF8_E) as *const u8, CQF8_E)
+            r == 0 || t == 0 || core::slice::from_raw_parts((r + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE) != core::slice::from_raw_parts((t + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE)
         });
         format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p, *conta, n, dif)
     });

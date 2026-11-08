@@ -1681,7 +1681,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(t
 /// abaixo de −1, que caem no mesmo ramo): é_liga (se pedido) = 1, rodadas = 6, id = 0x43d + fase; a tabela de 6 rodadas
 /// de 0x41 bytes (0x944e46(0x186); sem memória, a caixa da linha 0x17a ou 0x1aa e devolve 0); na segunda fase, antes, a
 /// data de 1º de março do ano seguinte levada à terça (0x549f70), um dia antes (0x54c8e0, que grava a data estática dela)
-/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `CQH4_DATAS` (0x68a160 com o ano
+/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `GROUP_STAGE_DATES` (0x68a160 com o ano
 /// +0x40 da copa) e o jogo 0 de cada rodada vazio (0x68a1c0 com −1). As preliminares (−1) e o mata-mata (12 em diante):
 /// a original pelo trampolim. Devolve a tabela.
 pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
@@ -1717,7 +1717,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
         if f < 10 { 2 } else { 3 }
     };
     crate::comparacao::ramo("cqh_4 tabela das rodadas");
-    for &(i, dia, mes, anos, semana) in CQH4_DATAS[metade].iter() {
+    for &(i, dia, mes, anos, semana) in GROUP_STAGE_DATES[metade].iter() {
         data(t, i, dia, mes, anos, semana, 2, ano, 0);
     }
     for r in 0..6 {

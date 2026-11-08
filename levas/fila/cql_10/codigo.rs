@@ -7,7 +7,7 @@
 /// times, jogos, times novos e inscritos que já entraram, +0x20/+0x21/+0x22 replay, jogos por confronto e dias entre
 /// eles, +0x5c/+0x60/+0x64 os prêmios (chegar, vencer, perder).
 #[derive(Clone, Copy)]
-struct Cql10R {
+struct EngCcCupCupRound {
     sorteio: (u32, u32, u32, u32),
     jogo: (u32, u32, u32, u32, u32, u32),
     codigo: u16,
@@ -21,13 +21,13 @@ struct Cql10R {
 /// A linha da tabela: (sorteio), (jogo), nome, (bits do sorteio, desempate, desempate de ida e volta), categoria,
 /// (times, jogos, novos, inscritos), (replay, jogos por confronto, dias entre eles), (prêmios).
 const fn cql10r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
-    times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> Cql10R {
-    Cql10R { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
+    times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> EngCcCupCupRound {
+    EngCcCupCupRound { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
 }
 
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &Cql10R, ano: u32) {
+unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &EngCcCupCupRound, ano: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
@@ -57,7 +57,7 @@ unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &Cql10R, ano: u32) {
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-unsafe fn eng_cc_cup_create_single_stage_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cql10R], arquivo: usize, linha: u32, nome: &'static str) -> usize {
+unsafe fn eng_cc_cup_create_single_stage_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[EngCcCupCupRound], arquivo: usize, linha: u32, nome: &'static str) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -119,7 +119,7 @@ unsafe fn eng_cc_cup_compare_round_table(nome: &str, fase: u32, rodadas: *mut i1
 
 /// A Copa da Liga inglesa (EngCcCup): sete rodadas de agosto a março do ano seguinte; as três primeiras dependem de
 /// +0xb2 (os clubes nas copas europeias, que entram mais tarde) e vêm à parte (`league_cup_rounds`).
-const CQL10_COPA_DA_LIGA: [Cql10R; 7] = [
+const LEAGUE_CUP_ROUNDS: [EngCcCupCupRound; 7] = [
     cql10r((0x17, 6, 0, 5), (0x16, 7, 0, 1, 2, 0), 0xa, (0, 0x403, 0), 4, (0, 0, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
     cql10r((0x17, 7, 0, 2), (0x14, 8, 0, 2, 2, 0), 0x14, (0, 0x403, 0), 4, (0, 0, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)), // cql10: a 2ª rodada da Copa da Liga
     cql10r((0x1c, 8, 0, 3), (0x1c, 9, 0, 2, 2, 0), 0x1e, (0, 3, 0), 4, (0x20, 0x10, 0, 0), (0, 1, 0), (0, 0xffff_ffff, 0)),
@@ -132,8 +132,8 @@ const CQL10_COPA_DA_LIGA: [Cql10R; 7] = [
 /// A tabela da Copa da Liga com `b` = +0xb2 (byte com sinal; as contas em 16 bits como a original): 1ª rodada 2b + 0x38
 /// times, b + 0x1c jogos, 2b + 0x38 novos; 2ª rodada (0x20 − b) × 2 times, 0x20 − b jogos, (0xc − b) × 3 novos e 2b +
 /// 0x38 inscritos; 3ª rodada b novos e 0x5c − b inscritos.
-fn league_cup_rounds(b: i16) -> [Cql10R; 7] {
-    let mut t = CQL10_COPA_DA_LIGA;
+fn league_cup_rounds(b: i16) -> [EngCcCupCupRound; 7] {
+    let mut t = LEAGUE_CUP_ROUNDS;
     let x = |v: i16| v as u16;
     t[0].times = (x(b.wrapping_mul(2).wrapping_add(0x38)), x(b.wrapping_add(0x1c)), x(b.wrapping_mul(2).wrapping_add(0x38)), 0);
     t[1].times = (x(0x20i16.wrapping_sub(b).wrapping_mul(2)), x(0x20i16.wrapping_sub(b)), x(0xci16.wrapping_sub(b).wrapping_mul(3)), x(b.wrapping_mul(2).wrapping_add(0x38)));
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table(this: usize, 
 /// quartas; as rodadas 2 a 5 dependem de +0xb3 (isenções) e +0xb4 (a escolha da entrada na 5ª rodada) e do +0x3e (os
 /// inscritos) e vêm à parte (`fa_cup_rounds`). A original grava ainda +0x13 = 0 nas rodadas 0 a 6,
 /// que a data do jogo já deixou com o mando 0.
-const CQL10_COPA_DA_INGLATERRA: [Cql10R; 9] = [
+const FA_CUP_ROUNDS: [EngCcCupCupRound; 9] = [
     cql10r((9, 9, 0, 5), (0x10, 9, 0, 5, 1, 0), 0xdc, (0, 0, 3), 4, (0x38, 0x1c, 0x38, 0), (1, 0, 0xa), (0, 0x2710, 0)),
     cql10r((0x11, 9, 0, 6), (0x12, 0xa, 0, 5, 1, 0), 0xa, (0, 0, 3), 4, (0x50, 0x28, 0x34, 0x38), (1, 1, 0xa), (0, 0x4e20, 0)),
     cql10r((0x13, 0xa, 0, 6), (9, 0xb, 0, 5, 1, 0), 0x14, (0, 0, 3), 4, (0, 0, 0, 0), (1, 1, 0xa), (0, 0x4e20, 0)), // cql10: a 2ª rodada da Copa da Inglaterra
@@ -177,8 +177,8 @@ const CQL10_COPA_DA_INGLATERRA: [Cql10R; 9] = [
 /// times, 0x20 jogos, 0x2b novos e 0x6c inscritos; senão, 6b + 0x28 times, 3b + 0x14 jogos, 6b novos e 0x6c inscritos
 /// na primeira, (0x10 − b) × 4 times, (0x10 − b) × 2 jogos, 0x2c − 7b novos e (b + 0x12) × 6 inscritos na segunda. A 3ª
 /// tem (0x10 − b) × 2 times e 0x10 − b jogos; a 4ª, b novos e +0x3e − b inscritos.
-fn fa_cup_rounds(b: i16, entrada: u8, inscritos: i16) -> [Cql10R; 9] {
-    let mut t = CQL10_COPA_DA_INGLATERRA;
+fn fa_cup_rounds(b: i16, entrada: u8, inscritos: i16) -> [EngCcCupCupRound; 9] {
+    let mut t = FA_CUP_ROUNDS;
     let x = |v: i16| v as u16;
     if entrada == 1 {
         t[2].times = (0x28, 0x13, 0, 0);
@@ -210,14 +210,14 @@ unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56f320(this: 
 }
 
 /// A Supercopa inglesa (Charity Shield): uma rodada, um jogo em agosto.
-const CQL10_SUPERCOPA: [Cql10R; 1] = [
+const CHARITY_SHIELD_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((5, 6, 0, 5), (0xd, 7, 0, 6, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cql10: o jogo da Supercopa inglesa
 ];
 
 /// { 0x56d640 } (thiscall, ret 0x10, eng_charity.cpp; a virtual +0x3c da Supercopa): `EngCharity::create_round_table(
 /// fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x9c sem memória.
 unsafe extern "thiscall" fn eng_cc_cup_create_round_table_56d640(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL10_SUPERCOPA, 0x9c425c, 0x9c, "cql_10 tabela da supercopa inglesa")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CHARITY_SHIELD_ROUNDS, 0x9c425c, 0x9c, "cql_10 tabela da supercopa inglesa")
 }
 
 unsafe extern "thiscall" fn comparar_eng_cc_cup_create_round_table_56d640(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {

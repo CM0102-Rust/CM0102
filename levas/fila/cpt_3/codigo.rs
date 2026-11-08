@@ -11,7 +11,7 @@ unsafe fn cpt3_d(a: usize) -> usize {
 /// 1; nações (+0x53) diferentes ou fora da escolha (+0x11c), 3; a nação na tabela das 35 nações-chave (0xb63d60, 72
 /// bytes cada, escolhida em +0x11c), o byte +0x14 da linha; senão 0 com o mandante seleção e 3 sem. Senão, competição de
 /// nação (+0x5d): o byte +0x14 da linha dela, ou 3. Sem nação: Copa do Mundo e eliminatórias (0x669a10), 0; torneio
-/// internacional (0x669ae0), 1; senão o índice da nação-chave (0x669470). Chamada a cada jogo procurado: sem contador.
+/// internacional (0x669ae0), 1; senão o índice da nação-chave (0x669470). TapeCall a cada jogo procurado: sem contador.
 unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
@@ -65,11 +65,11 @@ unsafe extern "C" fn comparar_comp_active_key_nation_of_fixture(comp: usize, par
 
 /// Os ids das competições da Copa do Mundo: a final e as seis eliminatórias (Europa [0x9cf780], África, Ásia,
 /// CONCACAF, Oceania, América do Sul).
-const CPT3_COPA: [usize; 7] = [0x9cf79c, 0x9cf77c, 0x9cf774, 0x9cf770, 0x9cf780, 0x9cf76c, 0x9cf778];
+const WORLD_CUP_COMPS: [usize; 7] = [0x9cf79c, 0x9cf77c, 0x9cf774, 0x9cf770, 0x9cf780, 0x9cf76c, 0x9cf778];
 
 /// Os ids dos torneios de seleções fora da Copa do Mundo: Olimpíada, Eurocopa, eliminatórias da Eurocopa, Copa
 /// Africana [0x9cf7ac], Copa América, seleção B, sub-21, Copa da Oceania, Copa das Confederações e Copa da Ásia.
-const CPT3_INTERNACIONAIS: [usize; 10] = [0x9cf7a0, 0x9cf7a4, 0x9cf784, 0x9cf7ac, 0x9cf7a8, 0x9cf794, 0x9cf798, 0x9cf8a0, 0x9cf964, 0x9cf790];
+const INTERNATIONAL_TOURNAMENTS: [usize; 10] = [0x9cf7a0, 0x9cf7a4, 0x9cf784, 0x9cf7ac, 0x9cf7a8, 0x9cf794, 0x9cf798, 0x9cf8a0, 0x9cf964, 0x9cf790];
 
 /// { 0x669a10 } (cdecl, key_nation.cpp): `key_nation_is_world_cup_comp(competição)`: o id (+0) é a Copa do Mundo ou uma
 /// das eliminatórias, 1; senão 0. Competição nula: a caixa "Error" (linha 0x3d7) e 0.
@@ -79,7 +79,7 @@ unsafe extern "C" fn key_nation_is_world_cup_comp(comp: usize) -> u32 {
         return 0;
     }
     let id = cpt3_d(comp);
-    CPT3_COPA.iter().any(|&g| cpt3_d(g) == id) as u32
+    WORLD_CUP_COMPS.iter().any(|&g| cpt3_d(g) == id) as u32
 }
 
 unsafe extern "C" fn comparar_key_nation_is_world_cup_comp(comp: usize) -> u32 {
@@ -101,7 +101,7 @@ unsafe extern "C" fn key_nation_is_international_comp(comp: usize) -> u32 {
         return 0;
     }
     let id = cpt3_d(comp);
-    CPT3_INTERNACIONAIS.iter().any(|&g| cpt3_d(g) == id) as u32
+    INTERNATIONAL_TOURNAMENTS.iter().any(|&g| cpt3_d(g) == id) as u32
 }
 
 unsafe extern "C" fn comparar_key_nation_is_international_comp(comp: usize) -> u32 {

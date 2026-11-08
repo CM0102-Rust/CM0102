@@ -13,11 +13,11 @@ unsafe fn cpo7_c(a: usize) -> i32 {
     *(a as *const i8) as i32
 }
 
-type Cpo7Gravar = unsafe extern "thiscall" fn(usize, i8, u32) -> u32;
+type NewsWriteFn = unsafe extern "thiscall" fn(usize, i8, u32) -> u32;
 
 /// Os dados da pessoa a partir de `k`: id e as três chaves +0x33 de +4, +8 e +0xc (a de +0xc pode faltar: −1, só
 /// quando `opcional`).
-unsafe fn set_person_slots_optional(gravar: Cpo7Gravar, n: usize, k: i8, p: usize, opcional: bool) {
+unsafe fn set_person_slots_optional(gravar: NewsWriteFn, n: usize, k: i8, p: usize, opcional: bool) {
     gravar(n, k, cpo7_d(p) as u32);
     gravar(n, k + 1, cpo7_d(cpo7_d(p + 4) + 0x33) as u32);
     gravar(n, k + 2, cpo7_d(cpo7_d(p + 8) + 0x33) as u32);
@@ -26,7 +26,7 @@ unsafe fn set_person_slots_optional(gravar: Cpo7Gravar, n: usize, k: i8, p: usiz
 }
 
 /// A dupla de transmutes comum: construir a notícia (0x77bbe0) e gravar um dado (0x785790).
-unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, Cpo7Gravar) {
+unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32, u32) -> usize, NewsWriteFn) {
     (core::mem::transmute(0x77bbe0usize), core::mem::transmute(0x785790usize))
 }
 
@@ -38,7 +38,7 @@ unsafe fn days_since_arrival(p: usize) -> i32 {
 
 /// O sorteio da gratidão pelo tipo (índices da tabela de bytes 0x732fcc, saltos 0x732fb4): 0 os tipos 0, 6, 14 e 17; 1
 /// os 2 e 30 (sorteio(2)); 2 os 4, 9, 33, 34 e 37 (sorteio(3)); 3 os 5 e 7 (sorteio(4)); o resto 0.
-const CPO7_CASO: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 2, 2, 4, 5, 2];
+const GRATITUDE_DRAW_CASE: [u8; 0x26] = [0, 5, 1, 5, 2, 3, 0, 3, 5, 2, 5, 5, 5, 4, 0, 5, 5, 0, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 2, 2, 4, 5, 2];
 
 /// { 0x732c80 } (thiscall, ret 0x10, media.cpp, quadro SEH sem destrutor): `Media::queue_player_gratitude_news(jogador,
 /// clube, tipo, variante)`: com jogador com ficha (+0x61), clube com técnico (+0xcf) e o contrato dele com o clube
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
     let t = t as i16 as i32;
     gravar(n, 5, t as u32);
     gravar(n, 6, variante as i8 as i32 as u32);
-    let v = match if (t as u32) <= 0x25 { CPO7_CASO[t as usize] } else { 5 } {
+    let v = match if (t as u32) <= 0x25 { GRATITUDE_DRAW_CASE[t as usize] } else { 5 } {
         0 => {
             let ficha = cpo7_d(jogador + 0x61);
             if ficha != 0 && cpo7_c(ficha + 0x44) < 10 {

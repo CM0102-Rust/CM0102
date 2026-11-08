@@ -36,7 +36,7 @@ unsafe fn list_item_ids(lista: usize) -> Vec<u32> {
 /// O ensaio do comparador da 0x5cbdf0: as nações usadas (o vetor local da original), as listas antes e o que a cópia
 /// acrescentaria a cada uma (índice da lista, item).
 #[derive(Clone)]
-struct Cqc11Ensaio {
+struct FriendlyComparerTrial {
     usadas: Vec<u8>,
     antes: std::rc::Rc<Vec<Vec<u32>>>,
     novos: Vec<Vec<u32>>,
@@ -66,7 +66,7 @@ unsafe fn tape_fully_consumed() -> bool {
     !f.2 && f.1 == f.0.len()
 }
 
-impl Cqc11Ensaio {
+impl FriendlyComparerTrial {
     fn usada(&self, id: usize) -> bool {
         self.usadas.get(id).is_some_and(|&b| b != 0)
     }
@@ -90,7 +90,7 @@ impl Cqc11Ensaio {
 /// Um jogo da primeira parte: com nação nos dois clubes (+0x1c, +0x20; +0x53, a id em +0), as duas ficam usadas e cada
 /// uma vai à lista (pela id) da outra: a de casa recebe a de fora, depois o contrário (0x68d0d0 com 4: thiscall na
 /// lista). No ensaio, só o registro.
-unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option<&mut Cqc11Ensaio>) {
+unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option<&mut FriendlyComparerTrial>) {
     let na = cqc11_d(cqc11_d(p + 0x1c) + 0x53);
     if na == 0 {
         return;
@@ -125,7 +125,7 @@ unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option
 /// +0x53, a id em +0) marca as duas nações como usadas e cada uma vai à lista da outra (pela id: a de casa recebe a de
 /// fora, depois o contrário; 0x68d0d0 com 4). No ensaio, nada se grava fora das datas estáticas (o cursor das listas
 /// do calendário não se mexe).
-unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>) {
+unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut FriendlyComparerTrial>) {
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c8e0usize);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
@@ -192,7 +192,7 @@ unsafe fn is_african_excluded(datas: usize, n: usize) -> bool {
 /// não é criado: vale o que a original fez (a id de `b` apareceu na lista da posição de `a`), os sorteios vêm da fita
 /// e, depois do mando, o resto continua (desde `a` seguinte) no primeiro sorteio de 500 da fita (ou no fim) com que
 /// fecha: os de dentro das rotinas do amistoso ficam para trás. Começa na nação `i0`.
-unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>, i0: i32) {
+unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut FriendlyComparerTrial>, i0: i32) {
     let sortear: unsafe extern "C" fn(i32) -> i32 =
         if ens.is_some() { tape_random } else { core::mem::transmute(0x90cfc0usize) };
     let proibido: unsafe extern "thiscall" fn(usize, i32, i32) -> u32 = core::mem::transmute(0x5cc3e0usize);
@@ -341,7 +341,7 @@ unsafe extern "thiscall" fn comparar_arrange_international_friendlies(this: usiz
     let nacoes = cqc11_d(0xae2350) as i32;
     let k = nacoes.max(cqc11_d(this + 0x34fe) as i32).max(0) as usize;
     let antes: Vec<Vec<u32>> = (0..k).map(|q| list_item_ids(nation_friendly_list(this, q))).collect();
-    let mut e = Cqc11Ensaio { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
+    let mut e = FriendlyComparerTrial { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
     link_nations_near_date(this, datas, 0, Some(&mut e));
     let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, datas, n));
     let quantos = tape_lock.len();

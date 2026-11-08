@@ -9,6 +9,6 @@ MUTACOES = [
      '                    1 => { sprintf(texto, 0x98f0b8, b, a); } // mutacao: sobrenome primeiro'),
     ('dbu_cargo', '    (0x9b6964, 0x9b6988, 0x9b695c, 0x9b6440, 4), // manager (dbu)',
      '    (0x9b6964, 0x9b6988, 0x9b68f8, 0x9b642c, 4), // mutacao: manager vira assistant manager'),
-    ('dbu_idioma', '{ DBU1_IDIOMAS[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)',
-     '{ DBU1_IDIOMAS[x as usize % 64] } else { 0x9b6b60 }; // mutacao: o idioma seguinte'),
+    ('dbu_idioma', '{ LANGUAGE_NAMES[x as usize - 1] } else { 0x9b6b60 }; // Unknown (dbu)',
+     '{ LANGUAGE_NAMES[x as usize % 64] } else { 0x9b6b60 }; // mutacao: o idioma seguinte'),
 ]

@@ -9,10 +9,10 @@ unsafe fn cpq5_b(a: usize) -> u8 {
 }
 
 /// O dia de hoje: Data de 8 bytes em 0xae2c90 (+0 dia do ano i16, +2 ano u16, +4 bissexto).
-const CPQ5_HOJE: usize = 0xae2c90;
+const TODAY: usize = 0xae2c90;
 
 /// As estáticas das operações de data (0x54c5b0, 0x54c8e0, 0x54c770, 0x54cdb0: valor e guarda), para os comparadores.
-const CPQ5_ESTATICAS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
+const TRANSFER_MANAGER_DATE_STATICS: [(usize, usize); 8] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1), (0xae2470, 8), (0xae2418, 1)];
 
 /// `a` antes de `b` na ordem dos originais: o ano (+2, 16 bits sem sinal) e, no mesmo ano, o dia (+0, 16 bits com sinal).
 unsafe fn date_pair_before(a: *const [u32; 2], b: *const [u32; 2]) -> bool {
@@ -64,7 +64,7 @@ fn reason_ignores_date(m: u32) -> bool {
 unsafe extern "thiscall" fn transfer_manager_get_offer_completion_date(this: usize, oferta: usize, saida: *mut [u32; 2]) -> u16 {
     let mais: unsafe extern "thiscall" fn(*const [u32; 2], *mut [u32; 2], u32) -> *const [u32; 2] = core::mem::transmute(0x54c5b0usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
-    let hoje = CPQ5_HOJE as *const [u32; 2];
+    let hoje = TODAY as *const [u32; 2];
     let (mut t, mut t2) = ([0u32; 2], [0u32; 2]);
     let vendedor = offer_seller_club(oferta);
     match cpq5_b(oferta + 0x30) & 0xf {
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta:
     let mais: unsafe extern "thiscall" fn(*const [u32; 2], *mut [u32; 2], u32) -> *const [u32; 2] = core::mem::transmute(0x54c5b0usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
-    let hoje = CPQ5_HOJE as *const [u32; 2];
+    let hoje = TODAY as *const [u32; 2];
     let (mut dia, mut limit, mut inicio, mut t, mut t2) = ([0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2]);
     padrao(&mut dia);
     mais(hoje, &mut limit, 0x16d);
@@ -202,17 +202,17 @@ unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta:
 unsafe extern "stdcall" fn transfer_manager_get_next_window_dates(inicio: *mut [u32; 2], fim: *mut [u32; 2]) {
     let dma: unsafe extern "thiscall" fn(*mut [u32; 2], u32, u32, u32, u32) -> *mut [u32; 2] = core::mem::transmute(0x549f70usize);
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
-    let hoje = CPQ5_HOJE as *const [u32; 2];
+    let hoje = TODAY as *const [u32; 2];
     // ponytail: a original empurra o ano num registrador com lixo acima (e o ano + 1 sobre a palavra do argumento); a
     // 0x549f70 só usa os 16 bits de baixo
-    let ano = || *((CPQ5_HOJE + 2) as *const u16) as u32;
+    let ano = || *((TODAY + 2) as *const u16) as u32;
     let (mut a, mut b, mut c, mut d, mut e, mut t) = ([0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2]);
     dma(&mut a, 1, 6, ano(), 0xffff_ffff); // 1º de julho
     dma(&mut b, 0x1f, 6, ano(), 0xffff_ffff); // 31 de julho
     dma(&mut c, 0xf, 0xb, ano(), 0xffff_ffff); // 15 de dezembro
     dma(&mut d, 0xf, 0, ano(), 0xffff_ffff); // 15 de janeiro
     let dia = |x: &[u32; 2]| x[0] as u16 as i16;
-    let h = *(CPQ5_HOJE as *const i16);
+    let h = *(TODAY as *const i16);
     if h >= dia(&a) && h <= dia(&b) {
         copia(inicio, &mut t, hoje);
         if !fim.is_null() {
@@ -248,7 +248,7 @@ unsafe extern "stdcall" fn transfer_manager_get_next_window_dates(inicio: *mut [
 fn date_comparer_regions(saidas: &[usize]) -> Vec<(usize, usize)> {
     let mut r: Vec<(usize, usize)> = saidas.iter().filter(|&&s| s != 0).map(|&s| (s, 8)).collect();
     r.push((0xae1080, 4));
-    r.extend_from_slice(&CPQ5_ESTATICAS);
+    r.extend_from_slice(&TRANSFER_MANAGER_DATE_STATICS);
     r
 }
 
@@ -276,5 +276,5 @@ unsafe extern "stdcall" fn comparar_transfer_manager_get_next_window_dates(inici
     let o = original_fn::<unsafe extern "stdcall" fn(*mut [u32; 2], *mut [u32; 2])>(%%I2%%);
     let reg = date_comparer_regions(&[inicio as usize, fim as usize]);
     let (_, _, igual, _, _) = crate::comparacao::lado_a_lado(&reg, || o(inicio, fim), || transfer_manager_get_next_window_dates(inicio, fim));
-    PLACAR.registrar(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(CPQ5_HOJE as *const u32), !fim.is_null()));
+    PLACAR.registrar(igual, || format!("transfer_manager_get_next_window_dates(hoje {:x}, fim {}) diferente", *(TODAY as *const u32), !fim.is_null()));
 }

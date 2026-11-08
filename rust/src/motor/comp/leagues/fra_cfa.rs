@@ -3,7 +3,7 @@ use super::*;
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-pub(crate) type Cqo5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type FraCfaScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Sets rounds primeira.. of round table t from a static list: each round's date (0x68a160) and match ranges
 /// (0x68a1c0), in the original's order.
@@ -11,7 +11,7 @@ pub(crate) type Cqo5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo5Rodada]) {
+pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[FraCfaScheduleRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -25,11 +25,11 @@ pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, ano: u32, primeira: i32
 
 
 /// O que muda entre as ligas de fase única.
-pub(crate) struct Cqo5Liga {
+pub(crate) struct SinglePhaseLeague {
     pub(crate) rodadas: i16,
     pub(crate) arquivo: usize,
     pub(crate) linha: u32,
-    pub(crate) tabela: &'static [Cqo5Rodada],
+    pub(crate) tabela: &'static [FraCfaScheduleRound],
     pub(crate) ramo: &'static str,
 }
 
@@ -40,7 +40,7 @@ pub(crate) struct Cqo5Liga {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5Liga) -> usize {
+pub(crate) unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &SinglePhaseLeague) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -119,7 +119,7 @@ pub(crate) unsafe fn compare_c1_schedule(nome: &str, fase: u32, rodadas: *mut i1
 }
 
 /// a CFA (de fundo, 4 grupos de 18), 34 rodadas de 31/jul a 20/mai; quase todas com duas faixas de TV
-pub(crate) const CQO5_CFA: [Cqo5Rodada; 34] = [
+pub(crate) const CFA_ROUNDS: [FraCfaScheduleRound; 34] = [
     (31, 6, 0, 5, 2, &[(6, 1, 1), (6, 2, 1), (-1, -1, -1)]), // 0: 31/jul
     (6, 7, 0, 4, 2, &[(-1, -1, -1)]), // 1: 6/ago
     (14, 7, 0, 5, 2, &[(4, 1, 1), (4, 2, 1), (-1, -1, -1)]), // 2: 14/ago
@@ -157,7 +157,7 @@ pub(crate) const CQO5_CFA: [Cqo5Rodada; 34] = [
 ];
 
 /// a Série C1 (as duas chaves, a mesma tabela), 34 rodadas de domingo de 5/set a 7/mai, sem faixas de TV
-pub(crate) const CQO5_C1: [Cqo5Rodada; 34] = [
+pub(crate) const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [
     (5, 8, 0, 6, 1, &[(-1, -1, -1)]), // 0: 5/set
     (12, 8, 0, 6, 1, &[(-1, -1, -1)]), // 1: 12/set
     (19, 8, 0, 6, 1, &[(-1, -1, -1)]), // 2: 19/set
@@ -194,14 +194,14 @@ pub(crate) const CQO5_C1: [Cqo5Rodada; 34] = [
     (7, 4, 1, 6, 1, &[(-1, -1, -1)]), // 33: 7/mai (+1 ano)
 ];
 
-pub(crate) const CQO5_LIGA_CFA: Cqo5Liga = Cqo5Liga { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CQO5_CFA, ramo: "cqo_5 calendario da cfa" };
+pub(crate) const CQO5_LIGA_CFA: SinglePhaseLeague = SinglePhaseLeague { rodadas: 0x22, arquivo: 0x9ccaf0, linha: 0xab, tabela: &CFA_ROUNDS, ramo: "cqo_5 calendario da cfa" };
 
 /// the CFA schedule (the French fourth level, background, 4 groups of 18): 34 rounds, from 31 July to 20 May of the
 /// next year; in 25 rounds two matches go to TV slots (mostly day 6 or 4, slots 1 and 2); main stage only
 /// Original: `FraCfa::create_schedule` (0x5b9510, fra_cfa.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5b9510 } (thiscall, ret 0x10, fra_cfa.cpp, 2.703 bytes, método +0x3c): `FraCfa::create_schedule(fase, &rodadas, &extra,
-/// &é_liga)`: a CFA, 34 rodadas (`CQO5_CFA`). Fonte 0x9ccaf0, linha 0xab.
+/// &é_liga)`: a CFA, 34 rodadas (`CFA_ROUNDS`). Fonte 0x9ccaf0, linha 0xab.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     create_cfa_schedule(this, fase, rodadas, extra, liga, &CQO5_LIGA_CFA)
 }
@@ -218,12 +218,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_create_schedule(this: us
 /// mais 0x800, 0x802 no confronto de dois jogos) e a final (sorteio em 29/mai, ida em 4/jun, 2 times); a fase 1, os
 /// play-outs [inferência: o rebaixamento]: uma rodada de 2 confrontos de ida e volta nas datas das semifinais, sem
 /// sorteio (0x200), nome 0xbe.
-pub(crate) const CQO5_SEMIFINAIS: Cql10R = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0x82, (0, 0xa00, 0x802), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0)); // cqo5: as semifinais da C1
-pub(crate) const CQO5_FINAL: Cql10R = cql10r((0x1d, 4, 1, 0), (4, 5, 1, 6, 1, 0), 0x96, (0, 0x800, 0x802), 5, (2, 1, 0, 0), (0, 2, 7), (0, 0, 0));
-pub(crate) const CQO5_PLAYOUT: Cql10R = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0xbe, (0, 0x200, 0x800), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0));
+pub(crate) const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0x82, (0, 0xa00, 0x802), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0)); // cqo5: as semifinais da C1
+pub(crate) const CFA_FINAL_ROUND: EngCcCupCupRound = cql10r((0x1d, 4, 1, 0), (4, 5, 1, 6, 1, 0), 0x96, (0, 0x800, 0x802), 5, (2, 1, 0, 0), (0, 2, 7), (0, 0, 0));
+pub(crate) const C1_PLAYOUT: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15, 4, 1, 6, 1, 0), 0xbe, (0, 0x200, 0x800), 5, (4, 2, 4, 0), (0, 2, 7), (0, 0, 0));
 
 /// O que muda entre as duas chaves da C1: a fonte e as linhas das caixas (fase −1, 0 e 1).
-pub(crate) struct Cqo5C1 {
+pub(crate) struct C1BracketVariant {
     pub(crate) arquivo: usize,
     pub(crate) linhas: [u32; 3],
 }
@@ -232,11 +232,11 @@ pub(crate) struct Cqo5C1 {
 /// returns the table or 0.
 ///
 /// [pt] O corpo comum da C1 A e da C1 B (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo), pela
-/// fase (o byte): −1 a fase principal (é_liga = 1, 34 rodadas, extra 0, a tabela de 0x8a2 bytes com `CQO5_C1`, o ano
+/// fase (o byte): −1 a fase principal (é_liga = 1, 34 rodadas, extra 0, a tabela de 0x8a2 bytes com `SERIE_C1_ROUNDS`, o ano
 /// +0x40 como palavra); 0 os play-offs (é_liga = 0, 2 rodadas, extra 0xa0, a tabela de 0xd0 bytes com as semifinais e a
 /// final); 1 os play-outs (é_liga = 0, 1 rodada, extra 0, 0x68 bytes); as outras devolvem 0 sem gravar nada. Sem memória
 /// (malloc 0x944e46: push; add esp, 4 -> cdecl): a caixa da linha da fase e 0. Devolve a tabela.
-pub(crate) unsafe fn create_c1_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo5C1) -> usize {
+pub(crate) unsafe fn create_c1_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &C1BracketVariant) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let (k, l, n, x, tamanho) = match fase as u8 {
         0xff => (0, 1, 0x22, 0, 0x8a2),
@@ -257,15 +257,15 @@ pub(crate) unsafe fn create_c1_schedule(this: usize, fase: u32, rodadas: *mut i1
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16);
     if k == 0 {
         crate::comparacao::ramo("cqo_5 calendario da c1");
-        fra_cfa_set_league_rounds(t, ano as u16 as u32, 0, &CQO5_C1);
+        fra_cfa_set_league_rounds(t, ano as u16 as u32, 0, &SERIE_C1_ROUNDS);
     } else {
         crate::comparacao::ramo("cqo_5 play-offs da c1");
         let ano = ano as i32 as u32;
         if k == 1 {
-            eng_cc_cup_write_cup_round(t, 0, &CQO5_SEMIFINAIS, ano);
-            eng_cc_cup_write_cup_round(t, 1, &CQO5_FINAL, ano);
+            eng_cc_cup_write_cup_round(t, 0, &CFA_SEMIFINAL_ROUND, ano);
+            eng_cc_cup_write_cup_round(t, 1, &CFA_FINAL_ROUND, ano);
         } else {
-            eng_cc_cup_write_cup_round(t, 0, &CQO5_PLAYOUT, ano);
+            eng_cc_cup_write_cup_round(t, 0, &C1_PLAYOUT, ano);
         }
     }
     t
@@ -279,7 +279,7 @@ pub(crate) unsafe fn create_c1_schedule(this: usize, fase: u32, rodadas: *mut i1
 /// [pt] { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
 /// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule_64ef30(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_c1_schedule(this, fase, rodadas, extra, liga, &Cqo5C1 { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
+    create_c1_schedule(this, fase, rodadas, extra, liga, &C1BracketVariant { arquivo: 0x9ea558, linhas: [0xac, 0x156, 0x190] })
 }
 
 /// Comparer for `fra_cfa_create_schedule_64ef30` (comparison mode: see the header of motor.rs).
@@ -343,7 +343,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize
 }
 
 /// O que muda entre as duas ligas de fundo.
-pub(crate) struct Cqn4Fundo {
+pub(crate) struct BackgroundLeague {
     pub(crate) vtabela: usize,
     /// o id do registro da competição (+4)
     pub(crate) competicao: usize,
@@ -378,7 +378,7 @@ pub(crate) struct Cqn4Fundo {
 /// (League::free_table 0x687970: push 0; mov ecx -> thiscall, ret 4): os jogos do grupo ficam no calendário do jogo e a
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
-pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
+pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_FRACFA_SET_UP_RULES);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
@@ -451,7 +451,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Cqn4Fundo
     this
 }
 
-pub(crate) const CQN4_CFA: Cqn4Fundo = Cqn4Fundo {
+pub(crate) const FRA_CFA_CFA_LEAGUE: BackgroundLeague = BackgroundLeague {
     vtabela: 0x96a7b0,
     competicao: KEY_CLUB_COMP_FRENCH_CFA,
     todas: &[KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION], // cqn4: os clubes da primeira e da segunda divisões na CFA
@@ -464,7 +464,7 @@ pub(crate) const CQN4_CFA: Cqn4Fundo = Cqn4Fundo {
     arquivo: 0x9ccaf0,
     linhas: [0x40, 0x64, 0x6b],
 };
-pub(crate) const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
+pub(crate) const FRENCH_LOWER_DIVISION: BackgroundLeague = BackgroundLeague {
     vtabela: 0x96ab78,
     competicao: KEY_CLUB_COMP_FRENCH_LOWER_DIVISION,
     todas: &[KEY_CLUB_COMP_FRENCH_NATIONAL],
@@ -488,7 +488,7 @@ pub(crate) const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
 /// [inferência: os times reserva]) e até 34 da divisão genérica cuja competição de reserva é a CFA, embaralhados em 4
 /// grupos de 18. Fonte 0x9ccaf0, linhas 0x40, 0x64, 0x6b.
 pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) -> usize {
-    construct_group_league(this, ano, &CQN4_CFA)
+    construct_group_league(this, ano, &FRA_CFA_CFA_LEAGUE)
 }
 
 /// the French lower division (background): up to 40 clubs, those of the National and up to 20 French clubs of the
@@ -499,7 +499,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) 
 /// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
 /// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
 pub(crate) unsafe extern "thiscall" fn construct_fra_lower(this: usize, ano: u32) -> usize {
-    construct_group_league(this, ano, &CQN4_BAIXO)
+    construct_group_league(this, ano, &FRENCH_LOWER_DIVISION)
 }
 
 /// Comparer of the constructors (they draw and allocate): original only, checking return, vtable, year, discipline,
@@ -507,7 +507,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_lower(this: usize, ano: u32
 ///
 /// [pt] Sorteiam e alocam: só a original, conferindo a devolução, a vtable, o ano, a disciplina, o registro e a liga sem
 /// tabela no fim (+0x3e = 0, +0xb1 = 0: a última tabela foi solta).
-pub(crate) unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &BackgroundLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && read_u32_as_usize(this + 4) == comp_record_of_key(p.competicao)
@@ -519,13 +519,13 @@ pub(crate) unsafe fn compare_construct_group_league(nome: &str, this: usize, ano
 /// Comparer for `construct_fra_cfa` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_CFA);
-    compare_construct_group_league("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
+    compare_construct_group_league("construct_fra_cfa", this, ano, &FRA_CFA_CFA_LEAGUE, || o(this, ano))
 }
 
 /// Comparer for `construct_fra_lower` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_FRA_LOWER);
-    compare_construct_group_league("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
+    compare_construct_group_league("construct_fra_lower", this, ano, &FRENCH_LOWER_DIVISION, || o(this, ano))
 }
 
 /// Body of the two destructors: sets the vtable, frees table, schedule (+0xba) and each stage, frees the stage array,

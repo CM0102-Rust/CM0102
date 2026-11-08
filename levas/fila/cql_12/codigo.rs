@@ -8,7 +8,7 @@
 /// times, jogos, times novos e inscritos que já entraram, +0x20/+0x21/+0x22 replay, jogos por confronto e dias entre
 /// eles, +0x5c/+0x60/+0x64 os prêmios (chegar, vencer, perder).
 #[derive(Clone, Copy)]
-struct Cql12R {
+struct FraSuperCupRound {
     sorteio: (u32, u32, u32, u32),
     jogo: (u32, u32, u32, u32, u32, u32),
     codigo: u16,
@@ -22,13 +22,13 @@ struct Cql12R {
 /// A linha da tabela: (sorteio), (jogo), nome, (bits do sorteio, desempate, desempate de ida e volta), categoria,
 /// (times, jogos, novos, inscritos), (replay, jogos por confronto, dias entre eles), (prêmios).
 const fn cql12r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, u32, u32, u32), codigo: u16, bits: (u16, u16, u16), categoria: u8,
-    times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> Cql12R {
-    Cql12R { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
+    times: (u16, u16, u16, u16), confronto: (u8, u8, u8), premios: (u32, u32, u32)) -> FraSuperCupRound {
+    FraSuperCupRound { sorteio, jogo, codigo, bits, categoria, times, confronto, premios }
 }
 
 /// Grava a rodada `i` da tabela `t` (ano-base `ano`, a palavra +0x40 da copa com sinal): as duas datas (0x521e60 e
 /// 0x521eb0, cdecl, 7 e 9 argumentos; add esp, 0x1c / 0x24) e os campos.
-unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &Cql12R, ano: u32) {
+unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCupRound, ano: u32) {
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521e60usize);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(0x521eb0usize);
     sorteio(t, i, r.sorteio.0, r.sorteio.1, r.sorteio.2, r.sorteio.3, ano);
@@ -59,8 +59,8 @@ unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &Cql12R, ano: u32) {
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela. `ajuste` mexe na primeira rodada depois da alocação (o mando sorteado da
 /// Supercopa francesa).
-unsafe fn fra_super_create_single_stage_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[Cql12R], arquivo: usize, linha: u32, nome: &'static str,
-    ajuste: impl FnOnce(&mut Cql12R)) -> usize {
+unsafe fn fra_super_create_single_stage_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32, tabela: &[FraSuperCupRound], arquivo: usize, linha: u32, nome: &'static str,
+    ajuste: impl FnOnce(&mut FraSuperCupRound)) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -123,7 +123,7 @@ unsafe fn fra_super_compare_round_table(nome: &str, fase: u32, rodadas: *mut i16
 }
 
 /// A Supercopa da França: um jogo em julho; o prêmio de 60 mil por chegar. O mando vem à parte (`french_super_cup_venue`).
-const CQL12_SUPERCOPA_DA_FRANCA: [Cql12R; 1] = [
+const FRENCH_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
     cql12r((5, 6, 0, 5), (0x18, 6, 0, 5, 2, 0x400), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0xea60, 0, 0)), // cql12: o jogo da Supercopa da França
 ];
 
@@ -143,7 +143,7 @@ unsafe fn french_super_cup_venue(this: usize) -> u32 {
 /// `french_super_cup_venue` (a original sorteia depois da data do sorteio, que não sorteia: a cópia sorteia logo antes);
 /// a caixa da linha 0x97 sem memória.
 unsafe extern "thiscall" fn fra_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_FRANCA, 0x9ccc48, 0x97, "cql_12 tabela da supercopa da franca",
+    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &FRENCH_SUPER_CUP_ROUNDS, 0x9ccc48, 0x97, "cql_12 tabela da supercopa da franca",
         |r| r.jogo.5 = french_super_cup_venue(this))
 }
 
@@ -159,14 +159,14 @@ unsafe extern "thiscall" fn comparar_fra_super_create_round_table(this: usize, f
 
 /// A Supercopa da Espanha: ida e volta (7 dias entre os jogos) em agosto, sem sorteio (+0xd = 0x200), desempate de ida e
 /// volta 1.
-const CQL12_SUPERCOPA_DA_ESPANHA: [Cql12R; 1] = [
+const SPANISH_SUPER_CUP: [FraSuperCupRound; 1] = [
     cql12r((5, 6, 0, 5), (0x14, 7, 0, 6, 1, 0), 0, (0, 0x200, 1), 6, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)), // cql12: a ida da Supercopa da Espanha
 ];
 
 /// { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 unsafe extern "thiscall" fn spa_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DA_ESPANHA, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
+    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &SPANISH_SUPER_CUP, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 
 unsafe extern "thiscall" fn comparar_spa_super_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
@@ -176,14 +176,14 @@ unsafe extern "thiscall" fn comparar_spa_super_create_round_table(this: usize, f
 }
 
 /// A Supercopa do Japão: um jogo em março no estádio neutro, 150 mil por vencer.
-const CQL12_SUPERCOPA_DO_JAPAO: [Cql12R; 1] = [
+const JAPAN_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
     cql12r((1, 1, 0, 5), (4, 2, 0, 5, 1, 4), 0, (0, 1, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0x249f0, 0)), // cql12: o jogo da Supercopa do Japão
 ];
 
 /// { 0x666020 } (thiscall, ret 0x10, jap_super.cpp; a virtual +0x3c da Supercopa do Japão): `JapSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 unsafe extern "thiscall" fn fra_super_create_round_table_666020(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQL12_SUPERCOPA_DO_JAPAO, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
+    fra_super_create_single_stage_round_table(this, fase, rodadas, extra, saida, &JAPAN_SUPER_CUP_ROUNDS, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
 }
 
 unsafe extern "thiscall" fn comparar_fra_super_create_round_table_666020(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {

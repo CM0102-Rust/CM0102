@@ -53,7 +53,7 @@ unsafe fn check_qualifier_rules(nome: &str, this: usize, campos: &[(usize, u8, u
     r
 }
 
-const CQJ12_EUROPA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x4a, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
+const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x4a, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xc7, 1, 4), (0xc8, 1, 5), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7)];
 
 /// { 0x9191e0 } (thiscall, ret 0, wc_europe_league.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
@@ -62,7 +62,7 @@ const CQJ12_EUROPA: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x4a, 1, 3), (0x3c,
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da europa");
-    wc_europe_league_write_rule_fields(this, &CQJ12_EUROPA);
+    wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
     *((this + 0xc4) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
     let dia = 0x19; // cqj12: o dia do começo das eliminatórias europeias
@@ -73,10 +73,10 @@ unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    check_qualifier_rules("wc_europe_league_set_up_rules", this, &CQJ12_EUROPA, (0x19, 2, 5), 0, || o(this))
+    check_qualifier_rules("wc_europe_league_set_up_rules", this, &EUROPE_RULE_FIELDS, (0x19, 2, 5), 0, || o(this))
 }
 
-const CQJ12_SUL: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
+const SOUTH_AMERICA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 16] = [(0x3c, 2, 2), (0x43, 1, 2), (0xc6, 1, 2), (0xc2, 1, 3), (0xc3, 1, 1), (0xc4, 1, 0xa), (0xab, 2, 0),
     (0xdb, 2, 0), (0xc5, 1, 1), (0xc7, 1, 3), (0xbf, 1, 1), (0xc0, 1, 0), (0xc1, 1, 0), (0x49, 1, 7), (0x4a, 1, 3), (0xa7, 2, 0xffff)];
 
 /// { 0x921040 } (thiscall, ret 0, wc_south_american_league.cpp; a virtual +0x8c; quadro SEH só da data local):
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this: usize) ->
         }
     }
     crate::comparacao::ramo("cqj_12 regras da america do sul");
-    wc_europe_league_write_rule_fields(this, &CQJ12_SUL);
+    wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
     *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
     *((this + 0xbe) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
     let dia = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
@@ -114,13 +114,13 @@ unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_921040(this: 
         }
     }
     let vagas = 4u8.wrapping_sub(ef).wrapping_sub(*((this + 0xee) as *const u8));
-    let r = check_qualifier_rules("wc_europe_league_set_up_rules_921040", this, &CQJ12_SUL, (0x19, 0, 5), 0, || o(this));
+    let r = check_qualifier_rules("wc_europe_league_set_up_rules_921040", this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS, (0x19, 0, 5), 0, || o(this));
     let (lido_ef, lido_be) = (*((this + 0xef) as *const u8), *((this + 0xbe) as *const u8));
     PLACAR.registrar(lido_ef == ef && lido_be == vagas, || format!("wc_europe_league_set_up_rules_921040({:#x}) +0xef {} previsto {} vagas {} previstas {}", this, lido_ef, ef, lido_be, vagas));
     r
 }
 
-const CQJ12_ASIA: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
+const ASIA_QUALIFIER_RULE_FIELDS: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2, 2), (0xc3, 1, 1), (0xc4, 1, 0xa), (0x43, 1, 2), (0xc5, 1, 1),
     (0xc6, 1, 2), (0xbe, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0)];
 
 /// { 0x912eb0 } (thiscall, ret 0, wc_asia_league.cpp; a virtual +0x8c; quadro SEH só da data local):
@@ -128,7 +128,7 @@ const CQJ12_ASIA: [(usize, u8, u32); 12] = [(0xc2, 1, 3), (0xc7, 1, 3), (0x3c, 2
 /// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
 unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da asia");
-    wc_europe_league_write_rule_fields(this, &CQJ12_ASIA);
+    wc_europe_league_write_rule_fields(this, &ASIA_QUALIFIER_RULE_FIELDS);
     let dia = 0x19; // cqj12: o dia do começo das eliminatórias asiáticas
     let palavra = comp_date_word(this, dia, 2, 5);
     finish_rules_setup(this, palavra, 1)
@@ -137,5 +137,5 @@ unsafe extern "thiscall" fn wc_europe_league_set_up_rules_912eb0(this: usize) ->
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_wc_europe_league_set_up_rules_912eb0(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    check_qualifier_rules("wc_europe_league_set_up_rules_912eb0", this, &CQJ12_ASIA, (0x19, 2, 5), 1, || o(this))
+    check_qualifier_rules("wc_europe_league_set_up_rules_912eb0", this, &ASIA_QUALIFIER_RULE_FIELDS, (0x19, 2, 5), 1, || o(this))
 }

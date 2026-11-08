@@ -3,7 +3,7 @@ MUTACOES = [
     ('cpa_ordem_posicao', '            *((r + 4) as *mut i8) = c; // a posição', '            *((r + 4) as *mut i8) = c.wrapping_add(1); // mutacao: uma posicao abaixo'),
     ('cpa_mini_posicao', '                pos = pos.wrapping_sub(1); // a posição desce', '                pos = pos.wrapping_sub(0); // mutacao: a posicao nao desce'),
     ('cpa_liberar_propria', '    if propria { // a da liga: zera a contagem e a tabela', '    if !propria { // mutacao: zera a da liga ao soltar uma copia'),
-    ('cpa_completa_rodadas', '            if ((read_u8(tab + CPA1_LINHA * i + 0x11) as i8) as i16) < rodadas { // ainda falta jogar', '            if ((read_u8(tab + CPA1_LINHA * i + 0x11) as i8) as i16) < rodadas - 1 { // mutacao: uma rodada antes'),
+    ('cpa_completa_rodadas', '            if ((read_u8(tab + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rodadas { // ainda falta jogar', '            if ((read_u8(tab + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rodadas - 1 { // mutacao: uma rodada antes'),
     ('cpa_tv_valor', '            somar_tv(get_club_finance(*(G_FINANCE_TABLE as *const usize), clube), valor); // o dinheiro da TV', '            somar_tv(get_club_finance(*(0xae2a38 as *const usize), clube), valor.wrapping_mul(2)); // mutacao: o dobro'),
     ('cpa_honras_ordem', '    registrar(liga, campeao, vice, terceiro, destaque) // campeão, vice, terceiro', '    registrar(liga, campeao, terceiro, vice, destaque) // mutacao: vice e terceiro trocados'),
     ('cpa_historico_ano', '    core::ptr::write_unaligned((r + 8) as *mut u16, *(G_CURRENT_DATE_YEAR as *const u16)); // o ano', '    core::ptr::write_unaligned((r + 8) as *mut u16, (*(0xae2c92 as *const u16)).wrapping_add(1)); // mutacao: o ano seguinte'),

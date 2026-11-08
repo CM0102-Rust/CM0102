@@ -1,7 +1,7 @@
 use super::*;
 
 /// A Intertoto: cinco rodadas em ida e volta de junho a agosto (a 1ª com 40 times; 12 novos na 2ª, 8 na 3ª).
-pub(crate) const CQP13_INTERTOTO: [Cql10R; 5] = [
+pub(crate) const INTERTOTO_ROUNDS: [EngCcCupCupRound; 5] = [
     cql10r((0x19, 5, 0, 4), (0x1a, 5, 0, 5, 1, 0), 0xa, (0, 4, 7), 7, (0x28, 0x14, 0x28, 0), (0, 2, 4), (0, 0, 0)), // cqp13: a 1ª rodada da Intertoto
     cql10r((1, 6, 0, 3), (3, 6, 0, 5, 1, 0), 0x14, (0, 0, 3), 7, (0x20, 0x10, 0xc, 0x28), (0, 2, 7), (0, 0, 0)),
     cql10r((0xb, 6, 0, 6), (0x11, 6, 0, 5, 1, 0), 0x1e, (0, 0, 3), 7, (0x18, 0xc, 8, 0x34), (0, 2, 7), (0, 0, 0)),
@@ -18,7 +18,7 @@ pub(crate) const CQP13_INTERTOTO: [Cql10R; 5] = [
 /// [pt] { 0x633300 } (thiscall, ret 0x10, intertoto_cup.cpp; a virtual +0x3c): `IntertotoCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0xe4 sem memória.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERTOTO, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &INTERTOTO_ROUNDS, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
 
 /// Comparer for `intertoto_cup_create_round_table` (comparison mode: see the header of motor.rs).
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table
 }
 
 /// A Copa Intercontinental: jogo único em 1º de dezembro (sorteio em 10 de outubro), mando 4 (Tóquio [inferência]).
-pub(crate) const CQP13_INTERCONTINENTAL: [Cql10R; 1] = [
+pub(crate) const INTERCONTINENTAL_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
     cql10r((0xa, 9, 0, 5), (1, 0xb, 0, 1, 2, 4), 0, (0, 3, 0), 6, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqp13: a Copa Intercontinental
 ];
 
@@ -40,7 +40,7 @@ pub(crate) const CQP13_INTERCONTINENTAL: [Cql10R; 1] = [
 /// [pt] { 0x92b770 } (thiscall, ret 0x10, world_club_cup.cpp; a virtual +0x3c): `WorldClubCup::create_round_table(...)`:
 /// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_92b770(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERCONTINENTAL, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &INTERCONTINENTAL_CUP_ROUNDS, 0xad5848, 0x9a, "cqp_13 tabela da intercontinental")
 }
 
 /// Comparer for `intertoto_cup_create_round_table_92b770` (comparison mode: see the header of motor.rs).
@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table
 }
 
 /// A Copa Interamericana: ida e volta a partir de 26 de janeiro do ano seguinte (sorteio em 10 de outubro), 7 dias.
-pub(crate) const CQP13_INTERAMERICANA: [Cql10R; 1] = [
+pub(crate) const INTERAMERICAN_CUP: [EngCcCupCupRound; 1] = [
     cql10r((0xa, 9, 0, 5), (0x1a, 0, 1, 2, 2, 0), 0, (0, 0, 3), 8, (2, 1, 2, 0), (0, 2, 7), (0, 0, 0)),
 ];
 
@@ -62,7 +62,7 @@ pub(crate) const CQP13_INTERAMERICANA: [Cql10R; 1] = [
 /// [pt] { 0x632340 } (thiscall, ret 0x10, inter_amer_cup.cpp; a virtual +0x3c): `InterAmerCup::create_round_table(...)`:
 /// na fase −1, a rodada única; a caixa da linha 0x9a sem memória.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table_632340(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &CQP13_INTERAMERICANA, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
+    eng_cc_cup_create_single_stage_round_table(this, fase, rodadas, extra, saida, &INTERAMERICAN_CUP, 0x9e9d94, 0x9a, "cqp_13 tabela da interamericana")
 }
 
 /// Comparer for `intertoto_cup_create_round_table_632340` (comparison mode: see the header of motor.rs).
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_intertoto_cup_create_round_table
 }
 
 /// A Copa dos Campeões da CONCACAF: quartas (28/8), semifinal (1/9) e final (4/9) em jogo único, 8 times.
-pub(crate) const CQP13_CONCACAF: [Cql10R; 3] = [
+pub(crate) const CONCACAF_CHAMPIONS_CUP_ROUNDS: [EngCcCupCupRound; 3] = [
     cql10r((1, 7, 0, 5), (0x1c, 8, 0, 3, 2, 0), 0xa, (0, 3, 0), 8, (8, 4, 8, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // cqp13: as quartas da CONCACAF
     cql10r((0x1d, 8, 0, 4), (1, 9, 0, 6, 2, 0), 0x82, (0, 3, 0), 8, (4, 2, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
     cql10r((2, 9, 0, 0), (4, 9, 0, 2, 2, 0), 0x96, (0, 3, 0), 8, (2, 1, 0, 0), (0, 0, 0), (0, 0xffff_ffff, 0)),
@@ -85,7 +85,7 @@ pub(crate) const CQP13_CONCACAF: [Cql10R; 3] = [
 /// `uefa_cup_rounds`): a 1ª rodada de qualificação em agosto, a 2ª no fim de agosto, a 1ª rodada em setembro, a 2ª
 /// em novembro, a 3ª em dezembro, as oitavas em fevereiro, as quartas e a semifinal em março e abril e a final em
 /// maio, todas em ida e volta menos a final.
-pub(crate) const CQQ10_UEFA: [Cql10R; 8] = [
+pub(crate) const UEFA_CUP_ROUNDS: [EngCcCupCupRound; 8] = [
     cql10r((0x1c, 6, 0, 4), (0xa, 7, 0, 3, 2, 0), 0xdc, (4, 0, 3), 7, (0x52, 0x29, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqq10: a 1ª rodada de qualificação da UEFA
     cql10r((0x19, 7, 0, 4), (0xe, 8, 0, 3, 2, 0), 0xa, (4, 0x400, 3), 7, (0x60, 0x30, 0x37, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql10r((0x1d, 8, 0, 4), (0x13, 9, 0, 3, 2, 0), 0x14, (4, 0, 3), 7, (0x30, 0x18, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
@@ -97,7 +97,7 @@ pub(crate) const CQQ10_UEFA: [Cql10R; 8] = [
 ];
 
 /// A preliminar (só com `b` = +0xb2 > 0): sorteio em 28/6, jogo em 6/7; b times, b/2 jogos, b novos.
-pub(crate) const CQQ10_UEFA_PRELIMINAR: Cql10R =
+pub(crate) const UEFA_CUP_PRELIMINARY_ROUND: EngCcCupCupRound =
     cql10r((0x1c, 5, 0, 2), (6, 6, 0, 3, 2, 0), 0xa0, (0, 0x200, 3), 7, (0, 0, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0));
 
 /// UEFA Cup round descriptions for b = +0xb2 (preliminary round when b > 0, then the qualifying and main rounds with
@@ -106,10 +106,10 @@ pub(crate) const CQQ10_UEFA_PRELIMINAR: Cql10R =
 /// [pt] As rodadas da Copa da UEFA com `b` = +0xb2 (byte com sinal; as metades truncam como a original, cdq/sar): com b > 0
 /// a preliminar (b times, b/2 jogos, b novos) e depois as oito; na 1ª rodada de qualificação 0x52 − b/2 novos e b já
 /// inscritos, na 2ª b/2 + 0x52 inscritos, na 1ª rodada b/2 + 0x89 inscritos.
-pub(crate) fn uefa_cup_rounds(b: i8) -> ([Cql10R; 9], usize) {
-    let mut t = [CQQ10_UEFA_PRELIMINAR; 9];
+pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
+    let mut t = [UEFA_CUP_PRELIMINARY_ROUND; 9];
     let (b, m) = (b as i32, b as i32 / 2);
-    let mut u = CQQ10_UEFA;
+    let mut u = UEFA_CUP_ROUNDS;
     u[0].times.2 = (0x52 - m) as u16;
     u[0].times.3 = b as u16;
     u[1].times.3 = (m + 0x52) as u16;

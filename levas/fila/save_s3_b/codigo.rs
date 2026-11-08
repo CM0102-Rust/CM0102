@@ -24,7 +24,7 @@ unsafe fn save_error_box(linha: u32, texto: usize, titulo: usize, corpo: usize) 
 /// [0xb6b7c8] (o de Media) e chama com [0xae2a60]. O passo 0x19 (0x6692f0, as competições) não
 /// tem global e devolve 0 quando falha.
 #[derive(Clone, Copy)]
-enum PassoDoSave {
+enum SaveStep {
     /// thiscall(this, caminho), ret 4
     Caminho(usize, usize),
     /// thiscall(this), sem argumento
@@ -39,42 +39,42 @@ enum PassoDoSave {
     Competicoes,
 }
 
-const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
-    PassoDoSave::Caminho(0xb63c98, 0x5ff9e0), // 2 HUMAN_MANAGER
-    PassoDoSave::Caminho(0xb74448, 0x7f8020), // 3 SCOUT_MANAGER
-    PassoDoSave::Caminho(0xb7431c, 0x787c30), // 4 News
-    PassoDoSave::Virtual(0xae2c74),           // 5 Friendly
-    PassoDoSave::Sozinho(0xde1f58, 0x905510), // 6 UefaSeeding
-    PassoDoSave::Sozinho(0xae1000, 0x4c6b70), // 7 ConmebolSeeding
-    PassoDoSave::Caminho(0xdd7f00, 0x86ffd0), // 8 Staff_Records
-    PassoDoSave::Caminho(0xb6b7c0, 0x72adf0), // 9 Match_Stats
-    PassoDoSave::Caminho(0xb74350, 0x7c55a0), // 0xa PlayerStats
-    PassoDoSave::Caminho(0xad9da8, 0x443f50), // 0xb Club_History
-    PassoDoSave::Caminho(0xad9dac, 0x451ff0), // 0xc Club_Records
-    PassoDoSave::Caminho(0xde1d08, 0x8995d0), // 0xd Tactics
-    PassoDoSave::Sozinho(0xb5e134, 0x5fb320), // 0xe HostCountry
-    PassoDoSave::Caminho(0xae28f0, 0x555dd0), // 0xf Discipline
-    PassoDoSave::Caminho(0xad9c60, 0x4141a0), // 0x10 AWARD_MANAGER
-    PassoDoSave::Caminho(0xae2a3c, 0x5a53d0), // 0x11 Fine
-    PassoDoSave::Caminho(0xad9c6c, 0x418980), // 0x12 AWOL
-    PassoDoSave::Caminho(0xae2a30, 0x569ae0), // 0x13 DISPUTE
-    PassoDoSave::Caminho(0xb7433c, 0x794f00), // 0x14 Notes
-    PassoDoSave::Caminho(0xb63d28, 0x62b2d0), // 0x15 Injury
-    PassoDoSave::Caminho(0xb74318, 0x776a20), // 0x16 NationalTeams
-    PassoDoSave::Sozinho(0xdd7ef4, 0x85bea0), // 0x17 Stadium
-    PassoDoSave::Um(0xae2a58, 0x5ac060),      // 0x18 FIXTURE_MANAGER
-    PassoDoSave::Competicoes,                 // 0x19 key_nation_save_all_comps
-    PassoDoSave::Caminho(0xae1050, 0x4dc3a0), // 0x1a CONTRACT_MANAGER
-    PassoDoSave::Caminho(0xae2a38, 0x59b3b0), // 0x1b FinanceTable
-    PassoDoSave::Caminho(0xde1f54, 0x8bd4b0), // 0x1c TRANSFER_MANAGER
-    PassoDoSave::Caminho(0xb7434c, 0x7ad7c0), // 0x1d PLAYER_REGEN
-    PassoDoSave::Caminho(0xb6b7c8, 0x72b5f0), // 0x1e Media
-    PassoDoSave::Outro(0xb6b7c8, 0xae2a60, 0x5afad0), // 0x1f FOG_OF_WAR
-    PassoDoSave::Caminho(0xb67a44, 0x68e920), // 0x20 MANAGER_MANAGER
-    PassoDoSave::Caminho(0xb74340, 0x79bb80), // 0x21 OfficialsManager
-    PassoDoSave::Caminho(0xdd7ee4, 0x84c680), // 0x22 SimulatedStats
-    PassoDoSave::Caminho(0xde1f44, 0x8b1450), // 0x23 TRAINING_MANAGER
-    PassoDoSave::Caminho(0xdd7ef0, 0x859cc0), // 0x24 SQUAD_MANAGER
+const SAVE_STEPS: [SaveStep; 0x23] = [
+    SaveStep::Caminho(0xb63c98, 0x5ff9e0), // 2 HUMAN_MANAGER
+    SaveStep::Caminho(0xb74448, 0x7f8020), // 3 SCOUT_MANAGER
+    SaveStep::Caminho(0xb7431c, 0x787c30), // 4 News
+    SaveStep::Virtual(0xae2c74),           // 5 Friendly
+    SaveStep::Sozinho(0xde1f58, 0x905510), // 6 UefaSeeding
+    SaveStep::Sozinho(0xae1000, 0x4c6b70), // 7 ConmebolSeeding
+    SaveStep::Caminho(0xdd7f00, 0x86ffd0), // 8 Staff_Records
+    SaveStep::Caminho(0xb6b7c0, 0x72adf0), // 9 Match_Stats
+    SaveStep::Caminho(0xb74350, 0x7c55a0), // 0xa PlayerStats
+    SaveStep::Caminho(0xad9da8, 0x443f50), // 0xb Club_History
+    SaveStep::Caminho(0xad9dac, 0x451ff0), // 0xc Club_Records
+    SaveStep::Caminho(0xde1d08, 0x8995d0), // 0xd Tactics
+    SaveStep::Sozinho(0xb5e134, 0x5fb320), // 0xe HostCountry
+    SaveStep::Caminho(0xae28f0, 0x555dd0), // 0xf Discipline
+    SaveStep::Caminho(0xad9c60, 0x4141a0), // 0x10 AWARD_MANAGER
+    SaveStep::Caminho(0xae2a3c, 0x5a53d0), // 0x11 Fine
+    SaveStep::Caminho(0xad9c6c, 0x418980), // 0x12 AWOL
+    SaveStep::Caminho(0xae2a30, 0x569ae0), // 0x13 DISPUTE
+    SaveStep::Caminho(0xb7433c, 0x794f00), // 0x14 Notes
+    SaveStep::Caminho(0xb63d28, 0x62b2d0), // 0x15 Injury
+    SaveStep::Caminho(0xb74318, 0x776a20), // 0x16 NationalTeams
+    SaveStep::Sozinho(0xdd7ef4, 0x85bea0), // 0x17 Stadium
+    SaveStep::Um(0xae2a58, 0x5ac060),      // 0x18 FIXTURE_MANAGER
+    SaveStep::Competicoes,                 // 0x19 key_nation_save_all_comps
+    SaveStep::Caminho(0xae1050, 0x4dc3a0), // 0x1a CONTRACT_MANAGER
+    SaveStep::Caminho(0xae2a38, 0x59b3b0), // 0x1b FinanceTable
+    SaveStep::Caminho(0xde1f54, 0x8bd4b0), // 0x1c TRANSFER_MANAGER
+    SaveStep::Caminho(0xb7434c, 0x7ad7c0), // 0x1d PLAYER_REGEN
+    SaveStep::Caminho(0xb6b7c8, 0x72b5f0), // 0x1e Media
+    SaveStep::Outro(0xb6b7c8, 0xae2a60, 0x5afad0), // 0x1f FOG_OF_WAR
+    SaveStep::Caminho(0xb67a44, 0x68e920), // 0x20 MANAGER_MANAGER
+    SaveStep::Caminho(0xb74340, 0x79bb80), // 0x21 OfficialsManager
+    SaveStep::Caminho(0xdd7ee4, 0x84c680), // 0x22 SimulatedStats
+    SaveStep::Caminho(0xde1f44, 0x8b1450), // 0x23 TRAINING_MANAGER
+    SaveStep::Caminho(0xdd7ef0, 0x859cc0), // 0x24 SQUAD_MANAGER
 ];
 
 /// { 0x82e430 } (cdecl, Setup.cpp, ~6,8 KB, SEH): `save_game_data(caminho, a4)`: grava o jogo
@@ -93,7 +93,7 @@ const PASSOS_DO_SAVE: [PassoDoSave; 0x23] = [
 ///   o tamanho do banco, as datas e horas, as ligas, a nação padrão ou −1, os dados de execução de
 ///   pessoas, clubes e reputação); erro de escrita dá a caixa "Disk Space Error" com a linha do
 ///   campo e fecha o item.
-/// - Os passos 2..=0x24 (`PASSOS_DO_SAVE`): disco e memória (antes do 0x11, sem apagar e com
+/// - Os passos 2..=0x24 (`SAVE_STEPS`): disco e memória (antes do 0x11, sem apagar e com
 ///   memória < 25), a barra e o `save` do subsistema; 0x25: empacota os `*.tmp` (0x933610).
 /// - Hall da fama (0x5f00c0, fora do save), regras FIFA (0x8395b0); em rede, troca o save antigo
 ///   pelo novo (0x945ba4); [0xdd7130] = 1, [0xa801bc] = 0 e a data do último save (0xdd70a0).
@@ -240,7 +240,7 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
         return 0;
     }
     fechar_item(&mut z);
-    for (i, step_towards) in PASSOS_DO_SAVE.iter().enumerate() {
+    for (i, step_towards) in SAVE_STEPS.iter().enumerate() {
         let k = i as u32 + 2;
         // antes do passo 0x11 (depois do AWARD_MANAGER) a original não apaga o caminho e pede
         // memória >= 25 (e não >= 1)
@@ -258,38 +258,38 @@ unsafe extern "C" fn save_game_data(caminho: *const u8, a4: u32) -> u32 {
         }
         barra(0xb74450, texto.as_ptr(), k, 0x25, -1);
         match *step_towards {
-            PassoDoSave::Caminho(g, f) => {
+            SaveStep::Caminho(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(f);
                     f(u(g) as usize, l);
                 }
             }
-            PassoDoSave::Sozinho(g, f) => {
+            SaveStep::Sozinho(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(f);
                     f(u(g) as usize);
                 }
             }
-            PassoDoSave::Um(g, f) => {
+            SaveStep::Um(g, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(f);
                     f(u(g) as usize, 1);
                 }
             }
-            PassoDoSave::Virtual(g) => {
+            SaveStep::Virtual(g) => {
                 let o = u(g) as usize;
                 if o != 0 {
                     let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(*((*(o as *const usize) + 0x1c) as *const usize));
                     f(o, 1);
                 }
             }
-            PassoDoSave::Outro(g, this, f) => {
+            SaveStep::Outro(g, this, f) => {
                 if u(g) != 0 {
                     let f: unsafe extern "thiscall" fn(usize, *const u8) = core::mem::transmute(f);
                     f(u(this) as usize, l);
                 }
             }
-            PassoDoSave::Competicoes => {
+            SaveStep::Competicoes => {
                 if competicoes() == 0 {
                     setup_warning(0x2baa);
                     return 0;

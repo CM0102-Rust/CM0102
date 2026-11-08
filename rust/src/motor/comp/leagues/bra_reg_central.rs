@@ -298,13 +298,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_central_update_staff_rec
 ///
 /// [pt] { 0x4304b0 } (thiscall, ret 8, bra_reg_central.cpp): `BraRegCentral::BraRegCentral(ano, registro)`: o Centro-Oeste (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_bahia_construct_state_league(this, ano, registro, &CQT1_CENTRO_OESTE, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
+    bra_reg_bahia_construct_state_league(this, ano, registro, &CENTRO_OESTE_STATE_CHAMPIONSHIP, 7, true, "cqt_1 centro_oeste novo") // cqt1: a disciplina e as posições previstas do Centro-Oeste
 }
 
 /// Comparer for `construct_bra_reg_central` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_central(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_CENTRAL);
-    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_central", this, ano, registro, &CQT1_CENTRO_OESTE, || o(this, ano, registro))
+    bra_reg_bahia_compare_state_league_ctor("construct_bra_reg_central", this, ano, registro, &CENTRO_OESTE_STATE_CHAMPIONSHIP, || o(this, ano, registro))
 }
 
 /// The Centre-West turnover: archives the season in the statistics, clears the previous table and stages, moves to the

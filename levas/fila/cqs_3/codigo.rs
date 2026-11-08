@@ -13,7 +13,7 @@ unsafe fn cqs3_b(a: usize) -> u8 {
 }
 
 #[allow(clippy::type_complexity)]
-type Cqs3Fase = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
+type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
 
 /// { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
 /// grupo g (0 a 6) da primeira fase da Série C, da virada e do construtor (g de 0 a 6; a liga é o grupo de cima, e os
@@ -32,7 +32,7 @@ unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: u
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let construir: Cqs3Fase = core::mem::transmute(0x68b100usize);
+    let construir: LeagueStageCtorFn = core::mem::transmute(0x68b100usize);
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs3_d(cqs3_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = tabela(this, g, &mut rodadas, &mut extra, 0);
@@ -67,8 +67,8 @@ unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: usize, g: u32
     bra_nat_third_create_group_stage_cqs3_grupo(this, g, 0xc2) // cqs3: os pontos por vitória nos grupos
 }
 
-/// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `CQS3_SEMENTES[k]` da lista dos dezesseis.
-const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
+/// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `SECOND_ROUND_SEEDS[k]` da lista dos dezesseis.
+const SECOND_ROUND_SEEDS: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5, 3, 1]; // cqs3: as vagas da segunda fase
 
 /// { 0x42e430 } (thiscall, ret 0, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_second_round_stage()`,
 /// a segunda fase da Série C, do fim dos grupos.
@@ -76,7 +76,7 @@ const CQS3_SEMENTES: [u8; 16] = [0, 2, 4, 6, 8, 10, 12, 14, 15, 13, 11, 9, 7, 5,
 /// 2) Os dois primeiros de cada um dos oito grupos (a tabela da liga e as das fases 0 a 6, nessa ordem), em registros de
 ///    6 bytes (o clube e os pontos, +0x19 da linha).
 /// 3) Dezesseis vezes: o registro de mais pontos (o primeiro, no empate) entre os que ainda têm clube sai (o clube vira
-///    0) e o clube vai à vaga `CQS3_SEMENTES[k]`: o melhor contra o 16º, o 2º contra o 15º... (sem nenhum: a caixa da
+///    0) e o clube vai à vaga `SECOND_ROUND_SEEDS[k]`: o melhor contra o 16º, o 2º contra o 15º... (sem nenhum: a caixa da
 ///    linha 0x30b; a original lê então o endereço 0 e cai).
 /// 4) A tabela das rodadas pela virtual +0x3c (thiscall(this, 7, &rodadas, &extra, 0), ret 0x10); a fase (operator new
 ///    0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 16, a lista, as rodadas, +4, a
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
                 core::ptr::read_volatile(core::ptr::null::<usize>()) // ponytail: a original lê o endereço 0 aqui e cai
             }
         };
-        core::ptr::write_unaligned((lista + 4 * CQS3_SEMENTES[k] as usize) as *mut usize, c);
+        core::ptr::write_unaligned((lista + 4 * SECOND_ROUND_SEEDS[k] as usize) as *mut usize, c);
     }
     let tabela: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqs3_d(cqs3_d(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn comparar_create_second_round_stage(this: usize) {
             }
         }
         if let Some(m) = melhor {
-            plano[CQS3_SEMENTES[k] as usize] = r[m].0;
+            plano[SECOND_ROUND_SEEDS[k] as usize] = r[m].0;
             r[m].0 = 0;
         }
     }

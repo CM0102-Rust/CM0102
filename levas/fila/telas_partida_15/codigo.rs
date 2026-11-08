@@ -28,7 +28,7 @@ unsafe fn set_selection_subtitle(t: usize) {
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let subtitulo: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x803f80usize);
     texto(0xde1f64, t);
-    subtitulo(GERENTE_DE_TELAS, 0xde1f64, 1);
+    subtitulo(SCREEN_MANAGER, 0xde1f64, 1);
 }
 
 /// Os nomes dos `n` jogadores de `lista` juntos em 0xde1f64 ("a", "a and b", "a, b, and c" pelos
@@ -66,7 +66,7 @@ unsafe fn show_selection_warning(texto_obj: usize, msg: *const u8, caixa_sobre: 
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
         core::mem::transmute(0x5ed200usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
     let r = definir(texto_obj, msg);
     let cor = if caixa_sobre { colour_with_high_bits(r, 0xae3184) } else { colour_word(0xae3184) };
     area(0x6e, 0x91, 0x30c, 0x217, 2, 0, 0x10, 4, cor, texto_obj);
@@ -122,8 +122,8 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
     let nome_do: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x53dba0usize);
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
         core::mem::transmute(0x5ed200usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
+    let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
     let g = |a: usize| *(a as *const usize);
     const BUF: usize = 0xde1f64;
     const SEPARADOR: usize = 0x9ed918; // "\n\n"
@@ -221,7 +221,7 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
     let (mut frente, mut fundo_da_cor) = (0u32, 0u32);
     cores(clube, 1, &mut frente, &mut fundo_da_cor);
     nome_da_equipe(clube, equipe, BUF, 0x7d0, 3, 1);
-    titulo(GERENTE_DE_TELAS, fundo_da_cor as usize, frente as usize, BUF);
+    titulo(SCREEN_MANAGER, fundo_da_cor as usize, frente as usize, BUF);
 
     // ponytail: o motivo de inelegibilidade fora de 1 a 11 deixa a mensagem da original com o que
     // sobrou na pilha; aqui ela começa vazia
@@ -360,9 +360,9 @@ unsafe extern "C" fn match_screens_draw_team_selection() {
         area(0x6e, 0x91, 0x30c, 0x217, 2, 0, 0x10, 4, colour_word(0xae3184), tu);
         let id = lista(current_human_display(), 0x64, 0x22b, 0x316, 0x24e, 2, colunas.as_ptr() as usize, 1, 0, 1, 0, usize::MAX);
         let r = texto(BUF, 0x98e8cc) as usize;
-        celula(GERENTE_DE_TELAS, id, 0, 0, 0x30, colour_with_high_bits(r, 0xae317e), 0xc, 3, colour_word(0xae3184), BUF, 2, 0);
+        celula(SCREEN_MANAGER, id, 0, 0, 0x30, colour_with_high_bits(r, 0xae317e), 0xc, 3, colour_word(0xae3184), BUF, 2, 0);
         texto(BUF, 0x98e8d0);
-        celula(GERENTE_DE_TELAS, id, 1, 0, 0x30, colour_word(0xae317e), 0xc, 3, colour_word(0xae3184), BUF, 3, 0);
+        celula(SCREEN_MANAGER, id, 1, 0, 0x30, colour_word(0xae317e), 0xc, 3, colour_word(0xae3184), BUF, 3, 0);
     }
     destruir(t);
 }

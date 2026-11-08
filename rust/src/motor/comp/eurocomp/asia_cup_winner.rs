@@ -5,7 +5,7 @@ use super::*;
 
 /// O grupo de onde sai cada vaga das quartas da Copa Africana (−1 = o grupo A, a tabela da própria copa; 0..2 = as fases
 /// dos grupos B a D) e a posição: as chaves são os pares da lista.
-pub(crate) const CQT13_QUARTAS: [(i32, i32); 8] = [
+pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
     (-1, 0), (0, 1), // cqt13: 1º A × 2º B
     (1, 0), (2, 1), // cqt13: 1º C × 2º D
     (1, 1), (2, 0), // cqt13: 2º C × 1º D
@@ -22,14 +22,14 @@ pub(crate) unsafe fn group_table_club(this: usize, g: i32, p: i32) -> usize {
 }
 
 /// AfricanNations::create_knockout_stage: builds the quarter-finals of the African Nations Cup (called by advance_stage
-/// on reaching stage 3): the 8 teams taken from the group tables by the fixed CQT13_QUARTAS pairings, the round dates
+/// on reaching stage 3): the 8 teams taken from the group tables by the fixed AFRICAN_NATIONS_QUARTER_FINAL_SLOTS pairings, the round dates
 /// from virtual +0x3c, a new Cup_Stage stored in stage slot 3 (+0xc), then sets up the first round and sets the current
 /// stage (+0x30) to 3. Out of memory or no stage: error box and return.
 ///
 /// [pt] { 0x402090 } (thiscall, ret 0, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
 /// normal): `AfricanNations::create_knockout_stage()`, as quartas da Copa Africana (da fase seguinte 0x401e10, ao chegar
 /// a 3): a lista dos 8 (0x944e46(0x20): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x311 e volta) pelos
-/// cruzamentos de CQT13_QUARTAS, na ordem das chamadas; a tabela das rodadas pela virtual +0x3c (push 0; push &id; push
+/// cruzamentos de AFRICAN_NATIONS_QUARTER_FINAL_SLOTS, na ordem das chamadas; a tabela das rodadas pela virtual +0x3c (push 0; push &id; push
 /// &rodadas; push 3; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 -> cdecl;
 /// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 8, a lista, as rodadas, +4, a tabela, o ano +0x40, 3, 4, o
 /// id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos, que o
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
         return show_error_at(0x9870f8, 0x311);
     }
     crate::comparacao::ramo("cqt_13 quartas da copa africana");
-    for (k, &(g, p)) in CQT13_QUARTAS.iter().enumerate() {
+    for (k, &(g, p)) in AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().enumerate() {
         write_u32_from_usize(lista + k * 4, group_table_club(this, g, p));
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -82,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_asia_cup_winner_create_knockout_
         return o(this);
     }
     let tabela = |g: i32| if g < 0 { read_u32_as_usize(this + 0xb1) } else { read_u32_as_usize(read_u32_as_usize(fases + g as usize * 4) + 0xb1) };
-    let mut plano: Vec<usize> = CQT13_QUARTAS.iter().map(|&(g, p)| read_u32_as_usize(tabela(g) + p as usize * 0x3b)).collect();
+    let mut plano: Vec<usize> = AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().map(|&(g, p)| read_u32_as_usize(tabela(g) + p as usize * 0x3b)).collect();
     o(this);
     let fase = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
     if fase == 0 {

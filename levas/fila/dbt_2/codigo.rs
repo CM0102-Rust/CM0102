@@ -84,7 +84,7 @@ unsafe extern "C" fn comparar_staff_get_player_attribute_for_viewer(quem_ve: usi
 
 /// Os nomes dos 12 atributos de técnico (abreviado, inteiro) da 0x543b10, pelos endereços dos textos no exe; o 8º
 /// (gestão de pessoas) abreviado é um formato com o texto de [0xad9c64].
-const DBT2_NOMES: [(usize, usize); 12] = [
+const STAFF_ATTRIBUTE_NAMES: [(usize, usize); 12] = [
     (0x9b7c90, 0x9b7c80), // Ada / Adaptability
     (0x9b7c7c, 0x9b7c64), // CGk / Coaching Goalkeepers
     (0x9b7c60, 0x9b7c44), // Coa / Coaching Outfield Players
@@ -111,7 +111,7 @@ unsafe extern "C" fn database_get_non_player_attribute_name(atributo: u32, texto
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     *(texto as *mut u8) = 0;
-    let (curto, longo) = DBT2_NOMES[x as usize - 1];
+    let (curto, longo) = STAFF_ATTRIBUTE_NAMES[x as usize - 1];
     if abreviado == 0 {
         formatar(texto, longo);
     } else if x == 8 {

@@ -144,7 +144,7 @@ unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
 
 /// As vagas da escalação de referência da 0x859fe0 para a 0x6e2000: os 11 titulares e os 9 reservas, cada um com as
 /// posições que servem (máscaras: 1 goleiro, 4/0x10/0x40 os setores, 0x80..0x800 as faixas [inferência]).
-const CQL2_VAGAS: [u16; 20] = [
+const SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS: [u16; 20] = [
     0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // os reservas
 ];
@@ -152,7 +152,7 @@ const CQL2_VAGAS: [u16; 20] = [
 /// { 0x859fe0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::assign_club_squad_numbers`): numera o elenco do
 /// clube `c`. Junta os jogadores do elenco (+0xd7, 50 vagas; só os da tabela das pessoas com contrato) e os do clube
 /// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 titulares e os 9 reservas de referência
-/// (0x6e2000, cdecl de 15, com `CQL2_VAGAS` e os modos 0x5840) e põe os outros depois, nas vagas livres; ordena os 30
+/// (0x6e2000, cdecl de 15, com `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS` e os modos 0x5840) e põe os outros depois, nas vagas livres; ordena os 30
 /// últimos pela idade (qsort 0x945333 com a 0x540130) e junta a lista. Depois, na ordem: do 22º em diante, quem não tem
 /// contrato com o clube (0x4cf5f0) ou tem contrato do tipo 6 ou 7 (+0x4f, nibble alto) [inferência: juvenil e amador]
 /// fica sem número; quem tem número (0x85a760) o guarda se ele está livre e, sem `manter`, se é de titular (até 11)
@@ -162,7 +162,7 @@ const CQL2_VAGAS: [u16; 20] = [
 /// positivo (o número) com técnico humano (0x600a50(c, 0, 1, 0, 0)), senão −1, −2... na ordem dos números.
 unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, manter: u32) {
     let parceiro: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x540a50usize);
-    let pick: Escalar = core::mem::transmute(0x6e2000usize);
+    let pick: AssignPositionsFn = core::mem::transmute(0x6e2000usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     let do_clube: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x4cf5f0usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
             }
         }
     }
-    let vagas = CQL2_VAGAS;
+    let vagas = SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS;
     crate::comparacao::ramo("cql_2 escala");
     pick(todos.as_ptr() as usize, n as u32, vagas.as_ptr() as usize, 0xb, 9, ordem.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     let mut livre = 0usize;

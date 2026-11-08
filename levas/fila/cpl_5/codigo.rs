@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn init_from_current_contract(this: usize, pessoa: usiz
 /// criação): tipo (+0x35 & 0x3f) 1 ou fim já passado, 14; tipo diferente de 2, 0; depois de [0xae1090], 0; os
 /// intervalos entre 0xae1040/0xae1060/0xae1010/0xae1058/0xae1030 dão os pares 1-2, 3-4, 5-6, 7-8, 9-10 (o ímpar no dia
 /// exato do limite de cima: 0x4a7f20) e, antes de 0xae1030, 11 no dia, 13 no dia de 0xae1048, senão 12. "Depois"
-/// pela 0x456740. Chamada a cada contrato no passe diário (0x4c7ac0): sem contador.
+/// pela 0x456740. TapeCall a cada contrato no passe diário (0x4c7ac0): sem contador.
 unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x456740usize);
     let mesmo_dia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(0x4a7f20usize);

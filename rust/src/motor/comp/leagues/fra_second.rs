@@ -3,7 +3,7 @@ use super::*;
 
 
 /// O que muda de uma divisão para outra no construtor.
-pub(crate) struct Cqm5Divisao {
+pub(crate) struct LeagueDivision {
     pub(crate) vtabela: usize,
     /// a regra de disciplina (+0x50): 0xc a francesa, 0x1a a espanhola
     pub(crate) disciplina: u8,
@@ -31,7 +31,7 @@ pub(crate) struct Cqm5Divisao {
 /// ([+4]+0x5d) não tem o bit 4 de +0x11c [inferência: a divisão de baixo jogável], a divisão de baixo espanhola
 /// (operator new de 0xee; SpaLower::SpaLower 0x851020: push ano; mov ecx, novo -> thiscall, ret 4) vai para +0xee
 /// (0 sem memória); com o bit, +0xee = 0. Devolve this.
-pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &Cqm5Divisao) -> usize {
+pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: usize, p: &LeagueDivision) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
@@ -95,7 +95,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     this
 }
 
-pub(crate) const CQM5_FRANCA_2: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const FRENCH_SECOND_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96ac2c,
     disciplina: 0xc, // cqm5: a regra de disciplina francesa
     regras: 0x5bf0a0,
@@ -104,7 +104,7 @@ pub(crate) const CQM5_FRANCA_2: Cqm5Divisao = Cqm5Divisao {
     linhas: [0x43, 0x4a, 0x51, 0x5a, 0x61],
     baixo: false,
 };
-pub(crate) const CQM5_FRANCA_3: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const FRENCH_THIRD_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96ad80,
     disciplina: 0xc,
     regras: 0x5c0700,
@@ -113,7 +113,7 @@ pub(crate) const CQM5_FRANCA_3: Cqm5Divisao = Cqm5Divisao {
     linhas: [0x42, 0x49, 0x50, 0x59, 0x60],
     baixo: false,
 };
-pub(crate) const CQM5_SEGUNDA: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const SPANISH_SEGUNDA: LeagueDivision = LeagueDivision {
     vtabela: 0x96fbd0,
     disciplina: 0x1a, // cqm5: a regra de disciplina espanhola
     regras: 0x855cc0,
@@ -122,7 +122,7 @@ pub(crate) const CQM5_SEGUNDA: Cqm5Divisao = Cqm5Divisao {
     linhas: [0x46, 0x4d, 0x54, 0x5b, 0x62],
     baixo: false,
 };
-pub(crate) const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
+pub(crate) const SPAIN_PRIMERA_DIVISION: LeagueDivision = LeagueDivision {
     vtabela: 0x96fa68,
     disciplina: 0x1a,
     regras: 0x84fdf0,
@@ -139,7 +139,7 @@ pub(crate) const CQM5_PRIMERA: Cqm5Divisao = Cqm5Divisao {
 /// [pt] { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
 /// (a Division 2), disciplina 0xc, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
-    construct_division_league(this, ano, registro, &CQM5_FRANCA_2)
+    construct_division_league(this, ano, registro, &FRENCH_SECOND_DIVISION)
 }
 
 
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, ano: u3
 /// [pt] O comparador dos quatro: alocam: só a original, conferindo a devolução, a vtable, o ano, o registro e a disciplina;
 /// na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c = 0 e +0xc = 0; na Primera, a divisão de baixo em +0xee
 /// conforme o bit 4 da nação.
-pub(crate) unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm5Divisao, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: u32, registro: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == p.disciplina;
@@ -170,7 +170,7 @@ pub(crate) unsafe fn compare_division_league_ctor(nome: &str, this: usize, ano: 
 /// Comparer for `construct_fra_second` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_SECOND);
-    compare_division_league_ctor("construct_fra_second", this, ano, registro, &CQM5_FRANCA_2, || o(this, ano, registro))
+    compare_division_league_ctor("construct_fra_second", this, ano, registro, &FRENCH_SECOND_DIVISION, || o(this, ano, registro))
 }
 
 /// the second: 4 go up and 2 go down in 2001, then 3 up and 3 down; the rest as the top division
@@ -223,9 +223,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_second_create_table(this: us
 /// Original: `FraSecond::create_schedule` (0x5be620, fra_second.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
-/// 38 rodadas (`CQO4_SEGUNDA`). Fonte 0x9ccc0c, linha 0xa7.
+/// 38 rodadas (`SECOND_DIVISION_ROUNDS`). Fonte 0x9ccc0c, linha 0xa7.
 pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_league_schedule(this, fase, rodadas, extra, liga, &CQO4_LIGA_SEGUNDA)
+    create_league_schedule(this, fase, rodadas, extra, liga, &FRENCH_SECOND_DIVISION_LEAGUE)
 }
 
 /// Comparer for `fra_second_create_schedule` (comparison mode: see the header of motor.rs).

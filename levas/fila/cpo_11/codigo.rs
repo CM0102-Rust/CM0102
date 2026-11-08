@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, pessoa: usi
 
 /// O que a 0x556570 vai fazer, lido antes (a lista das guardadas perde e libera os itens): o contrato e o clube, os
 /// itens guardados da pessoa (a vaga e os 5 bytes) e, depois deles, as vagas 0..2 não devolvidas que o clube não cobre.
-struct Cpo11Devolver {
+struct ContractReturnPlan {
     contrato: usize,
     clube: usize,
     guardadas: Vec<(usize, [u8; 5])>,
@@ -222,13 +222,13 @@ struct Cpo11Devolver {
 }
 
 /// O plano da 0x556570 (o cursor da lista é zerado pela original na entrada; a busca sem criar só lê).
-unsafe fn return_bans_plan(this: usize, pessoa: usize) -> Cpo11Devolver {
+unsafe fn return_bans_plan(this: usize, pessoa: usize) -> ContractReturnPlan {
     let id = cpo11_d(pessoa) as u32;
     let r = discipline_record(this, id);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let contrato = contract_of(cpo11_d(0xae1050), pessoa);
     let clube = if contrato == 0 { 0 } else { cpo11_d(0xae23b4).wrapping_add(cpo11_d(contrato + 4).wrapping_mul(0x245)) };
-    let mut p = Cpo11Devolver { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
+    let mut p = ContractReturnPlan { contrato, clube, guardadas: Vec::new(), resto: *((r + 0x1c) as *const u8), soltas: Vec::new() };
     let lista = this + 0x1c;
     cpo11_por(lista + 0xa, cpo11_d(this + 0x1e) as u32);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -323,13 +323,13 @@ unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
 
 /// O caminho da 0x556940, lido antes: a suspensão velha estendida (e os valores novos dela), ou a vaga da nova e a
 /// conta do vetor depois; `None` nas caixas (capacidade no máximo).
-enum Cpo11Plano {
+enum SuspensionPlan {
     Estender { s: usize, jogos: u8, dias: i16 },
     Nova { vaga: i16, conta: i16 },
     Caixa,
 }
 
-unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plano {
+unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> SuspensionPlan {
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
         if regra == 0xff {
@@ -340,9 +340,9 @@ unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plano {
             let s = cpo11_d(this + 4).wrapping_add((cpo11_w(e + 6) as i32 as usize).wrapping_mul(20));
             let (jogos, novos) = (*(s as *const u8), *(ban as *const u8));
             return if jogos != 0xff && novos != 0xff {
-                Cpo11Plano::Estender { s, jogos: novos.wrapping_add(jogos), dias: cpo11_w(s + 2) }
+                SuspensionPlan::Estender { s, jogos: novos.wrapping_add(jogos), dias: cpo11_w(s + 2) }
             } else {
-                Cpo11Plano::Estender { s, jogos, dias: cpo11_w(s + 2).wrapping_add(cpo11_w(ban + 2)) }
+                SuspensionPlan::Estender { s, jogos, dias: cpo11_w(s + 2).wrapping_add(cpo11_w(ban + 2)) }
             };
         }
     }
@@ -350,13 +350,13 @@ unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Cpo11Plano {
     for i in 0..n.max(0) {
         let s = cpo11_d(this + 4).wrapping_add(i as usize * 20);
         if *(s as *const u8) == 0xff && cpo11_w(s + 2) == -1 {
-            return Cpo11Plano::Nova { vaga: i, conta: n };
+            return SuspensionPlan::Nova { vaga: i, conta: n };
         }
     }
     if n < cpo11_w(this + 8) || cpo11_w(this + 8) < 0x7d00 {
-        return Cpo11Plano::Nova { vaga: n, conta: n.wrapping_add(1) };
+        return SuspensionPlan::Nova { vaga: n, conta: n.wrapping_add(1) };
     }
-    Cpo11Plano::Caixa
+    SuspensionPlan::Caixa
 }
 
 /// Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
@@ -369,13 +369,13 @@ unsafe extern "thiscall" fn comparar_add_ban(this: usize, id: u32, ban: usize) {
     core::ptr::copy_nonoverlapping((ban + 0xc) as *const u8, regras.as_mut_ptr(), 4);
     original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(%%I0%%)(this, id, ban);
     let (ok, detalhe) = match plano {
-        Cpo11Plano::Caixa => return,
-        Cpo11Plano::Estender { s, jogos, dias } => {
+        SuspensionPlan::Caixa => return,
+        SuspensionPlan::Estender { s, jogos, dias } => {
             let ok = *(s as *const u8) == jogos && cpo11_w(s + 2) == dias && *((s + 0x13) as *const u8) & 1 == 1
                 && *((ban + 0x13) as *const u8) & 1 == 1;
             (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, cpo11_w(s + 2), dias))
         }
-        Cpo11Plano::Nova { vaga, conta } => {
+        SuspensionPlan::Nova { vaga, conta } => {
             let s = cpo11_d(this + 4).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
             let mut ok = cpo11_w(this + 0xa) == conta && *(s as *const u8) == *(ban as *const u8) && cpo11_w(s + 2) == cpo11_w(ban + 2);
             for k in 0..4usize {

@@ -32,9 +32,9 @@ unsafe fn contract_region(pessoa: usize, clube: usize) -> Option<(usize, usize)>
 /// Uma rotina sem porta que por dentro chama unidades da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
 /// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
 /// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
-/// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
+/// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem RECORD_POST_MATCH) só chama.
 unsafe fn replay_inner_tape_calls<R>(chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, f: impl FnOnce() -> R) -> R {
-    if !GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) {
+    if !RECORD_POST_MATCH.load(std::sync::atomic::Ordering::Relaxed) {
         return f();
     }
     let externa = tape_lock().replace((Vec::new(), Vec::new()));
@@ -376,7 +376,7 @@ unsafe extern "thiscall" fn comparar_warn_squad_of_position_rival(this: usize, j
 
 /// As respostas 1 e 2 de cada caso da tabela de saltos da 0x735160 (a 3ª, de todos, é "No Comment", 0xa27808); o caso
 /// vem da tabela de bytes do exe em 0x7356f4 (tipo − 3, até 0x7f; acima, o 21).
-const CQB8_RESPOSTAS: [(usize, usize); 22] = [
+const PRESS_ANSWERS: [(usize, usize); 22] = [
     (0xa27700, 0xa2771c), (0xa27670, 0xa2767c), (0xa27688, 0xa276a4), (0xa276e4, 0xa276f0), (0xa2773c, 0xa27770),
     (0xa2764c, 0xa2765c), (0xa27430, 0xa2743c), (0xa2762c, 0xa2763c), (0xa2744c, 0xa27460), (0xa275d0, 0xa27534),
     (0xa27554, 0xa27574), (0xa27510, 0xa27534), (0xa275b4, 0xa275c0), (0xa274e0, 0xa274f8), (0xa27588, 0xa275a0),
@@ -394,7 +394,7 @@ unsafe extern "stdcall" fn media_format_response_option_label(tipo: u32, opcao: 
     }
     let k = (tipo as i16 as i32).wrapping_sub(3) as u32;
     let caso = if k > 0x7f { 21 } else { *((0x7356f4 + k as usize) as *const u8) as usize };
-    let (um, dois) = CQB8_RESPOSTAS[caso];
+    let (um, dois) = PRESS_ANSWERS[caso];
     let texto = match opcao as i8 {
         1 => um,
         2 => dois,

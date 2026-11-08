@@ -13,14 +13,14 @@ unsafe fn cqt11_pd(a: usize, v: usize) {
 }
 
 /// Os clubes de uma origem para a Oceania: até 20, na ordem da tabela de clubes.
-struct Cqt11Lista {
+struct SourceClubList {
     clubes: [usize; 20],
     n: i16,
 }
 
-impl Cqt11Lista {
+impl SourceClubList {
     fn novo() -> Self {
-        Cqt11Lista { clubes: [0; 20], n: 0 }
+        SourceClubList { clubes: [0; 20], n: 0 }
     }
 
     /// Entra se cabe (a conta é palavra com sinal, < 20).
@@ -97,7 +97,7 @@ unsafe fn select_qualified_clubs(this: usize) -> u32 {
     }
     let mut campeao = colocado(cqt11_d(0xae23d0) + cqt11_d(0x9cf89c) * 0x6b, 0);
     let (mut nz, mut aus, mut tai, mut fij, mut mel, mut pol) =
-        (Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo());
+        (SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo());
     let mut i = 0i32;
     let mut c = cqt11_d(0xae23b4);
     while i < (cqt11_d(0xae235c) as i32).wrapping_sub((cqt11_d(0xae2350) as i32).wrapping_mul(2)) {

@@ -1899,7 +1899,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_contract_offer(this: usize, 
         todas.push((l, 0xe));
     }
     let n_cmp = todas.len();
-    todas.extend(CPQ5_ESTATICAS);
+    todas.extend(TRANSFER_MANAGER_DATE_STATICS);
     todas.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let antes = crate::comparacao::Memoria::ler(&todas);
     CPW4_ENSAIO = true;
@@ -4451,7 +4451,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: us
         return o(this, id, vaga);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
-    reg.extend_from_slice(&CPR10_ESTATICAS);
+    reg.extend_from_slice(&INJURY_DATE_STATICS);
     reg.push((this + 0x1c, 4));
     reg.push((read_u32_as_usize(this + 0xc), read_u32_as_usize(this + 0x14).wrapping_mul(14)));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, id, vaga),

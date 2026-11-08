@@ -242,13 +242,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_bra_reg_pern_create_semi_final_s
 ///
 /// [pt] { 0x4388f0 } (thiscall, ret 8, bra_reg_pern.cpp): `BraRegPern::BraRegPern(ano, registro)`: o Pernambucano (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_pern(this: usize, ano: u32, registro: usize) -> usize {
-    bra_reg_northeast_construct_state_league(this, ano, registro, &CQT3_PERNAMBUCANO, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
+    bra_reg_northeast_construct_state_league(this, ano, registro, &PERNAMBUCANO_STATE_CHAMPIONSHIP, 7, true, "cqt_3 pernambucano novo") // cqt3: a disciplina e as posições previstas do Pernambucano
 }
 
 /// Comparer for `construct_bra_reg_pern` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_bra_reg_pern(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_BRA_REG_PERN);
-    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_pern", this, ano, registro, &CQT3_PERNAMBUCANO, || o(this, ano, registro))
+    bra_reg_northeast_compare_state_league_ctor("construct_bra_reg_pern", this, ano, registro, &PERNAMBUCANO_STATE_CHAMPIONSHIP, || o(this, ano, registro))
 }
 
 /// the Pernambuco league has 10 clubs: those with it as their reserve division in the database (the field that holds

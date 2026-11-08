@@ -8,7 +8,7 @@ use super::*;
 /// [pt] { 0x867b50 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::has_active_release_clause()`: 1 com a cláusula +0x1c
 /// = 2, a +0x1d = 1 ou a +0x1f = 2; senão 0. Pelo dia dos contratos 0x4c7ac0, pelo valor do jogador 0x4d0c60, pelo preço
 /// pedido 0x4d2070, pela resposta prevista do vendedor 0x84af00, pelo vendedor que tem de aceitar 0x8cd240 e pelo lance
-/// 0x8e5d60. Chamada a cada contrato: sem contador.
+/// 0x8e5d60. TapeCall a cada contrato: sem contador.
 pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
     if read_u8(c + 0x1c) == 2 || read_u8(c + 0x1d) == 1 || read_u8(c + 0x1f) == 2 {
         return 1; // cpu4: com a clausula ativa
@@ -209,7 +209,7 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
 /// criação): tipo (+0x35 & 0x3f) 1 ou fim já passado, 14; tipo diferente de 2, 0; depois de [0xae1090], 0; os
 /// intervalos entre 0xae1040/0xae1060/0xae1010/0xae1058/0xae1030 dão os pares 1-2, 3-4, 5-6, 7-8, 9-10 (o ímpar no dia
 /// exato do limite de cima: 0x4a7f20) e, antes de 0xae1030, 11 no dia, 13 no dia de 0xae1048, senão 12. "Depois"
-/// pela 0x456740. Chamada a cada contrato no passe diário (0x4c7ac0): sem contador.
+/// pela 0x456740. TapeCall a cada contrato no passe diário (0x4c7ac0): sem contador.
 pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
     let depois: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let mesmo_dia: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3D_3D);

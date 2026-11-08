@@ -1751,22 +1751,22 @@ pub(crate) unsafe extern "thiscall" fn comparar_register_semi_final_losers_for_u
 
 
 /// O registro de 59 bytes da tabela da liga.
-pub(crate) const CPU12_LINHA: usize = 0x3b;
+pub(crate) const CUP_LEAGUE_TABLE_ROW_SIZE: usize = 0x3b;
 
-/// Copies one 59-byte row record (CPU12_LINHA) from origem to destino.
+/// Copies one 59-byte row record (CUP_LEAGUE_TABLE_ROW_SIZE) from origem to destino.
 ///
 /// [pt] Copia um registro de 59 bytes (o `rep movsd` de 14 dwords, a palavra e o byte da original).
 pub(crate) unsafe fn copy_row_59(destino: usize, origem: usize) {
-    core::ptr::copy(origem as *const u8, destino as *mut u8, CPU12_LINHA);
+    core::ptr::copy(origem as *const u8, destino as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE);
 }
 
 /// Puts table pair (i, j) in grid slots k and half + k, marks both slots and both clubs used, increments k.
 ///
 /// [pt] Põe o par (i, j) da tabela nas vagas k e metade + k da grade, marca as vagas e os dois clubes.
 pub(crate) unsafe fn place_pair(grade: usize, posto: *mut u32, usado: *mut u32, tab: usize, i: usize, j: usize, k: &mut i32, metade: i32) {
-    copy_row_59(grade + *k as usize * CPU12_LINHA, tab + i * CPU12_LINHA);
+    copy_row_59(grade + *k as usize * CUP_LEAGUE_TABLE_ROW_SIZE, tab + i * CUP_LEAGUE_TABLE_ROW_SIZE);
     let m = metade + *k;
-    copy_row_59(grade + m as usize * CPU12_LINHA, tab + j * CPU12_LINHA);
+    copy_row_59(grade + m as usize * CUP_LEAGUE_TABLE_ROW_SIZE, tab + j * CUP_LEAGUE_TABLE_ROW_SIZE);
     *posto.add(m as usize) = 1;
     *posto.add(*k as usize) = 1;
     *usado.add(j) = 1;

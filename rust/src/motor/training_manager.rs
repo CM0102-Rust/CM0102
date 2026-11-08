@@ -21,7 +21,7 @@ pub(crate) unsafe fn clear_coach_slot(e: usize) {
 
 /// Os divisores da nota pela quantidade de categorias do treinador (1 a 5), floats montados na pilha pela original:
 /// 1,0; 1,2; 1,4; 1,6; 2,0.
-pub(crate) const CQF7_DIVISORES: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3333, 0x3fcc_cccd, 0x4000_0000];
+pub(crate) const RATING_DIVISORS: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3333, 0x3fcc_cccd, 0x4000_0000];
 
 /// Non-player attribute rating (0x544410) for the attribute byte at f + k.
 ///
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
                 _ => non_player_attribute_rating(f, 0x11),
             };
             // o byte de baixo, com sinal, em float dividido pelo float da quantidade (precisão dupla do x87)
-            let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(CQF7_DIVISORES[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
+            let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
             crate::comparacao::ramo("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }

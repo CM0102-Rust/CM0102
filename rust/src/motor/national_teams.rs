@@ -600,15 +600,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_national_teams_collect_fixture_o
 /// Os códigos de posição das vagas da original: elenco de 26 (0x76c771..0x76c84c), de 24 (0x76c870..0x76c92c) e o de
 /// qualquer outro tamanho (0x76c939..0x76c9de, 22 vagas), com os comuns gravados depois (0x76c860/0x76c865 e as vagas
 /// 0, 1, 3, 5, 6 e 21). O código 0xc da vaga 12/11/10 vem do ebp (0xc desde 0x76c2e4/0x76c6a9).
-pub(crate) const CQC12_26: [u16; 26] = [1, 1, 1, 0x202, 0x202, 0x204, 0x204, 0x204, 0x84, 0x804, 0x88, 0x808, 0xc, 0x210, 0x210, 0x210,
+pub(crate) const SQUAD_26_POSITIONS: [u16; 26] = [1, 1, 1, 0x202, 0x202, 0x204, 0x204, 0x204, 0x84, 0x804, 0x88, 0x808, 0xc, 0x210, 0x210, 0x210,
     0x220, 0x90, 0x810, 0xa0, 0x820, 0x240, 0x240, 0x240, 0x240, 0x240];
-pub(crate) const CQC12_24: [u16; 24] = [1, 1, 0x202, 0x202, 0x204, 0x204, 0x204, 0x84, 0x804, 0x88, 0x808, 0xc, 0x210, 0x210, 0x210,
+pub(crate) const SQUAD_24_POSITIONS: [u16; 24] = [1, 1, 0x202, 0x202, 0x204, 0x204, 0x204, 0x84, 0x804, 0x88, 0x808, 0xc, 0x210, 0x210, 0x210,
     0x220, 0x90, 0x810, 0xa0, 0x820, 0x240, 0x240, 0x240, 0x240];
-pub(crate) const CQC12_22: [u16; 22] = [1, 1, 1, 0x202, 0x204, 0x204, 0x204, 0x204, 0x84, 0x804, 0xc, 0x210, 0x210, 0x220, 0x90, 0x810,
+pub(crate) const SQUAD_SLOTS_22: [u16; 22] = [1, 1, 1, 0x202, 0x204, 0x204, 0x204, 0x204, 0x84, 0x804, 0xc, 0x210, 0x210, 0x220, 0x90, 0x810,
     0xa0, 0x820, 0x240, 0x240, 0x240, 0x240];
 /// As vagas que a tabela de 24 tem a mais que a de 22, na ordem em que aparecem nela: 0x202 (líbero/centro, a vaga
 /// 3), 0x88 e 0x808 (volantes pelos lados, 9 e 10) e 0x210 (o 3º meia central, 14).
-pub(crate) const CQC12_EXTRAS: [u16; 3] = [0x202, 0x88, 0x808];
+pub(crate) const SQUAD_SLOTS_24_EXTRAS: [u16; 3] = [0x202, 0x88, 0x808];
 
 /// Position codes of the tam squad slots (tables for 22/24/26; approved fix fills slots 23 and 25 from the 24 table
 /// extras).
@@ -618,7 +618,7 @@ pub(crate) const CQC12_EXTRAS: [u16; 3] = [0x202, 0x88, 0x808];
 /// preenche as vagas de 22, 24 ou 26 jogadores; nos elencos de 23 (as fases finais, 0x76d430: a Copa de 2002, em
 /// 29/05/2002) e 25, as vagas a partir da 22ª ficam com a sobra da pilha (local_86c), que vai à escala (0x6e2000) e
 /// ao filtro dos escalados (0x5b7d20), e a sobra muda a cada execução (metades de ponteiros da heap). Aqui as vagas
-/// além das 22 da tabela da original recebem, em ordem, as que a tabela de 24 acrescenta à de 22 (CQC12_EXTRAS):
+/// além das 22 da tabela da original recebem, em ordem, as que a tabela de 24 acrescenta à de 22 (SQUAD_SLOTS_24_EXTRAS):
 /// o elenco de 23 = o de 22 + 0x202 (a primeira vaga que o de 24 acrescenta); o de 25 = o de 22 + 0x202, 0x88 e
 /// 0x808. Por que assim: as 22 primeiras vagas continuam as que a original grava nesses tamanhos (a comparação
 /// confere todas), e cada vaga a mais vai na direção da tabela maior seguinte. O elenco de 25 parte da tabela de 22
@@ -627,14 +627,14 @@ pub(crate) const CQC12_EXTRAS: [u16; 3] = [0x202, 0x88, 0x808];
 pub(crate) unsafe fn squad_position_codes(tam: u8) -> [u16; 50] {
     let mut c = [0u16; 50];
     match tam {
-        0x1a => c[..26].copy_from_slice(&CQC12_26),
-        0x18 => c[..24].copy_from_slice(&CQC12_24),
-        _ => c[..22].copy_from_slice(&CQC12_22),
+        0x1a => c[..26].copy_from_slice(&SQUAD_26_POSITIONS),
+        0x18 => c[..24].copy_from_slice(&SQUAD_24_POSITIONS),
+        _ => c[..22].copy_from_slice(&SQUAD_SLOTS_22),
     }
     if tam == 23 || tam == 25 {
         crate::comparacao::ramo(if tam == 23 { "cqc_12 correção do elenco de 23" } else { "cqc_12 correção do elenco de 25" });
         for i in 22..tam as usize {
-            c[i] = CQC12_EXTRAS[i - 22]; // cqc12: as vagas da correção
+            c[i] = SQUAD_SLOTS_24_EXTRAS[i - 22]; // cqc12: as vagas da correção
         }
     }
     c
@@ -1177,10 +1177,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_select_squad(this: usize, nacao:
     let regioes = squad_selection_regions(this, nacao, t, p);
     let externa = tape_lock().take();
     *tape_lock() = Some((regioes.clone(), Vec::new()));
-    let nivel = DENTRO.swap(0, Relaxed);
+    let nivel = RECORDABLE_DEPTH.swap(0, Relaxed);
     o(this, nacao, tipo, data, p, forcado);
     let gravadas = tape_lock().take().map_or(Vec::new(), |f| f.1);
-    DENTRO.store(nivel, Relaxed);
+    RECORDABLE_DEPTH.store(nivel, Relaxed);
     *tape_lock() = externa;
     let Some((_, _, a, _, antes, _, (ent, _))) = gravadas.iter().find(|c| c.0 == 0x6e2000) else {
         return;
@@ -2741,7 +2741,7 @@ pub(crate) unsafe fn is_major_finals(id: u32) -> bool {
 
 /// O que a 0x775220 grava: a competição atual da nação ([this+4] + id × 110 + 4), a da fila ([this+8] + id × 4) e se
 /// avisa o gerenciador dos técnicos.
-pub(crate) struct Cpo13Atual {
+pub(crate) struct NationCurrentCompUpdate {
     pub(crate) vaga: usize,
     pub(crate) nova: Option<u32>,
     pub(crate) fila: usize,
@@ -2755,17 +2755,17 @@ pub(crate) struct Cpo13Atual {
 /// [pt] O plano da 0x775220 (só lê): com competição atual (≠ −1) que é fase final grande, a nova vai para a fila e a atual
 /// fica (sem aviso); senão, se a nova é fase final grande e há atual, a atual vai para a fila; a nova vira a atual e o
 /// gerenciador dos técnicos ([0xb67a44], se existe) é avisado.
-pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> Cpo13Atual {
+pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> NationCurrentCompUpdate {
     let id = read_u32_as_usize(nacao);
     let vaga = read_u32_as_usize(this + 4).wrapping_add(id.wrapping_mul(110)) + 4;
     let fila = read_u32_as_usize(this + 8).wrapping_add(id.wrapping_mul(4));
     let atual = read_u32_as_usize(vaga) as u32;
     let nova = read_u32_as_usize(comp) as u32;
-    let mut p = Cpo13Atual { vaga, nova: Some(nova), fila, na_fila: None, avisa: read_u32_as_usize(G_MANAGER_MANAGER) != 0 };
+    let mut p = NationCurrentCompUpdate { vaga, nova: Some(nova), fila, na_fila: None, avisa: read_u32_as_usize(G_MANAGER_MANAGER) != 0 };
     if atual != 0xffff_ffff {
         let r = read_u32_as_usize(G_CLUB_COMP_TABLE).wrapping_add((atual as usize).wrapping_mul(107)); // registros de 107 bytes
         if r != 0 && is_major_finals(read_u32_as_usize(r) as u32) {
-            return Cpo13Atual { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
+            return NationCurrentCompUpdate { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
         }
         if is_major_finals(nova) {
             p.na_fila = Some(atual);

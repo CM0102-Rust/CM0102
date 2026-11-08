@@ -7,8 +7,8 @@
 # da base) [inferencia: os jogos da Copa dos Campeoes nao chegam a mudar nada que a carreira le].
 MUTACOES = [
     ('cqp10_merconorte_dia_2',
-     'const CQP10_MERCONORTE_GRUPOS: [Cqp10G; 6] = [(9, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // cqp10: os grupos da Merconorte',
-     'const CQP10_MERCONORTE_GRUPOS: [Cqp10G; 6] = [(2, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // mutacao: 2/9',
+     'const MERCONORTE_GROUP_ROUNDS: [BraChampCupGroupRound; 6] = [(9, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // cqp10: os grupos da Merconorte',
+     'const MERCONORTE_GROUP_ROUNDS: [BraChampCupGroupRound; 6] = [(2, 8, 2, 2), (0x17, 8, 2, 2), (7, 9, 2, 2), (0x15, 9, 2, 2), (4, 0xa, 2, 2), (0x12, 0xa, 2, 2)]; // mutacao: 2/9',
      'cqp_10 grupos da merconorte'),
     ('cqp10_supercopa_europeia_semana_depois',
      'cql10r((4, 6, 0, 5), (0x18, 7, 0, 4, 2, 0x8000), 0, (0, 0x83, 0), 8, (2, 1, 2, 0), (0, 1, 0), (0, 0, 0)), // cqp10: a Supercopa Europeia',

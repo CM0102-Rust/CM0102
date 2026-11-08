@@ -284,12 +284,12 @@ pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
 }
 
 /// As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
-pub(crate) const REGIOES_DAS_CHAVES_DBW: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
+pub(crate) const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
 /// Comparer for `set_key_ids` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_globals();
         set_fixed_key_ids(u32::MAX, false)
     });
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids() -> u32 {
 /// Comparer for `set_key_ids_1080` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_SET_KEY_IDS_1080);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&REGIOES_DAS_CHAVES_DBW, || o(), || {
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&FIXED_KEY_REGIONS, || o(), || {
         reset_key_ranges_1080();
         set_fixed_key_ids(MARCA_DAS_CHAVES_1080, false)
     });
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn comparar_set_key_ids_1080() -> u32 {
 
 /// Os nomes das regiões 1..14 da 0x616f20 (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
 /// 3 (Caribe) tem textos próprios.
-pub(crate) const DBU3_REGIOES: [(usize, usize); 14] = [
+pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
     (0x9e20bc, 0x9d9458), // African / Africa
     (0x9e20b4, 0x9d9450), // Asian / Asia
     (0, 0),               // Caribbean (à parte)
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "C" fn get_region_name(regiao: u32, texto: usize, taman
             formatar(texto, 0x9e2080, 0xad9c64usize); // Caribbean<%s COMMENT Regionality as in European>
         }
     } else {
-        let (adj, nome) = DBU3_REGIOES[r as usize - 1];
+        let (adj, nome) = REGION_NAMES[r as usize - 1];
         // nos idiomas do grupo o adjetivo vem com a forma 0xff; nos outros, com as outras formas
         let usa_adjetivo = if grupo { fb == 0xff } else { fb != 0xff }; // (dbu)
         formatar(texto, if usa_adjetivo { adj } else { nome });
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "C" fn comparar_get_region_name(regiao: u32, texto: usi
 /// Os adjetivos dos continentes da 0x6177f0 por idioma (imediatos do código, pelos endereços no exe; levantados
 /// seguindo os desvios da original): linhas África [0x9cfa08], Ásia [0x9cfa0c], Europa [0x9cfa10], América do Norte
 /// [0x9cfa14], Oceania [0x9cfa18] e os outros; colunas a forma do adjetivo 0, 1, 2, 3 e as outras.
-pub(crate) const DBU3_CONTINENTES_9: [[usize; 5]; 6] = [
+pub(crate) const CONTINENT_ADJECTIVES: [[usize; 5]; 6] = [
     [0x9d1064, 0x9d104c, 0x9d0d44, 0x9d0d38, 0x9d0d38],
     [0x9d0d2c, 0x9d0d20, 0x9d0d14, 0x9d0d08, 0x9d0d08],
     [0x9e2120, 0x9e2114, 0x9e2108, 0x9e20fc, 0x9e20fc],
@@ -412,7 +412,7 @@ pub(crate) const DBU3_CONTINENTES_9: [[usize; 5]; 6] = [
     [0x9d0b50, 0x9d0b44, 0x9d0b38, 0x9d0b2c, 0x9d0b2c],
     [0x9d0ae4, 0x9d0ad4, 0x9d0ac4, 0x9d0ab4, 0x9d0ab4],
 ];
-pub(crate) const DBU3_CONTINENTES_5: [[usize; 5]; 6] = [
+pub(crate) const CONTINENT_ADJECTIVES_LANG5: [[usize; 5]; 6] = [
     [0x9d1064, 0x9d1064, 0x9d104c, 0x9d0d44, 0x9d0d38],
     [0x9d0d2c, 0x9d0d2c, 0x9d0d20, 0x9d0d14, 0x9d0d08],
     [0x9e20f4, 0x9e20f4, 0x9e20ec, 0x9e20e0, 0x9e20d4],
@@ -420,7 +420,7 @@ pub(crate) const DBU3_CONTINENTES_5: [[usize; 5]; 6] = [
     [0x9d0890, 0x9d0890, 0x9d0884, 0x9d0878, 0x9d086c],
     [0x9d085c, 0x9d085c, 0x9d084c, 0x9d083c, 0x9d082c],
 ];
-pub(crate) const DBU3_CONTINENTES_4: [[usize; 5]; 6] = [
+pub(crate) const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
     [0x9d1064, 0x9d1058, 0x9d104c, 0x9d1040, 0x9d1040],
     [0x9d1034, 0x9d1028, 0x9d101c, 0x9d1010, 0x9d1010],
     [0x9e20f4, 0x9e20cc, 0x9e20ec, 0x9e20c4, 0x9e20c4],
@@ -451,9 +451,9 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continente: usize, texto
         None
     } else {
         match idioma() {
-            9 => Some((&DBU3_CONTINENTES_9, 9)),
-            5 => Some((&DBU3_CONTINENTES_5, 5)),
-            4 => Some((&DBU3_CONTINENTES_4, 4)),
+            9 => Some((&CONTINENT_ADJECTIVES, 9)),
+            5 => Some((&CONTINENT_ADJECTIVES_LANG5, 5)),
+            4 => Some((&CONTINENT_NAMES_LANGUAGE_4, 4)),
             _ => None,
         }
     };
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "C" fn comparar_get_continent_adjective(continente: usi
 }
 
 /// As chaves de clube do index.cpp (0x6146b0), na ordem do código: (texto do nome, global que recebe a linha), em 4 cadeias. Vários nomes podem dar na mesma global (grafias).
-pub(crate) static CHAVES_DE_CLUBE: &[&[(u32, u32)]] = &[
+pub(crate) static CLUB_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9e1f08, 0x9d00a4), // MLS All Stars East
@@ -872,7 +872,7 @@ pub(crate) static CHAVES_DE_CLUBE: &[&[(u32, u32)]] = &[
 ];
 
 /// As chaves de nação do index.cpp (0x60d810), na ordem do código: (texto do nome, global que recebe a linha), em 2 cadeias.
-pub(crate) static CHAVES_DE_NACAO: &[&[(u32, u32)]] = &[
+pub(crate) static NATION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9d9e30, KEY_NATION_AFGHANISTAN as u32), // Afghanistan
@@ -1098,8 +1098,8 @@ pub(crate) static CHAVES_DE_NACAO: &[&[(u32, u32)]] = &[
     ],
 ];
 
-/// As globais de clube na ordem em que 0x60ba80 as compara (as mesmas 313 de CHAVES_DE_CLUBE).
-pub(crate) static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
+/// As globais de clube na ordem em que 0x60ba80 as compara (as mesmas 313 de CLUB_KEYS).
+pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
     0x9d00a4, // MLS All Stars East
     0x9d00a8, // MLS All Stars West
     0x9d00ac, // River Plate
@@ -1420,14 +1420,14 @@ pub(crate) static CHAVES_DE_CLUBE_NA_TROCA: &[u32] = &[
 /// Original: `match_club_key_id` (0x6146b0, index.cpp, cdecl).
 ///
 /// [pt] { 0x6146b0 } (cdecl, index.cpp, match_club_key_id): casa o nome de clube da base com as chaves fixas
-/// do jogo (CHAVES_DE_CLUBE): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (CLUB_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_CLUBE.iter() {
+    for cadeia in CLUB_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
             r = stricmp(nome, texto as usize);
             if r == 0 {
@@ -1443,10 +1443,10 @@ pub(crate) unsafe extern "C" fn match_club_key_id(nome: usize, linha: u32) -> u3
 /// Original: `remap_club_key_id` (0x60ba80, index.cpp, cdecl).
 ///
 /// [pt] { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
-/// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CHAVES_DE_CLUBE_NA_TROCA) que
+/// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CLUB_KEYS_SWAP_ORDER) que
 /// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
 pub(crate) unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32 {
-    for &g in CHAVES_DE_CLUBE_NA_TROCA.iter() {
+    for &g in CLUB_KEYS_SWAP_ORDER.iter() {
         if *(g as *const u32) == antigo {
             *(g as *mut u32) = novo; // chave remapeada
             return 1;
@@ -1459,14 +1459,14 @@ pub(crate) unsafe extern "C" fn remap_club_key_id(antigo: u32, novo: u32) -> u32
 /// Original: `match_nation_key_id` (0x60d810, index.cpp, cdecl).
 ///
 /// [pt] { 0x60d810 } (cdecl, index.cpp, match_nation_key_id): casa o nome de nação da base com as chaves fixas
-/// do jogo (CHAVES_DE_NACAO): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (NATION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_nation_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_NACAO.iter() {
+    for cadeia in NATION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
             r = stricmp(nome, texto as usize);
             if r == 0 {
@@ -1528,7 +1528,7 @@ pub(crate) unsafe extern "C" fn comparar_match_nation_key_id(nome: usize, linha:
 }
 
 /// As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
-pub(crate) static CHAVES_DE_COMPETICAO_DE_CLUBE: &[&[(u32, u32)]] = &[
+pub(crate) static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9dc200, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION as u32), // French Lower Division
@@ -1894,7 +1894,7 @@ pub(crate) static CHAVES_DE_COMPETICAO_DE_CLUBE: &[&[(u32, u32)]] = &[
 ];
 
 /// As chaves de competição e prêmio de pessoa do index.cpp (0x6115e0), na ordem do código: (texto do nome, global que recebe a linha), em 5 cadeias.
-pub(crate) static CHAVES_DE_COMPETICAO_DE_PESSOA: &[&[(u32, u32)]] = &[
+pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9e05ec, KEY_STAFF_COMP_FIFA_WORLD_PLAYER_OF_THE_YEAR as u32), // FIFA World Player of the Year
@@ -2359,14 +2359,14 @@ pub(crate) static CHAVES_DE_COMPETICAO_DE_PESSOA: &[&[(u32, u32)]] = &[
 /// Original: `match_club_comp_key_id` (0x60efd0, index.cpp, cdecl).
 ///
 /// [pt] { 0x60efd0 } (cdecl, index.cpp, match_club_comp_key_id): casa o nome de competição de clube da base com as chaves fixas
-/// do jogo (CHAVES_DE_COMPETICAO_DE_CLUBE): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (CLUB_COMPETITION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_COMPETICAO_DE_CLUBE.iter() {
+    for cadeia in CLUB_COMPETITION_KEYS.iter() {
         let mut i = 0;
         while i < cadeia.len() {
             let (texto, global) = cadeia[i];
@@ -2393,14 +2393,14 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) 
 /// Original: `match_staff_comp_key_id` (0x6115e0, index.cpp, cdecl).
 ///
 /// [pt] { 0x6115e0 } (cdecl, index.cpp, match_staff_comp_key_id): casa o nome de competição ou prêmio de pessoa da base com as chaves fixas
-/// do jogo (CHAVES_DE_COMPETICAO_DE_PESSOA): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (PERSON_COMPETITION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 pub(crate) unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_CRT_STRICMP);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_COMPETICAO_DE_PESSOA.iter() {
+    for cadeia in PERSON_COMPETITION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
             r = stricmp(nome, texto as usize);
             if r == 0 {

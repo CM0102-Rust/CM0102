@@ -19,7 +19,7 @@ unsafe fn club_comp_record(id: usize) -> usize {
 
 /// As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
 /// primeiro que é seleção, 0x53b900): (mexicanos, centro-americanos, caribenhos, da MLS) com as contagens.
-struct Cqi11Listas {
+struct ConcacafClubLists {
     mex: [usize; 200],
     centro: [usize; 200],
     caribe: [usize; 200],
@@ -27,11 +27,11 @@ struct Cqi11Listas {
     n: [u32; 4],
 }
 
-unsafe fn concacaf_club_lists() -> Cqi11Listas {
+unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     // ponytail: as quatro listas começam zeradas na cópia (na original, sobra de pilha que só é lida quando falta clube;
     // o comparador manda esse caso para a original sozinha)
-    let mut l = Cqi11Listas { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
+    let mut l = ConcacafClubLists { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
     let (mut a, mut b, mut c, mut m) = (0u8, 0u8, 0u8, 0i8);
     let mut clube = cqi11_d(0xae23b4);
     let mut i = 0i32;

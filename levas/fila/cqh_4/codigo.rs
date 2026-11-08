@@ -3,7 +3,7 @@
 /// As datas das 6 rodadas das fases de grupos (0x68a160: rodada, dia, mês 0..11, anos a somar, dia da semana; código 2,
 /// valor 0), pela metade da fase: [0] primeira fase, grupos 0..3; [1] primeira fase, 4..7; [2] segunda fase, 8..9; [3]
 /// segunda fase, 10..11.
-const CQH4_DATAS: [[(i32, i32, i32, i32, i32); 6]; 4] = [
+const GROUP_STAGE_DATES: [[(i32, i32, i32, i32, i32); 6]; 4] = [
     [(0, 0xc, 8, 0, 1), (1, 0x14, 8, 0, 2), (2, 0x1b, 8, 0, 2), (3, 0x11, 9, 0, 1), (4, 0x19, 9, 0, 2), (5, 7, 0xa, 0, 1)], // cqh4: a primeira fase, grupos A a D
     [(0, 0xd, 8, 0, 2), (1, 0x13, 8, 0, 1), (2, 0x1a, 8, 0, 1), (3, 0x12, 9, 0, 2), (4, 0x18, 9, 0, 1), (5, 8, 0xa, 0, 2)], // cqh4: a primeira fase, grupos E a H
     [(0, 0x15, 0xa, 0, 1), (1, 6, 0xb, 0, 2), (2, 0xe, 1, 1, 2), (3, 0x14, 1, 1, 1), (4, 7, 2, 1, 2), (5, 0xd, 2, 1, 1)],
@@ -16,7 +16,7 @@ const CQH4_DATAS: [[(i32, i32, i32, i32, i32); 6]; 4] = [
 /// abaixo de −1, que caem no mesmo ramo): é_liga (se pedido) = 1, rodadas = 6, id = 0x43d + fase; a tabela de 6 rodadas
 /// de 0x41 bytes (0x944e46(0x186); sem memória, a caixa da linha 0x17a ou 0x1aa e devolve 0); na segunda fase, antes, a
 /// data de 1º de março do ano seguinte levada à terça (0x549f70), um dia antes (0x54c8e0, que grava a data estática dela)
-/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `CQH4_DATAS` (0x68a160 com o ano
+/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `GROUP_STAGE_DATES` (0x68a160 com o ano
 /// +0x40 da copa) e o jogo 0 de cada rodada vazio (0x68a1c0 com −1). As preliminares (−1) e o mata-mata (12 em diante):
 /// a original pelo trampolim. Devolve a tabela.
 unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u
         if f < 10 { 2 } else { 3 }
     };
     crate::comparacao::ramo("cqh_4 tabela das rodadas");
-    for &(i, dia, mes, anos, semana) in CQH4_DATAS[metade].iter() {
+    for &(i, dia, mes, anos, semana) in GROUP_STAGE_DATES[metade].iter() {
         data(t, i, dia, mes, anos, semana, 2, ano, 0);
     }
     for r in 0..6 {

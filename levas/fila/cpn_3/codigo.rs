@@ -17,7 +17,7 @@ unsafe fn cpn3_w(a: usize) -> i16 {
 }
 
 /// A notícia guardada na caixa: 0xdf bytes (+0xd6 id).
-const CPN3_NOTICIA: usize = 0xdf;
+const MEDIA_NEWS_ITEM_SIZE: usize = 0xdf;
 
 /// A razão entre a reputação do jogador (+0xb do registro +0x61, no mínimo 2000) e a do clube (+0x80, entre 2000 e
 /// 7500), como o fild/fidiv do original.
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
         if k < cpn3_i(e) {
             k = cpn3_i(e) + 0x63;
         }
-        let vaga = cpn3_d(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA));
+        let vaga = cpn3_d(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE));
         if cpn3_d(vaga + 0xd6) == 0 {
             return vetor;
         }
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usize, conta: 
             }
             let n = *conta;
             *conta = n + 1;
-            copiar(vetor.wrapping_add((n as usize).wrapping_mul(CPN3_NOTICIA)), cpn3_d(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA)));
+            copiar(vetor.wrapping_add((n as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)), cpn3_d(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)));
         }
         k -= 1;
         if k == cpn3_i(e + 4) - 1 {
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize
             if k < cpn3_i(e) {
                 k = cpn3_i(e) + 0x63;
             }
-            let vaga = cpn3_d(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA));
+            let vaga = cpn3_d(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE));
             if cpn3_d(vaga + 0xd6) == 0 {
                 break;
             }
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tecnico: usize
     let ok = if ids.is_empty() {
         r == 0
     } else {
-        r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| cpn3_d(r + i * CPN3_NOTICIA + 0xd6) == id))
+        r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| cpn3_d(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
     PLACAR.registrar(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
     r

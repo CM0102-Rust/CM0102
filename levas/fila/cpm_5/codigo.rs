@@ -21,7 +21,7 @@ unsafe fn cpm5_sorteio(n: i32) -> i32 {
 
 /// O que a 0x62e500 decide depois de sortear.
 #[derive(Clone, Copy, PartialEq, Debug)]
-enum Cpm5Recorrente {
+enum RecurringInjuryOutcome {
     Nada,
     Marcada,
     Limpar(usize),
@@ -34,19 +34,19 @@ enum Cpm5Recorrente {
 /// do jogador; 100 sem jogador, bytes com sinal), parando no primeiro com 95 ou mais. Achado: jogador de clube (+0x39)
 /// de reputação (+0x80) acima de 4250, clube sem humano (0x600a50) e 1 em 3 (sorteio 3): tratar; senão limpar a marca
 /// dele.
-unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) -> Cpm5Recorrente {
+unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) -> RecurringInjuryOutcome {
     if cpm5_b(registro + 0x12) != 0xff || cpm5_d((0x9e7ae0isize + *lesao as i8 as isize * 13) as usize) == 0 {
-        return Cpm5Recorrente::Nada;
+        return RecurringInjuryOutcome::Nada;
     }
     let s = cpm5_sorteio(0x14);
     if s != 0 { // 1 em 20
-        return Cpm5Recorrente::Nada;
+        return RecurringInjuryOutcome::Nada;
     }
     crate::comparacao::ramo("cpm_5 lesao recorrente");
     *((registro + 0x13) as *mut u8) = s as u8;
     *((registro + 0x12) as *mut u8) = *lesao;
     if *(0xae2364 as *const i32) <= 0 {
-        return Cpm5Recorrente::Marcada;
+        return RecurringInjuryOutcome::Marcada;
     }
     let (mut melhor, mut escolhido, mut pessoa) = (0i8, 0usize, 0usize);
     let mut r = cpm5_d(this);
@@ -69,16 +69,16 @@ unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) 
         r += 0x1f;
     }
     if escolhido == 0 {
-        return Cpm5Recorrente::Marcada;
+        return RecurringInjuryOutcome::Marcada;
     }
     let clube = cpm5_d(pessoa + 0x39);
     if cpm5_d(pessoa + 0x61) != 0 && clube != 0 && core::ptr::read_unaligned((clube + 0x80) as *const i16) > 0x109a {
         let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
         if humano(clube, 0, 1, 0, 0) == 0 && cpm5_sorteio(3) == 0 && pessoa != 0 {
-            return Cpm5Recorrente::Tratar(pessoa);
+            return RecurringInjuryOutcome::Tratar(pessoa);
         }
     }
-    Cpm5Recorrente::Limpar(escolhido)
+    RecurringInjuryOutcome::Limpar(escolhido)
 }
 
 /// { 0x62e500 } (thiscall, ret 8, injury.cpp): `Injury::roll_recurring_injury(registro, lesao)`: o plano
@@ -87,7 +87,7 @@ unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) 
 /// limpar: o registro escolhido sem recorrente (+0x12 = 0xff, +0x13 = 0).
 unsafe extern "thiscall" fn roll_recurring_injury(this: usize, registro: usize, lesao: *const u8) {
     match plan_recurring_injury(this, registro, lesao) {
-        Cpm5Recorrente::Tratar(p) => {
+        RecurringInjuryOutcome::Tratar(p) => {
             let id = cpm5_d(p) as i32;
             let tipo = if id < *(0xae2364 as *const i32) && cpm5_d(p + 0x61) != 0 {
                 cpm5_b(injury_history_record(this, id as usize) + 0x12)
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn roll_recurring_injury(this: usize, registro: usize, 
             let injure: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32, u32, i32, u32, u32) -> u32 = core::mem::transmute(0x62d250usize);
             injure(this, (registro as u32 & 0xffff_ff00) | nova as u32, 0, p, 0, 1, -1, 0, 0);
         }
-        Cpm5Recorrente::Limpar(r) => {
+        RecurringInjuryOutcome::Limpar(r) => {
             *((r + 0x12) as *mut u8) = 0xff;
             *((r + 0x13) as *mut u8) = 0;
         }
@@ -182,12 +182,12 @@ unsafe extern "thiscall" fn comparar_roll_recurring_injury(this: usize, registro
     let agora = (cpm5_b(registro + 0x12), cpm5_b(registro + 0x13));
     let mesmo_sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois_do_plano;
     let ok = match plano {
-        Cpm5Recorrente::Nada => agora == marcas && mesmo_sorteio,
-        Cpm5Recorrente::Marcada => agora == (tipo, 0) && mesmo_sorteio,
-        Cpm5Recorrente::Limpar(r) => {
+        RecurringInjuryOutcome::Nada => agora == marcas && mesmo_sorteio,
+        RecurringInjuryOutcome::Marcada => agora == (tipo, 0) && mesmo_sorteio,
+        RecurringInjuryOutcome::Limpar(r) => {
             (cpm5_b(r + 0x12), cpm5_b(r + 0x13)) == (0xff, 0) && (r == registro || agora == (tipo, 0)) && mesmo_sorteio
         }
-        Cpm5Recorrente::Tratar(_) => true, // a 0x62d250 sorteia e grava o resto
+        RecurringInjuryOutcome::Tratar(_) => true, // a 0x62d250 sorteia e grava o resto
     };
     PLACAR.registrar(ok, || {
         format!("roll_recurring_injury(tipo {}) plano {:x?}, marcas {:?} -> {:?}, mesmo sorteio={}", tipo, plano, marcas, agora, mesmo_sorteio)

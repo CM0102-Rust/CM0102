@@ -77,14 +77,14 @@ unsafe extern "thiscall" fn comparar_ita_ser_c1a_advance_stage_578330(this: usiz
 
 /// As linhas dos 4 clubes do play-off de acesso (2º contra 5º, 3º contra 4º: a lista é 5º, 2º, 4º, 3º) e do play-out
 /// (14º contra 17º, 15º contra 16º: 17º, 14º, 16º, 15º), na ordem da lista que vai para a fase.
-const CQL5_PLAYOFF: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso
-const CQL5_PLAYOUT: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out
+const PROMOTION_PLAYOFF_ROWS: [usize; 4] = [4, 1, 3, 2]; // cql5: as linhas do play-off de acesso
+const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-out
 
 /// O corpo das duas (0x64ba70 e 0x64fc30, iguais fora o fonte, as linhas e a ordem de soltar as listas no fim):
 /// 1) o campeão (a linha 0) vai para a Supercopa da Série C1 (a competição [[0xadadfc] + [0x9cf938] × 4], a lista de
 ///    inscritos [+0xa7] de 6 bytes): na vaga 0 se vazia, senão na vaga 1;
 /// 2) a lista de 4 clubes (malloc 0x944e46 de 0x10: push; add esp, 4 -> cdecl; sem memória: a caixa da linha
-///    `linhas[0]` e volta) com os da faixa do play-off (CQL5_PLAYOFF);
+///    `linhas[0]` e volta) com os da faixa do play-off (PROMOTION_PLAYOFF_ROWS);
 /// 3) o calendário da fase 0 (a virtual +0x3c: push 0; push &extra; push &rodadas; push 0; mov ecx, this -> thiscall,
 ///    ret 0x10; devolve o gabarito, `rodadas` e `extra` são palavras);
 /// 4) a fase (operator new 0x944cf1 de 0xb2: push; add esp, 4 -> cdecl; Cup_Stage::Cup_Stage 0x522e00: 15 argumentos
@@ -93,7 +93,7 @@ const CQL5_PLAYOUT: [usize; 4] = [16, 13, 15, 14]; // cql5: as linhas do play-ou
 ///    dos 4 na tabela (registro local de 4 bytes: 4, 1, 3, 2)) vai para [+0xc][0]; sem fase: a caixa da linha
 ///    `linhas[1]` e volta; senão o sorteio da primeira rodada (Cup::set_up_round 0x51c800: push 0; mov ecx, fase ->
 ///    thiscall, ret 4) e solta o gabarito (0x9452ca: push; add esp, 4 -> cdecl);
-/// 5) a mesma coisa com a fase 1 e os do play-out (CQL5_PLAYOUT; as posições 16, 13, 15, 14 no registro local e
+/// 5) a mesma coisa com a fase 1 e os do play-out (PLAYOUT_ROWS; as posições 16, 13, 15, 14 no registro local e
 ///    1, 1 nos dois bytes) em [+0xc][1]; solta a lista e o gabarito (na ordem `lista_primeiro`); sem fase: a caixa da
 ///    linha `linhas[2]`; senão o sorteio da primeira rodada e +0x30 = 1.
 /// Os bits de cima das palavras que a original empurra como dupla (os clubes, as rodadas, o ano e o `extra`) são lixo
@@ -121,7 +121,7 @@ unsafe fn create_end_of_league_stages(this: usize, arquivo: usize, linhas: [u32;
         show_error_at(arquivo, linhas[0]);
         return;
     }
-    for (k, &i) in CQL5_PLAYOFF.iter().enumerate() {
+    for (k, &i) in PROMOTION_PLAYOFF_ROWS.iter().enumerate() {
         cql5_pd(lista + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let clubes = *((this + 0xbf) as *const i8) as i16 as u16 as u32;
@@ -144,7 +144,7 @@ unsafe fn create_end_of_league_stages(this: usize, arquivo: usize, linhas: [u32;
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(cql5_d(cql5_d(this) + 0x3c));
     let gabarito = calendario(this, 1, &mut rodadas, &mut extra, 0);
-    for (k, &i) in CQL5_PLAYOUT.iter().enumerate() {
+    for (k, &i) in PLAYOUT_ROWS.iter().enumerate() {
         cql5_pd(lista + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let posicoes: [u8; 4] = [0x10, 0xd, 0xf, 0xe];

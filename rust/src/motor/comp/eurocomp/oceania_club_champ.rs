@@ -253,14 +253,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_create_group_b_stage(this: usize
 
 
 /// Os clubes de uma origem para a Oceania: até 20, na ordem da tabela de clubes.
-pub(crate) struct Cqt11Lista {
+pub(crate) struct SourceClubList {
     pub(crate) clubes: [usize; 20],
     pub(crate) n: i16,
 }
 
-impl Cqt11Lista {
+impl SourceClubList {
     fn novo() -> Self {
-        Cqt11Lista { clubes: [0; 20], n: 0 }
+        SourceClubList { clubes: [0; 20], n: 0 }
     }
 
     /// Entra se cabe (a conta é palavra com sinal, < 20).
@@ -342,7 +342,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     }
     let mut campeao = colocado(read_u32_as_usize(G_CLUB_COMP_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) * 0x6b, 0);
     let (mut nz, mut aus, mut tai, mut fij, mut mel, mut pol) =
-        (Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo(), Cqt11Lista::novo());
+        (SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo());
     let mut i = 0i32;
     let mut c = read_u32_as_usize(G_CLUB_TABLE);
     while i < (read_u32_as_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_u32_as_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
@@ -557,7 +557,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_create_knocko
 /// anos, dia da semana, horário, mando), `E` um dia do confronto (0x521f10: rodada, vaga, dia da semana, horário,
 /// código, mando) e `B`/`W`/`X` a gravação de um byte/palavra/dword no deslocamento dado da tabela.
 #[derive(Clone, Copy)]
-pub(crate) enum Cqq12Op {
+pub(crate) enum OceaniaClubChampScheduleOp {
     D(i32, i32, i32, i32, i32, i32, i32),
     L(i32, i32, i32, i32, i32, u32),
     S(u32, u32, u32, u32, u32),
@@ -567,22 +567,22 @@ pub(crate) enum Cqq12Op {
     W(usize, u16),
     X(usize, u32),
 }
-pub(crate) use Cqq12Op::{B as Cqq12B, D as Cqq12D, E as Cqq12E, J as Cqq12J, L as Cqq12L, S as Cqq12S, W as Cqq12W, X as Cqq12X};
+pub(crate) use OceaniaClubChampScheduleOp::{B as Cqq12B, D as Cqq12D, E as Cqq12E, J as Cqq12J, L as Cqq12L, S as Cqq12S, W as Cqq12W, X as Cqq12X};
 
 /// Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
 /// rodadas, o extra (só se o ponteiro não é nulo, quando `extra_checa`), o tamanho da tabela, a linha da caixa sem
 /// memória, as operações comuns e as da fase (os jogos de cada grupo) e o nome do contador. `None`: a fase devolve 0
 /// sem gravar nada.
 #[derive(Clone, Copy)]
-pub(crate) struct Cqq12Fase {
+pub(crate) struct OceaniaStage {
     pub(crate) liga: i32,
     pub(crate) rodadas: i16,
     pub(crate) extra: i16,
     pub(crate) extra_checa: bool,
     pub(crate) tamanho: u32,
     pub(crate) linha: u32,
-    pub(crate) ops: &'static [Cqq12Op],
-    pub(crate) ops2: &'static [Cqq12Op],
+    pub(crate) ops: &'static [OceaniaClubChampScheduleOp],
+    pub(crate) ops2: &'static [OceaniaClubChampScheduleOp],
     pub(crate) nome: &'static str,
 }
 
@@ -592,7 +592,7 @@ pub(crate) struct Cqq12Fase {
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-pub(crate) unsafe fn build_stage_table(this: usize, f: Option<Cqq12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -644,7 +644,7 @@ pub(crate) unsafe fn build_stage_table(this: usize, f: Option<Cqq12Fase>, rodada
 /// Bytes the stage operations write into table t, in operation order.
 ///
 /// [pt] Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
-pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[Cqq12Op], ops2: &[Cqq12Op], t: usize) -> Vec<u8> {
+pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[OceaniaClubChampScheduleOp], ops2: &[OceaniaClubChampScheduleOp], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
     for op in ops.iter().chain(ops2.iter()) {
@@ -673,7 +673,7 @@ pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[Cqq12Op], ops
 /// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
 /// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
-pub(crate) unsafe fn compare_stage_table(nome: &str, fase: u32, f: Option<Cqq12Fase>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
+pub(crate) unsafe fn compare_stage_table(nome: &str, fase: u32, f: Option<OceaniaStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -699,22 +699,22 @@ pub(crate) unsafe fn compare_stage_table(nome: &str, fase: u32, f: Option<Cqq12F
 }
 
 /// O Campeonato de Clubes da Oceania, as três rodadas de cada grupo (10, 12 e 14 de janeiro do ano seguinte, valor 1) com o jogo 2 vazio.
-pub(crate) const CQQ12_OCEANIA_GRUPOS: [Cqq12Op; 6] = [
+pub(crate) const OCEANIA_CLUB_GROUP_OPS: [OceaniaClubChampScheduleOp; 6] = [
     Cqq12D(0, 0xa, 0, 1, 4, 2, 1), Cqq12L(0, 2, -1, -1, -1, 0), Cqq12D(1, 0xc, 0, 1, 6, 1, 1),
     Cqq12L(1, 2, -1, -1, -1, 0), Cqq12D(2, 0xe, 0, 1, 1, 2, 1), Cqq12L(2, 2, -1, -1, -1, 0),
 ];
 /// Os jogos do grupo da fase −1.
-pub(crate) const CQQ12_OCEANIA_GRUPO_A: [Cqq12Op; 6] = [
+pub(crate) const OCEANIA_GROUP_A_MATCHES: [OceaniaClubChampScheduleOp; 6] = [
     Cqq12L(0, 0, 4, 1, 3, 4), Cqq12L(0, 1, 4, 2, 3, 0x40), Cqq12L(1, 0, 6, 1, 3, 4), Cqq12L(1, 1, 6, 2, 3, 0x40),
     Cqq12L(2, 0, 1, 1, 3, 4), Cqq12L(2, 1, 1, 1, 3, 0x40),
 ];
 /// Os jogos do grupo da fase 0.
-pub(crate) const CQQ12_OCEANIA_GRUPO_B: [Cqq12Op; 6] = [
+pub(crate) const OCEANIA_GROUP_B_OPS: [OceaniaClubChampScheduleOp; 6] = [
     Cqq12L(0, 0, 5, 1, 3, 0x40), Cqq12L(0, 1, 5, 2, 3, 4), Cqq12L(1, 0, 0, 1, 3, 0x40), Cqq12L(1, 1, 0, 2, 3, 4),
     Cqq12L(2, 0, 2, 1, 3, 4), Cqq12L(2, 1, 2, 1, 3, 0x40),
 ];
 /// O mata-mata em jogo único: semifinal em 17/1, final e terceiro lugar em 19/1 do ano seguinte.
-pub(crate) const CQQ12_OCEANIA_MATA: [Cqq12Op; 54] = [
+pub(crate) const OCEANIA_CLUB_KNOCKOUT_OPS: [OceaniaClubChampScheduleOp; 54] = [
     Cqq12S(0, 0x10, 0, 1, 3), Cqq12J(0, 0x11, 0, 1, 4, 2, 0x40), Cqq12W(0x7, 0x82), Cqq12W(0x9, 0), Cqq12W(0xb, 0),
     Cqq12W(0xd, 0x283), Cqq12B(0x17, 8), Cqq12W(0x18, 4), Cqq12W(0x1a, 2), Cqq12W(0x1c, 4), Cqq12W(0xf, 0),
     Cqq12W(0x1e, 0), Cqq12B(0x20, 0), Cqq12B(0x21, 1), Cqq12B(0x22, 0), Cqq12X(0x5c, 0), Cqq12X(0x60, 0),
@@ -731,19 +731,19 @@ pub(crate) const CQQ12_OCEANIA_MATA: [Cqq12Op; 54] = [
 ///
 /// [pt] A fase do Campeonato de Clubes da Oceania: abaixo de 1 os grupos (id 0x420 + fase; os jogos de cada grupo para −1
 /// e 0), 1 o mata-mata, acima nada.
-pub(crate) fn oceania_stage_spec(fase: u32) -> Option<Cqq12Fase> {
+pub(crate) fn oceania_stage_spec(fase: u32) -> Option<OceaniaStage> {
     let f = fase as u8 as i8;
     if f < 1 {
-        let jogos: &'static [Cqq12Op] = match f {
-            -1 => &CQQ12_OCEANIA_GRUPO_A,
-            0 => &CQQ12_OCEANIA_GRUPO_B,
+        let jogos: &'static [OceaniaClubChampScheduleOp] = match f {
+            -1 => &OCEANIA_GROUP_A_MATCHES,
+            0 => &OCEANIA_GROUP_B_OPS,
             _ => &[],
         };
-        Some(Cqq12Fase { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x420), extra_checa: false, tamanho: 0xc3, linha: 0x93,
-            ops: &CQQ12_OCEANIA_GRUPOS, ops2: jogos, nome: "cqq_12 grupos da oceania" })
+        Some(OceaniaStage { liga: 1, rodadas: 3, extra: (f as i16).wrapping_add(0x420), extra_checa: false, tamanho: 0xc3, linha: 0x93,
+            ops: &OCEANIA_CLUB_GROUP_OPS, ops2: jogos, nome: "cqq_12 grupos da oceania" })
     } else if f == 1 {
-        Some(Cqq12Fase { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0xc5,
-            ops: &CQQ12_OCEANIA_MATA, ops2: &[], nome: "cqq_12 mata-mata da oceania" })
+        Some(OceaniaStage { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0xc5,
+            ops: &OCEANIA_CLUB_KNOCKOUT_OPS, ops2: &[], nome: "cqq_12 mata-mata da oceania" })
     } else {
         None
     }
@@ -843,11 +843,11 @@ pub(crate) unsafe fn compare_team_table(nome: &str, this: usize, o: impl FnOnce(
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da oceania");
     let dia = 0x14; // cqj11: o dia do começo na Oceania
-    apply_cup_rules(this, &CQJ11_OCEANIA, dia, 3)
+    apply_cup_rules(this, &OCEANIA_RULES, dia, 3)
 }
 
 /// Comparer for `oceania_club_champ_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SET_UP_RULES);
-    check_cup_rules("oceania_club_champ_set_up_rules", this, &CQJ11_OCEANIA, || o(this))
+    check_cup_rules("oceania_club_champ_set_up_rules", this, &OCEANIA_RULES, || o(this))
 }

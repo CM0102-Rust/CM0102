@@ -2,16 +2,16 @@
 
 /// As formas do adjetivo de 0x545a60 (tabelas de salto 0x545b2c/0x545b34, 0x545b58/0x545b60, 0x545b84,
 /// 0x545c10, 0x545c9c e 0x545d28), índice 1..35. Os idiomas 3, 6, 7, 8 e 10 dão a mesma linha.
-const FORMAS_DO_ADJETIVO_COMUM: [u8; 35] = [
+const ADJECTIVE_FORMS_COMMON: [u8; 35] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ];
-const FORMAS_DO_ADJETIVO_4: [u8; 35] = [
+const ADJECTIVE_FORMS_LANGUAGE_4: [u8; 35] = [
     2, 3, 0, 2, 2, 3, 0, 0, 2, 0, 0, 0, 1, 1, 0, 1, 2, 3, 0, 3, 0, 0, 0, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0,
 ];
-const FORMAS_DO_ADJETIVO_5: [u8; 35] = [
+const ADJECTIVE_FORMS_LANG5: [u8; 35] = [
     2, 3, 2, 2, 1, 3, 2, 1, 2, 2, 3, 1, 3, 3, 1, 3, 2, 3, 2, 4, 1, 1, 1, 2, 2, 1, 3, 2, 1, 1, 1, 1, 3, 2, 2,
 ];
-const FORMAS_DO_ADJETIVO_9: [u8; 35] = [
+const ADJECTIVE_FORMS_9: [u8; 35] = [
     1, 2, 1, 1, 0, 1, 1, 1, 1, 1, 2, 0, 2, 3, 1, 2, 2, 3, 1, 3, 0, 0, 0, 1, 1, 0, 2, 1, 0, 0, 0, 0, 1, 1, 0,
 ];
 
@@ -20,10 +20,10 @@ const FORMAS_DO_ADJETIVO_9: [u8; 35] = [
 /// ou índice fora: 0xff. Sem chamadas e sem caixa.
 unsafe extern "C" fn get_adjective_form_index(indice: u32, idioma: u32) -> u8 {
     let linha = match idioma {
-        3 | 6 | 7 | 8 | 10 => &FORMAS_DO_ADJETIVO_COMUM,
-        4 => &FORMAS_DO_ADJETIVO_4,
-        5 => &FORMAS_DO_ADJETIVO_5,
-        9 => &FORMAS_DO_ADJETIVO_9,
+        3 | 6 | 7 | 8 | 10 => &ADJECTIVE_FORMS_COMMON,
+        4 => &ADJECTIVE_FORMS_LANGUAGE_4,
+        5 => &ADJECTIVE_FORMS_LANG5,
+        9 => &ADJECTIVE_FORMS_9,
         _ => return 0xff,
     };
     let i = (indice as u8 as i8 as i32).wrapping_sub(1) as u32; // o ja da original compara sem sinal

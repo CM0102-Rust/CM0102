@@ -7,7 +7,7 @@ unsafe fn cpu1_d(a: usize) -> usize {
 /// { 0x669340 } (cdecl, key_nation.cpp): `key_nation_index_of_nation(nação)`: a primeira linha da tabela das 35
 /// nações-chave (0xb63d60, 72 bytes, nação em +0) com a nação dada (sem conferir a nula), ou 4. Pela moral do jogo
 /// 0x4cb250, pelas aposentadorias 0x7a7310, pelo amistoso livre 0x5c6b70, pelos prêmios do dia das nações e pelas vagas
-/// da UEFA. Chamada a cada jogador: sem contador.
+/// da UEFA. TapeCall a cada jogador: sem contador.
 unsafe extern "C" fn key_nation_index_of_nation(nacao: usize) -> u8 {
     for k in 0..0x23usize {
         if cpu1_d(0xb63d60 + 72 * k) == nacao {

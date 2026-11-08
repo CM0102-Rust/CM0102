@@ -3017,7 +3017,7 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
     }
     let nivel = PROFUNDIDADE.fetch_add(1, Relaxed);
     // no autoteste o narrador e falso: a chamada so e gravada
-    if !SINTETICO.load(Relaxed) {
+    if !SYNTHETIC.load(Relaxed) {
         f(this, a1, a2, a3, a4, a5, a6, a7);
     }
     PROFUNDIDADE.fetch_sub(1, Relaxed);
@@ -3028,7 +3028,7 @@ unsafe extern "thiscall" fn porta_6d6f70(this: usize, a1: u32, a2: u32, a3: u32,
 }
 
 /// Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
-unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(ChamarComentario)) -> (bool, usize) {
+unsafe fn comparar_com_comentarios(original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     comparar_com_comentarios_em(&[], original, rust)
 }
 
@@ -3040,7 +3040,7 @@ fn mesmos_argumentos(a: &[u32; 7], b: &[u32; 7]) -> bool {
 }
 
 /// Como `comparar_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
-unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(ChamarComentario)) -> (bool, usize) {
+unsafe fn comparar_com_comentarios_em(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     use std::sync::atomic::Ordering::Relaxed;
     // dentro de outra comparacao que esta gravando (uma rotina portada chama outra que narra, ou uma
     // gravacao da fita esta aberta): so a original roda, e os comentarios dela entram na gravacao de fora
@@ -3248,36 +3248,36 @@ unsafe fn comparar_reinicio(nome: &str, this: usize, o: unsafe extern "thiscall"
 
 pub unsafe fn instalar(comparando: bool) {
     if comparando {
-        for (k, pr) in PROLOGOS_POS.iter().enumerate() {
+        for (k, pr) in POS_PROLOGUES.iter().enumerate() {
             if let Some(t) = desvios::desviar(&format!("motor_porta_{:x} (pos-jogo)", pr.endereco), pr, post_match_gates()[k]) {
                 PORTAS_POS[k] = t;
             }
         }
-        if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGO_6F5C30, respond_hook as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_6f5c30 (gravacao)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
             PORTA_6F5C30 = t;
         }
         if let Some(t) = desvios::desviar("motor_porta_6d6f70 (gravacao)", &PROLOGO_6D6F70, porta_6d6f70 as *const () as usize) {
             PORTA_6D6F70 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGO_6EAEA0, init_player_hook as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_6eaea0 (gravacao)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
             PORTA_6EAEA0 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_716630 (gravacao)", &PROLOGO_716630, gate_start_fight as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_716630 (gravacao)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
             PORTA_716630 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_716e10 (gravacao)", &PROLOGO_716E10, gate_react_to_foul_decision as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_716e10 (gravacao)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
             PORTA_716E10 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_716c90 (gravacao)", &PROLOGO_716C90, gate_handle_suspected_dive as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_716c90 (gravacao)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
             PORTA_716C90 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGO_70DFD0, gate_try_block_shot as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_70dfd0 (gravacao)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
             PORTA_70DFD0 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGO_68D0D0, gate_llist_add_tail as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_68d0d0 (gravacao)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
             PORTA_68D0D0 = t;
         }
-        if let Some(t) = desvios::desviar("motor_porta_62ed70 (gravacao)", &PROLOGO_62ED70, gate_get_player_injury as *const () as usize) {
+        if let Some(t) = desvios::desviar("motor_porta_62ed70 (gravacao)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
             PORTA_62ED70 = t;
         }
     }
@@ -7791,7 +7791,7 @@ pub unsafe fn autoteste(casos: u64) {
     let mut tabela55 = vec![0u8; 79 * 80 + 8];
     let mut tecnicos56 = vec![0u8; 42735 * 16 + 16];
     let mut partida50 = vec![0u8; 0x60];
-    SINTETICO.store(true, std::sync::atomic::Ordering::Relaxed);
+    SYNTHETIC.store(true, std::sync::atomic::Ordering::Relaxed);
     PLACAR.autoteste(|| {
         for _ in 0..casos {
             for t in tabelas.iter_mut() {
@@ -9673,7 +9673,7 @@ pub unsafe fn autoteste(casos: u64) {
                         let h73 = s.proximo();
                         let nac73 = [KEY_NATION_SPAIN, KEY_NATION_GERMANY, KEY_NATION_PORTUGAL];
                         let mut todos73: Vec<usize> = nac73.to_vec();
-                        for &(a, b) in PARES_A_B.iter().chain(PARES_B_A.iter()) {
+                        for &(a, b) in A_B_CLUB_PAIRS.iter().chain(CLUB_PAIRS_B_A.iter()) {
                             todos73.push(a);
                             todos73.push(b);
                         }
@@ -9681,12 +9681,12 @@ pub unsafe fn autoteste(casos: u64) {
                         for (k, &a) in nac73.iter().enumerate() {
                             *(a as *mut u32) = 900 + k as u32;
                         }
-                        for (k, &(a, b)) in PARES_A_B.iter().enumerate() {
+                        for (k, &(a, b)) in A_B_CLUB_PAIRS.iter().enumerate() {
                             *(a as *mut i32) = if (h73 >> (k % 50 + 3)) % 11 == 0 { -5 } else { 1000 + k as i32 };
                             *(b as *mut i32) = match (h73 >> (k % 60)) % 9 { 0 => -1, 1 => -5, _ => 2000 + k as i32 };
                         }
-                        let ids73: Vec<u32> = PARES_A_B.iter().map(|&(a, _)| *(a as *const u32))
-                            .chain(PARES_A_B.iter().map(|&(_, b)| *(b as *const u32))).collect();
+                        let ids73: Vec<u32> = A_B_CLUB_PAIRS.iter().map(|&(a, _)| *(a as *const u32))
+                            .chain(A_B_CLUB_PAIRS.iter().map(|&(_, b)| *(b as *const u32))).collect();
                         let mut nacao73 = [0u32; 4];
                         nacao73[0] = [900u32, 901, 902, 903][((h73 >> 2) % 4) as usize];
                         let mut clube73 = [0u8; 0x250];
@@ -10107,5 +10107,5 @@ pub unsafe fn autoteste(casos: u64) {
             comparar_distance_between(((q1 >> 51) % 12) as i8 - 1, ((q1 >> 55) % 14) as i8 - 1, ((q1 >> 59) % 11) as i8 - 1, ((q1 >> 33) % 14) as i8 - 1);
         }
     });
-    SINTETICO.store(false, std::sync::atomic::Ordering::Relaxed);
+    SYNTHETIC.store(false, std::sync::atomic::Ordering::Relaxed);
 }

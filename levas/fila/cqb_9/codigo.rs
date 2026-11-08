@@ -96,7 +96,7 @@ unsafe extern "thiscall" fn comparar_serve_international_bans(this: usize, time:
 
 /// O plano do recurso: a entrada da pessoa no órgão da `regra` (0x7e82e0 sem criar), a suspensão (20 bytes em
 /// [this+4]), os valores novos de +0 (jogos) ou +2 (dias) e se ela é solta.
-struct Cqb9Recurso {
+struct AppealPlan {
     orgao: usize,
     entrada: usize,
     suspensao: usize,
@@ -105,11 +105,11 @@ struct Cqb9Recurso {
     solta: bool,
 }
 
-unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> Cqb9Recurso {
+unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> AppealPlan {
     let achar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x7e82e0usize);
     let orgao = cqb9_d(cqb9_d(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
     let entrada = achar(orgao, id, 0);
-    let mut r = Cqb9Recurso { orgao, entrada, suspensao: 0, jogos: 0, dias: 0, solta: false };
+    let mut r = AppealPlan { orgao, entrada, suspensao: 0, jogos: 0, dias: 0, solta: false };
     if entrada == 0 || cqb9_w(entrada + 6) == -1 {
         return r;
     }

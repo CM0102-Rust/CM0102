@@ -2009,16 +2009,16 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_failed_to_qualify_record(thi
 /// O registro de pontos de cada técnico (Staff_Records +8): 0xd2 bytes por pessoa que não é jogador ([0xae2368]) e
 /// pelos 16 humanos. +0x86 id da pessoa (−1 vazio), +0xb6 pontos do ano, +0xba/+0xbe pontos na liga e na copa (+0xc2 e
 /// +0xc6 as competições deles, −1 sem), +0xca/+0xce os do mês.
-pub(crate) const CPO3_REGISTRO: usize = 0xd2;
+pub(crate) const MANAGER_RECORD_SIZE: usize = 0xd2;
 
 /// Number of manager records: [0xae2368] (non-player count) + 16 human slots.
 pub(crate) unsafe fn manager_record_count() -> i32 {
     read_i32(0xae2368).wrapping_add(0x10)
 }
 
-/// Returns manager record k in the records array [this+8] (CPO3_REGISTRO bytes each).
+/// Returns manager record k in the records array [this+8] (MANAGER_RECORD_SIZE bytes each).
 pub(crate) unsafe fn manager_record_at(this: usize, k: i32) -> usize {
-    read_usize(this + 8).wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO))
+    read_usize(this + 8).wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE))
 }
 
 /// Returns the staff record of id ([G_STAFF_TABLE] + id × 0x6e; −1 gives the record before the table, as the original).
@@ -2050,7 +2050,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_daily_update(this: usize, d
         let base = read_usize(this + 8);
         let n = manager_record_count();
         for k in 0..n.max(0) as usize {
-            let e = base.wrapping_add(k * CPO3_REGISTRO);
+            let e = base.wrapping_add(k * MANAGER_RECORD_SIZE);
             write_usize(e + 0xca, 0);
             write_usize(e + 0xce, 0); // os pontos do mês
         }
@@ -2063,7 +2063,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_daily_update(this: usize, d
         let hall: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_HALLOFFAME_ADD_CALENDAR_YEAR_ENTRY);
         let mut k = 0i32;
         while k < manager_record_count() {
-            let e = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO));
+            let e = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE));
             let id = read_usize(e + 0x86);
             if id as i32 != -1 {
                 hall(read_usize(G_HALL_OF_FAME), staff_records_staff_by_id(id), read_usize(e + 0xb6));
@@ -2096,7 +2096,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
     let base = read_usize(this + 8);
     let mut k = 0i32;
     while k < manager_record_count() {
-        let s = base.wrapping_add((k as usize).wrapping_mul(CPO3_REGISTRO)) + 0xba;
+        let s = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE)) + 0xba;
         let copa = read_i32(s + 0xc);
         if read_i32(s + 8) == id {
             crate::comparacao::ramo("cpo_3 fim da liga");

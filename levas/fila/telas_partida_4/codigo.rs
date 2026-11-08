@@ -3,8 +3,8 @@
 /// O bloco de parâmetros da tela atual ([gerente + 0x7e2 + 0x300 x vaga]; o parâmetro k em +0x14 + 8k,
 /// a marca de "liberar ao trocar" em +0x18 + 8k, 60 parâmetros) e as marcas 0xb6b7a8/ac/b0.
 unsafe fn screen_param_regions() -> Vec<(usize, usize)> {
-    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
+    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
+    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
     let mut r = vec![(0xb6b7a8, 12)];
     if bloco != 0 {
         r.push((bloco, 0x200));
@@ -30,7 +30,7 @@ unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
     }
     crate::comparacao::ramo("telas abrir a partida");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
-    if abrir(GERENTE_DE_TELAS, vaga, 0x718e90, 0x71a240, 1, 0x71b120, 0) == 0 {
+    if abrir(SCREEN_MANAGER, vaga, 0x718e90, 0x71a240, 1, 0x71b120, 0) == 0 {
         return;
     }
     let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(0x7ff130usize);
@@ -42,7 +42,7 @@ unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
         (0x1a, M), (0x1b, 0), (0x1c, 1), (0x1d, 0), (0x21, M), (0x22, 0), (0x23, M), (0x24, 0), (0x25, 0), (0x26, 0), (0x27, 0),
         (0x28, 0), (0x29, 0), (0x2d, 0), (0x2f, 0), (0x30, 0),
     ] {
-        gravar(GERENTE_DE_TELAS, vaga, k, v, 0);
+        gravar(SCREEN_MANAGER, vaga, k, v, 0);
     }
     let espectadores = *((partida + 0x5b) as *const usize);
     let marca = (espectadores as isize + 0xc5 + *(0xb77c7a as *const i16) as isize * 4) as *mut u32;
@@ -56,7 +56,7 @@ unsafe extern "C" fn open_match_screen(vaga: u32, partida: usize) {
         confirmar(*(0xb67a50 as *const usize), partida);
         if *((partida + 0x57) as *const u32) != 0 {
             let gravar_atual: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(0x7ff270usize);
-            gravar_atual(GERENTE_DE_TELAS, 1, 2, 0);
+            gravar_atual(SCREEN_MANAGER, 1, 2, 0);
         }
     }
 }

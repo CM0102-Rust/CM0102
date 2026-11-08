@@ -44,7 +44,7 @@ unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
 
 /// O que a 0x556e90 faz com o jogo: a entrada no órgão, a suspensão (20 bytes em [this+4]), o contador novo de jogos
 /// cumpridos (+1) e se a suspensão termina.
-struct Cpm4Jogo {
+struct SuspensionMatchUpdate {
     entrada: usize,
     suspensao: usize,
     contador: Option<u8>,
@@ -55,8 +55,8 @@ struct Cpm4Jogo {
 /// pessoa no órgão da `regra`; por jogos (+0 ≠ 0xff): a partir do começo (dia +4, ano +6; hoje [0xae2c90]: dia +0,
 /// ano +2), com `conta`, +1 no contador (+1), e termina ao chegar em +0; por dias (+0 = 0xff): termina quando hoje
 /// chega ao começo + dias (+2) (0x54c5b0).
-unsafe fn serve_ban_match_plan(this: usize, id: u32, regra: u32, conta: u32) -> Cpm4Jogo {
-    let mut j = Cpm4Jogo { entrada: 0, suspensao: 0, contador: None, cumprida: false };
+unsafe fn serve_ban_match_plan(this: usize, id: u32, regra: u32, conta: u32) -> SuspensionMatchUpdate {
+    let mut j = SuspensionMatchUpdate { entrada: 0, suspensao: 0, contador: None, cumprida: false };
     let e = ruling_body_entry(ruling_body_for_rule(this, regra as u8), id);
     if e == 0 || cpm4_w(e + 6) == -1 {
         return j;

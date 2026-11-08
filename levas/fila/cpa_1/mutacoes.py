@@ -10,6 +10,6 @@ MUTACOES = [
      '                pos = pos.wrapping_sub(0); // mutacao: a posicao nao desce'),
     ('cpa_liberar_propria', '    if propria { // a da liga: zera a contagem e a tabela',
      '    if !propria { // mutacao: zera a da liga ao soltar uma copia'),
-    ('cpa_completa_rodadas', '            if ((cpa1_b(tab + CPA1_LINHA * i + 0x11) as i8) as i16) < rodadas { // ainda falta jogar',
-     '            if ((cpa1_b(tab + CPA1_LINHA * i + 0x11) as i8) as i16) < rodadas - 1 { // mutacao: uma rodada antes'),
+    ('cpa_completa_rodadas', '            if ((cpa1_b(tab + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rodadas { // ainda falta jogar',
+     '            if ((cpa1_b(tab + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rodadas - 1 { // mutacao: uma rodada antes'),
 ]

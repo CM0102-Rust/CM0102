@@ -9,7 +9,7 @@ unsafe fn cpt4_d(a: usize) -> usize {
 /// competição de nação (+0x5d): a linha dela na tabela das 35 nações-chave (0xb63d60, 72 bytes), ou 4. Sem nação: Copa
 /// do Mundo e eliminatórias, 0; torneio de seleções (0x669ae0), 1; Copa do Mundo de Clubes e Mundial de Clubes da FIFA,
 /// 2; senão a linha de continente (nação 0) com o continente da competição (+0x59), ou 3. A original lê +0x5d antes de
-/// conferir a competição nula (o caso de erro nunca chega à caixa). Chamada a cada partida: sem contador.
+/// conferir a competição nula (o caso de erro nunca chega à caixa). TapeCall a cada partida: sem contador.
 unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let nacao = cpt4_d(comp + 0x5d);
     if nacao != 0 {

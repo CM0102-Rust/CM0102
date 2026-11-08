@@ -1,11 +1,11 @@
 // ---------- %%LEVA%%a leva: os vetores de atributos de volta ao não jogador e ao jogador e o reequilíbrio dos atributos do não jogador (Database.cpp) ----------
 
 /// { 0x53a980 } (cdecl, Database.cpp): o inverso de 0x53a8b0: o byte de baixo de cada uma das 21
-/// células de 3 bytes do `vetor` volta ao `nao_jogador` na ordem `ORDEM_DO_NAO_JOGADOR`. A pessoa não
+/// células de 3 bytes do `vetor` volta ao `nao_jogador` na ordem `NON_PLAYER_ATTRIBUTE_ORDER`. A pessoa não
 /// é usada. eax na saída: o vetor com o último byte copiado no byte de baixo (os chamadores não usam).
 unsafe extern "C" fn database_vector_to_non_player(nao_jogador: usize, _pessoa: usize, vetor: usize) -> u32 {
     let mut ultimo = 0u8;
-    for (k, &d) in ORDEM_DO_NAO_JOGADOR.iter().enumerate() {
+    for (k, &d) in NON_PLAYER_ATTRIBUTE_ORDER.iter().enumerate() {
         ultimo = *((vetor + 3 * k) as *const u8);
         *((nao_jogador + d) as *mut u8) = ultimo;
     }
@@ -13,10 +13,10 @@ unsafe extern "C" fn database_vector_to_non_player(nao_jogador: usize, _pessoa: 
 }
 
 /// { 0x53aa10 } (cdecl, Database.cpp): o inverso de 0x53a610: o byte de baixo das células 0..53 do
-/// `vetor` volta ao `jogador` nos deslocamentos de `CELULAS_DO_VETOR` e o da célula 54 à `pessoa`
+/// `vetor` volta ao `jogador` nos deslocamentos de `ATTRIBUTE_VECTOR_CELLS` e o da célula 54 à `pessoa`
 /// +0x58. eax na saída: o vetor com o último byte no byte de baixo (os chamadores não usam).
 unsafe extern "C" fn database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
-    for (i, &(d, _)) in CELULAS_DO_VETOR.iter().enumerate() {
+    for (i, &(d, _)) in ATTRIBUTE_VECTOR_CELLS.iter().enumerate() {
         *((jogador + d as usize) as *mut u8) = *((vetor + 3 * i) as *const u8);
     }
     let ultimo = *((vetor + 3 * 54) as *const u8);
@@ -147,7 +147,7 @@ unsafe extern "C" fn comparar_database_vector_to_non_player(nao_jogador: usize, 
 
 unsafe extern "C" fn comparar_database_vector_to_player(jogador: usize, pessoa: usize, vetor: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(%%I1%%);
-    // os deslocamentos de CELULAS_DO_VETOR ficam em +0x0f..+0x44
+    // os deslocamentos de ATTRIBUTE_VECTOR_CELLS ficam em +0x0f..+0x44
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado_leve(&[(jogador + 0x0f, 0x44 - 0x0f + 1), (pessoa + 0x58, 1)],
         || o(jogador, pessoa, vetor), || database_vector_to_player(jogador, pessoa, vetor));
     PLACAR.registrar(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", jogador, r, n, mo, mr));

@@ -1485,8 +1485,8 @@ pub(crate) unsafe extern "thiscall" fn control_of_move(this: usize, codigo: *mut
     si
 }
 
-/// Chamada a 0x6d6f70 (enfileirar um evento de comentario): (this, 7 argumentos).
-pub(crate) type ChamarComentario<'a> = &'a mut dyn FnMut(usize, [u32; 7]);
+/// TapeCall a 0x6d6f70 (enfileirar um evento de comentario): (this, 7 argumentos).
+pub(crate) type AddEventCall<'a> = &'a mut dyn FnMut(usize, [u32; 7]);
 
 /// Calls MATCH_EVENTS::add_event (0x6d6f70) with seven arguments.
 ///
@@ -1499,7 +1499,7 @@ pub(crate) unsafe fn add_match_event(this: usize, a: [u32; 7]) {
 /// 0x7002f0 with injected call: commentary event with two fields set to -1.
 ///
 /// [pt] { 0x7002f0 } (match_pl.cpp) com a chamada injetada: comentario com dois campos -1.
-pub(crate) unsafe fn commentary_two_blank(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, chamar: ChamarComentario) {
+pub(crate) unsafe fn commentary_two_blank(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, chamar: AddEventCall) {
     chamar(this, [a1, a2, a3, a4, u32::MAX, u32::MAX, a5]);
 }
 
@@ -1513,7 +1513,7 @@ pub(crate) unsafe extern "thiscall" fn commentary_a(this: usize, a1: u32, a2: u3
 /// 0x70a860 with injected call: commentary event with three fields set to -1.
 ///
 /// [pt] { 0x70a860 } (match_pl.cpp) com a chamada injetada: comentario com tres campos -1.
-pub(crate) unsafe fn commentary_three_blank(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, chamar: ChamarComentario) {
+pub(crate) unsafe fn commentary_three_blank(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, chamar: AddEventCall) {
     chamar(this, [a1, a2, u32::MAX, a3, u32::MAX, u32::MAX, a4]);
 }
 
@@ -3052,7 +3052,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_shot(j: usize, forca: u32, x: u3
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, std::sync::atomic::Ordering::Relaxed);
+    let gravar = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j, forca, x, y), |chamar| {
         shoot_injected(j, forca as i16, x as i8, y as i8, &mut |rotina, this, args| {
             let mascara = match rotina {
@@ -3067,7 +3067,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_shot(j: usize, forca: u32, x: u3
             chamar(rotina, this, args, mascara)
         })
     });
-    GRAVAR_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
+    RECORD_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("shot(forca {}, alvo {} {}) {} chamadas: {}", forca as i16, x as i8, y as i8, k, tape_detail()));
 }
 
@@ -3454,7 +3454,7 @@ pub(crate) unsafe fn compare_shot_outcome(p: usize, f: f32) {
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let gravar = RECORD_716.swap(true, Relaxed);
     let a7 = GRAVAR_A7.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || {
         zero_stack_below();
@@ -3474,7 +3474,7 @@ pub(crate) unsafe fn compare_shot_outcome(p: usize, f: f32) {
         })
     });
     GRAVAR_A7.store(a7, Relaxed);
-    GRAVAR_716.store(gravar, Relaxed);
+    RECORD_716.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("shot_outcome {} chamadas: {}", k, tape_detail()));
 }
 
@@ -3848,11 +3848,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_shot_on_goal(p: usize, f: f32) {
 }
 
 /// Unidades da fita do movimento: a 0x68d0d0 recebe o evento 0x82 montado na pilha (confere o conteudo).
-pub(crate) static GRAVAR_MOVIMENTO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static RECORD_MOVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// True while the player-move tape flag is set and a tape is recording.
 pub(crate) fn is_recording_move() -> bool {
-    GRAVAR_MOVIMENTO.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
+    RECORD_MOVE.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
 
 /// Is (x, y) in the penalty area the side attacks (cols 2..6; rows 10-11 for side 0, 0-1 for side 1)?
@@ -4862,9 +4862,9 @@ pub(crate) unsafe fn compare_player_move(p: usize, a1: u32, a2: u32, a3: u32, a4
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let gravar = RECORD_716.swap(true, Relaxed);
     let a7 = GRAVAR_A7.swap(true, Relaxed);
-    let mov = GRAVAR_MOVIMENTO.swap(true, Relaxed);
+    let mov = RECORD_MOVE.swap(true, Relaxed);
     let (r, _, igual, sequencia, k) = comparar_com_fita(reg, || o(p, a1, a2, a3, a4, a5), |chamar| {
         player_move_injected(p, a1 as u8 as i8, a2 as u8 as i8, a3 as u16 as i16, a4 as u8, a5 as u8, &mut |rotina, this, args| {
             let mascara = match rotina {
@@ -4882,9 +4882,9 @@ pub(crate) unsafe fn compare_player_move(p: usize, a1: u32, a2: u32, a3: u32, a4
         });
         0
     });
-    GRAVAR_MOVIMENTO.store(mov, Relaxed);
+    RECORD_MOVE.store(mov, Relaxed);
     GRAVAR_A7.store(a7, Relaxed);
-    GRAVAR_716.store(gravar, Relaxed);
+    RECORD_716.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("move_to_cell(acao {:#x}) {} chamadas: {}", a3 as u16, k, tape_detail()));
     r
 }
@@ -4900,7 +4900,7 @@ pub(crate) unsafe fn compare_shot_on_goal(p: usize, f: f32) {
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let gravar = RECORD_716.swap(true, Relaxed);
     let a7 = GRAVAR_A7.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(p, f), |chamar| {
         shot_on_goal_injected(p, f, &mut |rotina, this, args| {
@@ -4917,13 +4917,13 @@ pub(crate) unsafe fn compare_shot_on_goal(p: usize, f: f32) {
         })
     });
     GRAVAR_A7.store(a7, Relaxed);
-    GRAVAR_716.store(gravar, Relaxed);
+    RECORD_716.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("shot_on_goal {} chamadas: {}", k, tape_detail()));
 }
 
 /// Unidades da fita da conducao: a copia de 0x68d0d0 vai para a lista na pilha (endereco diferente
 /// na copia Rust: grava sem o `this`) e a 0x702050 (o chute) entra como unidade.
-pub(crate) static GRAVAR_CONDUCAO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static RECORD_BALL_CARRY: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Is row y in the side's attacking half (side 1: below 6; side 0: 6 and up; other sides: yes)?
 ///
@@ -5716,7 +5716,7 @@ pub(crate) unsafe fn dribble_injected(p: usize, modo: u8, chamar: &mut dyn FnMut
 /// copia Rust diferem); o resto da copia (o bloco do jogador, 0x1be bytes) e conferido. Vale nas
 /// duas fases da comparacao (na da copia Rust a fita ja foi tirada).
 pub(crate) fn taped_pressure_list_addr(l: usize, n: u32) -> usize {
-    if GRAVAR_CONDUCAO.load(std::sync::atomic::Ordering::Relaxed) && n == 0x1be {
+    if RECORD_BALL_CARRY.load(std::sync::atomic::Ordering::Relaxed) && n == 0x1be {
         0
     } else {
         l
@@ -5793,9 +5793,9 @@ pub(crate) unsafe fn compare_dribble(p: usize, modo: u32) -> u32 {
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let gravar = RECORD_716.swap(true, Relaxed);
     let a7 = GRAVAR_A7.swap(true, Relaxed);
-    let cond = GRAVAR_CONDUCAO.swap(true, Relaxed);
+    let cond = RECORD_BALL_CARRY.swap(true, Relaxed);
     let (r, rr, igual, sequencia, k) = comparar_com_fita(
         reg,
         || {
@@ -5860,9 +5860,9 @@ pub(crate) unsafe fn compare_dribble(p: usize, modo: u32) -> u32 {
             }) as u32
         },
     );
-    GRAVAR_CONDUCAO.store(cond, Relaxed);
+    RECORD_BALL_CARRY.store(cond, Relaxed);
     GRAVAR_A7.store(a7, Relaxed);
-    GRAVAR_716.store(gravar, Relaxed);
+    RECORD_716.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia && r == rr, || format!("dribble(modo {}) original={} rust={} {} chamadas: {}", modo as u8, r, rr, k, tape_detail()));
     r
 }
@@ -6767,11 +6767,11 @@ pub(crate) unsafe fn execute_pass_injected(p: usize, x: i8, y: i8, tipo_in: i8, 
 }
 
 /// Unidades da fita do passe: o evento 0x82 vai para a lista montado na pilha (confere o conteudo).
-pub(crate) static GRAVAR_PASSE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static RECORD_PASS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// True while the pass tape flag is set and a tape is recording.
 pub(crate) fn is_recording_pass() -> bool {
-    GRAVAR_PASSE.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
+    RECORD_PASS.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
 
 /// Rust-mode dispatcher for pass calls (trace 0x6ccb60 with packed coords, shots with distance bits), else as the move.
@@ -6834,9 +6834,9 @@ pub(crate) unsafe fn compare_execute_pass(p: usize, x: u32, y: u32, tipo: u32, s
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let gravar = RECORD_716.swap(true, Relaxed);
     let a7 = GRAVAR_A7.swap(true, Relaxed);
-    let passe = GRAVAR_PASSE.swap(true, Relaxed);
+    let passe = RECORD_PASS.swap(true, Relaxed);
     let (r, rr, igual, sequencia, k) = comparar_com_fita(
         reg,
         || o(p, x, y, tipo, saida, receptor, tx, ty) as u32,
@@ -6859,9 +6859,9 @@ pub(crate) unsafe fn compare_execute_pass(p: usize, x: u32, y: u32, tipo: u32, s
             }) as u32
         },
     );
-    GRAVAR_PASSE.store(passe, Relaxed);
+    RECORD_PASS.store(passe, Relaxed);
     GRAVAR_A7.store(a7, Relaxed);
-    GRAVAR_716.store(gravar, Relaxed);
+    RECORD_716.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia && (r as u8) == (rr as u8), || format!("execute_pass(tipo {:#x}) original={} rust={} {} chamadas: {}", tipo as u8, r as u8, rr as u8, k, tape_detail()));
     r as u8
 }
@@ -10392,7 +10392,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tackle(j: usize, forte: u32) {
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, std::sync::atomic::Ordering::Relaxed);
+    let gravar = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j, forte), |chamar| {
         tackle_injected(j, forte as u8, &mut |rotina, this, args| {
             let mascara = match rotina {
@@ -10407,7 +10407,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_tackle(j: usize, forte: u32) {
             chamar(rotina, this, args, mascara)
         })
     });
-    GRAVAR_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
+    RECORD_716.store(gravar, std::sync::atomic::Ordering::Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("tackle(forte {}) {} chamadas: {}", forte as u8, k, tape_detail()));
 }
 
@@ -10522,15 +10522,15 @@ pub(crate) unsafe extern "thiscall" fn comparar_move_off_ball(j: usize) {
     let m = *((j + 0x19e) as *const usize);
     reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0x48)]);
     const MASCARAS: [(usize, [u32; 5]); 5] = [
-        (0x6f09f0, MASCARA_XY),
-        (0x6f46b0, MASCARA_XY),
+        (0x6f09f0, XY_ARG_MASK),
+        (0x6f46b0, XY_ARG_MASK),
         (0x6f5b80, [0xff, 0, 0, 0, 0]),
         (0x6d6f70, [0xffff, u32::MAX, 0xff, 0xff, 0xff]),
         (0x6f0630, [0; 5]),
     ];
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j), |chamar| {
         off_ball_move_injected(j, &mut |rotina, this, args| {
-            let mascara = MASCARAS.iter().find(|m| m.0 == rotina).map_or(MASCARA_XY, |m| m.1);
+            let mascara = MASCARAS.iter().find(|m| m.0 == rotina).map_or(XY_ARG_MASK, |m| m.1);
             chamar(rotina, this, args, mascara)
         })
     });
@@ -10555,10 +10555,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_decide_off_ball(j: usize, a: u32
     // a 0x6f09f0 gravada move tambem os outros jogadores (decide por eles): todos entram
     reg.extend([(m + 0x1a0, 0x30), (m + 0x215e, 0x8f00 - 0x215e), (m + 0xf56e, 0x48)]);
     // 0x6f09f0 e 0x6f46b0 leem x e y como bytes; 0x6f5b80, so o `direto`
-    const MASCARAS: [(usize, [u32; 5]); 3] = [(0x6f09f0, MASCARA_XY), (0x6f46b0, MASCARA_XY), (0x6f5b80, [0xff, 0, 0, 0, 0])];
+    const MASCARAS: [(usize, [u32; 5]); 3] = [(0x6f09f0, XY_ARG_MASK), (0x6f46b0, XY_ARG_MASK), (0x6f5b80, [0xff, 0, 0, 0, 0])];
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, || o(j, a), |chamar| {
         off_ball_decide_injected(j, &mut |rotina, args| {
-            let mascara = MASCARAS.iter().find(|m| m.0 == rotina).map_or(MASCARA_XY, |m| m.1);
+            let mascara = MASCARAS.iter().find(|m| m.0 == rotina).map_or(XY_ARG_MASK, |m| m.1);
             chamar(rotina, j, args, mascara)
         })
     });
@@ -10574,7 +10574,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_advance_row(this: usize, direto:
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((this + 0x102, 2));
     let (r, _, igual, sequencia, k) = comparar_com_fita(reg, || o(this, direto), |chamar| {
-        advance_row_injected(this, direto, &mut |rotina, a| chamar(rotina, this, a, MASCARA_XY))
+        advance_row_injected(this, direto, &mut |rotina, a| chamar(rotina, this, a, XY_ARG_MASK))
     });
     // a resposta e o `eax` da chamada (o movimento nao devolve nada): nao entra na comparacao
     PLACAR.registrar(igual && sequencia && k == 1, || format!("advance_row({}) {} chamadas", direto, k));

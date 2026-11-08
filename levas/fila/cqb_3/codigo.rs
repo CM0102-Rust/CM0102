@@ -19,7 +19,7 @@ unsafe fn cqb3_b(a: usize) -> u8 {
 /// As 110 datas internacionais da 0x5ca4f0, na ordem em que a original as grava: (+0 o dia da semana, +1 o dia, +2 o
 /// mês a partir de 0, +0xb o ano a somar ao da Copa, o global do continente em +0xc, o global da competição em +0x10
 /// ou 0 para −1). Extraídas da desmontagem (0x5ca588..0x5cb8e6); as 5 últimas vão pela 0x5cb9b0.
-const CQB3_DATAS: [(u8, u8, u8, u8, usize, usize); 110] = [
+const INTERNATIONAL_DATES: [(u8, u8, u8, u8, usize, usize); 110] = [
     (5, 10, 9, 0, 0x9cfa08, 0),
     (2, 18, 10, 0, 0x9cfa08, 0),
     (6, 15, 11, 0, 0x9cfa08, 0),
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
         return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(this);
     }
     let preencher: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32) = core::mem::transmute(0x5cb9b0usize);
-    for (k, &(semana, dia, mes, ano, continente, competicao)) in CQB3_DATAS.iter().enumerate() {
+    for (k, &(semana, dia, mes, ano, continente, competicao)) in INTERNATIONAL_DATES.iter().enumerate() {
         let e = cqb3_d(this + 0x34ec) + k * 0x14;
         let comp = if competicao == 0 { -1 } else { cqb3_i(competicao) };
         if k >= 105 {

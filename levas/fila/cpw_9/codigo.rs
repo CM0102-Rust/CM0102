@@ -51,7 +51,7 @@ static mut CPW9_ESPERA: Option<(Vec<(usize, usize)>, crate::comparacao::Memoria)
 
 /// O switch dos tipos de lesão (tipo − 0xc, byte da tabela 0x62bcd8): 0 os do +0x1b/+0x36, 1 nenhuma lesão (0x14), 2 o
 /// 0x1c, 3 o 0x2d, 4 os 0x3b e 0x3c, 5 só a lesão.
-const CPW9_CASOS: [u8; 0x31] = [
+const INJURY_TYPE_CASES: [u8; 0x31] = [
     0, 5, 5, 5, 5, 5, 5, 5, 1, 5, 5, 0, 5, 5, 0, 0, 2, 5, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5, 5, 5, 5, 5, 5,
     5, 5, 5, 5, 5, 5, 5, 4, 4,
 ];
@@ -209,7 +209,7 @@ unsafe fn roll_training_injuries(this: usize) {
             let grave: i8 = if i < graves { -1 } else { 0 };
             let tipo = escolher(this, categoria as i8, grave, p);
             let k = (tipo as i8 as i32).wrapping_sub(0xc);
-            let caso = if (k as u32) > 0x30 { 5 } else { CPW9_CASOS[k as usize] };
+            let caso = if (k as u32) > 0x30 { 5 } else { INJURY_TYPE_CASES[k as usize] };
             if caso == 1 {
                 break 'proximo; // o tipo 0x14: nenhuma lesão
             }

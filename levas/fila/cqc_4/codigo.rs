@@ -16,7 +16,7 @@ unsafe fn cqc4_pw(a: usize, v: u16) {
     core::ptr::write_unaligned(a as *mut u16, v);
 }
 
-type Cqc4Data = [u8; 8];
+type RawDate = [u8; 8];
 
 /// `a` depois de `b` como a original compara as datas: o ano (+2) sem sinal, depois o dia (+0) com sinal.
 unsafe fn fix_man_date_is_after(a: usize, b: usize) -> bool {
@@ -28,21 +28,21 @@ unsafe fn fix_man_date_is_after(a: usize, b: usize) -> bool {
 /// 0x549ef0 a data (dia, ano) (push ano; push dia), 0x417c10 a atribuição (push fonte; push ret), 0x54c5b0 + dias,
 /// 0x54c8e0 − dias, 0x54c770 + semanas (push n; push ret), 0x54a2d0 o dia da semana alvo (push dest; push alvo),
 /// 0x54a3f0 o dia da semana (sem pushes).
-unsafe fn date_default(d: &mut Cqc4Data) {
-    let f: unsafe extern "thiscall" fn(*mut Cqc4Data) -> usize = core::mem::transmute(0x54a110usize);
+unsafe fn date_default(d: &mut RawDate) {
+    let f: unsafe extern "thiscall" fn(*mut RawDate) -> usize = core::mem::transmute(0x54a110usize);
     f(d);
 }
-unsafe fn date_from_day_year(d: &mut Cqc4Data, dia: u16, ano: u16) -> usize {
-    let f: unsafe extern "thiscall" fn(*mut Cqc4Data, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
+unsafe fn date_from_day_year(d: &mut RawDate, dia: u16, ano: u16) -> usize {
+    let f: unsafe extern "thiscall" fn(*mut RawDate, u32, u32) -> usize = core::mem::transmute(0x549ef0usize);
     f(d, dia as u32, ano as u32)
 }
-unsafe fn date_assign(d: &mut Cqc4Data, fonte: usize) {
-    let f: unsafe extern "thiscall" fn(*mut Cqc4Data, *mut Cqc4Data, usize) -> usize = core::mem::transmute(0x417c10usize);
+unsafe fn date_assign(d: &mut RawDate, fonte: usize) {
+    let f: unsafe extern "thiscall" fn(*mut RawDate, *mut RawDate, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut ret = [0u8; 8];
     f(d, &mut ret, fonte);
 }
 unsafe fn date_op(rotina: usize, d: usize, n: u32) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, *mut Cqc4Data, u32) -> usize = core::mem::transmute(rotina);
+    let f: unsafe extern "thiscall" fn(usize, *mut RawDate, u32) -> usize = core::mem::transmute(rotina);
     let mut ret = [0u8; 8];
     // ponytail: a original passa um ret na pilha dela; as três escrevem nele ou na estática e devolvem o ponteiro,
     // que é lido logo depois (antes da próxima chamada), como na original
@@ -53,13 +53,13 @@ unsafe fn date_op(rotina: usize, d: usize, n: u32) -> usize {
     }
     r
 }
-static mut CQC4_RET: Cqc4Data = [0; 8];
+static mut CQC4_RET: RawDate = [0; 8];
 unsafe fn date_weekday(d: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     f(d)
 }
-unsafe fn nearest_weekday(d: usize, alvo: u32, dest: &mut Cqc4Data) {
-    let f: unsafe extern "thiscall" fn(usize, u32, *mut Cqc4Data) -> u32 = core::mem::transmute(0x54a2d0usize);
+unsafe fn nearest_weekday(d: usize, alvo: u32, dest: &mut RawDate) {
+    let f: unsafe extern "thiscall" fn(usize, u32, *mut RawDate) -> u32 = core::mem::transmute(0x54a2d0usize);
     f(d, alvo, dest);
 }
 

@@ -29,6 +29,27 @@ A batch has from 1 to 10 match engine routines (`match_eng.cpp`, `match_pl.cpp`,
    3. Career: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector`. The two Rust runs must give the same fingerprint (`--detector` runs a third one, only recorded: see "DLL memory, trampolines and garbage detector"); since 2026-10-31 the original mode one (`--modo original`) is only recorded and does not block the batch (criterion "a result the game produces"; before, it had to be equal). In batches 50 to 52, `c76ad0ff6ce3daa6` with 2,357,335,216 random draws.
 5. **Record.** Section for the batch in `ROTINAS.md` and in `ROTINAS.en.md`, translation of the new names in `glossario.py` (generates `GLOSSARIO.md` and `.en.md`), state in `wiki/index.md`, a line in `wiki/log.md`, commit and push.
 
+## Readability: after integrating a batch (2026-11-08)
+
+The public code is in English and readable from outside (reorganisation of 2026-11-07). A new batch arrives with
+Portuguese names and the old format; after integrating it (and before publishing), run the tools in this order and
+prove (Rust ×2 careers + detector and comparison, as always):
+
+1. `partir_motor.py --gravar`: the new code leaves `motor.rs` for the module of its source file;
+2. `unificar_memoria.py --gravar` and `unificar_auxiliares.py --gravar`: memory-access copies and duplicated helpers
+   become the single functions;
+3. `renomear_rotinas.py --gravar`: new routines get their original English name (docs/NOMES.csv);
+4. new helpers and items: English names proposed by reading (read-only agents) and applied by
+   `aplicar_nomes_auxiliares.py` and `aplicar_nomes_itens.py`; then `restaurar_palavras.py <commit before>` if a
+   single-word name landed in a Portuguese comment;
+5. `cabecalhos.py --gravar` (from ROTINAS) or `aplicar_cabecalhos.py` (proposed summaries): the bilingual header;
+6. `nomear_chaves.py`, `nomear_globais.py`, `nomear_campos.py`, `arrumar_rodada4.py --fase a` and `--fase b`,
+   `anotar_constantes.py`: named keys, globals, fields, sizes and constants with their value;
+7. `legibilidade.py`: the scoreboard (docs/LEGIBILIDADE.en.md) must not get worse.
+
+Better still: write the item in the new format from the start (docs/COMO_ESCREVER_UM_ITEM.en.md). Each step rewrites
+the mutation lists with the same renames; check the anchors afterwards (`fila.py checar` and the recent batches' lists).
+
 ## Known traps
 
 - `fst dword` followed by a comparison: stores the rounded float but compares the double; reproduce by storing `v as f32` and comparing `v`. x87 `pow` (`_CIpow`): base in st1, exponent in st0 (the first one loaded is the base). 64-bit return (`edx:eax`): check which register the test uses.

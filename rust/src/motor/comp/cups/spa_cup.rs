@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_cup_record_season_honours_63
 /// [pt] { 0x84d220 } (thiscall, ret 0x10, spa_cup.cpp; a virtual +0x3c da Copa do Rei): `SpaCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa8 sem memória.
 pub(crate) unsafe extern "thiscall" fn spa_cup_create_round_table(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, saida: *mut i32) -> usize {
-    single_stage_round_table(this, fase, rodadas, extra, saida, &CQL11_COPA_DO_REI, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
+    single_stage_round_table(this, fase, rodadas, extra, saida, &COPA_DEL_REY_ROUNDS, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
 }
 
 /// Comparer for `spa_cup_create_round_table` (comparison mode: see the header of motor.rs).

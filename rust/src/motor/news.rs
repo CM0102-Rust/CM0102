@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_item_by_id(this: usize, tec
 
 
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +0xd6 id, +0xda livre/lida, +0xde alcance).
-pub(crate) const CPN1_NOTICIA: usize = 0xdf;
+pub(crate) const NEWS_NEWS_RECORD_SIZE: usize = 0xdf;
 
 /// Index of a human manager in News' inbox table: person id - staff count + 16 (negative = not human).
 ///
@@ -273,14 +273,14 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
         write_usize(e + 4, read_usize(this + 4));
         let total = read_usize(this + 4).wrapping_add(0x64);
         write_usize(this + 4, total);
-        let p = realocar(read_usize(this), total.wrapping_mul(CPN1_NOTICIA) as u32);
+        let p = realocar(read_usize(this), total.wrapping_mul(NEWS_NEWS_RECORD_SIZE) as u32);
         write_usize(this, p);
         if p == 0 {
             show_error_at(0xa693ec, 0x1f6d);
             return 0;
         }
         for k in 0..0x64usize {
-            let v = read_usize(this) + (read_usize(e) + k).wrapping_mul(CPN1_NOTICIA);
+            let v = read_usize(this) + (read_usize(e) + k).wrapping_mul(NEWS_NEWS_RECORD_SIZE);
             write_usize(v + 0xd6, 0);
             write_usize(v + 0xda, 1);
         }
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: 
     if anterior < read_i32(e) {
         anterior = read_i32(e) + 0x63;
     }
-    let vaga = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN1_NOTICIA));
+    let vaga = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     if read_usize(vaga(anterior) + 0xd6) == read_usize(noticia + 0xd6) {
         return 1; // a mesma notícia de novo
     }
@@ -375,7 +375,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
     let (repetida, livre_atual) = if novo {
         (id == 0, true)
     } else {
-        let v = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN1_NOTICIA));
+        let v = |k: i32| read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
         (read_usize(v(anterior) + 0xd6) == id, read_usize(v(atual) + 0xda) != 0)
     };
     let (prox, conta_depois) = if repetida {
@@ -394,7 +394,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
         return r;
     }
     let extra = if responde { (read_i32(e + 4) - prox).rem_euclid(0x64) } else { 0 };
-    let vaga = read_usize(this).wrapping_add((atual as usize).wrapping_mul(CPN1_NOTICIA));
+    let vaga = read_usize(this).wrapping_add((atual as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     let ok = r == 1 && read_i32(e) == inicio && read_i32(e + 4) == if extra == 0 { prox } else { read_i32(e + 4) }
         && read_i32(e + 8) >= conta_depois && read_i32(e + 8) <= conta_depois + extra
         && (read_usize(this + 0x10) == contador_depois || (extra > 0 && read_usize(this + 0x10) > contador_depois))
@@ -409,7 +409,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
 
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +5 os 50 campos de 4 bytes, +0xcc fim do texto, +0xd6 id,
 /// +0xda lida).
-pub(crate) const CPN2_NOTICIA: usize = 0xdf;
+pub(crate) const NEWS_NEWS_ITEM_SIZE: usize = 0xdf;
 
 /// Human manager's 12-byte inbox entry (News +8: ring start, next slot, count), or None with the error box when not one
 /// of the last 16 people.
@@ -438,7 +438,7 @@ pub(crate) fn ring_prev_wrap(k: i32, inicio: i32) -> i32 {
 ///
 /// [pt] { 0x7874b0 } (thiscall, ret 8, news.cpp): `News::auto_respond_all(tecnico, clube)`: da notícia mais nova para a mais
 /// antiga do anel do humano, até a primeira vaga vazia (+0xd6 = 0), dá a resposta automática (0x784100) pelo `clube`.
-/// Sem técnico ou técnico da máquina: a caixa "Error" e 0; sem anel ou no fim: 1. Chamada ao sair de férias, ao ser
+/// Sem técnico ou técnico da máquina: a caixa "Error" e 0; sem anel ou no fim: 1. TapeCall ao sair de férias, ao ser
 /// demitido e ao ser contratado.
 pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     if tecnico == 0 {
@@ -456,7 +456,7 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: us
     let mut k = read_i32(e + 4) - 1;
     loop {
         k = ring_prev_wrap(k, read_i32(e));
-        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
+        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if read_usize(vaga + 0xd6) == 0 {
             return 1;
         }
@@ -493,7 +493,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: us
     let mut k = read_i32(e + 4) - 1;
     loop {
         k = ring_prev_wrap(k, read_i32(e));
-        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
+        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if read_usize(vaga + 0xd6) == 0 {
             return 0;
         }
@@ -501,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: us
         if texto(vaga, tecnico, 0xde1f64, 0x7d0, &mut saida) as u8 == 2 {
             return 1; // pede resposta
         }
-        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
+        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if *((vaga + 4) as *const u8) == 1 && read_usize(vaga + 0xda) == 0 {
             return 1; // importante e não lida
         }
@@ -1227,7 +1227,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usi
         if k < read_i32(e) {
             k = read_i32(e) + 0x63;
         }
-        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA));
+        let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE));
         if read_usize(vaga + 0xd6) == 0 {
             return vetor;
         }
@@ -1242,7 +1242,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, tecnico: usi
             }
             let n = *conta;
             *conta = n + 1;
-            copiar(vetor.wrapping_add((n as usize).wrapping_mul(CPN3_NOTICIA)), read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA)));
+            copiar(vetor.wrapping_add((n as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)), read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE)));
         }
         k -= 1;
         if k == read_i32(e + 4) - 1 {
@@ -1268,7 +1268,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tec
             if k < read_i32(e) {
                 k = read_i32(e) + 0x63;
             }
-            let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(CPN3_NOTICIA));
+            let vaga = read_usize(this).wrapping_add((k as usize).wrapping_mul(MEDIA_NEWS_ITEM_SIZE));
             if read_usize(vaga + 0xd6) == 0 {
                 break;
             }
@@ -1285,7 +1285,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_inbox_items(this: usize, tec
     let ok = if ids.is_empty() {
         r == 0
     } else {
-        r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * CPN3_NOTICIA + 0xd6) == id))
+        r == 0 || (*conta as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
     PLACAR.registrar(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", categoria as u8, if r == 0 { 0 } else { *conta }, ids));
     r

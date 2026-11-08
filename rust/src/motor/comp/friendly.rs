@@ -358,7 +358,7 @@ pub(crate) unsafe fn list_item_ids(lista: usize) -> Vec<u32> {
 /// O ensaio do comparador da 0x5cbdf0: as nações usadas (o vetor local da original), as listas antes e o que a cópia
 /// acrescentaria a cada uma (índice da lista, item).
 #[derive(Clone)]
-pub(crate) struct Cqc11Ensaio {
+pub(crate) struct FriendlyComparerTrial {
     pub(crate) usadas: Vec<u8>,
     pub(crate) antes: std::rc::Rc<Vec<Vec<u32>>>,
     pub(crate) novos: Vec<Vec<u32>>,
@@ -391,7 +391,7 @@ pub(crate) unsafe fn tape_fully_consumed() -> bool {
     !f.2 && f.1 == f.0.len()
 }
 
-impl Cqc11Ensaio {
+impl FriendlyComparerTrial {
     fn usada(&self, id: usize) -> bool {
         self.usadas.get(id).is_some_and(|&b| b != 0)
     }
@@ -418,7 +418,7 @@ impl Cqc11Ensaio {
 /// [pt] Um jogo da primeira parte: com nação nos dois clubes (+0x1c, +0x20; +0x53, a id em +0), as duas ficam usadas e cada
 /// uma vai à lista (pela id) da outra: a de casa recebe a de fora, depois o contrário (0x68d0d0 com 4: thiscall na
 /// lista). No ensaio, só o registro.
-pub(crate) unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option<&mut Cqc11Ensaio>) {
+pub(crate) unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option<&mut FriendlyComparerTrial>) {
     let na = read_usize(read_usize(p + 0x1c) + 0x53);
     if na == 0 {
         return;
@@ -456,7 +456,7 @@ pub(crate) unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, 
 /// +0x53, a id em +0) marca as duas nações como usadas e cada uma vai à lista da outra (pela id: a de casa recebe a de
 /// fora, depois o contrário; 0x68d0d0 com 4). No ensaio, nada se grava fora das datas estáticas (o cursor das listas
 /// do calendário não se mexe).
-pub(crate) unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>) {
+pub(crate) unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: usize, mut ens: Option<&mut FriendlyComparerTrial>) {
     let menos: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
@@ -531,7 +531,7 @@ pub(crate) unsafe fn is_african_excluded(datas: usize, n: usize) -> bool {
 /// não é criado: vale o que a original fez (a id de `b` apareceu na lista da posição de `a`), os sorteios vêm da fita
 /// e, depois do mando, o resto continua (desde `a` seguinte) no primeiro sorteio de 500 da fita (ou no fim) com que
 /// fecha: os de dentro das rotinas do amistoso ficam para trás. Começa na nação `i0`.
-pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut Cqc11Ensaio>, i0: i32) {
+pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas: usize, mut ens: Option<&mut FriendlyComparerTrial>, i0: i32) {
     let sortear: unsafe extern "C" fn(i32) -> i32 =
         if ens.is_some() { tape_random } else { core::mem::transmute(FN_UTILS_RANDOM) };
     let proibido: unsafe extern "thiscall" fn(usize, i32, i32) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_BANNED_NATION_PAIR);
@@ -689,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_arrange_international_friendlies
     let nacoes = read_usize(G_NATION_COUNT) as i32;
     let k = nacoes.max(read_usize(this + 0x34fe) as i32).max(0) as usize;
     let antes: Vec<Vec<u32>> = (0..k).map(|q| list_item_ids(nation_friendly_list(this, q))).collect();
-    let mut e = Cqc11Ensaio { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
+    let mut e = FriendlyComparerTrial { usadas: vec![0u8; nacoes.max(0) as usize], antes: std::rc::Rc::new(antes), novos: vec![Vec::new(); k] };
     link_nations_near_date(this, datas, 0, Some(&mut e));
     let ((), tape_lock) = crate::aleatorio::rastrear(|| o(this, datas, n));
     let quantos = tape_lock.len();
@@ -884,7 +884,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_friendly_check_tournament_invita
 /// As 110 datas internacionais da 0x5ca4f0, na ordem em que a original as grava: (+0 o dia da semana, +1 o dia, +2 o
 /// mês a partir de 0, +0xb o ano a somar ao da Copa, o global do continente em +0xc, o global da competição em +0x10
 /// ou 0 para −1). Extraídas da desmontagem (0x5ca588..0x5cb8e6); as 5 últimas vão pela 0x5cb9b0.
-pub(crate) const CQB3_DATAS: [(u8, u8, u8, u8, usize, usize); 110] = [
+pub(crate) const INTERNATIONAL_DATES: [(u8, u8, u8, u8, usize, usize); 110] = [
     (5, 10, 9, 0, KEY_CONTINENT_AFRICA, 0),
     (2, 18, 10, 0, KEY_CONTINENT_AFRICA, 0),
     (6, 15, 11, 0, KEY_CONTINENT_AFRICA, 0),
@@ -1020,7 +1020,7 @@ pub(crate) unsafe extern "thiscall" fn build_international_date_table(this: usiz
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_INTERNATIONAL_DATE_TABLE)(this);
     }
     let preencher: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32) = core::mem::transmute(FN_FRIENDLY_INTERNATIONAL_DATE_SET);
-    for (k, &(semana, dia, mes, ano, continente, competicao)) in CQB3_DATAS.iter().enumerate() {
+    for (k, &(semana, dia, mes, ano, continente, competicao)) in INTERNATIONAL_DATES.iter().enumerate() {
         let e = read_usize(this + 0x34ec) + k * 0x14;
         let comp = if competicao == 0 { -1 } else { read_i32(competicao) };
         if k >= 105 {
@@ -3224,7 +3224,7 @@ pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitri
 
 /// Comparer for `is_comp_current_on_date` (comparison mode: see the header of motor.rs).
 ///
-/// [pt] Comparador: pelo valor (as datas e a vaga só são lidas). Chamada pelas copas e ligas a cada data: sem contador.
+/// [pt] Comparador: pelo valor (as datas e a vaga só são lidas). TapeCall pelas copas e ligas a cada data: sem contador.
 pub(crate) unsafe extern "thiscall" fn comparar_is_comp_current_on_date(this: usize, comp: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_COMP_CURRENT_ON_DATE)(this, comp, data);
     let n = is_comp_current_on_date(this, comp, data);
@@ -3708,7 +3708,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_update_international_friendlies(
         PLACAR.registrar(dia == read_u16(G_CURRENT_DATE), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, dia, read_u16(G_CURRENT_DATE)));
         return;
     }
-    let mut reg = CPY4_ESTATICAS.to_vec();
+    let mut reg = SCOUT_MANAGER_DATE_STATICS.to_vec();
     reg.push((this + 0x34f4, 2));
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this), || update_international_friendlies(this));
     PLACAR.registrar(igual, || format!("update_international_friendlies(sem amistosos) {:x?} x {:x?}", mo, mr));

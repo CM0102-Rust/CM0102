@@ -172,14 +172,14 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_advance_stage(this:
 
 
 /// Os clubes de uma nação para a Merconorte: até 30, na ordem da tabela de clubes.
-pub(crate) struct Cqs11Nacao {
+pub(crate) struct NationClubList {
     pub(crate) clubes: [usize; 30],
     pub(crate) n: u8,
 }
 
-impl Cqs11Nacao {
+impl NationClubList {
     fn novo() -> Self {
-        Cqs11Nacao { clubes: [0; 30], n: 0 }
+        NationClubList { clubes: [0; 30], n: 0 }
     }
 
     fn por(&mut self, c: usize) {
@@ -223,7 +223,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         show_error_at(0x9a7d6c, 0x262);
         return 0;
     }
-    let (mut mexico, mut colombia, mut peru, mut bolivia) = (Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo(), Cqs11Nacao::novo());
+    let (mut mexico, mut colombia, mut peru, mut bolivia) = (NationClubList::novo(), NationClubList::novo(), NationClubList::novo(), NationClubList::novo());
     let mut mls = [0usize; 12];
     let mut n_mls = 0i8;
     let mut i = 0i32;
@@ -652,11 +652,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_create_schedule(thi
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da merconorte");
-    apply_cup_rules(this, &CQJ11_MERCONORTE, CQJ11_MERCONORTE.dia, 3)
+    apply_cup_rules(this, &MERCONORTE_RULES, MERCONORTE_RULES.dia, 3)
 }
 
 /// Comparer for `con_merc_cup_set_up_rules` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SET_UP_RULES);
-    check_cup_rules("con_merc_cup_set_up_rules", this, &CQJ11_MERCONORTE, || o(this))
+    check_cup_rules("con_merc_cup_set_up_rules", this, &MERCONORTE_RULES, || o(this))
 }

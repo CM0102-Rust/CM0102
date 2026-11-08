@@ -10,7 +10,7 @@ unsafe fn cpn2_i(a: usize) -> i32 {
 
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +5 os 50 campos de 4 bytes, +0xcc fim do texto, +0xd6 id,
 /// +0xda lida).
-const CPN2_NOTICIA: usize = 0xdf;
+const NEWS_NEWS_ITEM_SIZE: usize = 0xdf;
 
 /// A entrada do humano na tabela das caixas (News +8, 12 bytes: início do anel, próxima vaga, conta), ou None (com a
 /// caixa "Error" da `linha`) se a pessoa não está entre as 16 últimas.
@@ -30,7 +30,7 @@ fn ring_prev_wrap(k: i32, inicio: i32) -> i32 {
 
 /// { 0x7874b0 } (thiscall, ret 8, news.cpp): `News::auto_respond_all(tecnico, clube)`: da notícia mais nova para a mais
 /// antiga do anel do humano, até a primeira vaga vazia (+0xd6 = 0), dá a resposta automática (0x784100) pelo `clube`.
-/// Sem técnico ou técnico da máquina: a caixa "Error" e 0; sem anel ou no fim: 1. Chamada ao sair de férias, ao ser
+/// Sem técnico ou técnico da máquina: a caixa "Error" e 0; sem anel ou no fim: 1. TapeCall ao sair de férias, ao ser
 /// demitido e ao ser contratado.
 unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube: usize) -> u32 {
     if tecnico == 0 {
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube:
     let mut k = cpn2_i(e + 4) - 1;
     loop {
         k = ring_prev_wrap(k, cpn2_i(e));
-        let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
+        let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if cpn2_d(vaga + 0xd6) == 0 {
             return 1;
         }
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: usize, so_urg
     let mut k = cpn2_i(e + 4) - 1;
     loop {
         k = ring_prev_wrap(k, cpn2_i(e));
-        let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
+        let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if cpn2_d(vaga + 0xd6) == 0 {
             return 0;
         }
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn has_urgent_items(this: usize, tecnico: usize, so_urg
         if texto(vaga, tecnico, 0xde1f64, 0x7d0, &mut saida) as u8 == 2 {
             return 1; // pede resposta
         }
-        let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(CPN2_NOTICIA));
+        let vaga = cpn2_d(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
         if *((vaga + 4) as *const u8) == 1 && cpn2_d(vaga + 0xda) == 0 {
             return 1; // importante e não lida
         }

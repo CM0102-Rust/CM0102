@@ -172,20 +172,20 @@ unsafe extern "thiscall" fn comparar_find_nth_unqualified_club_of_nation(this: u
 /// Os 20 clubes convidados da Copa Mercosul (as chaves fixas: River Plate, Boca Juniors, Independiente, San Lorenzo,
 /// Vélez Sarsfield, Cruzeiro, São Paulo, Palmeiras, Corinthians, Flamengo, Rosario Central, Vasco, Colo-Colo,
 /// Universidad de Chile, Universidad Católica, Peñarol, Nacional, Olimpia, Cerro Porteño e Grêmio), na ordem da original.
-const CQJ1_MERCOSUL: [usize; 20] = [
+const MERCOSUR_INVITED_CLUBS: [usize; 20] = [
     0x9d00ac, 0x9d00d0, 0x9d00b4, 0x9d00d8, 0x9d00b0, 0x9d026c, 0x9d0270, 0x9d0274, 0x9d0278, 0x9d0358,
     0x9d00e0, 0x9d0354, 0x9d0280, 0x9d0284, 0x9d0288, 0x9d0298, 0x9d028c, 0x9d0290, 0x9d0294, 0x9d027c,
 ];
 
 /// { 0x4c6890 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::is_mercosur_invited_club`; o this não é
-/// lido): 1 se o id do clube é um dos 20 convidados da Copa Mercosul (`CQJ1_MERCOSUL`), senão 0 (sem clube, devolve o 0
+/// lido): 1 se o id do clube é um dos 20 convidados da Copa Mercosul (`MERCOSUR_INVITED_CLUBS`), senão 0 (sem clube, devolve o 0
 /// do próprio ponteiro).
 unsafe extern "thiscall" fn is_mercosur_invited_club(_this: usize, clube: usize) -> u32 {
     if clube == 0 {
         return 0;
     }
     let id = cqj1_d(clube);
-    for &chave in CQJ1_MERCOSUL.iter() {
+    for &chave in MERCOSUR_INVITED_CLUBS.iter() {
         if id == cqj1_d(chave) {
             return 1; // cqj1: convidado
         }

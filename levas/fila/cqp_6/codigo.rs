@@ -4,12 +4,12 @@
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-type Cqp6Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+type SpaFirstLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-unsafe fn spa_first_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqp6Rodada]) {
+unsafe fn spa_first_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[SpaFirstLeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(0x68a160usize);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -45,16 +45,16 @@ unsafe fn cqp6_gravados(t: usize, guia: usize, n: usize) -> Vec<u8> {
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-struct Cqp6Natal {
-    comeco: &'static [Cqp6Rodada],
+struct SpaFirstChristmasSchedule {
+    comeco: &'static [SpaFirstLeagueRound],
     referencia: usize,
     ajuste: i32,
-    casos: [&'static [Cqp6Rodada]; 8],
-    fim: &'static [Cqp6Rodada],
+    casos: [&'static [SpaFirstLeagueRound]; 8],
+    fim: &'static [SpaFirstLeagueRound],
     linha: u32,
 }
 
-unsafe fn write_rounds_winter_break(t: usize, ano: u32, n: &Cqp6Natal, arquivo: usize) {
+unsafe fn write_rounds_winter_break(t: usize, ano: u32, n: &SpaFirstChristmasSchedule, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     spa_first_write_league_rounds(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -102,7 +102,7 @@ unsafe fn compare_league_round_table(nome: &str, fase: u32, rodadas: *mut i16, e
 }
 
 /// a Primera espanhola: as rodadas antes do Natal (ano par)
-const CQP6_PRIMERA_PAR_COMECO: [Cqp6Rodada; 15] = [
+const PRIMERA_EVEN_YEAR_EARLY_ROUNDS: [SpaFirstLeagueRound; 15] = [
     (30, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 0: 30/ago
     (13, 8, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 1: 13/set
     (20, 8, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 2: 20/set
@@ -121,47 +121,47 @@ const CQP6_PRIMERA_PAR_COMECO: [Cqp6Rodada; 15] = [
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 17/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_0: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_0: [SpaFirstLeagueRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 15: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 18/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_1: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_YEAR_CHRISTMAS_1: [SpaFirstLeagueRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 15: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 19/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_2: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_CHRISTMAS_ROUNDS_2: [SpaFirstLeagueRound; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 15: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 20/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_3: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_3: [SpaFirstLeagueRound; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 15: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 21/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_4: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_YEAR_CHRISTMAS_4: [SpaFirstLeagueRound; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 15: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 22/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_5: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_CHRISTMAS_ROUNDS_5: [SpaFirstLeagueRound; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 15: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 14 (a de referência) cai em 23/dez (ano par)
-const CQP6_PRIMERA_PAR_NATAL_6: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_6: [SpaFirstLeagueRound; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 15: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 14 fora de 17 a 23/dez: a caixa) (ano par)
-const CQP6_PRIMERA_PAR_NATAL_PADRAO: [Cqp6Rodada; 1] = [
+const PRIMERA_EVEN_YEAR_CHRISTMAS_DEFAULT: [SpaFirstLeagueRound; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 15: 27/dez
 ];
 
 /// a Primera espanhola: as rodadas depois do Natal (ano par)
-const CQP6_PRIMERA_PAR_FIM: [Cqp6Rodada; 22] = [
+const PRIMERA_EVEN_YEAR_END: [SpaFirstLeagueRound; 22] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 16: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 17: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 18: 17/jan (+1 ano)
@@ -187,7 +187,7 @@ const CQP6_PRIMERA_PAR_FIM: [Cqp6Rodada; 22] = [
 ];
 
 /// a Primera espanhola: as rodadas antes do Natal (ano impar)
-const CQP6_PRIMERA_IMPAR_COMECO: [Cqp6Rodada; 16] = [
+const PRIMERA_ODD_YEAR_START: [SpaFirstLeagueRound; 16] = [
     (22, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 0: 22/ago
     (29, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 1: 29/ago
     (12, 8, 0, 6, 2, &[(5, 1, 1), (-1, -1, -1)]), // 2: 12/set
@@ -207,47 +207,47 @@ const CQP6_PRIMERA_IMPAR_COMECO: [Cqp6Rodada; 16] = [
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 16/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_0: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_YEAR_CHRISTMAS_0: [SpaFirstLeagueRound; 1] = [
     (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 16: 23/dez
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 17/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_1: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_CHRISTMAS_ROUNDS_1: [SpaFirstLeagueRound; 1] = [
     (20, 11, 0, -1, 2, &[(-1, -1, -1)]), // 16: 20/dez
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 18/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_2: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_2: [SpaFirstLeagueRound; 1] = [
     (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 16: 21/dez
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 19/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_3: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_YEAR_CHRISTMAS_3: [SpaFirstLeagueRound; 1] = [
     (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 16: 22/dez
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 20/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_4: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_CHRISTMAS_ROUNDS_4: [SpaFirstLeagueRound; 1] = [
     (3, 0, 1, -1, 1, &[(-1, -1, -1)]), // 16: 3/jan (+1 ano)
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 21/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_5: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_5: [SpaFirstLeagueRound; 1] = [
     (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 16: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 15 (a de referência) cai em 22/dez (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_6: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_YEAR_CHRISTMAS_6: [SpaFirstLeagueRound; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 16: 29/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 15 fora de 16 a 22/dez: a caixa) (ano impar)
-const CQP6_PRIMERA_IMPAR_NATAL_PADRAO: [Cqp6Rodada; 1] = [
+const PRIMERA_ODD_CHRISTMAS_ROUNDS_DEFAULT: [SpaFirstLeagueRound; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 16: 27/dez
 ];
 
 /// a Primera espanhola: as rodadas depois do Natal (ano impar)
-const CQP6_PRIMERA_IMPAR_FIM: [Cqp6Rodada; 21] = [
+const PRIMERA_ODD_LATE_ROUNDS: [SpaFirstLeagueRound; 21] = [
     (5, 0, 1, 2, 2, &[(-1, -1, -1)]), // 17: 5/jan (+1 ano)
     (9, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 18: 9/jan (+1 ano)
     (16, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 19: 16/jan (+1 ano)
@@ -271,8 +271,8 @@ const CQP6_PRIMERA_IMPAR_FIM: [Cqp6Rodada; 21] = [
     (21, 4, 1, 6, 1, &[(-1, -1, -1)]), // 37: 21/mai (+1 ano)
 ];
 
-const CQP6_PRIMERA_PAR_NATAL: Cqp6Natal = Cqp6Natal { comeco: &CQP6_PRIMERA_PAR_COMECO, referencia: 14, ajuste: 17, casos: [&CQP6_PRIMERA_PAR_NATAL_0, &CQP6_PRIMERA_PAR_NATAL_1, &CQP6_PRIMERA_PAR_NATAL_2, &CQP6_PRIMERA_PAR_NATAL_3, &CQP6_PRIMERA_PAR_NATAL_4, &CQP6_PRIMERA_PAR_NATAL_5, &CQP6_PRIMERA_PAR_NATAL_6, &CQP6_PRIMERA_PAR_NATAL_PADRAO], fim: &CQP6_PRIMERA_PAR_FIM, linha: 0x11b };
-const CQP6_PRIMERA_IMPAR_NATAL: Cqp6Natal = Cqp6Natal { comeco: &CQP6_PRIMERA_IMPAR_COMECO, referencia: 15, ajuste: 16, casos: [&CQP6_PRIMERA_IMPAR_NATAL_0, &CQP6_PRIMERA_IMPAR_NATAL_1, &CQP6_PRIMERA_IMPAR_NATAL_2, &CQP6_PRIMERA_IMPAR_NATAL_3, &CQP6_PRIMERA_IMPAR_NATAL_4, &CQP6_PRIMERA_IMPAR_NATAL_5, &CQP6_PRIMERA_IMPAR_NATAL_6, &CQP6_PRIMERA_IMPAR_NATAL_PADRAO], fim: &CQP6_PRIMERA_IMPAR_FIM, linha: 0x1e1 };
+const PRIMERA_EVEN_CHRISTMAS_SCHEDULE: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_EVEN_YEAR_EARLY_ROUNDS, referencia: 14, ajuste: 17, casos: [&PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_0, &PRIMERA_EVEN_YEAR_CHRISTMAS_1, &PRIMERA_EVEN_CHRISTMAS_ROUNDS_2, &PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_3, &PRIMERA_EVEN_YEAR_CHRISTMAS_4, &PRIMERA_EVEN_CHRISTMAS_ROUNDS_5, &PRIMERA_EVEN_YEAR_CHRISTMAS_ROUNDS_6, &PRIMERA_EVEN_YEAR_CHRISTMAS_DEFAULT], fim: &PRIMERA_EVEN_YEAR_END, linha: 0x11b };
+const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_ODD_YEAR_START, referencia: 15, ajuste: 16, casos: [&PRIMERA_ODD_YEAR_CHRISTMAS_0, &PRIMERA_ODD_CHRISTMAS_ROUNDS_1, &PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_2, &PRIMERA_ODD_YEAR_CHRISTMAS_3, &PRIMERA_ODD_CHRISTMAS_ROUNDS_4, &PRIMERA_ODD_YEAR_CHRISTMAS_ROUNDS_5, &PRIMERA_ODD_YEAR_CHRISTMAS_6, &PRIMERA_ODD_CHRISTMAS_ROUNDS_DEFAULT], fim: &PRIMERA_ODD_LATE_ROUNDS, linha: 0x1e1 };
 
 /// { 0x84e450 } (thiscall, ret 0x10, spa_first.cpp, 6.107 bytes, método +0x3c): `SpaFirst::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 38 rodadas, a tabela pela paridade do ano +0x40 (o resto da divisão com
@@ -294,9 +294,9 @@ unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, fase: u32, ro
             crate::comparacao::ramo("cqp_6 calendario da primera");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
-                write_rounds_winter_break(t, ano, &CQP6_PRIMERA_IMPAR_NATAL, 0xa82844);
+                write_rounds_winter_break(t, ano, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);
             } else {
-                write_rounds_winter_break(t, ano, &CQP6_PRIMERA_PAR_NATAL, 0xa82844);
+                write_rounds_winter_break(t, ano, &PRIMERA_EVEN_CHRISTMAS_SCHEDULE, 0xa82844);
             }
             t
         }

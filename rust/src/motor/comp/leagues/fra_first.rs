@@ -221,7 +221,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, tabela: &[(u8, u8, 
 /// [pt] { 0x650100 } (thiscall, ret 0, ita_ser_c1b.cpp, 11.650 bytes): `ItaSerC1b::set_up_fixed_fixtures()`: os 306 jogos
 /// da C1/B 2001/02. Fonte 0x9ea558, linha 0x404.
 pub(crate) unsafe extern "thiscall" fn fra_first_set_up_fixed_fixtures(this: usize) {
-    set_up_fixed_fixtures_body(this, &CQN6_C1B, 0x9ea558, 0x404)
+    set_up_fixed_fixtures_body(this, &SERIE_C1B_FIXTURES, 0x9ea558, 0x404)
 }
 /// Comparer: runs only the original and checks +0xea is either 0 or n fixtures with both clubs found.
 ///
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_stub_return_one_ret4(this: usize
 
 /// Os jogos fixos (dia, mês com 0 = janeiro, ano, o 5º argumento (casa, pelo mapa), o 6º (fora)), os nomes no .rdata do
 /// exe; na ordem da original (extraídos da desmontagem e conferidos: os lugares do vetor vão de 16 em 16).
-pub(crate) const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
+pub(crate) const C1A_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (2, 8, 2001, 0x9ea540, 0x9ea54c), // Albinoleffe × Carrarese
     (2, 8, 2001, 0x9ea530, 0x9ea538), // Alzano × Arezzo
     (2, 8, 2001, 0x9ea520, 0x9ea528), // Cesena × Livorno
@@ -589,7 +589,7 @@ pub(crate) const CQN6_C1A: [(u8, u8, u16, u32, u32); 306] = [
     (5, 4, 2002, 0x9ea54c, 0x9ea4b0), // Carrarese × Varese
 ];
 
-pub(crate) const CQN6_C1B: [(u8, u8, u16, u32, u32); 306] = [
+pub(crate) const SERIE_C1B_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
     (2, 8, 2001, 0x9ea638, 0x9ea640), // Ascoli × Castel di Sangro
     (2, 8, 2001, 0x9ea620, 0x9ea62c), // Avellino × L'Aquila
     (2, 8, 2001, 0x9ea60c, 0x9ea614), // Catania × Benevento
@@ -1141,7 +1141,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_first_create_table(this: usi
 /// [pt] { 0x5bb690 } (thiscall, ret 0x10, fra_first.cpp, 3.090 bytes, método +0x3c): `FraFirst::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: só a fase −1 (as outras devolvem 0). Em 2001 (o ano +0x40 = 0x7d1) 34 rodadas (18
 /// clubes); nos outros anos 38 (20 clubes). é_liga (se pedido) = 1, as rodadas, extra 0, a tabela de rodadas × 0x41
-/// bytes (sem memória: a caixa da linha 0xd1 e 0); as rodadas de `CQO6_PRIMEIRA_FRANCESA` em sequência (as marcadas só
+/// bytes (sem memória: a caixa da linha 0xd1 e 0); as rodadas de `FRENCH_FIRST_DIVISION_ROUNDS` em sequência (as marcadas só
 /// entram com 38); no fim, se a conta não bate com as rodadas, a caixa da linha 0x1b2 (e devolve a tabela assim mesmo).
 /// Fonte 0x9ccb5c.
 pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
@@ -1163,7 +1163,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, fa
     }
     crate::comparacao::ramo("cqo_6 calendario da primeira francesa");
     let mut i: i16 = 0;
-    for (so_38, r) in CQO6_PRIMEIRA_FRANCESA.iter() {
+    for (so_38, r) in FRENCH_FIRST_DIVISION_ROUNDS.iter() {
         if *so_38 && n != 0x26 {
             continue;
         }

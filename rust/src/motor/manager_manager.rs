@@ -1167,9 +1167,9 @@ pub(crate) unsafe fn is_vacancy_candidate(this: usize, p: usize) -> u8 {
 /// O item de 0x26 bytes da vaga (o que a original monta em [esp+0x1c]): +0 achou um livre, +1 0, +2 o id dele, +6 o
 /// índice do escolhido, +0xa o id do técnico que saiu, +0xe o id do clube, +0x12 a nota anterior, +0x16 a data da
 /// chegada e +0x1e a data do anúncio (8 bytes cada, 0x54a110).
-pub(crate) struct Cqc9Vaga(pub(crate) [u8; 0x28]);
+pub(crate) struct ManagerVacancy(pub(crate) [u8; 0x28]);
 
-impl Cqc9Vaga {
+impl ManagerVacancy {
     fn b(&mut self, o: usize, v: u8) {
         self.0[o] = v;
     }
@@ -1211,7 +1211,7 @@ impl Cqc9Vaga {
 pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usize) {
     // ponytail: a nota anterior (+0x12) fica sem valor na original quando o escolhido é o auxiliar ou o de +0x19f (sobra de
     // pilha); aqui 0, um valor que o jogo também produz
-    let mut v = Cqc9Vaga([0; 0x28]);
+    let mut v = ManagerVacancy([0; 0x28]);
     let data_padrao: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     data_padrao(v.0.as_mut_ptr().add(0x16));
     data_padrao(v.0.as_mut_ptr().add(0x1e));
@@ -3519,8 +3519,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_issue_board_ultimatum(this: usiz
 
 /// As marcas do contrato que a saída do técnico apaga: lidas pela 0x8676f0 (+0x40; a 0x10000000 é apagada pela
 /// 0x8674e0, que mexe no +0x45) e lidas no +0x45 (apagadas pela 0x8674e0, que também atualiza a pessoa).
-pub(crate) const CPQ1_PELA_LEITURA: [(u32, usize); 3] = [(0x1000_0000, 0x8674e0), (0x80, 0x8676d0), (0x100, 0x8676d0)];
-pub(crate) const CPQ1_NO_45: [u32; 8] = [0x800_0000, 8, 0x200, 0x400, 0x2000, 0x1_0000, 0x8_0000, 0x80_0000];
+pub(crate) const CONTRACT_FLAGS_BY_READER: [(u32, usize); 3] = [(0x1000_0000, 0x8674e0), (0x80, 0x8676d0), (0x100, 0x8676d0)];
+pub(crate) const CONTRACT_FLAGS_AT_45: [u32; 8] = [0x800_0000, 8, 0x200, 0x400, 0x2000, 0x1_0000, 0x8_0000, 0x80_0000];
 
 /// Returns the club's manager and his role byte (club job +0x39/+0x3d or national job +0x24/+0x28), if he holds the
 /// post.
@@ -3608,13 +3608,13 @@ pub(crate) unsafe extern "thiscall" fn remove_club_manager(this: usize, clube: u
         if ct == 0 {
             continue;
         }
-        for (m, f) in CPQ1_PELA_LEITURA {
+        for (m, f) in CONTRACT_FLAGS_BY_READER {
             if marcas(ct) & m != 0 {
                 let apagar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(f);
                 apagar(ct, m);
             }
         }
-        for m in CPQ1_NO_45 {
+        for m in CONTRACT_FLAGS_AT_45 {
             if read_usize(ct + 0x45) as u32 & m != 0 {
                 queixa(ct, m);
             }

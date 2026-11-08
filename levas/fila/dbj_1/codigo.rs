@@ -36,48 +36,48 @@ fn v1_record_size(campos: &[(usize, u32, usize)]) -> usize {
 
 /// TClub (581 bytes) no club.dat versão 1 (577 bytes no arquivo): buracos em +0x37, +0x52 e +0x244; a
 /// reputação vem num byte (0 vira 1) × 500 em +0x80.
-const CLUBE_V1: [(usize, u32, usize); 18] = [(0, 4, 1), (4, 0x33, 1), (0x38, 0x1a, 1), (0x53, 4, 3), (0x5f, 1, 1),
+const CLUB_V1_LAYOUT: [(usize, u32, usize); 18] = [(0, 4, 1), (4, 0x33, 1), (0x38, 0x1a, 1), (0x53, 4, 3), (0x5f, 1, 1),
     (0x60, 4, 1), (0x64, 1, 1), (0x65, 4, 2), (0x6d, 1, 1), (0x6e, 4, 1), (0x72, 1, 1), (0x73, 4, 3), (0x7f, 1, 1),
     (0x80, 0, 1), (0x82, 1, 1), (0x83, 4, 87), (0x1df, 1, 1), (0x1e0, 4, 25)];
 
 /// Não jogador (68 bytes, id 9) versão 1 (65 no arquivo): as três reputações (+8, +0xa, +0xc) vêm em bytes.
-const NAO_JOGADOR_V1: [(usize, u32, usize); 6] = [(0, 4, 1), (4, 2, 2), (8, 0, 3), (0xe, 1, 21), (0x23, 4, 8), (0x43, 1, 1)];
+const NON_PLAYER_V1_LAYOUT: [(usize, u32, usize); 6] = [(0, 4, 1), (4, 2, 2), (8, 0, 3), (0xe, 1, 21), (0x23, 4, 8), (0x43, 1, 1)];
 
 /// Jogador (70 bytes, id 10) versão 1 (67 no arquivo): as três reputações (+9, +0xb, +0xd) vêm em bytes.
-const JOGADOR_V1: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1, 1), (5, 2, 2), (9, 0, 3), (0xf, 1, 55)];
+const PLAYER_V1_FIELDS: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1, 1), (5, 2, 2), (9, 0, 3), (0xf, 1, 55)];
 
 /// { 0x54dc90 } (cdecl, Db_files.cpp): `db_files_read_clubs_v1(stream, use_zip, registros, n)`: o club.dat
-/// versão 1 campo a campo (`CLUBE_V1`); a reputação lida num byte, 0 vira 1, × 500 (u16, como o `imul ax`).
+/// versão 1 campo a campo (`CLUB_V1_LAYOUT`); a reputação lida num byte, 0 vira 1, × 500 (u16, como o `imul ax`).
 /// Chamado por `db_files_read_clubs` 0x54db50 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
 unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler clubes v1");
-    convert_v1_records(stream, use_zip, registros, n, 581, &CLUBE_V1, |b| (b.max(1) as u16).wrapping_mul(500))
+    convert_v1_records(stream, use_zip, registros, n, 581, &CLUB_V1_LAYOUT, |b| (b.max(1) as u16).wrapping_mul(500))
 }
 
 /// { 0x54e9a0 } (cdecl, Db_files.cpp): `db_files_read_players_v1(stream, use_zip, registros, n)` (o mapa da
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 68 bytes): campo a campo
-/// (`NAO_JOGADOR_V1`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
+/// (`NON_PLAYER_V1_LAYOUT`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
 unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler não jogadores v1");
-    convert_v1_records(stream, use_zip, registros, n, 68, &NAO_JOGADOR_V1, |b| b as u16)
+    convert_v1_records(stream, use_zip, registros, n, 68, &NON_PLAYER_V1_LAYOUT, |b| b as u16)
 }
 
 /// { 0x54f150 } (cdecl, Db_files.cpp): `db_files_read_non_players_v1(stream, use_zip, registros, n)` (o mapa
-/// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`JOGADOR_V1`); as reputações
+/// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`PLAYER_V1_FIELDS`); as reputações
 /// lidas em bytes, sem conta. Chamado por 0x54f030 com a versão 1.
 unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
     crate::comparacao::ramo("banco ler jogadores v1");
-    convert_v1_records(stream, use_zip, registros, n, 70, &JOGADOR_V1, |b| b as u16)
+    convert_v1_records(stream, use_zip, registros, n, 70, &PLAYER_V1_FIELDS, |b| b as u16)
 }
 
-type ConversorV1 = unsafe extern "C" fn(usize, i32, usize, u32) -> i32;
+type V1Converter = unsafe extern "C" fn(usize, i32, usize, u32) -> i32;
 
 /// Comparador de um conversor: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à
 /// posição do `ftell` 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo
 /// parou. Fica a posição da Rust (a mesma, se iguais).
 // ponytail: com zread (o contêiner) só a original; o save é versão 2 e não chega aqui.
-unsafe fn comparar_conversor_v1(nome: &str, o: ConversorV1, rust: ConversorV1, stream: usize, use_zip: i32,
+unsafe fn comparar_conversor_v1(nome: &str, o: V1Converter, rust: V1Converter, stream: usize, use_zip: i32,
                                 registros: usize, n: u32, tamanho: usize) -> i32 {
     if use_zip != 0 {
         return o(stream, use_zip, registros, n);
@@ -106,15 +106,15 @@ unsafe fn comparar_conversor_v1(nome: &str, o: ConversorV1, rust: ConversorV1, s
 }
 
 unsafe extern "C" fn comparar_db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_clubs_v1", original_fn::<ConversorV1>(%%I0%%), db_files_read_clubs_v1, stream, use_zip, registros, n, 581)
+    comparar_conversor_v1("db_files_read_clubs_v1", original_fn::<V1Converter>(%%I0%%), db_files_read_clubs_v1, stream, use_zip, registros, n, 581)
 }
 
 unsafe extern "C" fn comparar_db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_players_v1", original_fn::<ConversorV1>(%%I1%%), db_files_read_players_v1, stream, use_zip, registros, n, 68)
+    comparar_conversor_v1("db_files_read_players_v1", original_fn::<V1Converter>(%%I1%%), db_files_read_players_v1, stream, use_zip, registros, n, 68)
 }
 
 unsafe extern "C" fn comparar_db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    comparar_conversor_v1("db_files_read_non_players_v1", original_fn::<ConversorV1>(%%I2%%), db_files_read_non_players_v1, stream, use_zip, registros, n, 70)
+    comparar_conversor_v1("db_files_read_non_players_v1", original_fn::<V1Converter>(%%I2%%), db_files_read_non_players_v1, stream, use_zip, registros, n, 70)
 }
 
 /// Autoteste dos conversores da versão 1 (CM_AUTOTESTE=1, modo comparação: a base de fábrica e o save são
@@ -129,8 +129,8 @@ pub unsafe fn autoteste_dbj_1() {
     let fclose: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x945a09usize);
     let (t0, d0) = PLACAR.contagem();
     let mut s = Sorteio(0x5631_4442_4a31);
-    let casos: [(ConversorV1, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUBE_V1, 581),
-        (comparar_db_files_read_players_v1, &NAO_JOGADOR_V1, 68), (comparar_db_files_read_non_players_v1, &JOGADOR_V1, 70)];
+    let casos: [(V1Converter, &[(usize, u32, usize)], usize); 3] = [(comparar_db_files_read_clubs_v1, &CLUB_V1_LAYOUT, 581),
+        (comparar_db_files_read_players_v1, &NON_PLAYER_V1_LAYOUT, 68), (comparar_db_files_read_non_players_v1, &PLAYER_V1_FIELDS, 70)];
     for (comparar, campos, tamanho) in casos {
         for caso in 0..64u64 {
             let n = 1 + (s.proximo() % 6) as usize;

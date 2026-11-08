@@ -6,8 +6,8 @@
 # - A nota de goleiros soma 31 em vez de 21.
 # - A nota de tatica divide por 2 em vez de 3.
 MUTACOES = [
-    ('cqf7_divisor_sempre_1', 'let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(CQF7_DIVISORES[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade',
-     'let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(CQF7_DIVISORES[0]) as f64) as i8; // mutacao: o divisor da quantidade', 'cqf_7 nota do treinador'),
+    ('cqf7_divisor_sempre_1', 'let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade',
+     'let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[0]) as f64) as i8; // mutacao: o divisor da quantidade', 'cqf_7 nota do treinador'),
     ('cqf7_goleiros_mais_31', '0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: a nota de goleiros',
      '0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x1f) / 2, // mutacao: a nota de goleiros', 'cqf_7 nota do treinador'),
     ('cqf7_tatica_por_2', '(a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: a nota de tática',

@@ -16,11 +16,11 @@ unsafe fn screen_update_regions(montagem: bool) -> Option<Vec<(usize, usize)>> {
     if montagem {
         return Some(r);
     }
-    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
-    if core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7d4 + vaga * 0x300) as *const u16) != 0 {
+    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
+    if core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7d4 + vaga * 0x300) as *const u16) != 0 {
         return None;
     }
-    let local = GERENTE_DE_TELAS + 0x3844;
+    let local = SCREEN_MANAGER + 0x3844;
     if !r.iter().any(|x| x.0 == local) {
         r.push((local, 0x12f550));
     }
@@ -53,7 +53,7 @@ unsafe fn append_to_text_buffer(origem: *const u8) {
 }
 
 /// Colunas 5 a 24 das estatísticas do time: a cor e o campo (byte da linha do jogador) mostrado.
-const CAMPOS_DAS_ESTATISTICAS: [(usize, usize); 20] = [
+const TEAM_STATS_FIELDS: [(usize, usize); 20] = [
     (0xaebdec, 0x1ce), (0xaebdec, 0x1cf), (0xaebdec, 0x1d0), (0xaebdd4, 0x1d1), (0xaebdd4, 0x1d2),
     (0xaebdd4, 0x1d3), (0xaebdec, 0x1d4), (0xaebdec, 0x1d5), (0xaebdec, 0x1d6), (0xaebdd4, 0x1b7),
     (0xaebdd4, 0x1b5), (0xaebdd4, 0x1b6), (0xaebdec, 0x1d7), (0xaebdec, 0x1b8), (0xaebdec, 0x1bb),
@@ -83,7 +83,7 @@ unsafe extern "C" fn fill_team_stats_rows(modo: u32, area: usize) {
     let nome_de: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(0x53e140usize);
     let confere: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(0x53e990usize);
     const BUF: usize = 0xde1f64;
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
 
     let lado = get_screen_param(0x1b) as u8 as i8;
     let p0 = get_screen_param(0);
@@ -219,7 +219,7 @@ unsafe extern "C" fn fill_team_stats_rows(modo: u32, area: usize) {
                     }
                 }
                 _ => {
-                    let (endereco_da_cor, campo) = CAMPOS_DAS_ESTATISTICAS[codigo - 5];
+                    let (endereco_da_cor, campo) = TEAM_STATS_FIELDS[codigo - 5];
                     coluna = coluna.wrapping_add(1);
                     cor = colour_word_u32(endereco_da_cor);
                     marcas = 1;
@@ -295,7 +295,7 @@ unsafe extern "C" fn refresh_latest_scores_rows() {
     let selecao: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7e6f20usize);
     let agora: unsafe extern "C" fn() -> u32 = core::mem::transmute(0x90c510usize);
     const BUF: usize = 0xde1f64;
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let i32_em = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let i16_em = |a: usize| core::ptr::read_unaligned(a as *const i16);
@@ -712,7 +712,7 @@ unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let mostrar: unsafe extern "thiscall" fn(usize, usize, i32, u32, i32) = core::mem::transmute(0x802f80usize);
     let abrir_partida: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x718aa0usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     let h = || *(0xb77c7a as *const i16);
     let chave_atual = || core::ptr::read_unaligned((0xb74c26 + h() as isize * 0x300) as *const usize);
     if ficha(0) == 0 {
@@ -768,8 +768,8 @@ unsafe extern "C" fn comparar_refresh_latest_scores_rows() {
         None => return o(),
     };
     reg.push((0xb6b7a8, 12));
-    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
+    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
+    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco != 0 {
         reg.push((bloco, 0xb4));
         reg.push((bloco + 0xb8, 0x200 - 0xb8));

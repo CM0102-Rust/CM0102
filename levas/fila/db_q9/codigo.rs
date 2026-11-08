@@ -39,7 +39,7 @@ unsafe extern "C" fn staff_adjust_morale(pessoa: usize, delta: u32, limitar: u32
 
 /// Os bytes do não jogador (+0x0e..+0x22) na ordem das 21 células do vetor de 0x53a8b0 (13 antes do
 /// corte, 8 depois).
-const ORDEM_DO_NAO_JOGADOR: [usize; 21] = [
+const NON_PLAYER_ATTRIBUTE_ORDER: [usize; 21] = [
     0x0e, 0x0f, 0x12, 0x13, 0x14, 0x15, 0x16, 0x1a, 0x1c, 0x1d, 0x1f, 0x20, 0x22, 0x11, 0x10, 0x17, 0x18, 0x19, 0x1b,
     0x1e, 0x21,
 ];
@@ -50,7 +50,7 @@ const ORDEM_DO_NAO_JOGADOR: [usize; 21] = [
 /// jogador e o último atributo estendido (os chamadores não usam).
 unsafe extern "C" fn database_non_player_to_attribute_vector(nao_jogador: usize, _pessoa: usize, vetor: usize, fim: *mut u8) -> u32 {
     let mut ultimo = 0u16;
-    for (k, &d) in ORDEM_DO_NAO_JOGADOR.iter().enumerate() {
+    for (k, &d) in NON_PLAYER_ATTRIBUTE_ORDER.iter().enumerate() {
         if k == 13 && !fim.is_null() {
             *fim = 0xd;
         }

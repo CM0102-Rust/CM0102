@@ -2,7 +2,7 @@
 
 /// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
-enum Rotulo {
+enum BranchLabel {
     R6cde,
     R6d1d,
     R69a6,
@@ -72,13 +72,13 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                 copiar();
                 return 0x213f;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if s3 == 0x1f69 {
             if s2 == 0x1f9d {
                 return if sorteio(3) != 0 { 0 } else { 0x2198 };
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if contexto(s3) && matches!(s2, 0x1f46 | 0x213e | 0x1f60 | 0x1f5f) && b(e, 6) != b(q, 6) {
             let lado = b(q, 6);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                 trocar(false);
                 return 0x2177;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         for (de, para) in [(0x2111, 0x2140), (0x210f, 0x2141), (0x1fe6, 0x2142), (0x1fe7, 0x2142)] {
             if s3 == de {
@@ -105,7 +105,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                     copiar();
                     return para;
                 }
-                break 'escolha Rotulo::R6cde;
+                break 'escolha BranchLabel::R6cde;
             }
         }
         if (s3 == 0x213e || s3 == 0x1f71) && s2 == 0x1f46 && igual(5) && igual(6) {
@@ -117,21 +117,21 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                 copiar();
                 return 0x213e;
             }
-            break 'escolha Rotulo::R69a6;
+            break 'escolha BranchLabel::R69a6;
         }
         if s3 == 0x1f41 {
             if s2 == 0x1f46 {
                 copiar();
                 return 0x1f46;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if s3 == 0x2113 {
             if (0x1f86..=0x1fbe).contains(&s2) && sorteio(3) == 0 && igual(5) && igual(6) {
                 copiar();
                 return s2;
             }
-            break 'escolha Rotulo::R6c95;
+            break 'escolha BranchLabel::R6c95;
         }
         if s3 == 0x1f47 {
             if s2 == 0x1f44 || s2 == 0x1f43 {
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                 copiar();
                 return s2;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if s3 == 0x1f4d {
             if s2 == 0x1f4a {
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                 copiar();
                 return 0x1f4a;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if s3 == 0x1f43 {
             if s2 == 0x1f9d {
@@ -168,20 +168,20 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                 copiar();
                 return 0x1f43;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if matches!(s3, 0x1f62 | 0x1f63 | 0x2150) && s2 == 0x1f46 && igual(5) && igual(6) {
-            break 'escolha Rotulo::Copiar;
+            break 'escolha BranchLabel::Copiar;
         }
         if s3 == 0x1f5d {
             if s2 == 0x1f6f {
                 copiar();
                 return 0x2143;
             }
-            break 'escolha Rotulo::R6cde;
+            break 'escolha BranchLabel::R6cde;
         }
         if contexto(s3) && s2 == 0x1f46 && b(q, 7) == b(e, 5) && b(q, 8) == b(e, 6) {
-            break 'escolha Rotulo::Copiar;
+            break 'escolha BranchLabel::Copiar;
         }
         match s3 {
             0x1f60 if s2 == 0x1f6f => {
@@ -206,32 +206,32 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                         trocar(true);
                         return 0x2146;
                     }
-                    break 'escolha Rotulo::Copiar;
+                    break 'escolha BranchLabel::Copiar;
                 }
             }
-            0x1f5e => break 'escolha Rotulo::R69a6,
-            _ => break 'escolha Rotulo::R69f5,
+            0x1f5e => break 'escolha BranchLabel::R69a6,
+            _ => break 'escolha BranchLabel::R69f5,
         }
-        Rotulo::R6cde
+        BranchLabel::R6cde
     };
 
     loop {
         r = match r {
-            Rotulo::R69a6 => {
+            BranchLabel::R69a6 => {
                 if s2 == 0x1f46 && sorteio(5) != 0 && igual(6) && !igual(5) {
                     trocar(true);
                     return 0x2147;
                 }
-                Rotulo::R69f5
+                BranchLabel::R69f5
             }
-            Rotulo::R69f5 => 'r: {
+            BranchLabel::R69f5 => 'r: {
                 for (de, para) in [(0x2148, 0x2149), (0x214a, 0x214b), (0x214c, 0x214d)] {
                     if s3 == de {
                         if s2 == 0x1f60 || s2 == 0x1f5f {
                             copiar();
                             return para;
                         }
-                        break 'r Rotulo::R6cde;
+                        break 'r BranchLabel::R6cde;
                     }
                 }
                 if contexto(s3) {
@@ -241,7 +241,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                         return 0x214e;
                     }
                     if s2 == 0x1f47 && (1..0x15).contains(&iq) && sorteio(0x16 - iq) != 0 && b(q, 7) == b(e, 5) && b(q, 8) == b(e, 6) {
-                        break 'r Rotulo::Copiar;
+                        break 'r BranchLabel::Copiar;
                     }
                 }
                 if s3 == 0x214f {
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                         copiar();
                         return 0x214f;
                     }
-                    break 'r Rotulo::R6cde;
+                    break 'r BranchLabel::R6cde;
                 }
                 if matches!(s3, 0x213e | 0x1f71 | 0x1f72) && s2 == 0x1f75 {
                     copiar();
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                         copiar();
                         return 0x1f9d;
                     }
-                    break 'r Rotulo::R6cde;
+                    break 'r BranchLabel::R6cde;
                 }
                 if s3 != 0x2021 {
                     if s3 == 0x1f55 {
@@ -268,39 +268,39 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                             return -0x2152;
                         }
                     } else if s3 == 0x2113 {
-                        break 'r Rotulo::R6c95;
+                        break 'r BranchLabel::R6c95;
                     } else if contexto(s3) {
-                        break 'r Rotulo::R6cbf;
+                        break 'r BranchLabel::R6cbf;
                     }
-                    break 'r Rotulo::R6cde;
+                    break 'r BranchLabel::R6cde;
                 }
                 if matches!(s2, 0x1f62 | 0x1f63 | 0x2150) {
                     return -0x2153;
                 }
-                Rotulo::R6cbf
+                BranchLabel::R6cbf
             }
-            Rotulo::R6cbf => {
+            BranchLabel::R6cbf => {
                 if s2 != 0x1f70 {
-                    Rotulo::R6cde
+                    BranchLabel::R6cde
                 } else if igual(6) {
                     return -0x2157;
                 } else {
-                    Rotulo::R6d1d
+                    BranchLabel::R6d1d
                 }
             }
-            Rotulo::R6c95 => {
+            BranchLabel::R6c95 => {
                 if s2 == 0x1f62 || s2 == 0x2150 {
                     return -0x2153;
                 }
-                Rotulo::R6cde
+                BranchLabel::R6cde
             }
-            Rotulo::R6cde => {
+            BranchLabel::R6cde => {
                 if (0x2076..=0x20d0).contains(&s2) && s3 == 0x2113 {
                     return if igual(5) && igual(6) { -0x2159 } else { 0 };
                 }
-                Rotulo::R6d1d
+                BranchLabel::R6d1d
             }
-            Rotulo::R6d1d => {
+            BranchLabel::R6d1d => {
                 const GRUPO: [i16; 8] = [0x1f4b, 0x1f4c, 0x1f4e, 0x1f4f, 0x1f50, 0x1f51, 0x1f52, 0x1f53];
                 if (0x215a..=0x215f).contains(&s3) && s2 == 0x1f70 {
                     return -0x2157;
@@ -326,16 +326,16 @@ unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) 
                     return if s2 == 0x1f44 && igual(5) && igual(6) { 0x216e } else { 0 };
                 }
                 if matches!(s3, 0x1f80 | 0x2131 | 0x2130) && s2 == 0x1f46 {
-                    Rotulo::Copiar
+                    BranchLabel::Copiar
                 } else if s3 != 0x1f73 && !(0x20b9..=0x20c4).contains(&s3) && s3 != 0x20d0 && s3 != 0x1f80 {
                     return 0;
                 } else if s2 != 0x1f46 && s2 != 0x1f47 {
                     return 0;
                 } else {
-                    Rotulo::Copiar
+                    BranchLabel::Copiar
                 }
             }
-            Rotulo::Copiar => {
+            BranchLabel::Copiar => {
                 copiar();
                 return s3;
             }

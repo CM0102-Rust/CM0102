@@ -31,16 +31,16 @@ unsafe extern "C" fn comparar_stadium_get_english_name(estadio: usize) -> usize 
 
 /// Os nomes dos `.lng` no .rdata do exe por idioma: 0, 1, 11 e 12 "eng.lng"; 2 fra, 3 ger, 4 ita, 5 esp, 6 dan,
 /// 7 hol, 8 nor, 9 por, 10 swe; os outros (13, negativos...) nenhum.
-const ARQUIVOS_DOS_IDIOMAS: [usize; 13] = [0x9b632c, 0x9b632c, 0x9b633c, 0x9b6334, 0x9b6324, 0x9b630c, 0x9b62fc,
+const LANGUAGE_FILES: [usize; 13] = [0x9b632c, 0x9b632c, 0x9b633c, 0x9b6334, 0x9b6324, 0x9b630c, 0x9b62fc,
     0x9b6344, 0x9b6314, 0x9b631c, 0x9b6304, 0x9b632c, 0x9b632c];
 
 /// { 0x535930 } (cdecl, Database.cpp): `database_language_file_exists(idioma)`: o caminho `CM3_TEMP\<.lng>`
 /// (0x90bde0, no buffer 0xde279c) e se existe (0x90c120: `_access(.., 0) == 0`, 1 ou 0); idioma sem `.lng`, 0
-/// sem montar o caminho. Chamada pelo `load_database` (0x5286e4, o idioma das preferências) e na criação.
+/// sem montar o caminho. TapeCall pelo `load_database` (0x5286e4, o idioma das preferências) e na criação.
 unsafe extern "C" fn database_language_file_exists(idioma: i32) -> i32 {
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x90c120usize);
-    match ARQUIVOS_DOS_IDIOMAS.get(idioma as u32 as usize) {
+    match LANGUAGE_FILES.get(idioma as u32 as usize) {
         Some(&nome) => existe(caminho(0x987da0, nome)), // "CM3_TEMP"
         None => 0,
     }

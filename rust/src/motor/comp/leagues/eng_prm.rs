@@ -3,7 +3,7 @@ use super::*;
 
 
 /// O que muda de uma divisão inglesa para outra no construtor.
-pub(crate) struct Cql6Divisao {
+pub(crate) struct EnglishDivision {
     /// a vtable da classe derivada
     pub(crate) vtabela: usize,
     /// a capacidade mínima do estádio (+0xe2) e os lugares sentados mínimos (+0xe4), quando a divisão os grava
@@ -32,7 +32,7 @@ pub(crate) struct Cql6Divisao {
 /// Comp_Stats::Comp_Stats 0x49ee70: push liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas
 /// (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0). Cada passo que falha mostra a caixa da
 /// sua linha e encerra. Devolve this.
-pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &Cql6Divisao) -> usize {
+pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &EnglishDivision) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LEAGUE_LEAGUE);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_LOAD_FROM_TEMP_FILE);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -92,7 +92,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     this
 }
 
-pub(crate) const CQL6_PREMIER: Cql6Divisao = Cql6Divisao {
+pub(crate) const PREMIER_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969d1c,
     estadio: Some((0x2710, 0x2710)),
     fases: 0,
@@ -101,7 +101,7 @@ pub(crate) const CQL6_PREMIER: Cql6Divisao = Cql6Divisao {
     arquivo: 0x9c43b0,
     linhas: [0x4d, 0x54, 0x5b, 0x64, 0x6b],
 };
-pub(crate) const CQL6_FIRST: Cql6Divisao = Cql6Divisao {
+pub(crate) const FIRST_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969c68,
     estadio: None,
     fases: 1, // cql6: o play-off da First Division
@@ -110,7 +110,7 @@ pub(crate) const CQL6_FIRST: Cql6Divisao = Cql6Divisao {
     arquivo: 0x9c4374,
     linhas: [0x49, 0x50, 0x57, 0x60, 0x68],
 };
-pub(crate) const CQL6_SECOND: Cql6Divisao = Cql6Divisao {
+pub(crate) const ENG_SECOND_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969dd0,
     estadio: None,
     fases: 1, // cql6: o play-off da Second Division
@@ -119,7 +119,7 @@ pub(crate) const CQL6_SECOND: Cql6Divisao = Cql6Divisao {
     arquivo: 0x9c43e8,
     linhas: [0x4a, 0x51, 0x58, 0x61, 0x68],
 };
-pub(crate) const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
+pub(crate) const THIRD_DIVISION: EnglishDivision = EnglishDivision {
     vtabela: 0x969e84,
     estadio: Some((0x1770, 0x3e8)),
     fases: 1,
@@ -137,7 +137,7 @@ pub(crate) const CQL6_THIRD: Cql6Divisao = Cql6Divisao {
 /// [pt] { 0x573380 } (thiscall, ret 8, eng_prm.cpp): `EngPrm::EngPrm(ano, registro)`. A Premier: sem fases além da liga
 /// (+0x2c = 0, +0xc = 0) e o estádio mínimo de 10.000 lugares, todos sentados.
 pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_PREMIER)
+    construct_english_division(this, ano, registro, &PREMIER_DIVISION)
 }
 
 
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, ano: u32, 
 /// [pt] { 0x576dd0 } (thiscall, ret 8, eng_third.cpp): `EngThird::EngThird(ano, registro)`. A Third Division: 1 fase além da
 /// liga (o play-off) e o estádio mínimo de 6.000 lugares, 1.000 sentados.
 pub(crate) unsafe extern "thiscall" fn construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_THIRD)
+    construct_english_division(this, ano, registro, &THIRD_DIVISION)
 }
 
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline,
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_third(this: usize, ano: u32
 /// [pt] O comparador dos quatro: alocam (as estatísticas, a tabela, os jogos): só a original, conferindo o que ela grava:
 /// a devolução, a vtable, o ano, o registro e a regra de disciplina; na liga nova (+0x44 = 0xff), +0x2c, o vetor das
 /// fases, a fase atual −1 e as estatísticas em +8.
-pub(crate) unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &Cql6Divisao, original: impl FnOnce() -> usize) -> usize {
+pub(crate) unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && read_u32_as_usize(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && read_u32_as_usize(this + 4) == registro && *((this + 0x50) as *const u8) == 9;
@@ -174,7 +174,7 @@ pub(crate) unsafe fn compare_english_constructor(nome: &str, this: usize, ano: u
 /// Comparer for `construct_eng_prm` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_PRM);
-    compare_english_constructor("construct_eng_prm", this, ano, registro, &CQL6_PREMIER, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_prm", this, ano, registro, &PREMIER_DIVISION, || o(this, ano, registro))
 }
 
 
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_prm(this: usize, a
 /// Comparer for `construct_eng_third` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_THIRD);
-    compare_english_constructor("construct_eng_third", this, ano, registro, &CQL6_THIRD, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_third", this, ano, registro, &THIRD_DIVISION, || o(this, ano, registro))
 }
 
 
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_prm_create_table_577f70(this
 /// Original: `EngPrm::create_schedule` (0x573660, eng_prm.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
-/// &extra, &é_liga)`: só a fase −1, 38 rodadas (`CQP5_PREMIERSHIP_NATAL`); as outras devolvem 0. Fonte 0x9c43b0.
+/// &extra, &é_liga)`: só a fase −1, 38 rodadas (`PREMIERSHIP_CHRISTMAS`); as outras devolvem 0. Fonte 0x9c43b0.
 pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match fase as u8 {
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, fase
             }
             crate::comparacao::ramo("cqp_5 calendario da premiership");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-            eng_first_set_christmas_rounds(t, ano, &CQP5_PREMIERSHIP_NATAL, 0x9c43b0);
+            eng_first_set_christmas_rounds(t, ano, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t
         }
         _ => 0,

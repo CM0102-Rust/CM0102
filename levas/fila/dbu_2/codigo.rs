@@ -104,7 +104,7 @@ unsafe extern "C" fn comparar_club_get_national_team_name(clube: usize, variante
 
 /// Os nomes dos 31 atributos de jogador da 0x5428a0 (imediatos do código, pelos endereços no exe): (abreviado, leva o
 /// vazio 0xad9c64, inteiro, leva o vazio).
-const DBU2_ATRIBUTOS: [(usize, bool, usize, bool); 31] = [
+const PLAYER_ATTRIBUTE_NAMES: [(usize, bool, usize, bool); 31] = [
     (0x9b7b60, false, 0x9b7b50, false), // Acc / Acceleration
     (0x9b7af4, false, 0x9b7ae8, false), // Agg / Aggression
     (0x9b7ae4, false, 0x9b7adc, false), // Agi / Agility
@@ -150,7 +150,7 @@ unsafe extern "C" fn database_get_player_attribute_name(atributo: u32, texto: us
     }
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     *(texto as *mut u8) = 0;
-    let (c, cv, l, lv) = DBU2_ATRIBUTOS[x as usize - 1];
+    let (c, cv, l, lv) = PLAYER_ATTRIBUTE_NAMES[x as usize - 1];
     let (s, vazio) = if abreviado != 0 { (c, cv) } else { (l, lv) }; // (dbu)
     if vazio {
         formatar(texto, s, 0xad9c64usize);
@@ -206,14 +206,14 @@ unsafe fn append_position_text(buf: usize, f: u8, curto: usize, longo: usize, lo
 }
 
 /// As posições da 0x53ee50 (abreviado, inteiro, o inteiro leva o vazio, letra), imediatos do código.
-const DBU2_GOLEIRO: (usize, usize, bool, usize) = (0x9b7610, 0x9b7600, false, 0x9b760c); // GK, Goalkeeper, A
-const DBU2_LIBERO: (usize, usize, bool, usize) = (0x9b75e4, 0x9b75dc, false, 0x98b3f0); // SW, Sweeper, B
-const DBU2_DEFENSOR: (usize, usize, bool, usize) = (0x9b75c0, 0x9b75b0, false, 0x9b75bc); // D, Defender, C
-const DBU2_VOLANTE: (usize, usize, bool, usize) = (0x9b7588, 0x9b756c, false, 0x9b7584); // DM, Defensive Midfielder, D
-const DBU2_MEIA_ATACANTE: (usize, usize, bool, usize) = (0x9b7544, 0x9b7528, false, 0x9b7540); // AM, Attacking Midfielder, F
-const DBU2_MEIA: (usize, usize, bool, usize) = (0x9b7508, 0x9b74f8, false, 0x9b7504); // M, Midfielder, E
-const DBU2_ATACANTE: (usize, usize, bool, usize) = (0x9b74dc, 0x9b74d0, false, 0x9b74d8); // S, Striker, H
-const DBU2_AVANTE: (usize, usize, bool, usize) = (0x9b74b4, 0x9b7484, true, 0x9b74b0); // F, Forward<%s>, G
+const POSITION_GOALKEEPER: (usize, usize, bool, usize) = (0x9b7610, 0x9b7600, false, 0x9b760c); // GK, Goalkeeper, A
+const POSITION_SWEEPER: (usize, usize, bool, usize) = (0x9b75e4, 0x9b75dc, false, 0x98b3f0); // SW, Sweeper, B
+const POSITION_DEFENDER: (usize, usize, bool, usize) = (0x9b75c0, 0x9b75b0, false, 0x9b75bc); // D, Defender, C
+const POSITION_DEFENSIVE_MIDFIELDER: (usize, usize, bool, usize) = (0x9b7588, 0x9b756c, false, 0x9b7584); // DM, Defensive Midfielder, D
+const POSITION_ATTACKING_MIDFIELDER: (usize, usize, bool, usize) = (0x9b7544, 0x9b7528, false, 0x9b7540); // AM, Attacking Midfielder, F
+const POSITION_MIDFIELDER: (usize, usize, bool, usize) = (0x9b7508, 0x9b74f8, false, 0x9b7504); // M, Midfielder, E
+const POSITION_STRIKER: (usize, usize, bool, usize) = (0x9b74dc, 0x9b74d0, false, 0x9b74d8); // S, Striker, H
+const POSITION_FORWARD: (usize, usize, bool, usize) = (0x9b74b4, 0x9b7484, true, 0x9b74b0); // F, Forward<%s>, G
 
 /// { 0x53ee50 } (cdecl, Database.cpp): `database_format_player_positions(jogador, texto, tamanho, forma)`: o texto das
 /// posições do jogador (as notas +0xf..+0x1a, bytes com sinal) pela forma (byte): 1 abreviado ("D/DM RC"), 2 inteiro
@@ -244,26 +244,26 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
         *(buf as *mut u8) = 0;
         let t = minimo as i32;
         if nota(0xf) >= t {
-            pos(DBU2_GOLEIRO);
+            pos(POSITION_GOALKEEPER);
         }
         if nota(0x10) >= t {
-            pos(DBU2_LIBERO);
+            pos(POSITION_SWEEPER);
         }
         if nota(0x11) >= t {
-            pos(DBU2_DEFENSOR);
+            pos(POSITION_DEFENDER);
         }
         if nota(0x12) >= t {
-            pos(DBU2_VOLANTE);
+            pos(POSITION_DEFENSIVE_MIDFIELDER);
         } else if nota(0x14) >= t && nota(0x13) >= t {
-            pos(DBU2_MEIA_ATACANTE);
+            pos(POSITION_ATTACKING_MIDFIELDER);
         } else if nota(0x13) >= t {
-            pos(DBU2_MEIA);
+            pos(POSITION_MIDFIELDER);
         }
         if nota(0x15) >= t {
             if nota(0x14) >= t || nota(0x17) >= t || nota(0x18) >= t || nota(0x1a) >= t {
-                pos(DBU2_AVANTE);
+                pos(POSITION_FORWARD);
             } else {
-                pos(DBU2_ATACANTE);
+                pos(POSITION_STRIKER);
             }
         }
         if nota(0xf) >= t {
@@ -281,9 +281,9 @@ unsafe extern "C" fn database_format_player_positions(jogador: usize, texto: usi
             *((jogador + 0x13) as *mut u8) = 0xf; // a original grava no jogador
         }
         if f == 2 || f == 3 {
-            formatar(0xde1f64, DBU2_MEIA_ATACANTE.1);
+            formatar(0xde1f64, POSITION_ATTACKING_MIDFIELDER.1);
         } else {
-            formatar(0xde1f64, DBU2_MEIA_ATACANTE.0, 0xad9c64usize);
+            formatar(0xde1f64, POSITION_ATTACKING_MIDFIELDER.0, 0xad9c64usize);
         }
         append_c_string(buf, 0xde1f64);
     }

@@ -472,9 +472,9 @@ unsafe fn is_vacancy_candidate(this: usize, p: usize) -> u8 {
 /// O item de 0x26 bytes da vaga (o que a original monta em [esp+0x1c]): +0 achou um livre, +1 0, +2 o id dele, +6 o
 /// índice do escolhido, +0xa o id do técnico que saiu, +0xe o id do clube, +0x12 a nota anterior, +0x16 a data da
 /// chegada e +0x1e a data do anúncio (8 bytes cada, 0x54a110).
-struct Cqc9Vaga([u8; 0x28]);
+struct ManagerVacancy([u8; 0x28]);
 
-impl Cqc9Vaga {
+impl ManagerVacancy {
     fn b(&mut self, o: usize, v: u8) {
         self.0[o] = v;
     }
@@ -511,7 +511,7 @@ impl Cqc9Vaga {
 unsafe extern "thiscall" fn add_job_vacancy(this: usize, clube: usize, saiu: usize) {
     // ponytail: a nota anterior (+0x12) fica sem valor na original quando o escolhido é o auxiliar ou o de +0x19f (sobra de
     // pilha); aqui 0, um valor que o jogo também produz
-    let mut v = Cqc9Vaga([0; 0x28]);
+    let mut v = ManagerVacancy([0; 0x28]);
     let data_padrao: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(0x54a110usize);
     data_padrao(v.0.as_mut_ptr().add(0x16));
     data_padrao(v.0.as_mut_ptr().add(0x1e));

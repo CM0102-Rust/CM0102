@@ -15,7 +15,7 @@ pub(crate) unsafe fn spain_rules_construct_nation_transfer_rules(this: usize, a:
 
 
 /// As janelas da Espanha: de 17 de junho a 20 de agosto e de 15 de dezembro a 31 de janeiro.
-pub(crate) const CQK2_ESPANHA: [[u8; 6]; 4] = [
+pub(crate) const SPAIN_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x16, 0x00, 0x03, 0x11, 0x05, 0x01],
     [0x16, 0x00, 0x04, 0x14, 0x07, 0x00], // cqk2: a Espanha fecha em agosto
     [0x16, 0x01, 0xff, 0x0f, 0x0b, 0x01],
@@ -27,10 +27,10 @@ pub(crate) const CQK2_ESPANHA: [[u8; 6]; 4] = [
 /// Original: `SPAIN_RULES::init_transfer_windows` (0x859470, spain_rules.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x859470 } (thiscall, ret 0, spain_rules.cpp, `SPAIN_RULES::init_transfer_windows`; chamada pelo construtor das regras da Espanha (regra 22), depois da base e da vtable): as
-/// 2 janelas de transferência de `CQK2_ESPANHA`.
+/// 2 janelas de transferência de `SPAIN_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows(this: usize) {
     crate::comparacao::ramo("cqk_2 espanha");
-    set_transfer_windows(this, 2, &CQK2_ESPANHA, 0xa82ac8, 0x54);
+    set_transfer_windows(this, 2, &SPAIN_TRANSFER_WINDOWS, 0xa82ac8, 0x54);
 }
 
 /// Comparer for `spain_rules_init_transfer_windows` (comparison mode: see the header of motor.rs).
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_window
 }
 
 /// As janelas da Itália: de 1º de julho a 27 de setembro (andando para a quinta-feira [inferência]), de 2 a 31 de janeiro, e a terceira, de 1º de julho a 30 de abril [inferência: a dos jogadores sem contrato].
-pub(crate) const CQK2_ITALIA: [[u8; 6]; 6] = [
+pub(crate) const ITALY_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x0e, 0x00, 0xff, 0x01, 0x06, 0x01],
     [0x0e, 0x00, 0x04, 0x1b, 0x09, 0x00], // cqk2: a Itália fecha em setembro
     [0x0e, 0x01, 0xff, 0x02, 0x00, 0x01],
@@ -56,10 +56,10 @@ pub(crate) const CQK2_ITALIA: [[u8; 6]; 6] = [
 /// Original: `ITALY_RULES::init_transfer_windows` (0x6613f0, italy_rules.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x6613f0 } (thiscall, ret 0, italy_rules.cpp, `ITALY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Itália (regra 14), depois da base e da vtable): as
-/// 3 janelas de transferência de `CQK2_ITALIA`.
+/// 3 janelas de transferência de `ITALY_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_6613f0(this: usize) {
     crate::comparacao::ramo("cqk_2 italia");
-    set_transfer_windows(this, 3, &CQK2_ITALIA, 0x9ea9a4, 0x52);
+    set_transfer_windows(this, 3, &ITALY_TRANSFER_WINDOWS, 0x9ea9a4, 0x52);
 }
 
 /// Comparer for `spain_rules_init_transfer_windows_6613f0` (comparison mode: see the header of motor.rs).
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_spain_rules_init_transfer_window
 }
 
 /// As janelas da França: de 30 de maio a 31 de agosto, de 1º de setembro a 20 de dezembro e de 21 de dezembro a 10 de janeiro (com os dias da semana para os quais as datas andam [inferência]).
-pub(crate) const CQK2_FRANCA: [[u8; 6]; 6] = [
+pub(crate) const FRANCE_TRANSFER_WINDOWS: [[u8; 6]; 6] = [
     [0x09, 0x00, 0x06, 0x1e, 0x04, 0x01],
     [0x09, 0x00, 0x03, 0x1f, 0x07, 0x00], // cqk2: a França fecha em agosto
     [0x09, 0x01, 0x04, 0x01, 0x08, 0x01],
@@ -85,10 +85,10 @@ pub(crate) const CQK2_FRANCA: [[u8; 6]; 6] = [
 /// Original: `FRANCE_RULES::init_transfer_windows` (0x5c15e0, france_rules.cpp, thiscall, ret 0).
 ///
 /// [pt] { 0x5c15e0 } (thiscall, ret 0, france_rules.cpp, `FRANCE_RULES::init_transfer_windows`; chamada pelo construtor das regras da França (regra 9), depois da base e da vtable): as
-/// 3 janelas de transferência de `CQK2_FRANCA`.
+/// 3 janelas de transferência de `FRANCE_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn spain_rules_init_transfer_windows_5c15e0(this: usize) {
     crate::comparacao::ramo("cqk_2 franca");
-    set_transfer_windows(this, 3, &CQK2_FRANCA, 0x9cccf4, 0x4f);
+    set_transfer_windows(this, 3, &FRANCE_TRANSFER_WINDOWS, 0x9cccf4, 0x4f);
 }
 
 /// Comparer for `spain_rules_init_transfer_windows_5c15e0` (comparison mode: see the header of motor.rs).

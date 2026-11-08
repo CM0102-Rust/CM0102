@@ -26,7 +26,7 @@ unsafe fn cqf4_pb(a: usize, v: u8) {
 
 /// As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
 /// 0x122 bytes cada), na ordem em que a original as grava na lista: grupos A a H, quatro por grupo.
-const CQF4_SORTEIO_2002: [usize; 32] = [
+const WORLD_CUP_2002_DRAW: [usize; 32] = [
     0x9cf300, 0x9cf460, 0x9cf4f4, 0x9cf2c0, // A: França, Senegal, Uruguai, Dinamarca
     0x9cf488, 0x9cf474, 0x9cf420, 0x9cf480, // B: Espanha, Eslovênia, Paraguai, África do Sul
     0x9cf260, 0x9cf4dc, 0x9cf298, 0x9cf2a8, // C: Brasil, Turquia, China, Costa Rica
@@ -48,7 +48,7 @@ const CQF4_SORTEIO_2002: [usize; 32] = [
 ///    acha vaga e o laço não termina. A cópia repete o laço como a original, sem limite.
 /// 2) Os outros 24 (as vagas de +0x116, na ordem) caem em grupos sorteados (0x90cfc0(8)), cada grupo com no máximo
 ///    (k / 8) + 1 times quando o k-ésimo entra (k de 8 a 31): sorteia de novo enquanto o grupo já tem o limite.
-/// 3) Na Copa de 2002 (+0x40 = 2002), depois do sorteio, a lista vira o sorteio real (a ordem de `CQF4_SORTEIO_2002`:
+/// 3) Na Copa de 2002 (+0x40 = 2002), depois do sorteio, a lista vira o sorteio real (a ordem de `WORLD_CUP_2002_DRAW`:
 ///    o id do clube da seleção principal, 0x53b3d0 push nação; add esp -> cdecl), os grupos i/4 + 1, e a tabela das 32
 ///    nações da Copa ([+0x14], 6 bytes: +0 o clube, +4 a situação) recebe os clubes com a situação 6, a França (detentora)
 ///    2, a Coreia e o Japão (sedes) 1; +0x36 (quantas) = 32.
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         return lista;
     }
     crate::comparacao::ramo("cqf_4 sorteio de 2002");
-    for (i, &chave) in CQF4_SORTEIO_2002.iter().enumerate() { // cqf4: as nações do sorteio real
+    for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: as nações do sorteio real
         let nacao = cqf4_d(0xae23a8).wrapping_add((cqf4_d(chave) as i32).wrapping_mul(0x122) as usize);
         cqf4_pd(lista + i * 5, cqf4_d(principal(nacao)));
     }

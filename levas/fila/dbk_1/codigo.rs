@@ -191,7 +191,7 @@ unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
     let n = *(0xae235c as *const i32);
     let mut regioes = vec![(tabela, n.max(0) as usize * 581)];
     let mut pessoas = Vec::new();
-    for &(a, b) in PARES_A_B.iter() {
+    for &(a, b) in A_B_CLUB_PAIRS.iter() {
         for g in [a, b] {
             let linha = *(g as *const i32);
             if linha < 0 || linha >= n {

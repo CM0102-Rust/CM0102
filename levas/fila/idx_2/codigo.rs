@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as chaves fixas das competições de clube e das competições e prêmios de pessoa pelo nome (index.cpp) ----------
 
 /// As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
-static CHAVES_DE_COMPETICAO_DE_CLUBE: &[&[(u32, u32)]] = &[
+static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9dc200, 0x9cf548), // French Lower Division
@@ -367,7 +367,7 @@ static CHAVES_DE_COMPETICAO_DE_CLUBE: &[&[(u32, u32)]] = &[
 ];
 
 /// As chaves de competição e prêmio de pessoa do index.cpp (0x6115e0), na ordem do código: (texto do nome, global que recebe a linha), em 5 cadeias.
-static CHAVES_DE_COMPETICAO_DE_PESSOA: &[&[(u32, u32)]] = &[
+static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
         (0x9e05ec, 0x9cfa20), // FIFA World Player of the Year
@@ -828,14 +828,14 @@ static CHAVES_DE_COMPETICAO_DE_PESSOA: &[&[(u32, u32)]] = &[
 ];
 
 /// { 0x60efd0 } (cdecl, index.cpp, match_club_comp_key_id): casa o nome de competição de clube da base com as chaves fixas
-/// do jogo (CHAVES_DE_COMPETICAO_DE_CLUBE): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (CLUB_COMPETITION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_COMPETICAO_DE_CLUBE.iter() {
+    for cadeia in CLUB_COMPETITION_KEYS.iter() {
         let mut i = 0;
         while i < cadeia.len() {
             let (texto, global) = cadeia[i];
@@ -859,14 +859,14 @@ unsafe extern "C" fn match_club_comp_key_id(nome: usize, linha: u32) -> u32 {
 }
 
 /// { 0x6115e0 } (cdecl, index.cpp, match_staff_comp_key_id): casa o nome de competição ou prêmio de pessoa da base com as chaves fixas
-/// do jogo (CHAVES_DE_COMPETICAO_DE_PESSOA): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
+/// do jogo (PERSON_COMPETITION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
 /// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
 /// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
 /// acertou).
 unsafe extern "C" fn match_staff_comp_key_id(nome: usize, linha: u32) -> u32 {
     let stricmp: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x951c50usize);
     let mut r = 0i32;
-    for cadeia in CHAVES_DE_COMPETICAO_DE_PESSOA.iter() {
+    for cadeia in PERSON_COMPETITION_KEYS.iter() {
         for &(texto, global) in cadeia.iter() {
             r = stricmp(nome, texto as usize);
             if r == 0 {

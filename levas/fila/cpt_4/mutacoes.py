@@ -4,7 +4,7 @@
 # (4) as do continente: jogadores elegiveis ou nao, escalacoes e partidas mudam; a liga do dia 0x6847c0 tambem le o dia
 # da linha (+0x15). Sem a eliminatoria europeia na lista da Copa, os jogos de setembro a novembro de 2001 caem na linha
 # do continente (tipo 2, as regras da Europa no lugar de nenhuma): pega se alguma regra do continente barrar jogador de
-# selecao (a suspensao na competicao, por exemplo) - pode escapar. Chamada a cada partida: sem contador.
+# selecao (a suspensao na competicao, por exemplo) - pode escapar. TapeCall a cada partida: sem contador.
 MUTACOES = [
     ('cpt4_linha_seguinte', 'Some(k) => k as u8, // cpt4: a linha da nacao',
      'Some(k) => k as u8 + 1, // mutacao: a linha seguinte'),

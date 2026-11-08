@@ -24,7 +24,7 @@ MUTACOES = [
     ('r_marca', '    for o in [0, 4, 8] {\n        *((ultimo + o) as *mut i32) = -1;', '    for o in [0, 4] {\n        *((ultimo + o) as *mut i32) = -1;'),
     ('e_data', '    (clubes && w(8) == data_a && w(0xa) == data_b) as i32', '    (clubes && w(8) == data_a) as i32'),
     ('b_tipo', '        return (*((jogo + 0x3a) as *const u8) == 1) as u8 + 2;', '        return (*((jogo + 0x3a) as *const u8) == 1) as u8 + 1;'),
-    ('l_tamanho', '    if ler(saida, REGISTRO_DA_PARTIDA, 1, f) != 1 {', '    if ler(saida, REGISTRO_DA_PARTIDA - 4, 1, f) != 1 {'),
+    ('l_tamanho', '    if ler(saida, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {', '    if ler(saida, MATCH_STATS_RECORD_SIZE - 4, 1, f) != 1 {'),
     ('r_excluido', '|| *((r + 0x4c) as *const u8) == 0 {', '|| *((r + 0x4c) as *const u8) != 0 {'),
     ('s_faixa', '                *tamanho = (*tamanho).wrapping_sub(1);', '                *tamanho = (*tamanho).wrapping_sub(0);'),
     ('i_ultima', '    *((ultima - 2) as *mut u8) = 0;', '    *((ultima - 2) as *mut u8) = 1;'),

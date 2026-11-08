@@ -9,18 +9,18 @@ unsafe fn cpu12_w(a: usize) -> i16 {
 }
 
 /// O registro de 59 bytes da tabela da liga.
-const CPU12_LINHA: usize = 0x3b;
+const CUP_LEAGUE_TABLE_ROW_SIZE: usize = 0x3b;
 
 /// Copia um registro de 59 bytes (o `rep movsd` de 14 dwords, a palavra e o byte da original).
 unsafe fn copy_row_59(destino: usize, origem: usize) {
-    core::ptr::copy(origem as *const u8, destino as *mut u8, CPU12_LINHA);
+    core::ptr::copy(origem as *const u8, destino as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE);
 }
 
 /// Põe o par (i, j) da tabela nas vagas k e metade + k da grade, marca as vagas e os dois clubes.
 unsafe fn place_pair(grade: usize, posto: *mut u32, usado: *mut u32, tab: usize, i: usize, j: usize, k: &mut i32, metade: i32) {
-    copy_row_59(grade + *k as usize * CPU12_LINHA, tab + i * CPU12_LINHA);
+    copy_row_59(grade + *k as usize * CUP_LEAGUE_TABLE_ROW_SIZE, tab + i * CUP_LEAGUE_TABLE_ROW_SIZE);
     let m = metade + *k;
-    copy_row_59(grade + m as usize * CPU12_LINHA, tab + j * CPU12_LINHA);
+    copy_row_59(grade + m as usize * CUP_LEAGUE_TABLE_ROW_SIZE, tab + j * CUP_LEAGUE_TABLE_ROW_SIZE);
     *posto.add(m as usize) = 1;
     *posto.add(*k as usize) = 1;
     *usado.add(j) = 1;
@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     let metade_n = n() / 2;
     let usado = novo((n() * 4) as u32) as *mut u32;
     let posto = novo((n() << 2) as u32) as *mut u32;
-    let grade = novo((n() * CPU12_LINHA as i32) as u32);
+    let grade = novo((n() * CUP_LEAGUE_TABLE_ROW_SIZE as i32) as u32);
     let mut k: i32 = 0;
     if grade == 0 || usado.is_null() || posto.is_null() {
         show_error_at(0x9f15f4, 0xed3);
@@ -70,11 +70,11 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     while i < n() {
         let a = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
         let b = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
-        let mut tmp = [0u8; CPU12_LINHA];
+        let mut tmp = [0u8; CUP_LEAGUE_TABLE_ROW_SIZE];
         let t = tab();
-        core::ptr::copy(( t + a * CPU12_LINHA) as *const u8, tmp.as_mut_ptr(), CPU12_LINHA);
-        copy_row_59(t + a * CPU12_LINHA, t + b * CPU12_LINHA);
-        core::ptr::copy(tmp.as_ptr(), (tab() + b * CPU12_LINHA) as *mut u8, CPU12_LINHA); // cpu12: a troca
+        core::ptr::copy(( t + a * CUP_LEAGUE_TABLE_ROW_SIZE) as *const u8, tmp.as_mut_ptr(), CUP_LEAGUE_TABLE_ROW_SIZE);
+        copy_row_59(t + a * CUP_LEAGUE_TABLE_ROW_SIZE, t + b * CUP_LEAGUE_TABLE_ROW_SIZE);
+        core::ptr::copy(tmp.as_ptr(), (tab() + b * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE); // cpu12: a troca
         i += 1;
     }
     semear(semente as u32);
@@ -82,26 +82,26 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     if cpu12_w(this + 0xd9) as u16 & 0x100 != 0 {
         let mut i = 0;
         while i < n() {
-            *((grade + i as usize * CPU12_LINHA) as *mut u32) = 0;
+            *((grade + i as usize * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u32) = 0;
             i += 1;
         }
         let vt = cpu12_d(this);
         let vaga_do: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(cpu12_d(vt + 0xa8));
         let mut i = 0usize;
         while (i as i32) < n() {
-            let s = vaga_do(this, cpu12_d(tab() + i * CPU12_LINHA)) as i8 as i32;
-            if s >= 0 && s < n() && cpu12_d(grade + s as usize * CPU12_LINHA) == 0 {
-                copy_row_59(grade + s as usize * CPU12_LINHA, tab() + i * CPU12_LINHA);
-                *((tab() + i * CPU12_LINHA) as *mut u32) = 0;
+            let s = vaga_do(this, cpu12_d(tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE)) as i8 as i32;
+            if s >= 0 && s < n() && cpu12_d(grade + s as usize * CUP_LEAGUE_TABLE_ROW_SIZE) == 0 {
+                copy_row_59(grade + s as usize * CUP_LEAGUE_TABLE_ROW_SIZE, tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE);
+                *((tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u32) = 0;
             }
             i += 1;
         }
         let mut i = 0usize;
         while (i as i32) < n() {
-            let lin = tab() + i * CPU12_LINHA;
+            let lin = tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE;
             if cpu12_d(lin) != 0 {
-                if let Some(j) = (0..n().max(0) as usize).find(|&j| cpu12_d(grade + j * CPU12_LINHA) == 0) {
-                    copy_row_59(grade + j * CPU12_LINHA, lin);
+                if let Some(j) = (0..n().max(0) as usize).find(|&j| cpu12_d(grade + j * CUP_LEAGUE_TABLE_ROW_SIZE) == 0) {
+                    copy_row_59(grade + j * CUP_LEAGUE_TABLE_ROW_SIZE, lin);
                 }
             }
             i += 1;
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
         let gravar: unsafe extern "thiscall" fn(usize, usize, i32) = core::mem::transmute(cpu12_d(vt + 0xac));
         let mut i = 0;
         while i < n() {
-            gravar(this, cpu12_d(grade + i as usize * CPU12_LINHA), i);
+            gravar(this, cpu12_d(grade + i as usize * CUP_LEAGUE_TABLE_ROW_SIZE), i);
             i += 1;
         }
     } else {
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
             let total = cpu12_w(this + 0x3e);
             let mut c: i8 = 0;
             while total > 0 && (c as i16) < total {
-                let id = cpu12_d(cpu12_d(tab() + c as isize as usize * CPU12_LINHA));
+                let id = cpu12_d(cpu12_d(tab() + c as isize as usize * CUP_LEAGUE_TABLE_ROW_SIZE));
                 if id == cpu12_d(0x9d0118) {
                     celtic = c;
                 }
@@ -129,8 +129,8 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
             }
             if rangers != -1 && celtic != -1 {
                 let (primeiro, segundo) = if sorteio(2) != 0 { (celtic, rangers) } else { (rangers, celtic) };
-                copy_row_59(grade, tab() + primeiro as isize as usize * CPU12_LINHA);
-                copy_row_59(grade + metade as usize * CPU12_LINHA, tab() + segundo as isize as usize * CPU12_LINHA);
+                copy_row_59(grade, tab() + primeiro as isize as usize * CUP_LEAGUE_TABLE_ROW_SIZE);
+                copy_row_59(grade + metade as usize * CUP_LEAGUE_TABLE_ROW_SIZE, tab() + segundo as isize as usize * CUP_LEAGUE_TABLE_ROW_SIZE);
                 k = 1;
                 *posto.add(metade as usize) = 1;
                 *posto = 1;
@@ -145,9 +145,9 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
                 let mut j = i + 1;
                 while (j as i32) < n() {
                     if *usado.add(j) == 0 {
-                        let ei = cpu12_d(cpu12_d(tab() + i * CPU12_LINHA) + 0x69);
+                        let ei = cpu12_d(cpu12_d(tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE) + 0x69);
                         if ei != 0 {
-                            let ej = cpu12_d(cpu12_d(tab() + j * CPU12_LINHA) + 0x69);
+                            let ej = cpu12_d(cpu12_d(tab() + j * CUP_LEAGUE_TABLE_ROW_SIZE) + 0x69);
                             if ej != 0 && ei == ej {
                                 if k >= metade_n {
                                     show_error_at(0x9f15f4, 0xf76);
@@ -170,11 +170,11 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
                 let mut j = i + 1;
                 while (j as i32) < n() {
                     if *usado.add(j) == 0 {
-                        let ei = cpu12_d(cpu12_d(tab() + i * CPU12_LINHA) + 0x69);
+                        let ei = cpu12_d(cpu12_d(tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE) + 0x69);
                         if ei == 0 {
                             break;
                         }
-                        let ej = cpu12_d(cpu12_d(tab() + j * CPU12_LINHA) + 0x69);
+                        let ej = cpu12_d(cpu12_d(tab() + j * CUP_LEAGUE_TABLE_ROW_SIZE) + 0x69);
                         if ej == 0 {
                             break;
                         }
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
             if *usado.add(i) == 0 {
                 if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre
                     crate::comparacao::ramo("cpu_12 clube na vaga livre");
-                    copy_row_59(grade + j * CPU12_LINHA, tab() + i * CPU12_LINHA);
+                    copy_row_59(grade + j * CUP_LEAGUE_TABLE_ROW_SIZE, tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE);
                     *posto.add(j) = 1;
                     *usado.add(i) = 1;
                 }
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     }
     let mut i = 0usize;
     while (i as i32) < n() {
-        copy_row_59(tab() + i * CPU12_LINHA, grade + i * CPU12_LINHA);
+        copy_row_59(tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE, grade + i * CUP_LEAGUE_TABLE_ROW_SIZE);
         i += 1;
     }
     liberar(posto as usize);

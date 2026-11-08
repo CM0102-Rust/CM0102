@@ -22,6 +22,13 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 - **Rótulos de campo:** confira em [CAMPOS.md](CAMPOS.md); o que não estiver provado leva "[inferência]".
 - **DOCS:** em cada rotina, a regra em palavras (quantos sobem e descem, datas, vagas, desempate), em português e inglês. É a fonte do glossário e dos cabeçalhos.
 
+## Nomes e cabeçalho (desde 08/11/2026)
+
+- Código em inglês: a rotina com o nome do método original (o mapa de maxevans60, como em `docs/NOMES.csv`), os auxiliares com nome em inglês e sem prefixo de item, as constantes em MAIÚSCULAS em inglês.
+- Cabeçalho bilíngue em cada rotina: o resumo em inglês, a linha `Original: Classe::metodo (endereço, arquivo.cpp, convenção)`, uma linha `///` e as notas em português com `[pt]`.
+- Use o que já tem nome: `read_u32`/`write_u8` (`mem.rs`), `KEY_*` (`keys.rs`), `G_*` (`globals.rs`), `club::DIVISION` e `club::SIZE` (`fields.rs`), `FN_*` (`exe_fns.rs`) e `original_fn::<F>(IDX_<NOME>)`; constante de ponto flutuante lida do exe com o valor em comentário.
+- O `DOCS` do `rotinas.py` continua em português e inglês (é a fonte do ROTINAS e do glossário).
+
 ## Comparar
 
 - O comparador confere **só o que a rotina garante na saída**. Campo que outra rotina reescreve depois (ex.: a 0x6827d0 reescreve +0xa7) acusa à toa.

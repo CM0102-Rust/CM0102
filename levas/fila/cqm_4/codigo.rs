@@ -9,7 +9,7 @@ unsafe fn cqm4_pd(a: usize, v: usize) {
 }
 
 /// O que muda de uma divisão italiana para outra no construtor.
-struct Cqm4Divisao {
+struct ItalianDivision {
     vtabela: usize,
     /// a Série A e a Série B gravam +0xee = 0 (o campo próprio da classe [inferência: o desempate em curso]) e +0x4c = 1
     serie: bool,
@@ -34,7 +34,7 @@ struct Cqm4Divisao {
 /// estatísticas (operator new 0x944cf1 de 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push
 /// liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas (0x68a850: mov ecx -> thiscall, ret 0).
 /// Devolve this.
-unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: &Cqm4Divisao) -> usize {
+unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: &ItalianDivision) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -96,7 +96,7 @@ unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: 
     this
 }
 
-const CQM4_SERIE_A: Cqm4Divisao = Cqm4Divisao {
+const SERIE_A: ItalianDivision = ItalianDivision {
     vtabela: 0x96c3cc,
     serie: true,
     fases: 0,
@@ -106,7 +106,7 @@ const CQM4_SERIE_A: Cqm4Divisao = Cqm4Divisao {
     arquivo: 0x9ea2a8,
     linhas: [0x53, 0x5a, 0x64, 0x6d, 0x74],
 };
-const CQM4_SERIE_B: Cqm4Divisao = Cqm4Divisao {
+const SERIE_B_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c480,
     serie: true,
     fases: 0,
@@ -116,7 +116,7 @@ const CQM4_SERIE_B: Cqm4Divisao = Cqm4Divisao {
     arquivo: 0x9ea384,
     linhas: [0x4b, 0x52, 0x5c, 0x65, 0x6c],
 };
-const CQM4_C1A: Cqm4Divisao = Cqm4Divisao {
+const SERIE_C1A_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c534,
     serie: false,
     fases: 2, // cqm4: o play-off e o play-out da C1/A
@@ -126,7 +126,7 @@ const CQM4_C1A: Cqm4Divisao = Cqm4Divisao {
     arquivo: 0x9ea474,
     linhas: [0x49, 0x50, 0x5a, 0x63, 0x6a],
 };
-const CQM4_C1B: Cqm4Divisao = Cqm4Divisao {
+const SERIE_C1B_DIVISION: ItalianDivision = ItalianDivision {
     vtabela: 0x96c5e8,
     serie: false,
     fases: 2,
@@ -140,29 +140,29 @@ const CQM4_C1B: Cqm4Divisao = Cqm4Divisao {
 /// { 0x6406d0 } (thiscall, ret 8, ita_ser_a.cpp): `ItaSerA::ItaSerA(ano, registro)`: a Série A, só a liga (o jogo de
 /// desempate nasce no fim, pela 0x642880).
 unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_SERIE_A)
+    construct_italian_division(this, ano, registro, &SERIE_A)
 }
 
 /// { 0x645810 } (thiscall, ret 8, ita_ser_b.cpp): `ItaSerB::ItaSerB(ano, registro)`: a Série B, só a liga.
 unsafe extern "thiscall" fn construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_SERIE_B)
+    construct_italian_division(this, ano, registro, &SERIE_B_DIVISION)
 }
 
 /// { 0x64aa70 } (thiscall, ret 8, ita_ser_c1a.cpp): `ItaSerC1a::ItaSerC1a(ano, registro)`: a C1/A, a liga e 2 fases
 /// (o play-off de acesso e o play-out).
 unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_C1A)
+    construct_italian_division(this, ano, registro, &SERIE_C1A_DIVISION)
 }
 
 /// { 0x64ec20 } (thiscall, ret 8, ita_ser_c1b.cpp): `ItaSerC1b::ItaSerC1b(ano, registro)`: a C1/B, como a C1/A.
 unsafe extern "thiscall" fn construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
-    construct_italian_division(this, ano, registro, &CQM4_C1B)
+    construct_italian_division(this, ano, registro, &SERIE_C1B_DIVISION)
 }
 
 /// O comparador dos quatro: alocam: só a original, conferindo o que ela grava: a devolução, a vtable, o ano, o
 /// registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das fases e, na A e na
 /// B, +0x4c = 1 e +0xee = 0.
-unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &Cqm4Divisao, original: impl FnOnce() -> usize) -> usize {
+unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registro: usize, p: &ItalianDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this && cqm4_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && cqm4_d(this + 4) == registro && *((this + 0x50) as *const u8) == 0x11;
@@ -178,20 +178,20 @@ unsafe fn compare_italian_constructor(nome: &str, this: usize, ano: u32, registr
 
 unsafe extern "thiscall" fn comparar_construct_ita_ser_a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &CQM4_SERIE_A, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_a", this, ano, registro, &SERIE_A, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_ita_ser_b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &CQM4_SERIE_B, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_b", this, ano, registro, &SERIE_B_DIVISION, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_ita_ser_c1a(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &CQM4_C1A, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_c1a", this, ano, registro, &SERIE_C1A_DIVISION, || o(this, ano, registro))
 }
 
 unsafe extern "thiscall" fn comparar_construct_ita_ser_c1b(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I3%%);
-    compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &CQM4_C1B, || o(this, ano, registro))
+    compare_italian_constructor("construct_ita_ser_c1b", this, ano, registro, &SERIE_C1B_DIVISION, || o(this, ano, registro))
 }

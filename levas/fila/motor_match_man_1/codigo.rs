@@ -16,7 +16,7 @@ unsafe extern "C" fn apply_squad_rule(
     if r(0) == 0 || r(5) >= r(4) {
         return;
     }
-    let pick: Escalar = core::mem::transmute(0x6e2000usize);
+    let pick: AssignPositionsFn = core::mem::transmute(0x6e2000usize);
     let nota: unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32) -> i32 =
         core::mem::transmute(0x6e2f20usize);
     let restrito = |p: usize| -> bool {

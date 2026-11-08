@@ -1411,11 +1411,11 @@ pub(crate) unsafe fn dispatch_post_match_call(rotina: usize, this: usize, a: [u3
 }
 
 // --- portas do pos-jogo: as 14 rotinas do banco com efeitos (e a consulta 0x7c3a40), gravadas na fita so durante as
-// comparacoes do pos-jogo (GRAVAR_POS); para os outros chamadores do jogo so repassam. Devolvem
+// comparacoes do pos-jogo (RECORD_POST_MATCH); para os outros chamadores do jogo so repassam. Devolvem
 // edx:eax inteiro (nenhuma devolve ponto flutuante: conferido na 132a leva).
-pub(crate) static GRAVAR_POS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static RECORD_POST_MATCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 pub(crate) static mut PORTAS_POS: [usize; 15] = [0; 15];
-pub(crate) const PROLOGOS_POS: [Prologo; 15] = [
+pub(crate) const POS_PROLOGUES: [Prologo; 15] = [
     Prologo { endereco: 0x8676d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x40] },
     Prologo { endereco: 0x8674e0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
     Prologo { endereco: 0x867560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
@@ -1437,7 +1437,7 @@ pub(crate) const PROLOGOS_POS: [Prologo; 15] = [
 ///
 /// [pt] Dentro de uma comparacao do pos-jogo, com a fita aberta.
 pub(crate) fn is_recording_post_match() -> bool {
-    GRAVAR_POS.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
+    RECORD_POST_MATCH.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
 
 /// Runs a post-match call directly, or records it on the tape during a post-match comparison.
@@ -1445,7 +1445,7 @@ pub(crate) fn is_recording_post_match() -> bool {
 /// [pt] Repassa ou grava (durante uma comparacao do pos-jogo, no nivel de cima da fita).
 pub(crate) unsafe fn pass_or_record_post_match(rotina: usize, this: usize, a: [u32; 5], f: impl FnOnce() -> u64) -> u64 {
     use std::sync::atomic::Ordering::Relaxed;
-    if GRAVAR_POS.load(Relaxed) && is_recording() {
+    if RECORD_POST_MATCH.load(Relaxed) && is_recording() {
         let mut r = 0u64;
         call_recording(rotina, this, a, || {
             r = f();
@@ -1549,9 +1549,9 @@ pub(crate) fn post_match_gates() -> [usize; 15] {
 /// [pt] Roda a comparacao de uma rotina do pos-jogo pela fita: as 14 do banco entram como unidades.
 pub(crate) unsafe fn comparar_pos(nome: &str, reg: Vec<(usize, usize)>, original: impl FnOnce(), rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32)) {
     use std::sync::atomic::Ordering::Relaxed;
-    let gravar = GRAVAR_POS.swap(true, Relaxed);
+    let gravar = RECORD_POST_MATCH.swap(true, Relaxed);
     let (_, _, igual, sequencia, k) = comparar_com_fita(reg, original, |chamar| rust(&mut |r, t, a| chamar(r, t, a, [u32::MAX; 5])));
-    GRAVAR_POS.store(gravar, Relaxed);
+    RECORD_POST_MATCH.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia, || format!("{} ({} chamadas): {}", nome, k, tape_detail()));
 }
 

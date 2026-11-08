@@ -4,7 +4,7 @@ use super::*;
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-pub(crate) type Cqq4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type SpaSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Writes rounds starting at `primeira` into round table t: each round's date (0x68a160) and match slots (0x68a1c0),
 /// from a static table.
@@ -12,7 +12,7 @@ pub(crate) type Cqq4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqq4Rodada]) {
+pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[SpaSecondScheduleRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -30,18 +30,18 @@ pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, ano: u32, primeira: 
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-pub(crate) struct Cqq4Natal {
-    pub(crate) comeco: &'static [Cqq4Rodada],
+pub(crate) struct SpaSecondChristmasSchedule {
+    pub(crate) comeco: &'static [SpaSecondScheduleRound],
     pub(crate) referencia: usize,
     pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [Cqq4Rodada]; 8],
-    pub(crate) fim: &'static [Cqq4Rodada],
+    pub(crate) casos: [&'static [SpaSecondScheduleRound]; 8],
+    pub(crate) fim: &'static [SpaSecondScheduleRound],
     pub(crate) linha: u32,
 }
 
 /// Writes the opening rounds, then picks the middle block by how many days a reference round falls after 1 December
 /// (error box if out of range), then the closing rounds [inference: Christmas break placement].
-pub(crate) unsafe fn set_rounds_with_christmas(t: usize, ano: u32, n: &Cqq4Natal, arquivo: usize) {
+pub(crate) unsafe fn set_rounds_with_christmas(t: usize, ano: u32, n: &SpaSecondChristmasSchedule, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     spa_second_set_league_rounds(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -92,7 +92,7 @@ pub(crate) unsafe fn spa_second_compare_schedule_all_stages(nome: &str, fase: u3
 }
 
 /// a Segunda espanhola: as rodadas antes do Natal (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_COMECO: [Cqq4Rodada; 17] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_EARLY_ROUNDS: [SpaSecondScheduleRound; 17] = [
     (30, 7, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 0: 30/ago
     (6, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 1: 6/set
     (13, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 2: 13/set
@@ -113,47 +113,47 @@ pub(crate) const CQQ4_SEGUNDA_PAR_COMECO: [Cqq4Rodada; 17] = [
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 17/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_0: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_0: [SpaSecondScheduleRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 18/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_1: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_CHRISTMAS_1: [SpaSecondScheduleRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 19/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_2: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_CHRISTMAS_ROUNDS_2: [SpaSecondScheduleRound; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 20/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_3: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_3: [SpaSecondScheduleRound; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 21/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_4: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_CHRISTMAS_4: [SpaSecondScheduleRound; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 22/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_5: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_CHRISTMAS_ROUNDS_5: [SpaSecondScheduleRound; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 23/dez (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_6: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_6: [SpaSecondScheduleRound; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 16 fora de 17 a 23/dez: a caixa) (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL_PADRAO: [Cqq4Rodada; 1] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_CHRISTMAS_DEFAULT: [SpaSecondScheduleRound; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// a Segunda espanhola: as rodadas depois do Natal (ano par)
-pub(crate) const CQQ4_SEGUNDA_PAR_FIM: [Cqq4Rodada; 24] = [
+pub(crate) const SEGUNDA_EVEN_YEAR_END: [SpaSecondScheduleRound; 24] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 18: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 19: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 20: 17/jan (+1 ano)
@@ -181,7 +181,7 @@ pub(crate) const CQQ4_SEGUNDA_PAR_FIM: [Cqq4Rodada; 24] = [
 ];
 
 /// a Segunda espanhola (impar)
-pub(crate) const CQQ4_SEGUNDA_IMPAR_TODAS: [Cqq4Rodada; 42] = [
+pub(crate) const SEGUNDA_ODD_ALL_ROUNDS: [SpaSecondScheduleRound; 42] = [
     (22, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 0: 22/ago
     (29, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 1: 29/ago
     (5, 8, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 2: 5/set
@@ -226,7 +226,7 @@ pub(crate) const CQQ4_SEGUNDA_IMPAR_TODAS: [Cqq4Rodada; 42] = [
     (4, 5, 1, 6, 1, &[(-1, -1, -1)]), // 41: 4/jun (+1 ano)
 ];
 
-pub(crate) const CQQ4_SEGUNDA_PAR_NATAL: Cqq4Natal = Cqq4Natal { comeco: &CQQ4_SEGUNDA_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ4_SEGUNDA_PAR_NATAL_0, &CQQ4_SEGUNDA_PAR_NATAL_1, &CQQ4_SEGUNDA_PAR_NATAL_2, &CQQ4_SEGUNDA_PAR_NATAL_3, &CQQ4_SEGUNDA_PAR_NATAL_4, &CQQ4_SEGUNDA_PAR_NATAL_5, &CQQ4_SEGUNDA_PAR_NATAL_6, &CQQ4_SEGUNDA_PAR_NATAL_PADRAO], fim: &CQQ4_SEGUNDA_PAR_FIM, linha: 0x146 };
+pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = SpaSecondChristmasSchedule { comeco: &SEGUNDA_EVEN_YEAR_EARLY_ROUNDS, referencia: 16, ajuste: 17, casos: [&SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_0, &SEGUNDA_EVEN_YEAR_CHRISTMAS_1, &SEGUNDA_EVEN_CHRISTMAS_ROUNDS_2, &SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_3, &SEGUNDA_EVEN_YEAR_CHRISTMAS_4, &SEGUNDA_EVEN_CHRISTMAS_ROUNDS_5, &SEGUNDA_EVEN_YEAR_CHRISTMAS_ROUNDS_6, &SEGUNDA_EVEN_YEAR_CHRISTMAS_DEFAULT], fim: &SEGUNDA_EVEN_YEAR_END, linha: 0x146 };
 
 /// the Segunda schedule: 42 rounds (22 clubs), nearly all on Sunday (day 6); in odd years (2001/02) a fixed table from
 /// 22 August to 4 June, with one TV slot; in even years, from 30 August to 6 June, with three TV slots and one
@@ -253,9 +253,9 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, f
             crate::comparacao::ramo("cqq_4 calendario da segunda espanhola");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
-                spa_second_set_league_rounds(t, ano, 0, &CQQ4_SEGUNDA_IMPAR_TODAS);
+                spa_second_set_league_rounds(t, ano, 0, &SEGUNDA_ODD_ALL_ROUNDS);
             } else {
-                set_rounds_with_christmas(t, ano, &CQQ4_SEGUNDA_PAR_NATAL, 0xa828bc);
+                set_rounds_with_christmas(t, ano, &SEGUNDA_EVEN_CHRISTMAS_SCHEDULE, 0xa828bc);
             }
             t
         }
@@ -275,13 +275,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_spa_second_create_schedule(this:
 /// [pt] { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
 /// disciplina 0x1a, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
-    construct_division_league(this, ano, registro, &CQM5_SEGUNDA)
+    construct_division_league(this, ano, registro, &SPANISH_SEGUNDA)
 }
 
 /// Comparer for `construct_spa_second` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_spa_second(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_SPA_SECOND);
-    compare_division_league_ctor("construct_spa_second", this, ano, registro, &CQM5_SEGUNDA, || o(this, ano, registro))
+    compare_division_league_ctor("construct_spa_second", this, ano, registro, &SPANISH_SEGUNDA, || o(this, ano, registro))
 }
 
 /// La Segunda (22): the top 3 go up directly, the bottom 4 go down to Segunda B when it is loaded [inference from

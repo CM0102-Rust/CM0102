@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: os calendários Baiano, Centro-Oeste, Gaúcho, Goiano (as datas e os jogos de cada rodada da fase de pontos corridos e do mata-mata) (bra_reg_bahia.cpp, bra_reg_central.cpp, bra_reg_gaucho.cpp, bra_reg_goias.cpp) ----------
 
 /// O Baiano, a liga: 18 rodadas (da 11/jan à 20/abr), 1170 bytes, 64 operações.
-const CQW1_BAIANO_0: [Cqp11Op; 64] = [
+const CQW1_BAIANO_0: [AsiaClubChampScheduleOp; 64] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -24,7 +24,7 @@ const CQW1_BAIANO_0: [Cqp11Op; 64] = [
 ];
 
 /// O Baiano, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW1_BAIANO_1: [Cqp11Op; 36] = [
+const CQW1_BAIANO_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -35,11 +35,11 @@ const CQW1_BAIANO_1: [Cqp11Op; 36] = [
 ];
 
 /// As fases da tabela de rodadas do Baiano: a fase de pontos corridos (−1) (é liga): 18 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw1_baiano_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw1_baiano_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
             ops: &CQW1_BAIANO_0, nome: "cqw_1 baiano liga" }),
-        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
+        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
             ops: &CQW1_BAIANO_1, nome: "cqw_1 baiano fase 0" }),
         _ => None,
     }
@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn comparar_cqw1_calendario_baiano(this: usize, fase: u
 }
 
 /// O Centro-Oeste, a liga: 15 rodadas (da 11/jan à 6/abr), 975 bytes, 56 operações.
-const CQW1_CENTRO_OESTE_0: [Cqp11Op; 56] = [
+const CQW1_CENTRO_OESTE_0: [AsiaClubChampScheduleOp; 56] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x19, 1, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0), Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0),
@@ -78,7 +78,7 @@ const CQW1_CENTRO_OESTE_0: [Cqp11Op; 56] = [
 ];
 
 /// O Centro-Oeste, a fase 0: 3 rodadas (da 7/abr à 10/mai), 312 bytes, 54 operações.
-const CQW1_CENTRO_OESTE_1: [Cqp11Op; 54] = [
+const CQW1_CENTRO_OESTE_1: [AsiaClubChampScheduleOp; 54] = [
     Cqp11S(0, 7, 4, 0, 0), Cqp11J(0, 0xd, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x78), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 8), Cqp11W(0x1a, 4), Cqp11W(0x1c, 8), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -92,11 +92,11 @@ const CQW1_CENTRO_OESTE_1: [Cqp11Op; 54] = [
 ];
 
 /// As fases da tabela de rodadas do Centro-Oeste: a fase de pontos corridos (−1) (é liga): 15 rodadas, da 11/jan à 6/abr; a fase 0 (mata-mata ou fase final): 3 rodadas, da 7/abr à 10/mai.
-fn cqw1_centro_oeste_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw1_centro_oeste_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 15, extra: 0, extra_checa: false, tamanho: 0x3cf, linha: 0xa4,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 15, extra: 0, extra_checa: false, tamanho: 0x3cf, linha: 0xa4,
             ops: &CQW1_CENTRO_OESTE_0, nome: "cqw_1 centro_oeste liga" }),
-        0 => Some(Cqp11Fase { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0x114,
+        0 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0x114,
             ops: &CQW1_CENTRO_OESTE_1, nome: "cqw_1 centro_oeste fase 0" }),
         _ => None,
     }
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn comparar_cqw1_calendario_centro_oeste(this: usize, f
 }
 
 /// O Gaúcho, a liga: 17 rodadas (da 11/jan à 20/abr), 1105 bytes, 62 operações.
-const CQW1_GAUCHO_0: [Cqp11Op; 62] = [
+const CQW1_GAUCHO_0: [AsiaClubChampScheduleOp; 62] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -137,7 +137,7 @@ const CQW1_GAUCHO_0: [Cqp11Op; 62] = [
 ];
 
 /// O Gaúcho, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW1_GAUCHO_1: [Cqp11Op; 36] = [
+const CQW1_GAUCHO_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -148,11 +148,11 @@ const CQW1_GAUCHO_1: [Cqp11Op; 36] = [
 ];
 
 /// As fases da tabela de rodadas do Gaúcho: a fase de pontos corridos (−1) (é liga): 17 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw1_gaucho_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw1_gaucho_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 17, extra: 0, extra_checa: false, tamanho: 0x451, linha: 0xa8,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 17, extra: 0, extra_checa: false, tamanho: 0x451, linha: 0xa8,
             ops: &CQW1_GAUCHO_0, nome: "cqw_1 gaucho liga" }),
-        0 => Some(Cqp11Fase { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x122,
+        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x122,
             ops: &CQW1_GAUCHO_1, nome: "cqw_1 gaucho fase 0" }),
         _ => None,
     }
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn comparar_cqw1_calendario_gaucho(this: usize, fase: u
 }
 
 /// O Goiano, a liga: 13 rodadas (da 11/jan à 6/abr), 845 bytes, 52 operações.
-const CQW1_GOIANO_0: [Cqp11Op; 52] = [
+const CQW1_GOIANO_0: [AsiaClubChampScheduleOp; 52] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x19, 1, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0), Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0),
@@ -189,7 +189,7 @@ const CQW1_GOIANO_0: [Cqp11Op; 52] = [
 ];
 
 /// O Goiano, a fase 0: 3 rodadas (da 7/abr à 10/mai), 312 bytes, 54 operações.
-const CQW1_GOIANO_1: [Cqp11Op; 54] = [
+const CQW1_GOIANO_1: [AsiaClubChampScheduleOp; 54] = [
     Cqp11S(0, 7, 4, 0, 0), Cqp11J(0, 0xd, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x78), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 8), Cqp11W(0x1a, 4), Cqp11W(0x1c, 8), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -203,11 +203,11 @@ const CQW1_GOIANO_1: [Cqp11Op; 54] = [
 ];
 
 /// As fases da tabela de rodadas do Goiano: a fase de pontos corridos (−1) (é liga): 13 rodadas, da 11/jan à 6/abr; a fase 0 (mata-mata ou fase final): 3 rodadas, da 7/abr à 10/mai.
-fn cqw1_goiano_fase(fase: u32) -> Option<Cqp11Fase> {
+fn cqw1_goiano_fase(fase: u32) -> Option<ScheduleStage> {
     match fase as u8 as i8 {
-        -1 => Some(Cqp11Fase { liga: 1, rodadas: 13, extra: 0, extra_checa: false, tamanho: 0x34d, linha: 0xa4,
+        -1 => Some(ScheduleStage { liga: 1, rodadas: 13, extra: 0, extra_checa: false, tamanho: 0x34d, linha: 0xa4,
             ops: &CQW1_GOIANO_0, nome: "cqw_1 goiano liga" }),
-        0 => Some(Cqp11Fase { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0x10c,
+        0 => Some(ScheduleStage { liga: 0, rodadas: 3, extra: 0, extra_checa: false, tamanho: 0x138, linha: 0x10c,
             ops: &CQW1_GOIANO_1, nome: "cqw_1 goiano fase 0" }),
         _ => None,
     }

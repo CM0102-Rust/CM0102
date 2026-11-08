@@ -71,7 +71,7 @@ unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let cor = |a: usize| *(a as *const u16) as usize;
     let display = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let sem_selo = |c: usize| {
         let amistoso: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c2990usize);
@@ -209,8 +209,8 @@ unsafe extern "C" fn comparar_get_heading_colour(x: u32) -> u32 {
 unsafe extern "C" fn comparar_draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I0%%);
     let mut reg = screen_build_regions();
-    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16) as isize;
-    let bloco = core::ptr::read_unaligned((GERENTE_DE_TELAS as isize + 0x7e2 + vaga * 0x300) as *const usize);
+    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
+    let bloco = core::ptr::read_unaligned((SCREEN_MANAGER as isize + 0x7e2 + vaga * 0x300) as *const usize);
     if bloco != 0 {
         reg.push((bloco, 0xb4));
         reg.push((bloco + 0xb8, 0x200 - 0xb8));

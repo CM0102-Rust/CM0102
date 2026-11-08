@@ -7,7 +7,7 @@ use super::*;
 /// Solta a bola do dono e, com a bola fora do campo, marca a reposicao (0x8eb2: 2 lateral, 3 ou
 /// 4 conforme a linha de fundo e o lado que tocou por ultimo; 0x8eae: o lado que repoe), narra
 /// (0x1f76/0x1f75/0x1f77) e devolve 1. Bola em campo, 0.
-pub(crate) unsafe fn ball_out_with(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8 {
+pub(crate) unsafe fn ball_out_with(this: usize, lado_b: u8, chamar: AddEventCall) -> u8 {
     if byte(this, 0x8eb2) != 0 {
         return 1;
     }
@@ -648,25 +648,25 @@ pub(crate) unsafe extern "thiscall" fn comparar_facing(this: usize, a: i8, b: i8
 // responde de forma sintetica, sem rodar a rotina real.
 
 pub(crate) static mut PORTA_6F5C30: usize = 0;
-pub(crate) static GRAVAR_6F5C30: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-pub(crate) static SINTETICO: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static RECORD_6F5C30: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+pub(crate) static SYNTHETIC: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 // 0x6f5c30: sub esp, 0x218
-pub(crate) const PROLOGO_6F5C30: Prologo = Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
+pub(crate) const PROLOGUE_6F5C30: Prologo = Prologo { endereco: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] };
 
 /// Hook entry for 0x6f5c30: synthetic result in self-test, tape recording, or the comparer around the original.
 pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c: u32, d: u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
     let rodar = || {
-        if SINTETICO.load(Relaxed) {
+        if SYNTHETIC.load(Relaxed) {
             (p as u32 ^ a ^ b.wrapping_mul(3) ^ c.wrapping_mul(5) ^ d.wrapping_mul(7)) >> 4 & 1
         } else {
             let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(PORTA_6F5C30);
             f(p, a, b, c, d) as u32
         }
     };
-    if SINTETICO.load(Relaxed) {
-        if GRAVAR_6F5C30.load(Relaxed) && is_recording() {
+    if SYNTHETIC.load(Relaxed) {
+        if RECORD_6F5C30.load(Relaxed) && is_recording() {
             return call_recording(0x6f5c30, p, [a, b, c, d, 0], rodar) as u8;
         }
         return rodar() as u8;
@@ -675,7 +675,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
     // 0x6cd330 (`search_on_side`), cuja comparacao a grava como unidade: a comparacao roda dentro
     // da unidade (aninhada, com a fita de fora guardada)
     let comparar = || comparar_respond(p, a, b, c, d, &rodar) as u32;
-    if GRAVAR_6F5C30.load(Relaxed) && is_recording() {
+    if RECORD_6F5C30.load(Relaxed) && is_recording() {
         return call_recording(0x6f5c30, p, [a, b, c, d, 0], comparar) as u8;
     }
     if is_recording_top_level() {
@@ -694,7 +694,7 @@ pub(crate) unsafe fn comparar_respond(p: usize, a: u32, b: u32, c: u32, d: u32, 
     for clube in [*((t + 0x1c) as *const usize), *((t + 0x20) as *const usize)] {
         reg.extend(linhas_do_clube(clube));
     }
-    let gravar = GRAVAR_716.swap(true, Relaxed);
+    let gravar = RECORD_716.swap(true, Relaxed);
     let (r, rr, igual, sequencia, k) = comparar_com_fita(reg, || rodar() as u8, |chamar| {
         contest_ball_injected(p, a as i16, b as i8, f32::from_bits(c), d as u8, &mut |rotina, this, args| {
             let mascara = match rotina {
@@ -707,7 +707,7 @@ pub(crate) unsafe fn comparar_respond(p: usize, a: u32, b: u32, c: u32, d: u32, 
             chamar(rotina, this, args, mascara)
         })
     });
-    GRAVAR_716.store(gravar, Relaxed);
+    RECORD_716.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia && r == rr, || format!("respond(tipo {}, forca {}) original={} rust={} {} chamadas: {}", b as i8, a as i16, r, rr, k, tape_detail()));
     r
 }
@@ -726,13 +726,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_procurar(this: usize, lado: i8, 
         let p = *lista.add(i);
         regioes.extend([(p + 0x19, 1), (p + 0x2b, 1)]);
     }
-    let gravar = GRAVAR_6F5C30.swap(true, Relaxed);
+    let gravar = RECORD_6F5C30.swap(true, Relaxed);
     let (r, n, igual, sequencia, k) = comparar_com_fita(regioes, || f(this, lado, grupo, a3, a4, a5, a6, modo), |chamar| {
         search_cell_side_with(this, lado, grupo, a3, a4, a5, a6, modo, &mut |p, w, x, y, z| {
             chamar(0x6f5c30, p, [w, x, y, z, 0], [u32::MAX, u32::MAX, u32::MAX, u32::MAX, 0]) as u8
         })
     });
-    GRAVAR_6F5C30.store(gravar, Relaxed);
+    RECORD_6F5C30.store(gravar, Relaxed);
     PLACAR.registrar(igual && sequencia && r == n, || {
         format!("search_on_side(lado {}, modo {}, {} chamadas) original={} rust={}: {}", lado, modo, k, r, n, tape_detail())
     });

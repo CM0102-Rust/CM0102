@@ -27,6 +27,27 @@ Uma leva tem de 1 a 10 rotinas do motor de partidas (`match_eng.cpp`, `match_pl.
    3. Carreira: `python simular.py --ate 2002-06-01 --motor sim --modo rust --repetir 2 --detector`. As duas execuções Rust têm de dar a mesma impressão (o `--detector` roda uma terceira, só registrada: ver "Memória da DLL, trampolins e detector de lixo"); desde 31/10/2026 a do modo original (`--modo original`) é só registrada, não barra a leva (critério "resultado que o jogo produz"; antes tinha de ser igual). Nas levas 50 a 52, `c76ad0ff6ce3daa6` com 2.357.335.216 sorteios.
 5. **Registrar.** Seção da leva em `ROTINAS.md` e no `ROTINAS.en.md`, tradução dos nomes novos em `glossario.py` (gera `GLOSSARIO.md` e `.en.md`), estado em `wiki/index.md`, uma linha em `wiki/log.md`, commit e push.
 
+## Legibilidade: depois de integrar uma leva (08/11/2026)
+
+O código público é em inglês e legível de fora (reorganização de 07/11/2026). Uma leva nova chega com nomes em
+português e no formato antigo; depois de integrá-la (e antes de publicar), passe as ferramentas, nesta ordem, e prove
+(carreiras Rust ×2 + detector e comparação, como sempre):
+
+1. `partir_motor.py --gravar`: o código novo sai do `motor.rs` para o módulo do arquivo de origem;
+2. `unificar_memoria.py --gravar` e `unificar_auxiliares.py --gravar`: as cópias de acesso à memória e os auxiliares
+   repetidos viram as funções únicas;
+3. `renomear_rotinas.py --gravar`: as rotinas novas ganham o nome original em inglês (docs/NOMES.csv);
+4. os auxiliares e itens novos: nomes em inglês propostos por leitura (agentes que só leem) e aplicados por
+   `aplicar_nomes_auxiliares.py` e `aplicar_nomes_itens.py`; depois `restaurar_palavras.py <commit de antes>` se algum
+   nome de uma palavra só tiver caído em comentário em português;
+5. `cabecalhos.py --gravar` (pelo ROTINAS) ou `aplicar_cabecalhos.py` (resumos propostos): o cabeçalho bilíngue;
+6. `nomear_chaves.py`, `nomear_globais.py`, `nomear_campos.py`, `arrumar_rodada4.py --fase a` e `--fase b`,
+   `anotar_constantes.py`: chaves, globais, campos, tamanhos e constantes com nome ou valor;
+7. `legibilidade.py`: o placar (docs/LEGIBILIDADE.md) não pode piorar.
+
+Melhor ainda: escrever o item já no formato novo (docs/COMO_ESCREVER_UM_ITEM.md). Cada passo regrava as listas de
+mutação com as mesmas trocas; confira as âncoras depois (`fila.py checar` e as listas das levas recentes).
+
 ## Armadilhas já conhecidas
 
 - `fst dword` seguido de comparação: guarda o float arredondado mas compara o double; reproduzir guardando `v as f32` e comparando `v`. `pow` do x87 (`_CIpow`): base em st1, expoente em st0 (o primeiro carregado é a base). Retorno de 64 bits (`edx:eax`): ver qual registrador o teste usa.

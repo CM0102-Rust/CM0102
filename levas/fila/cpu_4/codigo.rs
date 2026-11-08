@@ -11,7 +11,7 @@ unsafe fn cpu4_b(a: usize) -> u8 {
 /// { 0x867b50 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::has_active_release_clause()`: 1 com a cláusula +0x1c
 /// = 2, a +0x1d = 1 ou a +0x1f = 2; senão 0. Pelo dia dos contratos 0x4c7ac0, pelo valor do jogador 0x4d0c60, pelo preço
 /// pedido 0x4d2070, pela resposta prevista do vendedor 0x84af00, pelo vendedor que tem de aceitar 0x8cd240 e pelo lance
-/// 0x8e5d60. Chamada a cada contrato: sem contador.
+/// 0x8e5d60. TapeCall a cada contrato: sem contador.
 unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
     if cpu4_b(c + 0x1c) == 2 || cpu4_b(c + 0x1d) == 1 || cpu4_b(c + 0x1f) == 2 {
         return 1; // cpu4: com a clausula ativa

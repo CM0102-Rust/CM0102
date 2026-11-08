@@ -18,7 +18,7 @@ unsafe fn is_major_finals(id: u32) -> bool {
 
 /// O que a 0x775220 grava: a competição atual da nação ([this+4] + id × 110 + 4), a da fila ([this+8] + id × 4) e se
 /// avisa o gerenciador dos técnicos.
-struct Cpo13Atual {
+struct NationCurrentCompUpdate {
     vaga: usize,
     nova: Option<u32>,
     fila: usize,
@@ -29,17 +29,17 @@ struct Cpo13Atual {
 /// O plano da 0x775220 (só lê): com competição atual (≠ −1) que é fase final grande, a nova vai para a fila e a atual
 /// fica (sem aviso); senão, se a nova é fase final grande e há atual, a atual vai para a fila; a nova vira a atual e o
 /// gerenciador dos técnicos ([0xb67a44], se existe) é avisado.
-unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> Cpo13Atual {
+unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> NationCurrentCompUpdate {
     let id = cpo13_d(nacao);
     let vaga = cpo13_d(this + 4).wrapping_add(id.wrapping_mul(110)) + 4;
     let fila = cpo13_d(this + 8).wrapping_add(id.wrapping_mul(4));
     let atual = cpo13_d(vaga) as u32;
     let nova = cpo13_d(comp) as u32;
-    let mut p = Cpo13Atual { vaga, nova: Some(nova), fila, na_fila: None, avisa: cpo13_d(0xb67a44) != 0 };
+    let mut p = NationCurrentCompUpdate { vaga, nova: Some(nova), fila, na_fila: None, avisa: cpo13_d(0xb67a44) != 0 };
     if atual != 0xffff_ffff {
         let r = cpo13_d(0xae23d0).wrapping_add((atual as usize).wrapping_mul(107)); // registros de 107 bytes
         if r != 0 && is_major_finals(cpo13_d(r) as u32) {
-            return Cpo13Atual { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
+            return NationCurrentCompUpdate { vaga, nova: None, fila, na_fila: Some(nova), avisa: false };
         }
         if is_major_finals(nova) {
             p.na_fila = Some(atual);

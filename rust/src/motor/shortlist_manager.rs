@@ -1662,9 +1662,9 @@ pub(crate) fn count_hot_branch(n: &core::sync::atomic::AtomicU32, nome: &'static
     }
 }
 
-pub(crate) static CQD12_BOSMAN: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
-pub(crate) static CQD12_FAIXA: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
-pub(crate) static CQD12_LONGE: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+pub(crate) static BRANCH_BOSMAN: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+pub(crate) static HOT_BRANCH_BAND: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+pub(crate) static FAR_BAND_HITS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 
 /// the club takes the player paying the compensation: outside the FIFA protected period, if the fee (0x8d0780) is below
 /// his value; inside it, only with the Bosman rule and the fee up to the value, by the contract expiry band (0 no; 1-8:
@@ -1701,7 +1701,7 @@ pub(crate) unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(th
     if bosman(gerente, pessoa(contrato)) == 0 { // cqd12: sem a lei Bosman
         return 0;
     }
-    count_hot_branch(&CQD12_BOSMAN, "cqd_12 com lei Bosman");
+    count_hot_branch(&BRANCH_BOSMAN, "cqd_12 com lei Bosman");
     let t = compensacao(gerente, pessoa(contrato), clube, 1);
     *taxa = t;
     if t > read_i32(pessoa(contrato) + 0x52) {
@@ -1718,11 +1718,11 @@ pub(crate) unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(th
         5 | 6 => 0.8,
         7 | 8 => 0.9,
         _ => {
-            count_hot_branch(&CQD12_LONGE, "cqd_12 band longe");
+            count_hot_branch(&FAR_BAND_HITS, "cqd_12 band longe");
             return 1; // cqd12: as faixas 9-14
         }
     };
-    count_hot_branch(&CQD12_FAIXA, "cqd_12 band pelo fator");
+    count_hot_branch(&HOT_BRANCH_BAND, "cqd_12 band pelo fator");
     // fild [vaga+0xb]; fild [vaga+3]; fmul fator; fcompp: 1 se o +3 × fator passa do +0xb (precisão dupla)
     (read_i32(vaga + 3) as f64 * fator > read_i32(vaga + 0xb) as f64) as u32
 }
@@ -2325,7 +2325,7 @@ pub(crate) unsafe fn contract_of_staff(pessoa: usize) -> usize {
 }
 
 /// As datas estáticas da 0x54c5b0, da 0x54c8e0 e da 0x54cdb0 (valor e guarda).
-pub(crate) const CPY1_ESTATICAS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
+pub(crate) const SHORTLIST_MANAGER_DATE_STATICS: [(usize, usize); 6] = [(G_ADD_DAYS_RESULT_DATE, 8), (0xae2469, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1)];
 
 
 /// counts the club's shortlist slots with a target and a bid at the given position (0xff: any); with the list in state
@@ -2389,7 +2389,7 @@ pub(crate) unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube:
 /// [pt] Comparador: lado a lado pelas 40 vagas do clube e pelas datas estáticas, e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_count_slots_with_bids(this: usize, clube: usize, posicao: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_COUNT_SLOTS_WITH_BIDS);
-    let mut reg = CPY1_ESTATICAS.to_vec();
+    let mut reg = SHORTLIST_MANAGER_DATE_STATICS.to_vec();
     reg.push((read_usize(shortlist_club_entry(this, clube)), 40 * 0x25));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, posicao), || count_slots_with_bids(this, clube, posicao));
     PLACAR.registrar(igual && r == n, || format!("count_slots_with_bids(clube {:x}, posicao {}) original={} rust={} {:x?} x {:x?}", clube, posicao as i8, r, n, mo, mr));
@@ -3066,7 +3066,7 @@ pub(crate) fn first_memory_diff(a: &crate::comparacao::Memoria, b: &crate::compa
 
 /// As máscaras de posição (+1, 16 bits) das vagas 1..24 de jogador, por formação (+7 da entrada); a vaga 0 é sempre
 /// o goleiro (1). A linha 0 vale para formação fora de 1..9 (o `default` do switch).
-pub(crate) static CPP5_MASCARAS: [[u16; 24]; 10] = [
+pub(crate) static FORMATION_POSITION_MASKS: [[u16; 24]; 10] = [
     [0x804, 0x84, 0x404, 0x104, 0x810, 0x90, 0x410, 0x110, 0x440, 0x140, 0x4, 0x8, 0x10, 0x10, 0x20, 0x40, 0x4, 0x10, 0x1, 0x40, 0x4, 0x10, 0x10, 0x1], // fora de 1..9
     [0x808, 0x88, 0x404, 0x2, 0x104, 0x410, 0x220, 0x110, 0x440, 0x140, 0x8, 0x210, 0x90, 0x810, 0x240, 0x220, 0x2, 0x210, 0x1, 0x40, 0x4, 0x8, 0x10, 0x1], // formação 1
     [0x808, 0x88, 0x404, 0x204, 0x104, 0x410, 0x220, 0x110, 0x440, 0x140, 0x8, 0x210, 0x90, 0x810, 0x240, 0x220, 0x204, 0x210, 0x1, 0x40, 0x4, 0x8, 0x10, 0x1], // formação 2
@@ -3111,7 +3111,7 @@ pub(crate) unsafe extern "stdcall" fn shortlist_set_up_formation_slots(entrada: 
     let v = read_usize(entrada);
     write_u16(v + 1, 1); // o goleiro
     for k in 1..25usize {
-        write_u16(v + 1 + k * 0x25, CPP5_MASCARAS[linha][k - 1]);
+        write_u16(v + 1 + k * 0x25, FORMATION_POSITION_MASKS[linha][k - 1]);
     }
 }
 
@@ -4372,7 +4372,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_loan_offer_for_player(this: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_TRY_LOAN_OFFER_FOR_PLAYER);
     let mut regioes = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
-    regioes.extend(CPQ5_ESTATICAS);
+    regioes.extend(TRANSFER_MANAGER_DATE_STATICS);
     let antes = crate::comparacao::Memoria::ler(&regioes);
     CPW3_ENSAIO = true;
     let n = crate::aleatorio::pausar_rastro(|| crate::aleatorio::sem_contar(|| try_loan_offer_for_player(this, jogador, clube)));

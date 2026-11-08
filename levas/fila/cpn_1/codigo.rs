@@ -13,7 +13,7 @@ unsafe fn cpn1_por(a: usize, v: usize) {
 }
 
 /// A notícia guardada na caixa: 0xdf bytes (+4 importante, +0xd6 id, +0xda livre/lida, +0xde alcance).
-const CPN1_NOTICIA: usize = 0xdf;
+const NEWS_NEWS_RECORD_SIZE: usize = 0xdf;
 
 /// A entrada do técnico humano na tabela das caixas (News +8, 12 bytes: início do anel, a próxima vaga, a conta):
 /// índice = id da pessoa − [0xae2364] + 16 (os humanos são as 16 últimas pessoas). Negativo: não é humano.
@@ -117,14 +117,14 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
         cpn1_por(e + 4, cpn1_d(this + 4));
         let total = cpn1_d(this + 4).wrapping_add(0x64);
         cpn1_por(this + 4, total);
-        let p = realocar(cpn1_d(this), total.wrapping_mul(CPN1_NOTICIA) as u32);
+        let p = realocar(cpn1_d(this), total.wrapping_mul(NEWS_NEWS_RECORD_SIZE) as u32);
         cpn1_por(this, p);
         if p == 0 {
             show_error_at(0xa693ec, 0x1f6d);
             return 0;
         }
         for k in 0..0x64usize {
-            let v = cpn1_d(this) + (cpn1_d(e) + k).wrapping_mul(CPN1_NOTICIA);
+            let v = cpn1_d(this) + (cpn1_d(e) + k).wrapping_mul(NEWS_NEWS_RECORD_SIZE);
             cpn1_por(v + 0xd6, 0);
             cpn1_por(v + 0xda, 1);
         }
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
     if anterior < cpn1_i(e) {
         anterior = cpn1_i(e) + 0x63;
     }
-    let vaga = |k: i32| cpn1_d(this).wrapping_add((k as usize).wrapping_mul(CPN1_NOTICIA));
+    let vaga = |k: i32| cpn1_d(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     if cpn1_d(vaga(anterior) + 0xd6) == cpn1_d(noticia + 0xd6) {
         return 1; // a mesma notícia de novo
     }
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: us
     let (repetida, livre_atual) = if novo {
         (id == 0, true)
     } else {
-        let v = |k: i32| cpn1_d(this).wrapping_add((k as usize).wrapping_mul(CPN1_NOTICIA));
+        let v = |k: i32| cpn1_d(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
         (cpn1_d(v(anterior) + 0xd6) == id, cpn1_d(v(atual) + 0xda) != 0)
     };
     let (prox, conta_depois) = if repetida {
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, noticia: us
         PLACAR.registrar(novo, || format!("deliver_to_manager devolveu 0 sem anel novo")); // só sem memória
         return r;
     }
-    let vaga = cpn1_d(this).wrapping_add((atual as usize).wrapping_mul(CPN1_NOTICIA));
+    let vaga = cpn1_d(this).wrapping_add((atual as usize).wrapping_mul(NEWS_NEWS_RECORD_SIZE));
     let ok = r == 1 && cpn1_i(e) == inicio && cpn1_i(e + 4) == prox && cpn1_i(e + 8) == conta_depois
         && cpn1_d(this + 0x10) == contador_depois && cpn1_d(noticia + 0xd6) == id && cpn1_d(noticia + 0xda) == 0
         && (repetida || cpn1_d(vaga + 0xd6) == id);

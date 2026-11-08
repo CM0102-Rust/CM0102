@@ -3,14 +3,14 @@ use super::*;
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-pub(crate) type Cqo4Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type FraThirdLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Writes league rounds from `first` in table t: date (0x68a160) and match slots (0x68a1c0) of each round.
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn fra_third_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo4Rodada]) {
+pub(crate) unsafe fn fra_third_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[FraThirdLeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -45,11 +45,11 @@ pub(crate) unsafe fn written_league_round_bytes(t: usize, guia: usize, n: usize)
 }
 
 /// O que muda entre as ligas de fase única.
-pub(crate) struct Cqo4Liga {
+pub(crate) struct FraThirdSingleStageLeague {
     pub(crate) rodadas: i16,
     pub(crate) arquivo: usize,
     pub(crate) linha: u32,
-    pub(crate) tabela: &'static [Cqo4Rodada],
+    pub(crate) tabela: &'static [FraThirdLeagueRound],
     pub(crate) ramo: &'static str,
 }
 
@@ -60,7 +60,7 @@ pub(crate) struct Cqo4Liga {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &Cqo4Liga) -> usize {
+pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &FraThirdSingleStageLeague) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
@@ -107,7 +107,7 @@ pub(crate) unsafe fn compare_league_schedule(nome: &str, fase: u32, rodadas: *mu
 }
 
 /// a terceira divisão (o National), 38 rodadas de 7/ago a 20/mai, sem faixas de TV
-pub(crate) const CQO4_TERCEIRA: [Cqo4Rodada; 38] = [
+pub(crate) const FRENCH_THIRD_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (7, 7, 0, 5, 2, &[(-1, -1, -1)]), // 0: 7/ago
     (13, 7, 0, 4, 2, &[(-1, -1, -1)]), // 1: 13/ago
     (17, 7, 0, 1, 2, &[(-1, -1, -1)]), // 2: 17/ago
@@ -149,7 +149,7 @@ pub(crate) const CQO4_TERCEIRA: [Cqo4Rodada; 38] = [
 ];
 
 /// a segunda divisão, 38 rodadas de 31/jul a 20/mai; 18 rodadas com uma faixa de TV (dia 5, turno 1, 1 jogo)
-pub(crate) const CQO4_SEGUNDA: [Cqo4Rodada; 38] = [
+pub(crate) const SECOND_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (31, 6, 0, 5, 2, &[(5, 1, 1), (-1, -1, -1)]), // 0: 31/jul
     (7, 7, 0, 5, 2, &[(-1, -1, -1)]), // 1: 7/ago
     (13, 7, 0, 4, 2, &[(-1, -1, -1)]), // 2: 13/ago
@@ -191,7 +191,7 @@ pub(crate) const CQO4_SEGUNDA: [Cqo4Rodada; 38] = [
 ];
 
 /// a divisão de baixo (de fundo), a mesma tabela da segunda, com a faixa também nas duas últimas rodadas
-pub(crate) const CQO4_BAIXO: [Cqo4Rodada; 38] = [
+pub(crate) const LOWER_DIVISION_ROUNDS: [FraThirdLeagueRound; 38] = [
     (31, 6, 0, 5, 2, &[(5, 1, 1), (-1, -1, -1)]), // 0: 31/jul
     (7, 7, 0, 5, 2, &[(-1, -1, -1)]), // 1: 7/ago
     (13, 7, 0, 4, 2, &[(-1, -1, -1)]), // 2: 13/ago
@@ -232,18 +232,18 @@ pub(crate) const CQO4_BAIXO: [Cqo4Rodada; 38] = [
     (20, 4, 1, 5, 2, &[(5, 1, 1), (-1, -1, -1)]), // 37: 20/mai (+1 ano)
 ];
 
-pub(crate) const CQO4_LIGA_TERCEIRA: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 0x9ccc80, linha: 0xa6, tabela: &CQO4_TERCEIRA, ramo: "cqo_4 calendario da terceira francesa" };
-pub(crate) const CQO4_LIGA_SEGUNDA: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 0x9ccc0c, linha: 0xa7, tabela: &CQO4_SEGUNDA, ramo: "cqo_4 calendario da segunda francesa" };
-pub(crate) const CQO4_LIGA_BAIXO: Cqo4Liga = Cqo4Liga { rodadas: 0x26, arquivo: 0x9ccbd0, linha: 0xa9, tabela: &CQO4_BAIXO, ramo: "cqo_4 calendario da divisao de baixo francesa" };
+pub(crate) const FRENCH_THIRD_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rodadas: 0x26, arquivo: 0x9ccc80, linha: 0xa6, tabela: &FRENCH_THIRD_DIVISION_ROUNDS, ramo: "cqo_4 calendario da terceira francesa" };
+pub(crate) const FRENCH_SECOND_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rodadas: 0x26, arquivo: 0x9ccc0c, linha: 0xa7, tabela: &SECOND_DIVISION_ROUNDS, ramo: "cqo_4 calendario da segunda francesa" };
+pub(crate) const LOWER_DIVISION_LEAGUE: FraThirdSingleStageLeague = FraThirdSingleStageLeague { rodadas: 0x26, arquivo: 0x9ccbd0, linha: 0xa9, tabela: &LOWER_DIVISION_ROUNDS, ramo: "cqo_4 calendario da divisao de baixo francesa" };
 
 /// the National schedule: 38 rounds (home and away with 20 clubs), from 7 August to 20 May of the next year, mostly at
 /// weekends and some midweek; round 21 already on 7 January; no TV slots (no match moves day); main stage only
 /// Original: `FraThird::create_schedule` (0x5bfe30, fra_third.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5bfe30 } (thiscall, ret 0x10, fra_third.cpp, 1.948 bytes, método +0x3c): `FraThird::create_schedule(fase, &rodadas, &extra,
-/// &é_liga)`: o National, 38 rodadas (`CQO4_TERCEIRA`). Fonte 0x9ccc80, linha 0xa6.
+/// &é_liga)`: o National, 38 rodadas (`FRENCH_THIRD_DIVISION_ROUNDS`). Fonte 0x9ccc80, linha 0xa6.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_league_schedule(this, fase, rodadas, extra, liga, &CQO4_LIGA_TERCEIRA)
+    create_league_schedule(this, fase, rodadas, extra, liga, &FRENCH_THIRD_LEAGUE)
 }
 
 /// Comparer for `fra_third_create_schedule` (comparison mode: see the header of motor.rs).
@@ -259,9 +259,9 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_schedule(this: 
 /// Original: `FraLower::create_schedule` (0x5bd920, fra_lower.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x5bd920 } (thiscall, ret 0x10, fra_lower.cpp, 2.311 bytes, método +0x3c): `FraLower::create_schedule`: a divisão de
-/// baixo, 38 rodadas (`CQO4_BAIXO`). Fonte 0x9ccbd0, linha 0xa9.
+/// baixo, 38 rodadas (`LOWER_DIVISION_ROUNDS`). Fonte 0x9ccbd0, linha 0xa9.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule_5bd920(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_league_schedule(this, fase, rodadas, extra, liga, &CQO4_LIGA_BAIXO)
+    create_league_schedule(this, fase, rodadas, extra, liga, &LOWER_DIVISION_LEAGUE)
 }
 
 /// Comparer for `fra_third_create_schedule_5bd920` (comparison mode: see the header of motor.rs).
@@ -315,11 +315,11 @@ pub(crate) unsafe extern "thiscall" fn comparar_fra_third_create_table(this: usi
 /// [pt] { 0x5bfb40 } (thiscall, ret 8, fra_third.cpp): `FraThird::FraThird(ano, registro)`: a terceira divisão francesa (o
 /// National), disciplina 0xc, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
-    construct_division_league(this, ano, registro, &CQM5_FRANCA_3)
+    construct_division_league(this, ano, registro, &FRENCH_THIRD_DIVISION)
 }
 
 /// Comparer for `construct_fra_third` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_fra_third(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_THIRD);
-    compare_division_league_ctor("construct_fra_third", this, ano, registro, &CQM5_FRANCA_3, || o(this, ano, registro))
+    compare_division_league_ctor("construct_fra_third", this, ano, registro, &FRENCH_THIRD_DIVISION, || o(this, ano, registro))
 }

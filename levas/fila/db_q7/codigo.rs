@@ -21,7 +21,7 @@ unsafe fn nation_name_index(n: usize) -> usize {
 
 /// A nação que empresta nomes a cada grupo de língua (nação +0x77, 1..32): tabelas de salto 0x53a060 e
 /// 0x53a528 (iguais). O grupo 17 (0) sorteia entre [0x9cf484] e [0x9cf404].
-const NACOES_DO_GRUPO_DE_LINGUA: [usize; 32] = [
+const LANGUAGE_GROUP_NATIONS: [usize; 32] = [
     0x9cf204, 0x9cf458, 0x9cf448, 0x9cf298, 0x9cf2ac, 0x9cf2b8, 0x9cf338, 0x9cf2e4, 0x9cf2fc, 0x9cf300, 0x9cf314,
     0x9cf31c, 0x9cf35c, 0x9cf344, 0x9cf360, 0x9cf36c, 0, 0x9cf430, 0x9cf434, 0x9cf444, 0x9cf448, 0x9cf408,
     0x9cf2ac, 0x9cf488, 0x9cf4dc, 0x9cf270, 0x9cf3b8, 0x9cf428, 0x9cf470, 0x9cf4a8, 0x9cf348, 0x9cf2c0,
@@ -44,7 +44,7 @@ unsafe fn name_donor_nation(nacao: usize, conta: usize, inicio: usize) -> Option
         let id = if k == 16 {
             if scaled_crt_rand(2) != 0 { g(0x9cf484) } else { g(0x9cf404) }
         } else {
-            g(NACOES_DO_GRUPO_DE_LINGUA[k as usize])
+            g(LANGUAGE_GROUP_NATIONS[k as usize])
         };
         esi = nacao_de(id);
         if esi != 0 {

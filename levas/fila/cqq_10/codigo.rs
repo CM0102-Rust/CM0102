@@ -4,7 +4,7 @@
 /// `uefa_cup_rounds`): a 1ª rodada de qualificação em agosto, a 2ª no fim de agosto, a 1ª rodada em setembro, a 2ª
 /// em novembro, a 3ª em dezembro, as oitavas em fevereiro, as quartas e a semifinal em março e abril e a final em
 /// maio, todas em ida e volta menos a final.
-const CQQ10_UEFA: [Cql10R; 8] = [
+const UEFA_CUP_ROUNDS: [EngCcCupCupRound; 8] = [
     cql10r((0x1c, 6, 0, 4), (0xa, 7, 0, 3, 2, 0), 0xdc, (4, 0, 3), 7, (0x52, 0x29, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqq10: a 1ª rodada de qualificação da UEFA
     cql10r((0x19, 7, 0, 4), (0xe, 8, 0, 3, 2, 0), 0xa, (4, 0x400, 3), 7, (0x60, 0x30, 0x37, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
     cql10r((0x1d, 8, 0, 4), (0x13, 9, 0, 3, 2, 0), 0x14, (4, 0, 3), 7, (0x30, 0x18, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
@@ -16,16 +16,16 @@ const CQQ10_UEFA: [Cql10R; 8] = [
 ];
 
 /// A preliminar (só com `b` = +0xb2 > 0): sorteio em 28/6, jogo em 6/7; b times, b/2 jogos, b novos.
-const CQQ10_UEFA_PRELIMINAR: Cql10R =
+const UEFA_CUP_PRELIMINARY_ROUND: EngCcCupCupRound =
     cql10r((0x1c, 5, 0, 2), (6, 6, 0, 3, 2, 0), 0xa0, (0, 0x200, 3), 7, (0, 0, 0, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0));
 
 /// As rodadas da Copa da UEFA com `b` = +0xb2 (byte com sinal; as metades truncam como a original, cdq/sar): com b > 0
 /// a preliminar (b times, b/2 jogos, b novos) e depois as oito; na 1ª rodada de qualificação 0x52 − b/2 novos e b já
 /// inscritos, na 2ª b/2 + 0x52 inscritos, na 1ª rodada b/2 + 0x89 inscritos.
-fn uefa_cup_rounds(b: i8) -> ([Cql10R; 9], usize) {
-    let mut t = [CQQ10_UEFA_PRELIMINAR; 9];
+fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
+    let mut t = [UEFA_CUP_PRELIMINARY_ROUND; 9];
     let (b, m) = (b as i32, b as i32 / 2);
-    let mut u = CQQ10_UEFA;
+    let mut u = UEFA_CUP_ROUNDS;
     u[0].times.2 = (0x52 - m) as u16;
     u[0].times.3 = b as u16;
     u[1].times.3 = (m + 0x52) as u16;

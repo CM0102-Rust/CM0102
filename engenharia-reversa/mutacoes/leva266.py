@@ -32,7 +32,7 @@ MUTACOES = [
     ('cqc11_fora_livre', '            *((usadas.wrapping_add(b as usize)) as *mut u8) = 1; // cqc11: as nações com jogo perto da data', '            // mutacao: a de fora fica livre', 'cqc_11 nacoes com jogo'),
     ('cqc12_sem_convocar', '        convocar(this, p); // cqc12: as convocações para o jogo', '        // mutacao: sem convocar', 'cqc_12 convoca'),
     ('cqc12_reservas_em_fevereiro', '    if is_today(dma(pt, 1, 0, ano, u32::MAX), hoje) // cqc12: 1º de janeiro', '    if is_today(dma(pt, 1, 1, ano, u32::MAX), hoje) // mutacao: 1o de fevereiro', 'cqc_12 refaz as reservas'),
-    ('cqc12_vaga23_goleiro', '            c[i] = CQC12_EXTRAS[i - 22]; // cqc12: as vagas da correção', '            c[i] = 1; // mutacao: goleiro', 'cqc_12 correção do elenco de 23'),
+    ('cqc12_vaga23_goleiro', '            c[i] = SQUAD_SLOTS_24_EXTRAS[i - 22]; // cqc12: as vagas da correção', '            c[i] = 1; // mutacao: goleiro', 'cqc_12 correção do elenco de 23'),
     ('cqc12_idade_do_sub21', '    if t == 2 && read_u8(j + 0x18) as i8 > 0x17 { // cqc12: a idade do sub-21', '    if t == 2 && read_u8(j + 0x18) as i8 > 0x15 { // mutacao: 21', 'cqc_12 escala do elenco'),
     ('cqc12_convocado_sem_time', '            write_usize(j + 0x24, elenco); // cqc12: o convocado ganha o time', '            // mutacao: sem o time', 'cqc_12 escala do elenco'),
     ('cqc12_sem_marcar', '            mark_clubs_three_days(this, d); // cqc12: os clubes com jogo em volta da data', '            // mutacao: sem marcar', 'cqc_12 marca os clubes'),

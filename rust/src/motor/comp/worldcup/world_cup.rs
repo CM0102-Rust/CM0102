@@ -8,7 +8,7 @@ use super::*;
 
 /// As chaves das 32 nações do sorteio real de 2002 (os globais g_key_nation_*, índice na tabela de nações [0xae23a8],
 /// 0x122 bytes cada), na ordem em que a original as grava na lista: grupos A a H, quatro por grupo.
-pub(crate) const CQF4_SORTEIO_2002: [usize; 32] = [
+pub(crate) const WORLD_CUP_2002_DRAW: [usize; 32] = [
     KEY_NATION_FRANCE, KEY_NATION_SENEGAL, KEY_NATION_URUGUAY, KEY_NATION_DENMARK, // A: França, Senegal, Uruguai, Dinamarca
     KEY_NATION_SPAIN, KEY_NATION_SLOVENIA, KEY_NATION_PARAGUAY, KEY_NATION_SOUTH_AFRICA, // B: Espanha, Eslovênia, Paraguai, África do Sul
     KEY_NATION_BRAZIL, KEY_NATION_TURKEY, KEY_NATION_CHINA, KEY_NATION_COSTA_RICA, // C: Brasil, Turquia, China, Costa Rica
@@ -35,7 +35,7 @@ pub(crate) const CQF4_SORTEIO_2002: [usize; 32] = [
 ///    acha vaga e o laço não termina. A cópia repete o laço como a original, sem limite.
 /// 2) Os outros 24 (as vagas de +0x116, na ordem) caem em grupos sorteados (0x90cfc0(8)), cada grupo com no máximo
 ///    (k / 8) + 1 times quando o k-ésimo entra (k de 8 a 31): sorteia de novo enquanto o grupo já tem o limite.
-/// 3) Na Copa de 2002 (+0x40 = 2002), depois do sorteio, a lista vira o sorteio real (a ordem de `CQF4_SORTEIO_2002`:
+/// 3) Na Copa de 2002 (+0x40 = 2002), depois do sorteio, a lista vira o sorteio real (a ordem de `WORLD_CUP_2002_DRAW`:
 ///    o id do clube da seleção principal, 0x53b3d0 push nação; add esp -> cdecl), os grupos i/4 + 1, e a tabela das 32
 ///    nações da Copa ([+0x14], 6 bytes: +0 o clube, +4 a situação) recebe os clubes com a situação 6, a França (detentora)
 ///    2, a Coreia e o Japão (sedes) 1; +0x36 (quantas) = 32.
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         return lista;
     }
     crate::comparacao::ramo("cqf_4 sorteio de 2002");
-    for (i, &chave) in CQF4_SORTEIO_2002.iter().enumerate() { // cqf4: as nações do sorteio real
+    for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: as nações do sorteio real
         let nacao = read_u32_as_usize(G_NATION_TABLE).wrapping_add((read_u32_as_usize(chave) as i32).wrapping_mul(0x122) as usize);
         write_u32_from_usize(lista + i * 5, read_u32_as_usize(principal(nacao)));
     }
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_world_cup_set_predicted_position
 
 /// Os jogos de cada fase de grupos na tabela das rodadas (0x68a1c0: rodada, jogo, a, b, c, valor), na ordem da
 /// original, pela fase + 1 (a tabela de saltos 0x92ccd0: −1 é a própria Copa, o grupo 1; 0..6 os grupos 2..8).
-pub(crate) const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
+pub(crate) const WORLD_CUP_GROUP_GAMES: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
     [(0, 0, 2, 1, 3, 4), (0, 1, 2, 2, 3, 0x4000), (1, 0, 1, 1, 3, 0x1000), (1, 1, 1, 2, 3, 0x400), (2, 0, 1, 2, 3, 0x40), (2, 1, 1, 2, 3, 0x2000)],
     [(0, 0, 3, 1, 3, 0x1000), (0, 1, 3, 2, 3, 0x800), (1, 0, 2, 1, 3, 0x2000), (1, 1, 2, 2, 3, 0x4000), (2, 0, 1, 1, 3, 4), (2, 1, 1, 1, 3, 0x400)],
     [(0, 0, 4, 1, 3, 0x200), (0, 1, 4, 2, 3, 0x40), (1, 0, 3, 2, 3, 0x800), (1, 1, 3, 1, 3, 4), (2, 0, 2, 1, 3, 0x100), (2, 1, 2, 1, 3, 0x1000)],
@@ -534,7 +534,7 @@ pub(crate) const CQF6_JOGOS: [[(i32, i32, i32, i32, i32, u32); 6]; 8] = [
 /// fases de grupos (char < 7): é_liga (se pedido) = 1, rodadas = 3, id = 0x420 + fase; a tabela de 3 rodadas de 0x41
 /// bytes (0x944e46(0xc3); sem memória, a caixa da linha 0xcc e devolve 0), as datas (0x68a160: 12, 19 e 24 de junho
 /// do ano da Copa, levadas aos dias da semana 4, 4 e 2, código 1, valor 1), o jogo 2 de cada rodada vazio (−1) e os
-/// dois jogos de cada rodada da fase (`CQF6_JOGOS`). O mata-mata (fase 7, com as rotinas da copa) e as fases acima:
+/// dois jogos de cada rodada da fase (`WORLD_CUP_GROUP_GAMES`). O mata-mata (fase 7, com as rotinas da copa) e as fases acima:
 /// a original. Devolve a tabela.
 pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, fase: u32, rodadas: *mut i16, id: *mut i16, liga: *mut i32) -> usize {
     let f = fase as u8 as i8;
@@ -566,7 +566,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, fa
     jogo(t, 2, 2, -1, -1, -1, 0);
     let k = (f as i32 + 1) as u32;
     if k <= 7 {
-        for &(r, j, a, b, c, v) in CQF6_JOGOS[k as usize].iter() {
+        for &(r, j, a, b, c, v) in WORLD_CUP_GROUP_GAMES[k as usize].iter() {
             jogo(t, r, j, a, b, c, v);
         }
     }

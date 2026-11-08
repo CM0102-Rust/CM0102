@@ -6,7 +6,7 @@ use super::*;
 
 /// As datas de referência das decisões (Date::set 0x54a130: dia do mês, mês a partir de 0, ano 1997, sem dia da
 /// semana): o dia do ano delas vai ao +0x1f das entradas do laço seguinte.
-pub(crate) const CQO3_DATAS: [[u32; 4]; 7] = [
+pub(crate) const HOST_DECISION_DATES: [[u32; 4]; 7] = [
     [0xa, 0x6, 0x7cd, 0xffffffff], // cqo3: 10 de julho, a Copa do Mundo
     [0x14, 0x6, 0x7cd, 0xffffffff],
     [0x14, 0x6, 0x7cd, 0xffffffff],
@@ -21,7 +21,7 @@ pub(crate) const CQO3_DATAS: [[u32; 4]; 7] = [
 /// 2000..2028), a Copa Africana ([0x9cf7ac], 2000..2014 de 2 em 2), as Olimpíadas ([0x9cf7a0], 2000..2028), a Copa
 /// América ([0x9cf7a8], 1999..2009 de 2 em 2), [0x9cf95c] (1999..2004, ano a ano) e a Copa da Ásia ([0x9cf790],
 /// 2000..2016) [inferência: os nomes pelos endereços da comunidade, docs/ENDERECOS_COMUNIDADE.md].
-pub(crate) const CQO3_LACOS: [(u16, u8, u32, u16, u16, u8); 7] = [
+pub(crate) const HOST_COUNTRY_LOOPS: [(u16, u8, u32, u16, u16, u8); 7] = [
     (0x0, 8, KEY_CLUB_COMP_FIFA_WORLD_CUP as u32, 1998, 4, 0x20),
     (0x110, 8, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP as u32, 2000, 4, 0x20), // cqo3: a Eurocopa
     (0x220, 8, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS as u32, 2000, 2, 0x10), // cqo3: a Copa Africana
@@ -34,9 +34,9 @@ pub(crate) const CQO3_LACOS: [(u16, u8, u32, u16, u16, u8); 7] = [
 /// As gravações da tabela padrão, na ordem da original (geradas da desmontagem de 0x5f999a..0x5fa640): (deslocamento,
 /// tipo, valor); tipo 0 = dword do global `valor` (uma nação ou competição), 1 = dword `valor` (−1 = sem sede), 2 =
 /// byte (o +0x1e de cada entrada: 0/1 a candidatura escolhida, −1 votação aberta, −2 fechada, −3 a sede padrão
-/// fixa), 3 = word 0 (ano 0 e dia 0 das entradas sem edição), 4 = a data `CQO3_DATAS[valor]`, 5 = o laço
-/// `CQO3_LACOS[valor]`.
-pub(crate) const CQO3_TABELA: [(u16, u8, u32); 281] = [
+/// fixa), 3 = word 0 (ano 0 e dia 0 das entradas sem edição), 4 = a data `HOST_DECISION_DATES[valor]`, 5 = o laço
+/// `HOST_COUNTRY_LOOPS[valor]`.
+pub(crate) const HOST_COUNTRY_TABLE: [(u16, u8, u32); 281] = [
     (0x0, 4, 0x0), (0x0, 5, 0x0), (0x6, 0, KEY_NATION_FRANCE as u32), (0xa, 1, 0xffffffff), (0xe, 0, KEY_NATION_SPAIN as u32), (0x12, 1, 0xffffffff),
     (0x16, 0, KEY_NATION_PORTUGAL as u32), (0x1a, 1, 0xffffffff), (0x1e, 2, 0x0), (0x28, 0, KEY_NATION_SOUTH_KOREA as u32), (0x2c, 0, KEY_NATION_JAPAN as u32), (0x30, 0, KEY_NATION_ENGLAND as u32),
     (0x34, 1, 0xffffffff), (0x38, 0, KEY_NATION_ITALY as u32), (0x3c, 1, 0xffffffff), (0x40, 2, 0x0), (0x4a, 0, KEY_NATION_GERMANY as u32), (0x4e, 1, 0xffffffff),
@@ -96,13 +96,13 @@ pub(crate) const CQO3_TABELA: [(u16, u8, u32); 281] = [
 /// [pt] { 0x5f9970 } (thiscall, ret 0, host_country.cpp, `HostCountry::init_default_table`; pelo construtor 0x5f97c0, sem o
 /// HostCountry.tmp; quadro SEH só pela Data local): a tabela padrão das sedes (57 entradas de 0x22 bytes em [this],
 /// conta em +4: +0 a competição, +4 o ano, +6/+0xa, +0xe/+0x12, +0x16/+0x1a as três candidaturas (duas nações cada),
-/// +0x1e a escolhida, +0x1f o dia da decisão, +0x21 o intervalo entre edições), pelas gravações de `CQO3_TABELA`;
+/// +0x1e a escolhida, +0x1f o dia da decisão, +0x21 o intervalo entre edições), pelas gravações de `HOST_COUNTRY_TABLE`;
 /// depois o dia da decisão de cada entrada anda um sorteio de −35 a +34 (0x90cfc0(70)); a entrada que não é padrão
 /// fixa (−3) e tem segunda ou terceira candidatura completa leva a caixa (linha 0x226) e perde as duas.
 pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     let definir: unsafe extern "thiscall" fn(*mut crate::data::Data, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_SET);
     let mut d = crate::data::Data { dia: 40, ano: 1972, bissexto: 1 };
-    for &(off, t, v) in CQO3_TABELA.iter() {
+    for &(off, t, v) in HOST_COUNTRY_TABLE.iter() {
         let e = read_u32_as_usize(this) + off as usize;
         match t {
             0 => write_u32(e, read_u32_as_usize(v as usize) as u32),
@@ -110,11 +110,11 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
             2 => *(e as *mut u8) = v as u8,
             3 => write_u16(e, v as u16),
             4 => {
-                let a = CQO3_DATAS[v as usize];
+                let a = HOST_DECISION_DATES[v as usize];
                 definir(&mut d, a[0], a[1], a[2], a[3]);
             }
             _ => {
-                let (ini, n, g, ano, step_towards, intervalo) = CQO3_LACOS[v as usize];
+                let (ini, n, g, ano, step_towards, intervalo) = HOST_COUNTRY_LOOPS[v as usize];
                 let mut e = read_u32_as_usize(this) + ini as usize;
                 let mut y = ano;
                 for _ in 0..n {

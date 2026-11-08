@@ -17,9 +17,9 @@ fn count_hot_branch(n: &core::sync::atomic::AtomicU32, nome: &'static str) {
     }
 }
 
-static CQD12_BOSMAN: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
-static CQD12_FAIXA: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
-static CQD12_LONGE: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+static BRANCH_BOSMAN: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+static HOT_BRANCH_BAND: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
+static FAR_BAND_HITS: core::sync::atomic::AtomicU32 = core::sync::atomic::AtomicU32::new(0);
 
 /// { 0x84b6f0 } (thiscall, ret 0x10, shortlist_manager.cpp; o this não é lido): `shortlist_manager_is_compensation_deal(
 /// vaga, contrato, clube, &taxa)`, pela vaga da lista de compras (0x842e10, 0x840000), pelo relatório do olheiro
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
     if bosman(gerente, pessoa(contrato)) == 0 { // cqd12: sem a lei Bosman
         return 0;
     }
-    count_hot_branch(&CQD12_BOSMAN, "cqd_12 com lei Bosman");
+    count_hot_branch(&BRANCH_BOSMAN, "cqd_12 com lei Bosman");
     let t = compensacao(gerente, pessoa(contrato), clube, 1);
     *taxa = t;
     if t > cqd12_i(pessoa(contrato) + 0x52) {
@@ -68,11 +68,11 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
         5 | 6 => 0.8,
         7 | 8 => 0.9,
         _ => {
-            count_hot_branch(&CQD12_LONGE, "cqd_12 band longe");
+            count_hot_branch(&FAR_BAND_HITS, "cqd_12 band longe");
             return 1; // cqd12: as faixas 9-14
         }
     };
-    count_hot_branch(&CQD12_FAIXA, "cqd_12 band pelo fator");
+    count_hot_branch(&HOT_BRANCH_BAND, "cqd_12 band pelo fator");
     // fild [vaga+0xb]; fild [vaga+3]; fmul fator; fcompp: 1 se o +3 × fator passa do +0xb (precisão dupla)
     (cqd12_i(vaga + 3) as f64 * fator > cqd12_i(vaga + 0xb) as f64) as u32
 }

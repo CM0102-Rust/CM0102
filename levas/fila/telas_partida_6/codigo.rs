@@ -9,12 +9,12 @@ unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
     }
     crate::comparacao::ramo("telas abrir os jogos do dia");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
-    if abrir(GERENTE_DE_TELAS, vaga, 0x717db0, 0x718930, 0, 0, 0) == 0 {
+    if abrir(SCREEN_MANAGER, vaga, 0x717db0, 0x718930, 0, 0, 0) == 0 {
         return;
     }
     let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(0x7ff130usize);
     for (k, v) in [(1u32, grupo), (2, 0), (3, 0), (4, 1)] {
-        gravar(GERENTE_DE_TELAS, vaga, k, v, 0);
+        gravar(SCREEN_MANAGER, vaga, k, v, 0);
     }
 }
 
@@ -36,7 +36,7 @@ unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
     };
     if i != -1 {
         let converter: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x803320usize);
-        set_screen_param(2, converter(GERENTE_DE_TELAS, get_screen_param(3)));
+        set_screen_param(2, converter(SCREEN_MANAGER, get_screen_param(3)));
     }
     match id(i) {
         1 => {

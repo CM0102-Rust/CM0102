@@ -33,7 +33,7 @@ unsafe fn injury_is_national_team(clube: usize) -> bool {
 
 /// Um surto (17 bytes, vetor [this+0x1c], capacidade +0x20, conta +0x24): +0 a data (8 bytes), +8 o tipo da doença,
 /// +9 o índice do clube, +0xd o id da partida (−1 sem).
-const CPP8_SURTO: usize = 0x11;
+const OUTBREAK_SIZE: usize = 0x11;
 
 /// Se o surto entra (os sorteios da 0x62e820, na ordem): tipo 4 nunca; tipo 3 só com 1 em 15 (sorteio de 15 = 0); os
 /// outros com 3 em 4 (sorteio de 4 ≠ 0); e nunca numa seleção (0x53b900).
@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
     if cpp8_i(this + 0x24) >= cap {
         let cap = cap.wrapping_add(30);
         core::ptr::write_unaligned((this + 0x20) as *mut i32, cap);
-        let tamanho = (cap as u32).wrapping_mul(CPP8_SURTO as u32);
+        let tamanho = (cap as u32).wrapping_mul(OUTBREAK_SIZE as u32);
         let v = cpp8_d(this + 0x1c);
         let novo = if v != 0 {
             let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
             return;
         }
     }
-    let e = cpp8_d(this + 0x1c).wrapping_add((cpp8_i(this + 0x24) as usize).wrapping_mul(CPP8_SURTO));
+    let e = cpp8_d(this + 0x1c).wrapping_add((cpp8_i(this + 0x24) as usize).wrapping_mul(OUTBREAK_SIZE));
     let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut rascunho = [0u8; 8];
     copiar(e, rascunho.as_mut_ptr(), data);
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
     let n = cpp8_i(this + 0x24).wrapping_add(1);
     core::ptr::write_unaligned((this + 0x24) as *mut i32, n);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    ordenar(cpp8_d(this + 0x1c), n as u32, CPP8_SURTO as u32, 0x778e90);
+    ordenar(cpp8_d(this + 0x1c), n as u32, OUTBREAK_SIZE as u32, 0x778e90);
 }
 
 /// A data de cinco dias atrás (0x54c8e0 sobre a data do jogo).
@@ -163,12 +163,12 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
             }
         }
         k += 1;
-        off += CPP8_SURTO;
+        off += OUTBREAK_SIZE;
     }
     let n = cpp8_i(this + 0x24);
     if removidos != 0 && removidos != n {
         let base = cpp8_d(this + 0x1c);
-        core::ptr::copy((base + removidos as usize * CPP8_SURTO) as *const u8, base as *mut u8, (n - removidos) as usize * CPP8_SURTO);
+        core::ptr::copy((base + removidos as usize * OUTBREAK_SIZE) as *const u8, base as *mut u8, (n - removidos) as usize * OUTBREAK_SIZE);
     }
     core::ptr::write_unaligned((this + 0x24) as *mut i32, n - removidos);
 }
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usi
     let depois_do_plano = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
     estado.escrever();
     let n0 = cpp8_i(this + 0x24);
-    let mut esperado = [0u8; CPP8_SURTO];
+    let mut esperado = [0u8; OUTBREAK_SIZE];
     esperado[..8].copy_from_slice(&*(data as *const [u8; 8]));
     esperado[8] = tipo as u8;
     esperado[9..13].copy_from_slice(&clube_i.to_le_bytes());
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_add_illness_outbreak(this: usize, data: usi
     let mesmo_sorteio = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO) == depois_do_plano;
     let v = cpp8_d(this + 0x1c);
     let ok = if entra && v != 0 {
-        n == n0 + 1 && (0..n.max(0) as usize).any(|k| *((v + k * CPP8_SURTO) as *const [u8; CPP8_SURTO]) == esperado)
+        n == n0 + 1 && (0..n.max(0) as usize).any(|k| *((v + k * OUTBREAK_SIZE) as *const [u8; OUTBREAK_SIZE]) == esperado)
     } else {
         n == n0
     };
@@ -254,7 +254,7 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
     let hoje4 = cpp8_d(0xae2c90) as u32;
     let mut saem = 0;
     for k in 0..n0.max(0) as usize {
-        let e = cpp8_d(this + 0x1c) + k * CPP8_SURTO;
+        let e = cpp8_d(this + 0x1c) + k * OUTBREAK_SIZE;
         let (ano_e, ano_h) = (cpp8_w(e + 2) as u16, (hoje4 >> 16) as u16);
         if ano_h < ano_e || (ano_h == ano_e && (hoje4 as u16 as i16) < cpp8_w(e)) {
             break;
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn comparar_spread_illness_outbreaks(this: usize) {
     }
     o(this);
     let n = cpp8_i(this + 0x24);
-    let velho = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, cpp8_d(this + 0x1c) + k * CPP8_SURTO));
+    let velho = (0..n.max(0) as usize).find(|&k| is_after_outbreak(&cinco, cpp8_d(this + 0x1c) + k * OUTBREAK_SIZE));
     PLACAR.registrar(velho.is_none() && n >= n0 - saem, || {
         format!("spread_illness_outbreaks: conta {} -> {} (saem {}), surto velho {:?}", n0, n, saem, velho)
     });

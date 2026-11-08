@@ -4,14 +4,14 @@ use super::*;
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-pub(crate) type Cqp5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type EngFirstScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Sets dates and match slots of the rounds from `primeira` in table t (League round set_date / set_match_slot).
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqp5Rodada]) {
+pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[EngFirstScheduleRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -29,18 +29,18 @@ pub(crate) unsafe fn eng_first_set_league_rounds(t: usize, ano: u32, primeira: i
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-pub(crate) struct Cqp5Natal {
-    pub(crate) comeco: &'static [Cqp5Rodada],
+pub(crate) struct EngFirstChristmasSchedule {
+    pub(crate) comeco: &'static [EngFirstScheduleRound],
     pub(crate) referencia: usize,
     pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [Cqp5Rodada]; 8],
-    pub(crate) fim: &'static [Cqp5Rodada],
+    pub(crate) casos: [&'static [EngFirstScheduleRound]; 8],
+    pub(crate) fim: &'static [EngFirstScheduleRound],
     pub(crate) linha: u32,
 }
 
 /// Sets the rounds around Christmas: start rounds, the middle block chosen by the weekday of the reference date, and
 /// end rounds.
-pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, ano: u32, n: &Cqp5Natal, arquivo: usize) {
+pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, ano: u32, n: &EngFirstChristmasSchedule, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     eng_first_set_league_rounds(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -90,7 +90,7 @@ pub(crate) unsafe fn eng_first_compare_round_table(nome: &str, fase: u32, rodada
 }
 
 /// a primeira divisão inglesa: as rodadas antes do Natal
-pub(crate) const CQP5_PRIMEIRA_COMECO: [Cqp5Rodada; 23] = [
+pub(crate) const FIRST_DIVISION_START: [EngFirstScheduleRound; 23] = [
     (12, 7, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 0: 12/ago
     (19, 7, 0, 5, 1, &[(6, 1, 2), (-1, -1, -1)]), // 1: 19/ago
     (26, 7, 0, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 2: 26/ago
@@ -117,7 +117,7 @@ pub(crate) const CQP5_PRIMEIRA_COMECO: [Cqp5Rodada; 23] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 13/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_0: [Cqp5Rodada; 4] = [
+pub(crate) const FIRST_DIVISION_CHRISTMAS_0: [EngFirstScheduleRound; 4] = [
     (20, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 20/dez
     (27, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 27/dez
     (30, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 30/dez
@@ -125,7 +125,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_0: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 14/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_1: [Cqp5Rodada; 4] = [
+pub(crate) const FIRST_DIVISION_CHRISTMAS_ROUNDS_1: [EngFirstScheduleRound; 4] = [
     (21, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 28/dez
@@ -133,7 +133,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_1: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 15/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_2: [Cqp5Rodada; 4] = [
+pub(crate) const DIVISION_ONE_CHRISTMAS_ROUNDS_2: [EngFirstScheduleRound; 4] = [
     (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (29, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 29/dez
@@ -141,7 +141,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_2: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 16/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_3: [Cqp5Rodada; 4] = [
+pub(crate) const FIRST_DIVISION_CHRISTMAS_3: [EngFirstScheduleRound; 4] = [
     (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 23/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (30, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 30/dez
@@ -149,7 +149,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_3: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 17/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_4: [Cqp5Rodada; 4] = [
+pub(crate) const FIRST_DIVISION_CHRISTMAS_ROUNDS_4: [EngFirstScheduleRound; 4] = [
     (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (31, 11, 0, -1, 1, &[(-1, -1, -1)]), // 25: 31/dez
@@ -157,7 +157,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_4: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 18/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_5: [Cqp5Rodada; 4] = [
+pub(crate) const DIVISION_ONE_CHRISTMAS_ROUNDS_5: [EngFirstScheduleRound; 4] = [
     (22, 11, 0, -1, 2, &[(-1, -1, -1)]), // 23: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 24: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 25: 28/dez
@@ -165,7 +165,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_5: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 22 (a de referência) cai em 19/dez
-pub(crate) const CQP5_PRIMEIRA_NATAL_6: [Cqp5Rodada; 4] = [
+pub(crate) const FIRST_DIVISION_CHRISTMAS_6: [EngFirstScheduleRound; 4] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 23: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 24: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
@@ -173,7 +173,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_6: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 22 fora de 13 a 19/dez: a caixa)
-pub(crate) const CQP5_PRIMEIRA_NATAL_PADRAO: [Cqp5Rodada; 4] = [
+pub(crate) const FIRST_DIVISION_CHRISTMAS_ROUNDS_DEFAULT: [EngFirstScheduleRound; 4] = [
     (26, 11, 0, 5, 1, &[(-1, -1, -1)]), // 23: 26/dez
     (28, 11, 0, 0, 2, &[(-1, -1, -1)]), // 24: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 25: 2/jan (+1 ano)
@@ -181,7 +181,7 @@ pub(crate) const CQP5_PRIMEIRA_NATAL_PADRAO: [Cqp5Rodada; 4] = [
 ];
 
 /// a primeira divisão inglesa: as rodadas depois do Natal
-pub(crate) const CQP5_PRIMEIRA_FIM: [Cqp5Rodada; 19] = [
+pub(crate) const FIRST_DIVISION_LATE_ROUNDS: [EngFirstScheduleRound; 19] = [
     (13, 0, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 27: 13/jan (+1 ano)
     (20, 0, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 28: 20/jan (+1 ano)
     (3, 1, 1, 5, 1, &[(4, 2, 2), (6, 1, 2), (-1, -1, -1)]), // 29: 3/fev (+1 ano)
@@ -204,7 +204,7 @@ pub(crate) const CQP5_PRIMEIRA_FIM: [Cqp5Rodada; 19] = [
 ];
 
 /// a Premiership: as rodadas antes do Natal
-pub(crate) const CQP5_PREMIERSHIP_COMECO: [Cqp5Rodada; 18] = [
+pub(crate) const PREMIERSHIP_EARLY_ROUNDS: [EngFirstScheduleRound; 18] = [
     (19, 7, 0, 5, 1, &[(-1, -1, -1)]), // 0: 19/ago
     (23, 7, 0, 2, 2, &[(1, 2, 2), (-1, -1, -1)]), // 1: 23/ago
     (26, 7, 0, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 2: 26/ago
@@ -226,7 +226,7 @@ pub(crate) const CQP5_PREMIERSHIP_COMECO: [Cqp5Rodada; 18] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 13/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_0: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_ROUNDS_0: [EngFirstScheduleRound; 4] = [
     (20, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 20/dez
     (27, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 27/dez
     (30, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 30/dez
@@ -234,7 +234,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_0: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 14/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_1: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_ROUNDS_1: [EngFirstScheduleRound; 4] = [
     (21, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
     (28, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 28/dez
@@ -242,7 +242,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_1: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 15/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_2: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_2: [EngFirstScheduleRound; 4] = [
     (22, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
     (29, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 29/dez
@@ -250,7 +250,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_2: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 16/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_3: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_ROUNDS_3: [EngFirstScheduleRound; 4] = [
     (23, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 23/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
     (30, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 30/dez
@@ -258,7 +258,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_3: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 17/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_4: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_ROUNDS_4: [EngFirstScheduleRound; 4] = [
     (21, 11, 0, -1, 2, &[(-1, -1, -1)]), // 18: 21/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
     (31, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 31/dez
@@ -266,7 +266,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_4: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 18/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_5: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_5: [EngFirstScheduleRound; 4] = [
     (22, 11, 0, -1, 2, &[(-1, -1, -1)]), // 18: 22/dez
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 19: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 28/dez
@@ -274,7 +274,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_5: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal quando a rodada 17 (a de referência) cai em 19/dez
-pub(crate) const CQP5_PREMIERSHIP_NATAL_6: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_ROUNDS_6: [EngFirstScheduleRound; 4] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 18: 26/dez
     (28, 11, 0, -1, 2, &[(-1, -1, -1)]), // 19: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 20: 2/jan (+1 ano)
@@ -282,7 +282,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_6: [Cqp5Rodada; 4] = [
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 17 fora de 13 a 19/dez: a caixa)
-pub(crate) const CQP5_PREMIERSHIP_NATAL_PADRAO: [Cqp5Rodada; 4] = [
+pub(crate) const PREMIERSHIP_CHRISTMAS_ROUNDS_DEFAULT: [EngFirstScheduleRound; 4] = [
     (26, 11, 0, 5, 1, &[(-1, -1, -1)]), // 18: 26/dez
     (28, 11, 0, 0, 2, &[(-1, -1, -1)]), // 19: 28/dez
     (2, 0, 1, -1, 1, &[(-1, -1, -1)]), // 20: 2/jan (+1 ano)
@@ -290,7 +290,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL_PADRAO: [Cqp5Rodada; 4] = [
 ];
 
 /// a Premiership: as rodadas depois do Natal
-pub(crate) const CQP5_PREMIERSHIP_FIM: [Cqp5Rodada; 16] = [
+pub(crate) const PREMIERSHIP_LATE_ROUNDS: [EngFirstScheduleRound; 16] = [
     (13, 0, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 22: 13/jan (+1 ano)
     (20, 0, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 23: 20/jan (+1 ano)
     (31, 0, 1, 5, 1, &[(6, 1, 2), (6, 1, 2), (0, 2, 2), (-1, -1, -1)]), // 24: 31/jan (+1 ano)
@@ -309,10 +309,10 @@ pub(crate) const CQP5_PREMIERSHIP_FIM: [Cqp5Rodada; 16] = [
     (20, 4, 1, 6, 1, &[(-1, -1, -1)]), // 37: 20/mai (+1 ano)
 ];
 
-pub(crate) const CQP5_PRIMEIRA_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_PRIMEIRA_COMECO, referencia: 22, ajuste: 13, casos: [&CQP5_PRIMEIRA_NATAL_0, &CQP5_PRIMEIRA_NATAL_1, &CQP5_PRIMEIRA_NATAL_2, &CQP5_PRIMEIRA_NATAL_3, &CQP5_PRIMEIRA_NATAL_4, &CQP5_PRIMEIRA_NATAL_5, &CQP5_PRIMEIRA_NATAL_6, &CQP5_PRIMEIRA_NATAL_PADRAO], fim: &CQP5_PRIMEIRA_FIM, linha: 0x17c };
-pub(crate) const CQP5_PRIMEIRA_PLAYOFF_0: Cql10R = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
-pub(crate) const CQP5_PRIMEIRA_PLAYOFF_1: Cql10R = cql10r((0x11, 4, 1, 3), (0x1c, 4, 1, 0, 2, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
-pub(crate) const CQP5_PREMIERSHIP_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_PREMIERSHIP_COMECO, referencia: 17, ajuste: 13, casos: [&CQP5_PREMIERSHIP_NATAL_0, &CQP5_PREMIERSHIP_NATAL_1, &CQP5_PREMIERSHIP_NATAL_2, &CQP5_PREMIERSHIP_NATAL_3, &CQP5_PREMIERSHIP_NATAL_4, &CQP5_PREMIERSHIP_NATAL_5, &CQP5_PREMIERSHIP_NATAL_6, &CQP5_PREMIERSHIP_NATAL_PADRAO], fim: &CQP5_PREMIERSHIP_FIM, linha: 0x173 };
+pub(crate) const DIVISION_ONE_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChristmasSchedule { comeco: &FIRST_DIVISION_START, referencia: 22, ajuste: 13, casos: [&FIRST_DIVISION_CHRISTMAS_0, &FIRST_DIVISION_CHRISTMAS_ROUNDS_1, &DIVISION_ONE_CHRISTMAS_ROUNDS_2, &FIRST_DIVISION_CHRISTMAS_3, &FIRST_DIVISION_CHRISTMAS_ROUNDS_4, &DIVISION_ONE_CHRISTMAS_ROUNDS_5, &FIRST_DIVISION_CHRISTMAS_6, &FIRST_DIVISION_CHRISTMAS_ROUNDS_DEFAULT], fim: &FIRST_DIVISION_LATE_ROUNDS, linha: 0x17c };
+pub(crate) const DIVISION_ONE_PLAYOFF_0: EngCcCupCupRound = cql10r((7, 4, 1, 0), (0xc, 4, 1, 5, 1, 0), 0x82, (0, 0x204, 3), 5, (4, 2, 4, 0), (0, 2, 4), (0, 0, 0));
+pub(crate) const FIRST_DIVISION_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1, 3), (0x1c, 4, 1, 0, 2, 4), 0x96, (0, 3, 0), 5, (2, 1, 0, 0), (0, 1, 0), (0, 0, 0));
+pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChristmasSchedule { comeco: &PREMIERSHIP_EARLY_ROUNDS, referencia: 17, ajuste: 13, casos: [&PREMIERSHIP_CHRISTMAS_ROUNDS_0, &PREMIERSHIP_CHRISTMAS_ROUNDS_1, &PREMIERSHIP_CHRISTMAS_2, &PREMIERSHIP_CHRISTMAS_ROUNDS_3, &PREMIERSHIP_CHRISTMAS_ROUNDS_4, &PREMIERSHIP_CHRISTMAS_5, &PREMIERSHIP_CHRISTMAS_ROUNDS_6, &PREMIERSHIP_CHRISTMAS_ROUNDS_DEFAULT], fim: &PREMIERSHIP_LATE_ROUNDS, linha: 0x173 };
 
 /// the Division One schedule: the same 46 dates as Division Two, with TV slots (usually one or two matches on day 6 or
 /// 4, slot 1 or 2); the same Christmas by the day of the 16 December round. The promotion play-offs (stage 0):
@@ -321,7 +321,7 @@ pub(crate) const CQP5_PREMIERSHIP_NATAL: Cqp5Natal = Cqp5Natal { comeco: &CQP5_P
 /// Original: `EngFirst::create_schedule` (0x571980, eng_first.cpp, thiscall, ret 0x10).
 ///
 /// [pt] { 0x571980 } (thiscall, ret 0x10, eng_first.cpp, 4.688 bytes, método +0x3c): `EngFirst::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`CQP5_PRIMEIRA_NATAL`, as datas da segunda com faixas de TV);
+/// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_ONE_CHRISTMAS`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
 pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fa
             }
             crate::comparacao::ramo("cqp_5 calendario da primeira inglesa");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
-            eng_first_set_christmas_rounds(t, ano, &CQP5_PRIMEIRA_NATAL, 0x9c4374);
+            eng_first_set_christmas_rounds(t, ano, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
         }
         0 => {
@@ -355,8 +355,8 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fa
             }
             crate::comparacao::ramo("cqp_5 play-offs da primeira inglesa");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-            eng_cc_cup_write_cup_round(t, 0, &CQP5_PRIMEIRA_PLAYOFF_0, ano);
-            eng_cc_cup_write_cup_round(t, 1, &CQP5_PRIMEIRA_PLAYOFF_1, ano);
+            eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, ano);
+            eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, ano);
             t
         }
         _ => 0,
@@ -519,13 +519,13 @@ pub(crate) unsafe extern "thiscall" fn comparar_eng_first_advance_stage(this: us
 /// [pt] { 0x571680 } (thiscall, ret 8, eng_first.cpp): `EngFirst::EngFirst(ano, registro)`. A First Division: 1 fase além da
 /// liga (o play-off de acesso), sem estádio mínimo.
 pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
-    construct_english_division(this, ano, registro, &CQL6_FIRST)
+    construct_english_division(this, ano, registro, &FIRST_DIVISION)
 }
 
 /// Comparer for `construct_eng_first` (comparison mode: see the header of motor.rs).
 pub(crate) unsafe extern "thiscall" fn comparar_construct_eng_first(this: usize, ano: u32, registro: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_ENG_FIRST);
-    compare_english_constructor("construct_eng_first", this, ano, registro, &CQL6_FIRST, || o(this, ano, registro))
+    compare_english_constructor("construct_eng_first", this, ano, registro, &FIRST_DIVISION, || o(this, ano, registro))
 }
 
 /// the First (24): the top 2 go up directly, 3rd to 6th go to the promotion play-offs, the bottom 3 go down to the

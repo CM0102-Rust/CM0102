@@ -4,14 +4,14 @@ use super::*;
 /// Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
 /// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
 /// quantos jogos; a lista termina em −1).
-pub(crate) type Cqq5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
+pub(crate) type SpaLowerLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Writes league rounds from `primeira` in table t: date (0x68a160) and match slots (0x68a1c0) for each.
 ///
 /// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
-pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqq5Rodada]) {
+pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[SpaLowerLeagueRound]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
@@ -29,18 +29,18 @@ pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, ano: u32, primeira: i
 /// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
 /// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
 /// caso padrão (o oitavo); depois as do fim.
-pub(crate) struct Cqq5Natal {
-    pub(crate) comeco: &'static [Cqq5Rodada],
+pub(crate) struct SpaLowerChristmasSchedule {
+    pub(crate) comeco: &'static [SpaLowerLeagueRound],
     pub(crate) referencia: usize,
     pub(crate) ajuste: i32,
-    pub(crate) casos: [&'static [Cqq5Rodada]; 8],
-    pub(crate) fim: &'static [Cqq5Rodada],
+    pub(crate) casos: [&'static [SpaLowerLeagueRound]; 8],
+    pub(crate) fim: &'static [SpaLowerLeagueRound],
     pub(crate) linha: u32,
 }
 
 /// Writes the start rounds, then a middle block chosen by the weekday offset of a reference round from a December date
 /// [inference: winter break], then the end rounds.
-pub(crate) unsafe fn set_rounds_around_christmas(t: usize, ano: u32, n: &Cqq5Natal, arquivo: usize) {
+pub(crate) unsafe fn set_rounds_around_christmas(t: usize, ano: u32, n: &SpaLowerChristmasSchedule, arquivo: usize) {
     let construir: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     spa_lower_set_league_rounds(t, ano, 0, n.comeco);
     let mut d = [0u16; 4];
@@ -91,7 +91,7 @@ pub(crate) unsafe fn compare_round_table_any_stage(nome: &str, fase: u32, rodada
 }
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_COMECO: [Cqq5Rodada; 17] = [
+pub(crate) const LOWER_EVEN_YEAR_START: [SpaLowerLeagueRound; 17] = [
     (30, 7, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 0: 30/ago
     (6, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 1: 6/set
     (13, 8, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 2: 13/set
@@ -112,47 +112,47 @@ pub(crate) const CQQ5_BAIXO_PAR_COMECO: [Cqq5Rodada; 17] = [
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 17/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_0: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS_0: [SpaLowerLeagueRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 18/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_1: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_CHRISTMAS_ROUNDS_1: [SpaLowerLeagueRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 19/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_2: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_2: [SpaLowerLeagueRound; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 17: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 20/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_3: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS_3: [SpaLowerLeagueRound; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 21/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_4: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_CHRISTMAS_ROUNDS_4: [SpaLowerLeagueRound; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 22/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_5: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_5: [SpaLowerLeagueRound; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 16 (a de referência) cai em 23/dez (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_6: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS_6: [SpaLowerLeagueRound; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 16 fora de 17 a 23/dez: a caixa) (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_NATAL_PADRAO: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_EVEN_CHRISTMAS_ROUNDS_DEFAULT: [SpaLowerLeagueRound; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 17: 27/dez
 ];
 
 /// a divisão de baixo espanhola: as rodadas depois do Natal (ano par)
-pub(crate) const CQQ5_BAIXO_PAR_FIM: [Cqq5Rodada; 24] = [
+pub(crate) const LOWER_EVEN_LATE_ROUNDS: [SpaLowerLeagueRound; 24] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 18: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 19: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (5, 1, 3), (5, 1, 3), (-1, -1, -1)]), // 20: 17/jan (+1 ano)
@@ -180,7 +180,7 @@ pub(crate) const CQQ5_BAIXO_PAR_FIM: [Cqq5Rodada; 24] = [
 ];
 
 /// a divisão de baixo espanhola: as rodadas antes do Natal (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_COMECO: [Cqq5Rodada; 20] = [
+pub(crate) const LOWER_ODD_EARLY_ROUNDS: [SpaLowerLeagueRound; 20] = [
     (16, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 0: 16/ago
     (23, 7, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 1: 23/ago
     (26, 7, 0, 2, 2, &[(-1, -1, -1)]), // 2: 26/ago
@@ -204,47 +204,47 @@ pub(crate) const CQQ5_BAIXO_IMPAR_COMECO: [Cqq5Rodada; 20] = [
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 17/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_0: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_CHRISTMAS_ROUNDS_0: [SpaLowerLeagueRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 18/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_1: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_1: [SpaLowerLeagueRound; 1] = [
     (26, 11, 0, -1, 2, &[(-1, -1, -1)]), // 20: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 19/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_2: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS_2: [SpaLowerLeagueRound; 1] = [
     (26, 11, 0, -1, 1, &[(-1, -1, -1)]), // 20: 26/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 20/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_3: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_CHRISTMAS_ROUNDS_3: [SpaLowerLeagueRound; 1] = [
     (27, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 27/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 21/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_4: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_4: [SpaLowerLeagueRound; 1] = [
     (28, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 28/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 22/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_5: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS_5: [SpaLowerLeagueRound; 1] = [
     (29, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 29/dez
 ];
 
 /// as rodadas do Natal quando a rodada 19 (a de referência) cai em 23/dez (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_6: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_CHRISTMAS_ROUNDS_6: [SpaLowerLeagueRound; 1] = [
     (30, 11, 0, -1, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 30/dez
 ];
 
 /// as rodadas do Natal no caso padrão (a rodada 19 fora de 17 a 23/dez: a caixa) (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL_PADRAO: [Cqq5Rodada; 1] = [
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_DEFAULT: [SpaLowerLeagueRound; 1] = [
     (27, 11, 0, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 20: 27/dez
 ];
 
 /// a divisão de baixo espanhola: as rodadas depois do Natal (ano impar)
-pub(crate) const CQQ5_BAIXO_IMPAR_FIM: [Cqq5Rodada; 21] = [
+pub(crate) const LOWER_ODD_YEAR_LATE_ROUNDS: [SpaLowerLeagueRound; 21] = [
     (3, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 21: 3/jan (+1 ano)
     (10, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 22: 10/jan (+1 ano)
     (17, 0, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 23: 17/jan (+1 ano)
@@ -268,8 +268,8 @@ pub(crate) const CQQ5_BAIXO_IMPAR_FIM: [Cqq5Rodada; 21] = [
     (16, 4, 1, 6, 1, &[(5, 1, 1), (-1, -1, -1)]), // 41: 16/mai (+1 ano)
 ];
 
-pub(crate) const CQQ5_BAIXO_PAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_PAR_COMECO, referencia: 16, ajuste: 17, casos: [&CQQ5_BAIXO_PAR_NATAL_0, &CQQ5_BAIXO_PAR_NATAL_1, &CQQ5_BAIXO_PAR_NATAL_2, &CQQ5_BAIXO_PAR_NATAL_3, &CQQ5_BAIXO_PAR_NATAL_4, &CQQ5_BAIXO_PAR_NATAL_5, &CQQ5_BAIXO_PAR_NATAL_6, &CQQ5_BAIXO_PAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_PAR_FIM, linha: 0x128 };
-pub(crate) const CQQ5_BAIXO_IMPAR_NATAL: Cqq5Natal = Cqq5Natal { comeco: &CQQ5_BAIXO_IMPAR_COMECO, referencia: 19, ajuste: 17, casos: [&CQQ5_BAIXO_IMPAR_NATAL_0, &CQQ5_BAIXO_IMPAR_NATAL_1, &CQQ5_BAIXO_IMPAR_NATAL_2, &CQQ5_BAIXO_IMPAR_NATAL_3, &CQQ5_BAIXO_IMPAR_NATAL_4, &CQQ5_BAIXO_IMPAR_NATAL_5, &CQQ5_BAIXO_IMPAR_NATAL_6, &CQQ5_BAIXO_IMPAR_NATAL_PADRAO], fim: &CQQ5_BAIXO_IMPAR_FIM, linha: 0x237 };
+pub(crate) const LOWER_EVEN_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_EVEN_YEAR_START, referencia: 16, ajuste: 17, casos: [&LOWER_EVEN_YEAR_CHRISTMAS_0, &LOWER_EVEN_CHRISTMAS_ROUNDS_1, &LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_2, &LOWER_EVEN_YEAR_CHRISTMAS_3, &LOWER_EVEN_CHRISTMAS_ROUNDS_4, &LOWER_EVEN_YEAR_CHRISTMAS_ROUNDS_5, &LOWER_EVEN_YEAR_CHRISTMAS_6, &LOWER_EVEN_CHRISTMAS_ROUNDS_DEFAULT], fim: &LOWER_EVEN_LATE_ROUNDS, linha: 0x128 };
+pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_ODD_EARLY_ROUNDS, referencia: 19, ajuste: 17, casos: [&LOWER_ODD_CHRISTMAS_ROUNDS_0, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_1, &LOWER_ODD_YEAR_CHRISTMAS_2, &LOWER_ODD_CHRISTMAS_ROUNDS_3, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_4, &LOWER_ODD_YEAR_CHRISTMAS_5, &LOWER_ODD_CHRISTMAS_ROUNDS_6, &LOWER_ODD_YEAR_CHRISTMAS_ROUNDS_DEFAULT], fim: &LOWER_ODD_YEAR_LATE_ROUNDS, linha: 0x237 };
 
 /// the Spanish lower division schedule (background): 42 rounds, nearly all on Sunday (day 6); in odd years (2001/02)
 /// from 16 August to 16 May, in even years from 30 August to 6 June; in each, one fixed-date Christmas round chosen by
@@ -296,9 +296,9 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, fa
             crate::comparacao::ramo("cqq_5 calendario da divisao de baixo espanhola");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
-                set_rounds_around_christmas(t, ano, &CQQ5_BAIXO_IMPAR_NATAL, 0xa82880);
+                set_rounds_around_christmas(t, ano, &LOWER_ODD_YEAR_CHRISTMAS, 0xa82880);
             } else {
-                set_rounds_around_christmas(t, ano, &CQQ5_BAIXO_PAR_NATAL, 0xa82880);
+                set_rounds_around_christmas(t, ano, &LOWER_EVEN_YEAR_CHRISTMAS, 0xa82880);
             }
             t
         }

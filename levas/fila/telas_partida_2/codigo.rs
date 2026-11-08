@@ -2,15 +2,15 @@
 
 /// O gerente de telas (o objeto [0xb74450], que tem a vaga da tela atual em +0x382a e um `Display` por
 /// vaga em +0x7fc + 0x300 x vaga).
-const GERENTE_DE_TELAS: usize = 0xb74450;
+const SCREEN_MANAGER: usize = 0xb74450;
 
 /// As regiões que a montagem de uma tela mexe: o gerente de telas (0x3840 bytes) e o `Display` da tela
 /// atual (a lista de exibição: itens de 0x18c bytes em +0xba95e, quantos em +0x12e9a0; 0x12f550 bytes).
 unsafe fn screen_build_regions() -> Vec<(usize, usize)> {
-    let vaga = *((GERENTE_DE_TELAS + 0x382a) as *const i16);
-    let mut r = vec![(GERENTE_DE_TELAS, 0x3840)];
+    let vaga = *((SCREEN_MANAGER + 0x382a) as *const i16);
+    let mut r = vec![(SCREEN_MANAGER, 0x3840)];
     if (0..64).contains(&vaga) {
-        let display = core::ptr::read_unaligned((GERENTE_DE_TELAS + 0x7fc + vaga as usize * 0x300) as *const usize);
+        let display = core::ptr::read_unaligned((SCREEN_MANAGER + 0x7fc + vaga as usize * 0x300) as *const usize);
         if display != 0 {
             r.push((display, 0x12f550));
         }
@@ -28,12 +28,12 @@ unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
     }
     crate::comparacao::ramo("telas abrir os ultimos placares");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
-    if abrir(GERENTE_DE_TELAS, vaga, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
+    if abrir(SCREEN_MANAGER, vaga, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
         return;
     }
     let gravar: unsafe extern "thiscall" fn(usize, u32, u32, usize, u32) = core::mem::transmute(0x7ff130usize);
     for (k, v) in [(0u32, 0usize), (0xe, entrada), (0xf, 0), (0x10, usize::MAX), (0x11, 1), (0x12, 0), (0x13, 1), (0x14, 0)] {
-        gravar(GERENTE_DE_TELAS, vaga, k, v, 0);
+        gravar(SCREEN_MANAGER, vaga, k, v, 0);
     }
 }
 
@@ -45,7 +45,7 @@ unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
 unsafe extern "C" fn build_latest_scores() {
     crate::comparacao::ramo("telas montar os ultimos placares");
     let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
-    let entrada = ler(GERENTE_DE_TELAS, 0xe);
+    let entrada = ler(SCREEN_MANAGER, 0xe);
     let id = *(entrada as *const i32);
     let fundo: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x41c410usize);
     fundo((*(0xae23d0 as *const usize) as isize + id as isize * 107) as usize, 0, 0);
@@ -54,7 +54,7 @@ unsafe extern "C" fn build_latest_scores() {
     let cor: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x839590usize);
     let (c1, c0) = (cor(1), cor(0));
     let titulo: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(0x803f30usize);
-    titulo(GERENTE_DE_TELAS, c0, c1, 0xde1f64);
+    titulo(SCREEN_MANAGER, c0, c1, 0xde1f64);
     let menu: unsafe extern "C" fn(u32, u32) = core::mem::transmute(0x75db00usize);
     menu(4, 0);
     let (mut topo, mut base) = (0x50i32, 0x217i32);
@@ -62,8 +62,8 @@ unsafe extern "C" fn build_latest_scores() {
     painel(&mut topo, &mut base);
     let sem_avancar: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x7febb0usize);
     let sem_voltar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x7fec60usize);
-    let avancar = (sem_avancar(GERENTE_DE_TELAS) == 0) as u32;
-    let voltar = (sem_voltar(GERENTE_DE_TELAS, 0) == 0) as u32;
+    let avancar = (sem_avancar(SCREEN_MANAGER) == 0) as u32;
+    let voltar = (sem_voltar(SCREEN_MANAGER, 0) == 0) as u32;
     let botoes: unsafe extern "C" fn(u32, u32) -> u32 = core::mem::transmute(0x5edcc0usize);
     botoes(voltar, avancar);
 }
@@ -103,7 +103,7 @@ unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
         }
         if g(0xb6b7a8) != 0 {
             let redesenhar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x802d00usize);
-            redesenhar(GERENTE_DE_TELAS, 0, 0);
+            redesenhar(SCREEN_MANAGER, 0, 0);
         }
     }
     let comando: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(0x7615d0usize);

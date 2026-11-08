@@ -12,7 +12,7 @@ unsafe extern "C" fn refresh_possession_bar() {
     let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(0x800890usize);
     let fundo: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x801040usize);
     let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
     let p0 = get_screen_param(0);
@@ -32,11 +32,11 @@ unsafe extern "C" fn refresh_possession_bar() {
         let v = *((e + 0x142) as *const u8);
         if copia == 0 || v != *((copia + 0x142) as *const u8) {
             let p = if v == 0 || *((e + 0x767) as *const u8) == 0 { 0x32 } else { v as i32 };
-            formatar(BUF, FORMATO_PCT, p);
+            formatar(BUF, FORMAT_PCT, p);
             let x = p * 0x1b4 / 100 + 0x115;
             retangulo(sm, item.wrapping_add(3), 0x115, altura - 0x23, x, altura - 0x14);
             texto(sm, item.wrapping_add(3), BUF);
-            formatar(BUF, FORMATO_PCT, 100 - p);
+            formatar(BUF, FORMAT_PCT, 100 - p);
             retangulo(sm, item.wrapping_add(4), x, altura - 0x23, 0x2c9, altura - 0x14);
             texto(sm, item.wrapping_add(4), BUF);
             fundo(sm, item.wrapping_add(5), if p < 0x32 { c2 } else { c1 });
@@ -86,12 +86,12 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     if overview_would_error() {
         return original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%)(topo, base);
     }
-    let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let caixa: CaixaDoGerente = core::mem::transmute(0x804030usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
+    let txt: ManagerTextFn = core::mem::transmute(0x803fd0usize);
+    let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
+    let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let largura_do_texto: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(0x5e5ad0usize);
@@ -109,7 +109,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     let narrar: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x6d7b00usize);
     let cores_do_clube: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(0x53b640usize);
     let barra: unsafe extern "C" fn() = core::mem::transmute(0x71d9e0usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -151,7 +151,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
         match rotulo {
             0 => show_error_at(0xa161d4, if periodo == 4 { 0x1d49 } else { 0x1d5e }),
             0xa167b8 => {
-                texto(BUF, rotulo, TEXTO_VAZIO);
+                texto(BUF, rotulo, EMPTY_TEXT);
             }
             _ => {
                 texto(BUF, rotulo);
@@ -345,7 +345,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             if b8(ev + 2) == 3 {
                 texto(BUF, 0xa165fc, m);
             } else {
-                formatar(BUF, FORMATO_D, m);
+                formatar(BUF, FORMAT_D, m);
             }
         };
         minuto(ev);
@@ -394,7 +394,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     if core::ptr::read_unaligned((e + 0x53) as *const u32) != 0 {
         let m = if linhas[0] > linhas[1] { linhas[0] } else { linhas[1] };
         linhas[lado_da_linha] = m;
-        texto_da_celula(sm, lst, 0, z(m), 1, 0, 1, 3, colour_word(0xaebdec), TEXTO_VAZIO);
+        texto_da_celula(sm, lst, 0, z(m), 1, 0, 1, 3, colour_word(0xaebdec), EMPTY_TEXT);
         let r = m + 1;
         linhas[lado_da_linha] = r;
         texto(BUF, if b8(part + 0x38) & 0x20 != 0 { 0xa165b8 } else { 0xa165a4 });
@@ -487,11 +487,11 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
     if liga == 0 || get_screen_param(0xe) == 0 {
         return original_fn::<unsafe extern "C" fn(usize, i32, i32)>(%%I2%%)(liga, topo, base);
     }
-    let txt: TextoDoGerente = core::mem::transmute(0x803fd0usize);
-    let lista: ListaDoDisplay = core::mem::transmute(0x55fba0usize);
-    let linha: LinhaDoDisplay = core::mem::transmute(0x55f990usize);
-    let celula: CelulaDaLista = core::mem::transmute(0x8040a0usize);
-    let texto_da_celula: TextoDaCelulaDaLista = core::mem::transmute(0x804100usize);
+    let txt: ManagerTextFn = core::mem::transmute(0x803fd0usize);
+    let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
+    let linha: DisplayLineFn = core::mem::transmute(0x55f990usize);
+    let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
+    let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x944c9fusize);
     let altura: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x5e5cd0usize);
@@ -516,7 +516,7 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
     let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(0x90c310usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let rolar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x403320usize);
-    let sm = GERENTE_DE_TELAS;
+    let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
@@ -651,12 +651,12 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
     };
     texto(BUF, 0x990b3c);
     cabecalho(4);
-    texto(BUF, 0x990b1c, TEXTO_VAZIO);
+    texto(BUF, 0x990b1c, EMPTY_TEXT);
     cabecalho(5);
     let regra = w16(liga + 0xab) as u8;
     texto(BUF, if regra & 0x20 != 0 { 0x990b18 } else if regra & 1 != 0 { 0x99c24c } else { 0x990b14 });
     cabecalho(6);
-    texto(BUF, 0x990af4, TEXTO_VAZIO);
+    texto(BUF, 0x990af4, EMPTY_TEXT);
     cabecalho(7);
     texto(BUF, 0x990af0);
     cabecalho(8);
@@ -736,14 +736,14 @@ unsafe extern "C" fn match_screens_draw_live_league_table(liga: usize, topo: i32
         celula(sm, lst, 2, fila, 1, 0, 1, 3, cor, clube + 0x38, 0x7d5, clube);
         let d = r + coluna.wrapping_mul(14);
         for (o, col) in [(0x11usize, 4usize), (0x12, 5), (0x13, 6), (0x14, 7)] {
-            formatar(BUF, FORMATO_D, b8(d + o) as i8 as i32);
+            formatar(BUF, FORMAT_D, b8(d + o) as i8 as i32);
             texto_da_celula(sm, lst, col, fila, 1, 0, 0xc, 2, colour_word(0xae3184), BUF);
         }
         for (o, col) in [(0x15usize, 8usize), (0x17, 9)] {
-            formatar(BUF, FORMATO_D, core::ptr::read_unaligned((d + o) as *const i16) as i32);
+            formatar(BUF, FORMAT_D, core::ptr::read_unaligned((d + o) as *const i16) as i32);
             texto_da_celula(sm, lst, col, fila, 1, 0, 0xc, 2, colour_word(0xae3184), BUF);
         }
-        formatar(BUF, FORMATO_D, core::ptr::read_unaligned((d + 0x19) as *const i16) as i32);
+        formatar(BUF, FORMAT_D, core::ptr::read_unaligned((d + 0x19) as *const i16) as i32);
         texto_da_celula(sm, lst, 0xa, fila, 0x30, colour_word(0xae3192), 0xc, 1, colour_word(0xae3184), BUF);
         fila += 1;
         i += 1;

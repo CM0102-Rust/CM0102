@@ -22,6 +22,13 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 - **Field labels:** check them in [CAMPOS.en.md](CAMPOS.en.md); what isn't proven gets "[inference]".
 - **DOCS:** for each routine, the rule in words (how many go up and down, dates, places, tie-break), in Portuguese and English. It is the source of the glossary and of the headers.
 
+## Names and header (since 2026-11-08)
+
+- Code in English: the routine with the original method name (maxevans60's map, as in `docs/NOMES.csv`), helpers with English names and no work-item prefix, constants in English UPPER_CASE.
+- A bilingual header on every routine: the English summary, the line `Original: Class::method (address, file.cpp, convention)`, a `///` line and the Portuguese notes with `[pt]`.
+- Use what already has a name: `read_u32`/`write_u8` (`mem.rs`), `KEY_*` (`keys.rs`), `G_*` (`globals.rs`), `club::DIVISION` and `club::SIZE` (`fields.rs`), `FN_*` (`exe_fns.rs`) and `original_fn::<F>(IDX_<NAME>)`; a float constant read from the exe with its value in a comment.
+- The `DOCS` in `rotinas.py` stays in Portuguese and English (it is the source of ROTINAS and the glossary).
+
 ## Comparing
 
 - The comparer checks **only what the routine guarantees on exit**. A field that another routine rewrites later (e.g. 0x6827d0 rewrites +0xa7) gives false alarms.

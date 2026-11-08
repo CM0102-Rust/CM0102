@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn comparar_fra_cfa_set_up_rules(this: usize) -> u32 {
 }
 
 /// O que muda entre as duas ligas de fundo.
-struct Cqn4Fundo {
+struct BackgroundLeague {
     vtabela: usize,
     /// o id do registro da competição (+4)
     competicao: usize,
@@ -89,7 +89,7 @@ struct Cqn4Fundo {
 /// (League::free_table 0x687970: push 0; mov ecx -> thiscall, ret 4): os jogos do grupo ficam no calendário do jogo e a
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
-unsafe fn construct_group_league(this: usize, ano: u32, p: &Cqn4Fundo) -> usize {
+unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) -> usize {
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5ba0a0usize);
     let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
@@ -162,7 +162,7 @@ unsafe fn construct_group_league(this: usize, ano: u32, p: &Cqn4Fundo) -> usize 
     this
 }
 
-const CQN4_CFA: Cqn4Fundo = Cqn4Fundo {
+const FRA_CFA_CFA_LEAGUE: BackgroundLeague = BackgroundLeague {
     vtabela: 0x96a7b0,
     competicao: 0x9cf5d8,
     todas: &[0x9cf5cc, 0x9cf5d0], // cqn4: os clubes da primeira e da segunda divisões na CFA
@@ -175,7 +175,7 @@ const CQN4_CFA: Cqn4Fundo = Cqn4Fundo {
     arquivo: 0x9ccaf0,
     linhas: [0x40, 0x64, 0x6b],
 };
-const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
+const FRENCH_LOWER_DIVISION: BackgroundLeague = BackgroundLeague {
     vtabela: 0x96ab78,
     competicao: 0x9cf548,
     todas: &[0x9cf5d4],
@@ -194,19 +194,19 @@ const CQN4_BAIXO: Cqn4Fundo = Cqn4Fundo {
 /// [inferência: os times reserva]) e até 34 da divisão genérica cuja competição de reserva é a CFA, embaralhados em 4
 /// grupos de 18. Fonte 0x9ccaf0, linhas 0x40, 0x64, 0x6b.
 unsafe extern "thiscall" fn construct_fra_cfa(this: usize, ano: u32) -> usize {
-    construct_group_league(this, ano, &CQN4_CFA)
+    construct_group_league(this, ano, &FRA_CFA_CFA_LEAGUE)
 }
 
 /// { 0x5bd600 } (thiscall, ret 4, fra_lower.cpp, 578 bytes): `FraLower::FraLower(ano)`, a divisão de baixo francesa
 /// (competição de id [0x9cf548]): até 40 clubes, os do National ([0x9cf5d4]) e até 20 franceses ([0x9cf300]) da divisão
 /// genérica sem competição de reserva, embaralhados em 2 grupos de 20. Fonte 0x9ccbd0, linhas 0x40, 0x62, 0x69.
 unsafe extern "thiscall" fn construct_fra_lower(this: usize, ano: u32) -> usize {
-    construct_group_league(this, ano, &CQN4_BAIXO)
+    construct_group_league(this, ano, &FRENCH_LOWER_DIVISION)
 }
 
 /// Sorteiam e alocam: só a original, conferindo a devolução, a vtable, o ano, a disciplina, o registro e a liga sem
 /// tabela no fim (+0x3e = 0, +0xb1 = 0: a última tabela foi solta).
-unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &Cqn4Fundo, original: impl FnOnce() -> usize) -> usize {
+unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &BackgroundLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this && cqn4_d(this) == p.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
         && *((this + 0x50) as *const u8) == 0xff && cqn4_d(this + 4) == cqn4_registro(p.competicao)
@@ -217,12 +217,12 @@ unsafe fn compare_construct_group_league(nome: &str, this: usize, ano: u32, p: &
 
 unsafe extern "thiscall" fn comparar_construct_fra_cfa(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I1%%);
-    compare_construct_group_league("construct_fra_cfa", this, ano, &CQN4_CFA, || o(this, ano))
+    compare_construct_group_league("construct_fra_cfa", this, ano, &FRA_CFA_CFA_LEAGUE, || o(this, ano))
 }
 
 unsafe extern "thiscall" fn comparar_construct_fra_lower(this: usize, ano: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(%%I2%%);
-    compare_construct_group_league("construct_fra_lower", this, ano, &CQN4_BAIXO, || o(this, ano))
+    compare_construct_group_league("construct_fra_lower", this, ano, &FRENCH_LOWER_DIVISION, || o(this, ano))
 }
 
 /// O corpo dos dois destrutores (thiscall, ret 0, quadro SEH só no caminho de exceção; iguais fora a vtable): a vtable

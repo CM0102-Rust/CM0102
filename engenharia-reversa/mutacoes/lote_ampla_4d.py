@@ -1,7 +1,7 @@
 # Lote 4d da carreira ampla (22/10/2026, de dia, intercalado com as levas): o lote 3 e as escapadas
 # por dados das levas 206, 210 a 213. Uso: python mutacoes.py mutacoes\lote_ampla_4d.py --carreira 2002-03-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limit 7200
 MUTACOES = [
-    ('l_tamanho', '    if ler(saida, REGISTRO_DA_PARTIDA, 1, f) != 1 {', '    if ler(saida, REGISTRO_DA_PARTIDA - 4, 1, f) != 1 {'),
+    ('l_tamanho', '    if ler(saida, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {', '    if ler(saida, MATCH_STATS_RECORD_SIZE - 4, 1, f) != 1 {'),
     ('r_excluido', '|| *((r + 0x4c) as *const u8) == 0 {', '|| *((r + 0x4c) as *const u8) != 0 {'),
     ('m_dobro', '            peso = peso.wrapping_add(peso);', '            peso = peso.wrapping_add(1);'),
     ('s_faixa', '                *tamanho = (*tamanho).wrapping_sub(1);', '                *tamanho = (*tamanho).wrapping_sub(0);'),

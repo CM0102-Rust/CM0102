@@ -3,7 +3,7 @@
 /// As regras de um grupo continental (a virtual +0x8c, set_up_rules, numa liga de grupo): os campos de byte e palavra
 /// gravados (deslocamento, tamanho 1 ou 2, valor), a data de começo (0x549f70: dia, mês, ano da competição +0x40, dia da
 /// semana; −1 = qualquer) e o fundo de prêmios (+0x28), quando há.
-struct Cqj11Regras {
+struct ContinentalGroupRules {
     campos: &'static [(usize, u8, u32)],
     dia: u32,
     mes: u32,
@@ -15,7 +15,7 @@ struct Cqj11Regras {
 /// ecx, local -> thiscall, ret 0x10) e a primeira palavra dela em +0xb6, +0xb8 = 0; o prêmio; depois a tabela das
 /// rodadas da virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba.
 /// Devolve 1.
-unsafe fn apply_cup_rules(this: usize, g: &Cqj11Regras, dia: u32, vitoria: u8) -> u32 {
+unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, dia: u32, vitoria: u8) -> u32 {
     for &(o, n, v) in g.campos {
         let v = if o == 0xc2 { vitoria as u32 } else { v };
         if n == 1 {
@@ -44,7 +44,7 @@ unsafe fn apply_cup_rules(this: usize, g: &Cqj11Regras, dia: u32, vitoria: u8) -
 
 /// O plano: os campos de `g`, a palavra da data (calculada antes numa Date local pela 0x549f70, sem efeito fora dela),
 /// +0xb8 = 0, o prêmio e a devolução 1.
-unsafe fn check_cup_rules(nome: &str, this: usize, g: &Cqj11Regras, o: impl FnOnce() -> u32) -> u32 {
+unsafe fn check_cup_rules(nome: &str, this: usize, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);
     let mut d = [0u8; 8];
     data(d.as_mut_ptr(), g.dia, g.mes, core::ptr::read_unaligned((this + 0x40) as *const u16) as u32, g.semana);
@@ -71,19 +71,19 @@ unsafe fn check_cup_rules(nome: &str, this: usize, g: &Cqj11Regras, o: impl FnOn
     r
 }
 
-const CQJ11_LIBERTADORES: Cqj11Regras = Cqj11Regras {
+const LIBERTADORES_RULES: ContinentalGroupRules = ContinentalGroupRules {
     campos: &[(0x3c, 2, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0x42, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0x4a, 1, 3), (0xc3, 1, 1), (0xc4, 1, 7),
         (0xc5, 1, 1), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x1c, 4, 0xffff_ffff), (0x20, 4, 0xffff_ffff), (0x49, 1, 7)],
     dia: 0xf, mes: 0, semana: 0xffff_ffff, premio: Some(0x1e8480),
 };
 
-const CQJ11_MERCONORTE: Cqj11Regras = Cqj11Regras {
+const MERCONORTE_RULES: ContinentalGroupRules = ContinentalGroupRules {
     campos: &[(0x3c, 2, 2), (0xc6, 1, 2), (0x42, 1, 2), (0xc2, 1, 3), (0xc7, 1, 3), (0xc3, 1, 1), (0xc4, 1, 7), (0xc5, 1, 1), (0xbe, 1, 1),
         (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0x1c, 4, 0xffff_ffff), (0x20, 4, 0xffff_ffff)],
     dia: 1, mes: 7, semana: 0xffff_ffff, premio: Some(0x1e8480),
 };
 
-const CQJ11_OCEANIA: Cqj11Regras = Cqj11Regras {
+const OCEANIA_RULES: ContinentalGroupRules = ContinentalGroupRules {
     campos: &[(0x43, 1, 2), (0xc6, 1, 2), (0xbe, 1, 2), (0xc2, 1, 3), (0x49, 1, 3), (0x4a, 1, 3), (0x3c, 2, 1), (0xc3, 1, 1), (0xc4, 1, 8),
         (0xc5, 1, 1), (0xc7, 1, 4), (0xbf, 1, 0), (0xc0, 1, 0), (0xc1, 1, 0), (0xd9, 2, 0x28)],
     dia: 0x14, mes: 7, semana: 5, premio: None,
@@ -97,13 +97,13 @@ unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da libertadores");
     let dia = 0xf; // cqj11: o dia do começo da Libertadores
     let vitoria = 3; // cqj11: a vitória nos grupos da Libertadores
-    apply_cup_rules(this, &CQJ11_LIBERTADORES, dia, vitoria)
+    apply_cup_rules(this, &LIBERTADORES_RULES, dia, vitoria)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    check_cup_rules("conmebol_liber_set_up_rules", this, &CQJ11_LIBERTADORES, || o(this))
+    check_cup_rules("conmebol_liber_set_up_rules", this, &LIBERTADORES_RULES, || o(this))
 }
 
 /// { 0x4c1ed0 } (thiscall, ret 0, con_merc_cup.cpp; a virtual +0x8c; quadro SEH só da data local): `ConMercCup::
@@ -111,13 +111,13 @@ unsafe extern "thiscall" fn comparar_conmebol_liber_set_up_rules(this: usize) ->
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
 unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da merconorte");
-    apply_cup_rules(this, &CQJ11_MERCONORTE, CQJ11_MERCONORTE.dia, 3)
+    apply_cup_rules(this, &MERCONORTE_RULES, MERCONORTE_RULES.dia, 3)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    check_cup_rules("con_merc_cup_set_up_rules", this, &CQJ11_MERCONORTE, || o(this))
+    check_cup_rules("con_merc_cup_set_up_rules", this, &MERCONORTE_RULES, || o(this))
 }
 
 /// { 0x7979b0 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x8c; quadro SEH só da data local):
@@ -127,11 +127,11 @@ unsafe extern "thiscall" fn comparar_con_merc_cup_set_up_rules(this: usize) -> u
 unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_11 regras da oceania");
     let dia = 0x14; // cqj11: o dia do começo na Oceania
-    apply_cup_rules(this, &CQJ11_OCEANIA, dia, 3)
+    apply_cup_rules(this, &OCEANIA_RULES, dia, 3)
 }
 
 // ponytail: a virtual +0x3c aloca a tabela das rodadas: não roda duas vezes. Só a original; o plano confere as regras.
 unsafe extern "thiscall" fn comparar_oceania_club_champ_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    check_cup_rules("oceania_club_champ_set_up_rules", this, &CQJ11_OCEANIA, || o(this))
+    check_cup_rules("oceania_club_champ_set_up_rules", this, &OCEANIA_RULES, || o(this))
 }
