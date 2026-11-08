@@ -42,9 +42,8 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(t
     if read_usize(this + 8) == 0 || read_usize(this + goldcup::DRAWN_CLUBS) == 0 || read_usize(this + goldcup::DRAWN_CLUB_COUNT) != 0xc {
         return o(this);
     }
-    let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let mut v: Vec<usize> = (0..12).map(|i| read_usize(read_usize(this + goldcup::DRAWN_CLUBS) + i * 4)).collect();
-    sort(v.as_mut_ptr(), 12, 4, 0x4b07d0);
+    exe::crt_qsort((v.as_mut_ptr()) as usize, 12, 4, 0x4b07d0);
     o(this);
     let errado = (0..12).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };

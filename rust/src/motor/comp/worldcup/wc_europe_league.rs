@@ -19,10 +19,9 @@ pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: usize, fields: &[(
 /// [pt] A primeira palavra da Date(dia, mês, ano da competição +0x40, dia da semana) (0x549f70: push semana; push ano; push
 /// mês; push dia; lea ecx, local -> thiscall, ret 0x10).
 pub(crate) unsafe fn comp_date_word(this: usize, day: u32, month: u32, week: u32) -> u16 {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
-    data(d.as_mut_ptr(), day, month, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, week);
+    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, month, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
 

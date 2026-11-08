@@ -8,5 +8,5 @@ MUTACOES = [
     ('dq2_ue', '    if *((n + nation::GROUP_MEMBERSHIP) as *const u8) == 2 { return 1; } // EU nationality', '    if *((n + nation::GROUP_MEMBERSHIP) as *const u8) == 3 { return 1; } // EU nationality'),
     ('dq3_listada', '*((v + contract::TRANSFER_STATUS) as *const u8) & 9 != 0', '*((v + contract::TRANSFER_STATUS) as *const u8) & 8 != 0'),
     ('dq3_arredonda', ' + read_f64_at(0x968968); // arredonda', ' + 0.0; // arredonda'),
-    ('dq3_atributo_da_pessoa', '    calcular(person, core::ptr::read_unaligned((person + staff::PLAYER) as *const usize), attribute)\n', '    calcular(person, core::ptr::read_unaligned((person + staff::PLAYER) as *const usize), attribute).wrapping_add(1)\n'),
+    ('dq3_atributo_da_pessoa', '    exe::staff_compute_player_attribute(person, core::ptr::read_unaligned((person + staff::PLAYER) as *const usize), attribute)\n', '    exe::staff_compute_player_attribute(person, core::ptr::read_unaligned((person + staff::PLAYER) as *const usize), attribute).wrapping_add(1)\n'),
 ]

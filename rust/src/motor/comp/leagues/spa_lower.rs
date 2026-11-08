@@ -56,10 +56,9 @@ pub(crate) struct SpaLowerChristmasSchedule {
 /// Writes the start rounds, then a middle block chosen by the weekday offset of a reference round from a December date
 /// [inference: winter break], then the end rounds.
 pub(crate) unsafe fn set_rounds_around_christmas(t: usize, year: u32, n: &SpaLowerChristmasSchedule, file: usize) {
-    let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     spa_lower_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
-    construct(&mut d, 1, 0xb, year, 0xffff_ffff);
+    exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let case = if k as u32 > 6 {
@@ -263,7 +262,6 @@ pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerC
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40, cada uma com a rodada
 /// do Natal; as outras devolvem 0. Fonte 0xa82980.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -271,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
             }
             *rounds = 42;
             *extra = 0;
-            let t = alloc(0xaaa);
+            let t = exe::crt_malloc(0xaaa);
             if t == 0 {
                 show_error_at(0xa82880, 0x8b);
                 return 0;
@@ -354,9 +352,8 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
 /// [pt] O clube de cima do clube `c` (club_get_linked_b_team 0x540a50: push 1; push &eh_a; push c; add esp, 0xc -> cdecl),
 /// se `c` é o time B dele (eh_a = 0) e ele está na competição de id [g].
 pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
-    let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
-    let p = partner(c, &mut eh_a, 1);
+    let p = exe::club_get_linked_b_team(c, &mut eh_a, 1);
     p != 0 && eh_a == 0 && spa_lower_is_in_comp(p, g)
 }
 
@@ -372,7 +369,6 @@ pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
 /// Segunda B] ou, se espanhóis, da de id [0x9cf764] [inferência: a divisão genérica de baixo], que não são time B nem
 /// time A de ninguém (club_get_linked_b_team devolve 0).
 pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
-    let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut v = Vec::new();
     let n = read_usize(G_CLUB_COUNT) as i32;
     let base = read_usize(G_CLUB_TABLE);
@@ -386,7 +382,7 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
             let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_usize(g));
             if group || (read_usize(nation) == read_usize(KEY_NATION_SPAIN) && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
                 let mut eh_a: u32 = 0;
-                if partner(c, &mut eh_a, 1) == 0 {
+                if exe::club_get_linked_b_team(c, &mut eh_a, 1) == 0 {
                     v.push(c);
                 }
             }
@@ -411,9 +407,8 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
         let comp = read_usize(c + club::DIVISION);
         let nation = read_usize(c + club::NATION);
         if comp != 0 && nation != 0 && read_usize(nation) == read_usize(KEY_NATION_SPAIN) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
-            let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
             let mut eh_a: u32 = 0;
-            let p = partner(c, &mut eh_a, 1);
+            let p = exe::club_get_linked_b_team(c, &mut eh_a, 1);
             let enters = p != 0 && eh_a == 0 && read_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_usize(read_usize(p + club::DIVISION)) == read_usize(g);
             if enters {
                 *k = k.wrapping_add(1);
@@ -442,10 +437,8 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 /// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
 /// 0x10). Devolve se encheu.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
-    let t = alloc(0x512);
+    let t = exe::crt_malloc(0x512);
     write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa82880, 0x2ac);
@@ -469,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
         let mut kk = k;
         for_each_spanish_b_team(g, &mut kk, rows, |c, entra| {
             if entra {
-                iniciar(this, k as u32, c, 0, 0);
+                exe::league_init_table_row(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
                 write_usize(c + club::RESERVE_DIVISION, read_usize(this + 4));
             } else {
@@ -486,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let mut j: i16 = 0;
     while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
         let c = list[j as usize];
-        iniciar(this, k as u32, c, 0, 0);
+        exe::league_init_table_row(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
         write_usize(c + club::RESERVE_DIVISION, read_usize(this + 4));
         j += 1;

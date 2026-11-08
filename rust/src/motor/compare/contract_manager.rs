@@ -61,14 +61,11 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
     if read_i8(game + fixture::HOME_SIDE_MARK) == 0 || read_i8(game + fixture::AWAY_SIDE_MARK) == 0 {
         return o(this, game, summary);
     }
-    let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let with_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut plan: [(usize, i32, i32); 2] = [(0, 0, 0); 2];
     let mut eh_a = 0u32;
     for (lado, pl) in plan.iter_mut().enumerate() {
         let club = match_clubs_by_side(game, lado).0;
-        if (partner(club, &mut eh_a, 1) != 0 && eh_a == 0) || skip_side_by_reputation(game, lado) || national_team(club) != 0 {
+        if (exe::club_get_linked_b_team(club, &mut eh_a, 1) != 0 && eh_a == 0) || skip_side_by_reputation(game, lado) || exe::database_is_national_team(club) != 0 {
             continue;
         }
         let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
@@ -77,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
         for k in 0..20usize {
             let slot = base + 0x190 + k * 0x49;
             let Some(pessoa) = staff_of_summary_slot(slot) else { continue };
-            let c = with_club(this, pessoa, club);
+            let c = exe::contract_manager_get_contract_for_club(this, pessoa, club);
             if c != 0 {
                 for v in match_bonuses_for_slot(game, c, slot, read_i16(base + 0x154 + 2 * k)).into_iter().flatten() {
                     total = total.wrapping_add(v);
@@ -360,14 +357,13 @@ pub(crate) unsafe extern "thiscall" fn compare_get_current_contract_offers(this:
     }
     let mut plan: Vec<u8> = Vec::new();
     core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_u32(list + llist::HEAD));
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let mut item = next(list);
+    let mut item = exe::llist_get_next(list);
     while item != 0 {
         let state = read_u8(item + contract_offer::CONTRACT_TYPE) & 0x3f;
         if read_u32(item + contract_offer::CLUB_ID) == read_u32(club) && state != 5 && state != 6 {
             plan.extend_from_slice(core::slice::from_raw_parts(item as *const u8, 111));
         }
-        item = next(list);
+        item = exe::llist_get_next(list);
     }
     let r = o(this, club, out);
     let array = read_u32(out) as usize;
@@ -454,14 +450,13 @@ pub(crate) unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize,
     }
     // the plan: the original restarts the cursor (+0xa) before traversing
     write_usize(list + llist::CURSOR, read_usize(list + llist::HEAD));
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut expected = 0u32;
-    let mut item = next(list);
+    let mut item = exe::llist_get_next(list);
     while item != 0 {
         if read_usize(item) == id {
             expected += 1;
         }
-        item = next(list);
+        item = exe::llist_get_next(list);
     }
     let r = o(this, id);
     SCOREBOARD.record(r == expected, || format!("resubmit_held_offers(id {:x}) devolveu {}, esperava {}", id, r, expected));

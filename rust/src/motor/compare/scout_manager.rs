@@ -34,8 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: 
     state.write_back();
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, a1080);
     let n1 = read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT).max(0) as usize;
-    let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(copy.as_mut_ptr() as usize, n1 as i32, 0x11, 0x7fc270);
+    exe::crt_qsort(copy.as_mut_ptr() as usize, (n1 as i32) as u32, 0x11, 0x7fc270);
     let plan: Vec<u8> = copy[..n1 * 0x11].to_vec();
     core::ptr::write_unaligned((this + scout_manager_fields::SCOUT_REQUESTS) as *mut usize, b0);
     core::ptr::write_unaligned((this + scout_manager_fields::SCOUT_REQUEST_COUNT) as *mut i32, c0);

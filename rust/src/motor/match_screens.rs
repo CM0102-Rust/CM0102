@@ -25,23 +25,15 @@ use super::*;
 /// original. Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: usize, n: i32) -> usize {
     crate::comparison::branch("estatisticas montar");
-    let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
-    let end_of_array: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let procurar: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
-    let close_search: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let d = |o: usize| (stats + o) as *mut i32;
 
     let mut record = [0u8; 0xd7a];
     let r = record.as_mut_ptr() as usize;
-    array(r + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
+    exe::crt_vector_constructor_iterator(r + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
 
     // the working exe (cm0102-1080) comes without the CD requirement: the jne on the drive type (0x729089)
     // became a nop and the found-check test (0x7290cb, 85 c0) became xor (31 c0 in cm0102-1080; 33 c0 is the other
@@ -62,10 +54,10 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: 
                     let nm = name.as_mut_ptr() as usize;
                     format(nm, 0x987e00, raiz, 0x63u32, 0x6du32, 0x30u32, 0x31u32, 0x30u32, 0x32u32, 0x2eu32, 0x65u32, 0x78u32, 0x65u32);
                     let ach = found.as_mut_ptr() as usize;
-                    if procurar(nm, ach, 0) == 0 || always_found {
+                    if exe::file_find_first(nm, ach, 0) == 0 || always_found {
                         break 'cd;
                     }
-                    close_search(ach);
+                    exe::file_find_close(ach);
                 }
                 // simplification: the original walks with an i8 (steps of 4): it would only pass 127 with more than 32 units
                 i += 4;
@@ -82,11 +74,11 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: 
     }
 
     if zip != 0 && exe::match_stats_load(stats, zip) != 0 {
-        end_of_array(r + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
+        exe::crt_vector_destructor_iterator(r + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
         return stats;
     }
     *d(4) = n;
-    let t = new((n as u32).wrapping_mul(12));
+    let t = exe::crt_operator_new((n as u32).wrapping_mul(12));
     *(stats as *mut usize) = t;
     if t == 0 {
         fatal_error_at(0xa17ba0, 0x62);
@@ -97,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: 
         *d(8 + 4 * k) = sum / 4;
         sum = sum.wrapping_add(n);
     }
-    let f = open(path(0x987da0, 0xa17b88), 0x9a7f28);
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0xa17b88), 0x9a7f28);
     if f == 0 {
         show_error_at(0xa17ba0, 0x71);
     } else {
@@ -105,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: 
         let mut ok = true;
         let mut i = 0;
         while i < n {
-            if write(r, 0xd7a, 1, f) != 1 {
+            if exe::crt_fwrite(r, 0xd7a, 1, f) != 1 {
                 show_error_at(0xa17ba0, 0x7e);
                 exe::crt_fclose(f);
                 ok = false;
@@ -118,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: 
             *d(match_stats::EVENT_FILE_NUMBER) = 0;
         }
     }
-    end_of_array(r + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
+    exe::crt_vector_destructor_iterator(r + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
     stats
 }
 
@@ -172,12 +164,6 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
     let pw = |p: usize, v: u16| core::ptr::write_unaligned(p as *mut u16, v);
     let pd = |p: usize, v: u32| core::ptr::write_unaligned(p as *mut u32, v);
     let data: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let usa_numeros: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_SQUAD_MANAGER_CLUB_USES_SQUAD_NUMBERS);
-    let capitao: unsafe extern "thiscall" fn(usize, usize, i32, i32) -> i8 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
-    let position: unsafe extern "thiscall" fn(usize, i32, i32) -> u16 = core::mem::transmute(FN_FORMATION_GET_SLOT_POSITION);
-    let give_number: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_SQUAD_MANAGER_ALLOCATE_SQUAD_NUMBER);
-    let copy_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     // the static date (day 0x29 of 1972) of the first call: the mark before construction, as in the original
     if b(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD) & 1 == 0 {
         pb(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD, b(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD) | 1);
@@ -245,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
             i += 1;
         }
         if n > 0 {
-            sort(reg + match_record::EVENTS, n, 4, 0x72b160);
+            exe::crt_qsort(reg + match_record::EVENTS, n, 4, 0x72b160);
             for k in 0..n as usize {
                 pb(reg + match_record::EVENTS + 4 * k, b(reg + match_record::EVENTS + 4 * k) & 1);
             }
@@ -259,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         let s = m + 0x36 * t + 0xf5bc;
         let id = d(reg + match_record::AWAY_CLUB_ID * t) as i32;
         let club = (d(G_CLUB_TABLE) as i32 + id * 0x245) as usize;
-        let uses = b(game() + 0x40 + t) != 0 && usa_numeros(d(G_SQUAD_MANAGER) as usize, club, 0) != 0;
+        let uses = b(game() + 0x40 + t) != 0 && exe::squad_manager_club_uses_squad_numbers(d(G_SQUAD_MANAGER) as usize, club, 0) != 0;
         for (o, de) in [(0, 1), (1, 0), (3, 4), (4, 5), (2, 6), (5, 7), (6, 8), (7, 9), (8, 2), (9, 3), (0xa, 0xb),
                         (0xb, 0xa), (0xc, 0xc), (0xd, 0xd), (0xe, 0xe), (0xf, 0x10), (0x10, 0xf)] {
             pb(tm + o, b(s + de));
@@ -276,15 +262,15 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         pb(tm + match_record_team::KIT, b(m + engine::SIDE_KIT + t));
         if sem_renda != 0 {
             let away = (b(game() + 0x40 + t) == 0) as i32;
-            let c = capitao(d(G_TACTICS) as usize, d(game() + 0x1c + 4 * t) as usize, away, 0) as i32;
+            let c = exe::tactics_find_captain_slot(d(G_TACTICS) as usize, d(game() + 0x1c + 4 * t) as usize, (away) as u32, (0) as u32) as i32;
             pb(tm + match_record_team::CAPTAIN, b((m as isize + (c + t as i32 * 20) as isize * 0x1be + 0x4796) as usize));
         } else {
             pb(tm + match_record_team::CAPTAIN, b(s + 0x11));
         }
         let f = m + 0x18e3 * t;
         for k in 0..11 {
-            pw(tm + match_record_team::FORMATION_X + 2 * k, position(f + 0xc3a8, k as i32, 0));
-            pw(tm + match_record_team::FORMATION_Y + 2 * k, position(f + 0xc3a8, k as i32, 1));
+            pw(tm + match_record_team::FORMATION_X + 2 * k, exe::formation_get_slot_position(f + 0xc3a8, (k as i32) as u32, (0) as u32));
+            pw(tm + match_record_team::FORMATION_Y + 2 * k, exe::formation_get_slot_position(f + 0xc3a8, (k as i32) as u32, (1) as u32));
         }
         pd(tm + 0x61, d(f + 0xc92c));
         let g = m + 0xd0 * t;
@@ -313,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
                     let mut v = (exe::squad_manager_get_squad_number(manager(), d(y) as usize, club) as i32).wrapping_abs() as u8;
                     pb(x, v);
                     if v == 0 {
-                        give_number(manager(), club, d(y) as usize);
+                        exe::squad_manager_allocate_squad_number(manager(), club, d(y) as usize);
                         v = (exe::squad_manager_get_squad_number(manager(), d(y) as usize, club) as i32).wrapping_abs() as u8;
                         pb(x, v);
                     }
@@ -332,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
             pd(x - 0x10, d(y - 8));
             pd(x - 0xc, d(y - 4));
             let mut copy = [0u8; 8];
-            copy_data(x - 8, copy.as_mut_ptr() as usize, if d(y) != 0 { d(y) as usize + 0x10 } else { G_MATCH_STATS_FILL_RECORD_STATIC_DATE });
+            exe::date_operator_3d(x - 8, copy.as_mut_ptr() as usize, if d(y) != 0 { d(y) as usize + 0x10 } else { G_MATCH_STATS_FILL_RECORD_STATIC_DATE });
             pb(x + 3, b(y - 0x4d));
             // simplification: fld f32 × fmul f64 (0.01) in 80 bits on the x87; in f64 it gives the same truncation (f32 × 0.01 never falls within 2^-53 of an integer)
             let rating = core::ptr::read_unaligned((y - 0x1c) as *const f32) as f64 * core::ptr::read_unaligned(0x967898 as *const f64);
@@ -390,14 +376,12 @@ pub(crate) type MatchTabs = [u32; 0x14b4 / 4];
 
 /// Constructs the 25 match tab objects (0xd4 bytes each) with the CRT vector constructor.
 pub(crate) unsafe fn construct_match_tabs(abas: &mut MatchTabs) {
-    let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
-    array(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x4568f0, 0x5a53c0);
+    exe::crt_vector_constructor_iterator(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x4568f0, 0x5a53c0);
 }
 
 /// Destroys the 25 match tab objects with the CRT vector destructor.
 pub(crate) unsafe fn destruct_match_tabs(abas: &mut MatchTabs) {
-    let end_of_array: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
-    end_of_array(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x5a53c0);
+    exe::crt_vector_destructor_iterator(abas.as_mut_ptr() as usize, 0xd4, 0x19, 0x5a53c0);
 }
 
 /// Address of the title text (+4) of match tab k.
@@ -420,8 +404,7 @@ pub(crate) unsafe fn free_match_snapshot() {
     if get_screen_param(0x1d) != 0 {
         let f = get_screen_param(0x1d);
         if f != 0 {
-            let end_of_array: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
-            end_of_array(f + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
+            exe::crt_vector_destructor_iterator(f + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
             exe::crt_operator_delete(f);
         }
         set_screen_param(0x1d, 0);
@@ -434,19 +417,17 @@ pub(crate) unsafe fn free_match_snapshot() {
 /// (0x41c250 e 0x41bfb0). Devolve o `eax` da última chamada (a original empilha o byte da cor do
 /// uniforme por cima dele).
 pub(crate) unsafe fn set_match_background(foto: usize, competition: usize, club: usize) -> usize {
-    let by_competition: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
-    let by_club: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_CLUB_PICTURE);
     if foto != 0 {
         let r = exe::background_set_stadium_picture(foto, 0, 1);
         if r != 0 {
             return r;
         }
     }
-    let r = by_competition(competition, 0, 1);
+    let r = (exe::background_set_comp_picture(competition, 0, 1) as usize);
     if r != 0 {
         return r;
     }
-    by_club(club, 0, 1);
+    exe::background_set_club_picture(club, 0, 1);
     exe::background_set_random_picture()
 }
 
@@ -455,10 +436,9 @@ pub(crate) unsafe fn set_match_background(foto: usize, competition: usize, club:
 /// [pt] A caixa "Error" de match_screens.cpp na linha `linha` (sem parar o jogo) e [0xb67a34] = 0.
 pub(crate) unsafe fn match_screens_error_box(row: u32) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-    split(0xa161d4, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
+    exe::crt_strtok(0xa161d4, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = join(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9870e8, s);
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
@@ -472,10 +452,9 @@ pub(crate) unsafe fn match_screens_error_box(row: u32) {
 pub(crate) unsafe fn format_match_team_name(team: usize, so_name: u8) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let b_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if so_name != 0 {
         format(0xde1f64, 0x987ff0, team + club::SHORT_NAME);
-    } else if b_national_team(team) != 0 {
+    } else if exe::database_is_national_team(team) != 0 {
         let c = *((team + club::GENDER_NAME) as *const i8) as i32;
         text(0xde1f64, 0xa164a4, c, c, team + club::NAME);
     } else {
@@ -617,8 +596,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     // y2 and the push immediate at 0x719345: 0x257 in the 800x600 exe, 0x437 in cm0102-1080 (resolucao.py)
     let y2 = core::ptr::read_unaligned(0x719346 as *const u32) as usize;
     let narracao = list(current_human_display(), 0, 0, 0x59, y2, 1, 0, 1, 0, 1, 0, MENOS1);
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let bottom = path(0x9b5348, 0xa16448);
+    let bottom = exe::utils_build_file_path(0x9b5348, 0xa16448);
     row(current_human_display(), 0x400, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0xc, 1, 0, bottom, 0, 0, 0, narracao);
     let clock = list(current_human_display(), 5, 0xa, 0x55, 0x24e, 1, 0, 0xd, 0, 1, 0, MENOS1);
     format(BUF, 0x98806c, *((st + match_record::MINUTE) as *const i16) as i32);
@@ -662,10 +640,9 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     }
 
     // the commentary speeds
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let mostrar = exe::human_manager_current_controls_club(rd(p + live_match::HOME_CLUB), 0, 1) != 0
         || exe::human_manager_current_controls_club(rd(p + live_match::AWAY_CLUB), 0, 1) != 0
-        || (human(rd(p + live_match::HOME_CLUB), 0, 1, 0, 0) == 0 && human(rd(p + live_match::AWAY_CLUB), 0, 1, 0, 0) == 0);
+        || (exe::human_manager_is_human_club(rd(p + live_match::HOME_CLUB), 0, 1, 0, 0) == 0 && exe::human_manager_is_human_club(rd(p + live_match::AWAY_CLUB), 0, 1, 0, 0) == 0);
     if mostrar {
         text(BUF, 0xa16414);
         let r = row(current_human_display(), 0x82, 0, 0, 0, 0, 0, 5, 0x1021, 0, 0, 0xc, 1, colour_with_high_bits(p15, G_GUI_COLOUR_PALE_GREY), BUF, 0, 0, 0, clock);
@@ -726,11 +703,10 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
             } else {
                 let slot = rd((0xb74c26 + h * 0x300) as usize);
                 let side = if rd(rd(p + live_match::AWAY_CLUB) + 0xcf) == slot { rd(p + live_match::AWAY_CLUB) } else { rd(p + live_match::HOME_CLUB) };
-                let continent: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
                 let national_teams = || *(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE as *const i32) as isize;
-                Some(if continent(side) as u16 == 0x414 {
+                Some(if exe::usa_mls_get_club_division(side) as u16 == 0x414 {
                     rd(rd(ligas(national_teams()) + 0xc) + 4)
-                } else if continent(side) as u16 == 0x47b {
+                } else if exe::usa_mls_get_club_division(side) as u16 == 0x47b {
                     rd(rd(ligas(national_teams()) + 0xc))
                 } else {
                     ligas(national_teams())
@@ -1249,7 +1225,6 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
     let text_of_manager: ManagerTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
     let caixa: ManagerBoxFn = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
     let colours: unsafe extern "C" fn(usize, usize, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
-    let new: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rb = |a: usize| *(a as *const u8);
     let sx = |a: usize| *(a as *const i8) as i32;
@@ -1263,7 +1238,7 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
     let mut foto = get_screen_param(0x20);
     let stats = *(G_MATCH_STATS as *const usize);
     if reg == 0 {
-        reg = new(0x4f);
+        reg = exe::crt_operator_new((0x4f) as u32);
         if exe::match_stats_find_record_fixture(stats, index, reg) == 0 {
             match_screens_error_box(0x90a);
             exe::crt_operator_delete(reg);
@@ -1273,17 +1248,14 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
         set_screen_param(0x1f, reg);
     }
     if foto == 0 {
-        let f = new(0xd7a);
+        let f = exe::crt_operator_new((0xd7a) as u32);
         if f != 0 {
-            let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
-            array(f + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
+            exe::crt_vector_constructor_iterator(f + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
         }
-        let build: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_MATCH_STATS_READ_MATCH_RECORD);
-        if build(*(G_MATCH_STATS as *const usize), index, f) == 0 {
+        if exe::match_stats_read_match_record(*(G_MATCH_STATS as *const usize), (index) as u32, f) == 0 {
             match_screens_error_box(0x91a);
             if f != 0 {
-                let end_of_array: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
-                end_of_array(f + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
+                exe::crt_vector_destructor_iterator(f + match_record::HOME_TEAM, 0x625, 2, 0x453c10);
                 exe::crt_operator_delete(f);
             }
             destruct_match_tabs(&mut abas);
@@ -1376,9 +1348,6 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
 /// mais posse no item 5. No fim guarda o estado na cópia (que nasce aqui se não existe).
 pub(crate) unsafe extern "C" fn refresh_possession_bar() {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let text: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_RECT);
-    let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
@@ -1394,18 +1363,18 @@ pub(crate) unsafe extern "C" fn refresh_possession_bar() {
         // the colours: 0x53b640 writes u16; the rest of the original’s variable is stack garbage (0x801040 only reads the word)
         let club = |k: usize| (*(G_CLUB_TABLE as *const usize)).wrapping_add(core::ptr::read_unaligned((e + k) as *const usize).wrapping_mul(club::SIZE));
         let (mut c1, mut c1b, mut c2, mut c2b) = (0u32, 0u32, 0u32, 0u32);
-        colours_of_club(club(0), *((e + match_record::HOME_KIT) as *const u8) as u32, &mut c1, &mut c1b);
-        colours_of_club(club(4), *((e + match_record::AWAY_KIT) as *const u8) as u32, &mut c2, &mut c2b);
+        exe::database_get_club_kit_colours(club(0), *((e + match_record::HOME_KIT) as *const u8) as u32, &mut c1, &mut c1b);
+        exe::database_get_club_kit_colours(club(4), *((e + match_record::AWAY_KIT) as *const u8) as u32, &mut c2, &mut c2b);
         let v = *((e + match_record::HOME_RECENT_POSSESSION) as *const u8);
         if copy == 0 || v != *((copy + match_record::HOME_RECENT_POSSESSION) as *const u8) {
             let p = if v == 0 || *((e + match_record::AWAY_RECENT_POSSESSION) as *const u8) == 0 { 0x32 } else { v as i32 };
             format(BUF, FORMAT_PCT, p);
             let x = p * 0x1b4 / 100 + 0x115;
-            retangulo(sm, item.wrapping_add(3), 0x115, height - 0x23, x, height - 0x14);
-            text(sm, item.wrapping_add(3), BUF);
+            exe::screenmanager_set_widget_rect(sm, item.wrapping_add(3), 0x115, height - 0x23, x, height - 0x14);
+            exe::screenmanager_set_widget_text(sm, item.wrapping_add(3), BUF);
             format(BUF, FORMAT_PCT, 100 - p);
-            retangulo(sm, item.wrapping_add(4), x, height - 0x23, 0x2c9, height - 0x14);
-            text(sm, item.wrapping_add(4), BUF);
+            exe::screenmanager_set_widget_rect(sm, item.wrapping_add(4), x, height - 0x23, 0x2c9, height - 0x14);
+            exe::screenmanager_set_widget_text(sm, item.wrapping_add(4), BUF);
             exe::screenmanager_set_widget_colour(sm, item.wrapping_add(5), if p < 0x32 { c2 } else { c1 });
         }
     }
@@ -1485,13 +1454,8 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
     let text_of_cell: ListCellTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let width_of_text: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
-    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
-    let checks: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
-    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
     let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
@@ -1551,8 +1515,8 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
             // 0x53b640 writes u16; the rest of the original’s variable is stack garbage (only the word counts)
             let club = |k: usize| (*(G_CLUB_TABLE as *const usize)).wrapping_add(u(e + k).wrapping_mul(club::SIZE));
             let (mut c68, mut c58, mut c5c, mut c64) = (0u32, 0u32, 0u32, 0u32);
-            colours_of_club(club(0), b8(e + match_record::HOME_KIT) as u32, &mut c68, &mut c58);
-            colours_of_club(club(4), b8(e + match_record::AWAY_KIT) as u32, &mut c5c, &mut c64);
+            exe::database_get_club_kit_colours(club(0), b8(e + match_record::HOME_KIT) as u32, &mut c68, &mut c58);
+            exe::database_get_club_kit_colours(club(4), b8(e + match_record::AWAY_KIT) as u32, &mut c5c, &mut c64);
             let b = *base;
             let r = txt(sm, 0x96, z(b - 0x2d), 0x2e4, z(b - 0xa), 0x30, colour_word(G_GUI_COLOUR_GREY), 0xc, 1, colour_word(G_GUI_COLOUR_PALE_GREY), 0, 1);
             set_screen_param(0x21, item16(r));
@@ -1606,7 +1570,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
     let mut data = [0u8; 8];
     data_new(data.as_mut_ptr() as usize, core::ptr::read_unaligned((part + fixture::DAY) as *const u16) as u32, core::ptr::read_unaligned((part + fixture::YEAR) as *const u16) as u32);
     exe::date_get_long_date_string(data.as_mut_ptr() as usize, BUF, 0x7d0, 0xff);
-    let mut w = width_of_text(1, BUF) + 0xf;
+    let mut w = exe::font_text_width(1, (BUF) as *const u8) + 0xf;
     if w <= 0x7d {
         w = 0x7d;
     }
@@ -1631,12 +1595,12 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
             append_to_text_buffer(aux.as_ptr());
         }
     }
-    let mut x = width_of_text(1, BUF) + 0xf;
+    let mut x = exe::font_text_width(1, (BUF) as *const u8) + 0xf;
     if x <= 0x7d {
         x = 0x7d;
     }
     let comp = u(part + fixture::COMPETITION);
-    if friendly(*(G_FRIENDLY as *const usize), comp) == 0 && national_team(*(G_RESERVE_COMP as *const usize), u(part + fixture::COMPETITION)) == 0 {
+    if exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), comp) == 0 && national_team(*(G_RESERVE_COMP as *const usize), u(part + fixture::COMPETITION)) == 0 {
         let key = (((*(u(part + fixture::COMPETITION) as *const u32)) << 11 | (core::ptr::read_unaligned((part + fixture::ROUND_PREFIX) as *const u16) as u32 & 0x7ff)) << 11)
             | (core::ptr::read_unaligned((part + fixture::ROUND_NAME) as *const u16) as u32 & 0x7ff);
         let t = *top;
@@ -1667,7 +1631,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
     // (0x7dc national-team club, 0x7d7 otherwise); otherwise only the text
     let cell_of_name = |queue: usize, col: u32, colour: u32, side: u8, f198: u32, f19c: u32, f1a0: u32, l: i32| {
         let pid = core::ptr::read_unaligned((queue + match_record::ROW_STAFF_ID) as *const i32);
-        if pid >= 0 && pid < *(G_STAFF_COUNT as *const i32) && checks((*persons).wrapping_add(pid as usize * 110), f198, f19c, f1a0, queue + match_record::ROW_DATE_OF_BIRTH) != 0 {
+        if pid >= 0 && pid < *(G_STAFF_COUNT as *const i32) && exe::database_staff_matches_names((*persons).wrapping_add(pid as usize * 110), f198, f19c, f1a0, queue + match_record::ROW_DATE_OF_BIRTH) != 0 {
             let club = if side == 0 { u(e) } else { u(e + match_record::AWAY_CLUB_ID) } as i32;
             let atalho = if club >= *(G_CLUB_COUNT as *const i32) - 2 * *(G_NATION_COUNT as *const i32) { 0x7dc } else { 0x7d7 };
             cell(sm, lst, col as usize, z(l), 1, 0, 1, 4, colour as usize, BUF, atalho, (*persons).wrapping_add(pid as usize * 110));
@@ -1712,7 +1676,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
                     }
                     _ => {
                         text(BUF, if kind == 4 { 0xa16650 } else { 0xa16610 }, 0x64, np);
-                        colour = rgb(0, 0xc0, 0, 0);
+                        colour = exe::graphics_rgb_to_pixel(0, 0xc0, 0, 0);
                     }
                 }
             }
@@ -1781,7 +1745,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
         let r = m + 1;
         rows[side_of_row] = r;
         text(BUF, if b8(part + fixture::TIE_RULES) & 0x20 != 0 { 0xa165b8 } else { 0xa165a4 });
-        let mut w = width_of_text(3, BUF) + 0x73;
+        let mut w = exe::font_text_width(3, (BUF) as *const u8) + 0x73;
         if w >= 0x2f1 {
             w = 0x2f1;
         }
@@ -1813,7 +1777,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
                 colour = word(colour, 0xaebde8);
             } else {
                 text(BUF, 0xa1656c, name.as_ptr());
-                colour = rgb(0, 0xc0, 0, 0);
+                colour = exe::graphics_rgb_to_pixel(0, 0xc0, 0, 0);
             }
             let l = rows[side_of_row];
             cell_of_name(queue, col, colour, side, f198, f19c, f1a0, l);
@@ -1898,15 +1862,9 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     let mensagem: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
         core::mem::transmute(FN_GUI_ADD_TEXT_AREA);
     let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let record: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
-    let apply: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize, usize) = core::mem::transmute(FN_LEAGUE_APPLY_RESULT_TO_TABLE);
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let day_of_week: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-    let language: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let name_of_competition: unsafe extern "C" fn(usize, u32, u32, u32) = core::mem::transmute(FN_COMP_UTIL_GET_STAGE_NAME);
-    let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MAX: usize = usize::MAX;
@@ -1960,12 +1918,12 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
                     }
                     gravar8(a + fixture::AWAY_GOALS_HALF_TIME, 0);
                     gravar8(a + fixture::HOME_GOALS_HALF_TIME, 0);
-                    apply(local, a, u(local + league::TABLE), u(local + league::CLUB_COUNT) as u32, 1, 0, 0);
+                    exe::league_apply_result_to_table(local, a, u(local + league::TABLE), u(local + league::CLUB_COUNT) as u32, 1, 0, 0);
                 } else {
                     let a = s + 0x180;
                     core::ptr::copy_nonoverlapping(game as *const u8, a as *mut u8, 0x4f);
                     exe::match_screens_tally_live_score(p0, k as u32, a);
-                    apply(local, a, u(local + league::TABLE), u(local + league::CLUB_COUNT) as u32, 1, 0, 0);
+                    exe::league_apply_result_to_table(local, a, u(local + league::TABLE), u(local + league::CLUB_COUNT) as u32, 1, 0, 0);
                 }
             }
             k += 1;
@@ -1997,8 +1955,8 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
             let a = exe::font_get_height(3);
             let n = ((base - y - 0x10) / a) as u8;
             exe::date_get_long_date_string(s + 0x30, s + 0x3d0, 0x7d0, 0xff);
-            let d = day_of_week(s + 0x30);
-            let g = exe::date_get_weekday_gender(language(), d);
+            let d = (exe::date_get_weekday(s + 0x30) as u32);
+            let g = exe::date_get_weekday_gender((exe::langlib_get_language() as u32), d);
             text(BUF, 0x99c2e8, g as u8 as i8 as i32, s + 0x3d0);
             mensagem(0x6e, z(y), 0x30c, z(base), 2, 0, n as usize, 3, colour_word(G_GUI_COLOUR_PALE_GREY), BUF, 0);
             exe::drop_league(local);
@@ -2092,13 +2050,13 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
             row(current_human_display(), 1, 0x70, 0, x2, 0, 0, queue, 0x6400, u(s + 0x14), 0, 0, 0, 0, 0, 0, 0, 0, lst);
             queue += 1;
         }
-        let r = record(local, i);
+        let r = exe::league_get_table_row(local, i);
         let club = u(r);
         let nl = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
         if nl > 0 {
             let mut j = 0;
             loop {
-                let x = record(league, j);
+                let x = exe::league_get_table_row(league, j);
                 *((s + 0x38) as *mut usize) = x;
                 if club == u(x) {
                     break;
@@ -2109,7 +2067,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
                 }
             }
         }
-        let pos = por_extenso(b8(r + 4) as i8 as i32 + 1, 3);
+        let pos = exe::utils_format_ordinal(b8(r + 4) as i8 as i32 + 1, 3);
         let ret = if core::ptr::read_unaligned((league + league::LEGS) as *const i16) != 0 {
             cell(sm, lst, 0, queue, 0x30, colour_with_high_bits(pos, G_GUI_COLOUR_DARK_BLUE), 0xc, 1, colour_word(G_GUI_COLOUR_PALE_GREY), pos, 7, r)
         } else {
@@ -2123,7 +2081,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
         } else if agora > antes {
             row(current_human_display(), 0x40001, 0, 0, 0, 0, 1, queue, 1, colour_with_high_bits(ret, 0xaebdcc), 0, 0xc, 0, colour_word(G_GUI_COLOUR_RED), 0, 0, 0, 0, lst);
         }
-        let colour = if human(club, 0, 1, 0, 0) != 0 { colour_word(G_GUI_COLOUR_YELLOW) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
+        let colour = if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 { colour_word(G_GUI_COLOUR_YELLOW) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
         cell(sm, lst, 2, queue, 1, 0, 1, 3, colour, club + club::SHORT_NAME, 0x7d5, club);
         let d = r + column.wrapping_mul(14);
         for (o, col) in [(0x11usize, 4usize), (0x12, 5), (0x13, 6), (0x14, 7)] {
@@ -2204,7 +2162,6 @@ pub(crate) unsafe fn set_selection_subtitle(t: usize) {
 pub(crate) unsafe fn join_selection_names(text_obj: usize, list: &[usize], n: i8, club: usize) {
     let name_of: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(FN_TEXT_ADD_LINK);
     let mut name = [0u8; 0xc8];
     let mut juntos = [0u8; 0x7d0];
@@ -2219,7 +2176,7 @@ pub(crate) unsafe fn join_selection_names(text_obj: usize, list: &[usize], n: i8
             text(juntos.as_mut_ptr() as usize, template, 0xde1f64usize, name.as_ptr() as usize);
         }
         match_screens_c_strcpy(0xde1f64 as *mut u8, juntos.as_ptr());
-        let kind = if national_team(club) != 0 { 0x7dc } else { 0x7d7 };
+        let kind = if exe::database_is_national_team(club) != 0 { 0x7dc } else { 0x7d7 };
         ligacao(text_obj, name.as_ptr(), kind, p);
         k += 1;
     }
@@ -2285,24 +2242,8 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
     crate::comparison::branch("telas conferencia da escalacao");
     let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(FN_TEXT_SET_STRING);
     let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(FN_TEXT_ADD_LINK);
-    let chosen: unsafe extern "thiscall" fn(usize, usize, u32, usize) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
-    let convocado: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_NATIONALTEAMS_GET_INTERNATIONAL_DUTY_CLUB);
-    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let injury: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
-    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let bottom: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_BACKGROUND_SET_CLUB_PICTURE);
-    let colours: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
-    let nome_da_equipe: unsafe extern "C" fn(usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CLUB_GET_NATIONAL_TEAM_NAME);
-    let title: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_TITLE);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let limite_do_banco: unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, usize, u32, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_CHECK_MATCHDAY_SQUAD_LIMIT);
-    let vaga_do_capitao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u8 = core::mem::transmute(FN_TACTICS_FIND_CAPTAIN_SLOT);
-    let melhor_titular: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT);
-    let pick_restart_taker: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_TACTICS_GET_SET_PIECE_TAKER);
-    let slot_of_player: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u8 = core::mem::transmute(FN_TACTICS_FIND_SELECTION_SLOT);
     let name_of: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
     let area: unsafe extern "C" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize =
         core::mem::transmute(FN_GUI_ADD_TEXT_AREA_FROM_TEXT);
@@ -2339,7 +2280,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
     for vaga in 0..0x14u8 {
         // simplification: the original pushes the slot as a dword with the top 3 bytes meaningless (the variable is a
         // char); the call uses the char, here it is zero-extended
-        let p = chosen(g(G_TACTICS), club, vaga as u32, equipe);
+        let p = exe::tactics_get_selected_player(g(G_TACTICS), club, vaga as u32, (equipe) as i32);
         if p == 0 {
             continue;
         }
@@ -2354,13 +2295,13 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         if v >= bench() + 0xb {
             continue;
         }
-        if convocado(g(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, club, 0, 0) != 0 {
+        if (exe::nationalteams_get_international_duty_club(g(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, club, (0) as u32, (0) as u32) as usize) != 0 {
             por(&mut convocados, p);
         }
-        if loan(g(G_CONTRACT_MANAGER), p) != 0
+        if exe::contract_manager_get_loan_contract(g(G_CONTRACT_MANAGER), p) != 0
             && exe::contract_manager_get_contract(g(G_CONTRACT_MANAGER), p) != 0
             && *((exe::contract_manager_get_contract(g(G_CONTRACT_MANAGER), p) + 4) as *const i32) == *(club as *const i32)
-            && national_team(club) == 0
+            && exe::database_is_national_team(club) == 0
         {
             por(&mut emprestados, p);
         }
@@ -2374,18 +2315,18 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         }
         let tipo_ruim = |l: usize| l != 0 && (0x4d..=0x51).contains(&*(l as *const i8));
         if exe::injury_get_player_injury_status(g(G_INJURY), p) == 1 {
-            let l = injury(g(G_INJURY), p);
+            let l = exe::injury_get_player_injury(g(G_INJURY), p);
             if tipo_ruim(l) {
-                if language() == 0 {
+                if exe::langlib_get_language() == 0 {
                     por(&mut indisponiveis, p);
                 } else {
                     por(&mut lesionados, p);
                 }
             }
         } else if exe::injury_get_player_injury_status(g(G_INJURY), p) == 2 {
-            if language() != 0 {
+            if exe::langlib_get_language() != 0 {
                 por(&mut lesionados, p);
-            } else if tipo_ruim(injury(g(G_INJURY), p)) {
+            } else if tipo_ruim(exe::injury_get_player_injury(g(G_INJURY), p)) {
                 por(&mut indisponiveis, p);
             } else {
                 por(&mut lesionados, p);
@@ -2393,19 +2334,19 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         }
         if exe::transfer_manager_player_needs_work_permit(g(G_TRANSFER_MANAGER), p, club, 0) != 0
             && *(competition() as *const i32) != *(KEY_CLUB_COMP_RESERVE as *const i32)
-            && friendly(g(G_FRIENDLY), competition()) == 0
+            && exe::friendly_is_friendly_competition(g(G_FRIENDLY), competition()) == 0
         {
             por(&mut sem_visto, p);
         }
     }
 
-    bottom(club, 0, 0);
+    (exe::background_set_club_picture(club, 0, 0) as i32);
     exe::menubar_build(4, 0);
     // 0x53b640 writes u16; the rest of the original’s variable is stack garbage, here 0
     let (mut frente, mut fundo_da_cor) = (0u32, 0u32);
-    colours(club, 1, &mut frente, &mut fundo_da_cor);
-    nome_da_equipe(club, equipe, BUF, 0x7d0, 3, 1);
-    title(SCREEN_MANAGER, fundo_da_cor as usize, frente as usize, BUF);
+    exe::database_get_club_kit_colours(club, 1, &mut frente, &mut fundo_da_cor);
+    exe::club_get_national_team_name(club, equipe, BUF, 0x7d0, 3, 1);
+    exe::screenmanager_add_screen_title(SCREEN_MANAGER, (fundo_da_cor as usize) as u32, (frente as usize) as u32, BUF);
 
     // simplification: an ineligibility reason outside 1 to 11 leaves the original’s message with whatever
     // was left on the stack; here it starts empty
@@ -2458,7 +2399,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
     } else if sem_visto.1 != 0 {
         group(&sem_visto, 0xa17224, 0xa171d4, true);
         show_selection_warning(tu, m, false, false);
-    } else if limite_do_banco(g(G_TRANSFER_MANAGER), club, game, m, 0, 2, 0) != 0 {
+    } else if exe::transfer_manager_check_matchday_squad_limit(g(G_TRANSFER_MANAGER), club, game, (m) as u32, 0, 2, 0) != 0 {
         set_selection_subtitle(0xa17b64);
         show_selection_warning(tu, m, true, false);
     } else if starters < 11 {
@@ -2484,17 +2425,17 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         let mut name = [0u8; 0xc8];
         let mut other = [0u8; 0xc8];
         // the captain: with no captain slot (negative) or outside the 11, the best starter (0x727e20)
-        let c = vaga_do_capitao(g(G_TACTICS), club, equipe, 1) as i8;
-        if c < 0 || vaga_do_capitao(g(G_TACTICS), club, equipe, 1) as i8 >= 0xb {
-            let s = melhor_titular(club, equipe) as i8;
+        let c = (exe::tactics_find_captain_slot(g(G_TACTICS), club, (equipe) as u32, 1) as u8) as i8;
+        if c < 0 || (exe::tactics_find_captain_slot(g(G_TACTICS), club, (equipe) as u32, 1) as u8) as i8 >= 0xb {
+            let s = exe::match_screens_find_best_rated_starter_slot(club, equipe) as i8;
             if s > -1 {
                 // simplification: as in the slot above, the top 3 bytes of the pushed dword are uninitialized
-                let p = chosen(g(G_TACTICS), club, s as u8 as u32, equipe);
+                let p = exe::tactics_get_selected_player(g(G_TACTICS), club, s as u8 as u32, (equipe) as i32);
                 if p != 0 {
                     name_of(p, name.as_mut_ptr(), 0xc8, 1);
                     text(BUF, 0xa16fec, name.as_ptr());
                     append(BUF);
-                    let kind = if national_team(club) != 0 { 0x7dc } else { 0x7d7 };
+                    let kind = if exe::database_is_national_team(club) != 0 { 0x7dc } else { 0x7d7 };
                     ligacao(tu, name.as_ptr(), kind, p);
                 }
             }
@@ -2504,9 +2445,9 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
         let mut cobradores = ([0usize; 20], 0i8);
         for papel in 0..5usize {
             for escolha in 0..2usize {
-                let p = pick_restart_taker(g(G_TACTICS), club, papel, (equipe & !0xff) | escolha, equipe);
+                let p = exe::tactics_get_set_piece_taker(g(G_TACTICS), club, (papel) as i32, ((equipe & !0xff) | escolha) as i32, (equipe) as i32);
                 if p != 0 {
-                    let s = slot_of_player(g(G_TACTICS), club, p, equipe) as i8;
+                    let s = exe::tactics_find_selection_slot(g(G_TACTICS), club, p, (equipe) as u32) as i8;
                     if !(0..=10).contains(&s) && !cobradores.0[..cobradores.1 as usize].contains(&p) {
                         por(&mut cobradores, p);
                     }
@@ -2569,10 +2510,7 @@ pub(crate) unsafe extern "thiscall" fn match_screens_load(stats: usize, zip: usi
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MATCH_SCREENS_LOAD)(stats, zip);
     }
     crate::comparison::branch("telas estatisticas carregar");
-    let open: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let mut h = open(zip, 0xa17bd0, 0, 0x16, 4);
+    let mut h = exe::zopen(zip, 0xa17bd0, 0, 0x16, 4);
     if h == 0 {
         show_error_at(0xa17ba0, 0x49e);
         return 0;
@@ -2583,24 +2521,24 @@ pub(crate) unsafe extern "thiscall" fn match_screens_load(stats: usize, zip: usi
         0
     };
     let n = (stats + match_stats::COUNT) as *mut i32;
-    if read(n as usize, 4, 1, h) != 1 {
+    if exe::zread(n as usize, 4, 1, h) != 1 {
         return falha(0x4a5, h);
     }
-    let table = alloc((*n).wrapping_mul(12) as u32);
+    let table = exe::crt_operator_new((*n).wrapping_mul(12) as u32);
     *(stats as *mut usize) = table;
     if table == 0 {
         return falha(0x4ae, h);
     }
-    if read(table, 0xc, *n as u32, h) != *n as u32 {
+    if exe::zread(table, 0xc, *n as u32, h) != *n as u32 {
         return falha(0x4b6, h);
     }
-    if read(stats + match_stats::BUCKET_CURSORS, 4, 4, h) != 4 {
+    if exe::zread(stats + match_stats::BUCKET_CURSORS, 4, 4, h) != 4 {
         return falha(0x4be, h);
     }
-    if read(stats + match_stats::CAPACITY, 4, 1, h) != 1 {
+    if exe::zread(stats + match_stats::CAPACITY, 4, 1, h) != 1 {
         return falha(0x4c6, h);
     }
-    if read(stats + match_stats::EVENT_FILE_NUMBER, 4, 1, h) != 1 {
+    if exe::zread(stats + match_stats::EVENT_FILE_NUMBER, 4, 1, h) != 1 {
         return falha(0x4ce, h);
     }
     exe::zclose(&mut h);
@@ -2624,9 +2562,7 @@ pub(crate) unsafe extern "thiscall" fn match_screens_save(stats: usize, zip: usi
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MATCH_SCREENS_SAVE)(stats, zip);
     }
     crate::comparison::branch("telas estatisticas salvar");
-    let open: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-    let mut h = open(zip, 0xa17bd0, 1, 0x16, 4);
+    let mut h = exe::zopen(zip, 0xa17bd0, 1, 0x16, 4);
     if h == 0 {
         fatal_error_at(0xa17ba0, 0x4f1);
     }
@@ -2636,19 +2572,19 @@ pub(crate) unsafe extern "thiscall" fn match_screens_save(stats: usize, zip: usi
         0
     };
     let n = (stats + match_stats::COUNT) as *const i32;
-    if write(n as usize, 4, 1, h) != 1 {
+    if exe::zwrite(n as usize, 4, 1, h) != 1 {
         return falha(0x4f8, h);
     }
-    if write(*(stats as *const usize), 0xc, *n as u32, h) != *n as u32 {
+    if exe::zwrite(*(stats as *const usize), 0xc, *n as u32, h) != *n as u32 {
         return falha(0x500, h);
     }
-    if write(stats + match_stats::BUCKET_CURSORS, 4, 4, h) != 4 {
+    if exe::zwrite(stats + match_stats::BUCKET_CURSORS, 4, 4, h) != 4 {
         return falha(0x508, h);
     }
-    if write(stats + match_stats::CAPACITY, 4, 1, h) != 1 {
+    if exe::zwrite(stats + match_stats::CAPACITY, 4, 1, h) != 1 {
         return falha(0x510, h);
     }
-    if write(stats + match_stats::EVENT_FILE_NUMBER, 4, 1, h) != 1 {
+    if exe::zwrite(stats + match_stats::EVENT_FILE_NUMBER, 4, 1, h) != 1 {
         return falha(0x518, h);
     }
     exe::zclose(&mut h);
@@ -2677,21 +2613,17 @@ pub(crate) unsafe extern "thiscall" fn read_match_record(stats: usize, k: i32, o
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_READ_MATCH_RECORD)(stats, k, out);
     }
     crate::comparison::branch("estatisticas ler registro");
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let search: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let f = open(path(0x987da0, 0xa17b88), 0x98f928);
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0xa17b88), 0x98f928);
     if f == 0 {
         show_error_at(0xa17ba0, 0x128);
         return 0;
     }
-    if search(f, k.wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
+    if exe::crt_fseek(f, k.wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
         show_error_at(0xa17ba0, 0x12f);
         exe::crt_fclose(f);
         return 0;
     }
-    if read(out, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {
+    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {
         show_error_at(0xa17ba0, 0x137);
         exe::crt_fclose(f);
         return 0;
@@ -2751,26 +2683,21 @@ pub(crate) unsafe extern "thiscall" fn write_match_record(stats: usize, game: us
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_WRITE_MATCH_RECORD)(stats, game, r, events);
     }
     crate::comparison::branch("estatisticas gravar registro");
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let search: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
     let d = |o: usize| (stats + o) as *mut i32;
     let j = |o: usize| (game + o) as *mut i32;
 
     let desc = r + match_record::EVENT_LOG;
     core::ptr::write_bytes(desc as *mut u8, 0, 13);
-    let h = (human(*((game + fixture::HOME_CLUB) as *const usize), 1, 1, 0, 0) != 0 || human(*((game + fixture::AWAY_CLUB) as *const usize), 1, 1, 0, 0) != 0) as u32;
+    let h = (exe::human_manager_is_human_club(*((game + fixture::HOME_CLUB) as *const usize), 1, 1, 0, 0) != 0 || exe::human_manager_is_human_club(*((game + fixture::AWAY_CLUB) as *const usize), 1, 1, 0, 0) != 0) as u32;
     exe::match_events_save_event_log(events, desc, h);
-    let f = open(path(0x987da0, 0xa17b88), 0x9c7848);
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0xa17b88), 0x9c7848);
     if f == 0 {
         show_error_at(0xa17ba0, 0x172);
         return 0;
     }
     let slot = *j(8);
     if slot != -1 {
-        if search(f, slot.wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
+        if exe::crt_fseek(f, slot.wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
             show_error_at(0xa17ba0, 0x17f);
             exe::crt_fclose(f);
             return 0;
@@ -2778,7 +2705,7 @@ pub(crate) unsafe extern "thiscall" fn write_match_record(stats: usize, game: us
     } else {
         let b = exe::match_stats_get_record_bucket(stats, game, r) as i8 as isize;
         let cursor = d(8 + 4 * b as usize);
-        if search(f, (*cursor).wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
+        if exe::crt_fseek(f, (*cursor).wrapping_mul(MATCH_STATS_RECORD_SIZE as i32), 0) != 0 {
             show_error_at(0xa17ba0, 0x18d);
             exe::crt_fclose(f);
             return 0;
@@ -2791,7 +2718,7 @@ pub(crate) unsafe extern "thiscall" fn write_match_record(stats: usize, game: us
             *cursor = c - total / 4;
         }
     }
-    if write(r, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {
+    if exe::crt_fwrite(r, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {
         show_error_at(0xa17ba0, 0x1a3);
         exe::crt_fclose(f);
         return 0;
@@ -2910,13 +2837,8 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
     type T11 = unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, u32, u32, u32, usize, u32, usize) -> u32;
     let cell: T11 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
     let text_of_cell: T9 = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
-    let text_of_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let margin: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
-    let name_of: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_IDS);
-    let checks: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     const BUF: usize = 0xde1f64;
     let sm = SCREEN_MANAGER;
 
@@ -2963,7 +2885,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     cor = colour_word_u32(G_GUI_COLOUR_PALE_GREY);
                     coluna = 1;
                     fonte = 0xc;
-                    fundo = if i < 0xb { colour_word_u32(G_GUI_COLOUR_DARK_BLUE) } else { rgb(0, 0, 0x40, 0) };
+                    fundo = if i < 0xb { colour_word_u32(G_GUI_COLOUR_DARK_BLUE) } else { exe::graphics_rgb_to_pixel(0, 0, 0x40, 0) };
                     let n = bi(0x1ac);
                     marcas = 0x30;
                     estilo = 1;
@@ -3006,7 +2928,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fonte = 1;
                     fundo = 0;
                     let mut name = [0u8; 0xc8];
-                    name_of(n1, n2, n3, name.as_mut_ptr(), 0xc8, 1, id as u32);
+                    exe::database_format_name_from_ids(n1, n2, n3, name.as_mut_ptr(), 0xc8, 1, id as u32);
                     let capitao = *((data.wrapping_add(base_side as usize) + 0x153) as *const i8) as i32;
                     if i == capitao {
                         text(BUF, 0xa16a7c, name.as_ptr());
@@ -3015,7 +2937,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     }
                     if id >= 0 && id < *(G_STAFF_COUNT as *const i32) {
                         let person = (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * 110);
-                        if checks(person, n1, n2, n3, reg + match_record::ROW_DATE_OF_BIRTH) != 0 {
+                        if exe::database_staff_matches_names(person, n1, n2, n3, reg + match_record::ROW_DATE_OF_BIRTH) != 0 {
                             let v = if side == 0 { *(data as *const i32) } else { *((data + match_record::AWAY_CLUB_ID) as *const i32) };
                             let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
                             botao = (if v >= limit { 0x7dc } else { 0x7d7 }, person);
@@ -3090,8 +3012,8 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     item = r;
                 }
             } else {
-                text_of_item(sm, item, BUF);
-                margin(sm, item, marcas);
+                exe::screenmanager_set_widget_text(sm, item, BUF);
+                exe::screenmanager_set_widget_style(sm, item, marcas);
                 exe::screenmanager_set_widget_text_colour(sm, item, cor);
                 item = item.wrapping_add(1);
             }
@@ -3120,18 +3042,9 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
 /// minutos do mesmo jogador juntos) e o agregado. Só a página mostrada é escrita (segunda passada).
 /// No rodapé "<< Página x/y >>" (ou "Hold") com mais de uma página; no fim a hora no parâmetro 0x14.
 pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
-    let text_of_item: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let margin: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
-    let font_of_item: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FONT);
-    let position_place_players: unsafe extern "thiscall" fn(usize, u32, u32, u32, i32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_RECT);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
     let name_of_stage: unsafe extern "C" fn(i32, i32, usize, u32, u32) -> i32 = core::mem::transmute(FN_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
-    let width_of_text: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let checks: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
-    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
     let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     const BUF: usize = 0xde1f64;
     let sm = SCREEN_MANAGER;
@@ -3151,18 +3064,18 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
 
     for r in 0..n {
         let it = item(r, 0);
-        position_place_players(sm, it, 0, 0, 0, 0);
-        margin(sm, it, 1);
-        font_of_item(sm, it, 3);
-        text_of_item(sm, it, 0xad9c64);
+        exe::screenmanager_set_widget_rect(sm, it, (0) as i32, (0) as i32, 0, (0) as i32);
+        exe::screenmanager_set_widget_style(sm, it, 1);
+        exe::screenmanager_set_widget_font(sm, it, (3) as usize);
+        exe::screenmanager_set_widget_text(sm, it, 0xad9c64);
         exe::screenmanager_set_widget_id(sm, it, 0);
-        text_of_item(sm, it + 1, 0xad9c64);
-        text_of_item(sm, it + 2, 0xad9c64);
-        text_of_item(sm, it + 3, 0xad9c64);
-        font_of_item(sm, it + 4, 3);
-        text_of_item(sm, it + 4, 0xad9c64);
+        exe::screenmanager_set_widget_text(sm, it + 1, 0xad9c64);
+        exe::screenmanager_set_widget_text(sm, it + 2, 0xad9c64);
+        exe::screenmanager_set_widget_text(sm, it + 3, 0xad9c64);
+        exe::screenmanager_set_widget_font(sm, it + 4, (3) as usize);
+        exe::screenmanager_set_widget_text(sm, it + 4, 0xad9c64);
         exe::screenmanager_set_widget_id(sm, it + 4, 0);
-        text_of_item(sm, it + 5, 0xad9c64);
+        exe::screenmanager_set_widget_text(sm, it + 5, 0xad9c64);
     }
     set_screen_param(0x13, 0);
     let mut paginas: i8 = 0;
@@ -3209,28 +3122,28 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                     if !same && !(w32 == 0 && w30 == 0) {
                         if passe == 2 {
                             name_of_stage(w32 as i32, w30 as i32, BUF, 0x7d0, 0);
-                            let mut x = width_of_text(3, BUF) + 0x7d;
+                            let mut x = exe::font_text_width(3, (BUF) as *const u8) + 0x7d;
                             if x >= 0x2f1 {
                                 x = 0x2f1;
                             }
                             let comp = u(m4 + fixture::COMPETITION);
                             let it = item(ebp, 0);
-                            if friendly(*(G_FRIENDLY as *const usize), comp) == 0 && national_team(*(G_RESERVE_COMP as *const usize), comp) == 0 {
-                                position_place_players(sm, it, 0x7d, 0, x, 0);
+                            if exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), comp) == 0 && national_team(*(G_RESERVE_COMP as *const usize), comp) == 0 {
+                                exe::screenmanager_set_widget_rect(sm, it, (0x7d) as i32, (0) as i32, x, (0) as i32);
                                 exe::screenmanager_set_widget_text_colour(sm, it, colour_word_u32(G_GUI_COLOUR_YELLOW));
-                                text_of_item(sm, it, BUF);
+                                exe::screenmanager_set_widget_text(sm, it, BUF);
                                 exe::screenmanager_set_widget_id(sm, it, 0x7e5);
                                 let key = ((*(comp as *const u32) << 11 | (w32 as u16 as u32 & 0x7ff)) << 11) | (w30 as u16 as u32 & 0x7ff);
                                 exe::screenmanager_set_widget_data(sm, it, key as usize);
                             } else {
-                                position_place_players(sm, it, 0x7d, 0, x, 0);
+                                exe::screenmanager_set_widget_rect(sm, it, (0x7d) as i32, (0) as i32, x, (0) as i32);
                                 exe::screenmanager_set_widget_text_colour(sm, it, colour_word_u32(G_GUI_COLOUR_YELLOW));
-                                text_of_item(sm, it, BUF);
+                                exe::screenmanager_set_widget_text(sm, it, BUF);
                             }
                             ebp += 1;
                             let it = item(ebp, 0);
-                            position_place_players(sm, it, 0x7d, 0, x, 0);
-                            margin(sm, it, 0xc400);
+                            exe::screenmanager_set_widget_rect(sm, it, (0x7d) as i32, (0) as i32, x, (0) as i32);
+                            exe::screenmanager_set_widget_style(sm, it, 0xc400);
                             exe::screenmanager_set_widget_colour(sm, it, colour_word_u32(G_GUI_COLOUR_YELLOW));
                             ebp += 1;
                         } else {
@@ -3247,9 +3160,9 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                         for (side, desvio) in [(0x1cusize, 0u32), (0x20, 4)] {
                             let team = u(m4 + side);
                             format(BUF, 0x987ff0, team + club::SHORT_NAME);
-                            let h = human(team, 0, 1, 0, 0);
+                            let h = exe::human_manager_is_human_club(team, 0, 1, 0, 0);
                             exe::screenmanager_set_widget_text_colour(sm, it + desvio, if h != 0 { colour_word_u32(G_GUI_COLOUR_YELLOW) } else { colour_word_u32(0xaebde8) });
-                            text_of_item(sm, it + desvio, BUF);
+                            exe::screenmanager_set_widget_text(sm, it + desvio, BUF);
                             exe::screenmanager_set_widget_id(sm, it + desvio, if b(m4 + fixture::HOME_SIDE_MARK + desvio as usize / 4) != 0 { 0x7d5 } else { 0x7d6 });
                             exe::screenmanager_set_widget_data(sm, it + desvio, team);
                             if desvio == 0 {
@@ -3258,15 +3171,15 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                                     0xfd => text(BUF, 0x99c9c4, 0xad9c64),
                                     _ => format(BUF, 0xa16d1c, g1 as i8 as i32),
                                 };
-                                text_of_item(sm, it + 1, BUF);
-                                text_of_item(sm, it + 2, 0x989adc);
+                                exe::screenmanager_set_widget_text(sm, it + 1, BUF);
+                                exe::screenmanager_set_widget_text(sm, it + 2, 0x989adc);
                                 // the original decides the away score from the home score (0xfe/0xfd)
                                 match g1 {
                                     0xfe => text(BUF, 0x99c9a4, 0xad9c64),
                                     0xfd => text(BUF, 0x99c984, 0xad9c64),
                                     _ => format(BUF, 0xa16d14, g2 as i8 as i32),
                                 };
-                                text_of_item(sm, it + 3, BUF);
+                                exe::screenmanager_set_widget_text(sm, it + 3, BUF);
                             }
                         }
                         // the period
@@ -3312,7 +3225,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                             }
                         })();
                         text(BUF, rotulo);
-                        text_of_item(sm, it + 5, BUF);
+                        exe::screenmanager_set_widget_text(sm, it + 5, BUF);
                     } else if ebp + 2 > n {
                         nova_pagina = true;
                         continue 'refaz;
@@ -3390,7 +3303,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                                 _ => (0xa16c34, 0),
                             };
                             text(BUF, template, name.as_ptr(), minute + 1);
-                            cor4c = if kind == 4 || kind == 6 { rgb(0, 0xc0, 0, 0) } else { c };
+                            cor4c = if kind == 4 || kind == 6 { exe::graphics_rgb_to_pixel(0, 0xc0, 0, 0) } else { c };
                         } else if kind <= 3 {
                             if abandonada(partida) {
                                 g1 = 0xfd;
@@ -3443,10 +3356,10 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                         if passe == 2 {
                             let it = item(r24, coluna44 * 2);
                             exe::screenmanager_set_widget_text_colour(sm, it, cor4c);
-                            text_of_item(sm, it, BUF);
+                            exe::screenmanager_set_widget_text(sm, it, BUF);
                             if id >= 0 && id < *(G_STAFF_COUNT as *const i32) {
                                 let person = (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * 110);
-                                if checks(person, n98, na0, na4, reg + match_record::ROW_DATE_OF_BIRTH) != 0 {
+                                if exe::database_staff_matches_names(person, n98, na0, na4, reg + match_record::ROW_DATE_OF_BIRTH) != 0 {
                                     let v = if side == 0 { i32_em(ev) } else { i32_em(ev + match_record::AWAY_CLUB_ID) };
                                     let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
                                     exe::screenmanager_set_widget_id(sm, it, if v >= limit { 0x7dc } else { 0x7d7 });
@@ -3482,9 +3395,9 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                             let first_leg = u(partida);
                             text(BUF, 0xa16bb0, b(first_leg + fixture::HOME_AGGREGATE) as i8 as i32 + g1 as i8 as i32, b(first_leg + fixture::AWAY_AGGREGATE) as i8 as i32 + g2 as i8 as i32);
                             let it = item(r, if do_fora { 4 } else { 0 });
-                            font_of_item(sm, it, 2);
+                            exe::screenmanager_set_widget_font(sm, it, (2) as usize);
                             exe::screenmanager_set_widget_text_colour(sm, it, colour_word_u32(G_GUI_COLOUR_YELLOW));
-                            text_of_item(sm, it, BUF);
+                            exe::screenmanager_set_widget_text(sm, it, BUF);
                         } else if prox > n {
                             nova_pagina = true;
                             continue 'refaz;
@@ -3510,28 +3423,28 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
 
     let it = (first as usize).wrapping_add(((high | n as u32) as usize).wrapping_mul(6)) as u32;
     if paginas > 1 {
-        margin(sm, it, 0x30);
+        exe::screenmanager_set_widget_style(sm, it, 0x30);
         if *(G_FONT_MODE as *const i32) != -1 {
             format(BUF, 0x99ec1c, 0x2a);
-            text_of_item(sm, it, BUF);
+            exe::screenmanager_set_widget_text(sm, it, BUF);
         } else {
-            text_of_item(sm, it, 0x98e7c4);
+            exe::screenmanager_set_widget_text(sm, it, 0x98e7c4);
         }
         let template = if parado != 0 { 0xa16b8c } else { 0xa16b68 };
         text(BUF, template, pagina as i32, paginas as i32);
-        margin(sm, it + 1, 2);
-        text_of_item(sm, it + 1, BUF);
-        margin(sm, it + 2, 0x30);
+        exe::screenmanager_set_widget_style(sm, it + 1, 2);
+        exe::screenmanager_set_widget_text(sm, it + 1, BUF);
+        exe::screenmanager_set_widget_style(sm, it + 2, 0x30);
         if *(G_FONT_MODE as *const i32) != -1 {
             format(BUF, 0x99ec1c, 0x2b);
-            text_of_item(sm, it + 2, BUF);
+            exe::screenmanager_set_widget_text(sm, it + 2, BUF);
         } else {
-            text_of_item(sm, it + 2, 0x98e7a8);
+            exe::screenmanager_set_widget_text(sm, it + 2, 0x98e7a8);
         }
     } else {
         for d in 0..3 {
-            margin(sm, it + d, 1);
-            text_of_item(sm, it + d, 0xad9c64);
+            exe::screenmanager_set_widget_style(sm, it + d, 1);
+            exe::screenmanager_set_widget_text(sm, it + d, 0xad9c64);
         }
     }
     set_screen_param(0x14, exe::utils_get_time_ms() as usize);
@@ -3553,9 +3466,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
 /// partida (0x718aa0) na vaga do humano: −4.
 pub(crate) unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
     crate::comparison::branch("telas espera dos outros jogadores");
-    let humanos: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, i32) = core::mem::transmute(FN_SCREENMANAGER_GET_CHANNEL_MANAGER_KEYS);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let mostrar: unsafe extern "thiscall" fn(usize, usize, i32, u32, i32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
     let sm = SCREEN_MANAGER;
     let h = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16);
     let key_current = || core::ptr::read_unaligned((0xb74c26 + h() as isize * 0x300) as *const usize);
@@ -3568,7 +3479,7 @@ pub(crate) unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
     }
     let mut keys = [0usize; 16];
     let mut how_many: i16 = 0;
-    humanos(sm, keys.as_mut_ptr(), &mut how_many, h() as i32);
+    exe::screenmanager_get_channel_manager_keys(sm, keys.as_mut_ptr(), &mut how_many, h() as i32);
     let mut k = 0usize;
     while (k as i32) < how_many as i32 {
         let c = keys[k];
@@ -3582,7 +3493,7 @@ pub(crate) unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
         return -11;
     }
     text(0xde1f64, 0xa16d94);
-    mostrar(sm, 0xde1f64, 1, 0, h() as i32);
+    exe::screenmanager_send_network_status_message(sm, 0xde1f64, 1, 0, h() as i32);
     exe::open_match_screen(key_current(), partida);
     -4
 }
@@ -3705,13 +3616,12 @@ pub(crate) unsafe extern "C" fn draw_action_zones_panel(top: *mut i32, base: *mu
     txt(sm, u(x0 + two + 10), u(y0 + 5), u(x1 - 10), u(y0 + 0x19), 1, 0, 0xc, 1, colour_word(G_GUI_COLOUR_YELLOW), 0, 1);
 
     // the two clubs’ colors (0x53b640 writes u16; the rest of the original’s variable is stack garbage, here 0)
-    let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u32, *mut u32) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let (mut c1a, mut c1b, mut c2a, mut c2b) = (0u32, 0u32, 0u32, 0u32);
     let clubs = *(G_CLUB_TABLE as *const usize);
     let id1 = core::ptr::read_unaligned(data as *const i32);
-    colours_of_club((clubs as isize + id1 as isize * 0x245) as usize, *((data + match_record::HOME_KIT) as *const u8) as u32, &mut c1a, &mut c1b);
+    exe::database_get_club_kit_colours((clubs as isize + id1 as isize * 0x245) as usize, *((data + match_record::HOME_KIT) as *const u8) as u32, &mut c1a, &mut c1b);
     let id2 = core::ptr::read_unaligned((data + match_record::AWAY_CLUB_ID) as *const i32);
-    colours_of_club((clubs as isize + id2 as isize * 0x245) as usize, *((data + match_record::AWAY_KIT) as *const u8) as u32, &mut c2a, &mut c2b);
+    exe::database_get_club_kit_colours((clubs as isize + id2 as isize * 0x245) as usize, *((data + match_record::AWAY_KIT) as *const u8) as u32, &mut c2a, &mut c2b);
 
     // a zone: the frame, the panel from `l` to `r`, the bars of the two colors and the middle line; returns that of the line
     let zona = |a: (i32, i32), colour: usize, l: i32, r: i32, colour_b: (usize, usize)| -> usize {
@@ -3786,16 +3696,14 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
             return show_panel_empty_message(top, base, SEM_RELATORIO);
         }
         if get_screen_param(0x2d) == 0 {
-            let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-            let memoria = new(0x2db1);
+            let memoria = exe::crt_operator_new(0x2db1);
             if memoria == 0 {
                 // simplification: out of memory the original shows the error (and tries to allocate again, to no effect)
                 return o(top, base);
             }
             crate::comparison::branch("telas painel do relatorio da partida (montar)");
             // simplification: the original’s SEH frame only frees the memory if the constructor throws an exception, which it does not
-            let construct: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_MATCH_EVENTS_MATCH_EVENTS);
-            let r = construct(memoria, 0);
+            let r = exe::new_match_events(memoria, (0) as u8);
             set_screen_param(0x2d, r);
             if exe::match_events_load_event_log(r, dados + match_record::EVENT_LOG) as u8 == 0 {
                 show_panel_empty_message(top, base, SEM_RELATORIO);
@@ -3853,12 +3761,11 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
                     // simplification: the top 3 bytes of the rows are stack garbage in the original; here 0
                     table = list(current_human_display(), 0x6e, a as usize, 0x30c, b as usize, 2, columns.as_mut_ptr() as usize, n as usize, 0, 1, 0, usize::MAX);
                 }
-                let colour_rgb: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
                 let k = *(entry as *const i16) as i32;
                 let word = |a: usize| (colour & 0xffff_0000) | colour_word(a);
                 colour = match k {
-                    0x1f56 | 0x1f57 | 0x1fce | 0x2008 => colour_rgb(0, 0xc0, 0, 0),
-                    0x1fcc | 0x1fcf | 0x2000 | 0x2013..=0x201b | 0x2114 => colour_rgb(0, 0x96, 0xff, 0),
+                    0x1f56 | 0x1f57 | 0x1fce | 0x2008 => (exe::graphics_rgb_to_pixel(0, 0xc0, 0, 0) as usize),
+                    0x1fcc | 0x1fcf | 0x2000 | 0x2013..=0x201b | 0x2114 => (exe::graphics_rgb_to_pixel(0, 0x96, 0xff, 0) as usize),
                     0x1fcd => word(0xaebdd4),
                     0x1ff5..=0x1ff8 => word(G_GUI_COLOUR_RED),
                     0x1ff9 => word(G_GUI_COLOUR_YELLOW),
@@ -3876,12 +3783,10 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
                 let mut k = first;
                 if last_minute != minute {
                     last_minute = minute;
-                    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-                    if language() != 2 {
+                    if exe::langlib_get_language() != 2 {
                         text(BUF, 0xa168ec, minute as u32 + 1);
                     } else {
-                        let por_extenso: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
-                        format(BUF, 0xa168e4, por_extenso(minute.wrapping_add(1) as u32, 2));
+                        format(BUF, 0xa168e4, exe::utils_format_ordinal((minute.wrapping_add(1) as u32) as i32, (2) as i32));
                     }
                     text_of_cell(sm, table, 0, k as usize, 2, 0, 0xc, 2, colour_word(G_GUI_COLOUR_YELLOW), BUF);
                     k += 1;
@@ -3937,8 +3842,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let sem_selo = |c: usize| {
-        let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
-        friendly(*(G_FRIENDLY as *const usize), c) == 0 && national_team(*(G_RESERVE_COMP as *const usize), c) == 0
+        exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), c) == 0 && national_team(*(G_RESERVE_COMP as *const usize), c) == 0
     };
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let rd32 = |a: usize| core::ptr::read_unaligned(a as *const i32);
@@ -3948,8 +3852,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
     let mut columns: [u8; 9] = [3, 2, 0x12, 1, 4, 1, 0x12, 2, 3];
     let group = get_screen_param(1);
     let comp = (*(G_CLUB_COMP_TABLE as *const usize) as isize + rd32(group) as isize * 107) as usize;
-    let bottom: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
-    bottom(comp, 0, 0);
+    exe::background_set_comp_picture(comp, 0, 0);
     // the competition’s colors (0x53b7c0 writes u16; the rest of the original’s variable is stack garbage, here 0)
     let (mut ca, mut cb) = (0u32, 0u32);
     exe::database_get_comp_colours(comp, &mut ca, &mut cb);
@@ -3962,8 +3865,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
     } else {
         copy_to_work_text(comp + 4);
     }
-    let title: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_TITLE);
-    title(sm, cb, ca, BUF);
+    exe::screenmanager_add_screen_title(sm, cb, ca, BUF);
     if sem_selo(comp) {
         row(current_human_display(), 6, 0x7d, 0xa, 0x316, 0x46, 0, 0, 1, 0, 0, 0xc, 7, 0, 0, 0, 0x7d0, comp, usize::MAX);
     }
@@ -4058,7 +3960,6 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
     let mut k: i32 = 0;
     let mut target: i32 = -1;
     let mut previous: usize = 0;
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let mut j = rd32(group + 4);
     while j <= rd32(group + 8) {
         let partidas = rd(rd(G_MATCH_DAY) + 0x19);
@@ -4074,8 +3975,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
             }
             let round: unsafe extern "C" fn(i32, i32, usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
             round(w32 as i32, w30 as i32, BUF, 0x7d0, 0);
-            let width_of_text: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
-            let mut width = width_of_text(3, BUF as *const u8) + 0x73;
+            let mut width = exe::font_text_width(3, BUF as *const u8) + 0x73;
             if width >= 0x2f1 {
                 width = 0x2f1;
             }
@@ -4093,7 +3993,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
         let (c1, c2) = (rd(fx + fixture::HOME_CLUB), rd(fx + fixture::AWAY_CLUB));
         if exe::human_manager_current_controls_club(c1, 0, 1) != 0 || exe::human_manager_current_controls_club(c2, 0, 1) != 0 {
             target = k;
-        } else if target == -1 && (human(c1, 0, 1, 0, 0) != 0 || human(c2, 0, 1, 0, 0) != 0) {
+        } else if target == -1 && (exe::human_manager_is_human_club(c1, 0, 1, 0, 0) != 0 || exe::human_manager_is_human_club(c2, 0, 1, 0, 0) != 0) {
             target = k;
         }
         exe::comp_screens_add_fixture_row(fx, table, &mut k, 2);
@@ -4140,11 +4040,9 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
 pub(crate) unsafe fn save_match_snapshot(mut copy: usize, state: usize) {
     if copy == 0 {
         crate::comparison::branch("telas cria a copia do estado da partida");
-        let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-        let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
-        copy = new(0xd7a);
+        copy = exe::crt_operator_new(0xd7a);
         if copy != 0 {
-            array(copy + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
+            exe::crt_vector_constructor_iterator(copy + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
         }
         set_screen_param(0x1d, copy);
     }
@@ -4202,7 +4100,6 @@ pub(crate) const FORMAT_PCT: usize = 0x98e8d4; // "%d%%"
 /// +0x75d mas mostra 100 − o do +0x138, como a original). No fim guarda o estado na cópia.
 pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let text: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
@@ -4215,13 +4112,13 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     let byte = |k: usize, d: u32| {
         if copy == 0 || u8_(e, k) != u8_(copy, k) {
             format(BUF, FORMAT_D, u8_(e, k));
-            text(sm, item.wrapping_add(d), BUF);
+            exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
     let diferenca = |a: usize, b: usize, d: u32| {
         if copy == 0 || u8_(e, a) - u8_(e, b) != u8_(copy, a) - u8_(copy, b) {
             format(BUF, FORMAT_D, u8_(e, a) - u8_(e, b));
-            text(sm, item.wrapping_add(d), BUF);
+            exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
     let write_percent_pair = |muda: usize, den: usize, num: usize, d: u32, inverter: bool| {
@@ -4232,7 +4129,7 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
                 let x = i16_(e, num) * 100 / i16_(e, den);
                 format(BUF, FORMAT_PCT, if inverter { 100 - x } else { x });
             }
-            text(sm, item.wrapping_add(d), BUF);
+            exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
 
@@ -4283,9 +4180,6 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
 pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let text: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let retangulo: unsafe extern "thiscall" fn(usize, u32, i32, i32, i32, i32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_RECT);
-    let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
@@ -4314,12 +4208,12 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
         let total = || s(e, 0xc) + s(e, 0x16) + s(e, 0x20);
         let a = if total() == 0 { 0 } else { (s(e, 0xc) * 100 / total()) as i8 as i32 };
         format(BUF, FORMAT_PCT, a);
-        text(sm, b, BUF);
+        exe::screenmanager_set_widget_text(sm, b, BUF);
         let c = if total() == 0 { 0 } else { (s(e, 0x20) * 100 / total()) as i8 as i32 };
         format(BUF, FORMAT_PCT, c);
-        text(sm, it(2), BUF);
+        exe::screenmanager_set_widget_text(sm, it(2), BUF);
         format(BUF, FORMAT_PCT, if total() == 0 { 0 } else { 100 - c - a });
-        text(sm, it(1), BUF);
+        exe::screenmanager_set_widget_text(sm, it(1), BUF);
     }
     if copy == 0 || s(e, 0x2a) != s(copy, 0x2a) {
         if side == 4 {
@@ -4328,15 +4222,15 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
             let x = s(e, 0x2a) * 60 / 11;
             traduzido(BUF, 0xa168b4, x / 60, x % 60);
         }
-        text(sm, it(3), BUF);
+        exe::screenmanager_set_widget_text(sm, it(3), BUF);
     }
 
     // the club colors: the first output (+0x3c on the original’s stack) is the bar color; the second
     // each call’s output is not used. Only the low 16 bits count (0x801040 reads a word).
     let club = |k: usize| (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((e + k) as *const usize)).wrapping_mul(club::SIZE));
     let (mut cor1, mut cor2, mut resto1, mut resto2) = ([0u8; 2], [0u8; 2], [0u8; 2], [0u8; 2]);
-    colours_of_club(club(0), u8_(e, match_record::HOME_KIT), cor1.as_mut_ptr(), resto1.as_mut_ptr());
-    colours_of_club(club(4), u8_(e, match_record::AWAY_KIT), cor2.as_mut_ptr(), resto2.as_mut_ptr());
+    exe::database_get_club_kit_colours(club(0), u8_(e, match_record::HOME_KIT), (cor1.as_mut_ptr()) as *mut u32, (resto1.as_mut_ptr()) as *mut u32);
+    exe::database_get_club_kit_colours(club(4), u8_(e, match_record::AWAY_KIT), (cor2.as_mut_ptr()) as *mut u32, (resto2.as_mut_ptr()) as *mut u32);
     let colour = |pct: u32| u16::from_le_bytes(if pct < 0x32 { cor2 } else { cor1 }) as u32;
     let value = |field: isize| *((e as isize + side + field) as *const u8);
     let mudou = |field: isize| copy == 0 || value(field) != *((copy as isize + side + field) as *const u8);
@@ -4344,8 +4238,8 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
     let zona = |field: isize, mark: isize, start: i32, end: i32, d: u32| {
         let p = pct(field, mark);
         let x = (end - start - 4) * p as i32 / 100 + start + 2;
-        retangulo(sm, it(d), start + 2, base - 0x12, x, base - 0xc);
-        retangulo(sm, it(d + 1), x, base - 0x12, end - 2, base - 0xc);
+        exe::screenmanager_set_widget_rect(sm, it(d), start + 2, base - 0x12, x, base - 0xc);
+        exe::screenmanager_set_widget_rect(sm, it(d + 1), x, base - 0x12, end - 2, base - 0xc);
         exe::screenmanager_set_widget_colour(sm, it(d + 2), colour(p));
     };
     if mudou(0x143) {
@@ -4361,11 +4255,11 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
         let p = pct(0x13e, 0x763);
         format(BUF, FORMAT_PCT, p);
         let w = (p * 0x1d2 / 100) as i32 + 0xd4;
-        retangulo(sm, it(0x15), 0xd4, height - 0x23, w, height - 0x14);
-        text(sm, it(0x15), BUF);
+        exe::screenmanager_set_widget_rect(sm, it(0x15), 0xd4, height - 0x23, w, height - 0x14);
+        exe::screenmanager_set_widget_text(sm, it(0x15), BUF);
         format(BUF, FORMAT_PCT, 100u32.wrapping_sub(p));
-        retangulo(sm, it(0x16), w, height - 0x23, 0x2a6, height - 0x14);
-        text(sm, it(0x16), BUF);
+        exe::screenmanager_set_widget_rect(sm, it(0x16), w, height - 0x23, 0x2a6, height - 0x14);
+        exe::screenmanager_set_widget_text(sm, it(0x16), BUF);
         exe::screenmanager_set_widget_colour(sm, it(0x17), colour(p));
     }
     save_match_snapshot(copy, e);
@@ -4393,8 +4287,6 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
 pub(crate) unsafe extern "C" fn refresh_player_ratings_rows() {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let traduzido: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let text: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let margin: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
@@ -4417,31 +4309,31 @@ pub(crate) unsafe extern "C" fn refresh_player_ratings_rows() {
             let difere = |ks: &[usize]| c == 0 || ks.iter().any(|&k| er(k) != cr(k));
             if er(match_record_row::POSITION) == 0xfb {
                 if c == 0 {
-                    margin(sm, i, 1);
-                    margin(sm, i + 1, 1);
-                    text(sm, i + 3, EMPTY_TEXT);
-                    text(sm, i + 4, EMPTY_TEXT);
-                    text(sm, i + 5, EMPTY_TEXT);
+                    exe::screenmanager_set_widget_style(sm, i, 1);
+                    exe::screenmanager_set_widget_style(sm, i + 1, 1);
+                    exe::screenmanager_set_widget_text(sm, i + 3, EMPTY_TEXT);
+                    exe::screenmanager_set_widget_text(sm, i + 4, EMPTY_TEXT);
+                    exe::screenmanager_set_widget_text(sm, i + 5, EMPTY_TEXT);
                 }
             } else {
                 if difere(&[0x2c, 0x2d]) {
                     let (a, d) = (er(match_record_row::YELLOW_CARDS), er(match_record_row::RED_CARD));
                     if a != 0 && d != 0 {
-                        margin(sm, i, 0x20030);
+                        exe::screenmanager_set_widget_style(sm, i, 0x20030);
                         exe::screenmanager_set_widget_colour(sm, i, colour_word(G_GUI_COLOUR_YELLOW) as u32);
-                        margin(sm, i + 1, 0x40030);
+                        exe::screenmanager_set_widget_style(sm, i + 1, 0x40030);
                         exe::screenmanager_set_widget_colour(sm, i + 1, colour_word(G_GUI_COLOUR_RED) as u32);
                     } else if a == 0 && d != 0 {
-                        margin(sm, i, 0x20030);
+                        exe::screenmanager_set_widget_style(sm, i, 0x20030);
                         exe::screenmanager_set_widget_colour(sm, i, colour_word(G_GUI_COLOUR_RED) as u32);
-                        margin(sm, i + 1, 1);
+                        exe::screenmanager_set_widget_style(sm, i + 1, 1);
                     } else if a != 0 {
-                        margin(sm, i, 0x20030);
+                        exe::screenmanager_set_widget_style(sm, i, 0x20030);
                         exe::screenmanager_set_widget_colour(sm, i, colour_word(G_GUI_COLOUR_YELLOW) as u32);
-                        margin(sm, i + 1, 1);
+                        exe::screenmanager_set_widget_style(sm, i + 1, 1);
                     } else {
-                        margin(sm, i, 1);
-                        margin(sm, i + 1, 1);
+                        exe::screenmanager_set_widget_style(sm, i, 1);
+                        exe::screenmanager_set_widget_style(sm, i + 1, 1);
                     }
                 }
                 let m = |k: usize| er(k) as i8;
@@ -4461,28 +4353,28 @@ pub(crate) unsafe extern "C" fn refresh_player_ratings_rows() {
                         Some((f, v, colour)) => {
                             traduzido(BUF, f, v as i32 + 1);
                             exe::screenmanager_set_widget_text_colour(sm, i + 3, colour_word(colour) as u32);
-                            text(sm, i + 3, BUF);
+                            exe::screenmanager_set_widget_text(sm, i + 3, BUF);
                         }
-                        None => text(sm, i + 3, EMPTY_TEXT),
+                        None => exe::screenmanager_set_widget_text(sm, i + 3, EMPTY_TEXT),
                     }
                 }
                 if row >= 0x323 && m(0x32) < 0 {
                     // the substitute who did not come on: only clears, and only without a copy
                     if c == 0 {
-                        text(sm, i + 4, EMPTY_TEXT);
-                        text(sm, i + 5, EMPTY_TEXT);
+                        exe::screenmanager_set_widget_text(sm, i + 4, EMPTY_TEXT);
+                        exe::screenmanager_set_widget_text(sm, i + 5, EMPTY_TEXT);
                     }
                 } else {
                     if difere(&[0x35, 0x32]) {
                         format(BUF, FORMAT_D, er(match_record_row::MATCH_GRADE) as i32);
-                        text(sm, i + 4, BUF);
+                        exe::screenmanager_set_widget_text(sm, i + 4, BUF);
                     }
                     if difere(&[0x21, 0x32]) {
                         if er(match_record_row::GOALS) != 0 {
                             format(BUF, FORMAT_D, er(match_record_row::GOALS) as i32);
-                            text(sm, i + 5, BUF);
+                            exe::screenmanager_set_widget_text(sm, i + 5, BUF);
                         } else {
-                            text(sm, i + 5, EMPTY_TEXT);
+                            exe::screenmanager_set_widget_text(sm, i + 5, EMPTY_TEXT);
                         }
                     }
                 }
@@ -4625,8 +4517,7 @@ pub(crate) unsafe extern "C" fn draw_team_stats_panel(side: u32, top: *mut i32, 
     let tabela_dos_valores = list(current_human_display(), 0x6e, *top as usize, 0x30c, *base as usize, 0x16, valores.as_mut_ptr() as usize, 0x15, 0, 1, 0, usize::MAX);
     set_screen_param(0x1b, side as u8 as i8 as i32 as usize);
     set_screen_param(0x1a, usize::MAX);
-    let fill: unsafe extern "C" fn(u32, usize) = core::mem::transmute(FN_FILL_TEAM_STATS_ROWS);
-    fill(1, tabela_dos_valores);
+    exe::fill_team_stats_rows(1, tabela_dos_valores);
 }
 
 /// Draws both teams' player ratings from `*topo` to `*base`: shirt number, name (button, with the captain) and rating.
@@ -4655,9 +4546,6 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let colour_reserve: unsafe extern "C" fn(u32, u32, u32, u32) -> usize = core::mem::transmute(FN_GRAPHICS_RGB_TO_PIXEL);
-    let name_of_person: unsafe extern "C" fn(u32, u32, u32, usize, u32, u32, i32) = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_IDS);
-    let pessoa_vale: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
 
@@ -4678,7 +4566,7 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
             format(BUF, 0x98806c, if camisa > 0 { camisa as i32 } else { j as i32 + 1 });
             let starters = (*((partida + fixture::SQUAD_RULES) as *const u8) & 0xf) as usize + 0xb;
             // the first 11: the original pushes eax = the match with the color in ax
-            let bottom = if j < 0xb { (partida & 0xffff_0000) | colour_word(G_GUI_COLOUR_DARK_BLUE) } else { colour_reserve(0, 0, 0x40, 0) };
+            let bottom = if j < 0xb { (partida & 0xffff_0000) | colour_word(G_GUI_COLOUR_DARK_BLUE) } else { (exe::graphics_rgb_to_pixel(0, 0, 0x40, 0) as usize) };
             let r = if j < starters {
                 text_of_cell(sm, table, col, j, 0x30, bottom, 0xc, 1, colour_word(G_GUI_COLOUR_PALE_GREY), BUF)
             } else {
@@ -4697,7 +4585,7 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
                 let b = core::ptr::read_unaligned((reg + match_record_row::SECOND_NAME_ID) as *const u32);
                 let c = core::ptr::read_unaligned((reg + match_record_row::COMMON_NAME_ID) as *const u32);
                 let mut name = [0u8; 0xc8];
-                name_of_person(a, b, c, name.as_mut_ptr() as usize, 0xc8, 1, id);
+                exe::database_format_name_from_ids(a, b, c, (name.as_mut_ptr() as usize) as *mut u8, 0xc8, 1, (id) as u32);
                 let capitao = *((dados + 1573 * i + 0x153) as *const i8) as i32;
                 if j as i32 == capitao {
                     text(BUF, 0xa16a7c, name.as_ptr() as usize);
@@ -4707,7 +4595,7 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
                 let mut botao = false;
                 if id >= 0 && id < *(G_STAFF_COUNT as *const i32) {
                     let person = (*(G_STAFF_TABLE as *const usize) as isize + id as isize * 110) as usize;
-                    if pessoa_vale(person, a, b, c, reg + match_record_row::DATE_OF_BIRTH) != 0 {
+                    if exe::database_staff_matches_names(person, a, b, c, reg + match_record_row::DATE_OF_BIRTH) != 0 {
                         botao = true;
                         let goal_difference = if i == 0 { *(dados as *const i32) } else { *((dados + match_record::AWAY_CLUB_ID) as *const i32) };
                         let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
@@ -4829,10 +4717,9 @@ pub(crate) unsafe extern "C" fn match_screens_handle_continue_command(item: u32)
             *(G_PENDING_COMMAND_CODE as *mut u32) = 0;
             *(G_PENDING_COMMAND_ARG as *mut u32) = 0;
             if choice == 3 {
-                let listar: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, u32) = core::mem::transmute(FN_SCREENMANAGER_GET_CHANNEL_MANAGER_KEYS);
                 let (mut n, mut lista) = (0i16, [0usize; 16]);
                 // the original pushes the whole eax: the high 16 bits are those of the record returned by 0x765480
-                listar(SCREEN_MANAGER, lista.as_mut_ptr(), &mut n, (r as u32 & 0xffff_0000) | human() as u16 as u32);
+                exe::screenmanager_get_channel_manager_keys(SCREEN_MANAGER, lista.as_mut_ptr(), &mut n, ((r as u32 & 0xffff_0000) | human() as u16 as u32) as i32);
                 let mut i: i8 = 0;
                 if n > 0 {
                     loop {
@@ -4855,9 +4742,8 @@ pub(crate) unsafe extern "C" fn match_screens_handle_continue_command(item: u32)
                 }
                 let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
                 format_text(0xde1f64, 0xa16d94);
-                let aviso: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
                 // simplification: the original pushes ecx with high 16 bits left over from 0x66f4e0 (unpredictable); here zero
-                aviso(SCREEN_MANAGER, 0xde1f64, 0, 0, human() as u16 as u32);
+                exe::screenmanager_send_network_status_message(SCREEN_MANAGER, 0xde1f64, (0) as i32, 0, (human() as u16 as u32) as i32);
                 exe::open_match_screen(current_human_screen_person(), club);
                 return -4;
             }
@@ -4882,8 +4768,7 @@ pub(crate) unsafe extern "C" fn match_screens_handle_continue_command(item: u32)
                     if core::ptr::read_unaligned((e + field) as *const u32) != 0
                         && core::ptr::read_unaligned((e as isize + human() as isize * 4 + 0x14) as *const u32) == 0
                     {
-                        let open: unsafe extern "C" fn(usize, usize) = core::mem::transmute(FN_OPEN_DAY_FIXTURES_SCREEN);
-                        open(current_human_screen_person(), e);
+                        exe::open_day_fixtures_screen((current_human_screen_person()) as u32, e);
                         return -4;
                     }
                     i = i.wrapping_add(1);
@@ -5163,8 +5048,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
     if *((game + fixture::HOME_SIDE_MARK) as *const u8) == 0 {
         return (*((game + fixture::CATEGORY) as *const u8) == 1) as u8 + 2;
     }
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(*((game + fixture::HOME_CLUB) as *const usize)) != 0 {
+    if exe::database_is_national_team(*((game + fixture::HOME_CLUB) as *const usize)) != 0 {
         if *((game + fixture::HOME_SIDE_MARK) as *const u8) == 0 {
             return 2;
         }
@@ -5257,8 +5141,7 @@ pub(crate) unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
     match id(i) {
         1 => {
             let slot = *((0xb74c26 + *(0xb77c7a as *const i16) as isize * 0x300) as *const u32);
-            let open: unsafe extern "C" fn(u32, usize) = core::mem::transmute(FN_OPEN_DAY_FIXTURES_SCREEN);
-            open(slot, given(i));
+            exe::open_day_fixtures_screen(slot, given(i));
             -11
         }
         2 => {
@@ -5290,11 +5173,10 @@ pub(crate) unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tacti
     if tactic == 0 {
         return original_fn::<unsafe extern "C" fn(usize, i32) -> u8>(IDX_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT)(tactic, contexto);
     }
-    let of_tactic: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> usize = core::mem::transmute(FN_TACTICS_GET_SELECTED_PLAYER);
     let mut slot = 0xffu8;
     let mut best = 0i16;
     for k in 0..11u32 {
-        let p = of_tactic(*(G_TACTICS as *const usize), tactic, k, contexto);
+        let p = exe::tactics_get_selected_player(*(G_TACTICS as *const usize), tactic, k, contexto);
         if p != 0 {
             let n = exe::match_man_get_captain_score(p, 0, tactic);
             if slot == 0xff || n > best {
@@ -5553,8 +5435,7 @@ pub(crate) unsafe extern "C" fn match_details_input(item: u32) -> i32 {
             if id_ou_default(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 2 {
                 let club = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
                 let mark = if club == *((p1f + fixture::HOME_CLUB) as *const usize) { *((p1f + fixture::HOME_SIDE_MARK) as *const u8) } else { *((p1f + fixture::AWAY_SIDE_MARK) as *const u8) };
-                let tactic: unsafe extern "C" fn(usize, u32, u32, u32, usize, u32) = core::mem::transmute(FN_TACTICS_SCREEN_OPEN);
-                tactic(club, (mark == 0) as u32, 0, 0, v1e, 0);
+                exe::tactics_screen_open(club, (mark == 0) as u32, (0) as usize, 0, (v1e) as i32, 0);
                 return -4;
             }
         }
@@ -5730,13 +5611,11 @@ pub(crate) unsafe extern "C" fn build_latest_scores() {
     crate::comparison::branch("telas montar os ultimos placares");
     let entry = exe::screenmanager_get_screen_param(SCREEN_MANAGER, 0xe);
     let id = *(entry as *const i32);
-    let bottom: unsafe extern "C" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
-    bottom((*(G_CLUB_COMP_TABLE as *const usize) as isize + id as isize * 107) as usize, 0, 0);
+    exe::background_set_comp_picture((*(G_CLUB_COMP_TABLE as *const usize) as isize + id as isize * 107) as usize, 0, 0);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     text(0xde1f64, 0xa16328, 0xad9c64);
     let (c1, c0) = (exe::get_heading_colour(1), exe::get_heading_colour(0));
-    let title: unsafe extern "thiscall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_ADD_SCREEN_TITLE);
-    title(SCREEN_MANAGER, c0, c1, 0xde1f64);
+    exe::screenmanager_add_screen_title(SCREEN_MANAGER, c0, c1, 0xde1f64);
     exe::menubar_build(4, 0);
     let (mut topo, mut base) = (0x50i32, 0x217i32);
     exe::draw_latest_scores_panel(&mut topo, &mut base);
@@ -5925,9 +5804,8 @@ pub(crate) unsafe extern "C" fn draw_latest_scores_panel(top: *mut i32, base: *m
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let sem_selo = |c: usize| {
-        let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
         let national_team: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
-        friendly(*(G_FRIENDLY as *const usize), c) == 0 && national_team(*(G_RESERVE_COMP as *const usize), c) == 0
+        exe::friendly_is_own_comp_record(*(G_FRIENDLY as *const usize), c) == 0 && national_team(*(G_RESERVE_COMP as *const usize), c) == 0
     };
 
     let partida = get_screen_param(0);

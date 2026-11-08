@@ -2261,8 +2261,7 @@ unsafe fn side_of_player(player: usize) -> i8 {
 }
 
 unsafe fn random(n: i32) -> i32 {
-    let f: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
+    exe::utils_random(n)
 }
 
 // The rest of the engine, one module per source file of the game (reorganisation, 07/11/2026).

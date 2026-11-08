@@ -334,8 +334,7 @@ pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usiz
 /// se faltar e o nome. Sem efeito fora de `destino`: o comparador de abrir/criar refaz o caminho num buffer
 /// próprio.
 pub(crate) unsafe fn database_path(target: usize, folder: usize, name: usize) {
-    let join: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    join(target, 0, folder, name, 0);
+    exe::crt_makepath((target) as *mut u8, 0, folder, name, 0);
 }
 
 /// Compares the path the original built at 0xde1f64 with the copy's, rebuilt in a local buffer.
@@ -350,35 +349,33 @@ pub(crate) unsafe fn check_database_path(routine: &str, folder: usize, name: usi
     SCOREBOARD.record(a == b, || format!("{} caminho {:?} x {:?}", routine, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
 }
 
-/// Builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "rb"); the comparer checks the path.
+/// Builds folder + name at 0xde1f64 (_makepath) and returns exe::crt_fopen(path, "rb"); the comparer checks the path.
 ///
 /// `db_files_open_for_read(folder, name)`: builds the path at 0xde1f64 (`_makepath`, see `database_path`) and returns
-/// `fopen(0xde1f64, "rb")` (0x945b00; "rb" at 0x98f928). When the game is created, `load_database` opens index.dat and
+/// `exe::crt_fopen(0xde1f64, "rb")` (0x945b00; "rb" at 0x98f928). When the game is created, `load_database` opens index.dat and
 /// each table of the Data folder this way.
 /// Original: `db_files_open_for_read` (0x54d580, Db_files.cpp, cdecl).
 ///
 /// [pt] { 0x54d580 } (cdecl, Db_files.cpp): `db_files_open_for_read(pasta, nome)`: monta o caminho em 0xde1f64
-/// (`_makepath`, ver `database_path`) e devolve `fopen(0xde1f64, "rb")` (0x945b00; "rb" em 0x98f928). Na
+/// (`_makepath`, ver `database_path`) e devolve `exe::crt_fopen(0xde1f64, "rb")` (0x945b00; "rb" em 0x98f928). Na
 /// criação do jogo, `load_database` abre assim o index.dat e cada tabela da pasta Data.
 pub(crate) unsafe extern "C" fn db_files_open_for_read(folder: usize, name: usize) -> usize {
     crate::comparison::branch("banco abrir .dat");
     database_path(0xde1f64, folder, name); // abrir (rb)
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    fopen(0xde1f64, 0x98f928)
+    exe::crt_fopen(0xde1f64, 0x98f928)
 }
 
-/// builds folder + name at 0xde1f64 (_makepath) and returns fopen(path, "wb"); only when writing the database to the
+/// builds folder + name at 0xde1f64 (_makepath) and returns exe::crt_fopen(path, "wb"); only when writing the database to the
 /// folder; the comparator checks the path
 /// Original: `db_files_open_for_write` (0x54d5b0, Db_files.cpp, cdecl).
 ///
 /// [pt] { 0x54d5b0 } (cdecl, Db_files.cpp): `db_files_open_for_write(pasta, nome)`: o mesmo caminho em 0xde1f64 e
-/// `fopen(0xde1f64, "wb")` ("wb" em 0x9a7f28). Só `save_database(…, 0, …)` (gravar a base na pasta) chama:
+/// `exe::crt_fopen(0xde1f64, "wb")` ("wb" em 0x9a7f28). Só `save_database(…, 0, …)` (gravar a base na pasta) chama:
 /// no save (use_zip ≠ 0) as tabelas vão por `zopen` 0x9326e0.
 pub(crate) unsafe extern "C" fn db_files_open_for_write(folder: usize, name: usize) -> usize {
     crate::comparison::branch("banco criar .dat");
     database_path(0xde1f64, folder, name);
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    fopen(0xde1f64, 0x9a7f28) // criar (wb)
+    exe::crt_fopen(0xde1f64, 0x9a7f28) // criar (wb)
 }
 
 /// Writes the continent.dat table (id 3) of 198-byte records in one go, through zwrite (save) or fwrite (Data); 1 if
@@ -512,8 +509,7 @@ pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 581, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 581, n, stream)
+        exe::crt_fwrite(records, 581, n, stream)
     };
     (written == n) as i32
 }
@@ -540,8 +536,7 @@ pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
         zwrite(records, 110, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 110, n, stream)
+        exe::crt_fwrite(records, 110, n, stream)
     };
     (written == n) as i32
 }
@@ -775,8 +770,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
         zread(records, 581, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 581, n, stream)
+        exe::crt_fread(records, 581, n, stream)
     };
     if read != n {
         return 0;
@@ -1159,8 +1153,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
     }
     crate::comparison::branch("banco ler pessoas 157");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 157, n, stream)
+        exe::zread(records, 157, n, stream)
     } else {
         let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
         fread(records, 157, n, stream)

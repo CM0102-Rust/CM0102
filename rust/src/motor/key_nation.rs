@@ -38,8 +38,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(club) == 0 {
+    if exe::database_is_national_team(club) == 0 {
         let nation = read_usize(club + club::NATION);
         if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
@@ -51,7 +50,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
             return 0;
         }
     }
-    if national_team(club) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         return 1;
     }
     let nation = read_usize(club + club::NATION); // cpu1: the nation of the continent
@@ -67,9 +66,8 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let nation = read_usize(club + club::NATION);
-    national_team(club) == 0
+    exe::database_is_national_team(club) == 0
         && nation != 0
         && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)
@@ -78,7 +76,7 @@ pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
 /// Returns the club's season year: the previous year when today is before the season start day of its row.
 ///
 /// `key_nation_get_club_season_year(clube)` (club): today's year (`[0xae2c92]`); for a club that is not a national
-/// team, by the club's row (`0x669360`): with the row's dword `+0x17` not zero or the start day (`+0x15`, unsigned)
+/// team, by the club's exe::key_nation_index_of_club(`0x669360`): with the row's dword `+0x17` not zero or the start day (`+0x15`, unsigned)
 /// below 60, and today's day (`[0xae2c90]`, signed) before the start day, the previous year. The original returns only
 /// the low 16 bits meaningfully (the high ones are left over from the pushed slot). Called by the club records
 /// `0x444930`/`0x447430`/`0x448ad0` and the player history `0x7c3e40`/`0x7c5fe0`.
@@ -90,11 +88,9 @@ pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
 pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> u16 {
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let year = *(G_CURRENT_DATE_YEAR as *const u16);
-    if club != 0 && national_team(club) == 0 {
-        let k = row(club) as i8 as isize;
+    if club != 0 && exe::database_is_national_team(club) == 0 {
+        let k = exe::key_nation_index_of_club(club) as i8 as isize;
         let e = (0xb63d60isize + 72 * k) as usize;
         let start = core::ptr::read_unaligned((e + 0x15) as *const u16);
         if (read_usize(e + 0x17) != 0 || start < 0x3c) && (*(G_CURRENT_DATE as *const i16) as i32) < start as i32 {

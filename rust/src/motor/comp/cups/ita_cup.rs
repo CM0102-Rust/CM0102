@@ -22,19 +22,17 @@ use super::*;
 /// 0x684230, mov ecx -> thiscall, ret 0). Devolve 1.
 pub(crate) unsafe fn create_first_group_table(this: usize, n: i16, file: usize, row: u32, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(n as i32 as u32 * 0x3b);
+    let t = exe::crt_malloc(n as i32 as u32 * 0x3b);
     core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
     if t == 0 {
         show_error_at(file, row);
         return 0;
     }
     crate::comparison::branch(ramo);
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut i: i8 = 0;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         let slot = read_usize(this + 0xee) + i as isize as usize * 4;
-        iniciar(this, i as u8 as u32, read_usize(slot), 0, 0);
+        exe::league_init_table_row(this, i as u8 as u32, read_usize(slot), 0, 0);
         core::ptr::write_unaligned((read_usize(this + 0xee) + i as isize as usize * 4) as *mut u32, 0); // cqr7: the group 1 slot leaves the list
         i = i.wrapping_add(1);
     }
@@ -168,15 +166,13 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize)
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da `linhas[1]` e 0. Com ela: a notícia do sorteio do grupo (0x684230
 /// na fase), +0x30 = g e 1.
 pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, g: u32, file: usize, rows: [u32; 2], ramo: &'static str) -> u32 {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
-    let teams = alocar(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
+    let teams = exe::crt_malloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(file, rows[0]);
         return 0;
@@ -198,7 +194,7 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: usize, 
             }
         }
     }
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(
             p,
@@ -364,8 +360,7 @@ pub(crate) unsafe fn create_knockout_stage(this: usize, n: u32, teams: usize, st
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let table = rounds_of_cup(this, stage, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     let f = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -401,8 +396,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize
     for (k, s) in seeds.iter_mut().enumerate() {
         *s = 3 - (k / 8) as u8;
     }
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let teams = alloc(0x60);
+    let teams = exe::crt_malloc(0x60);
     if teams == 0 {
         return show_error_at(0x9ea23c, 0x29c);
     }
@@ -469,9 +463,8 @@ pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: usize, sta
 /// linha dele (+0x37 = 6). 3) A liga provisória destruída (a virtual 0 com 1). 4) Nas vagas 22 a 31, os 10 cabeças de chave
 /// que entram direto (`take_direct_entrants`). 5) A fase 15 (`create_knockout_stage`), sem sementes, e a caixa da linha 0x304.
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let desempate: [u8; 4] = [1, 2, 3, 0];
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let league = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, i32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
@@ -490,8 +483,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     }
     let sort: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
     sort(league, 0); // cqr9: the ranking of the runners-up
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let teams = alloc(0x80);
+    let teams = exe::crt_malloc(0x80);
     if teams == 0 {
         return show_error_at(0x9ea204, 0x2ba);
     }
@@ -560,15 +552,13 @@ pub(crate) type ItaCupGroupRound = (u32, u32, u32, u32);
 pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, id: i16, groups: &[ItaCupGroupRound],
     knockout: &[EngCcCupCupRound], file: usize, row_g: u32, row_m: u32, name_g: &'static str, name: &'static str) -> usize {
     let f = stage as u8 as i8;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if f < limit {
-        let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
         if !league.is_null() {
             *league = 1;
         }
         *rounds = groups.len() as i16;
         *extra = (f as i16).wrapping_add(id);
-        let t = alloc(groups.len() as u32 * 0x41);
+        let t = exe::crt_malloc(groups.len() as u32 * 0x41);
         if t == 0 {
             show_error_at(file, row_g);
             return 0;
@@ -578,7 +568,7 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
         for (r, &(dia, mes, semana, codigo)) in groups.iter().enumerate() {
-            data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
+            exe::league_round_set_date(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
             exe::league_round_set_match_slot(t, r as i32, 0, -1, -1, -1, 0);
         }
         return t;
@@ -591,7 +581,7 @@ pub(crate) unsafe fn create_schedule(this: usize, stage: u32, rounds: *mut i16, 
     }
     *rounds = knockout.len() as i16;
     *extra = 0;
-    let t = alloc(knockout.len() as u32 * 0x68);
+    let t = exe::crt_malloc(knockout.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row_m);
         return 0;
@@ -731,16 +721,14 @@ pub(crate) unsafe fn last_season_position(c: usize) -> i8 {
 ///
 /// [pt] Embaralha `n` ponteiros a partir de `v` (0x4afb40: push n; push v; add esp junto -> cdecl; já em Rust).
 pub(crate) unsafe fn shuffle_pointers(v: usize, n: u32) {
-    let f: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
-    f(v, n);
+    exe::comp_util_shuffle_pointer_array(v, n);
 }
 
 /// qsort of n pointers from v with comparison cmp (CRT qsort).
 ///
 /// [pt] O qsort de `n` ponteiros a partir de `v` com a comparação `cmp` (0x945333: 4 pushes; add esp, 0x10 -> cdecl).
 pub(crate) unsafe fn sort_pointers(v: usize, n: u32, cmp: usize) {
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(v, n, 4, cmp);
+    exe::crt_qsort(v, n, 4, cmp);
 }
 
 /// Allocates the entrant pointer list (+0xee) with max entries in +0xf2; on failure shows the error box for linha and
@@ -749,8 +737,7 @@ pub(crate) unsafe fn sort_pointers(v: usize, n: u32, cmp: usize) {
 /// [pt] A lista de ponteiros (+0xee) com o máximo `max` em +0xf2 (dword): 0x944e46 de 4 × max; sem memória, a caixa `linha`.
 pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row: u32) -> Option<usize> {
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, max);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(max * 4);
+    let l = exe::crt_malloc(max * 4);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(file, row);

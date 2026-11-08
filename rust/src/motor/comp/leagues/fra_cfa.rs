@@ -55,13 +55,12 @@ pub(crate) unsafe fn create_cfa_schedule(this: usize, fase: u32, rodadas: *mut i
     if fase as u8 != 0xff {
         return 0;
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if !liga.is_null() {
         *liga = 1;
     }
     *rodadas = p.rodadas;
     *extra = 0;
-    let t = alocar(p.rodadas as u32 * 0x41);
+    let t = exe::crt_malloc(p.rodadas as u32 * 0x41);
     if t == 0 {
         show_error_at(p.arquivo, p.linha);
         return 0;
@@ -259,7 +258,6 @@ pub(crate) struct C1BracketVariant {
 /// final); 1 os play-outs (é_liga = 0, 1 rodada, extra 0, 0x68 bytes); as outras devolvem 0 sem gravar nada. Sem memória
 /// (malloc 0x944e46: push; add esp, 4 -> cdecl): a caixa da linha da fase e 0. Devolve a tabela.
 pub(crate) unsafe fn create_c1_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, p: &C1BracketVariant) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let (k, l, n, x, tamanho) = match stage as u8 {
         0xff => (0, 1, 0x22, 0, 0x8a2),
         0 => (1, 0, 2, 0xa0, 0xd0),
@@ -271,7 +269,7 @@ pub(crate) unsafe fn create_c1_schedule(this: usize, stage: u32, rounds: *mut i1
     }
     *rounds = n;
     *extra = x;
-    let t = alloc(tamanho);
+    let t = exe::crt_malloc(tamanho);
     if t == 0 {
         show_error_at(p.arquivo, p.linhas[k]);
         return 0;
@@ -388,7 +386,6 @@ pub(crate) struct BackgroundLeague {
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
 pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) -> usize {
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(p.tabela);
     let soltar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     exe::new_league(this);
@@ -442,7 +439,7 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
         }
         i += 1;
     }
-    embaralhar(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: the list random draw
+    exe::comp_util_shuffle_pointer_array(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: the list random draw
     for g in 0..p.grupos {
         if tabela(this, lista.as_ptr() as usize + g * p.por_grupo * 4) == 0 {
             show_error_at(p.arquivo, p.linhas[1]);
@@ -580,14 +577,12 @@ pub(crate) unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
 /// cuja competição (+0x57, o id no +0) é uma de `marcadas`. Devolve se encheu (a conta das linhas = +0x3e).
 pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file: usize, row: u32, marcadas: &[usize]) -> u32 {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
+    let t = exe::crt_malloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return 0;
     }
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     while i < read_i16(this + league::CLUB_COUNT) {
@@ -597,7 +592,7 @@ pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file
         // simplification: the original pushes the row in ecx with the upper bits of the competition id; 0x687430 only reads the
         // byte.
         let row = k; // cqk6: row k receives the k-th club of the list
-        iniciar(this, row as u32, club, mark, 0);
+        exe::league_init_table_row(this, row as u32, club, mark, 0);
         k = k.wrapping_add(1);
         i = i.wrapping_add(1);
     }

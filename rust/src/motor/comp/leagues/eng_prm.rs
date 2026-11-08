@@ -54,11 +54,9 @@ pub(crate) struct EnglishDivision {
 /// (League::set_predicted_positions 0x68a850: mov ecx -> thiscall, ret 0). Cada passo que falha mostra a caixa da
 /// sua linha e encerra. Devolve this.
 pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: &EnglishDivision) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     exe::new_league(this);
     write_usize(this + 4, registro);
     write_usize(this, p.vtable);
@@ -76,7 +74,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
     write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_usize(this + league::STAGE_COUNT, p.extra_stages as usize);
     if p.extra_stages != 0 {
-        let v = alocar(4);
+        let v = exe::crt_malloc(4);
         write_usize(this + league::STAGES, v);
     } else {
         write_usize(this + league::STAGES, 0);
@@ -97,7 +95,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, ano: u32, registro:
         show_error_at(p.source_file, p.box_lines[3]);
         return this;
     }
-    let e = novo(0x5ce);
+    let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
     write_usize(this + 8, s);
     if s == 0 {
@@ -343,14 +341,12 @@ pub(crate) unsafe fn eng_prm_pay_tv_rights(this: usize, value: i32, filtro: usiz
 /// +0x28 (League::calc_prize_fund 0x682f70: thiscall(liga, cota), ret 4), +0xe1 = 1, o dinheiro da TV (`pagar`) e 1.
 pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize, row: u32, g: usize, quota: i32, pay: impl FnOnce()) -> u32 {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
+    let t = exe::crt_malloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return 0;
     }
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     let mut club = read_usize(G_CLUB_TABLE);
@@ -360,7 +356,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
             let row = k; // cqi5: row k receives the k-th club of the division
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, club, 0, 0);
+            exe::league_init_table_row(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
@@ -373,8 +369,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
         return 0;
     }
     crate::comparison::branch("cqi_5 tabela cheia");
-    let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = prize(this, quota);
+    let f = exe::league_calc_prize_fund(this, quota);
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
     pay();
@@ -426,8 +421,7 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
         if r == 1 {
-            let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, quota);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == exe::league_calc_prize_fund(this, quota);
         }
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));
@@ -441,7 +435,6 @@ pub(crate) unsafe fn eng_prm_compare_league_table(name: &str, this: usize, n: i1
 /// [pt] { 0x573660 } (thiscall, ret 0x10, eng_prm.cpp, 5.019 bytes, método +0x3c): `EngPrm::create_schedule(fase, &rodadas,
 /// &extra, &é_liga)`: só a fase −1, 38 rodadas (`PREMIERSHIP_CHRISTMAS`); as outras devolvem 0. Fonte 0x9c43b0.
 pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -449,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
             }
             *rounds = 38;
             *extra = 0;
-            let t = alloc(0x9a6);
+            let t = exe::crt_malloc(0x9a6);
             if t == 0 {
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;

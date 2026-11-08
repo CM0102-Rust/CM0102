@@ -4,7 +4,7 @@ MUTACOES = [
     ('f_rejeitado', "    [0xa7, 0xab, 0xaf].iter().any(|&o| *((b + o) as *const usize) == a) as u32", "    [0xa7, 0xab].iter().any(|&o| *((b + o) as *const usize) == a) as u32"),
     ('f_insatisfacao', "let r1 = random((a * b as i32 * c as i32 + 0x14) * 100);", "let r1 = random((a * b as i32 * c as i32 + 0x15) * 100);", "match_wrap_up insatisfeito"),
     ('f_rival', "if [0xb3, 0xb7, 0xbb].iter().any(|&o| d(meu, o) == outro) {\n                        x += 10;", "if [0xb3, 0xb7, 0xbb].iter().any(|&o| d(meu, o) == outro) {\n                        x += 11;"),
-    ('f_gosta', "    } else if gosta(person, outro) != 0 {\n                        x -= 20;", "    } else if gosta(person, outro) != 0 {\n                        x -= 19;"),
+    ('f_gosta', "    } else if exe::staff_favours_club(person, outro) != 0 {\n                        x -= 20;", "    } else if exe::staff_favours_club(person, outro) != 0 {\n                        x -= 19;"),
     ('f_media', "average = if d(pt, fixture::STADIUM) == d(meu, club::STADIUM) { q - read_f64_at(0x967880) } else { q + read_f64_at(0x968918) };", "average = if d(pt, fixture::STADIUM) == d(meu, club::STADIUM) { q - read_f64_at(0x967880) * 1.01 } else { q + read_f64_at(0x968918) };", "match_wrap_up media do lado"),
     ('f_noventa', "    } else if *(m as *const u8) != 0 {\n                0x5a", "    } else if *(m as *const u8) != 0 {\n                0x59", "match_wrap_up media do lado"),
     ('f_minuto_reserva', "                end.wrapping_sub(c)", "                end.wrapping_sub(c).wrapping_add(1)", "match_wrap_up media do lado"),

@@ -37,17 +37,15 @@ pub(crate) enum BraChampCupStagePlan {
 /// 0) com as datas, o ano +0x40 em 16 bits. No mata-mata: é_liga = 0, rodadas, extra = 0; a tabela de 0x68 bytes por
 /// rodada (sem memória, a caixa e 0), as rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 com sinal e as palavras a mais.
 pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32, file: usize) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match f {
         BraChampCupStagePlan::Nada => 0,
         BraChampCupStagePlan::Grupos(grupos, id, linha, nome) => {
-            let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
             if !league.is_null() {
                 *league = 1;
             }
             *rounds = grupos.len() as i16;
             *extra = id;
-            let t = alloc(grupos.len() as u32 * 0x41);
+            let t = exe::crt_malloc(grupos.len() as u32 * 0x41);
             if t == 0 {
                 show_error_at(file, linha);
                 return 0;
@@ -57,7 +55,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
             // 0x68a160 only uses the low 16 bits: the copy passes the clean year
             let year = core::ptr::read_unaligned((this + cup::YEAR) as *const u16) as u32;
             for (r, &(dia, mes, semana, codigo)) in grupos.iter().enumerate() {
-                data(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
+                exe::league_round_set_date(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
                 exe::league_round_set_match_slot(t, r as i32, 0, -1, -1, -1, 0);
             }
             t
@@ -68,7 +66,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
             }
             *rounds = mata.len() as i16;
             *extra = 0;
-            let t = alloc(mata.len() as u32 * 0x68);
+            let t = exe::crt_malloc(mata.len() as u32 * 0x68);
             if t == 0 {
                 show_error_at(file, linha);
                 return 0;

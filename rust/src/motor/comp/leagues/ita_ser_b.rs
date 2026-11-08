@@ -27,7 +27,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_schedule(this: usize, st
 /// ret 4); havendo algum, a fase do desempate (+0x2c = 1, +0xc = malloc de 4, virtual +0x28). Sem nenhum: +0xdd = 0,
 /// +0xe6 = 0 e a virtual +0x94.
 pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, today: usize, full: u32) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let r = exe::league_update_for_date(this, today, full);
     if read_usize(this + league::COMPLETE) == 0 || read_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_usize(this + league::TIEBREAK_MATCHES) == 0 {
         return r;
@@ -48,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
     }
     if found {
         write_usize(this + league::STAGE_COUNT, 1);
-        let v = alloc(4);
+        let v = exe::crt_malloc(4);
         write_usize(this + league::STAGES, v);
         let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x28));
         proxima(this);
@@ -76,7 +75,6 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
 /// pelos pontos), ordena o bloco pela comparação do confronto (qsort 0x945333 com 0x683410, linhas de 0x3b: push;
 /// add esp, 0x10 -> cdecl; sem linha, o qsort recebe 0 e 0) e renumera a posição (+4) de todas as linhas.
 pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
-    let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     exe::league_rank_by_head_to_head(this, read_usize(this + league::TABLE));
     let n = read_i16(this + league::CLUB_COUNT);
     let mut first = 0usize;
@@ -93,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(thi
             l += 0x3b;
         }
     }
-    qsort(first, how_many as u16 as i16 as i32, 0x3b, 0x683410); // cql4: the block of tied clubs
+    exe::crt_qsort(first, (how_many as u16 as i16 as i32) as u32, 0x3b, 0x683410); // cql4: the block of tied clubs
     let mut i: i16 = 0;
     while i < read_i16(this + league::CLUB_COUNT) {
         *((ita_ser_a_table_row(this, i as usize) + 4) as *mut u8) = i as u8;

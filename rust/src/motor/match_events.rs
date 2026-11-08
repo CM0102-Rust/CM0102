@@ -99,25 +99,21 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
 /// com o numero (versao 1, senao erro 0xbf6/0xc11, com o arquivo aberto como na original). Devolve
 /// se leu.
 pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -> u8 {
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let search: unsafe extern "C" fn(usize, i32, u32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
     if desc.is_null() {
         return 0;
     }
     let (um, dois) = match_event_files(*(desc.add(3) as *const u8) != 0);
     let (mut versao, mut numero) = (0i32, 0i32);
     for (k, nome) in [um, dois].into_iter().enumerate() {
-        let f = open(path(0x987da0, nome), 0x98f928);
+        let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, nome), 0x98f928);
         if f == 0 {
             if k == 0 {
                 continue;
             }
             return 0;
         }
-        read(&mut versao as *mut i32 as usize, 4, 1, f);
-        read(&mut numero as *mut i32 as usize, 4, 1, f);
+        exe::crt_fread(&mut versao as *mut i32 as usize, 4, 1, f);
+        exe::crt_fread(&mut numero as *mut i32 as usize, 4, 1, f);
         if versao != 1 {
             // as in the original: the file stays open
             show_error_at(0xa159b0, if k == 0 { 0xbf6 } else { 0xc11 });
@@ -125,8 +121,8 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
         }
         if numero as u32 == *desc.add(2) {
             crate::comparison::branch("eventos lidos");
-            search(f, *desc as i32, 0);
-            let r = read(e + 0x720, 0xe, *desc.add(1), f);
+            exe::crt_fseek(f, *desc as i32, 0);
+            let r = exe::crt_fread(e + 0x720, 0xe, *desc.add(1), f);
             *((e + 6) as *mut u16) = *desc.add(1) as u16;
             exe::crt_fclose(f);
             return (r != 0) as u8;
@@ -176,13 +172,6 @@ pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
 /// pesos viram (maior x 10) / peso e +0xe a soma; evento sem som ganha o som padrao (0xb68670).
 /// Le pelo `fgetc` do jogo e usa o buffer [0xde1f64], como a original.
 pub(crate) unsafe extern "C" fn read_events_cfg() {
-    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let procurar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_STRSTR);
-    let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_UTILS_FILE_EXISTS);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     const FONTE: usize = 0xa159b0; // match_events.cpp
@@ -194,7 +183,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
     let how_many = |e: usize| core::ptr::read_unaligned((e + event_type::VARIANT_COUNT) as *const i16);
     let weight = |e: usize| (e + event_type::TOTAL_WEIGHT) as *mut i32;
 
-    if *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *const i32) != language() {
+    if *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *const i32) != exe::langlib_get_language() {
         exe::match_events_free_event_tables();
     }
     if *(FIM as *const u8) != 0 {
@@ -211,7 +200,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         core::ptr::write_unaligned(weight(e), 0);
         e += 0x12;
     }
-    let lingua = language();
+    let lingua = exe::langlib_get_language();
     *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *mut i32) = lingua;
     let name = match lingua {
         2 => 0xa15cec,
@@ -227,13 +216,13 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         12 => 0xa15c4c,
         _ => 0,
     };
-    let mut f = if name != 0 { open(path(0x9b5348, name), 0x9899fc) } else { 0 };
+    let mut f = if name != 0 { exe::crt_fopen(exe::utils_build_file_path(0x9b5348, name), 0x9899fc) } else { 0 };
     if f != 0 {
         *(FIM as *mut u8) = 1;
     } else {
         // simplification: the original tests [0xb6b723] again here; it has just been seen cleared
         *(FIM as *mut u8) = 1;
-        f = open(path(0x9b5348, 0xa15c3c), 0x9899fc);
+        f = exe::crt_fopen(exe::utils_build_file_path(0x9b5348, 0xa15c3c), 0x9899fc);
         if f == 0 {
             fatal_error_at(FONTE, 0xcc4);
         }
@@ -269,7 +258,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
             c = exe::at_9469e0(f);
         }
         *((BUF + n) as *mut u8) = 0;
-        let t = alloc(n as u32 + 1);
+        let t = exe::crt_malloc(n as u32 + 1);
         if t == 0 {
             fatal_error_at(FONTE, linha_alocacao);
         }
@@ -348,7 +337,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     fatal_error_at(FONTE, 0xd49);
                 }
                 let e = event(current);
-                let new = realloc(sons(e), (how_many(e) as i32 + 1) as u32 * 0x110);
+                let new = exe::crt_realloc(sons(e), (how_many(e) as i32 + 1) as u32 * 0x110);
                 if new == 0 {
                     fatal_error_at(FONTE, 0xd50);
                 }
@@ -372,8 +361,8 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     c = exe::at_9469e0(f);
                 }
                 *((s + 4 + n) as *mut u8) = 0;
-                if procurar(0xae2c98, 0xa15be0) != 0 && n != 0 && existe(path(0x9c382c, s + 4)) == 0 {
-                    format(BUF, 0xa15bac, path(0x9c382c, s + 4));
+                if exe::crt_strstr(0xae2c98, 0xa15be0) != 0 && n != 0 && exe::utils_file_exists(exe::utils_build_file_path(0x9c382c, s + 4)) == 0 {
+                    format(BUF, 0xa15bac, exe::utils_build_file_path(0x9c382c, s + 4));
                     exe::gui_show_message_box(0x9870e0, BUF, 0);
                 }
                 core::ptr::write_unaligned((s + 0x108) as *mut usize, 0);
@@ -469,8 +458,6 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     const TEMP: usize = 0xb67dd8;
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
-    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     if ev == 0 || ctx == 0 {
         return 0;
     }
@@ -649,7 +636,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                         format(dest(out), 0x98806c, if t(pos + 2) == b'1' { number.wrapping_add(1) } else { number });
                     }
                     b'N' | b'n' => {
-                        let r = por_extenso(core::ptr::read_unaligned((ev + 9) as *const i32), -1);
+                        let r = exe::utils_format_ordinal(core::ptr::read_unaligned((ev + 9) as *const i32), -1);
                         write(out, r);
                     }
                     b'R' | b'r' => {
@@ -661,7 +648,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                             } else {
                                 let rest = ((b(7) as i8 as i32 + b(5) as i8 as i32 + core::ptr::read_unaligned((ctx + 4) as *const i32)) % 5) as i8;
                                 let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));
-                                let mode = if language() == 4 && rest == 0 {
+                                let mode = if exe::langlib_get_language() == 4 && rest == 0 {
                                     1
                                 } else if rest == 0 {
                                     5
@@ -758,17 +745,8 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// (+0x2d6c, +0x2dac = peso x volume / 100).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
-    let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let width_of_text: unsafe extern "C" fn(usize, *const u8) -> i32 = core::mem::transmute(FN_FONT_TEXT_WIDTH);
-    let colours_of_club: unsafe extern "C" fn(usize, u32, *mut u8, *mut u8) = core::mem::transmute(FN_DATABASE_GET_CLUB_KIT_COLOURS);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let por_extenso: unsafe extern "C" fn(i32, i32) -> usize = core::mem::transmute(FN_UTILS_FORMAT_ORDINAL);
-    let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let font_of_panel: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FONT);
-    let text_of_panel: unsafe extern "thiscall" fn(usize, u32, *const u8) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_TEXT);
-    let margin: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_STYLE);
     let mostrar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_SET_WIDGET_FLAGS);
     const SOM: usize = G_SCREEN_MANAGER;
     const TABELA: isize = 0xb68788;
@@ -779,11 +757,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
     let goal_crowd_reaction = |n: usize| ((n as isize) + eu() + 0x20) as *mut u8;
     if *goal_crowd_reaction(nar) != 0xff && exe::screenmanager_is_sound_playing(SOM, *goal_crowd_reaction(nar) as u32) == 0 {
-        parar(SOM, *goal_crowd_reaction(nar) as u32);
+        exe::screenmanager_stop_sound(SOM, *goal_crowd_reaction(nar) as u32);
         *goal_crowd_reaction(nar) = 0xff;
     }
     if *goal_crowd_reaction(nar) == 0xff {
-        let p = path(0x9c382c, 0xa159a0);
+        let p = exe::utils_build_file_path(0x9c382c, 0xa159a0);
         exe::screenmanager_play_sound(SOM, goal_crowd_reaction(nar) as usize, 2, p, 1);
     }
     let b = |o: usize| *((ev + o) as *const u8);
@@ -807,7 +785,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         let side = b(6);
         let mut club_id = if side != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
         let kit = *((ctx as isize + side as i8 as isize * 1573 + 0x152) as *const u8) as u32;
-        colours_of_club((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+        exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
         let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize);
         let v = b(0xd) as i8;
         if v > 0 {
@@ -932,7 +910,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                     n += 1;
                                 }
                                 inteiro[n] = 0;
-                                let curto = (width_of_text(font, inteiro.as_ptr()) as i16) < 0x12c;
+                                let curto = (exe::font_text_width(font, inteiro.as_ptr()) as i16) < 0x12c;
                                 exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, curto as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
                                 let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
@@ -980,7 +958,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             format(dest(out), 0x98806c, v);
                         }
                         b'n' => {
-                            let r = por_extenso(core::ptr::read_unaligned((ev + 9) as *const i32), -1);
+                            let r = exe::utils_format_ordinal(core::ptr::read_unaligned((ev + 9) as *const i32), -1);
                             write(out, r);
                         }
                         b'O' | b'o' => {
@@ -989,7 +967,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             club_id = if side != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
                             let a = (side == 0) as isize;
                             let kit = *((ctx as isize + a * 1573 + 0x152) as *const u8) as u32;
-                            colours_of_club((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, cor1.as_mut_ptr(), cor2.as_mut_ptr());
+                            exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
                             *(dest(out) as *mut u8) = 0;
                         }
                         b'Y' | b'y' => {
@@ -1012,7 +990,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                         .wrapping_add(club_id as i32);
                                     let rest = (sum % 5) as i8;
                                     let sheet = (*(G_OFFICIAL_TABLE as *const usize)).wrapping_add((referee as usize).wrapping_mul(0x2b));
-                                    let mode_name = if language() == 4 && rest == 0 {
+                                    let mode_name = if exe::langlib_get_language() == 4 && rest == 0 {
                                         1
                                     } else if rest == 0 {
                                         5
@@ -1070,7 +1048,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         }
         *(dest(out) as *mut u8) = 0;
         // too wide: wraps or cuts at a word with ”...”
-        if width_of_text(font, row.as_ptr()) > width - 0x10 {
+        if exe::font_text_width(font, row.as_ptr()) > width - 0x10 {
             let mut n = 0usize;
             while row[n] != 0 {
                 n += 1;
@@ -1082,7 +1060,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                 loop {
                     si -= 1;
                     *(dest(si) as *mut u8) = 0;
-                    if width_of_text(font, row.as_ptr()) <= width - 0x10 {
+                    if exe::font_text_width(font, row.as_ptr()) <= width - 0x10 {
                         if si > 0 {
                             loop {
                                 if *(dest(si - 1) as *const u8) == b' ' {
@@ -1115,10 +1093,10 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
             }
         }
         exe::screenmanager_set_widget_colour(SOM, panel, core::ptr::read_unaligned(cor2.as_ptr() as *const u32));
-        font_of_panel(SOM, panel, font);
+        exe::screenmanager_set_widget_font(SOM, panel, font);
         exe::screenmanager_set_widget_text_colour(SOM, panel, core::ptr::read_unaligned(cor1.as_ptr() as *const u32));
-        text_of_panel(SOM, panel, row.as_ptr());
-        margin(SOM, panel, 0x30);
+        exe::screenmanager_set_widget_text(SOM, panel, (row.as_ptr()) as usize);
+        exe::screenmanager_set_widget_style(SOM, panel, 0x30);
         mostrar(SOM, panel, if *((e + 3) as *const u8) != 0 { 0x1001 } else { 1 });
     }
 
@@ -1136,7 +1114,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                     2 => (b(6) == 0) as u32,
                     _ => 2,
                 };
-                let p = path(0x9c382c, sound + 4);
+                let p = exe::utils_build_file_path(0x9c382c, sound + 4);
                 exe::screenmanager_play_sound(SOM, *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *const usize), side, p, 0);
             }
         }
@@ -1263,16 +1241,14 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
 /// nome tem a mesma forma 5, a forma `longa`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, curto: u8, _x: u32, longa: u32) {
-    let name: unsafe extern "C" fn(u32, u32, u32, *mut u8, u32, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_NAME_FROM_IDS);
     let r = (pt as isize + player as isize * 0x49 + side as isize * 0x625) as usize;
     let d = |o: usize| *((r + o) as *const u32);
     if curto != 0 && random(5) == 0 {
-        name(d(0x198), d(0x19c), d(0x1a0), buf, size, 1, d(0x190));
+        exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 1, d(0x190));
         return;
     }
     crate::comparison::branch("narracao nome curto");
-    name(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));
-    let textos: unsafe extern "C" fn(*const u8, *const u8, i32, u32) -> i32 = core::mem::transmute(FN_UTILS_STRING_COMPARE);
+    exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));
     for k in 0..2 {
         let club = *((pt + 4 * k) as *const u32) as usize;
         let mut l = [0usize; 100];
@@ -1286,10 +1262,10 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
                 continue;
             }
             let mut other = [0u8; 200];
-            name(n(1), n(2), n(3), other.as_mut_ptr(), 200, 5, d(0x190));
-            if textos(buf, other.as_ptr(), 1, 0) == 0 {
+            exe::database_format_name_from_ids(n(1), n(2), n(3), other.as_mut_ptr(), 200, 5, d(0x190));
+            if exe::utils_string_compare(buf, other.as_ptr(), 1, 0) == 0 {
                 crate::comparison::branch("narracao nome forma longa");
-                name(d(0x198), d(0x19c), d(0x1a0), buf, size, longa, d(0x190));
+                exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, longa, d(0x190));
                 return;
             }
         }
@@ -1331,7 +1307,6 @@ pub(crate) enum BranchLabel {
 /// área (0x6d58f0). As duas chamadas da 0x6cb960 do original não têm efeito e o valor delas é
 /// descartado (ficam de fora).
 pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let b = |p: usize, o: usize| *((p + o) as *const i8);
     let w = |p: usize| core::ptr::read_unaligned(p as *const i16);
     let s2 = w(e);
@@ -1369,7 +1344,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     let shot = (0x1f87..=0x1fbd).contains(&s2);
     if (shot || (s2 == 0x1f5f && area != 0)) && s3 == 0x1f7e {
         core::ptr::write_unaligned(q as *mut i16, 0x219c);
-        core::ptr::write_unaligned((q + 2) as *mut i16, sorteio(2) as i16);
+        core::ptr::write_unaligned((q + 2) as *mut i16, exe::utils_random(2) as i16);
         return 0;
     }
     if shot && s3 == 8000 {
@@ -1387,7 +1362,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
         }
         if s3 == 0x1f69 {
             if s2 == 0x1f9d {
-                return if sorteio(3) != 0 { 0 } else { 0x2198 };
+                return if exe::utils_random(3) != 0 { 0 } else { 0x2198 };
             }
             break 'escolha BranchLabel::R6cde;
         }
@@ -1438,7 +1413,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
             break 'escolha BranchLabel::R6cde;
         }
         if s3 == 0x2113 {
-            if (0x1f86..=0x1fbe).contains(&s2) && sorteio(3) == 0 && same(5) && same(6) {
+            if (0x1f86..=0x1fbe).contains(&s2) && exe::utils_random(3) == 0 && same(5) && same(6) {
                 copiar();
                 return s2;
             }
@@ -1460,7 +1435,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
         }
         if s3 == 0x1f4d {
             if s2 == 0x1f4a {
-                if sorteio(2) == 0 || !same(5) {
+                if exe::utils_random(2) == 0 || !same(5) {
                     return 0;
                 }
                 if (!same(6) || !same(7) || !same(8)) && (!same(6) || (b(q, 7) != -1 && b(e, 7) != -1)) {
@@ -1473,7 +1448,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
         }
         if s3 == 0x1f43 {
             if s2 == 0x1f9d {
-                if sorteio(2) == 0 {
+                if exe::utils_random(2) == 0 {
                     return 0;
                 }
                 copiar();
@@ -1504,7 +1479,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
                 return 0x1f70;
             }
             0x1f84 | 0x1f85 if s2 == 0x1f75 => {
-                if sorteio(3) == 0 {
+                if exe::utils_random(3) == 0 {
                     return 0;
                 }
                 copiar();
@@ -1513,7 +1488,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
             0x1f60 | 0x1f46 | 0x1f84 | 0x1f85 => {}
             0x1f80 => {
                 if s2 == 0x1f46 {
-                    if sorteio(2) != 0 && !same(6) {
+                    if exe::utils_random(2) != 0 && !same(6) {
                         swap(true);
                         return 0x2146;
                     }
@@ -1529,7 +1504,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     loop {
         r = match r {
             BranchLabel::R69a6 => {
-                if s2 == 0x1f46 && sorteio(5) != 0 && same(6) && !same(5) {
+                if s2 == 0x1f46 && exe::utils_random(5) != 0 && same(6) && !same(5) {
                     swap(true);
                     return 0x2147;
                 }
@@ -1551,7 +1526,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
                         copiar();
                         return 0x214e;
                     }
-                    if s2 == 0x1f47 && (1..0x15).contains(&iq) && sorteio(0x16 - iq) != 0 && b(q, 7) == b(e, 5) && b(q, 8) == b(e, 6) {
+                    if s2 == 0x1f47 && (1..0x15).contains(&iq) && exe::utils_random(0x16 - iq) != 0 && b(q, 7) == b(e, 5) && b(q, 8) == b(e, 6) {
                         break 'r BranchLabel::Copiar;
                     }
                 }
@@ -1630,7 +1605,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
                     copiar();
                     return 0x2151;
                 }
-                if GRUPO.contains(&s3) && GRUPO.contains(&s2) && sorteio(2) != 0 {
+                if GRUPO.contains(&s3) && GRUPO.contains(&s2) && exe::utils_random(2) != 0 {
                     return -0x2169;
                 }
                 if s3 == 0x216e {
@@ -1799,9 +1774,8 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
         core::ptr::write_unaligned((t + commentary_queue::SOUND_START_TIMES + 4 * k) as *mut u32, 0);
     }
     if goal_crowd_reaction != 0 {
-        let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
         let side = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        let name = path(0x9c382c, 0xa159a0);
+        let name = exe::utils_build_file_path(0x9c382c, 0xa159a0);
         exe::screenmanager_play_sound(G_SCREEN_MANAGER, (t as isize + 0x20 + side) as usize, 2, name, 1);
     }
     t
@@ -1860,7 +1834,6 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 /// 0xb74450) segura; o que acabou e parado (0x802a50) e liberado. Devolve 1 so se todos os marcados
 /// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
 pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const u32) -> u8 {
-    let parar: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_SCREENMANAGER_STOP_SOUND);
     let now = exe::utils_get_time_ms();
     crate::comparison::branch("sons dos eventos");
     for k in 0..16usize {
@@ -1878,7 +1851,7 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
             if exe::screenmanager_is_sound_playing(G_SCREEN_MANAGER, (start & !0xff) | *canal as u32) != 0 {
                 return 0;
             }
-            parar(G_SCREEN_MANAGER, *canal as u32);
+            exe::screenmanager_stop_sound(G_SCREEN_MANAGER, *canal as u32);
             *canal = 0xff;
         }
         if !passou {
@@ -1896,12 +1869,11 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
 /// Original: `event_variant` (0x6d5d80, match_events.cpp, stdcall).
 ///
 /// [pt] { 0x6d5d80 } (stdcall, ret 0xc, match_events.cpp): troca o evento da narração por uma variante:
-/// com sorteio(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
-/// outro sorteio(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
+/// com exe::utils_random(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
+/// outro exe::utils_random(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
 /// byte de cima 3..5 troca 0x1f4b por 0x217e.
 pub(crate) unsafe extern "system" fn event_variant(e: *const i16, sides: u32, kind: u8) -> i16 {
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    if sorteio(3) != 0 {
+    if exe::utils_random(3) != 0 {
         return *e;
     }
     let v = *e;
@@ -1910,7 +1882,7 @@ pub(crate) unsafe extern "system" fn event_variant(e: *const i16, sides: u32, ki
         2 => &[(0x216f, 0x2199), (0x2150, 0x2197), (0x2112, 0x2195), (0x1fe6, 0x2193), (0x1fee, 0x218d), (0x1f48, 0x2181), (0x1f41, 0x2180), (0x1f44, 0x2187), (0x1f86, 0x2189), (0x1fa2, 0x218a)],
         8 => &[(0x216f, 0x2199), (0x2150, 0x2197), (0x2112, 0x2195), (0x1fe6, 0x2193), (0x1fee, 0x218d), (0x205a, 0x218e), (0x205b, 0x218f), (0x1f4b, 0x2183), (0x1f41, 0x2184), (0x1f4a, 0x2188)],
         0x10 => &[(0x1f48, 0x2185)],
-        0x20 if sorteio(3) == 0 => &[(0x216f, 0x2199), (0x1fee, 0x218d), (0x1f42, 0x217c), (0x1f4b, 0x217d), (0x1f48, 0x2186)],
+        0x20 if exe::utils_random(3) == 0 => &[(0x216f, 0x2199), (0x1fee, 0x218d), (0x1f42, 0x217c), (0x1f4b, 0x217d), (0x1f48, 0x2186)],
         _ => &[],
     };
     if let Some(&(_, n)) = table.iter().find(|&&(de, _)| de == v) {

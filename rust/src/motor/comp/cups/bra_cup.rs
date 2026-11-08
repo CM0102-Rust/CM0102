@@ -149,8 +149,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, s
 /// lista +0x14 (6 bytes), a situação +5 = 0xff e a classe +4 = 0. Devolve 1.
 pub(crate) unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x47);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0x1aa);
+    let l = exe::crt_malloc(0x1aa);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x98a3bc, 0x143);

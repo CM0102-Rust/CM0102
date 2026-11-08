@@ -170,12 +170,11 @@ pub(crate) unsafe extern "thiscall" fn init(
         pesos_colunas = 0;
         pesos_linhas = 0;
     } else {
-        let swap: unsafe extern "C" fn(*mut i32, *mut i32, u32) = core::mem::transmute(FN_UTILS_SWAP_BYTES);
         if x1 > x2 {
-            swap(&mut x1, &mut x2, 4);
+            exe::utils_swap_bytes(&mut x1, &mut x2, 4);
         }
         if y1 > y2 {
-            swap(&mut y1, &mut y2, 4);
+            exe::utils_swap_bytes(&mut y1, &mut y2, 4);
         }
     }
     let x1 = if x1 > 0 { x1 } else { 0 };

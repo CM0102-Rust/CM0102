@@ -107,9 +107,8 @@ pub(crate) static mut ARCHIVE_STATS_CLUB_ID: i32 = -1;
 /// [pt] O nó do histórico (0x2b bytes montados na pilha): +0 o ano da temporada do clube (0x669950), +2 o clube (−1 sem),
 /// +6 os 32 bytes da categoria, +0x26 o valor, +0x2a o tipo (3 bits) e a categoria × 8.
 pub(crate) unsafe fn career_history_node(club: usize, data: Option<usize>, value: u32, mark: u8) -> [u8; 0x2b] {
-    let year: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
     let mut r = [0u8; 0x2b];
-    r[0..2].copy_from_slice(&year(club).to_le_bytes());
+    r[0..2].copy_from_slice(&exe::key_nation_get_club_season_year(club).to_le_bytes());
     let id = if club == 0 { 0xffff_ffffu32 } else { read_usize(club) as u32 };
     r[2..6].copy_from_slice(&id.to_le_bytes());
     if let Some(d) = data {
@@ -200,8 +199,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     let mark = if club == 0 || read_usize(club + club::NATION) == 0 {
         true
     } else {
-        let row: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_NATION);
-        let k = row(read_usize(club + club::NATION));
+        let k = (exe::key_nation_index_of_nation(read_usize(club + club::NATION)) as i8);
         if !(0..0x23).contains(&k) {
             true
         } else {
@@ -222,8 +220,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         } else if !mark {
             true
         } else {
-            let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-            days(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32) < 0x16d
+            exe::date_days_since(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32) < 0x16d
         };
         if write {
             let no = career_history_node(club, None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
@@ -237,8 +234,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         let list = exe::file_llist_get_nodes(read_usize(this), read_usize(reg + player_stats_entry::HISTORY_START) as u32, read_usize(reg + player_stats_entry::HISTORY_LAST) as u32);
         if list != 0 {
             core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_usize(list + llist::HEAD) as u32);
-            let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-            let mut no = next(list);
+            let mut no = exe::llist_get_next(list);
             while no != 0 {
                 if read_usize(no + career_entry::CLUB_ID) as u32 == club_id && *((no + career_entry::KIND) as *const u8) & 0xf8 == 0x10 {
                     crate::comparison::branch("cqh_8 jogos pelo clube");
@@ -247,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
                     let g = (reg + player_stats_entry::CLUB_LEAGUE_GOALS) as *mut u16;
                     core::ptr::write_unaligned(g, core::ptr::read_unaligned(g).wrapping_add(*((no + career_entry::STATS_GOALS) as *const u8) as u16));
                 }
-                no = next(list);
+                no = exe::llist_get_next(list);
             }
             exe::drop_llist(list);
             exe::crt_operator_delete(list);
@@ -349,9 +345,6 @@ pub(crate) fn history_entry_at(buf: usize, n: i32, k: i32) -> usize {
 /// jogos com a última entrada sem clube (+0xd9) também some. (6) Os grupos de ano 0 saem da tabela (os seguintes
 /// descem) e a conta cai 6 por grupo.
 pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
-    let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let realloc: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let year_of_club: unsafe extern "C" fn(usize) -> u16 = core::mem::transmute(FN_KEY_NATION_GET_CLUB_SEASON_YEAR);
     *count = 0;
     if p == 0 {
         show_player_stats_error(0xb98);
@@ -365,7 +358,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         show_player_stats_error(0xbaa);
         return 0;
     }
-    let mut buf = malloc(0x53fc);
+    let mut buf = exe::crt_malloc((0x53fc) as u32);
     if buf == 0 {
         show_player_stats_error(0xbb2);
         return 0;
@@ -374,7 +367,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let club = read_usize(p + staff::CLUB_JOB);
     let mut last = PlayerStatsEntry::nova(0, 0, 0, 0);
     for cat in 1..=6u8 {
-        let year = year_of_club(club);
+        let year = exe::key_nation_get_club_season_year(club);
         let id = if club == 0 { 0xffff_ffff } else { read_usize(club) as u32 }; // cqf8: the club of the current season
         crate::comparison::branch("cqf_8 temporada atual");
         let mut r = PlayerStatsEntry::nova(year, id, cat, 0xffff_ffff);
@@ -407,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                             if *count + cat as i32 - 1 >= cap {
                                 size += 0x53fc;
                                 cap += 500;
-                                buf = realloc(buf, size);
+                                buf = exe::crt_realloc(buf, (size) as u32);
                                 if buf == 0 {
                                     show_player_stats_error(0xc00);
                                     return 0;
@@ -435,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                     if *count + cat as i32 - 1 >= cap {
                         size += 0x53fc;
                         cap += 500;
-                        buf = realloc(buf, size);
+                        buf = exe::crt_realloc(buf, (size) as u32);
                         if buf == 0 {
                             show_player_stats_error(0xc26);
                             return 0;
@@ -449,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
             }
             if (kind >> 3) as i32 - 1 + *count >= cap {
                 cap += 500;
-                buf = realloc(buf, cap as usize * HISTORY_ENTRY_SIZE);
+                buf = exe::crt_realloc(buf, (cap as usize * HISTORY_ENTRY_SIZE) as u32);
                 if buf == 0 {
                     show_player_stats_error(0xc41);
                     return 0;
@@ -863,12 +856,11 @@ pub(crate) unsafe fn category_slot(this: usize, player: usize, category: u32) ->
 /// extensão, `linha`, `texto`) em 0xae24d0, o título traduzido (0x66f4e0) em 0xae28bc, o corpo (0x9a7ff8 com
 /// 0xae24d0) em 0xae26c4 e a caixa 0x5e8290. O jogo segue.
 pub(crate) unsafe fn show_stats_memory_error(row: u32, text: usize) {
-    let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32, usize) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-    split(0xa78310, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
+    exe::crt_strtok(0xa78310, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row, text);
     format(0xae24d0, 0x9a8120, s, nome.as_ptr(), ext.as_ptr(), row, text);
     translate(0xae28bc, 0x9a8108);
@@ -943,8 +935,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
     if n >= read_usize(this + player_stats_fields::CATEGORY_CAPACITY) as i32 {
         let cap = read_usize(this + player_stats_fields::CATEGORY_CAPACITY).wrapping_add(100);
         write_usize(this + player_stats_fields::CATEGORY_CAPACITY, cap);
-        let realloc: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let p = realloc(read_usize(this + player_stats_fields::CATEGORY_RECORDS), cap << 5);
+        let p = exe::crt_realloc(read_usize(this + player_stats_fields::CATEGORY_RECORDS), (cap << 5) as u32);
         write_usize(this + player_stats_fields::CATEGORY_RECORDS, p);
         if p == 0 {
             show_stats_memory_error(0xef4, 0xa784fc); // "PLAYER_STATS::create_stats() : Unable to allocate enough memory"
@@ -966,11 +957,10 @@ compare_value!(compare_is_retirement_pending, is_retirement_pending, IDX_IS_RETI
 /// [pt] O registro de idioma (6 bytes: +0 id da pessoa, +4 idioma, +5 fluência) da `pessoa` no `idioma`: bsearch
 /// (0x946464, comparação 0x7c6d40) na tabela [this+0x3c], [this+0x44] registros. 0 sem achar.
 pub(crate) unsafe fn find_language_record(this: usize, person: usize, language: u8) -> usize {
-    let bsearch: unsafe extern "C" fn(*const u8, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut key = [0u8; 8];
     core::ptr::write_unaligned(key.as_mut_ptr() as *mut u32, read_usize(person) as u32);
     key[4] = language; // the comparison only reads byte +4 of the key
-    bsearch(key.as_ptr(), read_usize(this + player_stats_fields::LANGUAGES), read_usize(this + player_stats_fields::LANGUAGE_COUNT) as u32, 6, 0x7c6d40)
+    exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this + player_stats_fields::LANGUAGES), read_usize(this + player_stats_fields::LANGUAGE_COUNT) as u32, 6, 0x7c6d40)
 }
 
 /// Appends the new entry to the language table (6 bytes: id, language, fluency up to 10; starts at 100, grows by 100)
@@ -988,8 +978,7 @@ pub(crate) unsafe fn find_language_record(this: usize, person: usize, language: 
 /// (no máximo 10, com sinal); com `ordenar`, qsort pela comparação 0x7c6d40. Sem memória: caixa fatal.
 pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, language: u32, fluencia: u32, sort: u32) {
     if read_usize(this + player_stats_fields::LANGUAGES) == 0 {
-        let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let p = malloc(0x258);
+        let p = exe::crt_malloc(0x258);
         write_u32(this + player_stats_fields::LANGUAGES, p as u32);
         if p == 0 {
             show_error_at(0xa78310, 0x11fd);
@@ -999,8 +988,7 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
     }
     let cap = read_usize(this + player_stats_fields::LANGUAGE_CAPACITY);
     if cap == read_usize(this + player_stats_fields::LANGUAGE_COUNT) {
-        let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let p = realloc(read_usize(this + player_stats_fields::LANGUAGES), (cap as u32).wrapping_mul(3).wrapping_add(0x12c).wrapping_mul(2));
+        let p = exe::crt_realloc(read_usize(this + player_stats_fields::LANGUAGES), (cap as u32).wrapping_mul(3).wrapping_add(0x12c).wrapping_mul(2));
         write_u32(this + player_stats_fields::LANGUAGES, p as u32);
         if p == 0 {
             show_error_at(0xa78310, 0x1208);
@@ -1018,8 +1006,7 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
     write_u32(this + player_stats_fields::LANGUAGE_COUNT, (n as u32).wrapping_add(1));
     if sort != 0 {
         crate::comparison::branch("cpo_12 idiomas ordenados");
-        let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-        qsort(read_usize(this + player_stats_fields::LANGUAGES), read_usize(this + player_stats_fields::LANGUAGE_COUNT) as u32, 6, 0x7c6d40);
+        exe::crt_qsort(read_usize(this + player_stats_fields::LANGUAGES), read_usize(this + player_stats_fields::LANGUAGE_COUNT) as u32, 6, 0x7c6d40);
     }
 }
 
@@ -1140,8 +1127,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     let mut key = [0u8; 8];
     key[..4].copy_from_slice(&(read_usize(person) as u32).to_le_bytes());
     key[4] = language;
-    let bsearch: unsafe extern "C" fn(*const u8, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let e = bsearch(key.as_ptr(), base, read_usize(this + player_stats_fields::LANGUAGE_COUNT), 6, 0x7c6d40);
+    let e = exe::crt_bsearch((key.as_ptr()) as usize, base, (read_usize(this + player_stats_fields::LANGUAGE_COUNT)) as u32, (6) as u32, 0x7c6d40);
     if e == 0 {
         return 0;
     }
@@ -1166,7 +1152,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
 /// Original: `PlayerStats::record_match` (0x7c0d70, player_stats.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x7c0d70 } (thiscall, ret 8, player_stats.cpp): `PlayerStats::record_match(partida, jogo)`: partida ou jogo nulos,
-/// as caixas e 0. Competição −2 (jogo simulado): a categoria é sorteio(9) ≠ 0 ? 2 : 3 para os dois lados; senão a de
+/// as caixas e 0. Competição −2 (jogo simulado): a categoria é exe::utils_random(9) ≠ 0 ? 2 : 3 para os dois lados; senão a de
 /// cada lado (match_stats_category). Em cada linha que conta (match_lineup_row): a nota (+0x35) e um jogo nas somas em double
 /// do this (+0x20/+0x28 com a marca +0x4c do jogo, senão +0x10/+0x18); nos registros de 0x20 bytes das categorias
 /// (0x7c3920, ou criado pela 0x7c5d80): jogos, entradas, gols/assistências e o resto da linha (+0x21..+0x2d), gols a
@@ -1179,13 +1165,10 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
     if p == 0 || game == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH)(this, p, game); // the boxes
     }
-    let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let count: unsafe extern "C" fn(i32) -> u32 = core::mem::transmute(FN_COMP_UTIL_IS_LEAGUE_DIVISION);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let simulado = read_usize(p) as i32 == -2;
     let mut cat: u8 = 0;
     if simulado {
-        cat = if sorteio(9) != 0 { 2 } else { 3 };
+        cat = if exe::utils_random(9) != 0 { 2 } else { 3 };
     }
     let mut contou = false;
     for lado in 0..2usize {
@@ -1263,10 +1246,10 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                 }
             }
             let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_usize(e + lineup_row::PLAYER_ID)).wrapping_mul(0x27));
-            if cat == 2 || (read_usize(p) as i32 > -1 && count(read_usize(p) as i32) != 0) {
+            if cat == 2 || (read_usize(p) as i32 > -1 && exe::comp_util_is_league_division(read_usize(p) as i32) != 0) {
                 add_u16_at(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 1);
                 add_u16_at(reg + player_stats_entry::CLUB_LEAGUE_GOALS, read_u8(e + lineup_row::GOALS) as u16);
-                if sheet(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 && contract_of_staff(pessoa) != 0 {
+                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 && contract_of_staff(pessoa) != 0 {
                     add_u16_at(contract_of_staff(pessoa) + 0x3b, 1);
                 }
             }
@@ -1300,8 +1283,6 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         return 0;
     }
     let index: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let archive: unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, i32, u32) = core::mem::transmute(FN_PLAYERSTATS_ARCHIVE_PLAYER_STATS);
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COUNT) {
         let club = injury_club_by_index(i);
@@ -1315,9 +1296,9 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
                 if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }
-                if loan(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + staff::CLUB_JOB) == club {
+                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + staff::CLUB_JOB) == club {
                     crate::comparison::branch("cpp_10 arquivar");
-                    archive(this, p, -1, 0, 0, -1, 0);
+                    exe::playerstats_archive_player_stats(this, p, -1, 0, 0, -1, 0);
                 }
             }
         }

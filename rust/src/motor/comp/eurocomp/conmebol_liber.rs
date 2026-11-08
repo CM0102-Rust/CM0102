@@ -75,10 +75,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
 /// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
 /// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
-    let t = new(0xec);
+    let t = exe::crt_malloc(0xec);
     write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0x9a7de4, 0x16f);
@@ -88,7 +86,7 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         crate::comparison::branch("cqr_10 linha do primeiro grupo");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
-        row(this, i as u8 as u32, conmebol_liber_drawn_club(this, i as usize), 0, 0);
+        exe::league_init_table_row(this, i as u8 as u32, conmebol_liber_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
     }
     exe::league_send_group_draw_news(this);
@@ -102,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
 /// drawn clubs (4g + 4 to 4g + 7), the cup's rules and year and the cup's round table for the group; human managers get
 /// the news.
 ///
-/// Ret 4; SEH frame only for the stage's new (no destructor on the normal path): the stage of group g + 1 (g from 0 to
+/// Ret 4; SEH frame only for the stage's exe::crt_operator_new(no destructor on the normal path): the stage of group g + 1 (g from 0 to
 /// 6, from the draw day). The teams in a vector of +0x3e pointers (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; out
 /// of memory: the box at line 0x218 and 0): drawn clubs 4g + 4 to 4g + 7 (+0xee); the round table through virtual +0x3c
 /// (push 0; push &id; push &rounds; push g; mov ecx, this -> thiscall, ret 0x10); the stage (0x944cf1(0xee) push; add
@@ -124,12 +122,10 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
 /// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
 /// (0x9452ca). Sem fase: a caixa da linha 0x22e e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: usize, g: i32) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
+    let teams = exe::crt_malloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(0x9a7de4, 0x218);
         return 0;
@@ -144,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         let b = |d: usize| *((this + d) as *const u8) as u32;
         construct(
@@ -229,10 +225,9 @@ pub(crate) unsafe fn apply_cup_rules(this: usize, g: &ContinentalGroupRules, day
             core::ptr::write_unaligned((this + o) as *mut u32, v);
         }
     }
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: the year goes in a register that may have garbage in the high 16 bits; 0x549f70 reads it as a word
-    data(d.as_mut_ptr(), day, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
+    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, g.mes, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32, g.semana);
     core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, core::ptr::read_unaligned(d.as_ptr() as *const u16));
     core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
     if let Some(p) = g.premio {
@@ -360,10 +355,8 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
 /// linha 0x297 e devolve 0; senão a lista embaralhada (0x4afb40(lista, 32): push n; push lista; add esp, 8 -> cdecl; 3 ×
 /// 32 trocas sorteadas) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let shuffle: unsafe extern "C" fn(usize, u32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
-    let list = new(0x80);
+    let list = exe::crt_malloc(0x80);
     core::ptr::write_unaligned((this + 0xee) as *mut u32, list as u32);
     if list == 0 {
         show_error_at(0x9a7de4, 0x285);
@@ -379,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
         return 0;
     }
     crate::comparison::branch("cqk_11 classificados da libertadores");
-    shuffle(list, read_i16(this + 0xf2) as u16 as u32); // cqk11: the 32 of the Libertadores shuffled
+    exe::comp_util_shuffle_pointer_array(list, read_i16(this + 0xf2) as u16 as u32); // cqk11: the 32 of the Libertadores shuffled
     1
 }
 

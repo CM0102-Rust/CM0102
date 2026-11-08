@@ -233,8 +233,6 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-    let morale: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     // 0x7c1e30: push 6,5f; push 1; push 2; push ficha; mov ecx, [0xb74350] -> thiscall (ret 0x10, x87); 0x544710: 3
     // pushes; add esp, 0xc -> cdecl; 0x4cf5f0: push clube; push p; mov ecx, [0xae1050] -> thiscall (ret 8)
     for j in 0..50usize {
@@ -248,8 +246,8 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         if f > threshold as f64 { // cqd13: acima do limiar
             crate::comparison::branch("cqd_13 jogador destacado do campeao");
             append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), &e);
-            morale(p, 0x14, 1); // cqd13: the morale of the standout player
-            let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
+            exe::staff_adjust_morale(p, 0x14, 1); // cqd13: the morale of the standout player
+            let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
             if k == 0 {
                 continue;
             }
@@ -257,8 +255,8 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             add_contract_morale(k, 100); // cqd13: the contract of the standout player
             offer_renewal_if_due(club, p, k);
         } else {
-            morale(p, 0xa, 1);
-            let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
+            exe::staff_adjust_morale(p, 0xa, 1);
+            let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
             if k != 0 {
                 add_contract_morale(k, 50);
             }
@@ -340,7 +338,6 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     }
     let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club != read_usize(game + fixture::HOME_CLUB)) as usize;
     add_lineup_histories(this, club, escalacao, &e);
-    let morale: unsafe extern "C" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     for j in 0..50usize {
         if (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(400) < read_i16(club + club::REPUTATION) as i32 {
@@ -351,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
             continue;
         }
         crate::comparison::branch("cqd_13 elenco do campeao da copa");
-        morale(p, 0xf, 1); // cqd13: the morale of the cup winner player
+        exe::staff_adjust_morale(p, 0xf, 1); // cqd13: the morale of the cup winner player
         let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
         if k == 0 {
             continue;
@@ -424,7 +421,6 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: usiz
         fixas.push((club + club::MAX_ATTENDANCE, 4));
         fixas.push((read_usize(club + club::STADIUM) + 0x44, 4));
     }
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut contratos = Vec::new();
     let mut sheets = Vec::new(); // (morale from the record, contract or 0, previous morale), in squad order
     for j in 0..50usize {
@@ -432,7 +428,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: usiz
         if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        let k = contract(read_usize(G_CONTRACT_MANAGER), p, club);
+        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
         let m = read_usize(p + staff::PLAYER) + 0x45;
         sheets.push((m, k, *(m as *const i8)));
         if k != 0 {
@@ -672,7 +668,6 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
 /// (0x58e340).
 pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, league: usize) {
     crate::comparison::branch("cqa_11 fim da liga");
-    let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0xa;
@@ -680,7 +675,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, le
     put_i32(&mut e, 0xd, read_i32(read_usize(league + 4)));
     let mut k: i16 = 0;
     while k < read_i16(league + league::CLUB_COUNT) {
-        let club = read_usize(row(league, k as i32));
+        let club = read_usize(exe::league_get_table_row(league, k as i32));
         put_i32(&mut e, 0x15, k as i32 + 1);
         put_i32(&mut e, 8, read_i32(club));
         let t = read_usize(club + club::MANAGER);
@@ -911,17 +906,15 @@ pub(crate) unsafe fn compare_cup_placed(name: &str, club: usize, game: usize, pa
 ///
 /// [pt] A data em `src` copiada para `dst` (0x417c10; a cópia de retorno vai para uma data local).
 pub(crate) unsafe fn staff_records_copy_date(dst: usize, src: usize) {
-    let copy: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    copy(dst, t.as_mut_ptr(), src);
+    exe::date_operator_3d(dst, (t.as_mut_ptr()) as usize, src);
 }
 
 /// Days of date a minus date b (0x54cdb0, b by value; writes the static date 0xae2470).
 ///
 /// [pt] Os dias da data `a` menos a `b` (0x54cdb0, `b` por valor; grava a data estática 0xae2470).
 pub(crate) unsafe fn days_between(a: usize, b: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    f(a, read_usize(b) as u32, read_usize(b + 4) as u32)
+    exe::date_days_since(a, read_usize(b) as u32, read_usize(b + 4) as u32)
 }
 
 /// `Staff_Records::record_manager_job_change(manager, club, hired)`: closes the manager's current spell, opens the new
@@ -997,9 +990,8 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
                 crate::comparison::branch("cqa_12 passagem nova");
                 write_i32(r + manager_record::CURRENT_CLUB, read_i32(club));
                 staff_records_copy_date(r + manager_record::CURRENT_CLUB_SINCE, today);
-                let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
                 let mut t = [0u8; 8];
-                let d = data(t.as_mut_ptr(), 0xd, 0xb, 0x7b7, u32::MAX);
+                let d = exe::date_date_549f70((t.as_mut_ptr()) as *mut [u16; 4], 0xd, 0xb, 0x7b7, u32::MAX);
                 staff_records_copy_date(r + manager_record::CURRENT_CLUB_END, d);
                 *((r + manager_record::CLUB_JOBS) as *mut u8) = (*((r + manager_record::CLUB_JOBS) as *const u8)).wrapping_add(1); // cqa12: as passagens
             }
@@ -1118,11 +1110,9 @@ pub(crate) unsafe fn staff_records_add_i32(a: usize, v: i32) {
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
 pub(crate) unsafe fn dated_history_entry() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
-    let new: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    let copy: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    new(e.as_mut_ptr());
-    copy(e.as_mut_ptr(), t.as_mut_ptr(), G_CURRENT_DATE);
+    exe::date_date_54a110((e.as_mut_ptr()) as usize);
+    exe::date_operator_3d((e.as_mut_ptr()) as usize, (t.as_mut_ptr()) as usize, G_CURRENT_DATE);
     e
 }
 
@@ -1217,8 +1207,7 @@ pub(crate) unsafe fn offer_renewal(p: usize) {
 
 /// Adjusts the person's morale by delta (FN_STAFF_ADJUST_MORALE with 1).
 pub(crate) unsafe fn adjust_morale(p: usize, delta: i32) {
-    let f: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
-    f(p, delta, 1);
+    exe::staff_adjust_morale(p, (delta) as u32, 1);
 }
 
 /// Raises a non-player rating i16 by ftol(x × weight × [0x96ff88]), floored at x × weight and capped at 10000.
@@ -1262,8 +1251,7 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
             let (p1, p2) = if read_u8(object + league::CLUB_SIDES) as i8 != 1 {
                 (400, 400)
             } else {
-                let foreign: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
-                (200, if foreign(manager, read_usize(club + club::NATION), 1) != 0 { 200 } else { 400 })
+                (200, if exe::database_is_staff_foreign(manager, read_usize(club + club::NATION), 1) != 0 { 200 } else { 400 })
             };
             let x = read_i16(pela + competition::REPUTATION) as i32;
             let nj = || read_usize(read_usize(club + club::MANAGER) + 0x69);
@@ -1407,8 +1395,7 @@ pub(crate) unsafe fn apply_relegation(this: usize, club: usize, comp: usize, wri
     if read_usize(club + club::MANAGER) != 0 {
         let manager = read_usize(club + club::MANAGER);
         if read_usize(manager + staff::NON_PLAYER) != 0 {
-            let foreign: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
-            let factor: i16 = if foreign(manager, read_usize(club + club::NATION), 1) != 0 { -8 } else { -16 };
+            let factor: i16 = if exe::database_is_staff_foreign(manager, read_usize(club + club::NATION), 1) != 0 { -8 } else { -16 };
             let nj = || read_usize(read_usize(club + club::MANAGER) + 0x69);
             let x = || read_i16(comp + competition::REPUTATION);
             crate::comparison::branch("cpq_3 rebaixamento do tecnico");
@@ -1478,8 +1465,7 @@ pub(crate) unsafe fn record_qualification(this: usize, club: usize, comp: usize,
     }
     let mut e = person_history_entry(club, 3, if comp != 0 { read_usize(comp) as u32 } else { u32::MAX });
     put_u32(&mut e, 0x11, stage as u16 as i16 as i32 as u32);
-    let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
-    put_u32(&mut e, 0x15, base(round) as u16 as i16 as i32 as u32);
+    put_u32(&mut e, 0x15, exe::comp_util_get_base_round_id(round) as u16 as i16 as i32 as u32);
     if read_usize(club + club::MANAGER) == 0 {
         return;
     }
@@ -1493,8 +1479,7 @@ pub(crate) unsafe fn record_qualification(this: usize, club: usize, comp: usize,
     let points = ftol(x * x * (weight as u8 as i8 as i32) as f64);
     staff_records_add_i32(r + manager_record::YEAR_POINTS, points);
     staff_records_add_i32(r + manager_record::MONTH_POINTS, points);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(club) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         crate::comparison::branch("cpq_3 classificado selecao");
         staff_records_add_i32(r + manager_record::NATIONAL_SEASON_POINTS, points);
     } else {
@@ -1535,9 +1520,8 @@ pub(crate) unsafe fn put_i32(e: &mut [u8; 0x40], o: usize, v: i32) {
 ///
 /// [pt] A data do jogo copiada (0x417c10) em `a` (a cópia também vai para uma data local).
 pub(crate) unsafe fn stamp_game_date(a: *mut u8) {
-    let copy: unsafe extern "thiscall" fn(*mut u8, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    copy(a, t.as_mut_ptr(), G_CURRENT_DATE);
+    exe::date_operator_3d((a) as usize, (t.as_mut_ptr()) as usize, G_CURRENT_DATE);
 }
 
 /// New 0x40-byte history entry on the stack with a constructed Date (0x54a110).
@@ -1547,8 +1531,7 @@ pub(crate) unsafe fn stamp_game_date(a: *mut u8) {
 /// histórico (FILE_LLIST), que a carreira não lê de volta.
 pub(crate) unsafe fn history_entry() -> [u8; 0x40] {
     let mut e = [0u8; 0x40];
-    let new: unsafe extern "thiscall" fn(*mut u8) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    new(e.as_mut_ptr());
+    exe::date_date_54a110((e.as_mut_ptr()) as usize);
     e
 }
 
@@ -1606,11 +1589,10 @@ pub(crate) unsafe fn for_each_swap_item(t: usize, mut f: impl FnMut(usize)) {
         return;
     }
     core::ptr::write_unaligned((l + llist::CURSOR) as *mut u32, read_usize(l + llist::HEAD) as u32);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let mut e = next(read_usize(t + offer::EXCHANGE_PLAYERS));
+    let mut e = exe::llist_get_next(read_usize(t + offer::EXCHANGE_PLAYERS));
     while e != 0 {
         f(e);
-        e = next(read_usize(t + offer::EXCHANGE_PLAYERS));
+        e = exe::llist_get_next(read_usize(t + offer::EXCHANGE_PLAYERS));
     }
 }
 
@@ -1618,8 +1600,7 @@ pub(crate) unsafe fn for_each_swap_item(t: usize, mut f: impl FnMut(usize)) {
 ///
 /// [pt] O tipo do cargo é de jogador (0x53b620: 11, 12, 13 ou 15)?
 pub(crate) unsafe fn staff_records_is_player_job(job: u8) -> bool {
-    let f: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
-    f(job as u32) != 0 // simplification: the original pushes the register with the byte in al; 0x53b620 reads only the byte
+    exe::database_is_player_job((job as u32) as i8) != 0 // simplification: the original pushes the register with the byte in al; 0x53b620 reads only the byte
 }
 
 /// Returns the manager's points record (FN_STAFF_RECORDS_GET_MANAGER_RECORD with create).
@@ -1648,8 +1629,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
     let (pessoa, c, vendedor, comprador) = transfer_parties(t);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     let mut e = history_entry();
-    let total: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_TOTAL_VALUE);
-    let value = total(t, 1, 0, 0, 1);
+    let value = exe::transfer_offer_get_total_value(t, 1, 0, 0, 1);
     let with_swap = || (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as i32;
     let kind = read_u8(t + offer::JOB_TYPE) as i8 as i32;
     if comprador != 0 && read_usize(comprador + club::MANAGER) != 0 {
@@ -1832,8 +1812,7 @@ pub(crate) unsafe extern "thiscall" fn add_knocked_out_record(this: usize, club:
     }
     crate::comparison::branch("cpq_4 eliminado");
     let mut e = stage_history_entry(club, 4, comp, stage);
-    let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(FN_COMP_UTIL_GET_BASE_ROUND_ID);
-    put_i32(&mut e, 0x15, base(round) as u16 as i16 as i32);
+    put_i32(&mut e, 0x15, exe::comp_util_get_base_round_id(round) as u16 as i16 as i32);
     if read_usize(club + club::MANAGER) != 0 {
         append_person_history_by_id(true, this, read_usize(read_usize(club + club::MANAGER)), &e);
     }
@@ -2012,7 +1991,6 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
         show_error_at(0xa83b78, 0x104e);
         return 0;
     }
-    let before: unsafe extern "thiscall" fn(usize, *mut u32, i32) -> usize = core::mem::transmute(FN_DATE_SUB_WEEKS);
     let mut best_points = 0i32;
     let mut best = 0usize;
     let mut k = 0i32;
@@ -2021,7 +1999,7 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
         let manager = read_usize(club + club::MANAGER);
         if manager != 0 && read_usize(manager + staff::CLUB_JOB) != 0 {
             let mut d = [0u32; 2];
-            let q = before(G_CURRENT_DATE, d.as_mut_ptr(), 2); // two weeks ago
+            let q = exe::date_sub_weeks(G_CURRENT_DATE, (d.as_mut_ptr()) as *mut [u8; 8], (2) as u32); // two weeks ago
             let lo = read_usize(q) as u32;
             let year = (lo >> 16) as u16;
             let year_manager = read_i16(manager + 0x40) as u16;
@@ -2062,8 +2040,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
     let mut lim = [0u8; 8];
     weeks(G_CURRENT_DATE, lim.as_mut_ptr(), 0x1c);
     let n = n as u16 as i16 as i32;
-    let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    qsort(clubs, n as u32, 4, 0x870220);
+    exe::crt_qsort(clubs, n as u32, 4, 0x870220);
     let (ld, la) = (i16::from_le_bytes([lim[0], lim[1]]), u16::from_le_bytes([lim[2], lim[3]]));
     let mut k = 0u8;
     for i in 0..n.max(0) as usize {

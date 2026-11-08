@@ -25,8 +25,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     }
     let reg = (*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9));
     let mut data = [0u8; 8];
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    copy(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
+    exe::date_operator_3d(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
     let obs = if font == 0 { 0 } else { *((font + staff::NON_PLAYER) as *const usize) };
     let level = reg as *mut u8;
     if obs == 0 {
@@ -36,8 +35,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     if *level == 3 {
         return;
     }
-    let chance: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    let c = chance(obs, *((obs + non_player::JUDGEMENT) as *const i8)) as i8;
+    let c = exe::non_player_attribute_rating(obs, *((obs + non_player::JUDGEMENT) as *const i8)) as i8;
     let r = random(c as i32) as i8;
     *level = if c < 15 && r == 0 {
         (*level).wrapping_add(1)
@@ -57,11 +55,10 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
 /// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
 pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usize) {
-    let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let n = || *(G_STAFF_COUNT as *const i32);
     for lado in 0..2usize {
         let club = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
-        if human(club, 0, 1, 0, 0) == 0 {
+        if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 {
             continue;
         }
         let q = *((club + club::MANAGER) as *const usize);

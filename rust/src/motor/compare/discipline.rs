@@ -329,8 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_drop_held_bans(this: usize, perso
 /// [pt] Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
 /// registro do jogador: as vagas do plano em −1, as outras iguais e o contador somado.
 pub(crate) unsafe extern "thiscall" fn compare_hold_bans_for_loan(this: usize, player: usize) {
-    let sheet_of: unsafe extern "thiscall" fn(usize, *const i32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let sheet = sheet_of(read_usize(G_CONTRACT_MANAGER), player as *const i32);
+    let sheet = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), (player as *const i32) as usize);
     if sheet == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOLD_BANS_FOR_LOAN)(this, player);
     }

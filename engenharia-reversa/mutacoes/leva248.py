@@ -16,7 +16,7 @@ MUTACOES = [
     ('cpl_felicidade', 'write_u8(this + contract::MATCHES_LEFT_OUT, 0); // a felicidade', 'write_u8(this + contract::MATCHES_LEFT_OUT, 10); // mutacao: 10', 'cpl_5 moral zerada'),
     ('cpl_faixa_meio', 'if m(G_CONTRACT_DATE_PLUS_91_DAYS) { // past the midpoint limit', 'if m(G_CONTRACT_DATE_PLUS_30_DAYS) { // mutacao: o limite de baixo'),
     ('cpl_registrar_conta', 'write_usize(this + media_fields::STORY_LOG_COUNT, n); // one more story', 'write_usize(this + media_fields::STORY_LOG_COUNT, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_6 registrar historia'),
-    ('cpl_expirar_sorteio', 'let s = sorteio(0x28); // the team history roll', 'let s = 0; let _ = sorteio; // mutacao: sem o sorteio', 'cpl_6 expirar historia do time'),
+    ('cpl_expirar_sorteio', 'let s = exe::utils_random(0x28); // the team history roll', 'let s = 0; let _ = sorteio; // mutacao: sem o sorteio', 'cpl_6 expirar historia do time'),
     ('cpl_historia_do_time', 'return 1; // the team’s story already told', 'return 0; // mutacao: nunca contada', 'cpl_6 historia do time ja contada'),
     ('cpl_interesse_conta', 'write_usize(this + media_fields::INTEREST_COUNT, n); // mais um interesse', 'write_usize(this + media_fields::INTEREST_COUNT, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_7 interesse novo'),
     ('cpl_interesse_repetido', 'return; // the interest is already there', '// mutacao: o repetido entra', 'cpl_7 interesse repetido'),

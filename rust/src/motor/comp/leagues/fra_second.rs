@@ -49,7 +49,6 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.tabela);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let baixo: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_SPALOWER_SPALOWER);
     exe::new_league(this);
     write_usize(this + 4, registro);
@@ -80,7 +79,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         show_error_at(p.arquivo, p.linhas[3]);
         return this;
     }
-    let e = novo(0x5ce);
+    let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
     write_usize(this + 8, s);
     if s == 0 {
@@ -92,7 +91,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
         let nacao = read_usize(read_usize(this + 4) + 0x5d);
         if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 divisao de baixo espanhola");
-            let e = novo(0xee);
+            let e = exe::crt_operator_new(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
             // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
             let b = if e != 0 { baixo(e, core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32) } else { 0 };

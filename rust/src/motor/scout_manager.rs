@@ -119,18 +119,16 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
 /// pedidos (0x945333 com 0x7fc270) e uma busca (0x7b3e20) em cada uma das 10 listas dos técnicos humanos (as 16 últimas
 /// pessoas com +0x5f = 1). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
-    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     // 0x68d020 / 0x68d040 / 0x54a110: lea ecx, local -> thiscall; 0x54c5b0: push 0xe; push &output; mov ecx, 0xae2c90
     let mut d14 = [0u32; 2];
     let catorze = d14.as_mut_ptr() as usize;
-    more(G_CURRENT_DATE, catorze, 0xe);
+    exe::date_add_days(G_CURRENT_DATE, catorze, 0xe);
     // the report record (0x67 bytes) with the dates the original’s entry builds (+0, +0x2f, +0x47)
     let mut record = [0u8; 0x68];
     let reg = record.as_mut_ptr() as usize;
-    data_default(reg);
-    data_default(reg + 0x2f);
-    data_default(reg + 0x47);
+    exe::date_date_54a110(reg);
+    exe::date_date_54a110(reg + 0x2f);
+    exe::date_date_54a110(reg + 0x47);
     let mut list = [0u8; 16];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
@@ -139,7 +137,6 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
         return 0;
     }
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     // 0x7f6cd0: push manager; push k; mov ecx, this -> thiscall, ret 8; 0x7b7490: push nation; mov ecx, list ->
     // thiscall, ret 4; 0x7b62a0: push 1; push 0; push 0; push 1; push −1000; push &registro; push jogador; mov ecx, lista
     // -> thiscall, ret 0x1c; 0x68d0d0: push 0x67; push &registro; lea ecx, local -> thiscall, ret 8; 0x7f9890: push
@@ -181,7 +178,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
         return 1;
     }
     exe::scout_manager_send_scout_reports(this, l);
-    sort(read_usize(this + scout_manager_fields::SCOUT_REQUESTS), read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT), 0x11, 0x7fc270);
+    exe::crt_qsort(read_usize(this + scout_manager_fields::SCOUT_REQUESTS), (read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT)) as u32, 0x11, 0x7fc270);
     for k in 0..0x10i32 {
         let p = staff_records_staff_by_id((read_i32(G_STAFF_COUNT) - k - 1) as usize);
         if read_u8(p + staff::CLASSIFICATION) == 1 {
@@ -223,26 +220,23 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usi
         return;
     }
     let n = count as i32;
-    let alloc: unsafe extern "C" fn(i32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     // 0x944e46 (malloc): push; add esp, 4 -> cdecl; 0x9452ca (free): push; add esp, 4 -> cdecl; 0x68d1b0: mov ecx, lista
     // -> thiscall; 0x945333: 4 pushes; add esp, 0x10 -> cdecl; 0x7f9a60: push quantos; push registro; mov ecx, this ->
     // thiscall, ret 8
-    let v = alloc(n.wrapping_mul(0x67));
+    let v = exe::crt_malloc((n.wrapping_mul(0x67)) as u32);
     if v == 0 && n != 0 {
         show_error_at(0xa7b094, 0x7dd);
         return;
     }
     core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
     let mut dst = v;
-    let mut item = next(list);
+    let mut item = exe::llist_get_next(list);
     while item != 0 {
         core::ptr::copy_nonoverlapping(item as *const u8, dst as *mut u8, 0x67);
         dst += 0x67;
-        item = next(list);
+        item = exe::llist_get_next(list);
     }
-    sort(v, n, 0x67, 0x7fc2a0);
+    exe::crt_qsort(v, (n) as u32, 0x67, 0x7fc2a0);
     let mut i: i32 = 0;
     while i < n {
         let r = v + i as usize * 0x67;
@@ -346,18 +340,16 @@ pub(crate) unsafe fn is_today(r: usize, today: usize) -> bool {
 /// volta a ser a mesma no fim: 0x54c8e0/0x54c5b0 e 0x417c10).
 pub(crate) unsafe fn mark_clubs_three_days(this: usize, d: usize) {
     let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     // 0x7775c0: push &data; mov ecx, edi -> thiscall, ret 4
     let (mut t, mut u) = ([0u8; 8], [0u8; 8]);
     let (pt, pu) = (t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
     crate::comparison::branch("cqc_12 marca os clubes");
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
-    copy(d, pu, minus(d, pt, 1));
+    exe::date_operator_3d(d, pu, minus(d, pt, 1));
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
-    copy(d, pu, more(d, pt, 2));
+    exe::date_operator_3d(d, pu, exe::date_add_days(d, pt, 2));
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
-    copy(d, pu, minus(d, pt, 1));
+    exe::date_operator_3d(d, pu, minus(d, pt, 1));
 }
 
 /// The fixtures of list `l` (of the day two weeks from now): for each one, the national team call-ups (0x76bab0) and,
@@ -376,11 +368,10 @@ pub(crate) unsafe fn mark_clubs_three_days(this: usize, d: usize) {
 /// (0x7771c0) das duas seleções; com o bit 0x200 de +0x4d, também os das seleções B (0x53b4f0 da nação +0x53 de cada
 /// uma) e, sem ele e com o 0x100, os das duas com `b` = 1.
 pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     // 0x76bab0: push p; mov ecx, edi -> thiscall ret 4; 0x5409b0 e 0x53b4f0: push; add esp, 4 -> cdecl;
     // 0x7771c0: push p; push b; push time; mov ecx, edi -> thiscall ret 0xc
     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-    let mut p = next(l);
+    let mut p = exe::llist_get_next(l);
     while p != 0 {
         crate::comparison::branch("cqc_12 convoca");
         exe::nationalteams_select_squads_for_fixture(this, p); // cqc12: the call-ups for the match
@@ -402,7 +393,7 @@ pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
                 exe::nationalteams_record_club_call_ups(this, read_usize(p + fixture::AWAY_CLUB), 1, p);
             }
         }
-        p = next(l);
+        p = exe::llist_get_next(l);
     }
 }
 
@@ -516,8 +507,6 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, 
 /// partida (0x7b5be0, os relatórios na lista local). O vetor sai (0x9452ca). Por fim os relatórios vão (0x7f9890) e a
 /// lista é destruída. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, result: usize) -> u32 {
-    let zerado: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     // calloc: push 4; push 0xa; add esp, 8 -> cdecl (10, 4); sorteio: push 0xa; add esp, 4 -> cdecl; free: cdecl;
     // 0x7f6cd0: push pessoa; push qual; mov ecx, [this] -> thiscall ret 8; 0x7ae9c0: 5 pushes; mov ecx, registro ->
     // thiscall ret 0x14; 0x7b5be0: push &lista; push resultado; push partida; mov ecx, registro -> thiscall ret 0xc;
@@ -532,10 +521,10 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
             continue;
         }
         crate::comparison::branch("cqc_13 olheiros do humano");
-        let marks = zerado(10, 4);
+        let marks = exe::crt_calloc(10, 4);
         for _ in 0..10 { // cqc13: os 10 observadores
             let q = loop {
-                let q = sortear(10) as i8; // cqc13: o observador sorteado
+                let q = exe::utils_random(10) as i8; // cqc13: o observador sorteado
                 if read_usize(marks.wrapping_add((q as isize * 4) as usize)) == 0 {
                     break q; // cqc13: um ainda não marcado
                 }
@@ -790,21 +779,18 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         return 0; // cps8: competição negativa
     }
     core::ptr::write_unaligned(G_SCOUT_CLUB_TABLE_LIST_CURSOR as *mut u32, read_usize(G_SCOUT_CLUB_TABLE_LIST_HEAD) as u32);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let mut e = next(G_SCOUT_CLUB_TABLE_LIST);
+    let mut e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
     while e != 0 {
         let v = read_usize(e);
         if read_usize(partida + fixture::HOME_CLUB_ID) == v || read_usize(partida + fixture::AWAY_CLUB_ID) == v {
             return 1;
         }
-        e = next(G_SCOUT_CLUB_TABLE_LIST);
+        e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
     }
     if read_usize(this + scout_manager_fields::SCOUT_REQUESTS) == 0 || read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT) <= 0 {
         crate::comparison::branch("cps_8 sem pedidos");
         return 0; // cps8: without scouting requests
     }
-    let national_team: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let impedido: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_NATIONALTEAMS_GET_INTERNATIONAL_DUTY_CLUB);
     let mut k = 0i32;
     while k < read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT) {
         let id = read_i32(read_usize(this + scout_manager_fields::SCOUT_REQUESTS).wrapping_add(k as usize * 0x11) + 4);
@@ -821,7 +807,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         } else {
             continue;
         };
-        if national_team(x) == 0 && exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), p, x, 0) != 0 {
+        if (exe::database_is_national_team(x) as i32) == 0 && exe::transfer_manager_player_needs_work_permit(read_usize(G_TRANSFER_MANAGER), p, x, 0) != 0 {
             continue;
         }
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
@@ -830,7 +816,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         if exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, read_usize(partida + fixture::COMPETITION), 1, 0) != 0 {
             continue;
         }
-        if impedido(read_usize(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, x, 0, 0) != 0 {
+        if exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, x, 0, 0) != 0 {
             continue;
         }
         if exe::transfer_manager_get_ineligibility_code(read_usize(G_TRANSFER_MANAGER), p, partida) == 0 {
@@ -1221,10 +1207,9 @@ pub(crate) unsafe extern "thiscall" fn has_scout_request(this: usize, player: us
     let found = if list == 0 {
         0
     } else {
-        let data: unsafe extern "thiscall" fn(*mut u8) -> *mut u8 = core::mem::transmute(FN_DATE_DATE_54A110);
         let search: unsafe extern "C" fn(*const u8, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
         let mut key = [0u8; 16];
-        data(key.as_mut_ptr().add(8));
+        (exe::date_date_54a110((key.as_mut_ptr().add(8)) as usize) as *mut u8);
         key[4..8].copy_from_slice(&read_u32(player).to_le_bytes());
         key[0..4].copy_from_slice(&read_u32(club).to_le_bytes());
         search(key.as_ptr(), list, read_u32(this + scout_manager_fields::SCOUT_REQUEST_COUNT), 0x11, 0x7fc270)

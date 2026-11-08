@@ -54,12 +54,11 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
     if read_usize(this + 8) == 0 || read_usize(this + bra_nat_third::CLUB_LIST) == 0 {
         return o(this);
     }
-    let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let mut v = [0usize; 0x38];
     for (k, c) in v.iter_mut().enumerate() {
         *c = read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k);
     }
-    sort(v.as_mut_ptr(), 0x38, 4, 0x4b07d0);
+    exe::crt_qsort((v.as_mut_ptr()) as usize, 0x38, 4, 0x4b07d0);
     o(this);
     let errado = (0..0x38).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };

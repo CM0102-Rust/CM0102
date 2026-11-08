@@ -25,16 +25,14 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
     if entry == 0 || exe::date_operator_3c(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 {
         return o(this, entry);
     }
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let mut last = None;
     let mut club = read_usize(G_CLUB_TABLE);
     for k in 0..read_i32(G_CLUB_COUNT).max(0) as usize {
-        if national_team(club) != 0 {
+        if exe::database_is_national_team(club) != 0 {
             break;
         }
         let nation = read_usize(club + club::NATION);
-        if read_usize(club + club::DIVISION) != 0 && nation != 0 && (read_u8(nation + nation::LEAGUE_SELECTED) != 0 || read_i16(club + club::REPUTATION) >= 0x1388) && (0xb63d60 + (row(club) as i8 as i32) * 72) as usize == entry {
+        if read_usize(club + club::DIVISION) != 0 && nation != 0 && (read_u8(nation + nation::LEAGUE_SELECTED) != 0 || read_i16(club + club::REPUTATION) >= 0x1388) && (0xb63d60 + (exe::key_nation_index_of_club(club) as i8 as i32) * 72) as usize == entry {
             last = Some(k);
         }
         club += 0x245;
@@ -65,8 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
 /// humano (a notícia entra na caixa dele) e o estádio dividido (mexe noutro clube e nas finanças dele).
 pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if club == 0 || national_team(club) != 0 || fin_prm_has_human_manager(club) {
+    if club == 0 || exe::database_is_national_team(club) != 0 || fin_prm_has_human_manager(club) {
         return o(this, club);
     }
     let mut a = 0u32;
@@ -246,8 +243,7 @@ pub(crate) unsafe extern "thiscall" fn compare_refresh_all_wage_bills(this: usiz
 /// 0x54cdb0 (0xae2470), com a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_finance_get_days_to_season_start(this: usize, club: usize, passou: *mut u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> i32>(IDX_FINANCE_GET_DAYS_TO_SEASON_START);
-    let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
-    if (row(club) as i8) < 0 {
+    if (exe::key_nation_index_of_club(club) as i8) < 0 {
         return o(this, club, passou);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(passou as usize, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8)], || o(this, club, passou), || finance_get_days_to_season_start(this, club, passou));

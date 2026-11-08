@@ -112,8 +112,6 @@ pub(crate) const PLAYOUT_ROWS: [usize; 4] = [16, 13, 15, 14]; // cql5: the play-
 /// da pilha ou de outros registradores; o construtor só lê a palavra (0x522e00: mov ax, word ptr [esp + ...]) e a
 /// cópia passa zero neles.
 pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows: [u32; 3], lista_primeiro: bool) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let stage_of_cup: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
@@ -127,7 +125,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     } else {
         write_usize(entrants, champion);
     }
-    let list = alloc(0x10);
+    let list = exe::crt_malloc(0x10);
     if list == 0 {
         show_error_at(file, rows[0]);
         return;
@@ -141,7 +139,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let gabarito = calendario(this, 0, &mut rodadas, &mut extra, 0);
     let positions: [u8; 4] = [4, 1, 3, 2]; // cql5: the play-off positions
-    let mut stage = new(0xb2);
+    let mut stage = exe::crt_operator_new(0xb2);
     if stage != 0 {
         stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 0, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());
     }
@@ -159,7 +157,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: usize, file: usize, rows:
         write_usize(list + k * 4, ita_ser_c1a_league_row_club(this, i));
     }
     let positions: [u8; 4] = [0x10, 0xd, 0xf, 0xe];
-    let mut stage = new(0xb2);
+    let mut stage = exe::crt_operator_new(0xb2);
     if stage != 0 {
         stage = stage_of_cup(stage, this, clubs, list, rodadas & 0xffff, record, gabarito, year, 1, 1, extra & 0xffff, 0x14, 0, 0, 0, positions.as_ptr());
     }

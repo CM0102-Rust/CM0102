@@ -25,10 +25,9 @@ pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
         return;
     }
     core::ptr::write_unaligned((list + 0xa) as *mut u32, read_usize(list + 2) as u32);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut k = 0i32;
     while (k as i16 as i32) < read_i16(read_usize(this)) as i32 {
-        let no = next(read_usize(this));
+        let no = exe::llist_get_next(read_usize(this));
         if no == 0 {
             return;
         }

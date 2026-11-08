@@ -15,10 +15,10 @@ MUTACOES = [
     ('dbm2_estadio', '.wrapping_mul(52)) // stadium in the table', '.wrapping_mul(51)) // stadium in the table'),
     ('dbm2_lng', '0x9b6314, 0x9b631c, 0x9b6304', '0x9b6314, 0x9b632c, 0x9b6304'),
     ('dbm2_soltar', '(t + english_name_tables::CLUB_ROWS + 4 * k) as *const usize); // table row in English', '(t + english_name_tables::CLUB_ROWS + 4 * (k ^ 1)) as *const usize); // table row in English'),
-    ('dbn1_nascimento', '    let year = sorteio(0x1a) + 0x794; // 1940 + up to 25', '    let year = sorteio(0x1a) + 0x795; // mutacao: 1941 + ate 25'),
+    ('dbn1_nascimento', '    let year = exe::utils_random(0x1a) + 0x794; // 1940 + up to 25', '    let year = exe::utils_random(0x1a) + 0x795; // mutacao: 1941 + ate 25'),
     ('dbn1_comissao_alvo', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(1, k as i32); // the commission by reputation', '            let target = ((rep(c) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
     ('dbn1_cortar_pessoas', '        for &d in &[0x39usize, 0x24] { // the person’s club and national team stay', '        for &d in &[0x24usize] { // mutacao: o clube da pessoa nao a segura'),
     ('dbn1_podar', '            if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 { // a linha fica', '            if nation == 0 || nation != 0 { // mutacao: fica tambem a linha de nacao nao escolhida'),
     ('dbn2_cidade_sem_nacao', '        a(e + 0x1f, G_NATION_TABLE, 0x122); // the city’s nation', '        wr(e + 0x1f, 0); // mutacao: a cidade sem nacao'),
-    ('dbn2_ordenar', '    sort(rd(G_CLUB_REPUTATION_ORDER), gi(G_CLUB_COUNT) as u32, 4, 0x540020); // all clubs by reputation', '    sort(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
+    ('dbn2_ordenar', '    exe::crt_qsort(rd(G_CLUB_REPUTATION_ORDER), gi(G_CLUB_COUNT) as u32, 4, 0x540020); // all clubs by reputation', '    exe::crt_qsort(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
 ]

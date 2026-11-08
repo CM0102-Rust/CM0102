@@ -76,13 +76,12 @@ pub(crate) unsafe fn create_league_schedule(this: usize, fase: u32, rodadas: *mu
     if fase as u8 != 0xff {
         return 0;
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     if !liga.is_null() {
         *liga = 1;
     }
     *rodadas = p.rodadas;
     *extra = 0;
-    let t = alocar(p.rodadas as u32 * 0x41);
+    let t = exe::crt_malloc(p.rodadas as u32 * 0x41);
     if t == 0 {
         show_error_at(p.arquivo, p.linha);
         return 0;

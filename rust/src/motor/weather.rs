@@ -45,7 +45,6 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// graus, estádio descoberto (+0x4d) de até 20000 lugares: sorteio por lugares e mandante (+0x64), zero = 9; chuva 8
 /// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
-    let key: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let est = read_usize(game + fixture::STADIUM);
     if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || read_usize(game + fixture::COMPETITION) == 0 {
         return 0;
@@ -54,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
     if read_usize(home + club::DIVISION) == 0 {
         return 0;
     }
-    let k: i8 = if home != 0 { key(home) } else { -1 };
+    let k: i8 = if home != 0 { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
     if read_usize(game + fixture::COMPETITION) != read_usize(home + club::DIVISION) || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
@@ -651,11 +650,8 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
 /// cada cidade sorteia as três medidas ((sorteio(100) + sorteio(100)) × 0,5) e o vento (sorteio(3)). Fecha o arquivo
 /// (0x945a09). Os erros (arquivo, linha, contagem, memória) são a caixa "Error" de weather.cpp e o jogo para.
 pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
-    let folder: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
-    let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let f = open(folder(0x9b5348, 0xad4e18), 0x9899fc);
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x9b5348, 0xad4e18), 0x9899fc);
     if f == 0 {
         fatal_error_at(0xad4dec, 0x68);
     }
@@ -666,12 +662,12 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
     if read(row.as_ptr(), 0x98c11c, this + 8) != 1 {
         fatal_error_at(0xad4dec, 0x75);
     }
-    let r = malloc(read_usize(this + 8).wrapping_mul(0x6e));
+    let r = exe::crt_malloc((read_usize(this + 8).wrapping_mul(0x6e)) as u32);
     *(this as *mut usize) = r;
     if r == 0 {
         fatal_error_at(0xad4dec, 0x7e);
     }
-    let c = malloc(read_usize(G_CITY_COUNT).wrapping_mul(4));
+    let c = exe::crt_malloc((read_usize(G_CITY_COUNT).wrapping_mul(4)) as u32);
     *((this + 4) as *mut usize) = c;
     if c == 0 {
         fatal_error_at(0xad4dec, 0x86);

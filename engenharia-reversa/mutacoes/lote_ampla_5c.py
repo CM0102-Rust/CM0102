@@ -24,7 +24,7 @@ MUTACOES = [
     ('r_marca', '    for o in [0, 4, 8] {\n        *((last + o) as *mut i32) = -1;', '    for o in [0, 4] {\n        *((last + o) as *mut i32) = -1;'),
     ('e_data', '    (clubs && w(8) == data_a && w(match_stats_entry::YEAR) == data_b) as i32', '    (clubs && w(8) == data_a) as i32'),
     ('b_tipo', '        return (*((game + fixture::CATEGORY) as *const u8) == 1) as u8 + 2;', '        return (*((game + fixture::CATEGORY) as *const u8) == 1) as u8 + 1;'),
-    ('l_tamanho', '    if read(out, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {', '    if read(out, MATCH_STATS_RECORD_SIZE - 4, 1, f) != 1 {'),
+    ('l_tamanho', '    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {', '    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE - 4, 1, f) != 1 {'),
     ('r_excluido', '|| *((r + match_record::NO_STATISTICS) as *const u8) == 0 {', '|| *((r + match_record::NO_STATISTICS) as *const u8) != 0 {'),
     ('s_faixa', '                *size = (*size).wrapping_sub(1);', '                *size = (*size).wrapping_sub(0);'),
     ('i_ultima', '    *((last - 2) as *mut u8) = 0;', '    *((last - 2) as *mut u8) = 1;'),

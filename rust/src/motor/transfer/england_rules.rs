@@ -11,9 +11,8 @@ use super::*;
 /// no início da janela e 0 no fim; duas datas por janela) alocada em +4 (0x944e46; sem memória, a caixa da linha
 /// `linha` do fonte `arquivo`).
 pub(crate) unsafe fn set_transfer_windows(this: usize, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     *((this + 8) as *mut u8) = n;
-    let j = alloc((t.len() * 6) as u32);
+    let j = exe::crt_malloc((t.len() * 6) as u32);
     core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
     if j == 0 {
         show_error_at(file, row);
@@ -154,7 +153,6 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         return 0;
     }
     // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4 (the loan contract)
-    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
         let p = read_usize(club + club::SQUAD + 4 * k);
@@ -164,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         if player != 0 && read_usize(player) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
-        if loan(read_usize(G_CONTRACT_MANAGER), p) == 0 {
+        if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
         let cp = game_get_contract_and_store(p);

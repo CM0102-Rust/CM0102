@@ -227,9 +227,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
     if !tira {
         return;
     }
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let mut sobra = 0u32;
-    if national_team(club) == 0 {
+    if exe::database_is_national_team(club) == 0 {
         for k in 0..50usize {
             let p = read_usize(club + club::SQUAD + 4 * k);
             if p == 0 || read_usize(p + staff::PLAYER) == 0 {

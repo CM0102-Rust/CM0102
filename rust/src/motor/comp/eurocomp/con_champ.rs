@@ -25,7 +25,6 @@ pub(crate) struct ConcacafClubLists {
 /// The four club lists of 0x4c11a0 in database order (Mexican, Central American, Caribbean, MLS) with their counts,
 /// stopping at the first national team.
 pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     // simplification: the four lists start zeroed in the copy (in the original, stack leftover that is only read when a club is missing;
     // the comparer sends this case to the original alone)
     let mut l = ConcacafClubLists { mex: [0; 200], centro: [0; 200], caribe: [0; 200], mls: [0; 12], n: [0; 4] };
@@ -33,7 +32,7 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
     let mut club = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
     while i < read_usize(G_CLUB_COUNT) as i32 {
-        if national_team(club) != 0 {
+        if exe::database_is_national_team(club) != 0 {
             break;
         }
         let nation = read_usize(club + club::NATION);
@@ -197,8 +196,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     }
     *rounds = 3;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(0x138);
+    let t = exe::crt_malloc(0x138);
     if t == 0 {
         show_error_at(0x9a7d30, 0x97);
         return 0;

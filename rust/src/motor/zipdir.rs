@@ -69,8 +69,7 @@ pub(crate) unsafe extern "C" fn zipdir_match_filename_pattern(default: *const u8
 /// do zipdir.cpp fazem (cada uma tem a sua cópia do trecho). Se o cabeçalho não vier, `h` fica
 /// como estava (memória da alocação, sem zerar, como na original).
 pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    if read(h, 0xc, 1, f) == 0 {
+    if exe::crt_fread(h, 0xc, 1, f) == 0 {
         return;
     }
     let kind = h as *mut u32;
@@ -83,7 +82,7 @@ pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
         *kind = 4;
         old = true;
     }
-    read(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
+    exe::crt_fread(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
 }
 
 /// reads the container header and returns dword +4 (0x16 .sav, 0x17 .qst; 0x14 on failure)
@@ -93,14 +92,12 @@ pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
 /// contêiner (0x16 `.sav`, 0x17 `.qst`), ou 0x14 se não abrir ou o tipo não for 3/4. Sem memória,
 /// a caixa de erro (zipdir.cpp 592) e 0x14.
 pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let h = new(0x416ec);
+    let h = exe::crt_operator_new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x250);
         return 0x14;
     }
-    let f = open(path, 0x98f928);
+    let f = exe::crt_fopen(path, 0x98f928);
     if f == 0 {
         exe::crt_operator_delete(h);
         return 0x14;
@@ -134,14 +131,12 @@ pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
 /// sempre (corrigir é outra decisão, como o save acima de 2 GB). Sem memória, a caixa de erro
 /// (zipdir.cpp 849) e 0; contêiner que não abre ou de tipo estranho, 0.
 pub(crate) unsafe extern "C" fn zget_matching_size(path: usize, default: usize) -> i32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let h = new(0x416ec);
+    let h = exe::crt_operator_new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x351);
         return 0;
     }
-    let f = open(path, 0x98f928);
+    let f = exe::crt_fopen(path, 0x98f928);
     if f == 0 {
         exe::crt_operator_delete(h);
         return 0;
@@ -200,48 +195,40 @@ pub(crate) unsafe fn zipdir_c_strcat(target: *mut u8, source: *const u8) {
 /// + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 no fim; 0 se nada casa. Arquivo que não abre ou
 /// item recusado: a caixa de erro (zipdir.cpp 797 / 805) e 0, sem fechar a busca (como a original).
 pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, default: usize, a4: u32, kind: u32) -> u32 {
-    let join_path: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    let first: unsafe extern "C" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
-    let next: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
-    let encerrar: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
-    let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let write: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZWRITE);
     crate::comparison::branch("save empacotar");
     // the search (handle +0, name +0x10, filter +0x110) and the built path
     let mut found = [0u8; 0x114];
     let mut search = [0u8; 0x104];
     let found_p = found.as_mut_ptr() as usize;
-    join_path(search.as_mut_ptr(), 0, folder, default, 0);
-    if first(search.as_mut_ptr() as usize, found_p, 0) != 0 {
+    exe::crt_makepath(search.as_mut_ptr(), 0, folder, default, 0);
+    if exe::file_find_first(search.as_mut_ptr() as usize, found_p, 0) != 0 {
         return 0;
     }
     loop {
-        join_path(search.as_mut_ptr(), 0, folder, found_p + 0x10, 0);
-        let f = open(search.as_mut_ptr() as usize, 0x98f928);
+        exe::crt_makepath(search.as_mut_ptr(), 0, folder, found_p + 0x10, 0);
+        let f = exe::crt_fopen(search.as_mut_ptr() as usize, 0x98f928);
         if f == 0 {
             show_error_at(0xad6ab0, 0x31d);
             return 0;
         }
-        let mut z = open_item(path, found_p + 0x10, 1, a4, kind);
+        let mut z = exe::zopen(path, found_p + 0x10, 1, a4, kind);
         if z == 0 {
             show_error_at(0xad6ab0, 0x325);
             exe::crt_fclose(f);
             return 0;
         }
-        let mut n = read(z + 0x41705, 1, 0x30d40, f);
+        let mut n = (exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32);
         while n > 0 {
-            write(z + 0x41705, 1, n, z);
-            n = read(z + 0x41705, 1, 0x30d40, f);
+            (exe::zwrite(z + 0x41705, (1) as u32, (n) as u32, z) as i32);
+            n = (exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32);
         }
         exe::crt_fclose(f);
         exe::zclose(&mut z);
-        if next(found_p) != 0 {
+        if exe::file_find_next((found_p) as *mut u8) != 0 {
             break;
         }
     }
-    encerrar(found_p);
+    exe::file_find_close(found_p);
     1
 }
 
@@ -273,14 +260,6 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
 /// Sem memória para o índice, a caixa de erro (zipdir.cpp 642) escreve o nome "zipdir" por cima da
 /// resposta (a mesma casa da pilha) e a lista segue sem os nomes (memória da alocação).
 pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usize, default: usize) -> u32 {
-    let reservar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let write: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let join_path: unsafe extern "C" fn(*mut u8, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    let read_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(FN_ZREAD);
     crate::comparison::branch("save desempacotar");
     let mut z = 0usize;
     let mut reply = 0u32;
@@ -293,22 +272,22 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
         }
         0u32
     };
-    let nomes = reservar(0x3f7a0);
+    let nomes = exe::crt_malloc(0x3f7a0);
     if nomes == 0 {
         return error(0, &mut z);
     }
-    let h = new(0x416ec);
+    let h = exe::crt_operator_new(0x416ec);
     if h == 0 {
         show_error_at(0xad6ab0, 0x282);
         // simplification: the source file name that 0x944cff splits off lands in the reply cell
         reply = u32::from_le_bytes(*b"zipd");
     } else {
-        let f = open(path, 0x98f928);
+        let f = exe::crt_fopen(path, 0x98f928);
         if f == 0 {
             exe::crt_operator_delete(h);
             return error(nomes, &mut z);
         }
-        if read(h, 0xc, 1, f) != 0 {
+        if exe::crt_fread(h, 0xc, 1, f) != 0 {
             let kind = h as *mut u32;
             let mut old = false;
             if *kind == 1 {
@@ -319,7 +298,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
                 *kind = 4;
                 old = true;
             }
-            read(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
+            exe::crt_fread(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
         }
         exe::crt_fclose(f);
         let kind = *(h as *const u32);
@@ -339,20 +318,20 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
         if exe::zipdir_match_filename_pattern(default, name) == 0 {
             continue;
         }
-        z = open_item(path, name, 0, 0x15, 4);
+        z = exe::zopen(path, name, 0, 0x15, 4);
         if z == 0 {
             continue;
         }
         reply = 1;
-        join_path(target.as_mut_ptr(), 0, folder, name, 0);
-        let g = open(target.as_mut_ptr() as usize, 0x9a7f28);
+        exe::crt_makepath(target.as_mut_ptr(), 0, folder, name, 0);
+        let g = exe::crt_fopen(target.as_mut_ptr() as usize, 0x9a7f28);
         if g == 0 {
             return error(nomes, &mut z);
         }
-        let mut n = read_item(z + 0x72445, 1, 0x30d40, z);
+        let mut n = (exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32);
         while n > 0 {
-            write(z + 0x72445, 1, n, g);
-            n = read_item(z + 0x72445, 1, 0x30d40, z);
+            exe::crt_fwrite(z + 0x72445, 1, (n) as u32, g);
+            n = (exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32);
         }
         exe::crt_fclose(g);
         exe::zclose(&mut z);
@@ -393,7 +372,6 @@ pub(crate) unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
 /// [pt] O próximo byte comprimido do item: do buffer de leitura (+0x41705, cursor +0xa3185 até +0xa318d)
 /// ou, acabado, de um `fread` de 0x30d40 bytes (o primeiro byte do bloco novo, mesmo se veio vazio).
 pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
     let c = zf_read_i32(z, 0xa3185);
     if c < zf_read_i32(z, 0xa318d) {
         let b = *((z + 0x41705 + c as usize) as *const u8);
@@ -402,7 +380,7 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
     }
     // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
     crate::comparison::branch("save zread bloco");
-    zf_write_i32(z, 0xa318d, read(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
+    zf_write_i32(z, 0xa318d, (exe::crt_fread(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32));
     let b = *((z + 0x41705) as *const u8);
     zf_write_i32(z, 0xa3185, 1);
     b
@@ -422,7 +400,6 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
 /// repetição pode atravessar chamadas (+0x10 de +0x14). Devolve `pedido / tam` (divisão com sinal,
 /// como a original: `tam` 0 derruba as duas).
 pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: i32, z: usize) -> i32 {
-    let read: unsafe extern "C" fn(*mut u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FREAD);
     if z == 0 || zf_read_i32(z, 4) != 0 {
         return 0;
     }
@@ -441,7 +418,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
         crate::comparison::branch("save zread tipo 3");
         let q = request / size;
         zf_write_i32(z, 8, size.wrapping_mul(q).wrapping_sub(request).wrapping_add(end));
-        return read(buf, size, q, zf_read_i32(z, 0) as usize);
+        return (exe::crt_fread((buf) as usize, (size) as u32, (q) as u32, zf_read_i32(z, 0) as usize) as i32);
     }
     let mut k = 0i32;
     if request > 0 {
@@ -500,7 +477,6 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
 /// [pt] Um byte comprimido para o buffer de escrita (+0x72445, cursor +0xa3189); cheio, grava o buffer
 /// inteiro (`fwrite`) e o byte vai para o começo.
 pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
-    let write: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     let p = zf_read_i32(z, 0xa3189);
     if p < 0x30d40 {
         *((z + 0x72445 + p as usize) as *mut u8) = b;
@@ -509,7 +485,7 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
     }
     // simplification: the branch flags the block, not each call (zwrite runs millions of times in the save)
     crate::comparison::branch("save zwrite bloco");
-    write(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
+    exe::crt_fwrite(z + 0x72445, 1, (p) as u32, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
 }
@@ -530,7 +506,6 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
 /// guardando a repetição em +0x18/+0x14 entre as chamadas; byte diferente fecha a repetição (1 com
 /// byte <= 0x80 sai literal, senão o par 0x80 + n, byte); a 0x7f sai o par e recomeça. Devolve `quantos`.
 pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_many: i32, z: usize) -> i32 {
-    let write: unsafe extern "C" fn(*const u8, i32, i32, usize) -> i32 = core::mem::transmute(FN_CRT_FWRITE);
     if z == 0 || zf_read_i32(z, 4) != 1 {
         return 0;
     }
@@ -540,7 +515,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
     zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
     if zf_read_i32(z, 0x19) != 4 {
         crate::comparison::branch("save zwrite tipo 3");
-        return write(buf, size, how_many, zf_read_i32(z, 0) as usize);
+        return (exe::crt_fwrite((buf) as usize, (size) as u32, (how_many) as u32, zf_read_i32(z, 0) as usize) as i32);
     }
     let repetido = (z + 0x18) as *mut u8;
     let mut k = 0i32;
@@ -589,8 +564,6 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
 /// zwrite) e regrava cabeçalho + índice inteiros (0x416ec bytes) no começo (`fseek` 0). Lendo: zera
 /// os cursores de leitura. Fecha o FILE, libera o ZFILE e zera o ponteiro.
 pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
-    let write: unsafe extern "C" fn(usize, u32, i32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let search: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
     let z = *zz;
     if z == 0 {
         return;
@@ -600,7 +573,7 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     if zf_read_i32(z, 4) == 1 {
         let n = zf_read_i32(z, 0xa3189);
         if n > 0 {
-            write(z + 0x72445, 1, n, f());
+            exe::crt_fwrite(z + 0x72445, 1, (n) as u32, f());
             zf_write_i32(z, 0xa3189, 0);
         }
     } else {
@@ -611,15 +584,15 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
         let n = zf_read_i32(z, 0x14);
         if zf_read_i32(z, 0x19) == 4 && n != 0 {
             if n <= 1 && *((z + 0x18) as *const u8) <= 0x80 {
-                write(z + 0x18, 1, 1, f());
+                exe::crt_fwrite(z + 0x18, 1, (1) as u32, f());
             } else {
                 let mark = (n as u8).wrapping_add(0x80);
-                write(&mark as *const u8 as usize, 1, 1, f());
-                write(z + 0x18, 1, 1, f());
+                exe::crt_fwrite(&mark as *const u8 as usize, 1, (1) as u32, f());
+                exe::crt_fwrite(z + 0x18, 1, (1) as u32, f());
             }
         }
-        search(f(), 0, 0);
-        write(z + 0x19, 0x416ec, 1, f());
+        exe::crt_fseek(f(), 0, (0) as u32);
+        exe::crt_fwrite(z + 0x19, 0x416ec, (1) as u32, f());
     }
     exe::crt_fclose(f());
     zf_write_i32(z, 0, 0);

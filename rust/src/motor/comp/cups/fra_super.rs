@@ -89,8 +89,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(table.len() as u32 * 0x68);
+    let t = exe::crt_malloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -118,9 +117,8 @@ pub(crate) unsafe fn french_super_cup_venue(this: usize) -> u32 {
     if core::ptr::read_unaligned((this + cup::YEAR) as *const i16) == 0x7d1 {
         return 0x400;
     }
-    let sortear: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     const MANDOS: [i16; 6] = [0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000];
-    MANDOS[sortear(6) as usize] as i32 as u32
+    MANDOS[exe::utils_random((6) as i32) as usize] as i32 as u32
 }
 
 /// rule: the French Super Cup (Trophée des Champions) is a single match between 2 clubs, drawn on 5/7 and played on

@@ -270,9 +270,8 @@ pub(crate) unsafe extern "thiscall" fn compare_end_player_injury(this: usize, pe
         return o(this, person, news);
     }
     let e = (read_i32(this + injury_fields::INJURY_ENTRIES) as u32).wrapping_add((i as u32).wrapping_mul(0x30)) as usize;
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let club = read_i32(person + staff::CLUB_JOB) as usize;
-    let away = *(e as *const u8) != 0x51 || (news != 0 && club != 0 && human(club, 0, 1, 0, 0) != 0);
+    let away = *(e as *const u8) != 0x51 || (news != 0 && club != 0 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0);
     if away {
         o(this, person, news);
         let ok = *(e as *const u8) == 0xff && read_i32(physical_record_of_id(this, read_i32(person)) + 0xe) == -1;
@@ -571,8 +570,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_injury_type(injuries: usiz
     // simplification: 0x62ed70 (first effect of 0x62d140, before any random roll of its own) goes through the
     // 0x62c680, which rolls only on the first query of the day and caches it; calling it here first fills the
     // cache in the same order as the original, and both sides of lado_a_lado find the cache full
-    let current: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_INJURY_GET_PLAYER_INJURY);
-    current(injuries, player);
+    exe::injury_get_player_injury(injuries, player);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS,
         || o(injuries, category, severity, player), || crate::rng::without_counting(|| choose_injury_type(injuries, category, severity, player)));
     SCOREBOARD.record(igual && r == n, || format!("choose_injury_type({}, {}) original={} rust={} sorteio igual={}", category, severity, r, n, igual));

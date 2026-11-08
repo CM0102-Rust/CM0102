@@ -216,8 +216,7 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
 /// (linhas de 0x3b bytes), noutra os de +0xa7 (6 bytes), sem os nulos e os repetidos, até 200; grava o vetor em
 /// `lista` e devolve a conta (word, no ax).
 pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list: *mut usize, _x: u32) -> u16 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alloc(0x320);
+    let v = exe::crt_malloc(0x320);
     if v == 0 {
         show_error_at(0x99b80c, 0x681);
         *list = 0;
@@ -469,8 +468,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
         }
     }
     // 0x53b900: push clube; add esp, 4 -> cdecl
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(club) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         return 0;
     }
     crate::comparison::branch("cqb_12 clube sem nacao chave");
@@ -567,25 +565,22 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     if how_many == *((rec + 4) as *const i8) {
         let cap = (*((rec + 4) as *const u8)).wrapping_add(3);
         *((rec + 4) as *mut u8) = cap;
-        let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let v = realloc(read_usize(rec), (cap as i8 as i32 * 9) as u32);
+        let v = exe::crt_realloc(read_usize(rec), (cap as i8 as i32 * 9) as u32);
         core::ptr::write_unaligned(rec as *mut usize, v);
         if v == 0 {
             show_error_at(0xa5b2a4, 0x21c8);
             return false;
         }
     }
-    let copy: unsafe extern "thiscall" fn(usize, *mut u8, *mut u8) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let q = *((rec + 5) as *const i8) as i32;
     let e = read_usize(rec).wrapping_add(9 * q as usize);
     let mut t = [0u8; 8];
-    copy(e, t.as_mut_ptr(), d);
+    exe::date_operator_3d(e, (t.as_mut_ptr()) as usize, (d) as usize);
     crate::comparison::branch("cpw_13 registro novo");
     *((e + 8) as *mut u8) = count; // cpw13: the count of the new record
     let q = (*((rec + 5) as *const i8)).wrapping_add(1);
     *((rec + 5) as *mut i8) = q;
-    qsort(read_usize(rec), q as i32 as u32, 9, 0x778e90);
+    exe::crt_qsort(read_usize(rec), q as i32 as u32, 9, 0x778e90);
     true
 }
 
@@ -656,18 +651,16 @@ pub(crate) unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
 /// nação (+0x5d): o byte +0x14 da linha dela, ou 3. Sem nação: Copa do Mundo e eliminatórias (0x669a10), 0; torneio
 /// internacional (0x669ae0), 1; senão o índice da nação-chave (0x669470). TapeCall a cada jogo procurado: sem contador.
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
-    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let row = |nation: usize| (0..0x23usize).find(|&k| {
         let n = read_usize(G_LEAGUE_TABLE + 72 * k);
         n != 0 && *((n + nation::LEAGUE_SELECTED) as *const u8) != 0 && n == nation
     });
     let nation = read_usize(comp + competition::NATION);
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
-    if (friendly(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
+    if (exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp) == reservas) && partida != 0 {
         let pc = read_usize(partida + fixture::COMPETITION);
         if pc == read_usize(read_usize(G_FRIENDLY) + 4) || read_usize(pc) == reservas {
-            if national_team(read_usize(partida + fixture::HOME_CLUB)) != 0 || national_team(read_usize(partida + fixture::AWAY_CLUB)) != 0 {
+            if exe::database_is_national_team(read_usize(partida + fixture::HOME_CLUB)) != 0 || exe::database_is_national_team(read_usize(partida + fixture::AWAY_CLUB)) != 0 {
                 return 1;
             }
             let home = read_usize(partida + fixture::HOME_CLUB);
@@ -678,7 +671,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             if let Some(k) = row(a) {
                 return *((0xb63d74 + 72 * k) as *const u8); // cpt3: the friendly’s nation
             }
-            return if national_team(home) != 0 { 0 } else { 3 };
+            return if exe::database_is_national_team(home) != 0 { 0 } else { 3 };
         }
     }
     if read_usize(comp + competition::NATION) != 0 {

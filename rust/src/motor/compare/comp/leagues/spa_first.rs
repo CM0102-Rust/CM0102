@@ -49,8 +49,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usiz
         found = (0..plano.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plano;
         if r == 1 {
-            let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, 0x3d090);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == exe::league_calc_prize_fund(this, 0x3d090);
         }
     }
     SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this, r, baixo.len(), plano, found));

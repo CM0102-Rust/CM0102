@@ -86,8 +86,7 @@ pub(crate) unsafe fn eng_cc_cup_create_single_stage_round_table(this: usize, sta
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(table.len() as u32 * 0x68);
+    let t = exe::crt_malloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -310,8 +309,7 @@ pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
 pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x5c);
     *((this + 0xb2) as *mut u8) = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0x228);
+    let l = exe::crt_malloc(0x228);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c4224, 0x18f);
@@ -360,8 +358,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: usize) -> (i32, i32) {
         }
         i = i.wrapping_add(1);
     }
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_usize(this + cup::TEAM_TABLE), n as u32, 6, 0x5221c0);
+    exe::crt_qsort(read_usize(this + cup::TEAM_TABLE), n as u32, 6, 0x5221c0);
     crate::comparison::branch("cqm_10 inscritos da copa da liga");
     let mut k: i16 = 0;
     while (k as i32) < n {
@@ -450,8 +447,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: usize, re
 /// ponteiros em +0xb2, a partir do 28º: +0x70), classe e situação 0. Devolve 1.
 pub(crate) unsafe fn collect_auto_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x1c);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0xa8);
+    let l = exe::crt_malloc(0xa8);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c4180, 0x19f);
@@ -494,8 +490,7 @@ pub(crate) unsafe fn latest_placed_club(id: usize, place: u32) -> usize {
 /// 0xe3 e 0). Classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0xc);
+    let l = exe::crt_malloc(0xc);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9c425c, 0xc5);

@@ -59,10 +59,8 @@ pub(crate) const WORLD_CUP_2002_DRAW: [usize; 32] = [
 ///    2, a Coreia e o Japão (sedes) 1; +0x36 (quantas) = 32.
 /// Devolve a lista.
 pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
-    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let mut count = [0i8; 8];
-    let list = zerada(0x20, 5);
+    let list = exe::crt_calloc(0x20, 5);
     if list == 0 {
         show_error_at(0xad5888, 0x4b5);
         return 0;
@@ -80,9 +78,9 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
             write_u8(this + 0xf7, 0xff);
         } else {
             // the loop of the 27/12/2001 crash (0x92ea55): with no standing slot among 2..7, it never ends
-            let mut k = sorteio(6).wrapping_add(2) as i16 as i32;
+            let mut k = exe::utils_random(6).wrapping_add(2) as i16 as i32;
             while read_u8(this.wrapping_add((k * 5) as usize) + 0xf2) == 0xff {
-                k = sorteio(6).wrapping_add(2) as i16 as i32;
+                k = exe::utils_random(6).wrapping_add(2) as i16 as i32;
             }
             let c = this.wrapping_add((k * 5) as usize);
             let e = list + s as usize * 5;
@@ -97,9 +95,9 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     let mut k = 8i32;
     for _ in 0..0x18 {
         let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: the limit of teams per group
-        let mut r = sorteio(8);
+        let mut r = exe::utils_random(8);
         while count[r as i16 as usize] >= lim {
-            r = sorteio(8);
+            r = exe::utils_random(8);
         }
         crate::comparison::branch("cqf_4 vaga no grupo");
         write_usize(dst, read_usize(src));
@@ -235,10 +233,8 @@ pub(crate) unsafe fn draw_list_club(list: usize, i: usize) -> usize {
 /// limpo), até 4 linhas ou o fim das 32 entradas; depois a notícia dos grupos (0x684230 mov ecx, this -> thiscall).
 /// Devolve 1.
 pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, list: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let row_of_table: unsafe extern "thiscall" fn(usize, u32, usize, u32, usize) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     write_u16(this + league::CLUB_COUNT, 4);
-    let t = alloc(0xec);
+    let t = exe::crt_malloc(0xec);
     write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xad5888, 0x2b1);
@@ -251,7 +247,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize,
         if read_u8(list + e * 5 + 4) == 1 {
             crate::comparison::branch("cqf_5 time do grupo um");
             let club = draw_list_club(list, e);
-            row_of_table(this, row as u8 as u32, club, 0, 0);
+            exe::league_init_table_row(this, row as u8 as u32, club, 0, (0) as u32);
             row += 1;
         }
         i += 1;
@@ -298,12 +294,10 @@ pub(crate) unsafe fn group_clubs(list: usize, g: i32) -> Vec<usize> {
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x380 e 0. Com ela: +0x30 = g e a notícia do grupo
 /// (0x684230 na fase). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, list: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
+    let teams = exe::crt_malloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(0xad5888, 0x366);
         return 0;
@@ -325,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(
             p,
@@ -389,8 +383,6 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
 /// da nação de cada clube (+0x53) vira a Copa (0x775220 push [+4]; push nação; mov ecx, [0xb74318] -> thiscall, ret 8)
 /// e o vetor é liberado (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         show_error_at(0xad5888, 0x671);
@@ -400,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
         show_error_at(0xad5888, 0x678);
         write_u16(this + 0x36, 0x20);
     }
-    let v = alloc(((read_i16(this + 0x36) as i32) << 2) as u32);
+    let v = exe::crt_malloc(((read_i16(this + 0x36) as i32) << 2) as u32);
     if v == 0 {
         show_error_at(0xad5888, 0x680);
         return;
@@ -410,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
         write_usize(v + i as usize * 4, read_usize(read_usize(this + 0x14) + i as usize * 6));
         i += 1;
     }
-    sort(v, read_i16(this + 0x36) as i32 as u32, 4, 0x4b07d0);
+    exe::crt_qsort(v, read_i16(this + 0x36) as i32 as u32, 4, 0x4b07d0);
     const FAIXAS: [u32; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     for (k, &p) in FAIXAS.iter().enumerate() {
         position(read_usize(this + 8), read_usize(v + k * 4), p);
@@ -464,14 +456,12 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
     if f >= 7 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_WORLD_CUP_CREATE_SCHEDULE)(this, stage, rounds, id, league);
     }
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     if !league.is_null() {
         *league = 1;
     }
     *rounds = 3; // cqf6: três rodadas
     *id = (f as i16).wrapping_add(0x420);
-    let t = alloc(0xc3);
+    let t = exe::crt_malloc(0xc3);
     if t == 0 {
         show_error_at(0xad5888, 0xcc);
         return 0;
@@ -480,11 +470,11 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
     // the year carries garbage in the high bytes in the original (the year’s cx over the previous ecx); 0x68a160 only uses the 16 bits
     // low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year
     let year = read_i16(this + league::YEAR) as u16 as u32;
-    data(t, 0, 0xc, 5, 0, 4, 1, year, 1); // cqf6: a primeira rodada
+    exe::league_round_set_date(t, 0, 0xc, 5, 0, 4, 1, year, 1); // cqf6: a primeira rodada
     exe::league_round_set_match_slot(t, 0, 2, -1, -1, -1, 0);
-    data(t, 1, 0x13, 5, 0, 4, 1, year, 1); // cqf6: a segunda rodada
+    exe::league_round_set_date(t, 1, 0x13, 5, 0, 4, 1, year, 1); // cqf6: a segunda rodada
     exe::league_round_set_match_slot(t, 1, 2, -1, -1, -1, 0);
-    data(t, 2, 0x18, 5, 0, 2, 1, year, 1); // cqf6: a terceira rodada
+    exe::league_round_set_date(t, 2, 0x18, 5, 0, 2, 1, year, 1); // cqf6: a terceira rodada
     exe::league_round_set_match_slot(t, 2, 2, -1, -1, -1, 0);
     let k = (f as i32 + 1) as u32;
     if k <= 7 {
@@ -571,7 +561,6 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         crate::comparison::branch("cqf_6 sem cabeças de chave em 2002");
         return;
     }
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     write_u8(this + 0x4b, 0);
     if read_i16(this + 0x36) < 0x20 {
@@ -603,7 +592,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
             }
         }
     }
-    sort(read_usize(this + 0x14), read_i16(this + 0x36) as i32 as u32, 6, 0x4b07b0);
+    exe::crt_qsort(read_usize(this + 0x14), read_i16(this + 0x36) as i32 as u32, 6, 0x4b07b0);
     // simplification: both outputs start at −1 (no venue); the original leaves them with the stack leftover when 0x5fa730 does not
     // finds the Cup (it only writes them when it finds it)
     let (mut a, mut b) = (-1i32, -1i32);
@@ -637,7 +626,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     if sede1 == detentor {
         n = 1;
     }
-    sort(read_usize(this + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
+    exe::crt_qsort(read_usize(this + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
     for i in 0..0x20usize {
         let club = read_usize(read_usize(this + 0x14) + i * 6);
         let pote = this + 0xf2 + i * 5;
@@ -666,7 +655,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         write_u8(pote, p);
         write_u8(read_usize(this + 0x14) + i * 6 + 4, s);
     }
-    sort(read_usize(this + 0x14) + 0x30, 0x18, 6, 0x92f660);
-    sort(this + 0x116, 0x18, 5, 0x92f660);
+    exe::crt_qsort(read_usize(this + 0x14) + 0x30, 0x18, 6, 0x92f660);
+    exe::crt_qsort(this + 0x116, 0x18, 5, 0x92f660);
 }
 

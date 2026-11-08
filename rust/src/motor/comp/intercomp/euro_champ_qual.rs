@@ -121,8 +121,7 @@ pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, clu
 pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
     let n = exe::eurochampqual_get_group_team_count(this, 0xffff_ffff);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((n as i32 * 0x3b) as u32);
+    let t = exe::crt_malloc((n as i32 * 0x3b) as u32);
     core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
     if t == 0 {
         show_error_at(0x9c4674, 0x2d2);
@@ -131,12 +130,11 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     let n = read_i16(this + league::CLUB_COUNT);
     core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + league::LEGS))); // cqs8: the group 1 rounds
     crate::comparison::branch("cqs_8 grupo 1 da eurocopa");
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut i: i8 = 0;
     if n > 0 {
         loop {
             let c = read_usize(read_usize(this + 0xf7) + i as isize as usize * 4);
-            iniciar(this, i as u8 as u32, c, 0, 0);
+            exe::league_init_table_row(this, i as u8 as u32, c, 0, 0);
             i = i.wrapping_add(1);
             if (i as i16) >= read_i16(this + league::CLUB_COUNT) {
                 break;

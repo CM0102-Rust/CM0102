@@ -125,8 +125,7 @@ pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
 /// +5, +0xa, +0xb) zerados. Devolve 1.
 pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0xc);
+    let l = exe::crt_malloc(0xc);
     write_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(0xaa20a0, 0xc6);
@@ -142,14 +141,12 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
         write_usize(read_usize(this + cup::TEAM_TABLE), usa_mls_all_stars_club_by_index(b));
         0x414
     };
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let mut k = sortear(6) as u8; // cqr6: o estádio sorteado entre 6
-    let division: unsafe extern "C" fn(usize) -> i16 = core::mem::transmute(FN_USA_MLS_GET_CLUB_DIVISION);
+    let mut k = exe::utils_random(6) as u8; // cqr6: o estádio sorteado entre 6
     let mut i = 0usize;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = usa_mls_all_stars_club_by_index(i);
         let league = read_usize(c + 0x57);
-        if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && division(c) as i32 == conferencia {
+        if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && (exe::usa_mls_get_club_division(c) as i16) as i32 == conferencia {
             if k == 0 {
                 crate::comparison::branch("cqr_6 estadio do jogo das estrelas");
                 let first = read_usize(read_usize(this + cup::TEAM_TABLE));
@@ -230,8 +227,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     }
     *rounds = 1;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(0x68);
+    let t = exe::crt_malloc(0x68);
     if t == 0 {
         show_error_at(0xaa20a0, 0x9a);
         return 0;

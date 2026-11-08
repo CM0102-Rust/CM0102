@@ -54,8 +54,7 @@ pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
 /// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
 pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     write_usize(this + eng_auto_cup::SELECTED_COUNT, 0x38);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0xe0);
+    let l = exe::crt_malloc(0xe0);
     write_usize(this + eng_auto_cup::SELECTED_CLUBS, l);
     if l == 0 {
         show_error_at(0x9c4180, 0x24c);
@@ -191,12 +190,11 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
         return 0;
     }
     crate::comparison::branch("cqs_5 chaves do trofeu da liga");
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), read_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
+    exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), read_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
     let half = (read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;
-    sort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), half as u32, 4, 0x4b0810);
+    exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), half as u32, 4, 0x4b0810);
     let half = (read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;
-    sort(read_usize(this + eng_auto_cup::SELECTED_CLUBS) + half as usize * 4, half as u32, 4, 0x4b0810);
+    exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS) + half as usize * 4, half as u32, 4, 0x4b0810);
     1
 }
 
@@ -237,8 +235,7 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
 /// (word), +0x51 (byte), 0, 0, 0, sem sementes; os words e bytes vão com lixo em cima, que o construtor não lê) em
 /// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let teams = alloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 2) as u32);
+    let teams = exe::crt_malloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         return show_error_at(0x9c4180, 0x2e9);
     }
@@ -250,8 +247,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let table = rounds_of_cup(this, 0, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     let f = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -327,8 +323,7 @@ pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Optio
 /// fase, a caixa da linha 0x35a (o vetor fica, como na original). Com ela, o sorteio da rodada (Cup::draw_round 0x51c410:
 /// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(8);
+    let l = exe::crt_malloc(8);
     if l == 0 {
         return show_error_at(0x9c4180, 0x337);
     }
@@ -341,8 +336,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let table = rounds_of_cup(this, 1, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     let f = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -394,8 +388,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     if read_usize(this + 8) == 0 {
         return show_error_at(0x9c4180, 0x3bb);
     }
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 3) as u32);
+    let v = exe::crt_malloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 3) as u32);
     if v == 0 {
         return show_error_at(0x9c4180, 0x3c3);
     }
@@ -407,11 +400,10 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
         write_usize(v + (n + d as i32) as usize * 4, read_usize(read_usize(read_usize(read_usize(this + cup::STAGES)) + 0xa7) + e));
         d = d.wrapping_add(1);
     }
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let n = read_i16(this + cup::TEAM_COUNT) as i32;
-    sort(v, n as u32, 4, 0x4b07d0);
+    exe::crt_qsort(v, n as u32, 4, 0x4b07d0);
     let n = read_i16(this + cup::TEAM_COUNT) as i32;
-    sort(v + n as usize * 4, n as u32, 4, 0x4b07d0);
+    exe::crt_qsort(v + n as usize * 4, n as u32, 4, 0x4b07d0);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let a = read_usize(v);
     let b = read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4);

@@ -43,8 +43,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
 /// vaga mesmo nula (como na original); sem fase, a caixa da linha 0x25c; com ela, +0x30 = 2. O quadro SEH da original
 /// só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alloc(8);
+    let list = exe::crt_malloc(8);
     if list == 0 {
         return show_error_at(0x9eabc8, 0x245);
     }
@@ -53,8 +52,7 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 2, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
     // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
     let stage = if p != 0 {
@@ -142,8 +140,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     }
     exe::crt_free(read_usize(this + league::STAGES));
     core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 3);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alloc(0xc);
+    let v = exe::crt_malloc(0xc);
     core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     if v == 0 {
         show_error_at(0x9eabc8, 0x1b4);
@@ -193,8 +190,7 @@ pub(crate) unsafe fn is_in_division(club: usize, g: usize) -> bool {
 /// `linha`). Devolve a tabela (0 sem memória).
 pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u32) -> usize {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((n as i32 as u32).wrapping_mul(0x3b));
+    let t = exe::crt_malloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
@@ -212,8 +208,7 @@ pub(crate) unsafe fn alloc_league_table(this: usize, n: i16, file: usize, row: u
 /// k); existe só para as mutações de cada liga. simplification: a original empurra a linha no eax com bits de cima de sobra;
 /// a 0x687430 só lê o byte.
 pub(crate) unsafe fn jap_j1_init_table_row(this: usize, k: u8, n: i16, girar: u8, club: usize) {
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    iniciar(this, (k as u32 + girar as u32) % n as u32, club, 0, 0);
+    exe::league_init_table_row(this, (k as u32 + girar as u32) % n as u32, club, 0, 0);
 }
 
 /// Japanese loop: every club of the division fills the next row while rows remain; the rest lose their division (+0x57
@@ -266,8 +261,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
     if fill_japanese_table(this, KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 0, "cqm_9 j1 cheia") == 0 {
         return 0;
     }
-    let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = prize(this, 0x186a0);
+    let f = exe::league_calc_prize_fund(this, 0x186a0);
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
     exe::league_pay_tv_rights(this, 0x2dc6c0, 0);
@@ -309,8 +303,7 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
             same = same && plan[cabem..].iter().all(|&c| read_usize(c + club::DIVISION) == 0);
         }
         if r == 1 && quota != 0 {
-            let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == prize(this, quota);
+            same = same && *((this + league::PRIZE_MODE) as *const u8) == 1 && core::ptr::read_unaligned((this + league::PRIZE_FUND) as *const i32) == exe::league_calc_prize_fund(this, quota);
         }
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this, r, plan, found));

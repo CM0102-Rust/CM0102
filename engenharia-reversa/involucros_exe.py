@@ -1,11 +1,14 @@
-r"""Uma declaração tipada por função do exe (etapa 4 da reorganização, 08/11/2026; o leitor de fora, rodada 7: 6.307
-`let f: unsafe extern "C" fn(..) = core::mem::transmute(FN_X);` repetindo a assinatura em cada uso). Para cada FN_X
-chamada sempre com a mesma assinatura, gera em rust/src/motor/exe_calls.rs, dentro de `pub(crate) mod exe`, um invólucro
-`exe::x(a0, a1, ..)`; nas funções em que o apelido local só é chamado (`f(...)`), a declaração sai e a chamada passa a
-`exe::x(...)`. A função que não compilar volta ao texto de antes (a volta do traduzir_locais.py). As listas de mutação
-recebem a mesma troca, trecho a trecho.
+r"""Uma declaração tipada por função do exe (etapa 4 da reorganização, 08/11/2026; o leitor de fora, rodadas 7 e 8:
+milhares de `let f: unsafe extern "C" fn(..) = core::mem::transmute(FN_X);` repetindo a assinatura em cada uso).
 
-Uso: python involucros_exe.py [--gravar]
+Para cada FN_X gera em rust/src/motor/exe_calls.rs, dentro de `pub(crate) mod exe`, um invólucro `exe::x(a0, a1, ..)`
+com uma assinatura: a do invólucro que já existe, senão a mais comum entre os usos (mesma convenção e mesma aridade em
+todos; variádicas ficam de fora). Nas funções em que o apelido local só é chamado (`f(...)`), a declaração sai e a chamada
+passa a `exe::x(...)`; num uso com outra assinatura (ex.: `u32` em vez de `usize`), cada argumento e o retorno ganham um
+`as` para o tipo da assinatura escolhida. A função que não compilar volta ao texto de antes (a volta do
+traduzir_locais.py). As listas de mutação recebem a mesma troca, trecho a trecho.
+
+Uso: python involucros_exe.py [--so-arquivo | --gravar]
 """
 import collections
 import glob
@@ -17,54 +20,113 @@ import sys
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(R, 'rust', 'src')
+ARQ = os.path.join(SRC, 'motor', 'exe_calls.rs')
 sys.path.insert(0, os.path.join(R, 'engenharia-reversa'))
 import mover_rotinas  # noqa: E402
 import traduzir_locais as tl  # noqa: E402
 
 LET = re.compile(r'^([ \t]*)let (\w+): (unsafe extern "(\w+)" fn\(([^)]*)\)(?: -> ([\w*: ]+?))?) = core::mem::transmute\((FN_\w+)\);[ \t]*\r?\n', re.M)
+SIG = re.compile(r'unsafe extern "(\w+)" fn\(([^)]*)\)(?: -> ([\w*: ]+?))?$')
 
 
 def norm(s):
     return re.sub(r'\s+', '', s)
 
 
+def partes(sig):
+    m = SIG.match(sig.strip())
+    return m.group(1), [x.strip() for x in m.group(2).split(',') if x.strip()], (m.group(3) or '').strip()
+
+
+def classe(t):
+    """Classe de ABI de um tipo: 'f32', 'f64' ou 'int' (inteiros, bool, ponteiros: mesmo registrador e 4 bytes no i686;
+    64 bits à parte). Um `as` só é seguro entre tipos da mesma classe: float volta em st0, inteiro em eax."""
+    t = norm(t)
+    if t in ('f32', 'f64'):
+        return t
+    if t in ('u64', 'i64'):
+        return '64'
+    return 'int'
+
+
+def largura(t):
+    t = norm(t)
+    return {'u8': 1, 'i8': 1, 'bool': 1, 'u16': 2, 'i16': 2, 'u64': 8, 'i64': 8, 'f64': 8}.get(t, 4)
+
+
+def nome_de(fn):
+    n = fn[3:].lower() if not fn[3].isdigit() else 'at_' + fn[3:].lower()
+    m = re.fullmatch(r'(\w+)_destructor_\1', n)
+    if m:
+        return 'drop_' + m.group(1)
+    k = re.fullmatch(r'(\w+)_\1', n)
+    return 'new_' + k.group(1) if k else n
+
+
+def args_da_chamada(s, i):
+    """A partir de s[i] == '(' devolve (lista de argumentos, índice depois do ')')."""
+    nivel, ini, args, j = 0, i + 1, [], i
+    while j < len(s):
+        c = s[j]
+        if c in '([{':
+            nivel += 1
+        elif c in ')]}':
+            nivel -= 1
+            if nivel == 0:
+                a = s[ini:j].strip()
+                if a:
+                    args.append(a)
+                return args, j + 1
+        elif c == ',' and nivel == 1:
+            args.append(s[ini:j].strip())
+            ini = j + 1
+        j += 1
+    return None, i
+
+
 def main():
-    arqs = glob.glob(os.path.join(SRC, '**', '*.rs'), recursive=True)
-    sig = collections.defaultdict(dict)
+    arqs = [p for p in glob.glob(os.path.join(SRC, '**', '*.rs'), recursive=True) if p != ARQ]
+    # as assinaturas que já têm invólucro ficam
+    canon = {}
+    if os.path.exists(ARQ):
+        for sig_, fn in re.findall(r'let f: (unsafe extern "\w+" fn\([^)]*\)(?: -> [\w*: ]+?)?) = core::mem::transmute\((FN_\w+)\);', open(ARQ, encoding='utf-8').read()):
+            canon[fn] = sig_
+    usos = collections.defaultdict(collections.Counter)
     for p in arqs:
         for m in LET.finditer(open(p, encoding='utf-8').read()):
-            sig[m.group(7)][norm(m.group(3))] = m
-    unicas = {fn: list(d.values())[0] for fn, d in sig.items() if len(d) == 1 and '...' not in list(d.values())[0].group(5)}
-    # o invólucro: exe::<nome> (FN_ sem o prefixo, em minúsculas)
-    nome = {fn: (fn[3:].lower() if not fn[3].isdigit() else 'at_' + fn[3:].lower()) for fn in unicas}
-
-    def sem_gagueira(n):  # cup_cup -> new_cup, cup_destructor_cup -> drop_cup
-        m = re.fullmatch(r'(\w+)_destructor_\1', n)
-        if m:
-            return 'drop_' + m.group(1)
-        k = re.fullmatch(r'(\w+)_\1', n)
-        return 'new_' + k.group(1) if k else n
-    nome = {fn: sem_gagueira(n) for fn, n in nome.items()}
+            usos[m.group(7)][m.group(3)] += 1
+    for fn, c in usos.items():
+        if fn in canon:
+            continue
+        sigs = list(c)
+        if any('...' in s for s in sigs):
+            continue
+        ps = [partes(s) for s in sigs]
+        if len({(cv, len(a)) for cv, a, _ in ps}) != 1:
+            continue
+        # cada posição (e o retorno) com a mesma classe de ABI em todos os usos
+        if len({tuple(classe(x) for x in a) + (classe(r) if r else '-',) for _, a, r in ps}) != 1:
+            continue
+        canon[fn] = c.most_common(1)[0][0]
     L = ['use super::*;', '', '// The original exe functions called from the Rust copies, one typed declaration each (generated by',
          '// engenharia-reversa/involucros_exe.py from the call sites). `exe::finance_get_club_finance(f, club)` calls',
          '// the routine at `FN_FINANCE_GET_CLUB_FINANCE` in the original exe.',
          '// [pt] As funções do exe original chamadas pelas cópias Rust, uma declaração tipada cada (gerado pelo',
          '// involucros_exe.py a partir das chamadas).', '',
          '#[allow(dead_code, clippy::too_many_arguments)]', 'pub(crate) mod exe {', '    use super::*;']
-    for fn in sorted(unicas):
-        m = unicas[fn]
-        conv, params, ret = m.group(4), [x.strip() for x in m.group(5).split(',') if x.strip()], m.group(6)
-        args = ', '.join('a%d: %s' % (i, t) for i, t in enumerate(params))
-        nomes = ', '.join('a%d' % i for i in range(len(params)))
+    for fn in sorted(canon):
+        conv, params, ret = partes(canon[fn])
         L.append('    #[inline(always)]')
-        L.append('    pub(crate) unsafe fn %s(%s)%s {' % (nome[fn], args, (' -> ' + ret.strip()) if ret else ''))
-        L.append('        let f: %s = core::mem::transmute(%s);' % (m.group(3), fn))
-        L.append('        f(%s)' % nomes)
+        L.append('    pub(crate) unsafe fn %s(%s)%s {' % (nome_de(fn), ', '.join('a%d: %s' % (i, t) for i, t in enumerate(params)),
+                                                         (' -> ' + ret) if ret else ''))
+        L.append('        let f: %s = core::mem::transmute(%s);' % (canon[fn], fn))
+        L.append('        f(%s)' % ', '.join('a%d' % i for i in range(len(params))))
         L.append('    }')
     L.append('}')
-    if '--so-arquivo' in sys.argv:  # só o arquivo dos invólucros (para compilar antes de trocar as chamadas)
-        open(os.path.join(SRC, 'motor', 'exe_calls.rs'), 'w', encoding='utf-8').write('\n'.join(L) + '\n')
+    if '--so-arquivo' in sys.argv:
+        open(ARQ, 'w', encoding='utf-8').write('\n'.join(L) + '\n')
         os.system('python "%s" --gravar' % os.path.join(R, 'engenharia-reversa', 'modulos_motor.py'))
+        print('%d invólucros' % len(canon))
         return
     mutacoes = []
     pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
@@ -74,51 +136,80 @@ def main():
                 mutacoes += [(f, m) for m in runpy.run_path(os.path.join(pasta, f)).get('MUTACOES', [])]
             except Exception:
                 pass
-    trocas_mut, total = {}, 0
+
+    def converter(s, ap, fn, sig_uso):
+        """Troca as chamadas `ap(...)` por exe::x(...), com `as` onde a assinatura do uso difere da escolhida."""
+        _, pu, ru = partes(sig_uso)
+        _, pc, rc = partes(canon[fn])
+        if ru and not rc:
+            return None
+        if ru and classe(ru) != classe(rc):
+            return None
+        if ru and largura(ru) > largura(rc):  # the chosen signature would cut bits the use read
+            return None
+        if len(pu) != len(pc) or any(classe(a) != classe(b) for a, b in zip(pu, pc)):
+            return None
+        out, pos = [], 0
+        for m in re.finditer(r'\b%s\s*\(' % re.escape(ap), s):
+            if m.start() < pos:
+                continue
+            args, fim = args_da_chamada(s, m.end() - 1)
+            if args is None or len(args) != len(pc):
+                return None
+            a2 = [a if norm(tu) == norm(tc) else '(%s) as %s' % (a, tc) for a, tu, tc in zip(args, pu, pc)]
+            chamada = 'exe::%s(%s)' % (nome_de(fn), ', '.join(a2))
+            if ru and norm(ru) != norm(rc):
+                chamada = '(%s as %s)' % (chamada, ru)
+            out.append(s[pos:m.start()])
+            out.append(chamada)
+            pos = fim
+        out.append(s[pos:])
+        return ''.join(out)
+    trocas_mut, total, conv_n = {}, 0, 0
     for p in arqs:
-        if p.endswith('exe_calls.rs'):
-            continue
         t = open(p, encoding='utf-8').read()
         tl.ANTES[p] = t
-        partes, pos = [], 0
+        partes_t, pos = [], 0
         for _, a, b in mover_rotinas.blocos(t):
             bloco = t[a:b]
             alvo = {}
             for m in LET.finditer(bloco):
                 fn, ap = m.group(7), m.group(2)
-                if fn not in unicas or norm(m.group(3)) not in sig[fn]:
+                if fn not in canon:
                     continue
                 cod = re.sub(r'//[^\n]*|"(?:[^"\\\n]|\\.)*"', ' ', bloco)
-                usos = re.findall(r'\b%s\b(\s*\()?' % re.escape(ap), cod)
-                # a própria declaração conta um uso sem "("; todos os outros têm de ser chamadas
-                if sum(1 for u in usos if not u) != 1 or len(re.findall(r'\blet (?:mut )?%s\b' % re.escape(ap), cod)) != 1:
+                usos_ap = re.findall(r'\b%s\b(\s*\()?' % re.escape(ap), cod)
+                if sum(1 for u in usos_ap if not u) != 1 or len(re.findall(r'\blet (?:mut )?%s\b' % re.escape(ap), cod)) != 1:
                     continue
-                alvo[ap] = fn
+                alvo[ap] = (fn, m.group(3))
             if not alvo:
                 continue
 
             def f_(s, alvo=alvo):
-                for ap, fn in alvo.items():
-                    s = re.sub(r'^[ \t]*let %s: unsafe extern "\w+" fn\([^)]*\)(?: -> [\w*: ]+?)? = core::mem::transmute\(%s\);[ \t]*\r?\n' % (re.escape(ap), fn), '', s, flags=re.M)
-                    s = tl.so_codigo(s, lambda x, ap=ap, fn=fn: re.sub(r'\b%s(\s*\()' % re.escape(ap), 'exe::%s\\1' % nome[fn], x))
+                for ap, (fn, sig_uso) in alvo.items():
+                    s2 = re.sub(r'^[ \t]*let %s: unsafe extern "\w+" fn\([^)]*\)(?: -> [\w*: ]+?)? = core::mem::transmute\(%s\);[ \t]*\r?\n' % (re.escape(ap), fn), '', s, flags=re.M)
+                    s3 = converter(s2, ap, fn, sig_uso)
+                    if s3 is not None:
+                        s = s3
                 return s
             novo = f_(bloco)
             if novo == bloco:
                 continue
             total += len(alvo)
+            conv_n += sum(1 for ap, (fn, su) in alvo.items() if norm(su) != norm(canon[fn]))
             for lista, mu in mutacoes:
                 if bloco.count(mu[1]) == 1:
                     trocas_mut[(lista, mu[0])] = (mu, f_)
-            partes.append(t[pos:a])
-            partes.append(novo)
+            partes_t.append(t[pos:a])
+            partes_t.append(novo)
             pos = b
-        partes.append(t[pos:])
-        if ''.join(partes) != t and '--gravar' in sys.argv:
-            open(p, 'w', encoding='utf-8').write(''.join(partes))
-    print('%d funções do exe com assinatura única; %d declarações locais saem; %d trechos de mutação' % (len(unicas), total, len(trocas_mut)))
+        partes_t.append(t[pos:])
+        if ''.join(partes_t) != t and '--gravar' in sys.argv:
+            open(p, 'w', encoding='utf-8').write(''.join(partes_t))
+    print('%d invólucros; %d declarações locais saem (%d com conversão); %d trechos de mutação' % (len(canon), total, conv_n, len(trocas_mut)))
     if '--gravar' not in sys.argv:
         return
-    open(os.path.join(SRC, 'motor', 'exe_calls.rs'), 'w', encoding='utf-8').write('\n'.join(L) + '\n')
+    open(ARQ, 'w', encoding='utf-8').write('\n'.join(L) + '\n')
     os.system('python "%s" --gravar' % os.path.join(R, 'engenharia-reversa', 'modulos_motor.py'))
     tl.voltar_funcoes_com_erro(trocas_mut)
     por = collections.defaultdict(list)

@@ -87,8 +87,7 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(table.len() as u32 * 0x68);
+    let t = exe::crt_malloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -231,8 +230,7 @@ pub(crate) unsafe fn french_cup_amateur_limit(this: usize) -> i32 {
 /// cheia, senão 0 (e quantos entraram, para o comparador).
 pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0xde);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0x534);
+    let l = exe::crt_malloc(0x534);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9ccb28, 0x16f);
@@ -248,9 +246,8 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
         comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE)) && comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && read_usize(c + 0x60) == 0
             && n < french_cup_amateur_limit(this)
     });
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     enter_clubs_pass(this, &mut n, || read_usize(G_CLUB_COUNT) as i32 - 2 * read_usize(G_NATION_COUNT) as i32, true, |c, n| {
-        read_usize(c + 0x53) != 0 && national_team(c) == 0 && read_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
+        read_usize(c + 0x53) != 0 && exe::database_is_national_team(c) == 0 && read_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
     crate::comparison::branch("cqm_11 inscritos da copa da franca");
@@ -294,8 +291,7 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> 
 /// Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x36);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0x144);
+    let l = exe::crt_malloc(0x144);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9ccb98, 0x146);
@@ -341,8 +337,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
 /// e 0). Classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0xc);
+    let l = exe::crt_malloc(0xc);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9ccc48, 0xc4);

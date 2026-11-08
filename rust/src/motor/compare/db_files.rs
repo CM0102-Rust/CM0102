@@ -9,20 +9,18 @@ pub(crate) unsafe fn compare_conversor_v1(name: &str, o: V1Converter, rust: V1Co
     if use_zip != 0 {
         return o(stream, use_zip, records, n);
     }
-    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FTELL);
-    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let pos = ftell(stream);
+    let pos = exe::crt_ftell(stream);
     let (mut fim_o, mut fim_r) = (0, 0);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&[(records, n as usize * size)],
         || {
             let r = o(stream, use_zip, records, n);
-            fim_o = ftell(stream);
+            fim_o = exe::crt_ftell(stream);
             r
         },
         || {
-            fseek(stream, pos, 0);
+            exe::crt_fseek(stream, pos, (0) as u32);
             let r = rust(stream, use_zip, records, n);
-            fim_r = ftell(stream);
+            fim_r = exe::crt_ftell(stream);
             r
         });
     SCOREBOARD.record(igual && r == x && fim_o == fim_r, || {
@@ -243,20 +241,18 @@ pub(crate) unsafe extern "C" fn compare_db_files_read_comps_v1(stream: usize, us
     if use_zip != 0 {
         return o(stream, use_zip, records, n);
     }
-    let ftell: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_CRT_FTELL);
-    let fseek: unsafe extern "C" fn(usize, i32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
-    let pos = ftell(stream);
+    let pos = exe::crt_ftell(stream);
     let (mut fim_o, mut fim_r) = (0, 0);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&[(records, n as usize * 107)],
         || {
             let r = o(stream, use_zip, records, n);
-            fim_o = ftell(stream);
+            fim_o = exe::crt_ftell(stream);
             r
         },
         || {
-            fseek(stream, pos, 0);
+            exe::crt_fseek(stream, pos, (0) as u32);
             let r = db_files_read_comps_v1(stream, use_zip, records, n);
-            fim_r = ftell(stream);
+            fim_r = exe::crt_ftell(stream);
             r
         });
     SCOREBOARD.record(igual && r == x && fim_o == fim_r, || {

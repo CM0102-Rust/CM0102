@@ -114,12 +114,9 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
 pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     core::ptr::write_unaligned((this + 0xf2) as *mut u16, 0x10);
-    let list = alloc(0xc8);
+    let list = exe::crt_malloc(0xc8);
     write_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0x9870f8, 0x349);
@@ -155,8 +152,8 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
         return 0;
     }
     let h = how_many as i32;
-    sort(read_usize(this + 0xee) + (h as isize * 4) as usize, (n as i32 - h) as u32, 4, 0x4b07d0); // cqs13: the non-hosts by reputation
-    let groups = alloc(0x40);
+    exe::crt_qsort(read_usize(this + 0xee) + (h as isize * 4) as usize, (n as i32 - h) as u32, 4, 0x4b07d0); // cqs13: the non-hosts by reputation
+    let groups = exe::crt_malloc(0x40);
     if groups == 0 {
         show_error_at(0x9870f8, 0x380);
         return 0;
@@ -164,9 +161,9 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     crate::comparison::branch("cqs_13 sorteio da copa africana");
     for j in 0..4usize {
         for p in 0..4usize {
-            let mut r = sorteio(4) as u8 as i8 as usize;
+            let mut r = exe::utils_random(4) as u8 as i8 as usize;
             while read_usize(read_usize(this + 0xee) + (r + 4 * p) * 4) == 0 {
-                r = sorteio(4) as u8 as i8 as usize;
+                r = exe::utils_random(4) as u8 as i8 as usize;
             }
             let e = read_usize(this + 0xee) + (r + 4 * p) * 4;
             write_usize(groups + (4 * j + p) * 4, read_usize(e)); // cqs13: the one from pot p in slot 4j + p
@@ -213,12 +210,10 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2f2 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i32) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alloc(0x10);
+    let teams = exe::crt_malloc(0x10);
     if teams == 0 {
         show_error_at(0x9870f8, 0x2dc);
         return 0;
@@ -230,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         let b = |d: usize| *((this + d) as *const u8) as u32;
         construct(
@@ -317,11 +312,9 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 /// push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this
 /// -> thiscall, ret 0) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let teams = 4i16; // cqk12: the four of group A
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, teams);
-    let t = new(0xec);
+    let t = exe::crt_malloc(0xec);
     core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
     if t == 0 {
         show_error_at(0x9870f8, 0x1f1);
@@ -332,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         let national_team = read_usize(read_usize(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: the national team in the row
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
-        row(this, i as u8 as u32, national_team, 0, 0);
+        exe::league_init_table_row(this, i as u8 as u32, national_team, 0, 0);
         i = i.wrapping_add(1);
     }
     exe::league_send_group_draw_news(this);

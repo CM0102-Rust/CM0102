@@ -125,10 +125,9 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
     if read_usize(this + 8) == 0 || read_i16(this + league::ENTRANT_COUNT) < 0x20 || read_usize(this + league::ENTRANT_BOOK) == 0 {
         return o(this);
     }
-    let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let n = read_i16(this + league::ENTRANT_COUNT) as usize;
     let mut v: Vec<usize> = (0..n).map(|i| read_usize(read_usize(this + league::ENTRANT_BOOK) + i * 6)).collect();
-    sort(v.as_mut_ptr(), n as u32, 4, 0x4b07d0);
+    exe::crt_qsort((v.as_mut_ptr()) as usize, n as u32, 4, 0x4b07d0);
     o(this);
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     let errado = (0..32).find(|&k| {

@@ -20,7 +20,7 @@ MUTACOES = [
     ('cpp_premio', 'receber(f_old, value as u32, (value >> 31) as u32); // o clube antigo recebe', 'let _ = (receber, f_old); // mutacao: o clube antigo nao recebe', 'cpp_6 premio por jogos'),
     ('cpp_tentativa', '*((offer + offer::RESPONSE_ROUND) as *mut u8) = read_u8(offer + offer::RESPONSE_ROUND).wrapping_add(1); // one more attempt', '// mutacao: sem contar a tentativa', 'cpp_7 recusa'),
     ('cpp_soltar', 'remove(this, staff_records_staff_by_id(read_usize(offer + offer::TARGET_STAFF_ID)), offer, 0, 0); // the offer’s player', '// mutacao: o jogador segue nas outras ofertas', 'cpp_7 soltar jogadores'),
-    ('cpp_valor', 'iniciar(offer, player, club, value); // the offer value', 'iniciar(offer, player, club, value.wrapping_add(1000)); // mutacao: 1000 a mais', 'cpp_7 oferta em dinheiro'),
+    ('cpp_valor', 'exe::transfer_offer_init_transfer_offer(offer, player, club, value); // the offer value', 'exe::transfer_offer_init_transfer_offer(offer, player, club, value.wrapping_add(1000)); // mutacao: 1000 a mais', 'cpp_7 oferta em dinheiro'),
     ('cpp8_surto_novo', '} else if friendly_random(4) == 0 { // 1 in 4 is left out', '} else if friendly_random(5) == 0 { // mutacao: 1 em 5 fica de fora', 'cpp_8 surto novo'),
     ('cpp8_espalhar', 'Some(friendly_random(3) as u8) // 0 a 2 doentes', 'Some(friendly_random(2) as u8) // mutacao: 0 a 1 doente', 'cpp_8 espalhar'),
     ('cpp8_surto_antigo', 'datar(G_CURRENT_DATE, &mut d, 5); // five days ago', 'datar(G_CURRENT_DATE, &mut d, 6); // mutacao: seis dias', 'cpp_8 surto antigo'),

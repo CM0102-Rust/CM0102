@@ -93,10 +93,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 /// clube; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this ->
 /// thiscall, ret 0) e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
-    let t = new(0xec);
+    let t = exe::crt_malloc(0xec);
     write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa6a068, 0x182);
@@ -106,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         crate::comparison::branch("cqt_10 linha do grupo a");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
-        row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: row i of group A
+        exe::league_init_table_row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: row i of group A
         i = i.wrapping_add(1);
     }
     exe::league_send_group_draw_news(this);
@@ -140,12 +138,10 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
 /// não lê: a cópia passa os valores limpos) em [+0xc][0]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase:
 /// a caixa da linha 0x2ad e 0. Com ela: +0x30 = 0, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alloc(0x10);
+    let teams = exe::crt_malloc(0x10);
     if teams == 0 {
         show_error_at(0xa6a068, 0x296);
         return 0;
@@ -157,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, 0, &mut rodadas, &mut id, 0);
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         let b = |d: usize| *((this + d) as *const u8) as u32;
         construct(
@@ -314,10 +310,8 @@ pub(crate) unsafe fn place_pot_pair(this: usize, k: usize, first: usize, second:
 /// A original guarda as listas na pilha sem zerá-las; com menos clubes que o lido ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as listas têm clubes que bastam; o comparador confere a lista].
 pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     write_usize(this + 0xf2, 8);
-    let list = alloc(0x20);
+    let list = exe::crt_malloc(0x20);
     write_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0xa6a068, 0x307);
@@ -357,16 +351,16 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
         champion = aus.clubes[0];
     }
     nz.ordenar(1);
-    place_pot_pair(this, 0, champion, nz.clubes[0], sorteio(2)); // cqt11: the Australian and New Zealand champions
+    place_pot_pair(this, 0, champion, nz.clubes[0], exe::utils_random(2)); // cqt11: the Australian and New Zealand champions
     fij.ordenar(1);
     tai.ordenar(1);
-    place_pot_pair(this, 1, fij.clubes[0], tai.clubes[0], sorteio(2)); // cqt11: Fiji e Taiti
+    place_pot_pair(this, 1, fij.clubes[0], tai.clubes[0], exe::utils_random(2)); // cqt11: Fiji e Taiti
     mel.ordenar(2);
     let (a, b) = mel.dois_de_nacoes_diferentes();
-    place_pot_pair(this, 2, a, b, sorteio(2)); // cqt11: os dois melanésios
+    place_pot_pair(this, 2, a, b, exe::utils_random(2)); // cqt11: os dois melanésios
     pol.ordenar(2);
     let (a, b) = pol.dois_de_nacoes_diferentes();
-    place_pot_pair(this, 3, a, b, sorteio(2));
+    place_pot_pair(this, 3, a, b, exe::utils_random(2));
     1
 }
 
@@ -441,10 +435,8 @@ pub(crate) unsafe fn semifinalists(this: usize) -> [usize; 4] {
 /// da linha 0x2e3 e volta. Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall,
 /// ret 4).
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
-    let list = alloc(0x10);
+    let list = exe::crt_malloc(0x10);
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
@@ -455,7 +447,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, 1, &mut rodadas, &mut id, 0);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
@@ -548,20 +540,18 @@ pub(crate) unsafe fn build_stage_table(this: usize, f: Option<OceaniaStage>, rod
     if !f.extra_checa || !extra.is_null() {
         *extra = f.extra;
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(f.tamanho);
+    let t = exe::crt_malloc(f.tamanho);
     if t == 0 {
         show_error_at(arquivo, f.linha);
         return 0;
     }
     crate::comparison::branch(f.nome);
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
         match *op {
             Cqq12D(r, dia, mes, anos, sem, cod, v) => {
-                data(t, r, dia, mes, anos, sem, cod, ano16, v);
+                exe::league_round_set_date(t, r, dia, mes, anos, sem, cod, ano16, v);
             }
             Cqq12L(r, j, a, b, c, v) => exe::league_round_set_match_slot(t, r, j, a, b, c, v),
             Cqq12S(r, dia, mes, anos, sem) => {
@@ -718,8 +708,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
 /// classe e situação 0. Devolve 1.
 pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: &'static str, order: impl Fn(i16) -> i16) -> i32 {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x10);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0x60);
+    let l = exe::crt_malloc(0x60);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(file, row);

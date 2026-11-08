@@ -47,10 +47,8 @@ pub(crate) const COPA_AMERICA_2001_NATIONS: [usize; 12] = [
 /// linha 0x3bc e devolve 0; com 12, a lista ordenada pela reputação (qsort 0x945333 com 0x4b07d0: 4 pushes; add esp ->
 /// cdecl) e devolve 1.
 pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     write_usize(this + 0xf2, 0xc);
-    let list = alloc(0x30);
+    let list = exe::crt_malloc(0x30);
     write_usize(this + 0xee, list);
     if list == 0 {
         show_error_at(0x9cd640, 0x37b);
@@ -64,11 +62,10 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
         }
         return 1;
     }
-    let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u32 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // simplification: the original pushes eax with the year in the low 16 bits and leftovers in the high ones; 0x5fa730 only reads the word
-    let how_many = sedes(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_COPA_AMERICA), year as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
+    let how_many = exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_COPA_AMERICA), year as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as u8 as i8;
     let mut k = 0i16;
     while k < how_many as i16 {
         write_usize(read_usize(this + 0xee) + k as usize * 4, national_team_of_nation_id(ids[k as usize] as usize));
@@ -98,7 +95,7 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
         show_error_at(0x9cd640, 0x3bc);
         return 0;
     }
-    sort(read_usize(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
+    exe::crt_qsort(read_usize(this + 0xee), k as i32 as u32, 4, 0x4b07d0);
     1
 }
 
@@ -138,19 +135,17 @@ pub(crate) const COPA_AMERICA_PREDICTED_PLACES: [u32; 12] = [1, 2, 3, 3, 5, 5, 5
 /// estatística (0x4a2540 Comp_Stats::set_club_final_position: push posição; push clube; mov ecx, [+8] -> thiscall,
 /// ret 8): 1, 2, 3, 3, quatro 5, 9 e três 10 (as 12 primeiras da cópia); a cópia liberada (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         return show_error_at(0x9cd640, 0x419);
     }
-    let v = alloc((read_usize(this + 0xf2) << 2) as u32);
+    let v = exe::crt_malloc((read_usize(this + 0xf2) << 2) as u32);
     if v == 0 {
         return show_error_at(0x9cd640, 0x421);
     }
     let n = read_usize(this + 0xf2) << 2;
     core::ptr::copy_nonoverlapping(read_usize(this + 0xee) as *const u8, v as *mut u8, n);
-    sort(v, read_usize(this + 0xf2) as u32, 4, 0x4b07d0);
+    exe::crt_qsort(v, read_usize(this + 0xf2) as u32, 4, 0x4b07d0);
     crate::comparison::branch("cqs_12 previstas da copa america");
     for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         position(read_usize(this + 8), read_usize(v + k * 4), p);
@@ -317,10 +312,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
 /// League::init_table_row: push 0; push 0; push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do
 /// sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
-    let t = new(0xec);
+    let t = exe::crt_malloc(0xec);
     write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0x9cd640, 0x1d4);
@@ -330,7 +323,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         crate::comparison::branch("cqr_13 linha do primeiro grupo");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
-        row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
+        exe::league_init_table_row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
     }
     exe::league_send_group_draw_news(this);
@@ -366,12 +359,10 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
 /// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2d6 e 0. Com ela:
 /// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alloc(0x10);
+    let teams = exe::crt_malloc(0x10);
     if teams == 0 {
         show_error_at(0x9cd640, 0x2bf);
         return 0;
@@ -383,7 +374,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         let b = |d: usize| *((this + d) as *const u8) as u32;
         construct(
@@ -502,20 +493,18 @@ pub(crate) unsafe fn build_phase_table(this: usize, f: Option<GoldcupStagePlan>,
     if !f.extra_checa || !extra.is_null() {
         *extra = f.extra;
     }
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar(f.tamanho);
+    let t = exe::crt_malloc(f.tamanho);
     if t == 0 {
         show_error_at(arquivo, f.linha);
         return 0;
     }
     crate::comparison::branch(f.nome);
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     let ano16 = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let ano = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
         match *op {
             Cqp12D(r, dia, mes, anos, sem, cod, v) => {
-                data(t, r, dia, mes, anos, sem, cod, ano16, v);
+                exe::league_round_set_date(t, r, dia, mes, anos, sem, cod, ano16, v);
             }
             Cqp12L(r, j, a, b, c, v) => exe::league_round_set_match_slot(t, r, j, a, b, c, v),
             Cqp12S(r, dia, mes, anos, sem) => {
@@ -818,11 +807,10 @@ pub(crate) unsafe fn goldcup_write_rule_fields(this: usize, fields: &[(usize, u8
 /// [pt] A primeira palavra da Date(dia, mês, ano da competição +0x40 + `ano`, dia da semana) (0x549f70: push semana; push
 /// ano; push mês; push dia; lea ecx, local -> thiscall, ret 0x10).
 pub(crate) unsafe fn competition_date_word(this: usize, day: u32, month: u32, year: i16, week: u32) -> u16 {
-    let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16).wrapping_add(year) as u16 as u32;
-    data(d.as_mut_ptr(), day, month, a, week);
+    exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, month, a, week);
     core::ptr::read_unaligned(d.as_ptr() as *const u16)
 }
 

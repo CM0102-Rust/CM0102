@@ -7,8 +7,7 @@ use super::*;
 /// (0x48c580: mov ecx -> thiscall, ret 0), a vtable `vtabela`, +0x42 = 1, o registro de id [g] em +4 e sem disciplina
 /// (+0x50 = 0xff).
 pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let c = new(0xa3);
+    let c = exe::crt_operator_new(0xa3);
     if c == 0 {
         return 0;
     }
@@ -66,7 +65,6 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
 /// e são destruídas (a virtual 0 com 1: push 1; mov ecx -> thiscall, ret 4). Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     exe::new_league(this);
     write_usize(this, 0x96aa24);
     core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
@@ -122,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
         show_error_at(0x9ccb5c, 0x7c);
         return this;
     }
-    let e = new(0x5ce);
+    let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
     write_usize(this + 8, s);
     if s == 0 {
@@ -131,9 +129,9 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     }
     exe::league_set_predicted_positions(this);
     let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
-    let a = new(0xee);
+    let a = exe::crt_operator_new(0xee);
     let ligas_cfa = if a != 0 { exe::new_fracfa(a, year) } else { 0 };
-    let b = new(0xee);
+    let b = exe::crt_operator_new(0xee);
     let ligas_baixo = if b != 0 { exe::new_fralower(b, year) } else { 0 };
     for l in [ligas_cfa, ligas_baixo] {
         if l != 0 {
@@ -174,14 +172,11 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
 /// stdcall, ret 0x10; operator delete 0x944c94 do bloco: push; add esp, 4 -> cdecl) e +0xea = 0: a liga volta ao
 /// calendário sorteado.
 pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u16, u32, u32)], file: usize, row: u32) {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let construct: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
-    let destroy: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     let n = league_match_count(this);
-    let block = new((n as u32).wrapping_mul(16).wrapping_add(4));
+    let block = exe::crt_operator_new((n as u32).wrapping_mul(16).wrapping_add(4));
     let array = if block != 0 {
         write_usize(block, n as usize);
-        construct(block + 4, 0x10, n as u32, 0x645800, 0x5a53c0);
+        exe::crt_vector_constructor_iterator(block + 4, 0x10, n as u32, 0x645800, 0x5a53c0);
         block + 4
     } else {
         0
@@ -204,7 +199,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
         let f = v + i * 0x10;
         if read_usize(f + 8) == 0xffff_ffff || read_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list
             if v != 0 {
-                destroy(v, 0x10, read_usize(v - 4) as u32, 0x5a53c0);
+                exe::crt_vector_destructor_iterator(v, 0x10, read_usize(v - 4) as u32, 0x5a53c0);
                 exe::crt_operator_delete(v - 4);
             }
             write_usize(this + league::FIXED_FIXTURES, 0);
@@ -1001,14 +996,12 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: usize, esc
 /// (+0x57, o id no +0) é a do global `g`, na ordem do banco, cada um na linha seguinte (League::init_table_row
 /// 0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher. Devolve se encheu.
 pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: u32, g: usize) -> Option<bool> {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((read_i16(this + league::CLUB_COUNT) as i32 as u32).wrapping_mul(0x3b));
+    let t = exe::crt_malloc((read_i16(this + league::CLUB_COUNT) as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return None;
     }
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     let mut club = read_usize(G_CLUB_TABLE);
@@ -1018,7 +1011,7 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: 
             let row = k; // cqj6: row k receives the k-th club of the division
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, club, 0, 0);
+            exe::league_init_table_row(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
@@ -1089,8 +1082,7 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: usize, n: 
             same = same
                 && match quota {
                     Some(c) => {
-                        let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-                        e1 == 1 && f == prize(this, c)
+                        e1 == 1 && f == exe::league_calc_prize_fund(this, c)
                     }
                     None => e1 == 2 && f == 0,
                 };
@@ -1115,7 +1107,6 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
     if stage as u8 != 0xff {
         return 0;
     }
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16);
     let n: i16 = if year == 0x7d1 { 0x22 } else { 0x26 }; // cqo6: 34 rodadas em 2001, 38 depois
     if !league.is_null() {
@@ -1123,7 +1114,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
     }
     *rounds = n;
     *extra = 0;
-    let t = alloc((n as i32 * 0x41) as u32);
+    let t = exe::crt_malloc((n as i32 * 0x41) as u32);
     if t == 0 {
         show_error_at(0x9ccb5c, 0xd1);
         return 0;

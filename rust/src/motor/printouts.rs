@@ -18,8 +18,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
     let mut t = kind as i8;
     if t == 1 {
-        let week: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-        if week(G_CURRENT_DATE) as i16 == 6 {
+        if exe::date_get_weekday(G_CURRENT_DATE) as i16 == 6 {
             t = 7;
         }
     }
@@ -90,9 +89,8 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
     if n == 0 {
         return -1;
     }
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     crate::comparison::branch("cpz_10 sorteio do comentarista");
-    let r = sortear(n as i32); // cpz10: the commentator random draw
+    let r = exe::utils_random(n as i32); // cpz10: the commentator random draw
     ids[r as usize] as i32
 }
 

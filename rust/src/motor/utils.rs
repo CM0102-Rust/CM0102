@@ -13,11 +13,6 @@ use super::*;
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
 pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
-    let join_path: unsafe extern "C" fn(*mut u8, usize, *const u8, usize, usize) = core::mem::transmute(FN_CRT_MAKEPATH);
-    let first: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> i32 = core::mem::transmute(FN_FILE_FIND_FIRST);
-    let next: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_NEXT);
-    let encerrar: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_FILE_FIND_CLOSE);
-    let erase: unsafe extern "C" fn(*mut u8) -> i32 = core::mem::transmute(FN_CRT_REMOVE);
     crate::comparison::branch("save limpar temporarios");
     let global = 0xde279c as *mut u8;
     *global = 0;
@@ -35,21 +30,21 @@ pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
     let mut found = [0u8; 0x114];
     let mut nomes = [0u8; 0x6400];
     loop {
-        join_path(search.as_mut_ptr(), 0, folder.as_ptr(), default, 0);
+        exe::crt_makepath(search.as_mut_ptr(), 0, (folder.as_ptr()) as usize, default, 0);
         let mut n = 0usize;
-        if first(search.as_mut_ptr(), found.as_mut_ptr(), 0) == 0 {
+        if exe::file_find_first((search.as_mut_ptr()) as usize, (found.as_mut_ptr()) as usize, 0) == 0 {
             loop {
                 zipdir_c_strcpy(nomes.as_mut_ptr().add(0x100 * n), found.as_ptr().add(0x10));
                 n += 1;
-                if n == 100 || next(found.as_mut_ptr()) != 0 {
+                if n == 100 || exe::file_find_next(found.as_mut_ptr()) != 0 {
                     break;
                 }
             }
         }
-        encerrar(found.as_mut_ptr());
+        exe::file_find_close((found.as_mut_ptr()) as usize);
         for k in 0..n {
-            join_path(search.as_mut_ptr(), 0, folder.as_ptr(), nomes.as_ptr().add(0x100 * k) as usize, 0);
-            erase(search.as_mut_ptr());
+            exe::crt_makepath(search.as_mut_ptr(), 0, (folder.as_ptr()) as usize, nomes.as_ptr().add(0x100 * k) as usize, 0);
+            exe::crt_remove((search.as_mut_ptr()) as *const u8);
         }
         if n != 100 {
             break;

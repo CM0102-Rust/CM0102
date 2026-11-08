@@ -45,11 +45,9 @@ pub(crate) struct StateLeague {
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: u32, registro: usize, e: &StateLeague, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
     exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
@@ -64,7 +62,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
     core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, e.fases);
-    let v = alocar(e.fases * 4);
+    let v = exe::crt_malloc(e.fases * 4);
     core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     if regras(this) == 0 {
         show_error_at(e.arquivo, e.linhas[0]);
@@ -82,7 +80,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: usize, ano: 
         show_error_at(e.arquivo, e.linhas[3]);
         return this;
     }
-    let n = novo(0x5ce);
+    let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {

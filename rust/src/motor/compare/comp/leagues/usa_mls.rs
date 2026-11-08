@@ -23,14 +23,13 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_advance_stage(this: usize
 /// antes pela cópia da escolha (os mesmos registros e o mesmo qsort): a fase da terceira vaga existe, com +0x3e = 8, +4
 /// = o +4 da liga e os oito na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this: usize) {
-    let sort: unsafe extern "C" fn(*mut u8, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let (a, b) = (read_usize(read_usize(this + league::STAGES)), read_usize(read_usize(this + league::STAGES) + 4));
     let mut plan = [0usize; 8];
     let mut r = [0u8; 54];
     put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
     put_club_points_record(&mut r, 1, table_row_club_points(a, 0));
     put_club_points_record(&mut r, 2, table_row_club_points(b, 0));
-    sort(r.as_mut_ptr(), 3, 6, 0x90a130);
+    exe::crt_qsort((r.as_mut_ptr()) as usize, 3, 6, 0x90a130);
     for k in 0..3 {
         plan[k] = club_of_record(&r, k);
     }
@@ -41,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
             k += 1;
         }
     }
-    sort(r.as_mut_ptr(), 9, 6, 0x90a130);
+    exe::crt_qsort((r.as_mut_ptr()) as usize, 9, 6, 0x90a130);
     for k in 0..5 {
         plan[3 + k] = club_of_record(&r, k);
     }
@@ -163,7 +162,6 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     if read_usize(this + 8) == 0 || n != 4 {
         return o(this);
     }
-    let sort: unsafe extern "C" fn(*mut usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let mut v = [0usize; 12];
     for k in 0..4 {
         v[k] = aus_nsl_table_row_club(this, k);
@@ -171,7 +169,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
         v[8 + k] = aus_nsl_table_row_club(read_usize(read_usize(this + league::STAGES) + 4), k);
     }
     for b in 0..3 {
-        sort(v[4 * b..].as_mut_ptr(), 4, 4, 0x4b07d0);
+        exe::crt_qsort((v[4 * b..].as_mut_ptr()) as usize, 4, 4, 0x4b07d0);
     }
     o(this);
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];

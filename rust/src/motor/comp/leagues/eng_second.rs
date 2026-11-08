@@ -56,10 +56,9 @@ pub(crate) struct EngSecondChristmasSchedule {
 /// Sets the rounds around Christmas: start rounds, the middle block chosen by the weekday of the reference date, and
 /// end rounds.
 pub(crate) unsafe fn eng_second_set_christmas_rounds(t: usize, year: u32, n: &EngSecondChristmasSchedule, file: usize) {
-    let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     eng_second_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
-    construct(&mut d, 1, 0xb, year, 0xffff_ffff);
+    exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let case = if k as u32 > 6 {
@@ -268,7 +267,6 @@ pub(crate) const DIVISION_THREE_PLAYOFF_1: EngCcCupCupRound = cql10r((0x11, 4, 1
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_TWO_CHRISTMAS`); a fase 0, os play-offs (semifinais e
 /// final); as outras devolvem 0. Fonte 0x9c43e8.
 pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -276,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
             }
             *rounds = 46;
             *extra = 0;
-            let t = alloc(0xbae);
+            let t = exe::crt_malloc(0xbae);
             if t == 0 {
                 show_error_at(0x9c43e8, 0xae);
                 return 0;
@@ -292,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
             }
             *rounds = 2;
             *extra = 0xa0;
-            let t = alloc(0xd0);
+            let t = exe::crt_malloc(0xd0);
             if t == 0 {
                 show_error_at(0x9c43e8, 0x1b5);
                 return 0;

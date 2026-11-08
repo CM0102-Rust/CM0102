@@ -34,7 +34,6 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let format: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let name_of: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(FN_DATABASE_FORMAT_STAFF_NAME);
-    let copy_data: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let mut nation = [0u8; 100];
     *summary = 0;
@@ -81,7 +80,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
         }
     }
     let mut copy = [0u8; 8];
-    copy_data(summary as usize + 0xf64, copy.as_mut_ptr(), G_CURRENT_DATE);
+    exe::date_operator_3d(summary as usize + 0xf64, (copy.as_mut_ptr()) as usize, G_CURRENT_DATE);
     copy_text(summary.add(0x7d0), version());
     let mut now = 0i32;
     let t = exe::at_946ebb(&mut now);

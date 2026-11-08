@@ -563,7 +563,6 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
         return o(this, data, round);
     }
     let id = read_usize(read_usize(this + 4));
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
@@ -574,7 +573,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
     if collect_round_fixtures(this, data, round, l) != 0 {
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
         let mut j = 0usize;
-        let mut f = next(l);
+        let mut f = exe::llist_get_next(l);
         while f != 0 {
             if read_u8(this + cup::STAGE_INDEX) == read_u8(f + fixture::STAGE_INDEX) && j < 0x38 && expected[j / 7] != 0xff {
                 if fixture_on_round_date(this, e, f) {
@@ -582,7 +581,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
                 }
                 j += 7;
             }
-            f = next(l);
+            f = exe::llist_get_next(l);
         }
     }
     exe::drop_llist(l);

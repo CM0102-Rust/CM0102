@@ -68,7 +68,6 @@ pub(crate) unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
 pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: u32, cont: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let state = (this + stadium_obj::VENUE_SORT) as *mut u8;
     // the key: only the order field and +0xc (0) matter to the comparers
@@ -77,21 +76,21 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     let mut e;
     if nation != 0 {
         if *state != 1 {
-            sort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e2f0);
+            exe::crt_qsort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e2f0);
             *state = 1;
         }
         key[0] = read_usize(nation) as u32;
         cmp = 0x85e2f0;
     } else if cont != 0 {
         if *state != 2 {
-            sort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e320);
+            exe::crt_qsort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e320);
             *state = 2;
         }
         key[1] = read_usize(cont) as u32;
         cmp = 0x85e320;
     } else {
         if *state != 3 {
-            sort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e350);
+            exe::crt_qsort(read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, 0x85e350);
             *state = 3;
         }
     }
@@ -476,8 +475,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
 ///
 /// [pt] O sorteio do jogo (0x90cfc0, cdecl): 0..n-1.
 pub(crate) unsafe fn random_below(n: u32) -> i32 {
-    let f: unsafe extern "C" fn(u32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    f(n)
+    exe::utils_random((n) as i32)
 }
 
 /// Returns the stadium's city (+0x38); without stadium or city, a random city from G_CITY_TABLE.
@@ -653,9 +651,8 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         if t == 8 || t == 10 || t == 6 {
             f[k] += read_f64_at(0x968950); // 0x968950 = 2
         }
-        let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         let mut adjust = read_f64_at(0x9689a0); // 0x9689a0 = 0
-        if friendly(read_usize(G_FRIENDLY), comp) == 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 && read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(comp) * 4) != 0 && read_usize(G_RESERVE_COMP) != 0 {
+        if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) == 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 && read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(comp) * 4) != 0 && read_usize(G_RESERVE_COMP) != 0 {
             let group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if group(read_usize(game + fixture::COMPETITION)) == 0 {
                 let league = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(read_usize(game + fixture::COMPETITION)) * 4);
@@ -916,7 +913,6 @@ pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
 /// - senão, com marcas & 4: a nota é sorteio(lugares).
 /// No fim, nota × (sorteio(100) × 0,004 + 0,8), truncada.
 pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, marks: u32, home: usize, away: usize, game: usize) -> i32 {
-    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE));
     if est == read_usize(inglaterra + nation::NATIONAL_STADIUM) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
         return 0;
@@ -958,7 +954,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     if m & 0x20 != 0 {
         let mut expected: i32 = 0x2710;
         if game != 0 {
-            if is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 {
+            if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 {
                 expected = 0xea60;
             } else {
                 let a = read_i32(read_usize(game + fixture::AWAY_CLUB) + 0x73);
@@ -1085,8 +1081,7 @@ pub(crate) unsafe fn stadium_by_id(id: usize) -> usize {
 
 /// qsorts a list of n 12-byte stadium entries with the comparer 0x85e380.
 pub(crate) unsafe fn sort_stadium_list(list: usize, n: u32) {
-    let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    qsort(list, n, 0xc, 0x85e380);
+    exe::crt_qsort(list, n, 0xc, 0x85e380);
 }
 
 /// The stadium daily update: on day 0 it rebuilds the venue list; before 2003 it closes the England national stadium
@@ -1123,9 +1118,8 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
             write_u32(nation_national_team(england_nation()) + 0x69, 0); // cps7: the national team without a home
         }
     }
-    let new: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut t = [0u8; 8];
-    let r = new(t.as_mut_ptr() as usize, 1, 6, 0x7d3, 0xffff_ffff);
+    let r = exe::date_date_549f70((t.as_mut_ptr() as usize) as *mut [u16; 4], 1, 6, 0x7d3, 0xffff_ffff);
     let reabre = read_usize(r) as u32;
     if (reabre >> 16) as u16 == read_u16(today + 2) && reabre as u16 == read_u16(today) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
         crate::comparison::branch("cps_7 reabre o estadio nacional");
@@ -1194,16 +1188,14 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, stadium: usize, 
         return show_error_at(0xa835b0, 0x810);
     }
     if read_usize(this) == 0 {
-        let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let l = alloc(0x168);
+        let l = exe::crt_malloc(0x168);
         write_u32(this, l as u32);
         if l == 0 {
             return show_error_at(0xa835b0, 0x81b);
         }
         write_u32(this + stadium_obj::BOOKING_CAPACITY, 0x1e);
     } else if read_usize(this + stadium_obj::BOOKING_COUNT) == read_usize(this + stadium_obj::BOOKING_CAPACITY) {
-        let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-        let l = realloc(read_usize(this), (read_usize(this + stadium_obj::BOOKING_CAPACITY) as u32).wrapping_mul(3).wrapping_add(0x5a).wrapping_mul(4));
+        let l = exe::crt_realloc(read_usize(this), (read_usize(this + stadium_obj::BOOKING_CAPACITY) as u32).wrapping_mul(3).wrapping_add(0x5a).wrapping_mul(4));
         write_u32(this, l as u32);
         if l == 0 {
             return show_error_at(0xa835b0, 0x82b);
@@ -1212,9 +1204,8 @@ pub(crate) unsafe extern "thiscall" fn add_booking(this: usize, stadium: usize, 
     }
     let e = read_usize(this).wrapping_add(read_usize(this + stadium_obj::BOOKING_COUNT).wrapping_mul(12));
     write_u32(e, read_usize(stadium) as u32);
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    copy(e + 4, t.as_mut_ptr() as usize, data);
+    exe::date_operator_3d(e + 4, t.as_mut_ptr() as usize, data);
     let n = (read_usize(this + stadium_obj::BOOKING_COUNT) as u32).wrapping_add(1);
     write_u32(this + stadium_obj::BOOKING_COUNT, n);
     sort_stadium_list(read_usize(this), n);
@@ -1234,12 +1225,11 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, stad
     if read_usize(this) == 0 {
         return 1;
     }
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut key = [0u8; 12];
     let mut t = [0u8; 8];
     core::ptr::write_unaligned(key.as_mut_ptr() as *mut u32, read_usize(stadium) as u32);
-    copy(key.as_mut_ptr() as usize + 4, t.as_mut_ptr() as usize, data);
+    exe::date_operator_3d(key.as_mut_ptr() as usize + 4, t.as_mut_ptr() as usize, data);
     let r = search(key.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380);
     crate::comparison::branch("cps_7 reserva conferida");
     (r == 0) as u32 // cps7: free without the reservation
@@ -1252,12 +1242,11 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, stad
 /// 0x85ba1b, 0x85c4ba, 0x85ddf3, 0x85df26): pela data (+4, Date::operator< 0x456770 e > 0x456740), depois pelo id do
 /// estádio (+0).
 pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> i32 {
-    let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let (d0, d1) = (read_usize(b + 4) as u32, read_usize(b + 8) as u32);
     if exe::date_operator_3c(a + 4, d0, d1) != 0 {
         return -1;
     }
-    if after(a + 4, d0, d1) != 0 {
+    if exe::date_operator_3e(a + 4, d0, d1) != 0 {
         return 1;
     }
     read_i32(a).wrapping_sub(read_i32(b))
@@ -1291,9 +1280,6 @@ pub(crate) unsafe extern "C" fn stadium_compare_bookings(a: usize, b: usize) -> 
 /// realloc 0x945667; sem memória, as caixas das linhas 0x89c e 0x8ac, e para). No fim é ordenada (qsort com a
 /// 0x85e2f0) e +0x18 = 1.
 pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let (lista, conta, cap) = ((this + stadium_obj::VENUES) as *mut usize, (this + stadium_obj::VENUE_COUNT) as *mut i32, (this + stadium_obj::VENUE_CAPACITY) as *mut i32);
     if *lista != 0 {
         exe::crt_free(*lista);
@@ -1331,14 +1317,14 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
             continue; // cqn3: the small stadium is left out
         }
         if *lista == 0 {
-            *lista = alloc(0x1e0);
+            *lista = exe::crt_malloc(0x1e0);
             if *lista == 0 {
                 show_error_at(0xa835b0, 0x89c);
                 return;
             }
             *cap = 0x1e;
         } else if *conta == *cap {
-            *lista = realloc(*lista, ((*cap + 0x1e) << 4) as u32);
+            *lista = exe::crt_realloc(*lista, ((*cap + 0x1e) << 4) as u32);
             if *lista == 0 {
                 show_error_at(0xa835b0, 0x8ac);
                 return;
@@ -1353,7 +1339,7 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
         *((r + 8) as *mut u32) = (read_u32(nation + nation::NATIONAL_STADIUM) as usize == e) as u32; // cqn3: o estádio nacional
         *conta += 1;
     }
-    sort(*lista, *conta as u32, 0x10, 0x85e2f0);
+    exe::crt_qsort(*lista, *conta as u32, 0x10, 0x85e2f0);
     *((this + stadium_obj::VENUE_SORT) as *mut u8) = 1;
 }
 

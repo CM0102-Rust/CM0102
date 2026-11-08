@@ -80,9 +80,8 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     *(r as *mut u8) = jogos; // cpu10: the suspension matches
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut today = [0u32; 2];
-    copy(r + 4, today.as_mut_ptr() as usize, G_CURRENT_DATE);
+    exe::date_operator_3d(r + 4, today.as_mut_ptr() as usize, G_CURRENT_DATE);
     *((r + 0x10) as *mut u8) = 3;
     *((r + 0x1c) as *mut u32) = read_usize(j) as u32;
     *((r + 0x6f) as *mut u8) = (*((j + 0x48) as *const u8) == 0) as u8;
@@ -196,8 +195,7 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     }
     *((this + 0x13) as *mut u32) = n;
     *((this + 0xf) as *mut u32) = n + 100;
-    let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    let p = realloc(read_usize(this + 0xb), (n + 100) * 14);
+    let p = exe::crt_realloc(read_usize(this + 0xb), (n + 100) * 14);
     *((this + 0xb) as *mut u32) = p as u32;
     if p == 0 {
         show_error_at(0xa7a858, 0x594);

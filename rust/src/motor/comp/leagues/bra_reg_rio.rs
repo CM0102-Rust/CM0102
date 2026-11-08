@@ -45,11 +45,9 @@ pub(crate) struct BraRegRioStateChampionship {
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, registro: usize, e: &BraRegRioStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.regras);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
     let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
     exe::new_league(this);
     core::ptr::write_unaligned((this + 4) as *mut usize, registro);
@@ -64,7 +62,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, r
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
     core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, e.fases);
-    let v = alocar(e.fases * 4);
+    let v = exe::crt_malloc(e.fases * 4);
     core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     if regras(this) == 0 {
         show_error_at(e.arquivo, e.linhas[0]);
@@ -82,7 +80,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: usize, ano: u32, r
         show_error_at(e.arquivo, e.linhas[3]);
         return this;
     }
-    let n = novo(0x5ce);
+    let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
     core::ptr::write_unaligned((this + 8) as *mut usize, s);
     if s == 0 {
@@ -254,15 +252,15 @@ pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
 /// - campeão sem acesso: + (r + max(d, 0)) × 200 × f (dono do estádio, +0x6d) ou × 100 × f;
 /// - 2º (ou posição 0) sem acesso: + (r + max(d, 0)) × 125 × f ou × 65 × f;
 /// - subiu (posição ≤ +0xbe): pela liga de cima ([0xadadfc][+0x1c]; sem ela, nada): v = +0x80 do clube (a reputação,
-///   word) × max(r de cima − r, 1) × f × 0,1, no mínimo 100; + v + sorteio(v) (dono) ou + v; e o piso pela reputação
+///   word) × max(r de cima − r, 1) × f × 0,1, no mínimo 100; + v + exe::utils_random(v) (dono) ou + v; e o piso pela reputação
 ///   da liga de cima;
-/// - play-off de acesso (+0xbf ≠ 0 e posição ≤ +0xbf): com d − 1 > 0: + sorteio(r(d − 1) × 75 × f) + r(d − 1) × 75 × f
-///   (dono) ou + sorteio(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; senão + sorteio(r × 50 × f ou r × 25 × f); com
+/// - play-off de acesso (+0xbf ≠ 0 e posição ≤ +0xbf): com d − 1 > 0: + exe::utils_random(r(d − 1) × 75 × f) + r(d − 1) × 75 × f
+///   (dono) ou + exe::utils_random(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; senão + exe::utils_random(r × 50 × f ou r × 25 × f); com
 ///   jogos em casa, a mistura com o público real: (público somado / jogos + 4 × média) × f × 0,2;
 /// - caiu (posição > +0x3e − +0xc1): pela liga de baixo (sem ela, nada): v = +0x80 × min(r de baixo − r, −1) × f × 0,2,
-///   no máximo −100 (sem rebaixamento na de baixo, +0x20 = −1: v = 2v − 250 − sorteio(750)); + v + sorteio(v); e o
+///   no máximo −100 (sem rebaixamento na de baixo, +0x20 = −1: v = 2v − 250 − exe::utils_random(750)); + v + exe::utils_random(v); e o
 ///   teto de 2000 (r de baixo ≤ 7) ou 3000 vezes a r de baixo, × f;
-/// - os outros: + sorteio(r × d × 5 × f), × 10 para o dono com d > 0 ou com +0x80 acima de 500 × r; a mistura com o
+/// - os outros: + exe::utils_random(r × d × 5 × f), × 10 para o dono com d > 0 ou com +0x80 acima de 500 × r; a mistura com o
 ///   público real (sem o peso f); o piso pela reputação; e o teto de 2000 r (r ≤ 7), 3000 r (r ≤ 12) ou 5000 r.
 /// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
 pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
@@ -282,7 +280,6 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             f = 0.5;
         }
     }
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
     let promotion = || {
         let v: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league) + 0x98));
         v(league)
@@ -321,7 +318,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 }
                 let v = ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.1).max(100);
                 if owner {
-                    let r = sorteio(v);
+                    let r = exe::utils_random(v);
                     add(r.wrapping_add(v));
                 } else {
                     add(v);
@@ -335,12 +332,12 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let s = a as i32;
                 if owner {
                     let v = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(75) as f64 * f);
-                    let r = sorteio(v);
+                    let r = exe::utils_random(v);
                     let w = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(75) as f64 * f);
                     add(r.wrapping_add(w));
                 } else {
                     let v = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(25) as f64 * f);
-                    let r = sorteio(v);
+                    let r = exe::utils_random(v);
                     let w = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(10) as f64 * f);
                     add(r.wrapping_add(w));
                 }
@@ -348,7 +345,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let r = league_comp_reputation(league);
                 let val = if owner { r.wrapping_mul(50) } else { r.wrapping_mul(25) };
                 let v = ftol(val as f64 * f);
-                add(sorteio(v));
+                add(exe::utils_random(v));
             }
             let games = *((e + 5) as *const u8);
             if games != 0 {
@@ -365,10 +362,10 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 }
                 let mut v = ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.2).min(-100);
                 if read_i32(low + 0x20) == -1 {
-                    let r = sorteio(0x2ee);
+                    let r = exe::utils_random(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
                 }
-                let r = sorteio(v);
+                let r = exe::utils_random(v);
                 add(r.wrapping_add(v));
                 let rb = league_comp_reputation(low);
                 let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
@@ -386,7 +383,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 r.wrapping_mul(d as i32).wrapping_mul(5)
             };
             let v = ftol(val as f64 * f);
-            add(sorteio(v));
+            add(exe::utils_random(v));
             let games = *((e + 5) as *const u8);
             if games != 0 {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
@@ -447,14 +444,12 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
 /// 3) [+0xc][k] = a fase, +0x30 = k (o byte com sinal) e o vetor liberado (free 0x9452ca). O quadro SEH da original só
 ///    cobre o construtor (sem destrutor no caminho normal).
 pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, row: u32, vinte: u32, pv: usize, ramo: &'static str) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, u32, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let slots: [u8; 4] = [1, 0, 0, 0];
     let n = read_i16(this + league::CLUB_COUNT);
-    let clubs = alocar(((n as i32) << 2) as u32);
+    let clubs = exe::crt_malloc(((n as i32) << 2) as u32);
     if clubs == 0 {
         return show_error_at(file, row);
     }
@@ -464,7 +459,7 @@ pub(crate) unsafe fn create_half_season_stage(this: usize, k: u32, file: usize, 
         i += 1;
     }
     let id = 0x439 + (k as u8 != 0) as u32;
-    let p = new(0xee);
+    let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(p, this, read_i16(this + league::CLUB_COUNT) as u16 as u32, clubs, 1, read_usize(this + 4), 0, 0,
                   read_u8(this + pv) as u32,
@@ -542,7 +537,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this
 /// caixa, que a virada do Brasil não lê).
 pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file: usize, year: i16, ramo: &'static str) -> u32 {
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     liberar_tabela(this, 0);
     let l = read_usize(this + league::ROUND_DATES);
@@ -570,7 +564,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: usize, table: usize, file
     }
     exe::crt_free(read_usize(this + league::STAGES));
     core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 3);
-    let v = alocar(0xc);
+    let v = exe::crt_malloc(0xc);
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(year));
     crate::comparison::branch(ramo);
@@ -680,8 +674,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 ///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let seeds: [u8; 4] = [0, 1, 0, 0];
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alloc(8);
+    let list = exe::crt_malloc(8);
     if list == 0 {
         return show_error_at(0x98b014, 0x226);
     }
@@ -710,8 +703,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 2, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
     // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
     let stage = if p != 0 {

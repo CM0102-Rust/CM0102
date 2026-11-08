@@ -9,7 +9,7 @@ MUTACOES = [
     ('cpi_sem_vencer_data', 'init_default_date(this + run_record::END_DATE); // the end of the winless run', 'init_default_date(this + 0xb); // mutacao: a data um byte antes'),
     ('cpi_gols_data', 'init_default_date(this + goals_in_match_record::MATCH); // the match date', 'init_default_date(this + 0x18); // mutacao: a data um byte antes'),
     ('cpi_mais_novo_idade', 'init_default_date(this); // the age of the youngest', '// mutacao: a idade sem montar'),
-    ('cpi_prazo_vaga', 'let rules = transfer_rules_at(this, slot(news, 0) as usize); // the rules of slot 0', 'let rules = transfer_rules_at(this, slot(news, 1) as usize); // mutacao: a vaga 1'),
+    ('cpi_prazo_vaga', 'let rules = transfer_rules_at(this, exe::newsitem_get_slot(news, (0) as u32) as usize); // the rules of slot 0', 'let rules = transfer_rules_at(this, exe::newsitem_get_slot(news, (1) as u32) as usize); // mutacao: a vaga 1'),
     ('cpi_emprestimo_nacao', '.find(|&r| read_usize(r + transfer_rules::NATION_ID) == nation) // the nation of the rules', '.find(|&r| read_usize(r + transfer_rules::NATION_ID) != nation) // mutacao: outra nacao'),
     ('cpi_pow', '    game_pow(base, expoente)\n}', '    game_pow(base, expoente * 2.0) // mutacao: o expoente dobrado\n}'),
     ('cpi_ofertas_pessoa', 'if read_usize(e) as u32 == person { // the person’s offer', 'if read_usize(e) as u32 != person { // mutacao: as dos outros'),

@@ -56,10 +56,9 @@ pub(crate) struct SpaFirstChristmasSchedule {
 /// Writes the league round table with a winter break: start rounds, a middle block chosen by the day offset from 1
 /// November, and end rounds [inference].
 pub(crate) unsafe fn write_rounds_winter_break(t: usize, year: u32, n: &SpaFirstChristmasSchedule, file: usize) {
-    let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     spa_first_write_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
-    construct(&mut d, 1, 0xb, year, 0xffff_ffff);
+    exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let case = if k as u32 > 6 {
@@ -291,7 +290,6 @@ pub(crate) const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirs
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 38 rodadas, a tabela pela paridade do ano +0x40 (o resto da divisão com
 /// sinal: `movsx; and 0x80000001; jns`), cada uma com a rodada do Natal; as outras devolvem 0. Fonte 0xa82944.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -299,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
             }
             *rounds = 38;
             *extra = 0;
-            let t = alloc(0x9a6);
+            let t = exe::crt_malloc(0x9a6);
             if t == 0 {
                 show_error_at(0xa82844, 0xb0);
                 return 0;
@@ -457,8 +455,7 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, esc
 /// thiscall(liga, valor, 0), ret 8) e 1.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x14);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(0x49c);
+    let t = exe::crt_malloc(0x49c);
     core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(0xa82844, 0x250);
@@ -475,7 +472,6 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
         i = i.wrapping_add(1);
         field = field.wrapping_add(0x245);
     }
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     let mut club = read_usize(G_CLUB_TABLE);
@@ -485,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
             let row = k; // cqk5: row k receives the k-th club of the Primera
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // o byte.
-            iniciar(this, row as u32, club, 0, 0);
+            exe::league_init_table_row(this, row as u32, club, 0, 0);
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
@@ -498,8 +494,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
         return 0;
     }
     crate::comparison::branch("cqk_5 tabela da primera");
-    let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    let f = prize(this, 0x3d090); // cqk5: the Primera quota
+    let f = exe::league_calc_prize_fund(this, 0x3d090); // cqk5: the Primera quota
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: the table prize at the end of the league
     exe::league_pay_tv_rights(this, 0x4c4b40, 0); // cqk5: the Primera TV money

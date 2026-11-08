@@ -19,6 +19,6 @@ MUTACOES = [
     ('cph_permissao_marca', '*mark(person) = 0; // the mark without permission', '*mark(person) &= 0xfe; // mutacao: so o bit 0'),
     ('cph_olheiro_confere', 'return 0; // the slot changed person', 'return person; // mutacao: sem conferir'),
     ('cph_sequencia_dias', '< 10 { // less than 10 days ago', '< 9 { // mutacao: 9 dias'),
-    ('cph_recordista_data', 'default(this + record_holder::DATE); // the record holder’s date', 'default(this + 0x8); // mutacao: em +8'),
+    ('cph_recordista_data', 'exe::date_date_54a110(this + record_holder::DATE); // the record holder’s date', 'exe::date_date_54a110(this + 0x8); // mutacao: em +8'),
     ('cph_rival_reputacao', 'if injury_word_0c(club) + 0x2ee >= injury_word_0c(r) {', 'if injury_word_0c(club) + 0x1f4 >= injury_word_0c(r) { // mutacao: 500'),
 ]

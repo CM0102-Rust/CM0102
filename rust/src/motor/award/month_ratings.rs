@@ -82,11 +82,9 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
         write_u32(this + 8, new as u32);
         let bytes = (new as u32).wrapping_mul(12);
         table = if table == 0 {
-            let malloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-            malloc(bytes)
+            exe::crt_malloc(bytes)
         } else {
-            let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-            realloc(table, bytes)
+            exe::crt_realloc(table, bytes)
         };
         if table == 0 {
             // simplification: out of memory (the original’s ”Error” box): restores the capacity and lets the original redo it
@@ -130,9 +128,8 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
 /// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
 pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32, age: u32) -> usize {
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     crate::comparison::branch("cpw_5 ordenou as notas");
-    sort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
+    exe::crt_qsort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
     let table = read_usize(this);
     let n = read_i32(this + 4);
     let age = age as u8;

@@ -28,8 +28,7 @@ pub(crate) const RATING_DIVISORS: [u32; 5] = [0x3f80_0000, 0x3f99_999a, 0x3fb3_3
 /// [pt] A chance de conhecer (0x544410, cdecl: a ficha de não jogador e o byte do atributo; a original empurra o
 /// registrador com lixo em cima: a chamada lê o byte).
 pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
-    let c: unsafe extern "C" fn(usize, i8) -> i32 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    c(f, read_i8(f + k)) as i8 as i32 // the original routine sign-extends al (movsx)
+    exe::non_player_attribute_rating(f, read_i8(f + k)) as i8 as i32 // the original routine sign-extends al (movsx)
 }
 
 /// `TRAINING_MANAGER::update_coach_assignments(club, manager)`, called by the coach hirings and departures (0x4ce4e0,
@@ -59,11 +58,10 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
 pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, club: usize, tecnico: usize) {
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     if tecnico == 0 && human(club, 1, 1, 0, 0) == 0 {
         return;
     }
-    if national_team(club) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         return;
     }
     let manager = if tecnico == 0 { read_usize(club + club::MANAGER) } else { tecnico };
@@ -532,8 +530,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             }
         }
         if n0 != read_i32(this + 0x6525) {
-            let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-            qsort(read_usize(this + 0x6521), read_usize(this + 0x6525) as u32, 8, 0x8b4e00);
+            exe::crt_qsort(read_usize(this + 0x6521), read_usize(this + 0x6525) as u32, 8, 0x8b4e00);
         }
     }
 }
@@ -680,14 +677,13 @@ pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize
         return 0;
     }
     let e = player_training_entry(this, p);
-    let read: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_STAFF_GET_PLAYER_ATTRIBUTE);
-    let before = read(p, attribute);
+    let before = (exe::staff_get_player_attribute(p, attribute) as u8);
     let mut d = [0i8; 8];
     for k in 0..5 {
         d[k] = training_nibble(e, k).wrapping_neg();
     }
     training_manager_apply_training_progress(this, p, &d);
-    let sem = read(p, attribute);
+    let sem = (exe::staff_get_player_attribute(p, attribute) as u8);
     let mut v = [0i8; 8];
     for k in 0..5 {
         v[k] = d[k].wrapping_neg();
@@ -1293,8 +1289,7 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
 /// goleiro (+0xf, com sinal) de 15 para cima, senão 1 (geral). A primeira atualização do treino de cada jogador
 /// (0x8b1750, que só depois refaz a vaga dos jogadores do computador) e todo o treino do clube humano usam essa vaga.
 pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
-    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let p = calloc(read_usize(G_PLAYER_DATA_COUNT) as u32, 6);
+    let p = exe::crt_calloc(read_usize(G_PLAYER_DATA_COUNT) as u32, 6);
     *((this + 0x651d) as *mut u32) = p as u32;
     if p == 0 {
         show_error_at(0xa8ccd0, 0x6e3);

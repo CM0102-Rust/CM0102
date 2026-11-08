@@ -27,11 +27,10 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
         return 1;
     }
     // 0x4cf6d0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
-    let loan: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
     let mut n: i8 = 0;
     for k in 0..50usize {
         let p = read_usize(club + club::SQUAD + 4 * k);
-        if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || loan(read_usize(G_CONTRACT_MANAGER), p) == 0 {
+        if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
         let cp = game_get_contract_and_store(p);

@@ -24,8 +24,7 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, 
     }
     let name = nation + nation::NATIONALITY; // the nation’s name
     if gender as u8 != 0 {
-        let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-        let i = language();
+        let i = exe::langlib_get_language();
         if let Some(&(_, nome_se_vazio, cadeias)) = ADJETIVOS_DA_NACAO.iter().find(|x| x.0 == i) {
             let form: unsafe extern "C" fn(u32, i32) -> u32 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
             let f = form(gender, i) as u8 as usize;
@@ -82,13 +81,12 @@ pub(crate) unsafe fn key_ids_loop(limit: impl Fn() -> i32, mut f: impl FnMut(i32
 /// [pt] A caixa fatal do relato (index.cpp, `linha`): "v%s %s.%s %d" em 0xae24d0 (0x90d130 com o nome e a extensão do
 /// index.cpp), a caixa "Error" (0x5e8290), [0xb67a34] = 0, 0x5cc7d0, 0x5a8f60 e exit(marca). Não volta.
 pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
-    let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let antes_de_sair2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(u32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-    split(0x9d93cc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
+    exe::crt_strtok(0x9d93cc, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let v = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     // the original does not pop the arguments of 0x90d130: they are the rest of ”v%s %s.%s %d”
     format(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), row);
@@ -138,16 +136,11 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     if key_ids_loop(|| gi(0xae2394), |i| match_key_name_chain(em(rd(G_COLOUR_TABLE), i, 0x3a) + 4, &CORES_DAS_CHAVES, i as u32)) {
         mark = u32::MAX;
     }
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let f = if gi(G_DATABASE_NAMES_LANGUAGE) != 0 { open(path(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
+    let f = if gi(G_DATABASE_NAMES_LANGUAGE) != 0 { exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0x9b632c), 0x98f928) } else { 0 }; // CM3_TEMP\eng.lng, "rb"
     if f != 0 {
-        let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-        let skip: unsafe extern "C" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_CRT_FSEEK);
         let inverter = exe::utils_read_file_format_marker(f) == 0xf1fffff1;
         let mut c = [0i32; 8];
-        read(c.as_mut_ptr() as usize, 0x20, 1, f);
+        exe::crt_fread(c.as_mut_ptr() as usize, 0x20, 1, f);
         if inverter {
             for x in c.iter_mut() {
                 *x = x.swap_bytes();
@@ -155,13 +148,13 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
         }
         // the table of `n` rows of `passo` bytes: read and handed to `f` (the fseek over it if memory runs out)
         let table = |n: i32, step_towards: u32, f_: &mut dyn FnMut(u32)| {
-            let b = alloc((n as u32).wrapping_mul(step_towards));
+            let b = exe::crt_malloc((n as u32).wrapping_mul(step_towards));
             if b != 0 {
-                read(b, step_towards, n as u32, f);
+                exe::crt_fread(b, step_towards, n as u32, f);
                 f_(b as u32);
                 exe::crt_free(b);
             } else {
-                skip(f, (n as u32).wrapping_mul(step_towards), 1);
+                exe::crt_fseek(f, ((n as u32).wrapping_mul(step_towards)) as i32, (1) as u32);
             }
         };
         table(c[0], 0x4f, &mut |b| {
@@ -186,15 +179,15 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
             key_ids_loop(|| c[3], |i| { exe::match_nation_key_id(em(b, i, 0x6d), i as u32); }); // eng.lng nations
         });
         // the prizes: the memory before skipping the two 0x34 tables
-        let b = alloc((c[7] as u32).wrapping_mul(0x4f));
-        skip(f, (c[6] as u32).wrapping_mul(0x34), 1);
-        skip(f, (c[4] as u32).wrapping_mul(0x34), 1);
+        let b = exe::crt_malloc((c[7] as u32).wrapping_mul(0x4f));
+        exe::crt_fseek(f, ((c[6] as u32).wrapping_mul(0x34)) as i32, (1) as u32);
+        exe::crt_fseek(f, ((c[4] as u32).wrapping_mul(0x34)) as i32, (1) as u32);
         if b != 0 {
-            read(b, 0x4f, c[7] as u32, f);
+            exe::crt_fread(b, 0x4f, c[7] as u32, f);
             key_ids_loop(|| c[7], |i| { exe::match_staff_comp_key_id(em(b as u32, i, 0x4f), i as u32); }); // eng.lng awards
             exe::crt_free(b);
         } else {
-            skip(f, (c[7] as u32).wrapping_mul(0x4f), 1);
+            exe::crt_fseek(f, ((c[7] as u32).wrapping_mul(0x4f)) as i32, (1) as u32);
         }
         table(c[5], 0x53, &mut |b| {
             key_ids_loop(|| c[5], |i| { exe::match_club_comp_key_id(em(b, i, 0x53), i as u32); }); // eng.lng competitions
@@ -327,7 +320,6 @@ pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: 
         return original_fn::<unsafe extern "C" fn(u32, usize, u32, u32) -> u32>(IDX_GET_REGION_NAME)(region, text, size, form);
     }
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
-    let adjetivo: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     *(text as *mut u8) = 0;
     let r = r as i32;
@@ -342,7 +334,7 @@ pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: 
             _ => None,
         };
         if let Some((base, linha)) = table {
-            let f = adjetivo(form, i as u32) as i8 as i32;
+            let f = exe::get_adjective_form_index(form, i as u32) as i8 as i32;
             let k = r.wrapping_mul(linha).wrapping_add(f);
             copy_c_string(text, read_usize(base.wrapping_add((k as usize).wrapping_mul(4))));
             return 1;

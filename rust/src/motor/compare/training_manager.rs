@@ -17,10 +17,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: us
     if club == 0 {
         return o(this, club, tecnico);
     }
-    let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let mut reg = vec![(club + club::HAS_LINKED_CLUB, 1)];
-    if (tecnico != 0 || human(club, 1, 1, 0, 0) != 0) && national_team(club) == 0 {
+    if (tecnico != 0 || exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0) && exe::database_is_national_team(club) == 0 {
         let manager = if tecnico == 0 { read_usize(club + club::MANAGER) } else { tecnico };
         if manager == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1)) {
             return o(this, club, tecnico);

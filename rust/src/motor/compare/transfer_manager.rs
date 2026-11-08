@@ -77,7 +77,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_loan_negotiation(this: usize,
 /// nova de cada lado; a da cópia é destruída (0x8e5710) e liberada (0x944c94) e fica tudo como a original deixou.
 pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize, buyer: usize, target: usize, offer: usize, out: *mut usize, atracao: *mut i8, value: i32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut usize, *mut i8, i32) -> u32>(IDX_MAKE_EXCHANGE_OPTION);
-    let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_TRANSFER_OFFER_DESTRUCTOR_TRANSFER_OFFER);
     let est = crate::rng::STATE_REGIONS;
     let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize), (out as usize, 4), (atracao as usize, 1), est[0], est[1]];
     let before = crate::comparison::MemorySnapshot::read(&regions);
@@ -91,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_make_exchange_option(this: usize,
     let e_n = read_usize(G_CONTRACT_LOOKUP_RESULT);
     if n != 0 && *out != 0 {
         let s = *out;
-        destroy(s);
+        exe::drop_transfer_offer(s);
         exe::crt_operator_delete(s);
     }
     after.write_back();
@@ -205,8 +204,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
     let (f855, j84c) = (if sem_base { f } else { read_u8(this + transfer_manager_fields::CURRENT_SLICE) }, read_u8(this + transfer_manager_fields::DAY_CURSOR));
     let mut amanha = [0u8; 8];
     {
-        let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-        let r = more(today, amanha.as_mut_ptr() as usize, 1);
+        let r = exe::date_add_days(today, amanha.as_mut_ptr() as usize, 1);
         amanha = core::ptr::read_unaligned(r as *const [u8; 8]);
     }
     o(this, today, slice);
@@ -427,10 +425,9 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_sale_percentage(this: u
 /// lixo da pilha, só a original roda. Os prêmios se provam pela própria 0x8cb340 (comparada) e pela carreira.
 pub(crate) unsafe extern "thiscall" fn compare_update_appearance_clauses_after_match(this: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_APPEARANCE_CLAUSES_AFTER_MATCH);
-    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let v = read_usize(this + transfer_manager_fields::WORK_PERMITS);
     let n = read_usize(this + transfer_manager_fields::WORK_PERMIT_COUNT) as i32;
-    if is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 || v == 0 || n <= 0 {
+    if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 || v == 0 || n <= 0 {
         return o(this, game, partida); // simplification: original only (stack garbage or no permissions)
     }
     let regions = [(v, n as usize * 0xe)];
@@ -473,8 +470,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_transfer_finalised_news(this
 
 /// Comparer for `free_transfer_staff`.
 pub(crate) unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, p: usize, club: usize, reason: u32, compensacao: i32, so_record: u32) {
-    let sheet: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let emprestada = sheet(read_usize(G_CONTRACT_MANAGER), p) != 0;
+    let emprestada = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0;
     let n = read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(IDX_FREE_TRANSFER_STAFF)(this, p, club, reason, compensacao, so_record);
     if emprestada {
@@ -578,11 +574,10 @@ pub(crate) unsafe extern "thiscall" fn compare_post_transfer_agreed_news(this: u
 
 /// Comparer for `add_config_loan`.
 pub(crate) unsafe extern "thiscall" fn compare_add_config_loan(this: usize, p: usize, club: usize, start: usize, end: usize) {
-    let emprestado: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_LOAN_CONTRACT);
-    let tinha = emprestado(read_usize(G_CONTRACT_MANAGER), p);
+    let tinha = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p);
     let passa = config_loan_allowed(p, club, start, end).is_some();
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize)>(IDX_ADD_CONFIG_LOAN)(this, p, club, start, end);
-    let has = emprestado(read_usize(G_CONTRACT_MANAGER), p);
+    let has = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p);
     let same = if passa { has != 0 } else { has == tinha };
     SCOREBOARD.record(same, || format!("add_config_loan(pessoa {:#x}) passa={} antes={:#x} depois={:#x}", read_usize(p), passa, tinha, has));
 }
@@ -870,12 +865,11 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_future_transfer(this: usiz
     }
     let l = read_usize(offer + offer::EXCHANGE_PLAYERS);
     if l != 0 {
-        let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-        let mut e = next(l);
+        let mut e = exe::llist_get_next(l);
         while e != 0 {
             regions.push((staff_flags_byte(this, read_usize(e)) as usize, 1));
-            e = next(l);
+            e = exe::llist_get_next(l);
         }
         regions.push((l + llist::CURSOR, 4));
     }
@@ -930,17 +924,16 @@ pub(crate) unsafe extern "thiscall" fn compare_collapse_offers_for_player(this: 
     if read_u8(read_usize(this + transfer_manager_fields::PERSON_FLAGS).wrapping_add(read_usize(person).wrapping_mul(8)) + 1) == 0 {
         return o(this, person);
     }
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
     exe::transfer_manager_get_offers_for_player(this, person, l, 0);
     let mut target = Vec::new();
     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
-    let mut e = next(l);
+    let mut e = exe::llist_get_next(l);
     while e != 0 {
         target.push(read_usize(read_usize(this).wrapping_add(read_usize(e).wrapping_mul(4))));
-        e = next(l);
+        e = exe::llist_get_next(l);
     }
     exe::drop_llist(l);
     o(this, person);

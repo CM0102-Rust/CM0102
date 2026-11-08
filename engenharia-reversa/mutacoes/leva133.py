@@ -2,7 +2,7 @@
 MUTACOES = [
     ('s_flag', "    if g(G_INTERACTIVE_MODE_FLAG) == 0 {\n        return 1;", "    if g(G_INTERACTIVE_MODE_FLAG) == 0 {\n        return 0;"),
     ('s_humano', "humano(c1, 1, 1, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {\n        return 0;", "humano(c1, 1, 0, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {\n        return 0;"),
-    ('s_ligado', "human(ligado(c, 0, 1), 1, 1, 0, 0) != 0", "human(ligado(c, 0, 1), 1, 0, 0, 0) != 0", "sem humano clube ligado"),
+    ('s_ligado', "human(exe::club_get_linked_b_team(c, (0) as *mut u32, 1), 1, 1, 0, 0) != 0", "human(exe::club_get_linked_b_team(c, (0) as *mut u32, 1), 1, 0, 0, 0) != 0", "sem humano clube ligado"),
     ('s_comp1', "if comp == read(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) ||", "if comp == read(KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION_B) ||"),
     ('s_958', "k as isize * 0x122 + 0x11c", "k as isize * 0x122 + 0x11d"),
     ('s_684', "if comp == read(KEY_CLUB_COMP_RESERVE) && human(c1", "if comp == read(KEY_CLUB_COMP_ARGENTINE_THIRD_DIVISION) && human(c1", "sem humano competicao direta"),

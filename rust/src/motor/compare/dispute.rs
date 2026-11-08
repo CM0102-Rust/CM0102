@@ -29,9 +29,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
     if list != 0 {
         let cursor = read_usize(list + llist::CURSOR);
         core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_usize(list + llist::HEAD) as u32);
-        let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
         for _ in 0..count_before.max(0) {
-            let no = next(list);
+            let no = exe::llist_get_next(list);
             if no == 0 {
                 break;
             }

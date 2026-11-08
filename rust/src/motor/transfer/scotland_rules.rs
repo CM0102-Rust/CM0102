@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
     1
 }
 
-/// Returns the Scottish loan period: it starts next month; under 22 it ends in the season end month (this year or
+/// Returns the Scottish loan period: it starts next month; under 22 it ends in the season end exe::date_get_month(this year or
 /// next), otherwise three months later.
 ///
 /// `SCOTLAND_RULES::get_loan_period(a1, a2, start_month, start_year, end_month, end_year, player)`: it starts in the
@@ -81,8 +81,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
 /// para os outros, três meses depois do começo.
 pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
-    let month: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    *start_month = (month(G_CURRENT_DATE) as i8).wrapping_add(1);
+    *start_month = (exe::date_get_month(G_CURRENT_DATE) as i8).wrapping_add(1);
     *start_year = read_i16(G_CURRENT_DATE_YEAR);
     if *start_month > 0xb {
         *start_month = (*start_month).wrapping_sub(0xc);

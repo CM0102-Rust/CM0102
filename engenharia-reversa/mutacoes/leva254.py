@@ -1,7 +1,7 @@
 # Mutações da 254a leva (itens cpr_1, cpr_2, cpr_3, cpr_4, cpr_5, cpr_8, cpr_9, cpr_10, cpr_11, cpr_12, cpr_13). Uso: python mutacoes.py mutacoes\leva254.py --carreira 2002-06-01
 MUTACOES = [
     ('cpr1_limite_em_2', '*t.add(5) = v; // the non-EU player limit', '*t.add(2) = v; // mutacao: o limite vai para +2', 'cpr_1 limite de nao comunitarios'),
-    ('cpr1_conta_comunitarios', '1 => foreign(p, read_usize(club + club::NATION), 1) != 0 && community(p, read_usize(club + club::NATION)) == 0,', '1 => foreign(p, read_usize(club + club::NATION), 1) != 0, // mutacao: conta os da UE', 'cpr_1 conta nao comunitarios'),
+    ('cpr1_conta_comunitarios', '1 => exe::database_is_staff_foreign(p, read_usize(club + club::NATION), 1) != 0 && exe::database_is_staff_eu_national(p, read_usize(club + club::NATION)) == 0,', '1 => exe::database_is_staff_foreign(p, read_usize(club + club::NATION), 1) != 0, // mutacao: conta os da UE', 'cpr_1 conta nao comunitarios'),
     ('cpr1_permissao_ignorada', 'return 0; // has the permission', 'return 1; // mutacao: a permissao nao vale', 'cpr_1 permissao achada'),
     ('cpr2_negociacao_livre', 'return (0x12, 0); // already in negotiation', 'return (0, 1); // mutacao: pode mesmo em negociacao', 'cpr_2 oferta em negociacao'),
     ('cpr2_acerto_livre', 'return (0x21, 0); // contrato acertado', 'let _ = 0x21; // mutacao: o acerto nao segura', 'cpr_2 contrato acertado'),

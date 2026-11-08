@@ -7,7 +7,7 @@ MUTACOES = [
     ('t_modo', "    if mode != -3 && j != *((this + engine::GOALKEEPER_SIDE1)", "    if mode != -2 && j != *((this + engine::GOALKEEPER_SIDE1)"),
     ('t_atac', "    if match_player_position(j) & 0x40 != 0 || match_player_position(j) & 0x20 != 0 {", "    if match_player_position(j) & 0x40 != 0 {"),
     ('t_904b', "            if *((block_manager + engine::SIDE0_MANAGER_TACTIC_SLOT as isize) as *const u8) == 0 {", "            if *((block_manager + engine::SIDE0_MANAGER_TACTIC_SLOT as isize) as *const u8) != 0 {"),
-    ('t_sel', "            if national_team(club) != 0 {", "            if national_team(club) == 0 {"),
+    ('t_sel', "            if exe::database_is_national_team(club) != 0 {", "            if exe::database_is_national_team(club) == 0 {"),
     ('t_faixa', "if id >= npes - 16 && id < npes &&", "if id >= npes - 15 && id < npes &&"),
     ('t_filtro', "if chosen != 0 && (match_player_position(q) & 1 != 0 || match_player_position(q) & 4 != 0 || match_player_position(q) & 2 != 0)", "if chosen != 0 && (match_player_position(q) & 1 != 0 || match_player_position(q) & 4 != 0)"),
     ('t_15000', "        } else if r & 0x10 != 0 {\n            15000", "        } else if r & 0x10 != 0 {\n            20000"),

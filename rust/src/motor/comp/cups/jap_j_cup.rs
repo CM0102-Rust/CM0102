@@ -88,8 +88,7 @@ pub(crate) unsafe fn build_single_stage_cup_rounds(this: usize, stage: u32, roun
     }
     *rounds = table.len() as i16;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(table.len() as u32 * 0x68);
+    let t = exe::crt_malloc(table.len() as u32 * 0x68);
     if t == 0 {
         show_error_at(file, row);
         return 0;
@@ -186,8 +185,7 @@ pub(crate) unsafe fn jap_j_cup_club_by_index(i: i32) -> usize {
 ///
 /// [pt] O sorteio de 0 a n − 1 (0x90cfc0: push n; add esp, 4 -> cdecl).
 pub(crate) unsafe fn jap_j_cup_random(n: i32) -> i32 {
-    let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    sortear(n)
+    exe::utils_random(n)
 }
 
 /// Sorts n clubs by reputation and shuffles the top `escolhas` (comp_util_sort_and_shuffle_top_clubs 0x4afbd0).
@@ -204,8 +202,7 @@ pub(crate) unsafe fn sort_and_shuffle_top_clubs(v: *mut usize, n: i32, escolhas:
 /// [pt] O qsort de `n` inscritos a partir de `base` (0x945333 com 0x522190: push 0x522190; push 6; push n; push base; add
 /// esp, 0x10 -> cdecl; 0x522190 já em Rust).
 pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(base, n, 6, 0x522190);
+    exe::crt_qsort(base, n, 6, 0x522190);
 }
 
 /// `JapJCup::collect_entrants()` (0x665a00, thiscall, ret 0, jap_j_cup.cpp): 28 entrants (+0x3e = 28); the list
@@ -222,8 +219,7 @@ pub(crate) unsafe fn sort_entrants(base: usize, n: u32) {
 /// qsort (0x522190) das 16 inscrições a partir da 11ª (+0x42). Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x1c);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0xa8);
+    let l = exe::crt_malloc(0xa8);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9eaf14, 0x11a);
@@ -354,8 +350,7 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
     }
     sort_and_shuffle_top_clubs(va.as_mut_ptr(), na as i32, 10);
     sort_and_shuffle_top_clubs(vb.as_mut_ptr(), nb as i32, 10);
-    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let l = calloc(read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6);
+    let l = exe::crt_calloc(read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0xaa20e0, 0x138);
@@ -406,8 +401,7 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
 /// (+0x5f), até encher; o qsort (0x522190) das 16 últimas inscrições. Devolve 1 com a lista cheia, senão 0.
 pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x50);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc(0x1e0);
+    let l = exe::crt_malloc(0x1e0);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(0x9eab90, 0x147);

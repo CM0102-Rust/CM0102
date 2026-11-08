@@ -97,8 +97,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
     };
     // with the manager on holiday the automatic reply (0x784100) may deliver another news item to the same human: the ring moves
     // more slots and the count together (found on 31/10/2026, when the routine left DESLIGADAS)
-    let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
+    let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
     let r = o(this, news, manager, free);
     if r == 0 {
         SCOREBOARD.record(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // only without memory

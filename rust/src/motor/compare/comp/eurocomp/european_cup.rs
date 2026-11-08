@@ -56,10 +56,9 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
     if read_usize(this + 8) == 0 || read_usize(this + cup::ENTRANT_BOOK) == 0 || read_i16(this + cup::ENTRANT_COUNT) <= 0 {
         return o(this);
     }
-    let sort: unsafe extern "C" fn(*mut u32, i32) = core::mem::transmute(FN_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
     let n = read_i16(this + cup::ENTRANT_COUNT) as usize;
     let mut v: Vec<u32> = (0..n).map(|i| read_usize(read_usize(this + cup::ENTRANT_BOOK) + i * 6) as u32).collect();
-    sort(v.as_mut_ptr(), n as i32);
+    exe::comp_util_sort_clubs_by_strength((v.as_mut_ptr()) as usize, n as i32);
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
     let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);

@@ -16,7 +16,7 @@ MUTACOES = [
     ('cpk_regiao_nacao', '        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp); // message box: original only\n    }\n    let nation = read_usize(comp + competition::NATION);', '        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp); // message box: original only\n    }\n    let nation = 0usize; // mutacao: sem a nacao'),
     ('cpk_importante_oferta', 'manager_of_news_club(news, 0x19) == person // the manager of the offering club', 'manager_of_news_club(news, 0x19) != person // mutacao: trocada'),
     ('cpk_texto_dado', 'let source = (news + 5 + 4 * k as usize) as *const u8; // o dado', 'let source = (news + 9 + 4 * k as usize) as *const u8; // mutacao: o dado seguinte'),
-    ('cpk_apuro_sorteio', 'let v = sorteio(2); // the news item’s random roll', 'let v = 0; let _ = sorteio; // mutacao: sem o sorteio'),
+    ('cpk_apuro_sorteio', 'let v = exe::utils_random(2); // the news item’s random roll', 'let v = 0; let _ = sorteio; // mutacao: sem o sorteio'),
     ('cpk_olheiro_regiao', 'if *((read_usize(c + club::NATION) + 0x76) as *const u8) != *((nation + nation::ACTUAL_REGION) as *const u8) { // outside the region', 'if *((read_usize(c + club::NATION) + 0x76) as *const u8) == *((nation + 0x76) as *const u8) { // mutacao: dentro'),
     ('cpk_historico_ultimo', 'without_last(read_usize(this), par, par + 4); // the last offset', 'without_last(read_usize(this), par, par); // mutacao: o primeiro'),
     ('cpk_formacao_com_bola', 'pitch_cell(b, 1, arg, &mut saida);', 'pitch_cell(b, 0, arg, &mut saida); // mutacao: sem a bola'),

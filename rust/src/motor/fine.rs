@@ -68,7 +68,6 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         FINE_NEWS_WOULD_BUILD = true;
         return;
     }
-    let future: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0xbc6, 0);
@@ -84,7 +83,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 8, (deadline as u8 == 1) as u32);
     let kind = *((c + contract::SQUAD_STATUS) as *const u8) & 0xf0;
     set_news_slot(nt, 9, (kind == 0x70) as u32);
-    set_news_slot(nt, 0xa, (future(read_usize(G_TRANSFER_MANAGER), player, 0) != 0) as u32);
+    set_news_slot(nt, 0xa, (exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), player, (0) as u32) != 0) as u32);
     set_news_slot(nt, 0xb, efeitos as i8 as u32);
     let game = (read_i8_as_i32(player + staff::AGE) > 0x17 && kind == 0x10) || kind == 0x20;
     set_news_slot(nt, 0xc, game as u32);

@@ -25,8 +25,7 @@ use super::*;
 /// Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a lista liberada e +0x30 = 0. O quadro SEH da original só
 /// cobre o construtor (sem destrutor).
 pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, ramo: &'static str) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alocar(0x10);
+    let list = exe::crt_malloc(0x10);
     if list == 0 {
         return show_error_at(file, row_without_list);
     }
@@ -36,8 +35,7 @@ pub(crate) unsafe fn create_play_off_stage(this: usize, rows: &[usize; 4], file:
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
     // virtual are words on the stack; the year goes in dx); the constructor only reads the words.
     let stage = if p != 0 {
@@ -337,14 +335,12 @@ pub(crate) unsafe fn club_in_comp_global(club: usize, field: usize, g: usize) ->
 /// `girar` é 0 (o original: a linha k recebe o k-ésimo clube); existe só para as mutações de cada divisão.
 pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row: u32, field: usize, g: usize, girar: u8, ramo: &'static str) -> u32 {
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alocar((n as i32 as u32).wrapping_mul(0x3b));
+    let t = exe::crt_malloc((n as i32 as u32).wrapping_mul(0x3b));
     core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(file, row);
         return 0;
     }
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     let mut club = read_usize(G_CLUB_TABLE);
@@ -353,7 +349,7 @@ pub(crate) unsafe fn create_division_table(this: usize, n: i16, file: usize, row
             // simplification: the original pushes the row in eax with the high bits of the competition id; 0x687430 only reads
             // the byte. With girar = 0, (k + 0) % n = k.
             let l = ((k as u32 + girar as u32) % n as u32) as u8;
-            iniciar(this, l as u32, club, 0, 0);
+            exe::league_init_table_row(this, l as u32, club, 0, 0);
             k = k.wrapping_add(1);
             if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;

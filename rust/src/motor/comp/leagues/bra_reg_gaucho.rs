@@ -31,8 +31,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
     // the seeds: the original writes the bytes on the stack before allocating (same as the rows, but separate constants)
     let mut s = [0u8; 8];
     s[..seeds.len()].copy_from_slice(seeds);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alocar((n * 4) as u32);
+    let list = exe::crt_malloc((n * 4) as u32);
     if list == 0 {
         return show_error_at(file, row_without_list);
     }
@@ -43,8 +42,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: usize, rows: &[usize], see
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the rounds, the extra and the year in dwords with garbage in the high 16 bits (the outputs of the
     // virtual are words on the stack; the year goes in cx); the constructor only reads the words.
     let stage = if p != 0 {

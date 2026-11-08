@@ -112,8 +112,7 @@ pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usi
     write_u8(this + contract::MATCHES_LEFT_OUT, 0); // a felicidade
     write_u8(this + contract::UNHAPPY_FLAG, 0);
     if club != 0 && read_usize(club + club::NATION) != 0 {
-        let fluencia: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8 = core::mem::transmute(FN_PLAYERSTATS_GET_LANGUAGE_FLUENCY);
-        let r = fluencia(read_usize(G_PLAYER_STATS), person, club, read_u8(read_usize(club + club::NATION) + 0x77) as u32, 0) as i8;
+        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club, read_u8(read_usize(club + club::NATION) + 0x77) as u32, 0) as i8;
         let c = if r > 10 { 10 } else { r } as u8;
         let b = read_u8(this + contract::SQUAD_STATUS);
         write_u8(this + contract::SQUAD_STATUS, (b & 0xf0) | (c & 0xf));
@@ -201,9 +200,8 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
 /// exato do limite de cima: 0x4a7f20) e, antes de 0xae1030, 11 no dia, 13 no dia de 0xae1048, senão 12. "Depois"
 /// pela 0x456740. TapeCall a cada contrato no passe diário (0x4c7ac0): sem contador.
 pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
-    let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     let end = this + contract::CONTRACT_EXPIRES;
-    let m = |g: usize| after(end, read_usize(g) as u32, read_usize(g + 4) as u32) != 0;
+    let m = |g: usize| exe::date_operator_3e(end, read_usize(g) as u32, read_usize(g + 4) as u32) != 0;
     let q = |g: usize| exe::date_operator_3d_3d(end, read_usize(g) as u32, read_usize(g + 4) as u32) != 0;
     if read_u8(this + contract::CONTRACT_TYPE) & 0x3f == 1 {
         return 14;
@@ -269,8 +267,7 @@ pub(crate) unsafe fn staff_of_contract(contract: usize) -> usize {
 /// (0xae2c90) até a data do fim do contrato (+0x2d), pela 0x54cdb0 (`dias_ate`, a data do jogo por valor). O jogo lê
 /// só a palavra; devolve o eax inteiro da 0x54cdb0.
 pub(crate) unsafe extern "thiscall" fn days_to_end_date(this: usize) -> u32 {
-    let days: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    days(this + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) // the contract end date
+    (exe::date_days_since(this + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) as u32) // the contract end date
 }
 
 /// Clears the grievances (+0x45), the opinion links (0x549c90) and, when asked, checks the withdrawal (0x867240).
@@ -404,8 +401,7 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     if exe::staff_contract_wants_to_leave(c) == 0 {
         return;
     }
-    let future: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_MANAGER_GET_FUTURE_TRANSFER);
-    if future(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || read_u8(c + contract::TRANSFER_STATUS) & 9 != 0 {
+    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, 0) != 0 || read_u8(c + contract::TRANSFER_STATUS) & 9 != 0 {
         return;
     }
     if exe::transfer_manager_is_queued_for_free_transfer(read_usize(G_TRANSFER_MANAGER), person) != 0 {
@@ -447,12 +443,11 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     }
     let category: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
     let desejado: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, u32, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_SET_TO_DESIRED_CONTRACT);
-    let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     // the local contract (0x50 bytes) as the original leaves it before 0x85fc50; it fills in the rest
     let mut local = [0u8; 0x50];
     let l = local.as_mut_ptr() as usize;
-    data_default(l + contract::DATE_STARTED);
-    data_default(l + contract::CONTRACT_EXPIRES);
+    exe::date_date_54a110(l + contract::DATE_STARTED);
+    exe::date_date_54a110(l + contract::CONTRACT_EXPIRES);
     core::ptr::write_unaligned((l + contract::CLUB) as *mut i32, -1);
     core::ptr::write_unaligned((l + contract::TRANSFER_ARRANGED_FOR) as *mut i32, -1);
     let merece = category(person, this);
@@ -521,9 +516,8 @@ pub(crate) unsafe extern "thiscall" fn contract_flags(this: usize) -> u32 {
 /// [pt] { 0x85e410 } (thiscall, ret 0, staff_contracts.cpp): `STAFF_CONTRACT::STAFF_CONTRACT()`: as duas datas (+0x25,
 /// +0x2d) padrão (0x54a110), +4 e +0x4a = −1, +0x49, +0x3b, +0x4e, +0x40, +0x45 e +8 = 0. Devolve o próprio contrato.
 pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
-    let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    data_default(this + contract::DATE_STARTED);
-    data_default(this + contract::CONTRACT_EXPIRES);
+    exe::date_date_54a110(this + contract::DATE_STARTED);
+    exe::date_date_54a110(this + contract::CONTRACT_EXPIRES);
     core::ptr::write_unaligned((this + contract::CLUB) as *mut u32, u32::MAX);
     core::ptr::write_unaligned((this + contract::TRANSFER_ARRANGED_FOR) as *mut u32, u32::MAX);
     *((this + contract::LEAVING_ON_BOSMAN) as *mut u8) = 0;

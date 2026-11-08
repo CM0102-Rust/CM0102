@@ -11,8 +11,7 @@ pub(crate) unsafe fn fix_man_club_by_index(i: usize) -> usize {
 ///
 /// [pt] O clube tem técnico humano (0x600a50: push 0; push 0; push 1; push 1; push clube; add esp, 0x14 -> cdecl).
 pub(crate) unsafe fn fix_man_is_human_club(club: usize) -> bool {
-    let f: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    f(club, 1, 1, 0, 0) != 0
+    exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0
 }
 
 /// Daily fixture manager update: reserve fixtures, queued fixture news, removal of AI-only friendlies and cup round
@@ -53,19 +52,15 @@ pub(crate) unsafe fn fix_man_is_human_club(club: usize) -> bool {
 ///    os jogos seguintes da rodada (0x522c70: push +0xb; push +7; push rodada; ecx = a copa -> thiscall, ret 0xc); a
 ///    lista é esvaziada (0x68d080).
 pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
-    let week: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-    let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let minus: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_SUB_DAYS);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    let slot: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_SLOT);
     let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
     let (pa, pb, pc) = (a.as_mut_ptr() as usize, b.as_mut_ptr() as usize, c.as_mut_ptr() as usize);
-    let day = week(G_CURRENT_DATE) as i16;
+    let day = exe::date_get_weekday(G_CURRENT_DATE) as i16;
     if day == 2 || day == 3 {
-        more(G_CURRENT_DATE, pa, 3);
+        exe::date_add_days(G_CURRENT_DATE, pa, 3);
         exe::reservecomp_schedule_reserve_fixtures(read_usize(G_RESERVE_COMP), pa);
         if day == 3 {
-            more(G_CURRENT_DATE, pb, 1);
+            exe::date_add_days(G_CURRENT_DATE, pb, 1);
             crate::comparison::branch("cqd_6 reservas de amanha");
             exe::reservecomp_schedule_reserve_fixtures(read_usize(G_RESERVE_COMP), pb); // cqd6: tomorrow’s reservations
         }
@@ -73,17 +68,17 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
     let l = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
     if l != 0 {
         write_usize(l + 0xa, read_usize(l + 2));
-        let mut n = next(l);
+        let mut n = exe::llist_get_next(l);
         while n != 0 {
-            let ca = fix_man_club_by_index(slot(n, 0) as usize);
-            let cb = fix_man_club_by_index(slot(n, 1) as usize);
-            if slot(n, 0xe) != 0 {
+            let ca = fix_man_club_by_index(exe::newsitem_get_slot(n, 0) as usize);
+            let cb = fix_man_club_by_index(exe::newsitem_get_slot(n, 1) as usize);
+            if exe::newsitem_get_slot(n, 0xe) != 0 {
                 exe::news_send_to_club_manager(read_usize(G_NEWS), n, ca);
             }
-            if slot(n, 0xf) != 0 {
+            if exe::newsitem_get_slot(n, 0xf) != 0 {
                 exe::news_send_to_club_manager(read_usize(G_NEWS), n, cb);
             }
-            n = next(read_usize(this + fixture_manager::MOVED_NEWS_QUEUE));
+            n = exe::llist_get_next(read_usize(this + fixture_manager::MOVED_NEWS_QUEUE));
         }
         let l = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
         if l != 0 {
@@ -124,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
     }
     if read_i16(G_FIXTURE_LEGS_LIST) != 0 {
         write_usize(G_FIXTURE_LEGS_LIST_CURSOR, read_usize(G_FIXTURE_LEGS_LIST_HEAD));
-        let mut e = next(G_FIXTURE_LEGS_LIST);
+        let mut e = exe::llist_get_next(G_FIXTURE_LEGS_LIST);
         while e != 0 {
             let i = read_usize(e) as i32;
             let table = read_usize(G_COMP_OBJECT_TABLE);
@@ -144,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                     }
                 }
             }
-            e = next(G_FIXTURE_LEGS_LIST);
+            e = exe::llist_get_next(G_FIXTURE_LEGS_LIST);
         }
         exe::llist_clear(G_FIXTURE_LEGS_LIST);
     }
@@ -168,12 +163,11 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
 /// novo (0x944cf1, 0x1184 bytes; 0x5a9cf0: push 0; push this; push ano; ecx = o novo -> thiscall, ret 0xc) entra em
 /// +0x112c; sem memória, a caixa da linha 0x681 e 0. A lista: [[bloco + (dia·3 + fatia)·4] + tipo·4].
 pub(crate) unsafe extern "thiscall" fn get_fixture_list(this: usize, year: u32, day: u32, slice: u32, kind: u32) -> usize {
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let mut b = this;
     while read_i16(b + 0x1130) != year as i16 {
         let o = read_usize(b + 0x112c);
         if o == 0 {
-            let m = new(0x1184);
+            let m = exe::crt_operator_new(0x1184);
             let r = if m == 0 { 0 } else { exe::new_fixture_manager(m, year, b, 0) };
             write_usize(b + 0x112c, r);
             if r == 0 {
@@ -199,7 +193,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_list(this: usize, year: u32, 
 /// bytes in [0xae23d0]) and the stadium id (+4 → +0x18, 0x4e bytes in [0xae23b0], 0 outside [0xae2358]) become pointers
 /// (id -1: the game stops, lines 0x74b, 0x751, 0x758), and the fixture goes (0x68d0d0: push 0x4f; push &fixture; ecx =
 /// the list -> thiscall, ret 8; on failure, the game stops, 0x785) into the list of the fixture's day (+0x2a), slice
-/// (+0x3f) and key nation (0x48dd70: push &fixture; push competition; add esp, 8 -> cdecl). At the end, fclose
+/// (+0x3f) and key exe::comp_active_key_nation_of_fixture(0x48dd70: push &fixture; push competition; add esp, 8 -> cdecl). At the end, fclose
 /// (0x945a09).
 /// Original: `FIXTURE_MANAGER::load_fixtures` (0x5ac3b0, fix_man.cpp, thiscall, ret 0).
 ///
@@ -214,10 +208,6 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_list(this: usize, year: u32, 
 /// (0x945a09).
 pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let nation: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let name = this + fixture_manager::FILE_NAME;
     let year = read_i16(this + fixture_manager::YEAR) as u16;
@@ -225,12 +215,12 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
     if year < 0x7bc {
         return;
     }
-    let f = open(path(0x987da0, name), 0x98f928);
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), 0x98f928);
     if f == 0 {
         return;
     }
     let mut count = 0i32;
-    if read(&mut count as *mut i32 as usize, 4, 1, f) != 1 {
+    if exe::crt_fread(&mut count as *mut i32 as usize, 4, 1, f) != 1 {
         show_error_at(0x9cc208, 0x730);
         exe::crt_fclose(f);
         return;
@@ -239,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
     let j = game.as_mut_ptr() as usize;
     let mut i = 0i32;
     while i < count {
-        if read(j, 0x4f, 1, f) != 1 {
+        if exe::crt_fread(j, 0x4f, 1, f) != 1 {
             show_error_at(0x9cc208, 0x73e);
             exe::crt_fclose(f);
             return;
@@ -267,7 +257,7 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
             0
         };
         write_usize(j + fixture::STADIUM, stadium);
-        let k = nation(comp, j) as i8;
+        let k = exe::comp_active_key_nation_of_fixture(comp, j) as i8;
         let day = read_i16(j + fixture::DAY) as u16 as usize; // cqd6: the day of the loaded match
         let list = read_usize(read_usize(this + (day * 3 + read_u8(j + fixture::TIME_SLICE) as usize) * 4) + k as isize as usize * 4);
         crate::comparison::branch("cqd_6 jogo carregado");
@@ -610,12 +600,6 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
     if game == 0 || out.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize>(IDX_FIND_FIXTURE_CLASHES)(this, game, out, two_days); // a caixa
     }
-    let key_of_game: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
-    let of_stadium: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_STADIUM);
-    let parceira: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_FIX_MAN_GET_PARTNER_KEY_NATION_INDEX);
-    let of_national_team: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_CLUB);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let new_data: unsafe extern "thiscall" fn(*mut [u8; 8], u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
     let mut two = two_days;
     *out = 0;
@@ -623,34 +607,34 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
     for k in 0..7 {
         a[k] = k as u8;
     }
-    let key = key_of_game(read_usize(game + fixture::COMPETITION), game) as i8;
+    let key = exe::comp_active_key_nation_of_fixture(read_usize(game + fixture::COMPETITION), game) as i8;
     a[7] = key as u8;
     let mut n: usize = 8;
     let home = read_usize(game + fixture::HOME_CLUB);
     if home != 0 && read_usize(home + club::DIVISION) != 0 {
-        a[8] = key_of_game(read_usize(home + club::DIVISION), 0);
+        a[8] = exe::comp_active_key_nation_of_fixture(read_usize(home + club::DIVISION), 0);
         n = 9;
     }
     let away = read_usize(game + fixture::AWAY_CLUB);
     if away != 0 && read_usize(away + club::DIVISION) != 0 {
-        a[n] = key_of_game(read_usize(away + club::DIVISION), 0);
+        a[n] = exe::comp_active_key_nation_of_fixture(read_usize(away + club::DIVISION), 0);
         n += 1;
     }
     if read_usize(game + fixture::STADIUM) != 0 {
-        a[n] = of_stadium(read_usize(game + fixture::STADIUM));
+        a[n] = exe::comp_active_key_nation_of_stadium(read_usize(game + fixture::STADIUM));
         n += 1;
     }
-    a[n] = parceira(read_usize(game + fixture::HOME_CLUB));
+    a[n] = exe::fix_man_get_partner_key_nation_index(read_usize(game + fixture::HOME_CLUB));
     n += 1;
-    a[n] = parceira(read_usize(game + fixture::AWAY_CLUB));
+    a[n] = exe::fix_man_get_partner_key_nation_index(read_usize(game + fixture::AWAY_CLUB));
     n += 1;
     if read_i32(game) != read_i32(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) && (key == 3 || key == 5) {
         two = 0;
     }
-    if national_team(read_usize(game + fixture::HOME_CLUB)) != 0 {
-        a[n] = of_national_team(read_usize(game + fixture::HOME_CLUB));
+    if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 {
+        a[n] = exe::comp_active_key_nation_of_club(read_usize(game + fixture::HOME_CLUB));
         n += 1;
-        a[n] = of_national_team(read_usize(game + fixture::AWAY_CLUB));
+        a[n] = exe::comp_active_key_nation_of_club(read_usize(game + fixture::AWAY_CLUB));
         n += 1;
     }
     for i in 0..n.saturating_sub(1) {
@@ -660,7 +644,7 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
             }
         }
     }
-    let block = new(0xe);
+    let block = exe::crt_operator_new(0xe);
     let list = if block != 0 { exe::new_llist(block) } else { 0 };
     if list == 0 {
         show_error_at(0x9cc208, 0xc1d); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
@@ -709,23 +693,20 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
 /// 2 pushes; add esp, 8 -> cdecl; fopen 0x945b00 "rb", fread 0x945bfe, fclose 0x945a09: cdecl), pela conta de 16 bits
 /// do começo; registro curto: a caixa (linha 0x10b9) e entra o que ficou no registro (0x68d0d0).
 pub(crate) unsafe extern "C" fn fix_man_load_fixture_leg_checks() {
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(*mut u8, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     let append: unsafe extern "thiscall" fn(usize, *const u8, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     exe::llist_clear(G_FIXTURE_LEGS_LIST);
-    let f = open(path(0x987da0, 0x9cc258), 0x98f928); // "CM3_TEMP", "check_fixture_legs.tmp", "rb"
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0x9cc258), 0x98f928); // "CM3_TEMP", "check_fixture_legs.tmp", "rb"
     if f == 0 {
         return;
     }
     // simplification: when reading the count fails the original uses stack garbage; here 0 (the game’s own file)
     let mut count = [0u8; 2];
-    read(count.as_mut_ptr(), 2, 1, f);
+    exe::crt_fread((count.as_mut_ptr()) as usize, 2, 1, f);
     let count = i16::from_le_bytes(count);
     let mut reg = [0u8; 15];
     let mut k: i16 = 0;
     while k < count {
-        if read(reg.as_mut_ptr(), 0xf, 1, f) != 1 {
+        if exe::crt_fread((reg.as_mut_ptr()) as usize, 0xf, 1, f) != 1 {
             show_error_at(0x9cc208, 0x10b9);
         }
         append(G_FIXTURE_LEGS_LIST, reg.as_ptr(), 0xf);
@@ -786,8 +767,7 @@ pub(crate) unsafe fn date_op(routine: usize, d: usize, n: u32) -> usize {
 pub(crate) static mut DATE_OP_RESULT: RawDate = [0; 8];
 /// Weekday of a date (0x54a3f0).
 pub(crate) unsafe fn date_weekday(d: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
-    f(d)
+    exe::date_get_weekday(d)
 }
 /// Writes into dest the nearest date with the target weekday (0x54a2d0).
 pub(crate) unsafe fn nearest_weekday(d: usize, target: u32, dest: &mut RawDate) {
@@ -807,9 +787,8 @@ pub(crate) unsafe fn fixture_time_slice(this: usize, comp: usize, day: u32) -> u
 /// [pt] Os conflitos do jogo (0x5ad780: mov ecx, gerenciador; push marca; push &gravidade; push jogo -> thiscall, ret
 /// 0xc): a lista (ou 0) e a gravidade.
 pub(crate) unsafe fn fix_man_find_fixture_clashes(this: usize, game: usize, two: u32) -> (usize, i32) {
-    let f: unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURE_CLASHES);
     let mut g: i32 = 0;
-    let l = f(this, game, &mut g, two);
+    let l = exe::fixture_manager_find_fixture_clashes(this, game, &mut g, two);
     (l, g)
 }
 
@@ -1079,12 +1058,11 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             exe::fixture_manager_insert_fixture(this, game);
             entrou = true;
             if l != 0 {
-                let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
                 let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
                 let remove: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
                 let news: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS);
                 core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
-                let mut x = next(l);
+                let mut x = exe::llist_get_next(l);
                 while x != 0 {
                     if friendly(read_usize(G_FRIENDLY), read_usize(x + 0x14)) != 0 {
                         exe::friendly_on_friendly_fixture_cancelled(read_usize(G_FRIENDLY), x, 0);
@@ -1103,7 +1081,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
                         }
                         news(read_usize(G_FIXTURE_MANAGER), pc, game, 0);
                     }
-                    x = next(l);
+                    x = exe::llist_get_next(l);
                 }
                 free_list(l);
             }
@@ -1112,11 +1090,9 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
     let year = read_u16(game + fixture::YEAR);
     let mut key: i8 = 0;
     if year == read_u16(this + fixture_manager::YEAR) {
-        let key_of_game: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
-        key = key_of_game(read_usize(game + fixture::COMPETITION), game) as i8;
+        key = exe::comp_active_key_nation_of_fixture(read_usize(game + fixture::COMPETITION), game) as i8;
         exe::fixture_manager_add_away_trip_illness_risk(this, game);
-        let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-        if national_team(read_usize(game + fixture::HOME_CLUB)) != 0 && national_team(read_usize(game + fixture::AWAY_CLUB)) != 0 && read_u8(game + fixture::HOME_GOALS) == 0xff {
+        if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 && exe::database_is_national_team(read_usize(game + fixture::AWAY_CLUB)) != 0 && read_u8(game + fixture::HOME_GOALS) == 0xff {
             let c = read_usize(game + fixture::COMPETITION);
             let id = read_usize(c) as i32;
             if id != read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) as i32 && id != read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) as i32 && read_u8(game + fixture::FLAGS) & 3 == 0 {
@@ -1150,8 +1126,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             exe::fixture_manager_set_year(other, year as u32);
         }
     } else {
-        let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-        let b = new(0x1184);
+        let b = exe::crt_operator_new(0x1184);
         other = if b != 0 { exe::new_fixture_manager(b, year as u32, this, 0) } else { 0 };
         core::ptr::write_unaligned((this + fixture_manager::OTHER_YEAR) as *mut usize, other);
         if other == 0 {
@@ -1233,7 +1208,6 @@ pub(crate) unsafe extern "thiscall" fn set_year(this: usize, year: u32) -> u32 {
     }
     write_u16(this + fixture_manager::YEAR, a);
     *((this + fixture_manager::LEAP_YEAR) as *mut u8) = (exe::date_is_leap_year(year) != 0) as u8;
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     crate::comparison::branch("cqc_4 ano novo do calendario");
     for dia in 0..0x16eusize {
         if n() > 0 {
@@ -1242,7 +1216,7 @@ pub(crate) unsafe extern "thiscall" fn set_year(this: usize, year: u32) -> u32 {
             loop {
                 let desloc = (k as i32 as usize).wrapping_mul(4);
                 for j in 0..3usize {
-                    let b = new(0xe);
+                    let b = exe::crt_operator_new(0xe);
                     let l = if b != 0 { exe::new_llist(b) } else { 0 };
                     core::ptr::write_unaligned(read_usize(e + j * 4).wrapping_add(desloc) as *mut usize, l);
                 }
@@ -1265,9 +1239,7 @@ pub(crate) unsafe extern "thiscall" fn set_year(this: usize, year: u32) -> u32 {
 ///
 /// [pt] Abre `nome` em CM3_TEMP (0x90bde0: cdecl(pasta, nome); fopen 0x945b00: cdecl(caminho, modo)).
 pub(crate) unsafe fn open_temp_file(name: usize, mode: usize) -> usize {
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    open(path(0x987da0, name), mode)
+    exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), mode)
 }
 
 /// Writes the club dates table [0xae2a5c], one word per club ([0xae235c]), into CM3_TEMP\club_dates.tmp.
@@ -1283,7 +1255,6 @@ pub(crate) unsafe fn open_temp_file(name: usize, mode: usize) -> usize {
 /// CM3_TEMP\club_dates.tmp ("wb") uma palavra por clube ([0xae235c] delas, fwrite 0x945ce6); gravação curta: a caixa
 /// da linha 0x101b; fecha. Sem abrir: nada.
 pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
-    let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
     if read_usize(G_CLUB_FIXTURE_YEAR_TABLE) == 0 {
         return show_error_at(0x9cc208, 0x1011);
     }
@@ -1292,7 +1263,7 @@ pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
         return;
     }
     crate::comparison::branch("cpy_7 gravar datas dos clubes");
-    if write(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates
+    if exe::crt_fwrite(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates
         show_error_at(0x9cc208, 0x101b);
     }
     uefa_seeding_crt_fclose(f);
@@ -1314,12 +1285,10 @@ pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
 /// CM3_TEMP\club_dates.tmp ("rb", fread 0x945bfe; leitura curta: a caixa da linha 0xff6) e fecha; sem o arquivo (a
 /// carreira nova), zera a tabela.
 pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
     if read_usize(G_CLUB_FIXTURE_YEAR_TABLE) != 0 {
         return show_error_at(0x9cc208, 0xfe4);
     }
-    let t = alloc(club_count().wrapping_mul(2));
+    let t = exe::crt_malloc(club_count().wrapping_mul(2));
     *(G_CLUB_FIXTURE_YEAR_TABLE as *mut usize) = t;
     if t == 0 {
         return show_error_at(0x9cc208, 0xfec);
@@ -1331,7 +1300,7 @@ pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
         return;
     }
     crate::comparison::branch("cpy_7 datas dos clubes lidas");
-    if read(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the reading of the dates
+    if exe::crt_fread(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the reading of the dates
         show_error_at(0x9cc208, 0xff6);
     }
     uefa_seeding_crt_fclose(f);
@@ -1351,8 +1320,6 @@ pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
 /// CM3_TEMP\check_fixture_legs.tmp ("wb") a conta (2 bytes) e, do começo da lista (o cursor +0xa ← a cabeça +2), cada
 /// item de 15 bytes (0x68d1b0; gravação curta: a caixa da linha 0x10e0, e segue); fecha. Sem abrir: nada.
 pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
-    let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let count = read_usize(G_FIXTURE_LEGS_LIST);
     if count as u16 == 0 {
         return;
@@ -1362,14 +1329,14 @@ pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
         return;
     }
     crate::comparison::branch("cpy_7 gravar conferencia das pernas");
-    write(&count as *const usize as usize, 2, 1, f);
+    exe::crt_fwrite(&count as *const usize as usize, 2, 1, f);
     *(G_FIXTURE_LEGS_LIST_CURSOR as *mut usize) = read_usize(G_FIXTURE_LEGS_LIST_HEAD);
     loop {
-        let item = next(G_FIXTURE_LEGS_LIST);
+        let item = exe::llist_get_next(G_FIXTURE_LEGS_LIST);
         if item == 0 {
             break;
         }
-        if write(item, 0xf, 1, f) != 1 {
+        if exe::crt_fwrite(item, 0xf, 1, f) != 1 {
             show_error_at(0x9cc208, 0x10e0);
         }
     }
@@ -1558,8 +1525,7 @@ pub(crate) unsafe fn list_rewind(l: usize) {
 ///
 /// [pt] A competição do jogo é amistosa? (0x5c6710: thiscall em [0xae2c74], 1 argumento.)
 pub(crate) unsafe fn fix_man_is_friendly_comp(comp: u32) -> bool {
-    let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    f(read_usize(G_FRIENDLY), comp) != 0
+    exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), (comp) as usize) != 0
 }
 
 /// Builds a date from (day, year) at d (0x549ef0) and returns it.
@@ -1579,15 +1545,13 @@ pub(crate) unsafe fn date_sub_days(d: usize, out: *mut u8, n: u32) -> usize {
 
 /// Date plus n days into `saida` (0x54c5b0).
 pub(crate) unsafe fn fix_man_date_add_days(d: usize, out: *mut u8, n: u32) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
-    f(d, out as usize, n)
+    exe::date_add_days(d, out as usize, n)
 }
 
 /// Assigns date `origem` to `destino` (0x417c10).
 pub(crate) unsafe fn date_assign_ptr(target: *mut u8, source: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut temporaria = [0u8; 8];
-    f(target as usize, temporaria.as_mut_ptr() as usize, source);
+    exe::date_operator_3d(target as usize, temporaria.as_mut_ptr() as usize, source);
 }
 
 /// Finds the club's fixtures between two dates into a list (FIXTURE_MANAGER find_fixtures 0x5acbe0, any comp/type, side
@@ -1596,9 +1560,8 @@ pub(crate) unsafe fn date_assign_ptr(target: *mut u8, source: usize) {
 /// [pt] Os jogos do clube entre duas datas (0x5acbe0, thiscall, 9 argumentos): a original empurra os dwords em +0 e +2 de
 /// cada data (só a palavra baixa conta), o clube, a lista, comp −1, tipo −2 e lado 1.
 pub(crate) unsafe fn find_club_fixtures_between(this: usize, a: *const u8, b: *const u8, club: u32, list: usize) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
     let (a, b) = (a as usize, b as usize);
-    f(this, read_u32(a), read_u32(a + 2), read_u32(b), read_u32(b + 2), club, list, u32::MAX, 0xffff_fffe, 1)
+    exe::fixture_manager_find_fixtures(this, read_u32(a), read_u32(a + 2), read_u32(b), read_u32(b + 2), club, list, u32::MAX, 0xffff_fffe, 1)
 }
 
 /// Removes a fixture from the calendar (0x5abc30).
@@ -1617,8 +1580,7 @@ pub(crate) unsafe fn fix_man_add_fixture(this: usize, game: usize, clear: u32) {
 
 /// Queues the "fixture moved" news item (0x5aac70) for the fixture, cause and old date.
 pub(crate) unsafe fn fix_man_queue_fixture_moved_news(this: usize, game: usize, causa: usize, old: usize) {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS);
-    f(this, game, causa, old);
+    exe::fixture_manager_queue_fixture_moved_news(this, game, causa, (old) as u32);
 }
 
 /// True if the fixture's new date clashes with a fixture other than the original f1 (via 0x5ad780); frees the clash
@@ -1627,9 +1589,8 @@ pub(crate) unsafe fn fix_man_queue_fixture_moved_news(this: usize, game: usize, 
 /// [pt] A data nova do jogo `f2` tem outro jogo? (0x5ad780: thiscall(jogo, &gravidade, 0) devolve uma LLIST alocada;
 /// percorre e acha um item com bytes diferentes do jogo original `f1`; depois destrói e libera, 0x944c94.)
 pub(crate) unsafe fn new_date_has_clash(this: usize, f2: *mut u8, f1: *const u8) -> bool {
-    let find: unsafe extern "thiscall" fn(usize, usize, *mut i32, u32) -> usize = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURE_CLASHES);
     let mut severity = 0i32;
-    let l = find(this, f2 as usize, &mut severity, 0);
+    let l = exe::fixture_manager_find_fixture_clashes(this, f2 as usize, &mut severity, 0);
     if l == 0 {
         return false;
     }
@@ -1678,9 +1639,8 @@ pub(crate) unsafe fn copy_first_fixture(l: usize, f1: &mut [u8; 0x4f], f2: &mut 
 /// depois, não amistoso, vai para um dia depois. Só se a data nova não tiver outro jogo (0x5ad780): tira (0x5abc30),
 /// junta (0x5aa680, 0) e dá a notícia do jogo remarcado (0x5aac70, com o jogo como causa).
 pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, game: usize) {
-    let init_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let mut d = [0u8; 8];
-    init_data(d.as_mut_ptr() as usize);
+    exe::date_date_54a110(d.as_mut_ptr() as usize);
     let mut l = [0u8; 0xe];
     let lp = l.as_mut_ptr() as usize;
     list_init(lp);
@@ -1807,8 +1767,7 @@ pub(crate) static mut FIXTURE_MOVED_NEWS_WAS_BUILT: bool = false;
 
 /// Data slot k of a news item (NEWSITEM get_slot).
 pub(crate) unsafe fn news_slot(n: usize, k: u32) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_SLOT);
-    f(n, k)
+    exe::newsitem_get_slot(n, k)
 }
 
 /// News item already in the list for the same fixture (slots 0,1,2,0xe,0xf vs fixture +0xc,+0x10,+0,+0x40,+0x41), or 0.
@@ -1851,8 +1810,7 @@ pub(crate) unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, old: usize) {
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     if read_usize(this + fixture_manager::MOVED_NEWS_QUEUE) == 0 && !FIXTURE_MOVED_NEWS_DRY_RUN {
-        let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-        let m = new(0xe);
+        let m = exe::crt_operator_new(0xe);
         if m != 0 {
             list_init(m);
         }
@@ -1913,7 +1871,6 @@ pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: 
 /// seguinte, um bloco novo (0x944cf1, 0x1184 bytes; 0x5a9cf0 com o ano, o bloco de antes e 0) entra na corrente. 0 se
 /// faltou memória (a corrente fica com 0 em +0x112c, como na original).
 pub(crate) unsafe fn calendar_year_block(fm: usize, f: usize) -> usize {
-    let new: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let mut b = fm;
     loop {
         let year = read_u16(f + fixture::YEAR);
@@ -1928,7 +1885,7 @@ pub(crate) unsafe fn calendar_year_block(fm: usize, f: usize) -> usize {
                 exe::fixture_manager_set_year(next, year as u32);
             }
         } else {
-            let p = new(0x1184);
+            let p = exe::crt_operator_new((0x1184) as u32);
             // the original’s ecx was the null +0x112c: the year is passed clean
             let r = if p != 0 { exe::new_fixture_manager(p, year as u32, b, 0) } else { 0 };
             core::ptr::write_unaligned((b + 0x112c) as *mut u32, r as u32);
@@ -2125,8 +2082,7 @@ pub(crate) unsafe extern "thiscall" fn find_fixtures(this: usize, dia0: u32, ano
     let mut n = 0usize;
     if club != u32::MAX {
         let reg = read_u32(G_CLUB_TABLE).wrapping_add(club.wrapping_mul(0x245)) as usize;
-        let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-        if national_team(reg) != 0 {
+        if exe::database_is_national_team(reg) != 0 {
             nations[0] = 0;
             nations[1] = 1;
             n = 2;
@@ -2330,8 +2286,7 @@ pub(crate) unsafe fn get_fixture_list_rewound(this: usize, year: u32, day: u32, 
 ///
 /// [pt] O próximo item da lista `l` (0x68d1b0, next_list_item), ou 0.
 pub(crate) unsafe fn list_next_item(l: usize) -> usize {
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    next(l)
+    exe::llist_get_next(l)
 }
 
 /// Fixture passes find_next_fixture's filter: competition (+0), stage (+0x34) and both clubs (home +0xc or away +0x10),

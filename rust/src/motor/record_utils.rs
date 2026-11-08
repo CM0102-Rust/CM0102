@@ -32,12 +32,11 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
         return 0;
     }
     let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
     let d = data_new(p0, read_u16(game + fixture::DAY) as u32, read_u16(game + fixture::YEAR) as u32);
-    copy(out, p1, d);
+    exe::date_operator_3d(out, p1, d);
     let s = |o: usize| (out + o) as *mut u8;
     core::ptr::write_unaligned(s(8) as *mut u32, read_u32(game));
     core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(game + fixture::ROUND_PREFIX));
@@ -100,9 +99,8 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
         core::ptr::write_unaligned((out + 4 * k) as *mut u32, name_id(read_u32(person + staff::FIRST_NAME + 4 * k)));
     }
     core::ptr::write_unaligned((out + 0xc) as *mut u32, read_u32(person));
-    let copy: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut t = [0u8; 8];
-    copy(out + 0x10, t.as_mut_ptr() as usize, person + staff::DATE_OF_BIRTH);
+    exe::date_operator_3d(out + 0x10, t.as_mut_ptr() as usize, person + staff::DATE_OF_BIRTH);
     1
 }
 
@@ -169,14 +167,12 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) == 0 {
         return;
     }
-    let of_club: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let k = of_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
+    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
     if k == 0 {
         return;
     }
     if read_usize(G_TRANSFER_MANAGER) != 0 {
-        let days: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        if days(G_CURRENT_DATE, read_usize(k + contract::DATE_STARTED), read_usize(k + 0x29)) > 0x12c { // cpy10: mais de 300 dias
+        if exe::date_days_since(G_CURRENT_DATE, (read_usize(k + contract::DATE_STARTED)) as u32, (read_usize(k + 0x29)) as u32) > 0x12c { // cpy10: mais de 300 dias
             let owner = contract_club_except_type5(p);
             let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {

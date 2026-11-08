@@ -13,7 +13,7 @@ MUTACOES = [
     ('c_menos20', "(byte(d32(j, match_player::PLAYER), 0xf) as i32 * 20 - 20) as f64) as i16;", "(byte(d32(j, match_player::PLAYER), 0xf) as i32 * 20) as f64) as i16;"),
     ('c_goleiro5', "                    -10000\n", "                    10000\n"),
     ('c_idade', "                        if age < 20 {\n                            s = ftol(s as f64 * read_f64_at(0x969510)) as i16;", "                        if age < 21 {\n                            s = ftol(s as f64 * read_f64_at(0x969510)) as i16;"),
-    ('c_5a', "                        if b5a != 0 && sorteio(b5a as i32) == 0 {", "                        if b5a != 0 && sorteio(b5a as i32) == 1 {"),
+    ('c_5a', "                        if b5a != 0 && exe::utils_random(b5a as i32) == 0 {", "                        if b5a != 0 && exe::utils_random(b5a as i32) == 1 {"),
     ('c_0b', "                        s = ftol((*((d32(j, match_player::PLAYER) + 0xb) as *const i16) as f64 * read_f64_at(0x96d240)", "                        s = ftol((*((d32(j, match_player::PLAYER) + 0xd) as *const i16) as f64 * read_f64_at(0x96d240)"),
     ('c_longe', "            ftol(f(j, match_player::FREE_KICKS) - g2 as f64 * g1 as f64) as i16", "            ftol(f(j, match_player::FREE_KICKS) - g2 as f64) as i16"),
     ('c_z', "                } else if table_ball() < read_f64_at(0x96d310) {", "                } else if table_ball() < read_f64_at(0x96d428) {"),

@@ -49,7 +49,6 @@ pub(crate) unsafe extern "thiscall" fn eng_third_create_table(this: usize) -> u3
 /// [pt] { 0x5770e0 } (thiscall, ret 0x10, eng_third.cpp, 3.692 bytes, método +0x3c): `EngThird::create_schedule`: o mesmo
 /// código da segunda (as mesmas rodadas), com a data da final dos play-offs um dia antes. Fonte 0x9c4424.
 pub(crate) unsafe extern "thiscall" fn eng_third_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -57,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn eng_third_create_schedule(this: usize, st
             }
             *rounds = 46;
             *extra = 0;
-            let t = alloc(0xbae);
+            let t = exe::crt_malloc(0xbae);
             if t == 0 {
                 show_error_at(0x9c4424, 0xb3);
                 return 0;
@@ -73,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn eng_third_create_schedule(this: usize, st
             }
             *rounds = 2;
             *extra = 0xa0;
-            let t = alloc(0xd0);
+            let t = exe::crt_malloc(0xd0);
             if t == 0 {
                 show_error_at(0x9c4424, 0x1ba);
                 return 0;

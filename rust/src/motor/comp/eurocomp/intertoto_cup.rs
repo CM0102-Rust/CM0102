@@ -104,8 +104,7 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
 pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
     const F: usize = 0x9e9e14;
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x3c);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alloc(0xf0);
+    let v = exe::crt_malloc(0xf0);
     if v == 0 {
         show_error_at(F, 0x161);
         return (0, 0);
@@ -128,7 +127,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         show_error_at(F, 0x172);
         return (0, 0);
     }
-    let l = alloc((n * 6) as u32);
+    let l = exe::crt_malloc((n * 6) as u32);
     core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
     if l == 0 {
         show_error_at(F, 0x17c);
@@ -144,8 +143,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         *((e + 5) as *mut u8) = 0;
         j = j.wrapping_add(1);
     }
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6, 0x522190);
+    exe::crt_qsort(read_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32 as u32, 6, 0x522190);
     exe::crt_free(v);
     ((k == read_i16(this + cup::TEAM_COUNT) as i32) as i32, read_i16(this + cup::TEAM_COUNT) as i32)
 }
@@ -175,8 +173,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usiz
 /// conta (palavra).
 pub(crate) unsafe fn collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
     let n = read_i16(this + cup::TEAM_COUNT);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let l = alloc((n as i32 * 4) as u32);
+    let l = exe::crt_malloc((n as i32 * 4) as u32);
     if l == 0 {
         show_error_at(0x9e9e14, 0x2fb);
         *out = 0;

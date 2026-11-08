@@ -56,10 +56,9 @@ pub(crate) struct EngFirstChristmasSchedule {
 /// Sets the rounds around Christmas: start rounds, the middle block chosen by the weekday of the reference date, and
 /// end rounds.
 pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, year: u32, n: &EngFirstChristmasSchedule, file: usize) {
-    let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     eng_first_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
-    construct(&mut d, 1, 0xb, year, 0xffff_ffff);
+    exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let case = if k as u32 > 6 {
@@ -308,7 +307,6 @@ pub(crate) const PREMIERSHIP_CHRISTMAS: EngFirstChristmasSchedule = EngFirstChri
 /// &rodadas, &extra, &é_liga)`: a fase −1, 46 rodadas (`DIVISION_ONE_CHRISTMAS`, as datas da segunda com faixas de TV);
 /// a fase 0, os play-offs; as outras devolvem 0. Fonte 0x9c4374.
 pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -316,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
             }
             *rounds = 46;
             *extra = 0;
-            let t = alloc(0xbae);
+            let t = exe::crt_malloc(0xbae);
             if t == 0 {
                 show_error_at(0x9c4374, 0xae);
                 return 0;
@@ -332,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
             }
             *rounds = 2;
             *extra = 0xa0;
-            let t = alloc(0xd0);
+            let t = exe::crt_malloc(0xd0);
             if t == 0 {
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
@@ -383,8 +381,7 @@ pub(crate) unsafe fn eng_first_league_row_club(league: usize, k: usize) -> usize
 /// thiscall(fase, 0), ret 4). O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: usize, row_without_list: u32, row_without_stage: u32, a10: Option<u32>, name: &'static str) {
     let n = read_u8(this + league::PROMOTION_PLAYOFF_COUNT) as i8 as i32;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let list = alloc((n << 2) as u32);
+    let list = exe::crt_malloc((n << 2) as u32);
     if list == 0 {
         return show_error_at(file, row_without_list);
     }
@@ -395,8 +392,7 @@ pub(crate) unsafe fn create_playoff_stage(this: usize, rows: [usize; 4], file: u
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let p = new(0xb2);
+    let p = exe::crt_operator_new(0xb2);
     // simplification: the original pushes the count, the rounds and the word +0x40 in integer registers with garbage in the high 16 bits
     // high; the constructor only reads the words ([esp+0x230], [esp+0x238], [esp+0x244] and [esp+0x250] with mov ax/dx).
     let stage = if p != 0 {

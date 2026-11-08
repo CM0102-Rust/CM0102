@@ -53,12 +53,11 @@ pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
 /// [pt] A caixa de erro "v%s %s.%s %d" de match_man.cpp na linha `linha`, e o jogo para (como a original).
 pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
-    let split: unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8) = core::mem::transmute(FN_CRT_STRTOK);
     let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let fechar2: unsafe extern "C" fn() = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-    split(0xa15da4, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
+    exe::crt_strtok(0xa15da4, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
     let s = join(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9870e8, s);
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
@@ -162,9 +161,8 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
         }
         k += 1;
     }
-    let mostrar: unsafe extern "C" fn(u32, usize) = core::mem::transmute(FN_OPEN_DAY_FIXTURES_SCREEN);
     *(G_MATCH_DAY_SCREEN_SHOWING_FLAG as *mut u32) = 1;
-    mostrar(0, escolhida);
+    exe::open_day_fixtures_screen(0, escolhida);
     exe::screenmanager_monitor(G_SCREEN_MANAGER);
     *(G_MATCH_DAY_SCREEN_SHOWING_FLAG as *mut u32) = 0;
     found
@@ -200,8 +198,6 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
     let read = |o: usize| *((day + o) as *const i32);
     let por = |o: usize, v: i32| *((day + o) as *mut i32) = v;
     let u = |p: usize, o: usize| *((p + o) as *const usize);
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let current = read(match_day_fields::CURRENT_MATCH);
     if current == -2 {
         return 0;
@@ -216,14 +212,14 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
             let p = u(day, match_day_fields::MATCHES).wrapping_add((k as isize * 0x69) as usize);
             if byte(p, day_match::HOME_GOALS) != -2
                 && (byte(day, match_day_fields::PASS) != 1 || u(u(p, day_match::DAY_COMPETITION), 0x10) != 0)
-                && human(u(p, day_match::HOME_CLUB), 0, *((p + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) == 0
-                && human(u(p, day_match::AWAY_CLUB), 0, *((p + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) == 0
+                && exe::human_manager_is_human_club(u(p, day_match::HOME_CLUB), 0, *((p + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) == 0
+                && exe::human_manager_is_human_club(u(p, day_match::AWAY_CLUB), 0, *((p + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) == 0
                 && byte(p, day_match::HOME_GOALS) == -1
                 && u(p, day_match::ENGINE) == 0
                 && u(p, day_match::MARKED) == 0
             {
                 exe::virtual_staff_fill_fixture_squads(u(G_VIRTUAL_STAFF, 0), p + day_match::FIXTURE_COPY, -3, 0);
-                let mem = new(0xf63b);
+                let mem = exe::crt_operator_new(0xf63b);
                 let engine = if mem != 0 { exe::new_cm3_match_engine(mem) } else { 0 };
                 *((p + day_match::ENGINE) as *mut usize) = engine;
                 if engine != 0 {
@@ -267,8 +263,6 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
 /// e tira a partida da fila [0xde2f70] (0x90d6b0). Devolve 1 se a partida terminou.
 pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32) -> u32 {
     let u = |p: usize, o: usize| *((p + o) as *const usize);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     let contador = G_STEP_BACKGROUND_MATCH_COUNTER as *mut i32;
     *contador += 1;
     if *contador > 100 {
@@ -314,9 +308,9 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
         return 0;
     }
     crate::comparison::branch("andar partida terminada");
-    let mem = new(0xd7a);
+    let mem = exe::crt_operator_new(0xd7a);
     if mem != 0 {
-        array(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
+        exe::crt_vector_constructor_iterator(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
     }
     *((p + day_match::SUMMARY) as *mut usize) = mem;
     if mem == 0 {
@@ -374,10 +368,9 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     let competition = |id: i32| *((u(G_COMP_OBJECT_TABLE, 0) as isize + 4 * id as isize) as *const usize);
     if u(game, fixture::COMPETITION) != 0 {
         crate::comparison::branch("fechar com competicao");
-        let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         for k in 0..2 {
             let c = u(game, fixture::AWAY_CLUB);
-            if c == 0 || human(c, 0, 1, 0, 0) == 0 || u(c, club::DIVISION) == 0 {
+            if c == 0 || exe::human_manager_is_human_club(c, 0, 1, 0, 0) == 0 || u(c, club::DIVISION) == 0 {
                 continue;
             }
             let id = *(u(c, club::DIVISION) as *const i32);
@@ -493,18 +486,9 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let humano_a = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) - i - 1) as isize * 0x6e) as usize);
     let human_b = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) + i - 0x10) as isize * 0x6e) as usize);
     let human: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let uses: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
-    let end_of_array: unsafe extern "stdcall" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_VECTOR_DESTRUCTOR_ITERATOR);
     let level: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_HUMAN_MANAGER_GET_COMMENTARY_SPEED);
     // 0x5fe290 (ret 8): the match and the human (the original pushes the human before the test)
-    let t9a01: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    let repassar: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SET_COMMENTARY_SPEED);
-    let index: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let mostrar: unsafe extern "thiscall" fn(usize, usize, i32, u32, i32) = core::mem::transmute(FN_SCREENMANAGER_SEND_NETWORK_STATUS_MESSAGE);
-    let prepare_rows: unsafe extern "thiscall" fn(usize, i32, usize, usize) = core::mem::transmute(FN_HUMAN_MANAGER_SELECT_TACTIC_SLOT);
 
     let terminou = |e: u8| e == 2 || e == 8;
     // plays to the end (steps of -1), counting those finished in +0x25
@@ -528,15 +512,15 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         exe::virtual_staff_release_fixture(u(G_VIRTUAL_STAFF, 0), p + day_match::FIXTURE_COPY);
     };
     let new_engine = |p: usize| {
-        let mem = new(0xf63b);
+        let mem = exe::crt_operator_new(0xf63b);
         let m = if mem != 0 { exe::new_cm3_match_engine(mem) } else { 0 };
         por(p, 0x57, m);
         m
     };
     let new_summary = |p: usize| {
-        let mem = new(0xd7a);
+        let mem = exe::crt_operator_new(0xd7a);
         if mem != 0 {
-            array(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
+            exe::crt_vector_constructor_iterator(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
         }
         por(p, 0x5f, mem);
         mem
@@ -555,7 +539,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                 let e = byte(p, day_match::HOME_GOALS);
                 if e != -2 && e <= -1 && u(p, day_match::MARKED) != 0 {
                     exe::virtual_staff_fill_fixture_squads(u(G_VIRTUAL_STAFF, 0), p + day_match::FIXTURE_COPY, -1, 0);
-                    let r = new(0x11d);
+                    let r = exe::crt_operator_new(0x11d);
                     por(p, 0x5b, r);
                     if r == 0 {
                         show_error_at(0xa15708, 0x250);
@@ -596,7 +580,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                                     if exe::human_manager_is_watching_fixture(manager(), p + day_match::FIXTURE_COPY, h) == 0 {
                                         continue;
                                     }
-                                    if t9a01(manager(), h) != 0 {
+                                    if exe::human_manager_is_on_holiday(manager(), h) != 0 {
                                         exe::human_manager_set_on_holiday(manager(), 0, h);
                                     }
                                     por(exe::get_human_manager_record(h), 0xe2, p);
@@ -605,15 +589,15 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                                     s12 = greater(s12, h);
                                 }
                             }
-                            let x = index(G_SCREEN_MANAGER, h) as i16 as isize;
+                            let x = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) as i16 as isize;
                             let placar = u(p, day_match::SCOREBOARD);
                             if core::ptr::read_unaligned((placar as isize + 5 + 4 * x) as *const u32) == 0 {
-                                let x = index(G_SCREEN_MANAGER, h) as i16 as isize;
+                                let x = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) as i16 as isize;
                                 core::ptr::write_unaligned((u(p, day_match::SCOREBOARD) as isize + 5 + 4 * x) as *mut u32, 1);
                                 *((u(p, day_match::SCOREBOARD) + 0x105) as *mut u8) += 1;
                             }
                             // simplification: the index is 0 to 15 (the humans); outside that the original would write to the stack
-                            let x = index(G_SCREEN_MANAGER, h) as i16;
+                            let x = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) as i16;
                             if (0..16).contains(&x) {
                                 vistos[x as usize] = 1;
                             }
@@ -621,7 +605,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                         for i in 0..16 {
                             let h = human_b(i);
                             if b(h, staff::CLASSIFICATION) != 0 && u(exe::get_human_manager_record(h), 0xe2) == p {
-                                repassar(manager(), if s13 > 0 { s13 } else { s12 } as u32, h);
+                                exe::human_manager_set_commentary_speed(manager(), if s13 > 0 { s13 } else { s12 } as u32, h);
                             }
                         }
                         if u(day, match_day_fields::HUMAN_MATCH) == 0 {
@@ -640,8 +624,8 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         if algum {
             for i in 0..16 {
                 let h = human_b(i);
-                if index(G_SCREEN_MANAGER, h) != 0xffff {
-                    let x = index(G_SCREEN_MANAGER, h) as i16;
+                if exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) != 0xffff {
+                    let x = exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, h) as i16;
                     if (0..16).contains(&x) && vistos[x as usize] == 0 {
                         exe::open_latest_scores_screen(h, u(u(day, match_day_fields::HUMAN_MATCH), 0x63));
                     }
@@ -736,7 +720,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             } else {
                                 text(0xde1f64, 0xa15734, a52, a52, b52, b52, casa + club::SHORT_NAME, g1 as i32, fora + club::SHORT_NAME, g2 as i32, pct, 0xa15850usize);
                             }
-                            mostrar(G_SCREEN_MANAGER, 0xde1f64, -1, 0, -1);
+                            exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, 0xde1f64, -1, 0, -1);
                             placar_escrito = true;
                         }
                     }
@@ -759,16 +743,16 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                     exe::match_day_apply_match_result(day, p);
                     crate::comparison::branch("match_wrap_up");
                     for (oc, ob) in [(0x20usize, 0x44usize), (0x24, 0x45)] {
-                        if human(u(p, oc), 0, 1, 0, 0) != 0 && uses(u(p, oc)) != 0 {
-                            let x = uses(u(p, oc));
+                        if human(u(p, oc), 0, 1, 0, 0) != 0 && exe::database_get_club_manager(u(p, oc)) != 0 {
+                            let x = exe::database_get_club_manager(u(p, oc));
                             crate::comparison::branch("linhas do humano refeitas");
-                            prepare_rows(manager(), (b(p, ob) == 0) as i32, u(p, oc), x);
+                            exe::human_manager_select_tactic_slot(manager(), (b(p, ob) == 0) as i32, u(p, oc), x);
                             exe::formation_clear_marking_targets(exe::human_manager_get_active_tactic(manager(), u(u(p, oc), 0xcf)));
                         }
                     }
                     let s = u(p, day_match::SUMMARY);
                     if s != 0 {
-                        end_of_array(s + 0x11f, 0x625, 2, 0x453c10);
+                        exe::crt_vector_destructor_iterator(s + 0x11f, 0x625, 2, 0x453c10);
                         exe::crt_operator_delete(s);
                     }
                     por(p, 0x5f, 0);
@@ -779,7 +763,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
         if placar_escrito {
             crate::comparison::branch("data na barra");
             exe::date_get_long_date_string(G_CURRENT_DATE, 0xde1f64, 0x7d0, *(G_CURRENT_DAY_SLICE as *const u8) as u32);
-            mostrar(G_SCREEN_MANAGER, 0xde1f64, -1, 0, -1);
+            exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, 0xde1f64, -1, 0, -1);
         }
         return 1;
     }
@@ -820,13 +804,9 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let read = |o: usize| core::ptr::read_unaligned((day + o) as *const i32);
     let por = |p: usize, o: usize, v: u32| core::ptr::write_unaligned((p + o) as *mut u32, v);
-    let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
     let list_of_day: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let write: unsafe extern "thiscall" fn(usize, *mut u8) = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_NEW_FIXTURE_DATE);
     let join: unsafe extern "thiscall" fn(usize, *mut u8, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_ADD_FIXTURE);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let modo8 = mode as u8;
     *(day as *mut u8) = modo8;
     for o in (1..=0x25).step_by(4) {
@@ -849,7 +829,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
         if read(o + 8) == read(o + 4) {
             let cap = read(o + 4) + 5;
             por(day, o + 4, cap as u32);
-            let p = realloc(u(day, o), (cap as u32).wrapping_mul(size));
+            let p = exe::crt_realloc(u(day, o), (cap as u32).wrapping_mul(size));
             por(day, o, p as u32);
             if p == 0 {
                 return false;
@@ -864,7 +844,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
         if list != 0 && *(list as *const i16) > 0 {
             por(list, 0xa, u(list, 2) as u32);
             let mut group = 0usize;
-            let mut x = next(list);
+            let mut x = exe::llist_get_next(list);
             while x != 0 {
                 let e = byte(x, fixture::HOME_GOALS);
                 if e <= -1 && e != -2 {
@@ -913,11 +893,11 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
                     por(group, 0x10, read(match_day_fields::MATCH_COUNT) as u32);
                     por(day, 0x21, (read(match_day_fields::MATCH_COUNT) + 1) as u32);
                 }
-                x = next(list);
+                x = exe::llist_get_next(list);
             }
             if group != 0 {
                 let (de, ate) = (u(group, day_group::FIRST_MATCH) as i32, u(group, day_group::LAST_MATCH) as i32);
-                sort(u(day, match_day_fields::MATCHES) + de as usize * 0x69, (ate - de + 1) as u32, 0x69, 0x6b6510);
+                exe::crt_qsort(u(day, match_day_fields::MATCHES) + de as usize * 0x69, (ate - de + 1) as u32, 0x69, 0x6b6510);
                 let mut last = -1i32;
                 let mut k = u(group, day_group::FIRST_MATCH) as i32;
                 while k <= u(group, day_group::LAST_MATCH) as i32 {
@@ -965,7 +945,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
         }
         i += 1;
     }
-    let mem = new(0xe);
+    let mem = exe::crt_operator_new(0xe);
     *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *mut usize) = if mem != 0 { exe::new_llist(mem) } else { 0 };
     exe::match_day_refresh_human_interest_flags(day);
     day
@@ -1012,7 +992,6 @@ pub(crate) unsafe fn match_day_marked_regions(d: usize) -> Vec<(usize, usize)> {
 /// (+0x2a) na primeira vez (+0x14 do grupo, +0x10 da competicao); senao, pela 0x6b61e0, so a
 /// competicao interessa. Qualquer marca liga +0x2b do dia. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let pr = |a: usize, v: i32| core::ptr::write_unaligned(a as *mut i32, v);
@@ -1049,8 +1028,8 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
             while mi <= read(comp + day_competition::LAST_MATCH) {
                 let m = (read(d + match_day_fields::MATCHES) as isize + mi as isize * 0x69) as usize;
                 pr(m + day_match::MARKED, 0);
-                let marcada = human(g(m + day_match::HOME_CLUB), 0, *((m + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) != 0
-                    || human(g(m + day_match::AWAY_CLUB), 0, *((m + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) != 0
+                let marcada = (exe::human_manager_is_human_club(g(m + day_match::HOME_CLUB), 0, *((m + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) as i32) != 0
+                    || (exe::human_manager_is_human_club(g(m + day_match::AWAY_CLUB), 0, *((m + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) as i32) != 0
                     || exe::human_manager_is_fixture_watched(g(G_HUMAN_MANAGER), m + day_match::FIXTURE_COPY) != 0;
                 if marcada {
                     crate::comparison::branch("interesse partida marcada");
@@ -1116,9 +1095,6 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
 /// vaga de humano com +0x11c bit 2, 0. No fim: 1 se a 0x7f9720 der 0.
 pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let ligado: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let national_team: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let f5c2990: unsafe extern "thiscall" fn(usize, u32) -> i32 = core::mem::transmute(FN_FRIENDLY_IS_OWN_COMP_RECORD);
     let slot_of: unsafe extern "C" fn(u32, usize) -> u32 = core::mem::transmute(FN_COMP_ACTIVE_KEY_NATION_OF_FIXTURE);
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
@@ -1139,7 +1115,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         return 0;
     }
     for c in [c1, c2] {
-        if ligado(c, 0, 1) != 0 && human(ligado(c, 0, 1), 1, 1, 0, 0) != 0 {
+        if exe::club_get_linked_b_team(c, (0) as *mut u32, 1) != 0 && human(exe::club_get_linked_b_team(c, (0) as *mut u32, 1), 1, 1, 0, 0) != 0 {
             crate::comparison::branch("sem humano clube ligado");
             return 0;
         }
@@ -1173,7 +1149,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
             }
         }
     }
-    if (national_team(c2) == 0 && f5c2990(g(G_FRIENDLY), read(partida + fixture::COMPETITION) as u32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
+    if ((exe::database_is_national_team(c2) as i32) == 0 && (exe::friendly_is_own_comp_record(g(G_FRIENDLY), (read(partida + fixture::COMPETITION) as u32) as usize) as i32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
         crate::comparison::branch("sem humano pela injury_word_0c");
         return if w(c2 + club::REPUTATION) + w(c1 + club::REPUTATION) > 0x2ee0 { 0 } else { final_() };
     }
@@ -1229,7 +1205,6 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
 pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let test_547d60: unsafe extern "C" fn(usize, usize) -> i32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let ch = core::cell::RefCell::new(call);
     let out = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
     let f589bc0 = |p: usize, c: usize| (ch.borrow_mut())(0x589bc0, 0, [p as u32, c as u32, 0, 0, 0]);
@@ -1308,7 +1283,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
         if test_7c3a40(g(G_PLAYER_STATS), p, club) == 0 {
             crate::comparison::branch("clube 589bc0");
             f589bc0(p, club);
-            if test_547d60(p, club) == 0 {
+            if (exe::staff_favours_club(p, club) as i32) == 0 {
                 crate::comparison::branch("clube 547d90");
                 f547d90(p, club, 1);
             }
@@ -1504,8 +1479,7 @@ pub(crate) fn post_match_gates() -> [usize; 15] {
 ///
 /// [pt] As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
 pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option<(usize, usize)> {
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = contract(*(G_CONTRACT_MANAGER as *const usize), person, club);
+    let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
     (c != 0).then_some((c + 0x40, 9))
 }
 
@@ -1536,9 +1510,6 @@ pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option
 pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     crate::comparison::branch("telas largar a partida assistida");
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
-    let index: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(FN_SCREENMANAGER_FIND_MANAGER_CHANNEL);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     let time = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
 
     let p = u((0xb74c26 + time() * 0x300) as usize, 0);
@@ -1560,7 +1531,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         // like the original, without checking the other human’s null record
         if *((q + staff::CLASSIFICATION) as *const u8) != 0 && q != p && u(exe::get_human_manager_record(q), 0xe2) == game {
             let minha = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const u16);
-            if index(G_SCREEN_MANAGER, q) == minha {
+            if exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, q) == minha {
                 return;
             }
             sozinho = false;
@@ -1583,7 +1554,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     }
     let engine = (game + day_match::ENGINE) as *mut usize;
     if core::ptr::read_unaligned(engine) == 0 {
-        let mem = new(0xf63b);
+        let mem = exe::crt_operator_new(0xf63b);
         let m = if mem != 0 { exe::new_cm3_match_engine(mem) } else { 0 };
         core::ptr::write_unaligned(engine, m);
         if m == 0 {
@@ -1601,9 +1572,9 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
         }
     }
     if *state != 8 {
-        let mem = new(0xd7a);
+        let mem = exe::crt_operator_new(0xd7a);
         if mem != 0 {
-            array(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
+            exe::crt_vector_constructor_iterator(mem + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
         }
         core::ptr::write_unaligned((game + day_match::SUMMARY) as *mut usize, mem);
         if mem == 0 {
@@ -1639,8 +1610,6 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
     if k < 0 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) || out == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE)(stats, k, out);
     }
-    let games: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     // simplification: the list is born zeroed here, which is all the constructor 0x68d020 does
     let mut list = [0u8; 14];
     let l = list.as_mut_ptr() as usize;
@@ -1649,18 +1618,18 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
     // the original pushes the whole registers: on top, the 16 bits of [this] and of k × 3
     let d1 = (table as u32 & 0xffff_0000) | *((e + 8) as *const u16) as u32;
     let d2 = ((k as u32).wrapping_mul(3) & 0xffff_0000) | *((e + 0xa) as *const u16) as u32;
-    games(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
+    exe::fixture_manager_find_fixtures(*(G_FIXTURE_MANAGER as *const usize), d1, d2, d1, d2, *(e as *const u32), l, u32::MAX, 0xffff_fffe, u32::MAX);
     // the cursor (+0xa) starts at the head (+2)
     core::ptr::copy(list.as_ptr().add(2), list.as_mut_ptr().add(0xa), 4);
     let club = *((e + 4) as *const u32);
-    let mut f = next(l);
+    let mut f = exe::llist_get_next(l);
     while f != 0 {
         if club == *((f + fixture::HOME_CLUB_ID) as *const u32) || club == *((f + fixture::AWAY_CLUB_ID) as *const u32) {
             core::ptr::copy_nonoverlapping(f as *const u8, out as *mut u8, 0x4f);
             exe::drop_llist(l);
             return 1;
         }
-        f = next(l);
+        f = exe::llist_get_next(l);
     }
     exe::drop_llist(l);
     0
@@ -1849,8 +1818,6 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
 pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| core::ptr::read_unaligned((q + o) as *const usize);
     let por = |q: usize, o: usize, v: usize| core::ptr::write_unaligned((q + o) as *mut usize, v);
-    let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
-    let array: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(FN_CRT_VECTOR_CONSTRUCTOR_ITERATOR);
     let register_for_ver: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
     const FONTE: usize = 0xa15708; // match_day.cpp
     if p == 0 {
@@ -1868,7 +1835,7 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
         return 0;
     }
     crate::comparison::branch("partida em rede confirmada");
-    let mem = new(0xf63b);
+    let mem = exe::crt_operator_new(0xf63b);
     let engine = if mem != 0 { exe::new_cm3_match_engine(mem) } else { 0 };
     por(p, 0x57, engine);
     if engine == 0 {
@@ -1876,9 +1843,9 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usiz
         return 0;
     }
     let new_summary = || {
-        let r = new(0xd7a);
+        let r = exe::crt_operator_new(0xd7a);
         if r != 0 {
-            array(r + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
+            exe::crt_vector_constructor_iterator(r + 0x11f, 0x625, 2, 0x453c30, 0x453c10);
         }
         por(p, 0x5f, r);
         r

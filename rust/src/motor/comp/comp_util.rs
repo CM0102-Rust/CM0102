@@ -172,8 +172,7 @@ pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
 /// pela força (0x4c0720), a maior primeiro, com as chaves num vetor temporário (0x944e46 / 0x9452ca; a original o
 /// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
 pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let k = alloc((n as u32).wrapping_mul(4));
+    let k = exe::crt_malloc((n as u32).wrapping_mul(4));
     if k == 0 {
         return show_error_at(0x99ec20, 0x292d);
     }
@@ -291,8 +290,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
         }
         return if club != home { 2 } else { 1 };
     }
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if national_team(club) != 0 {
+    if exe::database_is_national_team(club) != 0 {
         let nation = read_ptr(field as usize + 0x38);
         if nation != 0 && read_u32(nation + city::NATION) == read_u32(club + club::NATION) {
             return 1;
@@ -396,8 +394,7 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usiz
     if e < 1 {
         return;
     }
-    let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    qsort(clubs, nn as i32 as u32, 4, 0x4b07d0);
+    exe::crt_qsort(clubs, nn as i32 as u32, 4, 0x4b07d0);
     let mut m = e.wrapping_mul(3);
     if m > nn {
         m = nn;
@@ -586,13 +583,11 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
     if place > 2 {
         return original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_COMP_UTIL_GET_LATEST_PLACED_CLUB)(comp, place as u32); // message box: original only
     }
-    let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    qsort(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), *(G_CLUB_COMP_HISTORY_COUNT as *const i32), 0x1a, 0x540780);
+    exe::crt_qsort(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)) as u32, 0x1a, 0x540780);
     let mut key = [0u8; 0x1a];
     key[4..8].copy_from_slice(&comp.to_le_bytes());
     key[8..10].copy_from_slice(&0xffffu16.to_le_bytes()); // o ano: qualquer
-    let mut p = search(key.as_ptr(), *(G_CLUB_COMP_HISTORY_TABLE as *const usize), *(G_CLUB_COMP_HISTORY_COUNT as *const i32), 0x1a, 0x540780);
+    let mut p = exe::crt_bsearch((key.as_ptr()) as usize, *(G_CLUB_COMP_HISTORY_TABLE as *const usize), (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)) as u32, 0x1a, 0x540780);
     if p == 0 {
         return 0;
     }
@@ -623,10 +618,9 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
 /// estádio (0xae23b0, 0x4e) em +0x18 e competição (0xae23d0, 0x6b) em +0x14; id −1: 0.
 pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usize, partida: usize, cursor: *mut u8) {
     // simplification: the original pushes the whole eax (remainder of the previous slot in the high bits); 0x785830 only reads the byte
-    let slot: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_GET_SLOT);
     let mut v = *cursor;
     let mut read = || {
-        let r = slot(news, v as u32);
+        let r = exe::newsitem_get_slot(news, v as u32);
         v = v.wrapping_add(1);
         r
     };

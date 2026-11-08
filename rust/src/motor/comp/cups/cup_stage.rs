@@ -49,8 +49,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     write_u8(this + cup::SUBSTITUTIONS_ALLOWED, *((parent + 0x4a) as *const u8));
     write_usize(this + cup::PRIZE_FUND, a14 as usize);
     let size = (rounds as u16 as i16 as i32 * 0x68) as u32;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(size);
+    let t = exe::crt_malloc(size);
     write_usize(this + cup::ROUND_TABLE, t);
     if t == 0 {
         show_error_at(F, 0x48);
@@ -58,8 +57,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     }
     core::ptr::copy_nonoverlapping(template as *const u8, t as *mut u8, size as usize);
     write_u16(this + cup::TEAM_COUNT, n as u16);
-    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let l = zerada(n as u16 as i16 as i32 as u32, 6);
+    let l = exe::crt_calloc(n as u16 as i16 as i32 as u32, 6);
     write_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(F, 0x53);

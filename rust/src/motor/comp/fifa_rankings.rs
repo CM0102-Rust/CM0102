@@ -57,16 +57,12 @@ pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nati
 /// os totais dos anos andam uma casa (+0x14 → +0x28) e +0x14 zera. Por fim as pontuações (0x58dfc0) e as posições:
 /// a ordem (0x58d610) dá a posição + 1 em +0x10, com a anterior em +0x12; o vetor da ordem é liberado (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize) {
-    let day: unsafe extern "thiscall" fn(usize) -> u16 = core::mem::transmute(FN_DATE_GET_DAY_OF_MONTH);
-    let month_of: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
-    let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    if day(data) != 0x12 {
+    if (exe::date_get_day_of_month(data) as u16) != 0x12 {
         return;
     }
-    let month = month_of(data);
+    let month = exe::date_get_month(data);
     let mut stored = [0u8; 8];
-    copiar(this + 5, stored.as_mut_ptr() as usize, data);
+    exe::date_operator_3d(this + 5, stored.as_mut_ptr() as usize, data);
     let year = read_u16(data + 2) as i32;
     let mut i = 0i32;
     while i < read_usize(G_NATION_COUNT) as i32 {
@@ -83,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
             }
             k -= 1;
         }
-        sort(read_usize(e + 4), read_i16(e + 0xa) as i32 as u32, 5, 0x58e220);
+        exe::crt_qsort(read_usize(e + 4), read_i16(e + 0xa) as i32 as u32, 5, 0x58e220);
         i += 1;
     }
     if month == *((this + 4) as *const u8) && read_u16(data + 2) != read_u16(G_GAME_START_DATE_YEAR) {
@@ -132,10 +128,9 @@ pub(crate) unsafe fn ranking_entry(this: usize, nation: usize) -> usize {
 /// [pt] O mês e o ano do jogo `partida`: a data (0x549ef0) do dia do ano (+0x2a) e do ano (+0x28), o mês dela (0x54cfb0).
 pub(crate) unsafe fn match_month_year(partida: usize) -> (u8, u16) {
     let data_new: unsafe extern "thiscall" fn(*mut u8, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
-    let month_of: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_DATE_GET_MONTH);
     let mut d = [0u8; 8];
     let p = data_new(d.as_mut_ptr(), read_u16(partida + fixture::DAY) as u32, read_u16(partida + fixture::YEAR) as u32);
-    (month_of(p), read_u16(partida + fixture::YEAR))
+    (exe::date_get_month(p), read_u16(partida + fixture::YEAR))
 }
 
 /// Appends the points, month and year of the match to the national side's history, growing the array by 5 entries when
@@ -160,11 +155,9 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize,
         let h = read_usize(e + 4);
         let n = read_i16(e + 8) as i32 * 5;
         let new = if h != 0 {
-            let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-            realloc(h, n as u32)
+            exe::crt_realloc(h, n as u32)
         } else {
-            let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-            alloc(n as u32)
+            exe::crt_malloc(n as u32)
         };
         *((e + 4) as *mut usize) = new;
     }
@@ -300,9 +293,7 @@ pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
 /// (linha 0x1e3) e 0, sem gravar a conta. As entradas da tabela (0x2c bytes) das nações com seleção (+0x71 da nação,
 /// registros de 0x122 bytes em [0xae23a8]), ordenadas pela pontuação (qsort 0x945333 com 0x58e240); a conta em `conta`.
 pub(crate) unsafe extern "thiscall" fn collect_ranked_order(this: usize, count: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let v = alloc((read_usize(G_NATION_COUNT) as u32).wrapping_mul(4));
+    let v = exe::crt_malloc((read_usize(G_NATION_COUNT) as u32).wrapping_mul(4));
     if v == 0 {
         show_error_at(0x9c74f4, 0x1e3);
         return 0;
@@ -317,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn collect_ranked_order(this: usize, count: 
         }
         i += 1;
     }
-    sort(v, n as u32, 4, 0x58e240);
+    exe::crt_qsort(v, n as u32, 4, 0x58e240);
     *count = n as i32;
     v
 }
@@ -360,8 +351,7 @@ pub(crate) unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -
 /// pontos de cada um dos últimos anos]. Depois a ordem pelos pontos (0x58d610(this, &conta), thiscall, a lista ordenada
 /// das nações com continente) dá a posição: +0x12 = a posição de antes (+0x10) e +0x10 = 1, 2, 3...; a lista é solta.
 pub(crate) unsafe extern "thiscall" fn create_default_table(this: usize) {
-    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let t = calloc(read_u32(G_NATION_COUNT), 0x2c);
+    let t = exe::crt_calloc(read_u32(G_NATION_COUNT), 0x2c);
     *(this as *mut usize) = t;
     if t == 0 {
         show_error_at(0x9c74f4, 0x2da);

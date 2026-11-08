@@ -121,12 +121,11 @@ pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
 /// (0x5b5a60), com onze mascaras trocadas por quatro formacoes de referencia. Devolve a mascara
 /// antes da troca (o eax da original).
 pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
-    let bit: unsafe extern "stdcall" fn(i16) -> u32 = core::mem::transmute(FN_FORMATION_POSITION_TO_SHAPE_BIT);
     let m = (this + 0x187b) as *mut u32;
     core::ptr::write_unaligned(m, 0);
     for k in 0..11usize {
         let c = core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const i16);
-        let v = core::ptr::read_unaligned(m) | bit(c);
+        let v = core::ptr::read_unaligned(m) | exe::formation_position_to_shape_bit(c);
         core::ptr::write_unaligned(m, v);
     }
     let v = core::ptr::read_unaligned(m);
@@ -418,7 +417,6 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
 /// atacante (0x40, nas duas), de meia (0x20 na +0x12d e na +0x14e pela 0x5b2ae0) ou de volante e
 /// meia-atacante pela 0x5b2ae0 (8 e 0x10); senão 1. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8 {
-    let home: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(FN_FORMATION_GET_SLOT_POSITION);
     let w = |o: usize| core::ptr::read_unaligned((this + o) as *const u16);
     for i in 0..=10u32 {
         let a = w(0x12d + 2 * i as usize);
@@ -432,16 +430,16 @@ pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8
         if a & 0x880 != 0 && a & 0x20 != 0 {
             return 0;
         }
-        if b & 0x880 != 0 && home(this, i, 1) & 0x20 != 0 {
+        if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 0x20 != 0 {
             return 0;
         }
-        if home(this, i, 0) & 0x880 != 0 && home(this, i, 0) & 8 != 0 {
+        if exe::formation_get_slot_position(this, i, 0) & 0x880 != 0 && exe::formation_get_slot_position(this, i, 0) & 8 != 0 {
             return 0;
         }
-        if home(this, i, 0) & 0x880 != 0 && home(this, i, 0) & 0x10 != 0 {
+        if exe::formation_get_slot_position(this, i, 0) & 0x880 != 0 && exe::formation_get_slot_position(this, i, 0) & 0x10 != 0 {
             return 0;
         }
-        if home(this, i, 1) & 0x880 != 0 && home(this, i, 1) & 0x10 != 0 {
+        if exe::formation_get_slot_position(this, i, 1) & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 0x10 != 0 {
             return 0;
         }
     }
@@ -482,7 +480,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_SET_SLOT_COORDINATE)(this, home, stage, band, coord);
     }
-    let home_in: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(FN_FORMATION_GET_DEFAULT_COORDINATE);
     let su = s as usize;
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
     crate::comparison::branch("cpu_11 coordenada gravada");
@@ -504,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
             for zx in 0..3u32 {
                 for zy in 0..4u32 {
                     // the mask goes with the band height in the upper 16 bits (the original’s ecx); 0x5b7e60 does not read them
-                    home_in(pos as u32 | zy << 16, p as i8, zx | zy << 16, out.as_mut_ptr());
+                    exe::formation_get_default_coordinate(pos as u32 | zy << 16, p as i8, zx | zy << 16, out.as_mut_ptr());
                     let c = base + 4 * (zx as usize * 4 + zy as usize);
                     let dy = ((read_i16(c + 2) as i32 * 12) / 36 - (out[1] as i32 * 12) / 36).wrapping_abs();
                     let dx = ((read_i16(c) as i32 * 9) / 27 - (out[0] as i32 * 9) / 27).wrapping_abs();
@@ -829,8 +826,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         }
         return 0;
     }
-    let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let f = fopen(path, 0x98f928);
+    let f = exe::crt_fopen(path, 0x98f928);
     if f == 0 {
         if quieto == 0 {
             formation_error_box(0x8e0);
@@ -969,8 +965,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
         crate::comparison::branch("cqg_8 posicoes refeitas");
         exe::formation_set_slot_coordinate(this, vaga, 0, 0, c); // cqg8: the positions redone by home side
     }
-    let split: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(FN_CRT_STRTOK);
-    split(path, 0, 0, this, 0);
+    exe::crt_strtok(path, 0, 0, (this) as *mut u8, (0) as *mut u8);
     exe::formation_build_position_lookup(this);
     write_u32(this + 0x187f, 1);
     write_u32(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
@@ -991,7 +986,6 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
 /// das 11 vagas com lado aberto (0x880) é de zagueiro (4, na casa +0x12d ou +0x14e) ou de volante
 /// (8 na +0x12d; na +0x14e pela 0x5b2ae0); senão 1. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize) -> u8 {
-    let home: unsafe extern "thiscall" fn(usize, u32, u32) -> u16 = core::mem::transmute(FN_FORMATION_GET_SLOT_POSITION);
     let w = |o: usize| core::ptr::read_unaligned((this + o) as *const u16);
     for i in 0..=10u32 {
         let a = w(0x12d + 2 * i as usize);
@@ -1005,7 +999,7 @@ pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize
         if a & 0x880 != 0 && a & 8 != 0 {
             return 0;
         }
-        if b & 0x880 != 0 && home(this, i, 1) & 8 != 0 {
+        if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 8 != 0 {
             return 0;
         }
     }

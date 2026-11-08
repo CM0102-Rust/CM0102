@@ -2,14 +2,12 @@ use super::*;
 
 /// Opens an item named nome in the save archive (FN_ZOPEN with 1, 0x16, 4).
 pub(crate) unsafe fn zip_open_item(save: usize, name: usize) -> usize {
-    let open_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(FN_ZOPEN);
-    open_item(save, name, 1, 0x16, 4)
+    exe::zopen(save, name, 1, 0x16, 4)
 }
 
 /// Writes count items of size bytes to an open archive item (FN_ZWRITE).
 pub(crate) unsafe fn zip_write(data: usize, size: u32, how_many: u32, z: usize) -> u32 {
-    let write_item: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-    write_item(data, size, how_many, z)
+    exe::zwrite(data, size, how_many, z)
 }
 
 /// Closes an open archive item (FN_ZCLOSE).

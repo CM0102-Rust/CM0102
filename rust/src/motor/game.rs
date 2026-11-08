@@ -50,8 +50,6 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &m
 /// 0,6·c0 + 0,4·b8 + 0,2·b0 + 0,8·c8 + d8 + d0), ordenado (qsort 0x945333 com 0x4afba0) e solto; no dia de dezembro
 /// ([0x9cd216]) cada nação passa também pelo bônus e pelo deslocamento da história (`roll_coefficient_year`).
 pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
-    let malloc: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let qsort: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(FN_CRT_QSORT);
     if read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0 {
         if (read_usize(G_NATION_COUNT) as i32) > 0 {
             let mut p = read_usize(G_NATION_TABLE) + 0xd0;
@@ -74,7 +72,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
     if read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (current_month() * 2) as usize) != today {
         return;
     }
-    let array = malloc(read_usize(G_NATION_COUNT).wrapping_mul(0xc));
+    let array = exe::crt_malloc((read_usize(G_NATION_COUNT).wrapping_mul(0xc)) as u32);
     if array == 0 {
         show_error_at(0x9cd2a4, 0x156d);
         return;
@@ -107,7 +105,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
             }
         }
     }
-    qsort(array, n as usize, 0xc, 0x4afba0);
+    exe::crt_qsort(array, (n as usize) as u32, (0xc) as u32, 0x4afba0);
     exe::crt_free(array);
 }
 
@@ -173,8 +171,7 @@ pub(crate) unsafe fn game_club_of_contract(c: usize) -> usize {
 ///
 /// [pt] O vínculo da pessoa com o clube (0x4cf5f0).
 pub(crate) unsafe fn game_contract_for_club(p: usize, club: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    f(read_usize(G_CONTRACT_MANAGER), p, club)
+    exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club)
 }
 
 /// staff_is_disliked_by (0x547840): does `pessoa` dislike `alvo`.
@@ -216,7 +213,6 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
         return;
     }
     crate::comparison::branch("cps_5 atrito com o tecnico");
-    let mark: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
     let (tipo, marca) = if q == read_usize(club + club::MANAGER) {
         (0, 0x2000)
     } else if q == read_usize(club + club::ASSISTANT_MANAGER) {
@@ -225,7 +221,7 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
         (2, 0x800)
     };
     exe::news_post_dressing_room_unrest(p, q, tipo);
-    mark(k, marca, 0);
+    exe::staff_contract_apply_event_flags(k, marca, 0);
 }
 
 /// Updates the relationships in the squads: ten random pairs of team-mates: a disliked one stops being disliked and may
@@ -412,14 +408,13 @@ pub(crate) unsafe fn is_club_squad_player(p: usize, club: usize) -> bool {
 /// cada jogador sorteia (2 × Σ liderança × moral) / (liderança dele + soma) mais sorteio(moral / 12), em byte com sinal:
 /// negativo, sorteio(s) < sorteio(−5) baixa o moral (0x544710 com −1); positivo, sorteio(s) > sorteio(5) sobe (+1).
 pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
-    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let morale: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let n = read_usize(G_CLUB_COUNT);
     let mut club = read_usize(G_CLUB_TABLE);
     let end = club.wrapping_add(n.wrapping_mul(club::SIZE));
     while club < end {
         let slots = club + club::SQUAD;
-        if is_national_team(club) == 0 && friendly_random(7) == 0 {
+        if exe::database_is_national_team(club) == 0 && friendly_random(7) == 0 {
             let (mut soma, mut lideranca, mut q) = (0i32, 0i32, 0i32);
             for i in 0..0x32usize {
                 let p = read_usize(slots + i * 4);
@@ -488,8 +483,7 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
 ///
 /// [pt] Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
 pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
-    let f: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    f(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32)
+    exe::date_days_since(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32)
 }
 
 /// Checks players missing training: n/250 consecutive people from a random one; a present player with training and
@@ -514,7 +508,6 @@ pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
 /// < 30, < 90, < 180) zerado é falta. (2) Senão, com +0x5b < 10 e vínculo com o clube: as marcas do vínculo (+0x45:
 /// 0x8000, 0x30000; com +0x5b < 5, 0x7800) dão sorteios(+0x5b) que, zerados, são falta. A falta: 0x41a360.
 pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
-    let contract_bond: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
     crate::comparison::branch("cps_6 faltas do dia");
@@ -581,7 +574,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
                 continue;
             }
             let club = contract_club_record(game_get_contract_and_store(p));
-            let v = contract_bond(read_usize(G_CONTRACT_MANAGER), p, club);
+            let v = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
             if v == 0 {
                 continue;
             }

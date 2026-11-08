@@ -181,13 +181,12 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// duas sedes dela, a primeira na padrão fixa), montadas por 0x77bbe0/0x785790 e entregues aos técnicos do continente
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
 pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
     let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
     crate::comparison::branch("cqo_3 noticia das sedes");
     write_u32(list + 0xa, read_usize(list + 2) as u32);
-    let mut it = next(list);
+    let mut it = exe::llist_get_next(list);
     while it != 0 {
         let e = read_usize(it);
         let k = *((e + 0x1e) as *const i8);
@@ -225,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
                 all(read_usize(G_NEWS), p);
             }
         }
-        it = next(list);
+        it = exe::llist_get_next(list);
     }
 }
 
@@ -244,22 +243,18 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
 /// num bloco novo ([this], 0x944e46); falhando a leitura, a caixa (linhas 0x448/0x452/0x45c), fecha (0x945a09) e, com
 /// o bloco, o solta (0x9452ca). Devolve 1 com tudo lido, 0 sem o arquivo ou com erro.
 pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
-    let path: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
-    let open: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
-    let read: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let f = open(path(0x987da0, 0x9cf10c), 0x98f928);
+    let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
         crate::comparison::branch("cqo_3 sem o arquivo");
         return 0;
     }
-    if read(this + 4, 2, 1, f) != 1 {
+    if exe::crt_fread(this + 4, 2, 1, f) != 1 {
         show_error_at(0x9cf0d8, 0x448);
         exe::crt_fclose(f);
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32;
-    let b = alloc((n * 0x22) as u32);
+    let b = exe::crt_malloc((n * 0x22) as u32);
     write_u32(this, b as u32);
     if b == 0 {
         show_error_at(0x9cf0d8, 0x452);
@@ -267,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
         return 0;
     }
     let n = read_u16(this + 4) as i16 as i32 as u32;
-    if read(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
+    if exe::crt_fread(b, 0x22, n, f) != read_u16(this + 4) as i16 as i32 as u32 {
         show_error_at(0x9cf0d8, 0x45c);
         exe::crt_fclose(f);
         exe::crt_free(read_usize(this));
@@ -384,11 +379,10 @@ pub(crate) fn compare_year_day(e: usize, year: u16, day: u16) -> i32 {
 /// [pt] A primeira entrada (de `inicio` a `fim`, ordenadas por ano e dia) com o ano e o dia da chave (bsearch 0x946464 com a
 /// 0x5fb3f0 e o recuo até a primeira igual), ou 0.
 pub(crate) unsafe fn first_entry_for_date(start: usize, n: i16, year: u16, day: u16) -> usize {
-    let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut key = [0u8; 0x22];
     key[4..6].copy_from_slice(&year.to_le_bytes());
     key[0x1f..0x21].copy_from_slice(&day.to_le_bytes());
-    let mut p = search(key.as_ptr(), start, n as i32, 0x22, 0x5fb3f0);
+    let mut p = exe::crt_bsearch((key.as_ptr()) as usize, start, (n as i32) as u32, 0x22, 0x5fb3f0);
     if p == 0 {
         return 0;
     }
@@ -414,8 +408,6 @@ pub(crate) unsafe fn first_entry_for_date(start: usize, n: i16, year: u16, day: 
 pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, today: usize) {
     let por: unsafe extern "thiscall" fn(usize, *const usize, u32) = core::mem::transmute(FN_LLIST_ADD_TAIL);
     let data: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> *const [u16; 4] = core::mem::transmute(FN_DATE_DATE_549F70);
-    let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-    let sort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let n = read_u16(this + 4) as i16;
     let start = read_u32(this) as usize;
     let end = start.wrapping_add((n as i32 * 0x22 - 0x22) as usize);
@@ -452,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
                 crate::comparison::branch("cqj_3 sede sorteada");
-                *k = sorteio(3) as u8; // cqj3: a candidatura vencedora
+                *k = exe::utils_random(3) as u8; // cqj3: a candidatura vencedora
             }
             p += 0x22;
         }
@@ -471,7 +463,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             }
             i += 1;
         }
-        sort(read_u32(this) as usize, read_u16(this + 4) as i16 as i32, 0x22, 0x5fb3f0);
+        exe::crt_qsort(read_u32(this) as usize, (read_u16(this + 4) as i16 as i32) as u32, 0x22, 0x5fb3f0);
     }
     exe::hostcountry_post_host_news(this, l);
     exe::drop_llist(l);

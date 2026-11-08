@@ -43,13 +43,12 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
     if read_i32(e) == -1 {
         return 0;
     }
-    let botao: unsafe extern "thiscall" fn(usize, usize, usize, u32, *mut u32) -> u8 = core::mem::transmute(FN_NEWSITEM_GET_ACTION_BUTTON);
     let mut v = 0usize;
     for k in 0..0x64usize {
         v = read_usize(this).wrapping_add((read_usize(e).wrapping_add(k)).wrapping_mul(STORED_NEWS_SIZE));
         if read_usize(v + news_item::ID) as u32 == id && read_usize(v + news_item::READ) == 0 {
             let mut tratador = 0u32;
-            if botao(v, manager, 0xde1f64, 0x7d0, &mut tratador) != 2 {
+            if exe::newsitem_get_action_button(v, manager, 0xde1f64, 0x7d0, &mut tratador) != 2 {
                 crate::comparison::branch("cpo_6 noticia lida");
                 core::ptr::write_unaligned((v + news_item::READ) as *mut u32, 1);
                 core::ptr::write_unaligned((e + 8) as *mut i32, read_i32(e + 8) - 1);
@@ -239,12 +238,11 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     }
     let e = read_usize(this + news_fields::HUMAN_INBOXES) + idx as usize * 12;
     if read_i32(e) == -1 {
-        let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
         write_usize(e, read_usize(this + news_fields::SLOT_COUNT));
         write_usize(e + 4, read_usize(this + news_fields::SLOT_COUNT));
         let total = read_usize(this + news_fields::SLOT_COUNT).wrapping_add(0x64);
         write_usize(this + news_fields::SLOT_COUNT, total);
-        let p = realloc(read_usize(this), total.wrapping_mul(NEWS_NEWS_RECORD_SIZE) as u32);
+        let p = exe::crt_realloc(read_usize(this), total.wrapping_mul(NEWS_NEWS_RECORD_SIZE) as u32);
         write_usize(this, p);
         if p == 0 {
             show_error_at(0xa693ec, 0x1f6d);
@@ -281,8 +279,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     if current.wrapping_add(1) == start.wrapping_add(0x64) {
         write_usize(e + 4, start as usize);
     }
-    let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
+    if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
         crate::comparison::branch("cpn_1 resposta automatica");
         exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube
         let national_team = read_usize(manager + staff::NATIONAL_JOB);
@@ -722,8 +719,7 @@ pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
         return None;
     }
     let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
-    let checks: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
-    if checks(p, read_usize(this + player_search_fields::SCOUT_NAME_REF), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) == 0 || p == 0 {
+    if exe::database_staff_matches_names(p, (read_usize(this + player_search_fields::SCOUT_NAME_REF)) as u32, (read_usize(this + 0x178)) as u32, (read_usize(this + 0x17c)) as u32, this + 0x184) == 0 || p == 0 {
         return None;
     }
     Some(p)
@@ -849,15 +845,12 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(club: usize) -
     if club == 0 {
         return 0;
     }
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let r = human(club, 1, 1, 0, 0);
+    let r = exe::human_manager_is_human_club(club, 1, 1, 0, 0);
     if r == 0 {
         return r;
     }
-    let manager: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
-    let holiday: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_ON_HOLIDAY);
-    let t = manager(club);
-    holiday(*(G_HUMAN_MANAGER as *const usize), t);
+    let t = exe::database_get_club_manager(club);
+    exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), t);
     1 // humano
 }
 
@@ -919,16 +912,14 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
 /// a data de hoje ([0xae2c90], pela atribuição 0x417c10 com retorno numa temporária), o byte [0xae2c88] em +0xd5, o id
 /// (+0xd6) e +0xda zerados. Devolve a notícia.
 pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
-    let init_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
-    let atribuir_data: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
-    init_data(this + news_item::DATE);
+    exe::date_date_54a110(this + news_item::DATE);
     write_usize(this, kind as usize);
     *((this + news_item::IMPORTANT) as *mut u8) = importante as u8;
     for k in 0..50 {
         write_usize(this + news_item::DATA + 4 * k, 0);
     }
     let mut temporaria = [0u32; 2];
-    atribuir_data(this + news_item::DATE, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
+    exe::date_operator_3d(this + news_item::DATE, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
     *((this + news_item::DAY_SLICE) as *mut u8) = *(G_CURRENT_DAY_SLICE as *const u8);
     write_usize(this + news_item::ID, 0);
     write_usize(this + news_item::READ, 0);
@@ -964,7 +955,6 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
         return 0;
     }
     let copy: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWSITEM_OPERATOR_3D);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let mut array = 0usize;
     let mut k = read_i32(e + 4) - 1;
     loop {
@@ -977,7 +967,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
         }
         if category as u8 == 0 || exe::newsitem_get_category(slot) as u8 == category as u8 {
             if array == 0 {
-                array = alloc(0x571c);
+                array = exe::crt_malloc(0x571c);
                 if array == 0 {
                     show_error_at(0xa693ec, 0x222a);
                     return 0;

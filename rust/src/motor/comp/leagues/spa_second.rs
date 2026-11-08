@@ -56,10 +56,9 @@ pub(crate) struct SpaSecondChristmasSchedule {
 /// Writes the opening rounds, then picks the middle block by how many days a reference round falls after 1 December
 /// (error box if out of range), then the closing rounds [inference: Christmas break placement].
 pub(crate) unsafe fn set_rounds_with_christmas(t: usize, year: u32, n: &SpaSecondChristmasSchedule, file: usize) {
-    let construct: unsafe extern "thiscall" fn(*mut [u16; 4], u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     spa_second_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
-    construct(&mut d, 1, 0xb, year, 0xffff_ffff);
+    exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
     let day = core::ptr::read_unaligned((t + n.referencia * 0x41) as *const u16);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.ajuste);
     let case = if k as u32 > 6 {
@@ -219,7 +218,6 @@ pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = S
 /// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
 /// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     match stage as u8 {
         0xff => {
             if !league.is_null() {
@@ -227,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
             }
             *rounds = 42;
             *extra = 0;
-            let t = alloc(0xaaa);
+            let t = exe::crt_malloc(0xaaa);
             if t == 0 {
                 show_error_at(0xa828bc, 0xa9);
                 return 0;
@@ -289,11 +287,8 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
 /// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
 /// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
-    let t = alloc(0x512);
+    let t = exe::crt_malloc(0x512);
     write_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa828bc, 0x298);
@@ -306,7 +301,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     while (i as i32) < n {
         let c = base + (i as u16 as usize) * club::SIZE; // cqm6: club i in the database
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
-            iniciar(this, k as u32, c, 0, 0);
+            exe::league_init_table_row(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparison::branch("cqm_6 time b na segunda");
                 *((read_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
@@ -322,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
-    let f = premios(this, 0xc350);
+    let f = (exe::league_calc_prize_fund(this, (0xc350) as i32) as u32);
     write_usize(this + league::PRIZE_FUND, f as usize);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
     1

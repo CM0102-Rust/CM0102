@@ -21,8 +21,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
     if liga0 == 0 || read_u8(liga0 + league::STAGE_INDEX) != 0xff {
         return o(this, liga0, always); // simplification: the boxes, original only
     }
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
     let mut regions = vec![(this + club_records_fields::NEWS_QUEUE, 0xc)];
     let mut podem_entrar = 0i32;
     for liga in league_stage_chain(liga0) {
@@ -38,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
             }
             regions.push((t, 0xe));
             regions.push((s, 0xe));
-            if human(club, 0, 1, 0, 0) != 0 || national_team(club) != 0 {
+            if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 || exe::database_is_national_team(club) != 0 {
                 podem_entrar += 2;
             }
         }

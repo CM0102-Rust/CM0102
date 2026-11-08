@@ -148,8 +148,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
         let entry = shortlist_club_entry(this, club);
         reg.push((read_usize(entry), 40 * 0x25));
         reg.push((entry + 8, 1));
-        let contract_of: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        let c = contract_of(read_usize(G_CONTRACT_MANAGER), person, club);
+        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
         if c != 0 {
             reg.push((c + contract::SQUAD_STATUS, 1));
         }
@@ -222,9 +221,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_club_shortlist(this: usize
 /// clubes que a 0x842180 (pura) junta antes, numa lista própria. Cada lado cria e libera a sua lista.
 pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player(this: usize, player: usize, clear: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8)>(IDX_SUSPEND_CLUBS_SHORTLISTING_PLAYER);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let interested: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_SHORTLIST_MANAGER_COLLECT_INTERESTED_CLUBS);
-    let p = novo(0xe);
+    let p = exe::crt_operator_new(0xe);
     if p == 0 {
         return o(this, player, clear);
     }
@@ -258,8 +256,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_to_club_shortlists(thi
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
 pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize, player: usize, news: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_TRANSFER_LIST_PLAYER);
-    let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED);
-    let mark = listed(player, 0) == 0 && get_contract(player) != 0;
+    let mark = exe::staff_is_transfer_listed(player, 0) == 0 && get_contract(player) != 0;
     o(this, player, news);
     if mark {
         let c = get_contract(player);
@@ -328,18 +325,16 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: us
 /// Comparer for `add_shortlist_entry`.
 pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, person: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_SHORTLIST_ENTRY);
-    let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let human: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let key = [read_usize(person) as u32, if club != 0 { read_usize(club) as u32 } else { 0xffff_ffff }];
-    let tinha = read_usize(this) != 0 && bsearch(key.as_ptr(), read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0) != 0;
+    let tinha = read_usize(this) != 0 && exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT)) as u32, 8, 0x757ea0) != 0;
     let (n0, n1) = if read_usize(this) != 0 { (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT)) } else { (0, 0) };
     let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + 0xb;
     let nib = read_u8(r);
-    let sum = !tinha && human(club, 0, 1, 0, 0) == 0;
+    let sum = !tinha && exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) == 0;
     o(this, person, club);
     let expected = if sum { (nib & 0xf0) | (nib.wrapping_add(1) & 0xf) } else { nib };
     let (d0, d1) = (if tinha { n0 } else { n0 + 1 }, if tinha { n1 } else { n1 + 1 });
-    let found = bsearch(key.as_ptr(), read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0) != 0;
+    let found = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT)) as u32, 8, 0x757ea0) != 0;
     let ok = read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) == d0 && read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT) == d1 && read_u8(r) == expected && (found || club == 0);
     SCOREBOARD.record(ok, || {
         format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (esperado {:#x})",

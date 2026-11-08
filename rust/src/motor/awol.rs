@@ -50,7 +50,6 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         return;
     }
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
-    let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
     let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
     // 0x68d1b0: mov ecx, [edi + lista] -> thiscall; 0x68d1f0: push item; mov ecx, [edi + lista]; ret 4 -> thiscall
     let mut i: i32 = 0;
@@ -58,7 +57,7 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         return;
     }
     loop {
-        let item = next(read_usize(this + list));
+        let item = exe::llist_get_next(read_usize(this + list));
         if item == 0 {
             return;
         }
@@ -167,8 +166,7 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
             }
         },
         None => {
-            let s: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(FN_UTILS_RANDOM);
-            s(n)
+            exe::utils_random(n)
         }
     }
 }
@@ -200,7 +198,6 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         return;
     }
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     // 0x77bbe0: push 0; push 0xbc9; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall; 0x600a50: 5
     // pushes; add esp, 0x14 -> cdecl (clube, 0, 1, 0, 0) e (clube, 1, 1, 0, 0)
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
@@ -214,9 +211,9 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     crate::comparison::branch("cqd_11 noticia da falta");
     let r = taped_random(3); // cqd11: the news random draw
     write(nt, 5, r as u32);
-    write(nt, 6, human(club, 0, 1, 0, 0));
+    write(nt, 6, exe::human_manager_is_human_club(club, 0, 1, 0, 0));
     let manager = read_usize(club + club::MANAGER);
-    if manager != 0 && human(club, 1, 1, 0, 0) == 0 { // cqd11: the AI manager reports
+    if manager != 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 { // cqd11: the AI manager reports
         crate::comparison::branch("cqd_11 relator tecnico");
         let t = read_usize(club + club::MANAGER);
         write(nt, 7, read_usize(t) as u32);
@@ -287,8 +284,7 @@ pub(crate) unsafe fn maybe_drop_attribute(a: usize, zero: bool) {
 
 /// LLIST::get_next for a list.
 pub(crate) unsafe fn awol_llist_next(list: usize) -> usize {
-    let f: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
-    f(list)
+    exe::llist_get_next(list)
 }
 
 /// Resets an LLIST cursor (+0xa) to the first node (+2).
@@ -311,9 +307,8 @@ pub(crate) unsafe fn date_has_passed(d: usize) -> bool {
 ///
 /// [pt] Uma semana depois da data `d` (0x54c770), já passou?
 pub(crate) unsafe fn weeks_after_have_passed(d: usize, weeks: u32) -> bool {
-    let f: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(FN_DATE_ADD_WEEKS);
     let mut t = [0u8; 8];
-    date_has_passed(f(d, &mut t, weeks))
+    date_has_passed(exe::date_add_weeks(d, &mut t, weeks))
 }
 
 /// Ends an AWOL case: flips bit 2 of the person's mark byte and removes the record from the AWOL list (this + 4).
@@ -703,8 +698,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
                     MISS_TRAINING_DECISION = 1;
                     return;
                 }
-                let sumir: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_AWOL_START_ABSENCE);
-                sumir(this, person, 0, 0);
+                exe::awol_start_absence(this, person, (0) as usize, 0);
                 return;
             }
         }
@@ -721,8 +715,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     let row = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person) as usize).wrapping_mul(79)).wrapping_add(0xa) as *mut u8;
     let r = friendly_random(10);
     *row = (*row).wrapping_add(r as u8);
-    let match_condition: unsafe extern "thiscall" fn(usize, usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_CONDITION);
-    let c = match_condition(read_usize(G_INJURY), person, 0);
+    let c = exe::injury_get_condition(read_usize(G_INJURY), person, 0);
     // the original’s calculations are 32-bit with high bytes from other values in the register, but only the low word
     // arrives (the condition is short in 0x62bd10)
     let queda = 0x15i16.wrapping_sub(read_u8(read_usize(person + staff::PLAYER) + 0x34) as i8 as i16).wrapping_mul(25);
@@ -735,8 +728,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     reg[12] = AWOL_RESIDUE_BYTE;
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     append(read_usize(this + 4), reg.as_ptr() as usize, 0xd);
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    if human(club, 0, 1, 0, 0) != 0 {
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
         return;
     }
     let manager = read_usize(club + club::MANAGER);
@@ -747,8 +739,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     if np == 0 || friendly_random(read_u8(np + non_player::DISCIPLINE) as i8 as i32) == 0 {
         return;
     }
-    let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    let a = friendly_random(rating(np, read_u8(np + non_player::MAN_HANDLING) as u32) as i32);
+    let a = friendly_random((exe::non_player_attribute_rating(np, (read_u8(np + non_player::MAN_HANDLING) as u32) as i8) as i8) as i32);
     let b = friendly_random(5);
     crate::comparison::branch("cpw_7 multa pela falta");
     exe::fine_fine_player(read_usize(G_FINE), person, if a > b { 1 } else { 2 }, 1);
@@ -815,17 +806,15 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
 /// Clube da IA (0x600a50) com técnico (+0xcf, +0x69): sorteio(+0x14 dele) acima de sorteio(10) leva à multa (0x5a5980,
 /// prazo 1 se sorteio(nota 0x544410 com o +0x19) passar de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: usize, club: usize) {
-    let init_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let mut reg = [0u8; 0x11];
-    init_data(reg.as_mut_ptr() as usize + 8);
+    exe::date_date_54a110(reg.as_mut_ptr() as usize + 8);
     if player == 0 || club == 0 {
         return;
     }
     reg[..4].copy_from_slice(&read_u32(player).to_le_bytes());
     reg[4..8].copy_from_slice(&read_u32(club).to_le_bytes());
-    let atribuir: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_DATE_OPERATOR_3D);
     let mut temporaria = [0u8; 8];
-    atribuir(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
+    exe::date_operator_3d(reg.as_mut_ptr() as usize + 8, temporaria.as_mut_ptr() as usize, G_CURRENT_DATE);
     // simplification: byte +0x10 of the record is stack leftover in the original; the copy writes 0 (nobody reads it)
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     append(read_usize(this + 8), reg.as_ptr() as usize, 0x11);
@@ -857,8 +846,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         }
         exe::news_send_to_club_manager(read_usize(G_NEWS), nt, club);
     }
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    if human(club, 0, 1, 0, 0) != 0 {
+    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
         return;
     }
     let manager = read_usize(club + club::MANAGER);
@@ -877,9 +865,8 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     }
     let np = read_usize(read_usize(club + club::MANAGER) + 0x69);
     crate::comparison::branch("cpz_9 multa pela forma");
-    let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     // simplification: the original pushes ecx with byte +0x19 only in cl (the high ones are leftover); 0x544410 only reads the byte
-    let c =friendly_random(rating(np, *((np + non_player::MAN_HANDLING) as *const u8) as u32) as i32);
+    let c =friendly_random((exe::non_player_attribute_rating(np, (*((np + non_player::MAN_HANDLING) as *const u8) as u32) as i8) as i8) as i32);
     let e = friendly_random(5); // cpz9: the deadline random draw
     let deadline = if c > e { 1 } else { 2 }; // cpz9: the fine deadline
     exe::fine_fine_player(read_usize(G_FINE), player, deadline, 1);

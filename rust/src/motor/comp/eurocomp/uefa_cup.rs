@@ -46,8 +46,7 @@ pub(crate) unsafe fn entrants_minus_half_prelim(this: usize, k: i16) -> i32 {
 pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     const F: usize = 0xaa19e0;
     core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x91);
-    let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
-    let l = zerada(0xa1, 6);
+    let l = exe::crt_calloc(0xa1, 6);
     write_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(F, 0x1bf);
@@ -106,8 +105,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
         write_usize(read_usize(this + cup::TEAM_TABLE) + k as i32 as usize * 6 - 6, 0);
         k = k.wrapping_sub(1);
     }
-    let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    sort(read_usize(this + cup::TEAM_TABLE), k as i32 as u32, 6, 0x522190);
+    exe::crt_qsort(read_usize(this + cup::TEAM_TABLE), k as i32 as u32, 6, 0x522190);
     let b2 = *((this + 0xb2) as *const i8);
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
@@ -116,8 +114,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     core::ptr::write_unaligned((this + cup::ENTRANT_COUNT) as *mut i16, 0);
     let n = k.wrapping_add(0x1b);
     core::ptr::write_unaligned((this + cup::ENTRANT_CAPACITY) as *mut i16, n);
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc((n as i32 * 6) as u32);
+    let t = exe::crt_malloc((n as i32 * 6) as u32);
     write_usize(this + cup::ENTRANT_BOOK, t);
     if t == 0 {
         show_error_at(F, 0x21a);
@@ -166,8 +163,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
     }
     *rounds = 9;
     *extra = 0;
-    let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let t = alloc(0x3a8);
+    let t = exe::crt_malloc(0x3a8);
     if t == 0 {
         show_error_at(0xaa19e0, 0xe0);
         return 0;

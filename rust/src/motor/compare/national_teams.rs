@@ -248,8 +248,7 @@ pub(crate) unsafe extern "stdcall" fn compare_national_teams_post_player_called_
 /// rotina grava por conta própria (caps_update_regions). Fora de jogo entre seleções: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_record_international_result(this: usize, p: usize, m: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_INTERNATIONAL_RESULT);
-    let is_national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    if is_national_team(read_usize(p + fixture::HOME_CLUB)) == 0 || is_national_team(read_usize(p + fixture::AWAY_CLUB)) == 0 {
+    if exe::database_is_national_team(read_usize(p + fixture::HOME_CLUB)) == 0 || exe::database_is_national_team(read_usize(p + fixture::AWAY_CLUB)) == 0 {
         return o(this, p, m); // simplification: writes nothing, original only
     }
     let regions = caps_update_regions(this, p, m);
@@ -590,9 +589,8 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
     }
     // the regions: the player, the nation record, the level band in the list and the national team (the level,
     // 0x76d810, only reads)
-    let level: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
     let reg = u(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
-    let n = level(player, reg as *const i16, 0) as i8 as isize;
+    let n = exe::national_teams_get_position_group(player, (reg as *const i16) as usize, (0) as u32) as i8 as isize;
     let mut regions = [(player, 110), (reg, 110), (player, 0), (player, 0)];
     if (0..=3).contains(&n) {
         let start = (0..n as usize).fold(u(reg + 8) as i32, |s, k| s.wrapping_add(*((reg + 0xe + 4 * k) as *const u8) as i32));
