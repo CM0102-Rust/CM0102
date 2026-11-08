@@ -374,7 +374,7 @@ pub(crate) unsafe fn planned_final_positions(this: usize, knockout: usize, nm: i
             let mut k = 0i16;
             while k < n {
                 crate::comparison::branch("cqg_4 campeão");
-                v.push((i, 1u8)); // cqg4: o campeão
+                v.push((i, 1u8)); // cqg4: the champion
                 i += 1;
                 count = count.wrapping_add(1);
                 k += 1;
@@ -628,7 +628,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
                 let club = read_usize(v);
                 if club != 0 {
                     n += 1;
-                    if read_u8(v + 5) == read_u8(p + 5) || club_nation(club) == club_nation(read_usize(p)) { // cqg6: mesmo grupo ou nação
+                    if read_u8(v + 5) == read_u8(p + 5) || club_nation(club) == club_nation(read_usize(p)) { // cqg6: same group or nation
                         conflito = true;
                         break;
                     }

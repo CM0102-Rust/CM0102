@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, et
                 exe::squad_manager_send_euro_registration_news(this, c, id, etapa);
             } else {
                 crate::comparison::branch("cqn_3 inscreve o clube");
-                exe::squad_manager_select_euro_registered_players(read_u32(G_SQUAD_MANAGER) as usize, c, etapa, 0); // cqn3: inscreve o clube
+                exe::squad_manager_select_euro_registered_players(read_u32(G_SQUAD_MANAGER) as usize, c, etapa, 0); // cqn3: enters the club
             }
         });
     }

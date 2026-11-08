@@ -26,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
     if ![KEY_CLUB_COMP_ITALIAN_SERIE_C1_A, KEY_CLUB_COMP_ITALIAN_SERIE_C1_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_A, KEY_CLUB_COMP_ITALIAN_SERIE_C2_B, KEY_CLUB_COMP_ITALIAN_SERIE_C2_C].iter().any(|&g| read_usize(g) == id) {
         return 1;
     }
-    // 0x4cf6d0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
+    // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
     let mut n: i8 = 0;
     for k in 0..50usize {
         let p = read_usize(club + club::SQUAD + 4 * k);

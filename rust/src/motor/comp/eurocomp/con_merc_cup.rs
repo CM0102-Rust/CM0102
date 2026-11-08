@@ -497,7 +497,6 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        let b = |d: usize| *((this + d) as *const u8) as u32;
         construct(
             p,
             this,
@@ -507,15 +506,15 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
             read_usize(this + 4),
             table,
             rodadas as u16 as u32,
-            b(0xc2),
-            b(0xc3),
-            b(0xc4),
+            (read_u8(this + 0xc2) as u32),
+            (read_u8(this + 0xc3) as u32),
+            (read_u8(this + 0xc4) as u32),
             this + league::TIEBREAKS,
             this + league::PROMOTED_COUNT,
             read_i16(this + league::YEAR) as u16 as u32,
             g as u32,
             id as u16 as u32,
-            b(0x51),
+            (read_u8(this + 0x51) as u32),
             2,
             0,
             read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,

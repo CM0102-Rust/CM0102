@@ -80,7 +80,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
         let mut j: i16 = 0;
         if lim(()) > 0 {
             loop {
-                if entrants_minus_half_prelim(this, k) >= 0x76 { // cqs9: completa até 118
+                if entrants_minus_half_prelim(this, k) >= 0x76 { // cqs9: fills up to 118
                     break;
                 }
                 let c = base + j as u16 as usize * club::SIZE;

@@ -15,6 +15,6 @@ MUTACOES = [
     ('c_ganho', "more(w(e, match_player::MATCH_RATING), if far { gain.wrapping_mul(2) } else { gain });", "more(w(e, match_player::MATCH_RATING), if far { gain.wrapping_mul(3) } else { gain });"),
     ('c_cabeca_216', "if r + byte(pj, player_sheet::JUMPING) as i32 + 3 < byte(pe, player_sheet::JUMPING) as i32 {", "if r + byte(pj, player_sheet::JUMPING) as i32 + 4 < byte(pe, player_sheet::JUMPING) as i32 {", "shot de cabeca com desafiante"),
     ('c_longe', "let code = if strength < -500 {", "let code = if strength < -400 {", "shot narra de longe"),
-    ('c_posse', "let v = ftol(rating_shot as f64 * read_f64_at(0x96d7a0));", "let v = ftol(rating_shot as f64 * read_f64_at(0x96d7a0) * 1.01);"),
+    ('c_posse', "let v = ftol(rating_shot as f64 * read_f64_at(rdata::F64_NEG_0_1818181818));", "let v = ftol(rating_shot as f64 * read_f64_at(rdata::F64_NEG_0_1818181818) * 1.01);"),
     ('c_19c', "if r >= random(200) {", "if r >= random(201) {"),
 ]

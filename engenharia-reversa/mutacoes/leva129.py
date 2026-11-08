@@ -12,7 +12,7 @@ MUTACOES = [
     ('j_registra', "exe::cm3_match_engine_set_pending_foul(m, lance as u16, j as u32, 0, 0, t, *b(j, match_player::CELL_X), *b(j, match_player::CELL_Y), cartao, grav);", "exe::cm3_match_engine_set_pending_foul(m, lance as u16, j as u32, 0, 0, t, *b(j, match_player::CELL_Y), *b(j, match_player::CELL_X), cartao, grav);", "play falta registrada"),
     ('j_penalti', "*w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_sub(500);\n            } else {", "*w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_sub(499);\n            } else {", "play penalty"),
     ('j_venceu', "*w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x1e);", "*w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x1f);", "play venceu"),
-    ('j_estilo', "narrar7(call, 0x1f65, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo);", "narrar7(call, 0x1f65, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo.wrapping_add(1));", "play venceu"),
+    ('j_estilo', "narrar7(call, 0x1f65, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);", "narrar7(call, 0x1f65, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo.wrapping_add(1));", "play venceu"),
     ('j_meia_lua', "espirra(call, random(3), 0);", "espirra(call, random(3), j);", "play meia-lua"),
     ('j_perdeu', "*w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x14);", "*w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x15);", "play perdeu"),
 ]

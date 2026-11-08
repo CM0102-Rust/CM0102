@@ -343,7 +343,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
         show_error_at(0x9ccc48, 0xc4);
         return (-1, 0);
     }
-    let a = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 0); // cqm11: o campeão francês
+    let a = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 0); // cqm11: the French champion
     core::ptr::write_unaligned(l as *mut u32, a as u32);
     if a == 0 {
         show_error_at(0x9ccc48, 0xcd);

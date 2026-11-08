@@ -333,18 +333,18 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
 pub(crate) unsafe fn fan_rating(p: usize, club: usize, st: usize) -> f64 {
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let average = read_i16(st + player_category_stats::RATING_TOTAL) as i32 as f64 / read_u8(st) as i32 as f64;
-    let mut rating = average + read_u8(st + player_category_stats::GOALS) as i32 as f64 * read_f64(0x967878);
-    rating = rating + read_u8(st + 6) as i32 as f64 * read_f64(0x968958);
+    let mut rating = average + read_u8(st + player_category_stats::GOALS) as i32 as f64 * read_f64(rdata::F64_0_025);
+    rating = rating + read_u8(st + 6) as i32 as f64 * read_f64(rdata::F64_0_01666666667);
     if exe::club_favours_staff(p, club) != 0 {
         crate::comparison::branch("cpp_10 favorito do clube");
-        rating = rating + read_f64(0x968918); // o clube gosta dele
+        rating = rating + read_f64(rdata::F64_0_2); // the club likes him
     } else if exe::club_dislikes_staff(p, club) != 0 {
-        rating = rating - read_f64(0x968950);
+        rating = rating - read_f64(rdata::F64_2);
     }
     if gosta(p, club) != 0 {
-        rating + read_f64(0x968918)
+        rating + read_f64(rdata::F64_0_2)
     } else if exe::staff_dislikes_club(p, club) != 0 {
-        rating - read_f64(0x968940)
+        rating - read_f64(rdata::F64_1_5)
     } else {
         rating
     }
@@ -401,8 +401,8 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
                 chosen = p;
             }
         }
-        factor -= read_f64(0x967880);
-        if !(factor > read_f64(0x968918)) {
+        factor -= read_f64(rdata::F64_0_1);
+        if !(factor > read_f64(rdata::F64_0_2)) {
             break;
         }
     }
@@ -679,7 +679,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         }
         let average = estatistica(reg, 0x11, 6.5);
         // fcomp with −1.0 (double) and fcom with the stored float: passes only with the higher average
-        if *rating as f64 == read_f64_at(0x968948) || average > *rating as f64 { // 0x968948 = -1
+        if *rating as f64 == read_f64_at(rdata::F64_NEG_1) || average > *rating as f64 {
             crate::comparison::branch("cpm_6 recorde de nota da temporada");
             *rating = average as f32;
             *((r + club_record::SEASON_RATING_GAMES) as *mut u8) = jogou;
@@ -865,7 +865,7 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
     if value < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // below the minimum for the reputation
     }
-    if exigir != 0 && value < ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) { // 0x967880 = 0.1
+    if exigir != 0 && value < ftol(rep as f64 * rep as f64 * read_f64_at(rdata::F64_0_1)) {
         return 0;
     }
     (value != 0 && value > read_usize(rec + club_record::FEE_PAID) as i32) as u8

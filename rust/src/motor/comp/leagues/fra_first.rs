@@ -187,7 +187,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
         return;
     }
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
-        exe::fixed_fixture_set_by_club_names(read_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: cada jogo fixo
+        exe::fixed_fixture_set_by_club_names(read_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: each fixed match
     }
     crate::comparison::branch("cqn_6 calendario fixo");
     let n = league_match_count(this);

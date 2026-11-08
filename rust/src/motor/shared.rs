@@ -85,7 +85,6 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     let special: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     let b = |p: usize, o: usize| (p + o) as *mut u8;
     let w = |p: usize, o: usize| (p + o) as *mut i16;
-    let ub = |p: usize, o: usize| *((p + o) as *const u8) as u32;
     let zero = |p: usize| (byte(p, 0x27) == 0) as u32;
     let m = *((j + match_player::ENGINE) as *const usize);
     // the commentary’s seventh argument goes in the high part of the code (see `dispatch_tackle_calls`)
@@ -98,7 +97,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     };
     let in_the_box = || area_de(j, byte(j, match_player::SIDE) == 1);
     let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, espalhar: i32, chutador: usize| {
-        call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [ub(j, match_player::CELL_X), ub(j, match_player::CELL_Y), (espalhar as u8 as u32) | ub(j, match_player::SIDE) << 8, 0, chutador as u32]);
+        call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(j + match_player::CELL_X) as u32), (read_u8(j + match_player::CELL_Y) as u32), (espalhar as u8 as u32) | (read_u8(j + match_player::SIDE) as u32) << 8, 0, chutador as u32]);
     };
     if exe::cm3_match_engine_get_goalkeeper(m, byte(j, match_player::SIDE)) == j || *((m + engine::BALL_HOLDER) as *const usize) == j {
         return 0;
@@ -128,7 +127,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             return 0;
         }
         crate::comparison::branch("play bola do proprio lado");
-        narrate(call, 0x1f5e, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+        narrate(call, 0x1f5e, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         let r = random(byte(m, engine::BALL_ROLL) as i32);
         espirra(call, r.wrapping_add(1), j);
@@ -184,7 +183,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
             crate::comparison::branch("play falta punida");
             let mut weight = 0f32;
             exe::cm3_match_engine_referee_decide_booking(m, j, &mut t, cartao as i8, grav as i8, foul_strong as u8, &mut weight);
-            narrate(call, 0x1fe8, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+            narrate(call, 0x1fe8, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
             let colour: i32 = match t {
                 2 => 0x1ff9,
                 3 => 0x1ff7,
@@ -234,9 +233,9 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                             narrate(call, 0x20f5, 0, 0, u32::MAX);
                         }
                     }
-                    narrate(call, 0x2109, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+                    narrate(call, 0x2109, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
                 }
-                narrate(call, colour as u32, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+                narrate(call, colour as u32, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
                 if sent_off {
                     player_left_pitch_with(m, j, 0, call);
                 }
@@ -247,7 +246,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                     narrate(call, sound, u32::MAX, zero(j), u32::MAX);
                 } else {
                     if t == 7 {
-                        narrate(call, 0x21e2, ub(c, 0x2e), zero(j), u32::MAX);
+                        narrate(call, 0x21e2, (read_u8(c + 0x2e) as u32), zero(j), u32::MAX);
                     } else {
                         narrate(call, sound, u32::MAX, zero(j), u32::MAX);
                     }
@@ -255,22 +254,22 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
                         let far = (byte(c, 0x27) == 1 && byte(c, 0x103) < 4) || (byte(c, 0x27) == 0 && byte(c, 0x103) > 7);
                         if t == 7 {
                             if far && !area_de(c, byte(j, match_player::SIDE) == 1) {
-                                narrate(call, 0x21e1, ub(c, 0x2e), zero(j), u32::MAX);
+                                narrate(call, 0x21e1, (read_u8(c + 0x2e) as u32), zero(j), u32::MAX);
                             }
                         } else if far {
-                            narrate(call, if (2..=6).contains(&byte(j, match_player::CELL_X)) { 0x21e0 } else { 0x21df }, ub(c, 0x2e), zero(j), u32::MAX);
+                            narrate(call, if (2..=6).contains(&byte(j, match_player::CELL_X)) { 0x21e0 } else { 0x21df }, (read_u8(c + 0x2e) as u32), zero(j), u32::MAX);
                         }
                     }
                 }
             }
             if special(lance as i8) == 0 {
                 if random(9) == 0 {
-                    narrate(call, 0x20df, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
+                    narrate(call, 0x20df, u32::MAX, (read_u8(j + match_player::SIDE) as u32), u32::MAX);
                     if random(3) == 0 {
-                        narrate(call, 0x20e0, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
+                        narrate(call, 0x20e0, u32::MAX, (read_u8(j + match_player::SIDE) as u32), u32::MAX);
                     }
                     if (sent_off || sound == 0x1f7a) && random(2) == 0 {
-                        narrate(call, 0x20d9, u32::MAX, ub(j, match_player::SIDE), u32::MAX);
+                        narrate(call, 0x20d9, u32::MAX, (read_u8(j + match_player::SIDE) as u32), u32::MAX);
                     }
                 }
                 exe::cm3_match_engine_scale_side_anger_from_player(m, j, weight);
@@ -287,13 +286,13 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
         *b(j, match_player::BALLS_CONTESTED) = (*b(j, match_player::BALLS_CONTESTED)).wrapping_add(1);
         *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(1);
         if meia_lua {
-            narrate(call, 0x1ffe, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+            narrate(call, 0x1ffe, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         } else if strong != 0 {
-            narrar7(call, 0x21d6, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo);
+            narrar7(call, 0x21d6, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
         } else if estilo == 5 {
-            narrar7(call, 0x1f66, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, 5);
+            narrar7(call, 0x1f66, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, 5);
         } else {
-            narrar7(call, 0x1f65, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo);
+            narrar7(call, 0x1f65, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
         }
         call(FN_MATCH_PLAYER_TAKE_POSSESSION, j, [0; 5]);
         *w(j, match_player::ACTION) = lance;
@@ -301,20 +300,20 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     }
     if exe::cm3_match_engine_get_goalkeeper(m, byte(j, match_player::SIDE)) == j {
         crate::comparison::branch("play goleiro");
-        narrate(call, 0x1fe7, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+        narrate(call, 0x1fe7, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
     } else if meia_lua && rating > 200 {
         crate::comparison::branch("play meia-lua");
-        narrate(call, 0x1ffd, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX);
+        narrate(call, 0x1ffd, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         espirra(call, random(3), 0);
     } else {
         crate::comparison::branch("play perdeu");
         if strong != 0 {
-            narrar7(call, 0x21d8, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo);
+            narrar7(call, 0x21d8, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
         } else if estilo == 5 {
-            narrar7(call, 0x1f85, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, 5);
+            narrar7(call, 0x1f85, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, 5);
         } else {
-            narrar7(call, 0x1f84, ub(j, match_player::COMMENTARY_ID), ub(j, match_player::SIDE), u32::MAX, estilo);
+            narrar7(call, 0x1f84, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, estilo);
         }
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         espirra(call, random(3), j);

@@ -1,14 +1,14 @@
 # Mutacoes da leva148 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva148.py --carreira 2002-06-01
 MUTACOES = [
-    ('i_angulo', "ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0))", "ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0) + 1.0)"),
+    ('i_angulo', "ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(rdata::F64_90))", "ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(rdata::F64_90) + 1.0)"),
     ('i_ceu', "*b(engine::ABANDON_MINUTE) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0xf) }", "*b(engine::ABANDON_MINUTE) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0x10) }"),
     ('i_duracao', "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1ef;", "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1f0;"),
     ('i_folego', "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2710;", "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2700;"),
     ('i_desvio', "    *w(engine::BALL_DIRECTION) = 0xb4;", "    *w(engine::BALL_DIRECTION) = 0xb5;"),
     ('i_campo', "    *dw(engine::TEMPO_ROLL_A) = 0x40c00000;", "    *dw(engine::TEMPO_ROLL_A) = 0x40d00000;"),
     ('i_gramado', "        *dw(0x91d6) = 0x5a;", "        *dw(0x91d6) = 0x5b;"),
-    ('i_desgaste', "let t = (read_f64_at(0x9688a8) - x) as f32;", "let t = (read_f64_at(0x9688a8) - x + 1.0) as f32;"),
-    ('i_peso', "let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0)) - x * read_f64_at(0x968a80);", "let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0) + 1.0) - x * read_f64_at(0x968a80);"),
+    ('i_desgaste', "let t = (read_f64_at(rdata::F64_100) - x) as f32;", "let t = (read_f64_at(rdata::F64_100) - x + 1.0) as f32;"),
+    ('i_peso', "let a = (ga * read_f64_at(rdata::F64_0_0001) + read_f64_at(rdata::F64_5)) - x * read_f64_at(rdata::F64_0_3333333333);", "let a = (ga * read_f64_at(rdata::F64_0_0001) + read_f64_at(rdata::F64_5) + 1.0) - x * read_f64_at(rdata::F64_0_3333333333);"),
     ('i_saida', "            *b(engine::NEXT_KICKOFF_SIDE) = 1;\n            *b(engine::POSSESSION_SIDE) = 0;", "            *b(engine::NEXT_KICKOFF_SIDE) = 0;\n            *b(engine::POSSESSION_SIDE) = 1;"),
     ('i_pontos', "                    if p > 5 && (p as i32) > random(0x1e) {", "                    if p > 6 && (p as i32) > random(0x1e) {", "prejogo insatisfeito pela posicao"),
     ('i_ficha', "                    p += if f5b == 1 { 0x14 } else if f5b < 6 { 0xa } else { 5 };", "                    p += if f5b == 1 { 0x14 } else if f5b < 6 { 0xb } else { 5 };", "prejogo insatisfeito pela posicao"),

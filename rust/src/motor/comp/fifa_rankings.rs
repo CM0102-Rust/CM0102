@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nati
             break;
         }
         if v <= ate { // cpt1: ate o mes final
-            n = n.wrapping_add(1); // cpt1: mais um jogo
+            n = n.wrapping_add(1); // cpt1: one more match
         }
         j = j.wrapping_sub(1);
     }

@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
                 }
                 if k == -3 || k == -1 || default != 0 {
                     crate::comparison::branch("cqj_3 sede padrao");
-                    return host_pair(e, -1, a, b) as u32; // cqj3: a sede padrão
+                    return host_pair(e, -1, a, b) as u32; // cqj3: the default venue
                 }
             }
         }

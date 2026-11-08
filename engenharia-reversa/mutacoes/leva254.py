@@ -29,7 +29,7 @@ MUTACOES = [
     ('cpr11_normal_acima', 'normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // the position in normal form', 'normal = (normal & !0xff) | (k as u8).wrapping_add(2) as u32; // mutacao: uma abaixo', 'cpr_11 projecao'),
     ('cpr12_so_em_casa', 'if club != home && club != read_u32(f + fixture::AWAY_CLUB_ID) {', 'if club != home { // mutacao: so em casa'),
     ('cpr12_janela_curta', '(ano as u16 == ano1 as u16 && dia as u16 > dia1 as u16)', '(ano as u16 == ano1 as u16 && dia as u16 >= dia1 as u16) /* mutacao: sem o ultimo dia */'),
-    ('cpr12_qualquer_rodada', 'ok = false; // outra rodada', '// mutacao: a rodada nao filtra', 'cpr_12 jogo da rodada'),
+    ('cpr12_qualquer_rodada', 'ok = false; // another round', '// mutacao: a rodada nao filtra', 'cpr_12 jogo da rodada'),
     ('cpr13_um_jogo_livre', 'if n as u16 != 0 {', 'if n as u16 > 1 { // mutacao: um jogo nao ocupa', 'cpr_13 ocupado'),
     ('cpr13_sem_vespera', 'let r = minus_days(data, p0, 1); // the day before', 'let r = minus_days(data, p0, 0); // mutacao: sem a vespera', 'cpr_13 clube livre'),
     ('cpr13_copa_sem_o_clube', 'return 1; // is in the cup', 'return 0; // mutacao: nunca na copa', 'cpr_13 copa tem o clube'),

@@ -2,7 +2,7 @@
 MUTACOES = [
     ('dq10_contar', '            n = n.wrapping_add(1);\n        }\n        n\n', '            n = n.wrapping_add(2);\n        }\n        n\n'),
     ('dq10_reunir', 'array.add(i), squad_slot(club, i)', 'array.add(i), squad_slot(club, 49 - i)'),
-    ('dq10_dirigido', '    (*((u(0x53) + 0x11c) as *const u8) & 2 != 0) as u8', '    (*((u(0x53) + 0x11c) as *const u8) & 4 != 0) as u8'),
+    ('dq10_dirigido', '    (*((read_usize(club + 0x53) + 0x11c) as *const u8) & 2 != 0) as u8', '    (*((read_usize(club + 0x53) + 0x11c) as *const u8) & 4 != 0) as u8'),
     ('dq11_nao_jogador', '        last = *((array + 3 * k) as *const u8);', '        last = *((array + 3 * k + 1) as *const u8);'),
     ('dq11_jogador', '*((player + d as usize) as *mut u8) = *((array + 3 * i) as *const u8);', '*((player + d as usize) as *mut u8) = *((array + 3 * i + 1) as *const u8);'),
     ('dq11_normalizar', '    let delta = (-5i32).wrapping_sub', '    let delta = (-4i32).wrapping_sub'),

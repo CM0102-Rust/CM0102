@@ -4,7 +4,7 @@ use super::*;
 // engenharia-reversa/involucros_exe.py from the call sites). `exe::finance_get_club_finance(f, club)` calls
 // the routine at `FN_FINANCE_GET_CLUB_FINANCE` in the original exe.
 // [pt] As funções do exe original chamadas pelas cópias Rust, uma declaração tipada cada (gerado pelo
-// involucros_exe.py a partir das chamadas).
+// involucros_exe.py from the calls).
 
 #[allow(dead_code, clippy::too_many_arguments)]
 pub(crate) mod exe {

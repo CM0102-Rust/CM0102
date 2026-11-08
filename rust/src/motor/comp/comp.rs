@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
         let mut i = 0i16;
         while i < read_i16(f + 0x3e) {
             let club = if league { read_usize(read_usize(f + 0xb1) + i as usize * 0x3b) } else { read_usize(read_usize(f + 0xa7) + i as usize * 6) };
-            if club != 0 && !(0..n).any(|k| read_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: até 200 clubes
+            if club != 0 && !(0..n).any(|k| read_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: up to 200 clubs
                 crate::comparison::branch("cqh_6 clube na lista");
                 core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, club as u32); // cqh6: the club in the list
                 n += 1;
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
             return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: the active index of the club’s nation
         }
     }
-    // 0x53b900: push clube; add esp, 4 -> cdecl
+    // 0x53b900: push club; add esp, 4 -> cdecl
     if exe::database_is_national_team(club) != 0 {
         return 0;
     }
@@ -557,7 +557,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
         let e = read_usize(rec).wrapping_add(9 * k as i32 as usize);
         if core::ptr::read_unaligned((e + 2) as *const u16) == ano && core::ptr::read_unaligned(e as *const u16) == dia {
             crate::comparison::branch("cpw_13 soma na data");
-            *((e + 8) as *mut u8) = (*((e + 8) as *const u8)).wrapping_add(count); // cpw13: soma na data
+            *((e + 8) as *mut u8) = (*((e + 8) as *const u8)).wrapping_add(count); // cpw13: adds to the date
             return true;
         }
         k += 1;

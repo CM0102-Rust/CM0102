@@ -1193,7 +1193,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_board_veto(this: usize, off
     let m0 = if reason.is_null() { 0 } else { *reason };
     let r = o(this, offer, buyer, seller, player, decides, reason);
     let after = read();
-    let a_90 = before.map(|v| ftol(v as f64 * read_f64_at(0x9689d8)) as i16); // 0x9689d8 = 0.9
+    let a_90 = before.map(|v| ftol(v as f64 * read_f64_at(rdata::F64_0_9)) as i16);
     let m = if reason.is_null() { 0 } else { *reason };
     let ok = match (r, reason.is_null()) {
         (0, false) => m == m0 && after == before,

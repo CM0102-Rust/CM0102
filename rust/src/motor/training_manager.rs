@@ -910,7 +910,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     let t = read_usize(club + club::MANAGER);
     if t == 0 {
         crate::comparison::branch("cpt_8 sem tecnico");
-        return 100; // cpt8: sem técnico
+        return 100; // cpt8: no manager
     }
     if read_i32(t) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         return (t as u32 & 0xffff_0000) | 100; // cpt8: técnico do computador
@@ -932,7 +932,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
         crate::comparison::branch("cpt_8 treinadores");
         soma = ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: the average of the coaches
     }
-    let r = ftol(soma as f64 * read_f64_at(0x970400)); // 0x970400 = 5.714285714
+    let r = ftol(soma as f64 * read_f64_at(rdata::F64_5_714285714));
     if (r as i16) < 0x32 {
         return 0x32;
     }
@@ -976,13 +976,12 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, manage
 /// para cima, 100. Pela update_player_training (0x8b1750, o jogador do clube humano), pela set_player_schedule
 /// (0x8b2250) e pela reassign_squad_schedules (0x8b2470); vai para a ficha de forma (Injury::set_training_load 0x62c660).
 pub(crate) unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
-    let level = |k: usize| *((this + k) as *const i8) as f64;
-    let a = ftol(level(4) * read_f64_at(0x96f878)) as i16; // 0x96f878 = -1.3
-    let mut s = ftol(level(8) * read_f64_at(0x968968)) as i16; // 0x968968 = 0.5
+    let a = ftol((read_i8(this + 4) as f64) * read_f64_at(rdata::F64_NEG_1_3)) as i16;
+    let mut s = ftol((read_i8(this + 8) as f64) * read_f64_at(rdata::F64_0_5)) as i16;
     s = s.wrapping_sub(a);
-    s = s.wrapping_sub(ftol(level(7) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
-    s = s.wrapping_sub(ftol(level(6) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
-    s = s.wrapping_sub(ftol(level(5) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
+    s = s.wrapping_sub(ftol((read_i8(this + 7) as f64) * read_f64_at(rdata::F64_NEG_0_5)) as i16);
+    s = s.wrapping_sub(ftol((read_i8(this + 6) as f64) * read_f64_at(rdata::F64_NEG_0_5)) as i16);
+    s = s.wrapping_sub(ftol((read_i8(this + 5) as f64) * read_f64_at(rdata::F64_NEG_0_5)) as i16);
     if s >= 0x64 {
         return 0x64;
     }
@@ -1265,7 +1264,7 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
     if rest == 0 { // cpt10: o sétimo dia
         crate::comparison::branch("cpt_10 semana");
         let s = (this + 0x688d) as *mut u16;
-        *s = (*s).wrapping_add(1); // cpt10: mais uma semana
+        *s = (*s).wrapping_add(1); // cpt10: one more week
     }
     v / 7
 }

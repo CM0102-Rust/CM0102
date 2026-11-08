@@ -3200,6 +3200,9 @@ pub(crate) use self::player_stats::*;
 #[path = "motor/printouts.rs"]
 pub(crate) mod printouts;
 pub(crate) use self::printouts::*;
+#[path = "motor/rdata_consts.rs"]
+pub(crate) mod rdata_consts;
+pub(crate) use self::rdata_consts::*;
 #[path = "motor/record_utils.rs"]
 pub(crate) mod record_utils;
 pub(crate) use self::record_utils::*;
@@ -8203,9 +8206,7 @@ static mut DIAG_CLUB: usize = usize::MAX;
 static mut DIAG_MARK: usize = 0;
 
 unsafe fn diag_contract(c: usize) -> String {
-    let b = |o: usize| *((c + o) as *const u8);
-    let d = |o: usize| core::ptr::read_unaligned((c + o) as *const u32);
-    format!("+0x44 {} +0x45 {:#x} +0x40 {:#x} +0x49 {} +0x4e {:#x} +0x4f {:#x}", b(0x44) as i8, d(0x45), d(0x40), b(0x49), b(0x4e), b(0x4f))
+    format!("+0x44 {} +0x45 {:#x} +0x40 {:#x} +0x49 {} +0x4e {:#x} +0x4f {:#x}", read_u8(c + 0x44) as i8, read_u32(c + 0x45), read_u32(c + 0x40), read_u8(c + 0x49), read_u8(c + 0x4e), read_u8(c + 0x4f))
 }
 
 static mut DIAG_CALLS: u32 = 0;
@@ -9594,7 +9595,7 @@ pub unsafe fn autoteste(casos: u64) {
                     let mut tipo = [1i8, 2, 4, 5, 5, 5, 6, 7, 8][((r0 >> 23) % 9) as usize];
                     let ofs = if lado56 != 0 { 0 } else { 11 };
                     let (cx, ax) = ((a7 as i32 - 4).abs(), (a8 as i32 - ofs).abs());
-                    if (tipo == 6 || tipo == 7) && (2..=6).contains(&a7) && cx <= 8 && ax <= 11 && (distance_table_cell(ax, cx) as f64) < read_f64_at(0x96d428) {
+                    if (tipo == 6 || tipo == 7) && (2..=6).contains(&a7) && cx <= 8 && ax <= 11 && (distance_table_cell(ax, cx) as f64) < read_f64_at(rdata::F64_4_1) {
                         tipo = 8; // near the goal the free kick consults the tactics
                     }
                     let excl = if tipo == 5 && (r0 >> 27) % 3 == 0 { excl56.as_ptr() as usize } else { 0 };

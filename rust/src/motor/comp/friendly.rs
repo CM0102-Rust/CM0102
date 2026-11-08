@@ -63,13 +63,13 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
         let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(read_usize(game + fixture::HOME_CLUB), read_i16(game + fixture::DAY)), replace_low_word(read_usize(game + fixture::COMPETITION), read_i16(game + fixture::YEAR)), (read_usize(game + fixture::AWAY_CLUB) as u32) as usize, (read_usize(game + fixture::HOME_CLUB) as u32) as usize);
         if v != 0 {
             crate::comparison::branch("cqg_10 vaga do amistoso livre");
-            core::ptr::write_unaligned((v + scheduled_friendly_slot::OPPONENT) as *mut u32, 0); // cqg10: a vaga fica livre
+            core::ptr::write_unaligned((v + scheduled_friendly_slot::OPPONENT) as *mut u32, 0); // cqg10: the place stays free
             *((v + scheduled_friendly_slot::STATUS) as *mut u8) = 0;
         }
     }
-    if read_u8(game + fixture::HOME_GOALS) == 0xff { // cqg10: jogo sem rodada
+    if read_u8(game + fixture::HOME_GOALS) == 0xff { // cqg10: match without a round
         // 0x53b900: push; add esp, 4 -> cdecl; 0x5cb9e0: push jogo; mov ecx, this -> thiscall, ret 4; 0x5abc30: push
-        // jogo; mov ecx, [0xae2a58] -> thiscall, ret 4
+        // match; mov ecx, [0xae2a58] -> thiscall, ret 4
         if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 {
             exe::friendly_remove_national_fixture(this, game);
         } else {
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
 pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: usize, game: usize) {
     let _ = this;
     let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
-    // 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx, local -> thiscall; 0x5abc30: push jogo; mov ecx, [0xae2a58] -> thiscall,
+    // 0x68d020 / 0x68d040 / 0x68d1b0: lea ecx, local -> thiscall; 0x5abc30: push match; mov ecx, [0xae2a58] -> thiscall,
     // ret 4; 0x53b4f0: push nation; add esp, 4 -> cdecl; 0x549ef0: push +0x28; push +0x2a; lea ecx -> thiscall, ret 8;
     // 0x54c8e0: push 1; push &output; lea ecx -> thiscall, ret 8; 0x417c10: push source; push &output; lea ecx ->
     // thiscall, ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
         let data_new: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE);
         let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_FIXTURE_MANAGER_REMOVE_FIXTURE);
         // 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24; 0x549ef0: push +0x28; push +0x2a; lea ecx ->
-        // thiscall, ret 8; 0x5ac7a0 / 0x5abc30 / 0x5ab230: push jogo; mov ecx, [0xae2a58] -> thiscall, ret 4
+        // thiscall, ret 8; 0x5ac7a0 / 0x5abc30 / 0x5ab230: push match; mov ecx, [0xae2a58] -> thiscall, ret 4
         let id_comp = read_usize(read_usize(competition + 4)) as u32;
         find(read_usize(G_FIXTURE_MANAGER), read_usize(pa) as u32, core::ptr::read_unaligned((pa + 2) as *const u32), read_usize(pb) as u32,
             core::ptr::read_unaligned((pb + 2) as *const u32), -1, l, id_comp, -2, -1);
@@ -586,7 +586,7 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                                             }
                                             (*f).2 = false;
                                         }
-                                        (*f).2 = true; // nenhum ponto fecha
+                                        (*f).2 = true; // no point closes
                                         return;
                                     }
                                     None => {
@@ -1145,7 +1145,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
                     1
                 };
                 if marked != 0 {
-                    let f = ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8; // 0x9689b0 = 0.8
+                    let f = ftol(band as i8 as i32 as f64 * read_f64_at(rdata::F64_0_8)) as u8;
                     band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);
@@ -1330,15 +1330,15 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
     let o = other_friendly_club(m);
     let (na, no) = (read_usize(a + club::NATION), read_usize(o + club::NATION));
     let second = o == read_usize(m + friendly_match::HOME_CLUB);
-    let mut f = if second { read_f64_at(0x96af38) } else { read_f64_at(0x96af20) }; // 0x96af38 = 1.32, 0x96af20 = 1.65
+    let mut f = if second { read_f64_at(rdata::F64_1_32) } else { read_f64_at(rdata::F64_1_65) };
     if no != na {
-        f *= read_f64_at(0x96af30); // 0x96af30 = 0.925
+        f *= read_f64_at(rdata::F64_0_925);
     }
     if read_u8(no + nation::ACTUAL_REGION) != read_u8(na + nation::ACTUAL_REGION) {
-        f *= read_f64_at(0x969520); // 0x969520 = 0.85
+        f *= read_f64_at(rdata::F64_0_85);
     }
     if read_i32(no + nation::CONTINENT) != read_i32(na + nation::CONTINENT) {
-        f *= read_f64_at(0x969520); // 0x969520 = 0.85
+        f *= read_f64_at(rdata::F64_0_85);
     }
     if second {
         let (fa, fo) = (read_usize(a + club::STADIUM), read_usize(o + club::STADIUM));
@@ -1351,7 +1351,7 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
             let dx = read_f64_at(sa + city::LONGITUDE) - read_f64_at(so + city::LONGITUDE);
             let dy = read_f64_at(sa + city::LATITUDE) - read_f64_at(so + city::LATITUDE);
             let i = read_i32(a + club::MIN_ATTENDANCE) as f64;
-            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(0x96a5d8) + read_f64_at(0x967890)) * read_f64_at(0x96af28)) + read_f64_at(0x967890); // 0x96a5d8 = 0.55, 0x967890 = 1, 0x96af28 = 40000
+            let v = i / (((dy * dy + dx * dx).sqrt() * read_f64_at(rdata::F64_0_55) + read_f64_at(rdata::F64_1)) * read_f64_at(rdata::F64_40000)) + read_f64_at(rdata::F64_1);
             f *= v; // cqa2: the distance factor
         }
     }
@@ -1360,7 +1360,7 @@ pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
         crate::comparison::branch("cqa_2 decisao do amistoso");
     }
     // fcompp/test ah, 1: C0 holds for ”less” and for ”unordered” (NaN): the >= below take the same path
-    let accepted = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: accepts by reputation; 0x96a690 = 600
+    let accepted = ra as f64 >= ro as f64 / f || f * read_f64_at(rdata::F64_600) >= ro.wrapping_sub(ra) as f64; // cqa2: accepts by reputation;
     if accepted { 3 } else { 4 }
 }
 
@@ -1639,7 +1639,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: usize, club: us
         if r != 0 {
             crate::comparison::branch("cpv_13 prêmio do técnico");
             let a = (r + 0x9e) as *mut u16;
-            core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: conta o prêmio
+            core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: counts the prize
         }
         return;
     }
@@ -2179,7 +2179,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_tour_matches(this: usize, cand: 
         if k + 1 < n as i32 {
             crate::comparison::branch("cpt_12 data do jogo seguinte");
         }
-        let r = more_days(d1.as_ptr() as usize, &mut t, 2); // cpt12: o próximo jogo
+        let r = more_days(d1.as_ptr() as usize, &mut t, 2); // cpt12: the next match
         copy(&mut d1, &mut u, r);
     }
     1
@@ -2535,16 +2535,15 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
     // a palavra
     let r = exe::date_add_days(data, p1, folga as u32);
     exe::date_operator_3d(pb, p0, r);
-    let w = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const u16);
     let nation = read_u32(club + club::NATION) as usize;
     if k != 0 && exe::database_is_national_team(club) == 0 && nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
         let reg = (exe::key_nation_index_of_nation(nation) as u8 as i8 as isize * 72) as usize;
         let start = G_LEAGUE_WORLD_CUP_START_DATE.wrapping_add(reg); // the key nation’s season
-        let (iano, idia) = (w(start, 2), w(start, 0) as i16);
-        if iano < w(pb, 2) || (iano == w(pb, 2) && idia < w(pb, 0) as i16) {
+        let (iano, idia) = (read_u16(start + 2), read_u16(start + 0) as i16);
+        if iano < read_u16(pb + 2) || (iano == read_u16(pb + 2) && idia < read_u16(pb + 0) as i16) {
             let end = G_LEAGUE_WORLD_CUP_END_DATE.wrapping_add(reg);
-            let (fano, fdia) = (w(end, 2), w(end, 0) as i16);
-            if fano > w(pa, 2) || (fano == w(pa, 2) && fdia > w(pa, 0) as i16) {
+            let (fano, fdia) = (read_u16(end + 2), read_u16(end + 0) as i16);
+            if fano > read_u16(pa + 2) || (fano == read_u16(pa + 2) && fdia > read_u16(pa + 0) as i16) {
                 return sai(0); // the window falls within the season
             }
         }
@@ -2609,7 +2608,7 @@ pub(crate) unsafe extern "C" fn compare_nations_by_reputation_desc(a: usize, b: 
 pub(crate) unsafe extern "C" fn compare_fixture_records_by_date(a: usize, b: usize) -> i32 {
     let (d0, d1) = (read_usize(b + 3) as u32, read_usize(b + 7) as u32);
     let r = if exe::date_operator_3c(a + 3, d0, d1) != 0 { -1 } else { (exe::date_operator_3e(a + 3, d0, d1) != 0) as i32 };
-    r // a data mais cedo primeiro
+    r // the earliest date first
 }
 
 /// `Friendly::remove_friendly_match(fixture, clear_slot)`: removes the fixture's items from the [+0x34d4] list, clears
@@ -3227,7 +3226,7 @@ pub(crate) unsafe extern "thiscall" fn find_scheduled_friendly_slot(this: usize,
                 let v = e + 25 * i + 9;
                 if *((v + scheduled_friendly_slot::YEAR) as *const u16) == year && *(v as *const u16) == day && read_usize(v + scheduled_friendly_slot::OPPONENT) == opponent {
                     crate::comparison::branch("cpk_4 vaga do amistoso");
-                    return e + 25 * i + 9; // a vaga i
+                    return e + 25 * i + 9; // place i
                 }
             }
         }

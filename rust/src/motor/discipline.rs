@@ -651,7 +651,7 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
             return j;
         }
         crate::comparison::branch("cpm_4 jogo cumprido");
-        let n = (*((s + ban_record::MATCHES_SERVED) as *const u8)).wrapping_add(1); // mais um jogo cumprido
+        let n = (*((s + ban_record::MATCHES_SERVED) as *const u8)).wrapping_add(1); // one more match served
         j.contador = Some(n);
         j.cumprida = n == games;
     } else {
@@ -937,7 +937,7 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
         let slot = reg + 5 * k as usize;
         let mut r = [0u8; 10];
         r[..4].copy_from_slice(&(read_usize(player) as u32).to_le_bytes());
-        r[4] = k; // a vaga
+        r[4] = k; // the place
         r[5..].copy_from_slice(core::slice::from_raw_parts(slot as *const u8, 5));
         append(this + discipline_fields::HELD_BANS, r.as_ptr(), 10);
         core::ptr::write_unaligned(slot as *mut u32, u32::MAX);

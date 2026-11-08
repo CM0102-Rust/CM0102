@@ -190,7 +190,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
         return 0;
     }
     crate::comparison::branch("cqs_5 chaves do trofeu da liga");
-    exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), read_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
+    exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), read_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: North and South by latitude
     let half = (read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;
     exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), half as u32, 4, 0x4b0810);
     let half = (read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;

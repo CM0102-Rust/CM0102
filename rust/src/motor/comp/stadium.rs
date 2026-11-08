@@ -512,59 +512,59 @@ pub(crate) unsafe fn apply_side_factor_floor(game: usize, side: u8, f: &mut [f64
         let a = read_i16(game + fixture::ROUND_NAME) as u16;
         if a == 0x96 {
             if high(0x1676) {
-                floor(&mut f[k], read_f64_at(0x9690a8)); // 0x9690a8 = 2.75
+                floor(&mut f[k], read_f64_at(rdata::F64_2_75));
             } else {
-                floor(&mut f[k], read_f64_at(0x968e38)); // 0x968e38 = 3.5
+                floor(&mut f[k], read_f64_at(rdata::F64_3_5));
             }
-        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) { // 0x968e18 = 2.5
+        } else if a == 0x82 && f[k] < read_f64_at(rdata::F64_2_5) {
             if high(0x1676) {
-                floor(&mut f[k], read_f64_at(0x968ec8)); // 0x968ec8 = 2.25
+                floor(&mut f[k], read_f64_at(rdata::F64_2_25));
             } else {
-                floor(&mut f[k], read_f64_at(0x968930)); // 0x968930 = 3
+                floor(&mut f[k], read_f64_at(rdata::F64_3));
             }
         } else if side > 1 || rep(side) >= 0x1676 {
-            floor(&mut f[k], read_f64_at(0x9689b8)); // 0x9689b8 = 1.05
+            floor(&mut f[k], read_f64_at(rdata::F64_1_05));
         } else if rep(side) >= 0x109a {
-            floor(&mut f[k], read_f64_at(0x968928)); // 0x968928 = 1.25
+            floor(&mut f[k], read_f64_at(rdata::F64_1_25));
         } else {
-            floor(&mut f[k], read_f64_at(0x968f98)); // 0x968f98 = 1.75
+            floor(&mut f[k], read_f64_at(rdata::F64_1_75));
         }
     }
     if t == 6 {
         let a = read_i16(game + fixture::ROUND_NAME) as u16;
         if a == 0x96 {
             if high(0x109a) {
-                floor(&mut f[k], read_f64_at(0x9690a8)); // 0x9690a8 = 2.75
+                floor(&mut f[k], read_f64_at(rdata::F64_2_75));
             } else {
-                floor(&mut f[k], read_f64_at(0x968e38)); // 0x968e38 = 3.5
+                floor(&mut f[k], read_f64_at(rdata::F64_3_5));
             }
-        } else if a == 0x82 && f[k] < read_f64_at(0x968e18) { // 0x968e18 = 2.5
-            f[k] = read_f64_at(0x968e18); // 0x968e18 = 2.5
+        } else if a == 0x82 && f[k] < read_f64_at(rdata::F64_2_5) {
+            f[k] = read_f64_at(rdata::F64_2_5);
         } else {
-            floor(&mut f[k], read_f64_at(0x968928)); // 0x968928 = 1.25
+            floor(&mut f[k], read_f64_at(rdata::F64_1_25));
         }
     } else if read_i16(game + fixture::ROUND_NAME) as u16 == 0x96 && t == 5 {
         if high(0x109a) {
-            floor(&mut f[k], read_f64_at(0x9690a8)); // 0x9690a8 = 2.75
+            floor(&mut f[k], read_f64_at(rdata::F64_2_75));
         } else {
-            floor(&mut f[k], read_f64_at(0x968e38)); // 0x968e38 = 3.5
+            floor(&mut f[k], read_f64_at(rdata::F64_3_5));
         }
     } else if read_i16(game + fixture::ROUND_PREFIX) as u16 == 0xa0 && t == 5 {
         if side == 0 {
-            if rep(0) < 0x109a && f[0] < read_f64_at(0x96fe20) { // 0x96fe20 = 3.25
-                f[0] = read_f64_at(0x96fe20); // 0x96fe20 = 3.25
+            if rep(0) < 0x109a && f[0] < read_f64_at(rdata::F64_3_25) {
+                f[0] = read_f64_at(rdata::F64_3_25);
             } else {
-                floor(&mut f[0], read_f64_at(0x968e18)); // 0x968e18 = 2.5
+                floor(&mut f[0], read_f64_at(rdata::F64_2_5));
             }
         } else {
-            floor(&mut f[k], read_f64_at(0x968e18)); // 0x968e18 = 2.5
+            floor(&mut f[k], read_f64_at(rdata::F64_2_5));
         }
-    } else if t == 10 && f[k] < read_f64_at(0x968928) { // 0x968928 = 1.25
-        f[k] = read_f64_at(0x968928); // 0x968928 = 1.25
-    } else if t == 9 && f[k] < read_f64_at(0x9689b0) { // 0x9689b0 = 0.8
-        f[k] = read_f64_at(0x9689b0); // 0x9689b0 = 0.8
+    } else if t == 10 && f[k] < read_f64_at(rdata::F64_1_25) {
+        f[k] = read_f64_at(rdata::F64_1_25);
+    } else if t == 9 && f[k] < read_f64_at(rdata::F64_0_8) {
+        f[k] = read_f64_at(rdata::F64_0_8);
     } else {
-        floor(&mut f[k], read_f64_at(0x967880)); // 0x967880 = 0.1
+        floor(&mut f[k], read_f64_at(rdata::F64_0_1));
     }
 }
 
@@ -641,7 +641,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         let comp = read_usize(game + fixture::COMPETITION);
         if comp != 0 {
             f[k] = read_i16(comp + competition::REPUTATION) as i32 as f64;
-            if f[k] < read_f64_at(0x967890) { // 0x967890 = 1
+            if f[k] < read_f64_at(rdata::F64_1) {
                 f[k] = 1.0;
             }
         } else {
@@ -649,21 +649,21 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         }
         let t = read_u8(game + fixture::CATEGORY);
         if t == 8 || t == 10 || t == 6 {
-            f[k] += read_f64_at(0x968950); // 0x968950 = 2
+            f[k] += read_f64_at(rdata::F64_2);
         }
-        let mut adjust = read_f64_at(0x9689a0); // 0x9689a0 = 0
+        let mut adjust = read_f64_at(rdata::F64_0);
         if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) == 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 && read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(comp) * 4) != 0 && read_usize(G_RESERVE_COMP) != 0 {
             let group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
             if group(read_usize(game + fixture::COMPETITION)) == 0 {
                 let league = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(read_usize(game + fixture::COMPETITION)) * 4);
                 if read_u8(league + league::COMP_TYPE) != 2 {
                     let x = (read_u8(game + fixture::ROUND_NUMBER).wrapping_sub(read_u8(league + league::LEGS)) as i8) as i32 as f64;
-                    adjust = if x < read_f64_at(0x96fe28) { // 0x96fe28 = -6
-                        read_f64_at(0x96fe28) // 0x96fe28 = -6
-                    } else if x <= read_f64_at(0x9688a0) { // 0x9688a0 = 5
+                    adjust = if x < read_f64_at(rdata::F64_NEG_6) {
+                        read_f64_at(rdata::F64_NEG_6)
+                    } else if x <= read_f64_at(rdata::F64_5) {
                         x
                     } else {
-                        read_f64_at(0x9688a0) // 0x9688a0 = 5
+                        read_f64_at(rdata::F64_5)
                     };
                 }
             }
@@ -677,19 +677,19 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                 f[k] = outro as i32 as f64 / eu as i32 as f64 * v;
             }
             if outro > 0x11 {
-                f[k] *= read_f64_at(0x9689c0); // 0x9689c0 = 1.1
+                f[k] *= read_f64_at(rdata::F64_1_1);
             }
             if outro > 0xc && eu < 0xe {
-                f[k] *= read_f64_at(0x968928); // 0x968928 = 1.25
+                f[k] *= read_f64_at(rdata::F64_1_25);
             }
             let _ = clube;
             let lg = read_usize(read_usize(game + if side == 0 { 0x1c } else { 0x20 }) + 0x57);
             if lg != 0 && read_i16(lg + competition::REPUTATION) != 0 {
                 f[k] /= read_i16(lg + competition::REPUTATION) as i32 as f64;
             } else if read_u8(game + fixture::CATEGORY) == 0xa {
-                f[k] *= read_f64_at(0x968918); // 0x968918 = 0.2
+                f[k] *= read_f64_at(rdata::F64_0_2);
             } else {
-                f[k] *= read_f64_at(0x967888); // cqo2: the factor without the club league; 0x967888 = 0.05
+                f[k] *= read_f64_at(rdata::F64_0_05); // cqo2: the factor without the club league;
             }
         }
         apply_side_factor_floor(game, side, &mut f);
@@ -703,15 +703,15 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         let c_home = stadium_city(read_usize(home + club::STADIUM));
         let c_away = stadium_city(read_usize(away + club::STADIUM));
         let mut d = exe::stadium_get_travel_distance_factor(this, game, c_est, c_home, f[0]);
-        if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
-            d = read_f64_at(0x968f20); // 0x968f20 = 0.15
+        if d < read_f64_at(rdata::F64_0_15) {
+            d = read_f64_at(rdata::F64_0_15);
         }
         pc = ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0] * d);
         let mut d = exe::stadium_get_travel_distance_factor(this, game, c_est, c_away, f[1]);
-        if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
-            d = read_f64_at(0x968f20); // 0x968f20 = 0.15
+        if d < read_f64_at(rdata::F64_0_15) {
+            d = read_f64_at(rdata::F64_0_15);
         }
-        pf = ftol(read_i32(away + club::MIN_ATTENDANCE).wrapping_add(read_i32(away + club::ATTENDANCE)) as f64 * f[1] * d * read_f64_at(0x968968)); // 0x968968 = 0.5
+        pf = ftol(read_i32(away + club::MIN_ATTENDANCE).wrapping_add(read_i32(away + club::ATTENDANCE)) as f64 * f[1] * d * read_f64_at(rdata::F64_0_5));
         let comp = read_usize(game + fixture::COMPETITION);
         if comp != 0 && home != 0 && read_usize(home + club::DIVISION) == comp {
             let league = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(comp) * 4);
@@ -747,7 +747,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                             } else if cl < 4 {
                                 2
                             } else {
-                                ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16 // 0x9689e0 = 0.25
+                                ftol(ax as i32 as f64 * read_f64_at(rdata::F64_0_25)) as i16
                             };
                         }
                         let m = if bl < 4 && dl == 1 { 25 } else { 15 };
@@ -781,16 +781,16 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
     let rival = |a: usize, b: usize| read_usize(a + 0xb3) == b || read_usize(a + 0xb7) == b || read_usize(a + 0xbb) == b;
     if rival(home, away) {
         crate::comparison::branch("cqo_2 classico");
-        pc = ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico; 0x968940 = 1.5
+        pc = ftol(pc as f64 * read_f64_at(rdata::F64_1_5)); // cqo2: o clássico;
     } else if read_usize(home + club::STADIUM) != 0 && read_usize(away + club::STADIUM) != 0 && read_usize(read_usize(home + club::STADIUM) + 0x38) == read_usize(read_usize(away + club::STADIUM) + 0x38) {
-        pc = ftol(pc as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
+        pc = ftol(pc as f64 * read_f64_at(rdata::F64_1_35));
     }
     if rival(away, home) {
-        pf = ftol(pf as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
+        pf = ftol(pf as f64 * read_f64_at(rdata::F64_1_35));
     }
     if read_u8(game + fixture::NEUTRAL_VENUE) == 0 && read_u8(game + fixture::STAGE) != 0xff {
-        pc = ftol(pc as f64 * read_f64_at(0x9689b8)); // 0x9689b8 = 1.05
-        pf = ftol(pf as f64 * read_f64_at(0x969520)); // 0x969520 = 0.85
+        pc = ftol(pc as f64 * read_f64_at(rdata::F64_1_05));
+        pf = ftol(pf as f64 * read_f64_at(rdata::F64_0_85));
     }
     let comp = read_usize(game + fixture::COMPETITION);
     if comp != 0 && home != 0 && read_usize(home + club::DIVISION) == comp && read_u8(home + club::OWN_STADIUM) != 0 {
@@ -815,7 +815,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             if pc < n * 250 {
                 pc = n * 250;
             } else if pc > n * 1500 {
-                pc = n * 1500 - ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30)); // 0x968f30 = -0.2
+                pc = n * 1500 - ftol((pc - n * 1500) as f64 * read_f64_at(rdata::F64_NEG_0_2));
             }
         }
     }
@@ -833,9 +833,9 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             let vis = if read_u8(game + fixture::NEUTRAL_VENUE) == 0 {
                 let a = lot as f64;
                 let x = a - read_i32(read_usize(game + fixture::AWAY_CLUB) + 0x73) as f64 * f[0];
-                let y = a * read_f64_at(0x968f20); // 0x968f20 = 0.15
+                let y = a * read_f64_at(rdata::F64_0_15);
                 let z = if x < y { x } else { y };
-                let w = a * read_f64_at(0x967888); // 0x967888 = 0.05
+                let w = a * read_f64_at(rdata::F64_0_05);
                 ftol(if w > z { w } else { z })
             } else {
                 lot / 2
@@ -878,7 +878,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
 pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
     let dx = (read_f64(a + city::LATITUDE) - read_f64(b + city::LATITUDE)).abs();
     let dy = (read_f64(a + city::LONGITUDE) - read_f64(b + city::LONGITUDE)).abs();
-    ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40)) // 0x96fe40 = 44.44444444
+    ftol((dy * dy + dx * dx).sqrt() * read_f64_at(rdata::F64_44_44444444))
 }
 
 /// Scores a venue for a neutral fixture: the English national stadium before 2004 scores 0; the score starts at 100000,
@@ -940,8 +940,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
                 }
             } else {
                 let (f1, f2, f3) = (d1 as f64, d2 as f64, d3 as f64);
-                let near = f1 * read_f64_at(0x96fe38); // 0x96fe38 = 0.5882352941
-                let far = f1 * read_f64_at(0x969088); // 0x969088 = 0.8333333333
+                let near = f1 * read_f64_at(rdata::F64_0_5882352941);
+                let far = f1 * read_f64_at(rdata::F64_0_8333333333);
                 if f2 < near && f3 < near {
                     rating = 200000;
                 } else if !(f2 < far && f3 < far) {
@@ -977,27 +977,27 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             }
         }
         if lugares > expected {
-            rating = ftol(rating as f64 * read_f64_at(0x968978)); // 0x968978 = 1.2
+            rating = ftol(rating as f64 * read_f64_at(rdata::F64_1_2));
         }
         let (l, e) = (lugares as f64, expected as f64);
-        let t = e * read_f64_at(0x968940); // 0x968940 = 1.5
+        let t = e * read_f64_at(rdata::F64_1_5);
         if l > t {
-            rating = ftol(rating as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890))); // 0x96fe30 = 8.333333333e-05, 0x967890 = 1
-        } else if l < e * read_f64_at(0x968e80) { // 0x968e80 = 0.3
-            rating = ftol(rating as f64 * read_f64_at(0x967880)); // 0x967880 = 0.1
-        } else if l < e * read_f64_at(0x968968) { // 0x968968 = 0.5
-            rating = ftol(rating as f64 * read_f64_at(0x968e80)); // 0x968e80 = 0.3
-        } else if l < e * read_f64_at(0x968e40) { // 0x968e40 = 0.7
-            rating = ftol(rating as f64 * read_f64_at(0x968e40)); // 0x968e40 = 0.7
-        } else if l < e * read_f64_at(0x9689d8) { // 0x9689d8 = 0.9
-            rating = ftol(rating as f64 * read_f64_at(0x9689d8)); // 0x9689d8 = 0.9
+            rating = ftol(rating as f64 / ((l - t) * read_f64_at(rdata::F64_8_333333333ENEG_05) + read_f64_at(rdata::F64_1)));
+        } else if l < e * read_f64_at(rdata::F64_0_3) {
+            rating = ftol(rating as f64 * read_f64_at(rdata::F64_0_1));
+        } else if l < e * read_f64_at(rdata::F64_0_5) {
+            rating = ftol(rating as f64 * read_f64_at(rdata::F64_0_3));
+        } else if l < e * read_f64_at(rdata::F64_0_7) {
+            rating = ftol(rating as f64 * read_f64_at(rdata::F64_0_7));
+        } else if l < e * read_f64_at(rdata::F64_0_9) {
+            rating = ftol(rating as f64 * read_f64_at(rdata::F64_0_9));
         }
     } else if m & 4 != 0 {
         rating = friendly_random(lugares);
     }
     crate::comparison::branch("cpt_7 nota do estadio");
     let r = friendly_random(100); // cpt7: the random draw of the rating
-    ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * rating as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
+    ftol((r as f64 * read_f64_at(rdata::F64_0_004) + read_f64_at(rdata::F64_0_8)) * rating as f64)
 }
 
 // simplification: rolls random numbers (and, with flag 4, draws the places): original only; the copy takes the branch.
@@ -1028,30 +1028,30 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     let mut d = (dx * dx + dy * dy).sqrt();
     let kind = *((game + fixture::CATEGORY) as *const u8);
     if core::ptr::read_unaligned((game + fixture::ROUND_NAME) as *const u16) == 0xa0 && kind == 5 {
-        d *= read_f64_at(0x968968); // 0x968968 = 0.5
+        d *= read_f64_at(rdata::F64_0_5);
     }
-    let mut f = read_f64_at(0x967890) - d * read_f64_at(0x96afe0); // 0x967890 = 1, 0x96afe0 = 0.1333333333
+    let mut f = read_f64_at(rdata::F64_1) - d * read_f64_at(rdata::F64_0_1333333333);
     if *((game + fixture::NEUTRAL_VENUE) as *const u8) == 0 {
         f *= f;
     }
-    if d > read_f64_at(0x9689a0) && r > read_f64_at(0x9689a0) { // 0x9689a0 = 0
-        let q = r + read_f64_at(0x967890); // 0x967890 = 1
+    if d > read_f64_at(rdata::F64_0) && r > read_f64_at(rdata::F64_0) {
+        let q = r + read_f64_at(rdata::F64_1);
         f /= q * q;
     }
-    if base > read_f64_at(0x969558) { // 0x969558 = 14
-        let minimum = read_f64_at(0x967890) - (read_f64_at(0x968ea8) - base) * read_f64_at(0x968f20); // 0x967890 = 1, 0x968ea8 = 20, 0x968f20 = 0.15
+    if base > read_f64_at(rdata::F64_14) {
+        let minimum = read_f64_at(rdata::F64_1) - (read_f64_at(rdata::F64_20) - base) * read_f64_at(rdata::F64_0_15);
         if f < minimum {
             return minimum;
         }
     }
-    if kind == 0xa && f < read_f64_at(0x968918) { // 0x968918 = 0.2
-        return read_f64_at(0x968918); // 0x968918 = 0.2
+    if kind == 0xa && f < read_f64_at(rdata::F64_0_2) {
+        return read_f64_at(rdata::F64_0_2);
     }
-    if f < read_f64_at(0x967888) && read_usize(read_usize(game + fixture::HOME_CLUB) + 0x53) == nation { // 0x967888 = 0.05
-        return read_f64_at(0x967888); // 0x967888 = 0.05
+    if f < read_f64_at(rdata::F64_0_05) && read_usize(read_usize(game + fixture::HOME_CLUB) + 0x53) == nation {
+        return read_f64_at(rdata::F64_0_05);
     }
-    if f < read_f64_at(0x96d2c8) { // 0x96d2c8 = 0.03
-        return read_f64_at(0x96d2c8); // 0x96d2c8 = 0.03
+    if f < read_f64_at(rdata::F64_0_03) {
+        return read_f64_at(rdata::F64_0_03);
     }
     f
 }

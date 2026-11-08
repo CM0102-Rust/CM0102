@@ -194,12 +194,12 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
 /// (0x7863f0).
 pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, player: usize, club: usize) {
     let _ = this;
-    if player == 0 || read_usize(player + staff::PLAYER) == 0 || club == 0 || read_usize(club + club::MANAGER) == 0 { // cqd11: sem jogador ou técnico
+    if player == 0 || read_usize(player + staff::PLAYER) == 0 || club == 0 || read_usize(club + club::MANAGER) == 0 { // cqd11: no player or manager
         return;
     }
     let write: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     // 0x77bbe0: push 0; push 0xbc9; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall; 0x600a50: 5
-    // pushes; add esp, 0x14 -> cdecl (clube, 0, 1, 0, 0) e (clube, 1, 1, 0, 0)
+    // pushes; add esp, 0x14 -> cdecl (club, 0, 1, 0, 0) and (club, 1, 1, 0, 0)
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0xbc9, 0);
@@ -394,7 +394,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                 if r == 0 {
                     return;
                 }
-                if weeks_after_have_passed(r + 4, 1) { // cpw7: uma semana depois
+                if weeks_after_have_passed(r + 4, 1) { // cpw7: one week later
                     crate::comparison::branch("cpw_7 falta vencida");
                     resolve_awol_case(this, r);
                     break;

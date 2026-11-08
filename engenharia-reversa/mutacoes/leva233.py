@@ -1,7 +1,7 @@
 # Mutações da 233a leva (itens dbl_1, dbl_2, dbl_3, dbm_1, dbm_2, dbn_1, dbn_2). Uso: python mutacoes.py mutacoes\leva233.py --prova-save 233
 MUTACOES = [
     ('dbl_clube_em_temporada', '    season(club, 0, 0) // the season of the club’s nation', '    (season(club, 0, 0) == 0) as u32 // mutacao: a resposta invertida'),
-    ('dbl_clube_em_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holanda (clube)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (clube)'),
+    ('dbl_clube_em_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Netherlands (club)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (clube)'),
     ('dbl_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holland (nation)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),
     ('dbl_limpar_vinculos', '            write_state_i32(c, k + 0x37, -1); // the value of the empty link', '            write_state_i32(c, k + 0x37, -2); // mutacao: o valor do vínculo vazio -2'),
     ('dbl_juntar_vinculo', '        write_state_i32(c, 0x3b, id); // the second link', '        // mutacao: o segundo vínculo sem o id'),

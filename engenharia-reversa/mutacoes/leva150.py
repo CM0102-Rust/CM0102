@@ -1,7 +1,7 @@
 # Mutacoes da leva150 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva150.py --carreira 2002-06-01
 MUTACOES = [
-    ('a_fator', "            if factor > read_f64_at(0x968dc0) {", "            if factor > read_f64_at(0x967890) {"),
-    ('a_classico', "                esi = ftol(l14 as f64 * read_f64_at(0x968f98));", "                esi = ftol(l14 as f64 * read_f64_at(0x968940));"),
+    ('a_fator', "            if factor > read_f64_at(rdata::F64_1_4) {", "            if factor > read_f64_at(rdata::F64_1) {"),
+    ('a_classico', "                esi = ftol(l14 as f64 * read_f64_at(rdata::F64_1_75));", "                esi = ftol(l14 as f64 * read_f64_at(rdata::F64_1_5));"),
     ('a_dias', "[Some(0x96d4c0usize), Some(0x96d4b8)", "[Some(0x96d4b8usize), Some(0x96d4b8)"),
     ('a_mascara', "(0x5c, 0x810)", "(0x5c, 0x804)"),
     ('a_ja_jogou', "                if exe::transfer_manager_get_ineligibility_code(u(G_TRANSFER_MANAGER, 0), p, x) != 0 || exe::nationalteams_get_international_duty_club(", "                if exe::nationalteams_get_international_duty_club("),

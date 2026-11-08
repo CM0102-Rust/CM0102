@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
             if *((p + 0xca) as *const i8) == t {
                 let accepted = if nation == -1 {
                     crate::comparison::branch("cpz_10 comentarista de qualquer nacao");
-                    true // cpz10: qualquer nação
+                    true // cpz10: any nation
                 } else {
                     read_u32(p + 0xcf) as i32 == nation
                 };

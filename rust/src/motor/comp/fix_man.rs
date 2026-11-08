@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                     if *grav == 0 {
                                         crate::comparison::branch("cqc_3 mesmo clube noutra fatia");
                                     }
-                                    default_clash_severity(grav, true); // cqc3: o mesmo clube noutra fatia
+                                    default_clash_severity(grav, true); // cqc3: the same club in another pot
                                 } else if read_u8(game + fixture::CATEGORY) != 1 {
                                     default_clash_severity(grav, false);
                                 }
@@ -2172,7 +2172,7 @@ pub(crate) unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize,
             ok = false;
         }
         if round != u32::MAX && round as i32 != *((f + 0x34) as *const i16) as i32 {
-            ok = false; // outra rodada
+            ok = false; // another round
         }
         if (kind == 0xfe || *((f + 0x42) as *const u8) == kind) && ok {
             if list_append_fixture(list, f) == 0 {
@@ -2295,9 +2295,8 @@ pub(crate) unsafe fn list_next_item(l: usize) -> usize {
 /// [pt] A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa passar: a competição (+0), a fase
 /// (+0x34, curto com sinal) e os dois clubes (cada um o mandante +0xc ou o visitante +0x10).
 pub(crate) unsafe fn fixture_matches_next_filter(f: usize, comp: i32, stage: i32, clube_a: i32, club_b: i32) -> bool {
-    let d = |o: usize| core::ptr::read_unaligned((f + o) as *const i32);
-    let club = |c: i32| c == -1 || c == d(fixture::HOME_CLUB_ID) || c == d(fixture::AWAY_CLUB_ID);
-    (comp == -1 || comp == d(0)) // the competition
+    let club = |c: i32| c == -1 || c == read_i32(f + fixture::HOME_CLUB_ID) || c == read_i32(f + fixture::AWAY_CLUB_ID);
+    (comp == -1 || comp == read_i32(f + 0)) // the competition
         && (stage == -1 || stage == core::ptr::read_unaligned((f + fixture::ROUND_NUMBER) as *const i16) as i32)
         && club(clube_a)
         && club(club_b)

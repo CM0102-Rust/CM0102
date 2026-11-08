@@ -9,5 +9,5 @@ MUTACOES = [
     ('s_marcado', "                        if tx <= 2 {\n                            tx += 1;", "                        if tx <= 2 {\n                            tx += 2;"),
     ('s_avanca', "        let r = random(d as i32 * 5).wrapping_add(byte(j, match_player::MOMENT_MOVEMENT) as i32);", "        let r = random(d as i32 * 4).wrapping_add(byte(j, match_player::MOMENT_MOVEMENT) as i32);"),
     ('s_fica', "            *w(match_player::ACTION) = 0x76;", "            *w(match_player::ACTION) = 0x77;"),
-    ('s_ftol', "    let n = ftol(*((j + match_player::TEAMWORK) as *const f32) as f64 + read_f32_at(0x968a78) as f64);", "    let n = ftol(*((j + match_player::TEAMWORK) as *const f32) as f64 + read_f32_at(0x968a78) as f64 + 1.0);"),
+    ('s_ftol', "    let n = ftol(*((j + match_player::TEAMWORK) as *const f32) as f64 + read_f32_at(rdata::F32_10) as f64);", "    let n = ftol(*((j + match_player::TEAMWORK) as *const f32) as f64 + read_f32_at(rdata::F32_10) as f64 + 1.0);"),
 ]

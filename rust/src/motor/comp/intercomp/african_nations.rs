@@ -137,7 +137,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
     let mut nation = read_usize(G_NATION_TABLE);
     while (i as i32) < read_usize(G_NATION_COUNT) as i32 {
         let continent = read_usize(nation + nation::CONTINENT);
-        if continent != 0 && read_usize(continent) == read_usize(KEY_CONTINENT_AFRICA) && n < 0x32 { // cqs13: até 50 africanas
+        if continent != 0 && read_usize(continent) == read_usize(KEY_CONTINENT_AFRICA) && n < 0x32 { // cqs13: up to 50 African ones
             let l = read_usize(this + 0xee);
             let sede = (0..how_many.max(0) as usize).any(|j| read_usize(read_usize(l + j * 4) + 0x53) == nation);
             if !sede {
@@ -227,7 +227,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
     let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        let b = |d: usize| *((this + d) as *const u8) as u32;
         construct(
             p,
             this,
@@ -237,15 +236,15 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
             read_usize(this + 4),
             table,
             rodadas as u16 as u32,
-            b(league::WIN_POINTS),
-            b(league::DRAW_POINTS),
-            b(league::MATCH_CATEGORY),
+            (read_u8(this + league::WIN_POINTS) as u32),
+            (read_u8(this + league::DRAW_POINTS) as u32),
+            (read_u8(this + league::MATCH_CATEGORY) as u32),
             this + league::TIEBREAKS,
             this + league::PROMOTED_COUNT,
             read_i16(this + league::YEAR) as u16 as u32,
             g as u32,
             id as u16 as u32,
-            b(league::IMPORTANCE),
+            (read_u8(this + league::IMPORTANCE) as u32),
             4,
             0,
             read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,

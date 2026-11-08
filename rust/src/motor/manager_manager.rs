@@ -30,32 +30,32 @@ pub(crate) unsafe fn manager_manager_is_national_team(c: usize) -> u32 {
 pub(crate) unsafe fn match_weight(club: usize, partida: usize, factor: &mut f64) -> f64 {
     let comp = read_usize(partida + fixture::COMPETITION);
     if comp == 0 {
-        return read_f64(0x967898);
+        return read_f64(rdata::F64_0_01);
     }
     let obj = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(partida) as usize).wrapping_mul(4)));
     if exe::comp_is_club_still_in_contention(obj, club) == 0 {
-        return read_f64(0x968918);
+        return read_f64(rdata::F64_0_2);
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     if friendly(read_usize(G_FRIENDLY), comp) != 0 {
-        return if manager_manager_is_national_team(read_usize(partida + fixture::HOME_CLUB)) != 0 { read_f64(0x968f80) } else { read_f64(0x967888) };
+        return if manager_manager_is_national_team(read_usize(partida + fixture::HOME_CLUB)) != 0 { read_f64(rdata::F64_0_67) } else { read_f64(rdata::F64_0_05) };
     }
     if read_u8(partida + fixture::HOME_SIDE_MARK) == 0 {
-        return read_f64(0x967880);
+        return read_f64(rdata::F64_0_1);
     }
     if comp == read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x57) {
-        *factor = read_i16(comp + competition::REPUTATION) as i32 as f64 * read_f64(0x96d1e0) + read_f64(0x96d1d8);
-        return read_f64(0x967890);
+        *factor = read_i16(comp + competition::REPUTATION) as i32 as f64 * read_f64(rdata::F64_0_06) + read_f64(rdata::F64_0_27);
+        return read_f64(rdata::F64_1);
     }
     let x = (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(500).wrapping_sub(read_i16(club + club::REPUTATION) as i32);
-    let mut p = read_f64(0x967890) - (x as f64).abs() * read_f64(0x968d78);
+    let mut p = read_f64(rdata::F64_1) - (x as f64).abs() * read_f64(rdata::F64_6_666666667ENEG_05);
     if read_u8(partida + fixture::CATEGORY) == 8 {
-        p *= read_f64(0x968928);
+        p *= read_f64(rdata::F64_1_25);
     }
     match read_i16(partida + fixture::ROUND_NAME) as u16 {
-        0x78 => p *= read_f64(0x968928),
-        0x82 => p *= read_f64(0x968940),
-        0x8c => p *= read_f64(0x969040),
+        0x78 => p *= read_f64(rdata::F64_1_25),
+        0x82 => p *= read_f64(rdata::F64_1_5),
+        0x8c => p *= read_f64(rdata::F64_0_75),
         0x96 | 0xa0 => p = p + p,
         _ => {}
     }
@@ -216,12 +216,12 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         let b128 = read_u8(base + match_record::HOME_SHOTS_ON_TARGET) as i32;
         let o127 = read_u8(ob + match_record::HOME_SHOTS) as i32;
         crate::comparison::branch("cqc_8 nota do jogo");
-        let mut v = (b127 - 10) as f64 * read_f64(0x969020) + average;
-        v += (b128 - 10) as f64 * read_f64(0x969020);
-        v += (b127 - o127) as f64 * read_f64(0x968a98);
-        v += (di as i16) as f64 * read_f64(0x96d1d0);
-        v += read_f64(0x967880);
-        v = v * read_f64(0x96d1c8) - read_f64(0x96d1c0); // cqc8: the match rating (× 67 − 470)
+        let mut v = (b127 - 10) as f64 * read_f64(rdata::F64_0_03333333333) + average;
+        v += (b128 - 10) as f64 * read_f64(rdata::F64_0_03333333333);
+        v += (b127 - o127) as f64 * read_f64(rdata::F64_0_02);
+        v += (di as i16) as f64 * read_f64(rdata::F64_0_006666666667);
+        v += read_f64(rdata::F64_0_1);
+        v = v * read_f64(rdata::F64_67) - read_f64(rdata::F64_470); // cqc8: the match rating (× 67 − 470)
         v *= factor;
         aj = aj.wrapping_add(ftol(v));
         // the average reputation of the opponents selected (by the club’s nation)
@@ -365,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
                 if e2 != 0 {
                     let x = read_f64(e1 + city::LONGITUDE) - read_f64(e2 + city::LONGITUDE);
                     let y = read_f64(e1 + city::LATITUDE) - read_f64(e2 + city::LATITUDE);
-                    if (y * y + x * x).sqrt() * read_f64(0x96d1b8) <= read_f64(0x968890) {
+                    if (y * y + x * x).sqrt() * read_f64(rdata::F64_55) <= read_f64(rdata::F64_25) {
                         fl |= 0x40;
                     }
                 }
@@ -378,14 +378,14 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         }
     }
     if fl & 0x40 != 0 {
-        weight *= read_f64(0x968ec8);
+        weight *= read_f64(rdata::F64_2_25);
         if fl & 0x800 != 0 {
             aj = aj.wrapping_add(0xc);
         } else if fl & 0x1000 != 0 {
             aj = aj.wrapping_sub(0xc);
         }
     } else if fl & 0x80 != 0 {
-        weight *= read_f64(0x968940);
+        weight *= read_f64(rdata::F64_1_5);
         if fl & 0x800 != 0 {
             aj = aj.wrapping_add(5);
         } else if fl & 0x1000 != 0 {
@@ -393,7 +393,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         }
     }
     let mut mult = if exe::club_is_national_team(club) != 0 {
-        weight * read_f64(0x968968)
+        weight * read_f64(rdata::F64_0_5)
     } else {
         let s = manager_manager_is_national_team(club);
         if s != 0 { weight + weight } else { weight }
@@ -402,10 +402,10 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         if read_u8(board_row(this, club) + 0xf) & 4 != 0 { // a palavra +0xe & 0x400
             mult = mult + mult;
             if (aj as i16) < 0 {
-                aj = ftol((aj as i16) as f64 * read_f64(0x968940));
+                aj = ftol((aj as i16) as f64 * read_f64(rdata::F64_1_5));
             }
         } else {
-            mult *= read_f64(0x968940);
+            mult *= read_f64(rdata::F64_1_5);
         }
     }
     let mut dx = ftol((aj as i16) as f64 * mult);
@@ -512,7 +512,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         let manager = read_usize(club + club::MANAGER);
         let mark: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
         if manager != 0 && mark(read_usize(G_PLAYER_REGEN), manager) != 0 {
-            aj = ftol((aj as i16) as f64 * read_f64(0x968968));
+            aj = ftol((aj as i16) as f64 * read_f64(rdata::F64_0_5));
         }
     }
     // the confidence
@@ -763,9 +763,9 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     write_i16(ln() + 0xe, 0);
     write_u32(ln() + 0x2c, 0);
     let rep = read_i16(club + club::REPUTATION) as i32;
-    core::ptr::write_unaligned((ln() + 0x30) as *mut f64, rep.wrapping_mul(rep) as f64 * read_f64(0x9689e0));
+    core::ptr::write_unaligned((ln() + 0x30) as *mut f64, rep.wrapping_mul(rep) as f64 * read_f64(rdata::F64_0_25));
     let l38 = ln() + 0x38;
-    core::ptr::write_unaligned(l38 as *mut f64, read_f64(l38) * read_f64(0x9689e0));
+    core::ptr::write_unaligned(l38 as *mut f64, read_f64(l38) * read_f64(rdata::F64_0_25));
     write_u8(ln(), 0);
     let mut days: i32 = 0;
     if read_u8(ln() + 2) & 1 == 0 && read_usize(club + club::MANAGER) != 0 && manager_manager_is_national_team(club) == 0 {
@@ -935,7 +935,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     por(x as i8 as i32);
     if read_u8(ln() + 2) & 1 != 0 && read_u8(lg + comp_stats_club::BEST_POSITION) >= 1 && read_u8(lg + comp_stats_club::WORST_POSITION) >= 1 {
         let v = (read_u8(lg + comp_stats_club::CURRENT_POSITION) as i32).wrapping_add(meta());
-        por(ftol(v as f64 * read_f64(0x968968)) as i8 as i32);
+        por(ftol(v as f64 * read_f64(rdata::F64_0_5)) as i8 as i32);
         let (lo, hi) = (read_u8(lg + comp_stats_club::BEST_POSITION) as i32, read_u8(lg + comp_stats_club::WORST_POSITION) as i32);
         let x = meta();
         let x = if lo > x { lo } else if hi < x { hi } else { x };
@@ -1035,7 +1035,7 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: usize) {
         crate::comparison::branch("cqc_9 confianca de volta");
         for (o, k) in [(6usize, 0x96d288usize), (8, 0x9688d0), (0xa, 0x9688d0), (0xc, 0x9688d0)] {
             let x = read_i16(ln() + o) as i32;
-            let v = (x as f64 * read_f64(0x9688a0) + read_f64(k)) * read_f64(0x967880); // cqc9: the confidence restored
+            let v = (x as f64 * read_f64(rdata::F64_5) + read_f64(k)) * read_f64(rdata::F64_0_1); // cqc9: the confidence restored
             write_i16(ln() + o, ftol(v) as i16);
         }
     }
@@ -1052,7 +1052,7 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: usize) {
         let fx = read_usize(manager + staff::NON_PLAYER);
         let a = read_i16(fx + non_player::CURRENT_REPUTATION);
         if a < rep() {
-            let t = ftol((rep() as i32 - a as i32) as f64 * read_f64(0x969518));
+            let t = ftol((rep() as i32 - a as i32) as f64 * read_f64(rdata::F64_NEG_0_1));
             write_i16(fx + non_player::CURRENT_REPUTATION, a.wrapping_sub(t as i16));
             let fx = read_usize(read_usize(club + club::MANAGER) + 0x69);
             if read_i16(fx + non_player::CURRENT_REPUTATION) > 0x2710 {
@@ -1060,7 +1060,7 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: usize) {
             }
             let fx = read_usize(read_usize(club + club::MANAGER) + 0x69);
             let c = read_i16(fx + non_player::WORLD_REPUTATION);
-            let t = ftol((rep() as i32 - c as i32) as f64 * read_f64(0x96d280));
+            let t = ftol((rep() as i32 - c as i32) as f64 * read_f64(rdata::F64_NEG_0_05));
             write_i16(fx + non_player::WORLD_REPUTATION, c.wrapping_sub(t as i16));
             let fx = read_usize(read_usize(club + club::MANAGER) + 0x69);
             if read_i16(fx + non_player::WORLD_REPUTATION) > 0x2710 {
@@ -1073,7 +1073,7 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: usize) {
         let fx = read_usize(manager + staff::NON_PLAYER);
         let a = read_i16(fx + non_player::CURRENT_REPUTATION);
         if rep() > a {
-            let t = ftol((rep() as i32 - a as i32) as f64 * read_f64(0x969518));
+            let t = ftol((rep() as i32 - a as i32) as f64 * read_f64(rdata::F64_NEG_0_1));
             write_i16(fx + non_player::CURRENT_REPUTATION, a.wrapping_sub(t as i16));
         }
     }
@@ -1859,7 +1859,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                     }
                 }
                 let c = n();
-                if exe::utils_random(ftol(game_pow(c as f64, read_f64_at(0x968930)) + read_f64_at(0x9688a8))) == 0 { // 0x968930 = 3, 0x9688a8 = 100
+                if exe::utils_random(ftol(game_pow(c as f64, read_f64_at(rdata::F64_3)) + read_f64_at(rdata::F64_100))) == 0 {
                     return 0x2000;
                 }
                 let a = exe::utils_random(n());
@@ -1886,7 +1886,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     if kind == 1 || kind == 3 || read_usize(j + staff::CLUB_JOB) == 0 || exe::human_manager_is_human_club(club, 1, 1, (0) as u32, 0) == 0 {
         return 0;
     }
-    let x = read_i16(club + club::REPUTATION) as f64 * read_f64_at(0x968918); // 0x968918 = 0.2
+    let x = read_i16(club + club::REPUTATION) as f64 * read_f64_at(rdata::F64_0_2);
     let mut limit = ftol(x * x);
     if limit < 0x249f0 {
         limit = 0x249f0;
@@ -1919,10 +1919,10 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         if p > v + v && more > 0x19 {
             add_board_confidence(this, club, 6, -0x4e2);
             add_board_confidence(this, club, 0x14, -0x4e2);
-        } else if request > 0x4c4b40 && more > 0 && p > v * read_f64_at(0x968e18) { // 0x968e18 = 2.5
+        } else if request > 0x4c4b40 && more > 0 && p > v * read_f64_at(rdata::F64_2_5) {
             add_board_confidence(this, club, 6, -0x4e2);
             add_board_confidence(this, club, 0x14, -0x4e2);
-        } else if p > v * read_f64_at(0x969000) { // 0x969000 = 6
+        } else if p > v * read_f64_at(rdata::F64_6) {
             add_board_confidence(this, club, 6, -500);
             add_board_confidence(this, club, 0x14, -500);
             add_board_confidence(this, club, 0x16, -0xfa);
@@ -1950,12 +1950,12 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         return 0;
     }
     let k = match exe::finance_get_wealth_band(fin) {
-        2 => read_f64_at(0x96d1f8), // 0x96d1f8 = 1250000
-        1 => read_f64_at(0x96d1f0), // 0x96d1f0 = 650000
-        _ => read_f64_at(0x968ea0), // 0x968ea0 = 65000
+        2 => read_f64_at(rdata::F64_1250000),
+        1 => read_f64_at(rdata::F64_650000),
+        _ => read_f64_at(rdata::F64_65000),
     };
-    let ceiling = ftol(limit as f64 * read_f64_at(0x96a5d0) + smaller as f64 + k); // 0x96a5d0 = 0.65
-    if !(value as f64 * read_f64_at(0x96d1e8) > ceiling as f64) { // 0x96d1e8 = 0.275
+    let ceiling = ftol(limit as f64 * read_f64_at(rdata::F64_0_65) + smaller as f64 + k);
+    if !(value as f64 * read_f64_at(rdata::F64_0_275) > ceiling as f64) {
         return 0;
     }
     crate::comparison::branch("cpy_12 diretoria acha caro");
@@ -3060,7 +3060,7 @@ pub(crate) unsafe fn check_better_candidate(this: usize, club: usize) -> bool {
         return false;
     }
     let c = club_board_row(this, club) + 6;
-    write_i16(c, ftol(read_i16(c) as i32 as f64 * read_f64(0x9689d8)) as i16); // 0,9
+    write_i16(c, ftol(read_i16(c) as i32 as f64 * read_f64(rdata::F64_0_9)) as i16); // 0,9
     if read_i16(c) < 1 {
         write_i16(c, 1);
     }
@@ -3175,7 +3175,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
                     _ => {}
                 }
             }
-            if jogos as i16 > 0 && ((pontos as i16 as i32) / (jogos as i16 as i32)) as f64 > read_f64(0x968950) {
+            if jogos as i16 > 0 && ((pontos as i16 as i32) / (jogos as i16 as i32)) as f64 > read_f64(rdata::F64_2) {
                 return; // average above 2
             }
             let s19 = read_i32(ln + 0x19);
@@ -3196,7 +3196,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
                         limit = 100;
                     }
                 } else if read_i32(ln + 0x55) > 1 {
-                    limit = ftol(limit as i16 as i32 as f64 * read_f64(0x968940)); // 1,5
+                    limit = ftol(limit as i16 as i32 as f64 * read_f64(rdata::F64_1_5)); // 1,5
                 } else if read_i32(ln + 0x2d) > 1 {
                     if limit as i16 == 10 {
                         limit = 200;
@@ -3209,7 +3209,7 @@ pub(crate) unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clu
     }
     let mark: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
     let ceiling = if mark(read_usize(G_PLAYER_REGEN), read_usize(club + club::MANAGER)) != 0 {
-        ftol(limit as i16 as i32 as f64 * read_f64(0x9689e0)) // 0,25
+        ftol(limit as i16 as i32 as f64 * read_f64(rdata::F64_0_25)) // 0,25
     } else {
         limit
     };
@@ -3697,7 +3697,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     *(((board_row_by_id(this, id)) + 2) as *mut u8) |= 1;
     let list = read_u32(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize + 0xdc) as usize;
     *(list.wrapping_add((id as usize).wrapping_mul(9)) as *mut u8).add(4) = 2;
-    let k = read_f64_at(0x967880); // 0,1; 0x967880 = 0.1
+    let k = read_f64_at(rdata::F64_0_1); // 0,1;
     let rep = read_i16(club + club::REPUTATION) as i32;
     let manager = read_u32(club + club::MANAGER) as usize;
     let sheet = read_u32(manager + staff::NON_PLAYER) as usize;
@@ -3715,26 +3715,26 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     let sheet = read_u32(read_u32(club + club::MANAGER) as usize + 0x69) as usize;
     let v = read_i16(sheet + non_player::CURRENT_REPUTATION) as i32;
     let mut current = v as f32; // fst dword
-    let zero = read_f32_at(0x968970) as f64; // 0x968970 = 0
+    let zero = read_f32_at(rdata::F32_0) as f64;
     if v as f64 == zero {
         let r = read_i16(club + club::REPUTATION) as i32;
         current = if r != 0 { (r / 2) as f32 } else { 5000.0 };
-    } else if (current as f64) < read_f32_at(0x96d1a8) as f64 { // 0x96d1a8 = 500
+    } else if (current as f64) < read_f32_at(rdata::F32_500) as f64 {
         current = (random(0x3e8) + 0x1f4) as f32;
     }
     let d = read_i16(club + club::REPUTATION) as i32;
     let divisor = if d as f64 == zero {
         current as f64
-    } else if (d as f64) < read_f32_at(0x96d1a8) as f64 { // 0x96d1a8 = 500
+    } else if (d as f64) < read_f32_at(rdata::F32_500) as f64 {
         (random(0x2ee) + 0xfa) as f64
     } else {
         d as f64
     };
-    let mut q = ((current as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword; 0x96d1a4 = 7500
-    if q as f64 > read_f64_at(0x96d1b0) { // 0x96d1b0 = 5.811479333e-315
+    let mut q = ((current as f64 / divisor) * read_f32_at(rdata::F32_7500) as f64) as f32; // fstp dword;
+    if q as f64 > read_f64_at(rdata::F64_5_811479333ENEG_315) {
         crate::comparison::branch("cpp_3 base no teto");
         q = 10000.0;
-    } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) { // 0x96d1ac = 6500
+    } else if !(q as f64 >= read_f32_at(rdata::F32_6500) as f64) {
         q = 6500.0;
     }
     // confidence and moods, each with its own limits

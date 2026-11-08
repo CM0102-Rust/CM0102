@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
     crate::comparison::branch("cqi_11 classificados");
     pd(t(2), l.mex[0]);
-    pd(t(3), l.mex[1]); // cqi11: o segundo mexicano
+    pd(t(3), l.mex[1]); // cqi11: the Mexican runner-up
     pd(t(4), l.centro[0]);
     pd(t(5), l.centro[1]);
     pd(t(6), l.centro[2]);

@@ -31,9 +31,9 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     let more: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_DATE_ADD_DAYS);
     let contract_with: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let find: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, usize, i32, i32, u32) -> i16 = core::mem::transmute(FN_FIXTURE_MANAGER_FIND_FIXTURES);
-    // 0x600a50: 5 pushes (clube, 1, 1, 0, 0); add esp, 0x14 -> cdecl; 0x4cf5a0: push jogador; mov ecx, [0xae1050] ->
+    // 0x600a50: 5 pushes (club, 1, 1, 0, 0); add esp, 0x14 -> cdecl; 0x4cf5a0: push player; mov ecx, [0xae1050] ->
     // thiscall, ret 4; 0x54c5b0: push n; push &output; lea ecx, [pedido+8] -> thiscall, ret 8; 0x62c400: push player;
-    // mov ecx, [0xb63d28] -> thiscall, ret 4 (al); 0x4cf5f0: push clube; push jogador; mov ecx, [0xae1050] -> thiscall,
+    // mov ecx, [0xb63d28] -> thiscall, ret 4 (al); 0x4cf5f0: push club; push player; mov ecx, [0xae1050] -> thiscall,
     // ret 8; 0x5acbe0: 9 pushes; mov ecx, [0xae2a58] -> thiscall, ret 0x24 (ax)
     let player = staff_records_staff_by_id(read_usize(request + scout_request::PLAYER_ID));
     let club = friendly_club_by_id(read_usize(request));
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     }
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
     // 0x7f6cd0: push manager; push k; mov ecx, this -> thiscall, ret 8; 0x7b7490: push nation; mov ecx, list ->
-    // thiscall, ret 4; 0x7b62a0: push 1; push 0; push 0; push 1; push −1000; push &registro; push jogador; mov ecx, lista
+    // thiscall, ret 4; 0x7b62a0: push 1; push 0; push 0; push 1; push −1000; push &record; push player; mov ecx, list
     // -> thiscall, ret 0x1c; 0x68d0d0: push 0x67; push &registro; lea ecx, local -> thiscall, ret 8; 0x7f9890: push
     // &local; mov ecx, this -> thiscall, ret 4; 0x945333 (qsort): 4 pushes; add esp, 0x10 -> cdecl; 0x7b3e20: mov ecx,
     // lista -> thiscall, ret 0
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
             crate::comparison::branch("cqf_12 pedido processado");
             let mut feitos: i8 = 0;
             for k in 0..10u32 {
-                if feitos >= 3 { // cqf12: até três relatórios
+                if feitos >= 3 { // cqf12: up to three reports
                     break;
                 }
                 let lo = exe::scout_manager_get_search(this, k, tecnico);
@@ -507,9 +507,9 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, 
 /// partida (0x7b5be0, os relatórios na lista local). O vetor sai (0x9452ca). Por fim os relatórios vão (0x7f9890) e a
 /// lista é destruída. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, result: usize) -> u32 {
-    // calloc: push 4; push 0xa; add esp, 8 -> cdecl (10, 4); sorteio: push 0xa; add esp, 4 -> cdecl; free: cdecl;
+    // calloc: push 4; push 0xa; add esp, 8 -> cdecl (10, 4); random draw: push 0xa; add esp, 4 -> cdecl; free: cdecl;
     // 0x7f6cd0: push pessoa; push qual; mov ecx, [this] -> thiscall ret 8; 0x7ae9c0: 5 pushes; mov ecx, registro ->
-    // thiscall ret 0x14; 0x7b5be0: push &lista; push resultado; push partida; mov ecx, registro -> thiscall ret 0xc;
+    // thiscall ret 0x14; 0x7b5be0: push &list; push result; push match; mov ecx, record -> thiscall ret 0xc;
     // 0x7f9890: push &lista; mov ecx, this -> thiscall ret 4; 0x68d020/0x68d040: lea ecx, lista -> thiscall
     let mut l = [0u8; 0x10];
     let list = l.as_mut_ptr() as usize;
@@ -526,7 +526,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
             let q = loop {
                 let q = exe::utils_random(10) as i8; // cqc13: o observador sorteado
                 if read_usize(marks.wrapping_add((q as isize * 4) as usize)) == 0 {
-                    break q; // cqc13: um ainda não marcado
+                    break q; // cqc13: one not yet marked
                 }
             };
             core::ptr::write_unaligned(marks.wrapping_add((q as isize * 4) as usize) as *mut u32, 1);
@@ -612,7 +612,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option
     // 0x54a110: thiscall(date) (lea ecx); 0x54c770: thiscall(0xae2c90, output, 0xc) (mov ecx, 0xae2c90; 2 push);
     // 0x68d080: thiscall(list) (mov ecx, list; no push); 0x945333: cdecl(array, count, size, comparison) (add esp,
     // 0x10); 0x5cbdd0: thiscall(entry, year) (mov ecx, entry; 1 push); 0x417c10: thiscall(destination, output, source)
-    // (lea ecx, destino; 2 push); 0x946464: cdecl(chave, vetor, conta, 0x14, 0x5cc610) (add esp, 0x14); 0x456770 e
+    // (lea ecx, destination; 2 push); 0x946464: cdecl(key, array, count, 0x14, 0x5cc610) (add esp, 0x14); 0x456770 and
     // 0x456740: thiscall(data, baixo, alto) (lea ecx, data; 2 push); 0x5cbdf0: thiscall(this, primeira, quantas) (mov
     // ecx, esi; 2 push)
     let data_default: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
@@ -776,7 +776,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     let (c1, c2) = (read_usize(partida + fixture::HOME_CLUB), read_usize(partida + fixture::AWAY_CLUB));
     if read_i32(partida) < 0 {
         crate::comparison::branch("cps_8 competicao negativa");
-        return 0; // cps8: competição negativa
+        return 0; // cps8: negative competition
     }
     core::ptr::write_unaligned(G_SCOUT_CLUB_TABLE_LIST_CURSOR as *mut u32, read_usize(G_SCOUT_CLUB_TABLE_LIST_HEAD) as u32);
     let mut e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
@@ -1216,7 +1216,7 @@ pub(crate) unsafe extern "thiscall" fn has_scout_request(this: usize, player: us
     };
     if found == 0 {
         crate::comparison::branch("cpq_12 sem pedido");
-        return 0; // sem pedido
+        return 0; // no request
     }
     if *((found + scout_request::REPORT_COUNT) as *const i8) >= 3 {
         return 0;

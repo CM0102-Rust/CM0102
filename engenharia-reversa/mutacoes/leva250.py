@@ -1,6 +1,6 @@
 # Mutações da 250a leva (itens cpn_1, cpn_2, cpn_3, cpn_4, cpn_5, cpn_6, cpn_7). Uso: python mutacoes.py mutacoes\leva250.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpn_resposta_do_clube', 'exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 resposta automatica'),
+    ('cpn_resposta_do_clube', 'exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // the club', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 resposta automatica'),
     ('cpn_alcance_clube', 'crate::comparison::branch("cpn_1 alcance do clube");', 'crate::comparison::branch("cpn_1 alcance do clube"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 alcance do clube'),
     ('cpn_tecnico_do_clube', 'let manager = read_usize(club + club::MANAGER);\n    *((news + news_item::REACH) as *mut u8) = 0;', 'let manager = read_usize(club + club::ASSISTANT_MANAGER); // mutacao: o auxiliar\n    *((news + news_item::REACH) as *mut u8) = 0;', 'cpn_1 noticia ao tecnico humano'),
     ('cpn_responder_todas', 'exe::newsitem_auto_respond(slot, manager, club); // the automatic reply', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),

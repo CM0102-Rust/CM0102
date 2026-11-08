@@ -23,8 +23,8 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, which: i8, 
     let b = |o: usize| *r.add(o) as f64;
     let w = |o: usize| core::ptr::read_unaligned(r.add(o) as *const i16) as f64;
     let games = *r;
-    let cem = read_f32_at(0x968960) as f64; // 0x968960 = 100
-    let vinte_avos = read_f32_at(0x96d61c) as f64; // 0x96d61c = 0.05000000075
+    let cem = read_f32_at(rdata::F32_100) as f64;
+    let vinte_avos = read_f32_at(rdata::F32_0_05000000075_AT_96D61C) as f64;
     match which {
         1 => b(0),
         2..=4 => b(which as usize),
@@ -50,11 +50,11 @@ pub(crate) unsafe extern "stdcall" fn player_statistic(r: *const u8, which: i8, 
         }
         20 => {
             if games == 0 {
-                return read_f32_at(0x96b004) as f64; // 0x96b004 = 1.5
+                return read_f32_at(rdata::F32_1_5) as f64;
             }
             let rating = (*r.add(9) as i32 * 2 - *r.add(10) as i32 + games as i32) as f64;
             if games < 20 {
-                (rating + (20 - games as i32) as f64 * read_f64_at(0x968940)) * vinte_avos // 0x968940 = 1.5
+                (rating + (20 - games as i32) as f64 * read_f64_at(rdata::F64_1_5)) * vinte_avos
             } else {
                 rating / games as f64
             }
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                 && read_u16(ej + career_entry::STATS_RATING_TOTAL) != 0xffff
             {
                 for o in 6..0x14 {
-                    *((ej + o) as *mut u8) = read_u8(ej + o).wrapping_add(read_u8(ei + o)); // cqf8: soma da entrada repetida
+                    *((ej + o) as *mut u8) = read_u8(ej + o).wrapping_add(read_u8(ei + o)); // cqf8: sum of the repeated entry
                 }
                 write_u16(ej + career_entry::STATS_RATING_TOTAL, read_u16(ej + career_entry::STATS_RATING_TOTAL).wrapping_add(read_u16(ei + career_entry::STATS_RATING_TOTAL)));
                 if read_i32(ei + career_entry::TRANSFER_FEE) != -1 || (read_u8(ei + career_entry::KIND) & 7 == 1 && read_i32(ej + career_entry::TRANSFER_FEE) == -1) {
@@ -690,7 +690,7 @@ pub(crate) unsafe extern "thiscall" fn get_stat(this: usize, player: usize, cate
         if which as u8 == 0x12 || which as u8 == 0x14 {
             return default as f64; // cpu3: without a record, the default
         }
-        return 0.0; // cpu3: sem registro, zero
+        return 0.0; // cpu3: no record, zero
     }
     let (mut n, mut t) = (0u8, 0i16);
     let r2 = exe::playerstats_get_category_record(this, player, 2);
@@ -821,7 +821,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
     let t = exe::playerstats_build_career_history(read_usize(G_PLAYER_STATS), person, &mut n);
     let mut s = 0u16;
     if t != 0 {
-        let mut i = 0i32; // cps9: do primeiro grupo
+        let mut i = 0i32; // cps9: from the first group
         while i < n {
             s = s.wrapping_add(*((t + 0xdf + (i / 6) as usize * 0x102) as *const u8) as u16);
             i += 6;
@@ -1197,7 +1197,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                 if r == 0 {
                     r = exe::playerstats_create_stats(this, dados, c as u32);
                 }
-                add_u8_at(r, 1); // cpx12: o jogo
+                add_u8_at(r, 1); // cpx12: the match
                 if k > 10 {
                     add_u8_at(r + player_category_stats::SUB_APPEARANCES, 1);
                 }

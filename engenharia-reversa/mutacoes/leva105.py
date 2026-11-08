@@ -1,10 +1,10 @@
 # Mutacoes da leva105 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva105.py --jogo 2001-08-20
 MUTACOES = [
-    ('o_dist', "        dist = (x * x + x + read_f64_at(0x967890)) as f32;", "        dist = (x * x + x + read_f64_at(0x968968)) as f32;"),
+    ('o_dist', "        dist = (x * x + x + read_f64_at(rdata::F64_1)) as f32;", "        dist = (x * x + x + read_f64_at(rdata::F64_0_5)) as f32;"),
     ('o_cy', "    let cy = ((if flag == 1 { by - 11 } else { by }).abs()) as i8;", "    let cy = ((if flag == 1 { by - 10 } else { by }).abs()) as i8;"),
-    ('o_marca', "                v *= read_f32_at(0x96d420) as f64;", "                v *= read_f32_at(0x96d424) as f64;"),
-    ('o_leitura', "                let k = (w(atacante, match_player::BALL_CONTROL) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(6)) as i16;", "                let k = (w(atacante, match_player::BALL_CONTROL) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(5)) as i16;"),
-    ('o_folego', "            weight = (f(p, match_player::STAMINA) as f64 * read_f64_at(0x968eb8) * f(p, match_player::STAMINA) as f64 * weight as f64) as f32;", "            weight = (f(p, match_player::STAMINA) as f64 * read_f64_at(0x968eb8) * weight as f64) as f32;"),
+    ('o_marca', "                v *= read_f32_at(rdata::F32_2_25) as f64;", "                v *= read_f32_at(rdata::F32_0_05000000075) as f64;"),
+    ('o_leitura', "                let k = (read_i16(atacante + match_player::BALL_CONTROL) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(6)) as i16;", "                let k = (read_i16(atacante + match_player::BALL_CONTROL) as i32).wrapping_add(r2.wrapping_sub(r1).wrapping_mul(5)) as i16;"),
+    ('o_folego', "            weight = (read_f32(p + match_player::STAMINA) as f64 * read_f64_at(rdata::F64_1ENEG_08) * read_f32(p + match_player::STAMINA) as f64 * weight as f64) as f32;", "            weight = (read_f32(p + match_player::STAMINA) as f64 * read_f64_at(rdata::F64_1ENEG_08) * weight as f64) as f32;"),
     ('o_c', "                let k = if atacante_t1() { 3 } else if bit100 { 10 } else { 20 };", "                let k = if atacante_t1() { 3 } else if bit100 { 10 } else { 21 };"),
     ('o_f', "                let k = if atacante_t1() { 3 } else if bit100 { 5 } else { 10 };", "                let k = if atacante_t1() { 3 } else if bit100 { 5 } else { 11 };"),
     ('o_11', "                let (perto, longe) = if kind == 0x11 { (12, 8) } else { (8, 4) };", "                let (perto, longe) = if kind == 0x11 { (13, 8) } else { (8, 4) };"),

@@ -496,7 +496,7 @@ pub(crate) unsafe fn select_charity_shield_teams(this: usize) -> (i32, i32) {
         show_error_at(0x9c425c, 0xc5);
         return (-1, 0);
     }
-    let a = latest_placed_club(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0); // cqm10: o campeão inglês
+    let a = latest_placed_club(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 0); // cqm10: the English champion
     core::ptr::write_unaligned(l as *mut u32, a as u32);
     if a == 0 {
         show_error_at(0x9c425c, 0xce);

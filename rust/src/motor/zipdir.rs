@@ -350,7 +350,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
 // logical (uncompressed bytes), +0xc the item, +0x10/+0x14 RLE repetition (delivered/count),
 // +0x18 the repeat byte, +0x19 header (type +0x19, a4 +0x1d, count +0x21) and index
 // (+0x25, 0x10c per item: position, uncompressed size, name), read buffer +0x41705 and
-// escrita +0x72445 (0x30d40 cada), cursores +0xa3185 (leitura), +0xa3189 (escrita), +0xa318d (lidos).
+// write +0x72445 (0x30d40 each), cursors +0xa3185 (read), +0xa3189 (write), +0xa318d (items read).
 // RLE: byte <= 0x80 is emitted as is; > 0x80 = (byte − 0x80) copies of the next byte (1 to 0x7f).
 
 /// Reads an unaligned i32 at offset o of the ZFILE.

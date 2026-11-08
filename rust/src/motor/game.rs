@@ -28,7 +28,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &m
     crate::comparison::branch("cpt_6 dezembro");
     if (*mark as i8) < 0xc {
         crate::comparison::branch("cpt_6 bonus de dezembro");
-        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(0x967888) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: the December bonus; 0x967888 = 0.05, 0x968930 = 3
+        h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(rdata::F64_0_05) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(rdata::F64_3) + h[5]; // cpt6: the December bonus;
     }
     h[0] = h[1];
     h[1] = h[2];
@@ -85,8 +85,8 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         loop {
             let e = array + i as i32 as usize * 0xc;
             *(e as *mut usize) = na;
-            let s = read_f64(na + nation::FIFACOEFFICIENT93) * read_f64_at(0x968e48) + read_f64(na + nation::FIFACOEFFICIENT92) * read_f64_at(0x968e00) + read_f64(na + nation::FIFACOEFFICIENT91) * read_f64_at(0x968918) // 0x968e48 = 0.6, 0x968e00 = 0.4, 0x968918 = 0.2
-                + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64_at(0x9689b0) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95); // 0x9689b0 = 0.8
+            let s = read_f64(na + nation::FIFACOEFFICIENT93) * read_f64_at(rdata::F64_0_6) + read_f64(na + nation::FIFACOEFFICIENT92) * read_f64_at(rdata::F64_0_4) + read_f64(na + nation::FIFACOEFFICIENT91) * read_f64_at(rdata::F64_0_2)
+                + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64_at(rdata::F64_0_8) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95);
             write_f64(e + 4, s);
             if dez {
                 let mut h = nation_coefficient_history(na);
@@ -326,7 +326,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     }
     let mut e = read_i8_as_i32(p + staff::PROFESSIONALISM) + (read_i8_as_i32(p + staff::PRESSURE) + read_i8_as_i32(p + staff::LOYALTY)) + (read_i8_as_i32(p + staff::SPORTSMANSHIP) + read_i8_as_i32(p + staff::AGE));
     crate::comparison::branch("cps_5 tecnico sorteado");
-    if friendly_random(read_i8_as_i32(p + staff::LOYALTY)) == 0 { // cps5: o primeiro desconto
+    if friendly_random(read_i8_as_i32(p + staff::LOYALTY)) == 0 { // cps5: the first discount
         e -= 3;
     }
     if friendly_random(read_i8_as_i32(p + staff::PRESSURE)) == 0 {
@@ -511,7 +511,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
     crate::comparison::branch("cps_6 faltas do dia");
-    let r = friendly_random(n - q - 1); // cps6: a primeira pessoa
+    let r = friendly_random(n - q - 1); // cps6: the first person
     let mut current = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
     for _ in 0..q {
         let p = current;
@@ -693,10 +693,9 @@ pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut
 /// [pt] { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
 /// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.
 pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64 {
-    let d = |o: usize| core::ptr::read_unaligned((t + o) as *const f64);
-    let (n, q) = if second != 0 { (d(0x20), d(0x28)) } else { (d(0x10), d(0x18)) };
-    if q == read_f64_at(0x9689a0) || q.is_nan() { // 0x9689a0 = 0
-        return read_f64_at(0x968998); // 0x968998 = 6.8
+    let (n, q) = if second != 0 { (read_f64(t + 0x20), read_f64(t + 0x28)) } else { (read_f64(t + 0x10), read_f64(t + 0x18)) };
+    if q == read_f64_at(rdata::F64_0) || q.is_nan() {
+        return read_f64_at(rdata::F64_6_8);
     }
     n / q
 }
@@ -718,10 +717,9 @@ pub(crate) unsafe extern "C" fn pow_double(base: f64, expoente: f64) -> f64 {
 /// game_daily_staff_update (0x5d588f): pela habilidade atual (+5), depois pela potencial (+7), crescente.
 pub(crate) unsafe extern "C" fn compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
     let (pa, pb) = (*a, *b);
-    let h = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const i16) as i32;
-    if h(pa, 5) == h(pb, 5) {
-        return h(pa, 7) - h(pb, 7);
+    if (read_i16(pa + 5) as i32) == (read_i16(pb + 5) as i32) {
+        return (read_i16(pa + 7) as i32) - (read_i16(pb + 7) as i32);
     }
-    h(pa, 5) - h(pb, 5)
+    (read_i16(pa + 5) as i32) - (read_i16(pb + 5) as i32)
 }
 

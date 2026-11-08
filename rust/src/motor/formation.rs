@@ -252,27 +252,26 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
     if p == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_POSITION_MASK)(p);
     }
-    let b = |o: usize| *((p + o) as *const i8);
     let mut m = 0u16;
     let mut level = 15i8;
     loop {
-        if b(0xf) >= level {
+        if read_i8(p + 0xf) >= level {
             m |= 1;
         }
-        if b(0x11) >= level {
+        if read_i8(p + 0x11) >= level {
             m |= 4;
         }
-        if b(0x10) >= level {
+        if read_i8(p + 0x10) >= level {
             m |= 2;
         }
-        if b(0x12) >= level {
+        if read_i8(p + 0x12) >= level {
             m |= 8;
-        } else if b(0x14) >= level {
+        } else if read_i8(p + 0x14) >= level {
             m |= 0x20;
-        } else if b(0x13) >= level {
+        } else if read_i8(p + 0x13) >= level {
             m |= 0x10;
         }
-        if b(0x15) >= level {
+        if read_i8(p + 0x15) >= level {
             m |= 0x40;
         }
         level -= 1;
@@ -280,13 +279,13 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
             break;
         }
     }
-    if b(0x17) >= 15 {
+    if read_i8(p + 0x17) >= 15 {
         m |= 0x800;
     }
-    if b(0x18) >= 15 {
+    if read_i8(p + 0x18) >= 15 {
         m |= 0x80;
     }
-    if b(0x19) >= 15 {
+    if read_i8(p + 0x19) >= 15 {
         m |= 0x200;
     }
     m
@@ -417,10 +416,9 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
 /// atacante (0x40, nas duas), de meia (0x20 na +0x12d e na +0x14e pela 0x5b2ae0) ou de volante e
 /// meia-atacante pela 0x5b2ae0 (8 e 0x10); senão 1. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8 {
-    let w = |o: usize| core::ptr::read_unaligned((this + o) as *const u16);
     for i in 0..=10u32 {
-        let a = w(0x12d + 2 * i as usize);
-        let b = w(0x14e + 2 * i as usize);
+        let a = read_u16(this + (0x12d + 2 * i as usize));
+        let b = read_u16(this + (0x14e + 2 * i as usize));
         if a & 0x880 != 0 && a & 0x40 != 0 {
             return 0;
         }
@@ -986,10 +984,9 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
 /// das 11 vagas com lado aberto (0x880) é de zagueiro (4, na casa +0x12d ou +0x14e) ou de volante
 /// (8 na +0x12d; na +0x14e pela 0x5b2ae0); senão 1. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize) -> u8 {
-    let w = |o: usize| core::ptr::read_unaligned((this + o) as *const u16);
     for i in 0..=10u32 {
-        let a = w(0x12d + 2 * i as usize);
-        let b = w(0x14e + 2 * i as usize);
+        let a = read_u16(this + (0x12d + 2 * i as usize));
+        let b = read_u16(this + (0x14e + 2 * i as usize));
         if a & 0x880 != 0 && a & 4 != 0 {
             return 0;
         }

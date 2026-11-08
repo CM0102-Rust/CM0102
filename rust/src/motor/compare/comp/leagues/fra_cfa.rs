@@ -15,9 +15,8 @@ pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_create_schedule(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_set_up_rules(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_CFA_SET_UP_RULES);
     let r = o(this);
-    let b = |k: usize| *((this + k) as *const u8);
-    let ok = r == 1 && core::ptr::read_unaligned((this + league::LEGS) as *const u16) == 2 && b(league::WIN_POINTS) == 3 && b(league::DRAW_POINTS) == 1 && b(league::MATCH_CATEGORY) == 2
-        && b(league::TIEBREAKS) == 4 && b(0xc6) == 1 && b(0xc7) == 2 && b(league::CLUB_SIDES) == 1 && b(league::PROMOTED_COUNT) == 0 && b(league::PROMOTION_PLAYOFF_COUNT) == 0 && b(league::RELEGATION_PLAYOFF_COUNT) == 0 && b(league::RELEGATED_COUNT) == 0
+    let ok = r == 1 && core::ptr::read_unaligned((this + league::LEGS) as *const u16) == 2 && read_u8(this + league::WIN_POINTS) == 3 && read_u8(this + league::DRAW_POINTS) == 1 && read_u8(this + league::MATCH_CATEGORY) == 2
+        && read_u8(this + league::TIEBREAKS) == 4 && read_u8(this + 0xc6) == 1 && read_u8(this + 0xc7) == 2 && read_u8(this + league::CLUB_SIDES) == 1 && read_u8(this + league::PROMOTED_COUNT) == 0 && read_u8(this + league::PROMOTION_PLAYOFF_COUNT) == 0 && read_u8(this + league::RELEGATION_PLAYOFF_COUNT) == 0 && read_u8(this + league::RELEGATED_COUNT) == 0
         && read_usize(this + league::UPPER_DIVISION_ID) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_usize(this + league::LOWER_DIVISION_ID) == 0xffff_ffff
         && core::ptr::read_unaligned((this + league::LEAGUE_FLAGS) as *const u16) == 0x43;
     SCOREBOARD.record(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this, r));

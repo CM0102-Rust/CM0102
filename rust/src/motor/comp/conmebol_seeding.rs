@@ -214,7 +214,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                         crate::comparison::branch("cqj_2 clube mexicano");
                     }
                     crate::comparison::branch("cqj_2 tira a vaga");
-                    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX; // cqj2: sem vaga continental
+                    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX; // cqj2: no continental place
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
                     core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation));

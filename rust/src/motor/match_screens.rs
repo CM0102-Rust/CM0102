@@ -1934,7 +1934,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     let column = get_screen_param(0x28);
     get_screen_param(0x29);
 
-    // o sorteio ainda por vir
+    // the random draw still to come
     let sorteio = w16(league + league::NEXT_DRAW_DAY);
     if sorteio != 0xffff {
         data_new(s + 0x30, sorteio as u32, w16(league + league::NEXT_DRAW_YEAR_OFFSET).wrapping_add(w16(league + league::YEAR)) as u32);
@@ -4107,26 +4107,24 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     let item = get_screen_param(9) as u32;
     let copy = get_screen_param(0x1d);
     let e = displayed_match_state(p0);
-    let u8_ = |b: usize, k: usize| *((b + k) as *const u8) as i32;
-    let i16_ = |b: usize, k: usize| core::ptr::read_unaligned((b + k) as *const i16) as i32;
     let byte = |k: usize, d: u32| {
-        if copy == 0 || u8_(e, k) != u8_(copy, k) {
-            format(BUF, FORMAT_D, u8_(e, k));
+        if copy == 0 || (read_u8(e + k) as i32) != (read_u8(copy + k) as i32) {
+            format(BUF, FORMAT_D, (read_u8(e + k) as i32));
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
     let diferenca = |a: usize, b: usize, d: u32| {
-        if copy == 0 || u8_(e, a) - u8_(e, b) != u8_(copy, a) - u8_(copy, b) {
-            format(BUF, FORMAT_D, u8_(e, a) - u8_(e, b));
+        if copy == 0 || (read_u8(e + a) as i32) - (read_u8(e + b) as i32) != (read_u8(copy + a) as i32) - (read_u8(copy + b) as i32) {
+            format(BUF, FORMAT_D, (read_u8(e + a) as i32) - (read_u8(e + b) as i32));
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
     let write_percent_pair = |muda: usize, den: usize, num: usize, d: u32, inverter: bool| {
-        if copy == 0 || i16_(e, muda) != i16_(copy, muda) {
-            if i16_(e, den) == 0 {
+        if copy == 0 || (read_i16(e + muda) as i32) != (read_i16(copy + muda) as i32) {
+            if (read_i16(e + den) as i32) == 0 {
                 *(BUF as *mut [u8; 2]) = *b"-\0";
             } else {
-                let x = i16_(e, num) * 100 / i16_(e, den);
+                let x = (read_i16(e + num) as i32) * 100 / (read_i16(e + den) as i32);
                 format(BUF, FORMAT_PCT, if inverter { 100 - x } else { x });
             }
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
@@ -4193,11 +4191,10 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
     let copy = get_screen_param(0x1d);
     let marks = get_screen_param(0x23) as u32;
     let e = displayed_match_state(p0);
-    let u8_ = |x: usize, k: usize| *((x + k) as *const u8) as u32;
     let it = |d: u32| b.wrapping_add(d);
 
     for (i, a, c) in [(0u32, 0x767, 0x142), (1, 0x763, 0x13e), (2, 0x764, 0x13f), (3, 0x765, 0x140), (4, 0x766, 0x141)] {
-        if (i > 0 || p0 != 0) && u8_(e, a) + u8_(e, c) != 0 {
+        if (i > 0 || p0 != 0) && (read_u8(e + a) as u32) + (read_u8(e + c) as u32) != 0 {
             exe::screenmanager_set_widget_text_flags(sm, marks.wrapping_add(i), 1);
             exe::screenmanager_set_widget_id(sm, marks.wrapping_add(i), 4);
         }
@@ -4229,8 +4226,8 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
     // each call’s output is not used. Only the low 16 bits count (0x801040 reads a word).
     let club = |k: usize| (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((e + k) as *const usize)).wrapping_mul(club::SIZE));
     let (mut cor1, mut cor2, mut resto1, mut resto2) = ([0u8; 2], [0u8; 2], [0u8; 2], [0u8; 2]);
-    exe::database_get_club_kit_colours(club(0), u8_(e, match_record::HOME_KIT), (cor1.as_mut_ptr()) as *mut u32, (resto1.as_mut_ptr()) as *mut u32);
-    exe::database_get_club_kit_colours(club(4), u8_(e, match_record::AWAY_KIT), (cor2.as_mut_ptr()) as *mut u32, (resto2.as_mut_ptr()) as *mut u32);
+    exe::database_get_club_kit_colours(club(0), (read_u8(e + match_record::HOME_KIT) as u32), (cor1.as_mut_ptr()) as *mut u32, (resto1.as_mut_ptr()) as *mut u32);
+    exe::database_get_club_kit_colours(club(4), (read_u8(e + match_record::AWAY_KIT) as u32), (cor2.as_mut_ptr()) as *mut u32, (resto2.as_mut_ptr()) as *mut u32);
     let colour = |pct: u32| u16::from_le_bytes(if pct < 0x32 { cor2 } else { cor1 }) as u32;
     let value = |field: isize| *((e as isize + side + field) as *const u8);
     let mudou = |field: isize| copy == 0 || value(field) != *((copy as isize + side + field) as *const u8);
@@ -5055,14 +5052,13 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
         let v = core::ptr::read_unaligned((*((game + fixture::HOME_CLUB) as *const usize) + 0x80) as *const i16);
         return if v as i32 * 2 >= 10000 || v >= 0x157c { 0 } else { 2 };
     }
-    let w = |o: usize| core::ptr::read_unaligned((game + o) as *const i16) as i32;
     // simplification: the two byte tables of the jumps are read from the exe itself (the hook only replaces the start of the routine)
     let table = |end: usize, i: i32| *((end + i as usize) as *const u8);
     match (*((game + fixture::CATEGORY) as *const i8) as i32).wrapping_sub(1) {
         0 => 3,
         4 | 8 => 1,
         5 => {
-            let c = w(fixture::ROUND_NAME);
+            let c = (read_i16(game + fixture::ROUND_NAME) as i32);
             if c as u32 > 0x9b {
                 return 1;
             }
@@ -5073,10 +5069,10 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             }
         }
         7 => {
-            if (0x41f..=0x426).contains(&w(fixture::ROUND_PREFIX)) {
+            if (0x41f..=0x426).contains(&(read_i16(game + fixture::ROUND_PREFIX) as i32)) {
                 return 0;
             }
-            let c = w(fixture::ROUND_NAME) - 0x78;
+            let c = (read_i16(game + fixture::ROUND_NAME) as i32) - 0x78;
             if c as u32 > 0x23 { 1 } else { (table(0x729d64, c) != 0) as u8 }
         }
         _ => {

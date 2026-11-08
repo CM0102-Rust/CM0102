@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn send_club_international_report_news(this:
     let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let record_of_match: unsafe extern "C" fn(usize, usize, usize) = core::mem::transmute(FN_FILL_MATCH_RECORD_FROM_FIXTURE);
     let data_of_match: unsafe extern "C" fn(usize, usize, *mut u8) = core::mem::transmute(FN_WRITE_MATCH_RECORD_TO_NEWS);
-    // 0x945333 (qsort): push 0x778ef0; push 4; push conta; push elenco; add esp, 0x10 -> cdecl; 0x77bbe0: push 0; push
+    // 0x945333 (qsort): push 0x778ef0; push 4; push count; push squad; add esp, 0x10 -> cdecl; 0x77bbe0: push 0; push
     // 0x24; lea ecx, news -> thiscall; 0x785790: push value; push index; lea ecx, news -> thiscall, ret 8;
     // 0x7e4750: push &record; push club; push match; add esp, 0xc -> cdecl; 0x7e4de0: push &index; push &news;
     // push &record; add esp, 0xc -> cdecl; 0x7861e0: push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8
@@ -701,7 +701,7 @@ pub(crate) unsafe fn reserve_group(this: usize, reg: usize, k: usize, g: usize) 
 pub(crate) unsafe fn is_squad_candidate(this: usize, nation: usize, t: i8, data: usize, p: usize, squad: usize, reg: usize, lim: (i16, i16), j: usize) -> bool {
     let bits: unsafe extern "stdcall" fn(usize) -> u8 = core::mem::transmute(FN_PLAYER_REGEN_GET_RETIREMENT_STATUS);
     // 0x53b620: push byte +0x3d; add esp, 4 -> cdecl; 0x62c400: push j; mov ecx, [0xb63d28] -> thiscall ret 4 (al);
-    // 0x7a7eb0: push j; mov ecx, [0xb7434c] -> stdcall ret 4 (al); 0x547d30: push clube; push j; add esp, 0xc (junto
+    // 0x7a7eb0: push j; mov ecx, [0xb7434c] -> stdcall ret 4 (al); 0x547d30: push club; push j; add esp, 0xc (together
     // with that of 0x53b3d0) -> cdecl; 0x4cf5a0: push j; mov ecx, [0xae1050] -> thiscall ret 4; 0x55d270: push 0; push 1;
     // push [p + 0x14]; push j; mov ecx, [0xae28f0] -> thiscall ret 0x10; 0x76db00: 6 pushes (nation, 0, j, 0, 0, 0);
     // mov ecx, this -> thiscall ret 0x18
@@ -902,12 +902,12 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
     // ecx, data -> thiscall ret 8; 0x417c10: push origem; push saida; lea ecx, destino -> thiscall ret 8; 0x54a110: lea
     // ecx -> thiscall; 0x944cf1 (new): push 0xe; add esp, 4 -> cdecl; 0x68d020: mov ecx, bloco -> thiscall ret 0;
     // 0x68d0d0: push 0x12; push item; mov ecx, [this] -> thiscall ret 8; 0x76d880: push nation; mov ecx, this ->
-    // thiscall ret 4; 0x76d430: 4 pushes (partida, tipo, +0x42, +0x43) -> stdcall ret 0x10; 0x600a50: 5 pushes (time,
+    // thiscall ret 4; 0x76d430: 4 pushes (match, type, +0x42, +0x43) -> stdcall ret 0x10; 0x600a50: 5 pushes (team,
     // 0, 1, 0, 0); add esp -> cdecl; 0x5fd6b0: push 0; push manager; mov ecx, [0xb63c98] -> thiscall ret 8 (al);
     // 0x5409b0: push; add esp, 4 -> cdecl; 0x62ed70: push j; mov ecx, [0xb63d28] -> thiscall ret 4; 0x896c60: push 1;
     // push time; push j; push elenco; mov ecx, [0xde1d08] -> thiscall ret 0x10; 0x76f1a0: 3 pushes (elenco, time,
     // partida); mov ecx, this -> ret 0xc; 0x6e2000: 15 pushes; add esp, 0x3c -> cdecl; 0x5b7d20: push +0x61; add esp,
-    // 4 -> cdecl (ax); 0x8968f0 e 0x896e90: push time; push vaga; push elenco; mov ecx, [0xde1d08] -> thiscall ret 0xc;
+    // 4 -> cdecl (ax); 0x8968f0 and 0x896e90: push team; push place; push squad; mov ecx, [0xde1d08] -> thiscall ret 0xc;
     // 0x540980: push marca; push j; add esp, 8 -> cdecl; 0x945333 (qsort): 4 pushes; add esp, 0x10 -> cdecl; 0x76e0b0:
     // 7 pushes; mov ecx, this -> ret 0x1c
     let t = kind as u8 as i8;
@@ -1755,7 +1755,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                     }
                 }
                 crate::comparison::branch("cpw_12 jogo pela seleção");
-                *((person + staff::INT_APPS) as *mut u8) = (*((person + staff::INT_APPS) as *const u8)).wrapping_add(1); // cpw12: um jogo
+                *((person + staff::INT_APPS) as *mut u8) = (*((person + staff::INT_APPS) as *const u8)).wrapping_add(1); // cpw12: one match
                 *((person + staff::INT_GOALS) as *mut u8) = (*((person + staff::INT_GOALS) as *const u8)).wrapping_add(*((slot + match_record_row::GOALS) as *const u8)); // cpw12: os gols
                 if !INTERNATIONAL_RESULT_DRY_RUN {
                     // the original pushes edx with the short of the matches below and the high part of 55 × nation id
@@ -2225,7 +2225,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
     }
     if read_u8(e + 0x44) == 0 {
         crate::comparison::branch("cpv_12 sem janela");
-        return 1; // cpv12: sem janela
+        return 1; // cpv12: no window
     }
     let today = read_usize(G_CURRENT_DATE) as u32;
     let (ano, dia) = ((today >> 16) as u16, today as u16 as i16);
@@ -2778,7 +2778,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_squad(_this: usize, nation:
         Some(c) => team + club::SQUAD + 4 * c,
         None => return,
     };
-    core::ptr::write_unaligned(slot as *mut usize, p); // a vaga
+    core::ptr::write_unaligned(slot as *mut usize, p); // the place
     core::ptr::write_unaligned((p + staff::NATIONAL_JOB) as *mut usize, team);
     let mut data = [0u8; 8];
     exe::date_operator_3d(p + staff::DATE_JOINED_NATION, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
@@ -3358,7 +3358,7 @@ pub(crate) unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const 
 pub(crate) unsafe extern "thiscall" fn national_teams_daily_update(this: usize, today: usize) {
     let remove: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
     // 0x54c770: push 2; push saida; mov ecx, hoje -> thiscall ret 8; free: add esp, 4 -> cdecl; 0x549f70: 4 pushes;
-    // lea ecx, saida -> thiscall ret 0x10; 0x76abf0, 0x7774b0, 0x7779e0: mov ecx, edi sem pushes -> thiscall;
+    // lea ecx, output -> thiscall ret 0x10; 0x76abf0, 0x7774b0, 0x7779e0: mov ecx, edi without pushes -> thiscall;
     // 0x5abf10: 4 pushes; mov ecx, [0xae2a58] -> thiscall ret 0x10; 0x7777e0: push &data; mov ecx, edi -> thiscall
     // ret 4; 0x68d1f0: push item; mov ecx, [edi] -> thiscall ret 4; 0x58d460: push hoje; mov ecx, [edi + 0x1c] ->
     // thiscall ret 4

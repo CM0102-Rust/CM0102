@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpg_salario_minimo', '*((this + contract::WAGE) as *mut i32) = if v < 0x37 { 0x37 } else { v }; // the minimum of 55', '*((this + contract::WAGE) as *mut i32) = if v < 0x38 { 0x38 } else { v }; // mutacao: minimo 56'),
     ('cph_queixas_zero', 'core::ptr::write_unaligned((this + contract::GRIEVANCES) as *mut u32, 0); // the complaints', '*((this + contract::GRIEVANCES) as *mut u8) = 0; // mutacao: so o byte baixo'),
     ('cph_lugar_marca', 'if mark == 0 { 4 } else { 3 }', 'if mark == 0 { 3 } else { 4 } // mutacao: trocados'),
-    ('cph_conversas_clube', '&& (club == 0 || read_u32(r + contract_talks::CLUB_ID) == read_u32(club)) // o clube', '&& (club == 0 || true) // mutacao: sem o clube'),
+    ('cph_conversas_clube', '&& (club == 0 || read_u32(r + contract_talks::CLUB_ID) == read_u32(club)) // the club', '&& (club == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'copy_data(r + 8, &mut local, r + 0x19);', 'copy_data(r + 8, &mut local, r + 8); // mutacao: a data fica'),
     ('cph_desempregado_tecnico', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 50 && friendly_random(5) == 0 // the weak manager', '*((manager + non_player::CURRENT_REPUTATION) as *const i16) < 49 && friendly_random(5) == 0 // mutacao: 49'),

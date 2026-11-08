@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
     *((r + 0xb) as *mut u8) = read_u8(p + staff::AGE);
     crate::comparison::branch("cpw_5 jogador novo no mes");
-    *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
+    *((r + 0xa) as *mut u8) = 0; // cpw5: starts with no matches
     write_u32(this + 4, n.wrapping_add(1) as u32);
     add_match_rating(r, e);
 }
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
 pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32, age: u32) -> usize {
     crate::comparison::branch("cpw_5 ordenou as notas");
-    exe::crt_qsort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
+    exe::crt_qsort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: sorts by the average
     let table = read_usize(this);
     let n = read_i32(this + 4);
     let age = age as u8;

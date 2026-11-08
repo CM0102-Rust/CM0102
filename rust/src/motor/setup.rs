@@ -40,30 +40,29 @@ pub(crate) unsafe fn load_read_error(row: u32, text: usize, z: &mut usize) -> u3
 /// +0x33/+0x37 (+0x14j, j = 0, 1) = −1.
 pub(crate) unsafe fn convert_staff_state(font: usize, size: usize, n: i32) {
     let d = || *(G_STAFF_STATE_TABLE as *const usize);
-    let b = |o: usize| *((font + o) as *const u8);
     let mesclar = |base: u8, other: u8, m: u8| base ^ ((base ^ other) & m);
     for i in 0..n.max(0) as usize {
         let (o, f) = (i * 0x4f, i * size);
         *((d() + o) as *mut u32) = *((font + f) as *const u32);
         let x = d() + o + 0xb;
-        *(x as *mut u8) = mesclar(b(f + 0xb), *(x as *const u8), 0x7f);
-        *((d() + o + 0xa) as *mut u8) = b(f + 0xa);
+        *(x as *mut u8) = mesclar(read_u8(font + (f + 0xb)), *(x as *const u8), 0x7f);
+        *((d() + o + 0xa) as *mut u8) = read_u8(font + (f + 0xa));
         *((d() + o + 4) as *mut u32) = core::ptr::read_unaligned((font + f + 4) as *const u32);
-        *((d() + o + 9) as *mut u8) = b(f + 9);
-        *((d() + o + 8) as *mut u8) = b(f + 8);
+        *((d() + o + 9) as *mut u8) = read_u8(font + (f + 9));
+        *((d() + o + 8) as *mut u8) = read_u8(font + (f + 8));
         for m in [0xfu8, 0x40, 0x30] {
             let x = d() + o + 0xb;
-            *(x as *mut u8) = mesclar(*(x as *const u8), b(f + 0xb), m);
+            *(x as *mut u8) = mesclar(*(x as *const u8), read_u8(font + (f + 0xb)), m);
         }
         let c = d() + o + 0xc;
-        *(c as *mut u8) = mesclar(*(c as *const u8), b(f + 0xc), 1);
+        *(c as *mut u8) = mesclar(*(c as *const u8), read_u8(font + (f + 0xc)), 1);
         if size == 0x26 {
             *((d() + o + 0xd) as *mut u8) = 0;
             *((d() + o + 0xc) as *mut u8) &= 0xfd;
         } else {
-            *((d() + o + 0xd) as *mut u8) = b(f + 0xd);
+            *((d() + o + 0xd) as *mut u8) = read_u8(font + (f + 0xd));
             let c = d() + o + 0xc;
-            *(c as *mut u8) = mesclar(*(c as *const u8), b(f + 0xc), 2);
+            *(c as *mut u8) = mesclar(*(c as *const u8), read_u8(font + (f + 0xc)), 2);
         }
         for j in 0..5 {
             *((d() + o + 0x12 + 5 * j) as *mut u8) = 0;

@@ -1307,24 +1307,23 @@ pub(crate) enum BranchLabel {
 /// área (0x6d58f0). As duas chamadas da 0x6cb960 do original não têm efeito e o valor delas é
 /// descartado (ficam de fora).
 pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
-    let b = |p: usize, o: usize| *((p + o) as *const i8);
     let w = |p: usize| core::ptr::read_unaligned(p as *const i16);
     let s2 = w(e);
-    let (posse, area) = if m == 0 { (0, 0) } else { (b(m, engine::LAST_POSSESSION_SIDE), ball_goal_end(m)) };
+    let (posse, area) = if m == 0 { (0, 0) } else { (read_i8(m + engine::LAST_POSSESSION_SIDE), ball_goal_end(m)) };
     if w(t + 8) == w(t + 6) {
         return 0;
     }
-    let k = if w(t + 8) == 0 { 0xb } else { b(t, 8).wrapping_sub(1) };
+    let k = if w(t + 8) == 0 { 0xb } else { read_i8(t + 8).wrapping_sub(1) };
     let q = (t as isize + 0x30 + k as isize * 14) as usize;
     let s3 = w(q);
-    let same = |o: usize| b(q, o) == b(e, o);
+    let same = |o: usize| read_i8(q + o) == read_i8(e + o);
     let copiar = || core::ptr::copy((q as *const u8).add(5), (e as *mut u8).add(5), 8);
     // the previous one becomes the main one and the new one becomes the other (+7, +8)
     let swap = |inteiro: bool| {
-        *((e + 8) as *mut i8) = b(e, 6);
-        *((e + 7) as *mut i8) = b(e, 5);
-        *((e + 5) as *mut i8) = b(q, 5);
-        *((e + 6) as *mut i8) = b(q, 6);
+        *((e + 8) as *mut i8) = read_i8(e + 6);
+        *((e + 7) as *mut i8) = read_i8(e + 5);
+        *((e + 5) as *mut i8) = read_i8(q + 5);
+        *((e + 6) as *mut i8) = read_i8(q + 6);
         if inteiro {
             core::ptr::write_unaligned((e + 9) as *mut u32, core::ptr::read_unaligned((q + 9) as *const u32));
         }
@@ -1332,13 +1331,13 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     let contexto = |v: i16| (0x2021..=0x20d0).contains(&v);
 
     if s2 == 0x1f6f {
-        if posse == b(e, 6) {
+        if posse == read_i8(e + 6) {
             return 0x21bb;
         }
     } else if s2 == 0x1f92 && (s3 == 0x1f6c || s3 == 0x1f6e) {
         return -0x1f9c;
     }
-    if s3 == 0x1f7d && b(e, 6) != b(q, 6) && s2 == 0x1f46 {
+    if s3 == 0x1f7d && read_i8(e + 6) != read_i8(q + 6) && s2 == 0x1f46 {
         return -0x219d;
     }
     let shot = (0x1f87..=0x1fbd).contains(&s2);
@@ -1366,8 +1365,8 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
             }
             break 'escolha BranchLabel::R6cde;
         }
-        if contexto(s3) && matches!(s2, 0x1f46 | 0x213e | 0x1f60 | 0x1f5f) && b(e, 6) != b(q, 6) {
-            let side = b(q, 6);
+        if contexto(s3) && matches!(s2, 0x1f46 | 0x213e | 0x1f60 | 0x1f5f) && read_i8(e + 6) != read_i8(q + 6) {
+            let side = read_i8(q + 6);
             if (area == -1 && side == 1) || (area == 1 && side == 0) {
                 return -0x2178;
             }
@@ -1438,7 +1437,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
                 if exe::utils_random(2) == 0 || !same(5) {
                     return 0;
                 }
-                if (!same(6) || !same(7) || !same(8)) && (!same(6) || (b(q, 7) != -1 && b(e, 7) != -1)) {
+                if (!same(6) || !same(7) || !same(8)) && (!same(6) || (read_i8(q + 7) != -1 && read_i8(e + 7) != -1)) {
                     return 0;
                 }
                 copiar();
@@ -1466,7 +1465,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
             }
             break 'escolha BranchLabel::R6cde;
         }
-        if contexto(s3) && s2 == 0x1f46 && b(q, 7) == b(e, 5) && b(q, 8) == b(e, 6) {
+        if contexto(s3) && s2 == 0x1f46 && read_i8(q + 7) == read_i8(e + 5) && read_i8(q + 8) == read_i8(e + 6) {
             break 'escolha BranchLabel::Copiar;
         }
         match s3 {
@@ -1522,11 +1521,11 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
                 }
                 if contexto(s3) {
                     let (ie, iq) = (core::ptr::read_unaligned((e + 9) as *const i32), core::ptr::read_unaligned((q + 9) as *const i32));
-                    if contexto(s2) && (1..0x15).contains(&ie) && (1..0x15).contains(&iq) && b(e, 5) == b(q, 7) && b(e, 7) == b(q, 5) {
+                    if contexto(s2) && (1..0x15).contains(&ie) && (1..0x15).contains(&iq) && read_i8(e + 5) == read_i8(q + 7) && read_i8(e + 7) == read_i8(q + 5) {
                         copiar();
                         return 0x214e;
                     }
-                    if s2 == 0x1f47 && (1..0x15).contains(&iq) && exe::utils_random(0x16 - iq) != 0 && b(q, 7) == b(e, 5) && b(q, 8) == b(e, 6) {
+                    if s2 == 0x1f47 && (1..0x15).contains(&iq) && exe::utils_random(0x16 - iq) != 0 && read_i8(q + 7) == read_i8(e + 5) && read_i8(q + 8) == read_i8(e + 6) {
                         break 'r BranchLabel::Copiar;
                     }
                 }
@@ -1722,12 +1721,11 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
 /// itens, palavra +0x712 de 14 bytes) é o mesmo evento da nova posição (+0x30), a fila perde um;
 /// depois enfileira pela 0x6d6f70 com os mesmos 7 argumentos.
 pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
-    let w = |o: usize| core::ptr::read_unaligned((t + o) as *const i16);
-    let pos = w(8);
+    let pos = read_i16(t + 8);
     let pos = if pos == 0 { 0xb } else { pos.wrapping_sub(1) };
     core::ptr::write_unaligned((t + 8) as *mut i16, pos);
-    let n = w(6);
-    if n > 0 && w(0x712 + n as usize * 14) == w(0x30 + pos as usize * 14) {
+    let n = read_i16(t + 6);
+    if n > 0 && read_i16(t + (0x712 + n as usize * 14)) == read_i16(t + (0x30 + pos as usize * 14)) {
         core::ptr::write_unaligned((t + 6) as *mut i16, n - 1);
     }
     let enfileirar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_MATCH_EVENTS_ADD_EVENT);

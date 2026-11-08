@@ -315,7 +315,7 @@ pub(crate) unsafe extern "thiscall" fn clear_invalid_watched_fixtures(this: usiz
         }
         let f = human_manager_watched_match_record(this, i);
         if exe::human_manager_can_watch_fixture(this, f, p) == 0 {
-            core::ptr::write_bytes(f as *mut u8, 0, 79); // a partida sai
+            core::ptr::write_bytes(f as *mut u8, 0, 79); // the match is removed
         }
     }
     1
@@ -497,17 +497,14 @@ pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida:
         Ok(0) => return 0,
         Ok(r) => r,
     };
-    let b = |p: usize, o: usize| *((p + o) as *const u8);
-    let w = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const u16);
-    let d = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const u32);
-    let same = b(partida, fixture::TIME_SLICE) == b(r, 0x9b13)
-        && w(partida, fixture::DAY) == w(r, 0x9afe)
-        && w(partida, fixture::YEAR) == w(r, 0x9afc)
-        && d(partida, 0) == d(r, 0x9ad4)
-        && w(partida, fixture::ROUND_NUMBER) == w(r, 0x9b08)
-        && d(partida, fixture::HOME_CLUB_ID) == d(r, 0x9ae0)
-        && d(partida, fixture::AWAY_CLUB_ID) == d(r, 0x9ae4);
-    if same { 1 } else { 0 } // outra partida
+    let same = read_u8(partida + fixture::TIME_SLICE) == read_u8(r + 0x9b13)
+        && read_u16(partida + fixture::DAY) == read_u16(r + 0x9afe)
+        && read_u16(partida + fixture::YEAR) == read_u16(r + 0x9afc)
+        && read_u32(partida + 0) == read_u32(r + 0x9ad4)
+        && read_u16(partida + fixture::ROUND_NUMBER) == read_u16(r + 0x9b08)
+        && read_u32(partida + fixture::HOME_CLUB_ID) == read_u32(r + 0x9ae0)
+        && read_u32(partida + fixture::AWAY_CLUB_ID) == read_u32(r + 0x9ae4);
+    if same { 1 } else { 0 } // another match
 }
 
 /// Tells whether the human may watch the fixture: 1 when the fixture has a negative `+0x43` and neither it nor the

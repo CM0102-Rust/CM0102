@@ -3,7 +3,7 @@
 # Uso: python mutacoes.py mutacoes\lote_ampla_5b.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limit 14400
 MUTACOES = [
     ('dbi_crescer_historico_de_competicoes', '        core::ptr::write_unaligned(row as *mut i32, i); // the new row stores its own index', '        core::ptr::write_unaligned(row as *mut i32, i + 1); // mutacao: o índice + 1'),
-    ('dbi_ordem_do_elenco_pela_habilidade_atual', '        word(jb, 5) - word(ja, 5) // a habilidade atual maior primeiro', '        word(ja, 5) - word(jb, 5) // mutacao: a menor primeiro'),
+    ('dbi_ordem_do_elenco_pela_habilidade_atual', '        (read_i16(jb + player_sheet::CURRENT_ABILITY) as i32) - (read_i16(ja + player_sheet::CURRENT_ABILITY) as i32) // the highest current ability first', '        (read_i16(ja + player_sheet::CURRENT_ABILITY) as i32) - (read_i16(jb + player_sheet::CURRENT_ABILITY) as i32) // mutacao: a menor primeiro'),
     ('dbk1_juntar_comissao', '                        if n < k as i32 { // the B team’s staff go to the A team', '                        if n < 0 { // mutacao: a comissao do B nao vai para o A'),
     ('dbk2_olheiros', '        let o = rd(p + club::SCOUTS + 4 * j); // the partner’s scouts', '        let o = rd(club + 0x1b3 + 4 * j); // mutacao: os olheiros do proprio clube no lugar dos do parceiro'),
     ('dbl_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holland (nation)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),

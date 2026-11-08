@@ -462,23 +462,23 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     desejado(l, person, friendly_club_by_id(read_usize(this + contract::CLUB)), -1, status, 0xb, 0, 0);
     let v1 = calc_contract_value(this, person, l) as f32;
     let v2 = calc_contract_value(l, person, l) as f64;
-    let mut ratio = if v2 == read_f32_at(0x968970) as f64 { // 0x968970 = 0
-        read_f32_at(0x968970) as f64 // 0x968970 = 0
+    let mut ratio = if v2 == read_f32_at(rdata::F32_0) as f64 {
+        read_f32_at(rdata::F32_0) as f64
     } else {
-        v1 as f64 * read_f32_at(0x968960) as f64 / v2 // 0x968960 = 100
+        v1 as f64 * read_f32_at(rdata::F32_100) as f64 / v2
     };
     let years = (read_i16(G_CURRENT_DATE_YEAR) as u16 as i32).wrapping_sub(read_i16(this + 0x27) as u16 as i32);
     let days = years.wrapping_mul(365).wrapping_sub(read_i16(this + contract::DATE_STARTED) as i32).wrapping_add(read_i16(G_CURRENT_DATE) as i32).clamp(0, 500);
     let adapt = read_u8(person + staff::LOYALTY) as i8 as i32;
     if days < adapt.wrapping_mul(15).wrapping_add(100) {
         crate::comparison::branch("cpw_1 contratado ha pouco");
-        ratio = ratio + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (days / 2) as f64; // cpw1: the discount of the newly signed; 0x969560 = 50, 0x968eb0 = 7.5
+        ratio = ratio + read_f32_at(rdata::F32_50) as f64 + adapt as f64 * read_f64_at(rdata::F64_7_5) - (days / 2) as f64; // cpw1: the discount of the newly signed;
     }
     crate::comparison::branch("cpw_1 satisfacao avaliada");
-    if !(ratio >= read_f32_at(0x969560) as f64) { // cpw1: the dissatisfaction limit; 0x969560 = 50
+    if !(ratio >= read_f32_at(rdata::F32_50) as f64) { // cpw1: the dissatisfaction limit;
         return 1;
     }
-    if ratio < read_f32_at(0x96ff70) as f64 { // cpw1: the satisfaction limit; 0x96ff70 = 80
+    if ratio < read_f32_at(rdata::F32_80) as f64 { // cpw1: the satisfaction limit;
         3
     } else {
         2

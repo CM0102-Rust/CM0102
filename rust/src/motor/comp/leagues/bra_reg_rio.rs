@@ -687,7 +687,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
         core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
-            *((read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo9: campeão dos dois turnos
+            *((read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo9: champion of both halves
         }
         let mut i: i16 = 0;
         while i < read_i16(this + league::CLUB_COUNT) {

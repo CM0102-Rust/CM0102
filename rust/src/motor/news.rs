@@ -281,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     }
     if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
         crate::comparison::branch("cpn_1 resposta automatica");
-        exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // o clube
+        exe::newsitem_auto_respond(slot(current), manager, read_usize(manager + staff::CLUB_JOB)); // the club
         let national_team = read_usize(manager + staff::NATIONAL_JOB);
         if national_team != 0 {
             exe::newsitem_auto_respond(slot(current), manager, national_team);
@@ -550,7 +550,7 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
         },
         6 => t == 0x1770 && read_usize(news + news_item::DATA) as i32 >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10),
         1 => t == 0x1388,
-        _ => false, // 3 e 7: nenhum
+        _ => false, // 3 and 7: none
     };
     r as u8
 }

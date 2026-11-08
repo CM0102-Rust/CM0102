@@ -1,6 +1,6 @@
 # Mutações da 223a leva (itens db_q4, db_q5, db_q6). Uso: python mutacoes.py mutacoes\leva223.py --carreira 2002-06-01
 MUTACOES = [
-    ('dq4_temporada', '    tb as i32 - ta as i32 // a temporada mais nova primeiro', '    ta as i32 - tb as i32 // a temporada mais nova primeiro'),
+    ('dq4_temporada', '    tb as i32 - ta as i32 // the newest season first', '    ta as i32 - tb as i32 // the newest season first'),
     ('dq4_peso', '(0x23, 2), (0x24, 0)', '(0x23, 3), (0x24, 0)'),
     ('dq4_britanica', 'id == g(KEY_NATION_ENGLAND) || ', ''),
     ('dq5_basco', '    BASQUE_CLUBS.iter().any(|&a| id == g(a)) as u32', '    (!BASQUE_CLUBS.iter().any(|&a| id == g(a))) as u32'),

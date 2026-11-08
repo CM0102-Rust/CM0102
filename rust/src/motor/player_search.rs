@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) ou 0.
 pub(crate) unsafe fn player_search_contract_club(person: usize) -> usize {
-    // 0x4cf5a0: push pessoa; mov ecx, [0xae1050] -> thiscall, ret 4
+    // 0x4cf5a0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
     if c != 0 { friendly_club_by_id(read_usize(c + contract::CLUB)) } else { 0 }
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         (1, read_usize(game + fixture::HOME_CLUB_ID) as u32)
     };
     // 0x600a50: 5 pushes (club, 0, 1, 0, 0); add esp, 0x14 -> cdecl; 0x5afde0: push manager; mov ecx, [0xae2a60] ->
-    // thiscall; 0x5b09d0: push 0; push jogador; mov ecx, eax -> thiscall, ret 8; 0x7bd700: push 1; push jogador; mov ecx,
+    // thiscall; 0x5b09d0: push 0; push player; mov ecx, eax -> thiscall, ret 8; 0x7bd700: push 1; push player; mov ecx,
     // this -> thiscall, ret 8; 0x4afa80: push jogo; push clube; add esp, 8 -> cdecl
     for j in 0..0x14i8 {
         let e = result + 0x190 + lado as usize * 0x625 + j as usize * 0x49;
@@ -271,7 +271,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
         }
         let request: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_HAS_SCOUT_REQUEST);
         // 0x7f9690: push &list; push scout’s club; mov ecx, [0xb74448] -> thiscall, ret 8; 0x68d1b0: lea ecx, list
-        // -> thiscall; 0x7f8d70: push 1; push clube; push jogador; mov ecx, [0xb74448] -> thiscall, ret 0xc
+        // -> thiscall; 0x7f8d70: push 1; push club; push player; mov ecx, [0xb74448] -> thiscall, ret 0xc
         exe::scout_manager_collect_club_scout_targets(read_usize(G_SCOUT_MANAGER), read_usize(scout + staff::CLUB_JOB), l);
         let count = read_i16(l);
         if count == 0 {
@@ -337,8 +337,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     let mut mark = copia[0] & !0xff;
     let request: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_SCOUT_MANAGER_HAS_SCOUT_REQUEST);
     let append: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_LLIST_ADD_TAIL);
-    // 0x5afde0: push dono; mov ecx, [0xae2a60] -> thiscall, ret 4; 0x5b09d0: push olheiro; push jogador; mov ecx, eax ->
-    // thiscall, ret 8; 0x7f8d70: push 0; push clube; push jogador; mov ecx, [0xb74448] -> thiscall, ret 0xc; 0x5407e0:
+    // 0x5afde0: push owner; mov ecx, [0xae2a60] -> thiscall, ret 4; 0x5b09d0: push scout; push player; mov ecx, eax ->
+    // thiscall, ret 8; 0x7f8d70: push 0; push club; push player; mov ecx, [0xb74448] -> thiscall, ret 0xc; 0x5407e0:
     // push 0; push olheiro; push jogador; add esp, 0xc -> cdecl; 0x7b62a0: 7 pushes; mov ecx, this -> thiscall, ret 0x1c;
     // 0x68d0d0: push 0x67; push &registro; mov ecx, saida -> thiscall, ret 8
     // the local record (0x67 bytes), reused between players as in the original, with the parts that the constructor of the
@@ -346,7 +346,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     // starts zeroed (in the original, a stack leftover that 0x7b62a0 overwrites)
     let mut record = [0u8; 0x68];
     let reg = record.as_mut_ptr() as usize;
-    // lea ecx, local -> thiscall nas duas
+    // lea ecx, local -> thiscall in both
     exe::date_date_54a110(reg);
     exe::record_holder_construct(reg + 0x1f);
     exe::record_holder_construct(reg + 0x37);
@@ -379,12 +379,12 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             let pediu = request(read_usize(G_SCOUT_MANAGER), p, club_scout, 0);
             if pediu == 0 {
                 let target = read_i32(this + player_search_fields::ASSIGNED_COMP);
-                if !(target != -1 && read_i32(game) == target) && exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: reputação vista
+                if !(target != -1 && read_i32(game) == target) && exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: perceived reputation
                     continue;
                 }
             }
             // the rating: starters (up to the 11th) by rating +4, else +0, else the result’s (+0x4d); substitutes deduct the
-            // entrada (+2); resultado sem notas (+0x4c): titular vale 90
+            // entry (+2); result without ratings (+0x4c): a starter counts 90
             let rating_of = |x: usize| -> u8 {
                 let a = read_u8(x + 4);
                 if (a as i8) > -1 { a } else if (read_u8(x) as i8) > -1 { read_u8(x) } else { read_u8(result + 0x4d) }
@@ -565,7 +565,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         esi = *forcada as i32;
     } else {
         let rep = read_i16(club + club::REPUTATION) as i32;
-        let t = ftol(read_i32(club + club::MIN_ATTENDANCE) as f64 * read_f64_at(0x96e2b0) - read_f64_at(0x96e2a8)) as i16 as i32; // 0x96e2b0 = 0.43, 0x96e2a8 = 430
+        let t = ftol(read_i32(club + club::MIN_ATTENDANCE) as f64 * read_f64_at(rdata::F64_0_43) - read_f64_at(rdata::F64_430)) as i16 as i32;
         let ebx = (if rep > t { rep } else if t > 10000 { 10000 } else { t }) as i16 as i32;
         let mut n = rep;
         let mut l = rep;
@@ -596,14 +596,14 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
     let mut edi: i32 = if esi > 9000 {
         esi.wrapping_mul(3).wrapping_add(7500)
     } else if esi > 7000 {
-        ftol(esi as f64 * read_f64_at(0x96d688) - read_f64_at(0x96d760)) // 0x96d688 = 4.75, 0x96d760 = 8250
+        ftol(esi as f64 * read_f64_at(rdata::F64_4_75) - read_f64_at(rdata::F64_8250))
     } else if esi > 5000 {
-        ftol(esi as f64 * read_f64_at(0x968e18) + read_f64_at(0x9690b8)) // 0x968e18 = 2.5, 0x9690b8 = 7500
+        ftol(esi as f64 * read_f64_at(rdata::F64_2_5) + read_f64_at(rdata::F64_7500))
     } else if esi > 3000 {
         crate::comparison::branch("cpu_13 band de 3000 a 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: the middle band
     } else {
-        ftol(esi as f64 * read_f64_at(0x969018) + read_f64_at(0x9688e8)) // 0x969018 = 1.6, 0x9688e8 = 5000
+        ftol(esi as f64 * read_f64_at(rdata::F64_1_6) + read_f64_at(rdata::F64_5000))
     };
     if forcada.is_null() {
         let squad = (exe::database_count_club_squad(club, 0, 0) as i8);
@@ -615,18 +615,18 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
             if fin != 0 {
                 match exe::finance_get_wealth_band(fin) as i8 {
                     -2 => edi /= 2,
-                    -1 => edi = ftol(edi as f64 * read_f64_at(0x96a670)), // 0x96a670 = 0.6666666667
+                    -1 => edi = ftol(edi as f64 * read_f64_at(rdata::F64_0_6666666667)),
                     _ => {}
                 }
             }
         } else {
             let nation = read_i32(club + club::DIVISION) as usize;
             if with_nation(nation) {
-                let t2 = ftol(read_i16(nation + competition::REPUTATION) as i32 as f64 * read_f64_at(0x969588) + read_f64_at(0x968ea8)) as u8; // 0x969588 = 1.35, 0x968ea8 = 20
+                let t2 = ftol(read_i16(nation + competition::REPUTATION) as i32 as f64 * read_f64_at(rdata::F64_1_35) + read_f64_at(rdata::F64_20)) as u8;
                 let foul = (squad as u8).wrapping_sub(t2) as i8;
                 if foul < 0 {
                     let v = if foul > -10 { foul as i32 } else { -10 };
-                    edi = ftol((v as f64 * read_f64_at(0x967888) + read_f64_at(0x967890)) * edi as f64); // 0x967888 = 0.05, 0x967890 = 1
+                    edi = ftol((v as f64 * read_f64_at(rdata::F64_0_05) + read_f64_at(rdata::F64_1)) * edi as f64);
                 }
             }
             let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club);
@@ -634,20 +634,20 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                 let v = edi as f64;
                 match exe::finance_get_wealth_band(fin) as i8 {
                     -2 => {
-                        let (x, y) = (v * read_f64_at(0x96d718), edi.wrapping_sub(1000) as f64); // 0x96d718 = 0.9090909091
+                        let (x, y) = (v * read_f64_at(rdata::F64_0_9090909091), edi.wrapping_sub(1000) as f64);
                         edi = ftol(if x < y { x } else { y });
                     }
                     -1 => {
-                        let (x, y) = (v * read_f64_at(0x96e2a0), edi.wrapping_sub(500) as f64); // 0x96e2a0 = 0.9523809524
+                        let (x, y) = (v * read_f64_at(rdata::F64_0_9523809524), edi.wrapping_sub(500) as f64);
                         edi = ftol(if x < y { x } else { y });
                     }
                     1 => {
-                        let (x, y) = (v * read_f64_at(0x96d6b8), edi.wrapping_add(125) as f64); // 0x96d6b8 = 1.0125
+                        let (x, y) = (v * read_f64_at(rdata::F64_1_0125), edi.wrapping_add(125) as f64);
                         edi = ftol(if x > y { x } else { y });
                     }
                     2 => {
                         crate::comparison::branch("cpu_13 clube rico");
-                        let (x, y) = (v * read_f64_at(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico; 0x968fa0 = 1.025
+                        let (x, y) = (v * read_f64_at(rdata::F64_1_025), edi.wrapping_add(250) as f64); // cpu13: o rico;
                         edi = ftol(if x > y { x } else { y });
                     }
                     _ => {}

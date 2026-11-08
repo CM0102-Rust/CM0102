@@ -457,8 +457,8 @@ pub(crate) unsafe fn set_serie_a_rules(o: usize) {
     write_u8_at(o, 0xc2, 3); // cqi7: the Serie A points per win
     write_u8_at(o, 0xc3, 1); // pontos por empate
     write_u8_at(o, 0xc4, 2); // match category: league
-    write_u8_at(o, 0x42, 1); // clube nacional
-    write_u8_at(o, 0xc5, 3); // desempates: confronto direto, saldo, nenhum
+    write_u8_at(o, 0x42, 1); // national club
+    write_u8_at(o, 0xc5, 3); // tiebreakers: head-to-head, goal difference, none
     write_u8_at(o, 0xc6, 1);
     write_u8_at(o, 0xc7, 0);
     write_u8_at(o, 0xbe, 4); // top places
