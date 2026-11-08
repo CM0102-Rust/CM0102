@@ -127,7 +127,7 @@ Inventário para o exe todo em Rust. Fontes lidas como dados (nada de código co
 | Misc | `LoansUpdate` | regra/gosto: This patches the number of loans England, Scotland, France and Ireland can do to 9 (rather than 2 by default) |
 | Misc | `MakeExeRequireAdmin` | infraestrutura (manifesto) |
 | Misc | `MakeFutureLineProperlyTransparent` | conserto de outro patch: defeito gráfico "que não existe no original" |
-| Misc | `match_eng_1225_error_turn_off` | só cala a caixa de erro (0x6dd41c, em 0x6dbc50 match_man.cpp); não corrige |
+| Misc | `match_eng_1225_error_turn_off` | só cala a caixa de erro (0x6dd41c, em 0x6dbc50 match_man.cpp); não corrige: a causa é a pessoa repetida no elenco (0x53bd10/0x4cbd20 não conferem a presença), registrada no [DEFEITOS_DO_ORIGINAL.md](DEFEITOS_DO_ORIGINAL.md), seção Outros |
 | Misc | `NicksFitnessPatchV3` | regra/gosto: This is like Fiestita's fitness patch but instead removes the idea of a "slacking" portion altogether. |
 | Misc | `No Complaining About Training New Positions` | regra/gosto: Without this patch players complain constantly about training new positions. |
 | Misc | `No MLS Foreign Restrictions` | regra/gosto: Removes the foreign player restrictions in the US Major League Soccer league |

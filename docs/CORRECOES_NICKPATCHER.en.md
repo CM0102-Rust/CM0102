@@ -127,7 +127,7 @@ Inventory for the all-Rust exe. Sources read as data (no code copied): the `patc
 | Misc | `LoansUpdate` | rule/taste: This patches the number of loans England, Scotland, France and Ireland can do to 9 (rather than 2 by default) |
 | Misc | `MakeExeRequireAdmin` | infrastructure (manifest) |
 | Misc | `MakeFutureLineProperlyTransparent` | fix of another patch: graphical defect "that does not exist in the original" |
-| Misc | `match_eng_1225_error_turn_off` | only silences the error box (0x6dd41c, in 0x6dbc50 match_man.cpp); does not fix |
+| Misc | `match_eng_1225_error_turn_off` | only silences the error box (0x6dd41c, in 0x6dbc50 match_man.cpp); does not fix: the cause is the person repeated in the squad (0x53bd10/0x4cbd20 do not check presence), recorded in [DEFEITOS_DO_ORIGINAL.en.md](DEFEITOS_DO_ORIGINAL.en.md), Others section |
 | Misc | `NicksFitnessPatchV3` | rule/taste: This is like Fiestita's fitness patch but instead removes the idea of a "slacking" portion altogether. |
 | Misc | `No Complaining About Training New Positions` | rule/taste: Without this patch players complain constantly about training new positions. |
 | Misc | `No MLS Foreign Restrictions` | rule/taste: Removes the foreign player restrictions in the US Major League Soccer league |
