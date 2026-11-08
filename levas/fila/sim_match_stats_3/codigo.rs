@@ -11,7 +11,7 @@ unsafe extern "thiscall" fn read_match_record(estat: usize, k: i32, saida: usize
     if k < 0 || k > (*((estat + 0x1c) as *const i32)).wrapping_sub(1) || saida == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(%%I0%%)(estat, k, saida);
     }
-    crate::comparison::branch("estatisticas ler registro");
+    crate::comparison::branch("statistics read record");
     let caminho: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x90bde0usize);
     let abrir: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x945bfeusize);
@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn match_screens_record_match(estat: usize, m: usize, r
     if m == 0 || r == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(%%I1%%)(estat, m, r);
     }
-    crate::comparison::branch("estatisticas registrar partida");
+    crate::comparison::branch("statistics record match");
     let preencher: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x729ff0usize);
     let gravar: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x729820usize);
     preencher(estat, m, r, 0);
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn write_match_record(estat: usize, jogo: usize, r: usi
     if jogo == 0 || r == 0 || eventos == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(%%I2%%)(estat, jogo, r, eventos);
     }
-    crate::comparison::branch("estatisticas gravar registro");
+    crate::comparison::branch("statistics write record");
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let record_events: unsafe extern "thiscall" fn(usize, usize, u32) -> u8 = core::mem::transmute(0x6d98b0usize);
     let balde: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x729bd0usize);

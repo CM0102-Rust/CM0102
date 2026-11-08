@@ -8,11 +8,11 @@
 MUTACOES = [
     ('cpw5_so_a_casa', '    for l in 0..2 { // cpw5: os dois lados',
      '    for l in 0..1 { // mutacao: so a casa',
-     'cpw_5 notas do visitante'),
+     'cpw_5 away side ratings'),
     ('cpw5_comeca_com_um_jogo', '    *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos',
      '    *((r + 0xa) as *mut u8) = 1; // mutacao: comeca com um jogo',
-     'cpw_5 jogador novo no mes'),
+     'cpw_5 new player in the month'),
     ('cpw5_sem_ordenar', '    ordenar(cpw5_d(this), cpw5_d(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média',
      '    let _ = ordenar; // mutacao: sem ordenar',
-     'cpw_5 ordenou as notas'),
+     'cpw_5 sorted the ratings'),
 ]

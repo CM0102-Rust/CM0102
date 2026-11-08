@@ -6,10 +6,10 @@
 MUTACOES = [
     ('cpq_lado_em_casa', '    1 // o estádio do clube',
      '    2 // mutacao: em casa vira fora',
-     'cpq_12 em casa'),
+     'cpq_12 at home'),
     ('cpq_coeficiente_maior', '        return -1; // o maior antes',
      '        return 1; // mutacao: o maior depois'),
     ('cpq_pedido_sempre', '        return 0; // sem pedido',
      '        return 1; // mutacao: todo jogador pedido',
-     'cpq_12 sem pedido'),
+     'cpq_12 without request'),
 ]

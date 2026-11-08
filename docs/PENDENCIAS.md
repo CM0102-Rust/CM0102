@@ -11,27 +11,27 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `dividida defesa` | 0x70ec80 | sim | |
 | `disputa fora do campo` | 0x6c9cd0 (127ª) | sim | |
 | `jogada goleiro` | 0x70dfd0 (129ª) | — | inalcançável: o goleiro sai no início da rotina |
-| `eventos 0x82` | 0x6b74a0 (130ª) | sim | |
-| `eventos 0x13 sem marca` | 0x6b74a0 | sim | |
-| `eventos 0x13 noticia` | 0x6b74a0 | sim | |
-| `jogadores marca 0x20` | 0x6b6cc0 (131ª) | sim | roda só na carreira longa (semente 777, 2+) |
-| `clube 5896d0` | 0x6b79a0 (132ª) | sim | ações forçadas pegas pelas impressões (`leva132b.py`) |
-| `clube 589bc0` | 0x6b79a0 | sim | idem |
-| `clube 547d90` | 0x6b79a0 | sim | idem |
-| `sem humano clube ligado` | 0x6b66a0 (133ª) | sim | e as condições sempre falsas nas carreiras automáticas: clube humano na partida, competições [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], o 16º humano técnico de seleção |
-| `interesse partida marcada` | 0x6b5040 (134ª) | sim | **coberto** na sessão do Lucas de 14/10 (8+, sem divergência); continuam pendentes os outros humanos (as 16 vagas, o vínculo +0x24) |
-| `batedor do clube` | 0x897990 (138ª) | — | a carreira automática só passa pela célula vazia (16 milhões de vezes): os clubes da IA não têm batedor escolhido. Precisa de um clube humano com batedores escolhidos na tela de táticas (pênalti, falta, escanteio) e uma partida com bola parada |
-| `batedor de fora do clube` | 0x897990 | — | batedor escolhido que não é do clube (seleção ou vínculo 0x775790): técnico de seleção com batedores escolhidos |
-| `batedor saiu do clube` | 0x897990 | — | batedor escolhido que saiu do clube (vendido, emprestado) antes da partida |
-| `batedor sem ficha` | 0x897990 | — | batedor escolhido sem a ficha +0x61 (aposentado?) |
-| `batedor alem das pessoas` | 0x897990 | — | célula com id acima das pessoas (dado corrompido): provavelmente inalcançável |
+| `events 0x82` | 0x6b74a0 (130ª) | sim | |
+| `events 0x13 no mark` | 0x6b74a0 | sim | |
+| `events 0x13 news` | 0x6b74a0 | sim | |
+| `players mark 0x20` | 0x6b6cc0 (131ª) | sim | roda só na carreira longa (semente 777, 2+) |
+| `club 5896d0` | 0x6b79a0 (132ª) | sim | ações forçadas pegas pelas impressões (`leva132b.py`) |
+| `club 589bc0` | 0x6b79a0 | sim | idem |
+| `club 547d90` | 0x6b79a0 | sim | idem |
+| `no human linked club` | 0x6b66a0 (133ª) | sim | e as condições sempre falsas nas carreiras automáticas: clube humano na partida, competições [0x9cf7bc]/[0x9cf6e4]/[0x9cf958], o 16º humano técnico de seleção |
+| `interest match scheduled` | 0x6b5040 (134ª) | sim | **coberto** na sessão do Lucas de 14/10 (8+, sem divergência); continuam pendentes os outros humanos (as 16 vagas, o vínculo +0x24) |
+| `taker of the club` | 0x897990 (138ª) | — | a carreira automática só passa pela célula vazia (16 milhões de vezes): os clubes da IA não têm batedor escolhido. Precisa de um clube humano com batedores escolhidos na tela de táticas (pênalti, falta, escanteio) e uma partida com bola parada |
+| `taker from outside the club` | 0x897990 | — | batedor escolhido que não é do clube (seleção ou vínculo 0x775790): técnico de seleção com batedores escolhidos |
+| `taker left the club` | 0x897990 | — | batedor escolhido que saiu do clube (vendido, emprestado) antes da partida |
+| `taker without record` | 0x897990 | — | batedor escolhido sem a ficha +0x61 (aposentado?) |
+| `taker beyond the people` | 0x897990 | — | célula com id acima das pessoas (dado corrompido): provavelmente inalcançável |
 | `instrucoes guardadas` | 0x896fe0 (138ª) | — | a carreira só apaga as instruções (32 mil vezes). Guardar e devolver dependem do humano da vez ([0xb77c7a]) com o flag ligado: provavelmente mais de um humano, ou o humano assumindo/deixando um clube |
 | `instrucoes devolvidas` | 0x896fe0 | — | idem |
 | `instrucoes liberadas` | 0x896fe0 | — | idem (sem o flag) |
-| `numero da competicao` | 0x6b6570 (138ª) | — | nunca roda na carreira automática; chamada pela 0x6b55c0 (dia de jogos) e pela interface: dia de jogo com técnico humano |
-| `simulacao rapida abandono` | 0x6beeb0 (140ª) | — | mais de 4 expulsos de um lado na simulação rápida (3 x 0 para o outro): nunca acontece na carreira automática até 2002-06-01 (expulsões 2048 vezes, segundo amarelo 1024). Talvez inalcançável na prática; precisaria de um lado com muitos cartões |
-| `simulacao rapida contador reiniciado` | 0x6beeb0 | — | no fim da simulação rápida, o contador de ataques (+0xf5e2/+0xf618) abaixo de 10 reinicia (20 e sorteio(6) + 12): os ataques passam de 10 em toda partida da carreira |
-| `lesao para 3 e sai` | 0x6d0980 (141ª) | — | lesão leve (gravidade até 50) com o fôlego tirado acima do limite (0x96d1a8) num jogador já marcado em +0x1c (lesão grave anterior na mesma partida): nunca acontece na carreira automática até 2002-06-01 |
+| `competition number` | 0x6b6570 (138ª) | — | nunca roda na carreira automática; chamada pela 0x6b55c0 (dia de jogos) e pela interface: dia de jogo com técnico humano |
+| `quick simulation abandonment` | 0x6beeb0 (140ª) | — | mais de 4 expulsos de um lado na simulação rápida (3 x 0 para o outro): nunca acontece na carreira automática até 2002-06-01 (expulsões 2048 vezes, segundo amarelo 1024). Talvez inalcançável na prática; precisaria de um lado com muitos cartões |
+| `quick simulation counter reset` | 0x6beeb0 | — | no fim da simulação rápida, o contador de ataques (+0xf5e2/+0xf618) abaixo de 10 reinicia (20 e sorteio(6) + 12): os ataques passam de 10 em toda partida da carreira |
+| `injury to 3 and leaves` | 0x6d0980 (141ª) | — | lesão leve (gravidade até 50) com o fôlego tirado acima do limite (0x96d1a8) num jogador já marcado em +0x1c (lesão grave anterior na mesma partida): nunca acontece na carreira automática até 2002-06-01 |
 | `chute a gol marca` | 0x70a910 (142ª) | — | as narrações de marca da carreira (primeiro gol, 50º, 100º...; 0x200a..0x2012, destaque 0x21b6) nunca saem na carreira automática até 2002-06-01: os gols das partidas detalhadas são poucos |
 | `chute a gol empate tardio` | 0x70a910 | — | gol que empata depois dos 70 minutos numa partida detalhada (0x1fd6..0x1fd9): não acontece na carreira automática |
 | `movimento sem vaga na grade` | 0x6f09f0 (143ª) | — | o jogador que anda sem vaga na casa (+0x28 negativo) entra na casa nova; na carreira automática todos já entram em campo com vaga |
@@ -50,19 +50,19 @@ A sessão do Lucas no modo comparação confere todas as rotinas listadas: desde
 | `dia linhas do humano` | 0x6b4360 (152ª) | — | no fechamento do dia, as táticas guardadas dos humanos (0x5fbe20, 0x5fbd00, 0x5b5960) só são refeitas com técnico humano; o contador "linhas do humano refeitas" fica em zero na carreira automática (a mutação que tira a chamada escapa; o contador de terminadas, +0x25, é a lacuna já anotada na 151ª) Exercitado no jogo do Lucas (JOGAR.bat, 17/10/2026): o contador apareceu e o jogo seguiu sem erro. |
 | `dia primeira volta` | 0x6b3c10 (153ª) | — | a 1ª volta do dia (+0x33 = 1) só começa partidas cuja competição (+0x63 da partida) tem +0x10, que a montagem cria zerado; na carreira automática a 1ª volta não escolhe nada e tudo cai na 2ª, então começar na 2ª ou apontar outra competição não muda a carreira |
 | `dia partidas ja marcadas` | 0x6b3c10 (153ª) | — | a montagem pula as partidas da lista já marcadas -2; na carreira automática nenhuma chega marcada assim (a mutação que as deixa entrar escapa, mesmo a forte) |
-| `sons dos eventos` | 0x6d8c70 (153ª) | — | a espera dos sons dos eventos só roda com a tela da partida (0x6b55c0, jogo em rede): o contador "sons dos eventos" fica em zero na carreira automática Exercitado no jogo do Lucas (JOGAR.bat, 17/10/2026): o contador apareceu e o jogo seguiu sem erro. |
+| `event sounds` | 0x6d8c70 (153ª) | — | a espera dos sons dos eventos só roda com a tela da partida (0x6b55c0, jogo em rede): o contador "sons dos eventos" fica em zero na carreira automática Exercitado no jogo do Lucas (JOGAR.bat, 17/10/2026): o contador apareceu e o jogo seguiu sem erro. |
 | `eventos gravados` | 0x6d98b0, 0x6d9c40 (154ª) | sim (17/10/2026, `COMPARAR_800.bat`: contador "eventos lidos" ao abrir o relatório da partida, 0 divergências) | a gravação roda na carreira (contador acima de 2048), mas os arquivos "events1/2.tmp" não entram nas impressões, e a leitura de volta (rever os lances) só roda com a tela: o teste é no jogo, revendo os lances de uma partida assistida |
 | `passo em rede` | 0x6b55c0 (154ª) | sim (17/10/2026, `JOGAR.bat` e `JOGAR_COMPARANDO.bat`) | a partida do humano em rede (pelo relógio e pelo placar dos humanos) não roda na carreira automática; o contador "passo em rede" fica em zero Exercitado no jogo do Lucas (JOGAR.bat, 17/10/2026): o contador apareceu e o jogo seguiu sem erro. |
 | `eventos cfg sons e opcoes` | 0x6d9e50 (155ª) | — | dos dados do `events_*.cfg`, a carreira automática só enxerga a opção 2 (lance seguinte) e o peso relativo dos sons; pesos, tipos e nomes dos sons e as opções 0, 1 e 4 servem ao áudio, à tela da partida e ao passo em rede (6 mutações escapam, inclusive a refeita na opção 0). No jogo do Lucas (JOGAR.bat, 17/10/2026) a narração e os sons funcionaram |
 | `texto e partida em rede` | 0x6d8d10, 0x6b5260 (156ª) | sim (17/10/2026: "partida em rede confirmada" no `JOGAR.bat`; "texto do evento" só no relatório da partida, comparado no `COMPARAR_800.bat` com 0 divergências) | a montagem da linha de narração e a confirmação da partida em rede só rodam com a tela da partida (contadores "texto do evento" e "partida em rede confirmada" em zero). O texto tem comparação de verdade: o teste é assistir partidas no `JOGAR_COMPARANDO` |
-| `narracao no painel` | 0x6d7b00 (157ª) | sim (17/10/2026, `JOGAR.bat`: contadores "narracao no painel" e "sons dos eventos"; cores, quebra de linha e sons normais na tela) | o desenho da narração no painel (cores, quebra e corte da linha, sons do lance e da torcida) só roda com a tela da partida (contador "narracao no painel" em zero); o teste é assistir partidas no `JOGAR.bat` |
+| `commentary on the panel` | 0x6d7b00 (157ª) | sim (17/10/2026, `JOGAR.bat`: contadores "narracao no painel" e "sons dos eventos"; cores, quebra de linha e sons normais na tela) | o desenho da narração no painel (cores, quebra e corte da linha, sons do lance e da torcida) só roda com a tela da partida (contador "narracao no painel" em zero); o teste é assistir partidas no `JOGAR.bat` |
 | `conteiner` | 0x9326e0, 0x933080, 0x933170 (158ª) | — | o contêiner do save só roda ao salvar, ao carregar e no início rápido (a carreira automática não salva; as 4 mutações escapam). Provado à parte: `save_grande.py` (`.qst` de 2,38 GB, original × Rust) e no jogo do Lucas (17/10/2026): save de 2,55 GB gravado e carregado com a DLL; com as originais o carregamento falha (`Friendly.cpp`) |
 | `formacao` | 0x5b7d20, 0x5b8960 (159ª) | — | mutações `m_nivel` e `v_a20` escapam na carreira e na comparação: no banco a posição natural tem nota 20 (o laço da máscara para no nível 15) e nenhuma vaga com lado aberto é de meia. Exige banco editado (jogador sem posição acima de 14) |
 | `comissao` | 0x866f60 (161ª) | — | a faixa 51..75 de +0x44 da comissão (+5 na nota) não aparece nos dados: a mutação `c_idade` escapa mesmo refeita com +15. Exige banco editado |
 | `tabela tatica` | 0x896a90, 0x8968f0 (162ª) | — | na carreira automática as vagas da tabela tática ficam vazias (−1) e não há instruções pendentes: a pessoa da vaga (ficha, nação na seleção) e a limpeza das pendentes só rodam com técnico humano. O teste é o jogo do Lucas comparando (montar a tática, convocar a seleção) |
 | `calendario` | 0x68a030 (164ª) | — | a carreira automática só joga ligas inglesas: o rodízio com a marca 0x80 e a volta no fim do rodízio não rodam (`g_meio`, `g_volta` escapam, mesmo refeitas). Teste: carreira automática com outras ligas (`simular.py --ligas`) **Carreira ampla (19/10):** `g_meio_b` e `g_volta_b` acusadas. |
-| `vaga extra apagada` | 0x897ee0 (165ª) | — | o caminho roda (contador alto), mas a segunda vaga extra está sempre vazia ao apagar a primeira nos clubes da IA: a mutação `v_desce` é equivalente nos dados. Teste: técnico humano com as duas vagas extras preenchidas, apagando a primeira |
-| `humano manda no clube` | 0x600c90 (166ª) | — | sem técnico humano o contador fica em zero (`h_forcar` escapa). O teste é o jogo do Lucas comparando, inclusive como técnico de seleção |
+| `extra slot deleted` | 0x897ee0 (165ª) | — | o caminho roda (contador alto), mas a segunda vaga extra está sempre vazia ao apagar a primeira nos clubes da IA: a mutação `v_desce` é equivalente nos dados. Teste: técnico humano com as duas vagas extras preenchidas, apagando a primeira |
+| `human runs the club` | 0x600c90 (166ª) | — | sem técnico humano o contador fica em zero (`h_forcar` escapa). O teste é o jogo do Lucas comparando, inclusive como técnico de seleção |
 | `categoria do contrato` | 0x4ca470 (166ª) | — | o contrato do tipo 5 e a faixa da situação 0 com satisfação de 40 a 75 não aparecem na carreira (`c_tipo5`, `c_k0` escapam mesmo refeitas). Candidatas à carreira ampla de madrugada **Carreira ampla (19/10):** `c_k5_b` acusada; `c_k0_b` e `c_tipo5_b` seguem escapando (até 2002-03-31; `c_k0_b` também comparando até 2001-12-01). |
 | `partida abandonada` | 0x6d5930 (167ª) | — | nenhuma partida é abandonada na carreira automática (minuto do abandono em −1): a mutação `a_onze` escapa. Teste: uma partida abandonada (clima) no jogo do Lucas comparando |
 | `fila da narração: +0x2db0` | 0x6d5bf0 (169ª) | — | mutação equivalente (`c_tempo`): o valor inicial 125 só é comparado com 20 e 101 (0x6b5686, 0x6d8ace) e as telas da partida o regravam (0x719c4e, 0x71a3d5); 124 toma os mesmos caminhos |

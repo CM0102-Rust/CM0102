@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
         let copia: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], *mut [u8; 8]) -> usize = core::mem::transmute(0x417c10usize);
         let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         round_draw_date(copa, reg, &mut a);
-        crate::comparison::branch("cqa_3 sorteio adiado");
+        crate::comparison::branch("cqa_3 draw postponed");
         let r = mais(&mut a, &mut b, 1); // cqa3: o sorteio adiado
         copia(&mut a, &mut c, r); // push &b; push &c; ecx = &a -> thiscall, ret 8
         set_round_draw_date(copa, reg, &a);
@@ -126,12 +126,12 @@ unsafe extern "thiscall" fn draw_round(copa: usize, rodada: u32) -> u32 {
     };
     let regra = cqa3_w(reg + 0xd);
     if regra & 0x400 != 0 {
-        crate::comparison::branch("cqa_3 sorteio pela semente");
+        crate::comparison::branch("cqa_3 seeded draw");
         sorteio(0x51d2d0); // cqa3: pela semente
     } else if cqa3_b(reg + 0xb) & 4 != 0 {
         sorteio(0x51d9f0);
     } else if regra & 0x200 == 0 {
-        crate::comparison::branch("cqa_3 sorteio livre");
+        crate::comparison::branch("cqa_3 open draw");
         sorteio(0x51e220); // cqa3: o sorteio livre
     }
     // push −1; push rodada; ecx = a copa -> thiscall, ret 8

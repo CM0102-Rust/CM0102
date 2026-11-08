@@ -277,7 +277,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
 pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     let folder: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    crate::comparison::branch("save carregar jogo");
+    crate::comparison::branch("save load game");
     let u = |a: usize| *(a as *const u32);
     let sem_memoria = |minimum: i32| u(G_MEMORY_CHECK_ENABLED) != 0 && exe::os_get_free_memory_mb() < minimum;
     // the original’s two local dates (the 2nd is unused); their destructor is empty
@@ -673,7 +673,7 @@ pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
 ///   um fora de seleção (0x53b900) com nação de liga de frente (bit 2) e aceito por 0x544820: a
 ///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
 pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
-    crate::comparison::branch("save criar jogo pela configuracao");
+    crate::comparison::branch("save create game from configuration");
     let opcoes = || *(G_CONFIG as *const usize);
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);
@@ -1060,7 +1060,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     let folder: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-    crate::comparison::branch("save gravar jogo");
+    crate::comparison::branch("save write game");
     let opcoes = || *((*(G_CONFIG as *const usize) + 4) as *const u32);
     let kind = || if opcoes() & 0x8000 != 0 { 3u32 } else { 4 };
     let sem_memoria = || *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && exe::os_get_free_memory_mb() < 1;
@@ -1299,7 +1299,7 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(path: usize) -> u32 {
     if path == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_QUICK_START_FILE)(path);
     }
-    crate::comparison::branch("save filtro do inicio rapido");
+    crate::comparison::branch("save quick start filter");
     let id = exe::zget_archive_id(path);
     if id != 0x17 {
         return (id & 0xffff0000) | 2;
@@ -1357,7 +1357,7 @@ pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
 /// local (0x54a110, sem destrutor), que cai dentro do resumo (+0xf64) e é sobrescrita pela leitura.
 pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
     let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
-    crate::comparison::branch("save versao do jogo salvo");
+    crate::comparison::branch("save saved game version");
     let mut summary = [0u8; 0xf74];
     let mut v = 0i32;
     exe::date_date_54a110(summary.as_mut_ptr() as usize + 0xf64);
@@ -1427,7 +1427,7 @@ pub(crate) unsafe fn setup_warning(row: u32) {
 /// ou escrita que falha: a caixa "Error" (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38); nas escritas,
 /// depois da caixa o item é fechado. A original não devolve nada (`eax` sobra).
 pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
-    crate::comparison::branch("save gravar regras fifa");
+    crate::comparison::branch("save write fifa rules");
     if save == 0 {
         setup_warning(0x3b24);
         return;
@@ -1464,7 +1464,7 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 /// regra em vigor [0xa83608] vira 5. Fecha o item. Erros: a caixa "Error" (Setup.cpp 0x3b4f, 0x3b57,
 /// 0x3b5d, 0x3b63), como na gravação.
 pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
-    crate::comparison::branch("save carregar regras fifa");
+    crate::comparison::branch("save load fifa rules");
     if save == 0 {
         setup_warning(0x3b4f);
         return;
@@ -1530,7 +1530,7 @@ pub(crate) unsafe fn copy_text(target: *mut u8, font: *const u8) {
 /// `*.tmp` da pasta temporária (0x90cd50), [0xae2338], as tabelas do banco (0x528080), a data do
 /// jogo (0x54a130: 1, 0, 2001, −1) e três marcas zeradas. Devolve 1.
 pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
-    crate::comparison::branch("save liberar dados do jogo");
+    crate::comparison::branch("save free game data");
     // destrutor + delete + global zerado
     let objetos = |list: &[(usize, usize)]| {
         for &(g, destrutor) in list {

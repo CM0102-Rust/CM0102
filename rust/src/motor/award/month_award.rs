@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
     if r == 0 {
         return;
     }
-    crate::comparison::branch("cpw_6 premiou o melhor do mes");
+    crate::comparison::branch("cpw_6 awarded the best of the month");
     let id = read_i32(r);
     let table = read_usize(G_STAFF_TABLE) as u32;
     let club = read_usize(month_ratings_staff_by_id(id) + 0x39);
@@ -102,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
         // the high bytes of the reputations come from dword +0x19 in the register, as the original pushes
         let mark = read_usize(this + 0x19) as u32;
         let high = mark & 0xffff0000;
-        crate::comparison::branch("cpw_6 vencedor do mes");
+        crate::comparison::branch("cpw_6 winner of the month");
         raise_winner_reputation(month_ratings_staff_by_id(id), club, high | read_i16(this + 0x15) as u16 as u32, high | read_i16(this + 0x17) as u16 as u32, mark);
     }
     if MONTH_AWARD_DRY_RUN {

@@ -65,7 +65,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
     }
     let semente = sorteio(30000).wrapping_add(1);
     semear((cpu12_w(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)) as u32); // cpu12: a semente
-    crate::comparison::branch("cpu_12 ordem sorteada");
+    crate::comparison::branch("cpu_12 drawn order");
     let mut i = 0;
     while i < n() {
         let a = ((rand() as i64 * n() as i64) / 0x8000) as i32 as usize;
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn draw_team_order(this: usize, clubes: i32) {
         while (i as i32) < n() {
             if *usado.add(i) == 0 {
                 if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre
-                    crate::comparison::branch("cpu_12 clube na vaga livre");
+                    crate::comparison::branch("cpu_12 club in the free slot");
                     copy_row_59(grade + j * CUP_LEAGUE_TABLE_ROW_SIZE, tab() + i * CUP_LEAGUE_TABLE_ROW_SIZE);
                     *posto.add(j) = 1;
                     *usado.add(i) = 1;

@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
         let l = tactic_stats_row(this, c);
         registro(jogo, c, pr);
         let m = |o: usize| (l + o) as *mut i16;
-        crate::comparison::branch("cpz_5 linha da tatica");
+        crate::comparison::branch("cpz_5 tactic row");
         *m(2) = (*m(2)).wrapping_add(1);
         let (pro, contra) = (reg[0x19] as i8, reg[0x1a] as i8);
         if pro > contra {

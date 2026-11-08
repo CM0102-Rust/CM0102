@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize,
     }
     let v = if *t.add(5) != 0xff { *t.add(5) } else { *t.add(3) };
     if v != 0xff {
-        crate::comparison::branch("cpr_1 limit de nao comunitarios");
+        crate::comparison::branch("cpr_1 non-EU limit");
         clear_restriction_table(t);
         *t.add(5) = v; // o limite de não comunitários
         return;
@@ -89,7 +89,7 @@ unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_limit(this: us
     }
     let humano = ((clube == cpr1_d(partida + 0x1c) && cpr1_b(partida + 0x40) == 0) || (clube == cpr1_d(partida + 0x20) && cpr1_b(partida + 0x41) == 0)) as u32;
     if tipo == 1 {
-        crate::comparison::branch("cpr_1 conta nao comunitarios");
+        crate::comparison::branch("cpr_1 count non-EU players");
     }
     let mut k: i8 = 0;
     while k < ((cpr1_b(partida + 0x4d) & 0xf).wrapping_add(0xb)) as i8 {
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn player_needs_work_permit(this: usize, jogador: usize
         if id < cpr1_d(0xae2364) as i32 && cpr1_b(cpr1_d(this + 0x86e).wrapping_add((id as usize).wrapping_mul(8))) & 0x20 != 0 {
             let bsearch: unsafe extern "C" fn(*const i32, usize, usize, u32, usize) -> usize = core::mem::transmute(0x946464usize);
             if bsearch(&id, cpr1_d(this + 0x93a), cpr1_d(this + 0x93e), 0xe, 0x8e55c0) != 0 {
-                crate::comparison::branch("cpr_1 permissao achada");
+                crate::comparison::branch("cpr_1 permit found");
                 return 0; // tem a permissão
             }
         }

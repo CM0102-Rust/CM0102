@@ -16,7 +16,7 @@ pub(crate) const TURKEY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x9020a0 } (thiscall, ret 0x14, turkey_rules.cpp, `TURKEY_RULES::TURKEY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Turquia (regra 24): a base (0x8e84a0), a vtable 0x97075c, 1 janela(s) de `TURKEY_TRANSFER_WINDOWS`; o +0x13 = 8 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 8 (o padrão é 30). Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_turkey_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqm_3 turquia");
+    crate::comparison::branch("cqm_3 turkey");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x97075c, 1, &TURKEY_TRANSFER_WINDOWS, 0xaa19a8, 0x52);
     *((this + 0x13) as *mut u8) = 8;
     *((this + 0x14) as *mut u8) = 8;

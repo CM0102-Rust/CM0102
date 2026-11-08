@@ -2,7 +2,7 @@
 # transfer_manager.cpp):
 # - 0x51cb90 (Cup::create_tie_fixtures, ~1,8 KB, quadro SEH sem destrutor no caminho normal): cria a partida (e a
 #   volta, na rodada de duas mãos) de cada confronto marcado, pela montagem da rodada 0x51c800 (montar_rodada_da_copa,
-#   em Rust; "cps_13 jogos da rodada" na base): 1148 chamadas na carreira automática até 2002-06-01
+#   em Rust; "cps_13 round matches" na base): 1148 chamadas na carreira automática até 2002-06-01
 #   (docs/cobertura_simulacao.txt, 17/10). As partidas vão ao calendário (0x5aa680): quem joga, onde, quando.
 # - 0x522950 (Cup::post_draw_news, 800 bytes, quadro SEH sem destrutor no caminho normal): a notícia 0x26 do confronto
 #   com time ainda indefinido, só pela 0x51cb90: passageira.

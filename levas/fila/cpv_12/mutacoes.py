@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpv12_sem_janela_0', 'return 1; // cpv12: sem janela',
      'return 0; // mutacao: sem janela devolve 0',
-     'cpv_12 sem janela'),
+     'cpv_12 without window'),
     ('cpv12_data_passada_0', 'return 1; // cpv12: data passada',
      'return 0; // mutacao: data passada devolve 0',
-     'cpv_12 data passada'),
+     'cpv_12 past date'),
     ('cpv12_aposentado_segue', 'if aposentado(p, principal(cpv12_d(p + 0x1a))) != 0 { // cpv12: aposentado',
      'if aposentado(p, principal(cpv12_d(p + 0x1a))) != 0 && false { // mutacao: aposentado segue',
-     'cpv_12 aposentado'),
+     'cpv_12 retired'),
 ]

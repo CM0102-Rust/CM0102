@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
     if ga > gv {
         ba = 900; // cqa11: o bônus da vitória do mandante
         if a != 0 {
-            crate::comparison::branch("cqa_11 vitoria do mandante");
+            crate::comparison::branch("cqa_11 home win");
             increment_i16(a + 0x90);
         }
         if v != 0 {
@@ -130,13 +130,13 @@ unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize)
     let mut guardado = ba; // o [esp+0x10] da original: o bônus do mandante, depois a nota dele
     let comp = cqa11_d(p + 0x14);
     if a != 0 {
-        crate::comparison::branch("cqa_11 nota do mandante");
+        crate::comparison::branch("cqa_11 home side rating");
         let q = match_rating_for_manager(p, 0, &mut saida, fora, side_match_points(m, 0x11f, 0x128, 0x127, 0x129).wrapping_add(ba));
         cqa11_somar(a + 0xb6, q);
         cqa11_somar(a + 0xca, q);
         guardado = q;
         if comp == cqa11_d(casa + 0x57) || comp == cqa11_d(casa + 0x60) {
-            crate::comparison::branch("cqa_11 pontos do mes");
+            crate::comparison::branch("cqa_11 points of the month");
             cqa11_somar(a + 0xce, q); // cqa11: os pontos do mês do mandante
         }
         if is_national_team(casa) != 0 {
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn compare_record_match_result(this: usize, p: usize, m
 /// técnico do clube (+0xcf; tipo 0xa: o id do clube, a competição de +4, o ano +0x3a e a posição k + 1), no arquivo
 /// (0x58e340).
 unsafe extern "thiscall" fn add_league_finish_records(this: usize, liga: usize) {
-    crate::comparison::branch("cqa_11 fim da liga");
+    crate::comparison::branch("cqa_11 end of the league");
     let linha: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(0x6826d0usize);
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn add_supporters_player_of_year_record(this: usize, pe
     append_person_history_by_id(!SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN, this, cqa11_d(pessoa), &e);
     let r1 = cqa11_sortear(0x15 - cqa11_c(pessoa + 0x59));
     if r1 < cqa11_sortear(10) {
-        crate::comparison::branch("cqa_11 goal_crowd_reaction favorita");
+        crate::comparison::branch("cqa_11 favourite goal_crowd_reaction");
         let gosta: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547d90usize);
         let favorita: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547870usize);
         gosta(pessoa, clube, cqa11_sortear(2) as u32);

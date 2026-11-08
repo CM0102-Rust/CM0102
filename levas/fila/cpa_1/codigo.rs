@@ -292,7 +292,7 @@ unsafe extern "thiscall" fn free_table(liga: usize, tabela: usize) {
     if cpa1_w(liga + 0x3e) < 1 || t == 0 {
         return;
     }
-    crate::comparison::branch("liga liberar tabela");
+    crate::comparison::branch("league free table");
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     for campo in [5usize, 9] {
         if cpa1_d(t + campo) != 0 {
@@ -341,7 +341,7 @@ unsafe extern "thiscall" fn league_check_complete(liga: usize, fases: u32, avisa
                 return 0;
             }
         }
-        crate::comparison::branch("liga completa: fim da liga");
+        crate::comparison::branch("league complete: end of league");
         let divisao: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x4b0700usize);
         let id = *(cpa1_d(liga + 4) as *const u32);
         let mut premios = true;
@@ -361,7 +361,7 @@ unsafe extern "thiscall" fn league_check_complete(liga: usize, fases: u32, avisa
         return 1;
     }
     if fases == 1 && cpa1_b(liga + 0x44) == 0xff {
-        crate::comparison::branch("liga completa: fases");
+        crate::comparison::branch("league complete: stages");
         let mut k = 0usize;
         if cpa1_d(liga + 0x30) as i32 >= 0 {
             loop {

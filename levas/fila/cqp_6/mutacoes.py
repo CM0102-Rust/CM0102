@@ -3,9 +3,9 @@ MUTACOES = [
     ('cqp6_primera_impar_primeira_rodada_em_outro_dia',
      'const PRIMERA_ODD_YEAR_START: [SpaFirstLeagueRound; 16] = [\n    (22, 7, 0, 6,',
      'const PRIMERA_ODD_YEAR_START: [SpaFirstLeagueRound; 16] = [\n    (22, 7, 0, 2,',
-     'cqp_6 calendario da primera'),
+     'cqp_6 primera calendar'),
     ('cqp6_primera_impar_natal_deslocado',
      'const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_ODD_YEAR_START, referencia: 15, ajuste: 16,',
      'const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirstChristmasSchedule { comeco: &PRIMERA_ODD_YEAR_START, referencia: 15, ajuste: 15,',
-     'cqp_6 calendario da primera'),
+     'cqp_6 primera calendar'),
 ]

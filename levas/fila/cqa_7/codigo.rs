@@ -73,7 +73,7 @@ unsafe fn young_player_adjustment(this: usize, clube: usize, p: usize, saida: *m
         d1 = d1 * x;
     }
     if d1 > cqa7_k(0x967890) {
-        crate::comparison::branch("cqa_7 jovem valorizado");
+        crate::comparison::branch("cqa_7 valued youngster");
         *frac = d1 * *frac;
         let h = (d1 + cqa7_k(0x967890)) * cqa7_k(0x968968);
         *e = match_pl_ftol(*e as f64 * h) as u32;
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         *saida = nota(p, pos, flags, clube, v, obs);
         let transferencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
         if clube != cqa7_d(p + 0x39) && transferencia(p, 0) != 0 {
-            crate::comparison::branch("cqa_7 listado para transferencia");
+            crate::comparison::branch("cqa_7 transfer listed");
             *saida = match_pl_ftol(*saida as f64 * cqa7_k(0x9689b8)); // cqa7: o listado de outro clube × 1,05
         }
     }
@@ -256,7 +256,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         let v = r as f64;
         match_pl_ftol(((v * cqa7_k(0x96d238) - cqa7_k(0x967890)) * v + bv as f64 * cqa7_k(0x9689e0)) * cqa7_k(0x96f918)) as u32
     } else {
-        crate::comparison::branch("cqa_7 valor base");
+        crate::comparison::branch("cqa_7 base value");
         match_pl_ftol((bv as f64 * cqa7_k(0x9689e0) + r as f64 * cqa7_k(0x969040)) * cqa7_k(0x96f918)) as u32 // cqa7: o valor base
     };
     if e < 1 {
@@ -294,7 +294,7 @@ unsafe extern "thiscall" fn value_player_for_club(this: usize, clube: usize, p: 
         } else {
             f
         };
-        crate::comparison::branch("cqa_7 idade");
+        crate::comparison::branch("cqa_7 age");
         let um = cqa7_k(0x967890);
         if tipo == 0xa {
             *saida = match_pl_ftol(((um - g) * y + g) * *saida as f64);

@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize) {
     if times == 0 {
         return show_error_at(0x9ea23c, 0x29c);
     }
-    crate::comparison::branch("cqr_9 mata-mata da copa da italia");
+    crate::comparison::branch("cqr_9 italy cup knockout");
     for i in 0..8usize {
         cqr9_pd(times + i * 4, cqr9_d(group_table(this, i))); // cqr9: o campeão do grupo i
     }
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     if times == 0 {
         return show_error_at(0x9ea204, 0x2ba);
     }
-    crate::comparison::branch("cqr_9 mata-mata da copa da serie c");
+    crate::comparison::branch("cqr_9 serie c cup knockout");
     for i in 0..16usize {
         cqr9_pd(times + i * 4, cqr9_d(group_table(this, i)));
     }

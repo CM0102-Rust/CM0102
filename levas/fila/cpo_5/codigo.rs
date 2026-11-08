@@ -177,14 +177,14 @@ unsafe extern "thiscall" fn adjust_supporter_confidence(_this: usize, clube: usi
 /// acima de 4.500.000 e reputação (+5 da ficha) acima de 140.
 unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clube: usize, sujeito: usize, topico: u32, alvo: u32, variante: u32, sexto: u32) {
     let v = board_confidence_change(clube, alvo);
-    crate::comparison::branch("cpo_5 diretoria");
+    crate::comparison::branch("cpo_5 board");
     if clube != 0 {
         add_clamped_confidence(manager_manager_row(clube) + 6, v);
     }
     if (-500..=500).contains(&v) {
         return;
     }
-    crate::comparison::branch("cpo_5 diretoria noticia");
+    crate::comparison::branch("cpo_5 board news");
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);

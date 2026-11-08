@@ -29,10 +29,10 @@ unsafe extern "thiscall" fn init_player_entries(this: usize) {
         *((ficha() + 5) as *mut u8) &= 0xdf;
         let gol = *((f + 0xf) as *const i8);
         if gol >= 0xf { // cpu9: goleiro de 15 para cima
-            crate::comparison::branch("cpu_9 goleiro");
+            crate::comparison::branch("cpu_9 goalkeeper");
             *(ficha() as *mut u8) = 6; // cpu9: o programa dos goleiros
         } else {
-            crate::comparison::branch("cpu_9 linha");
+            crate::comparison::branch("cpu_9 outfield");
             *(ficha() as *mut u8) = 1; // cpu9: o programa geral
         }
         i += 1;
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pessoa: i32, na
             regen_out_of_memory(0xa0a);
         }
     }
-    crate::comparison::branch("cpu_9 banco de jogadores");
+    crate::comparison::branch("cpu_9 player bench");
     let registro = cpk2_d(0xae23bc).wrapping_add((pessoa as u32).wrapping_mul(0x6e) as usize);
     let item = cpk2_d(this + 0x3c).wrapping_add(cpk2_d(this + 0x40) << 4);
     cpk2_por(item, cpk2_d(cpk2_d(registro + 0x61)));

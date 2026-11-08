@@ -25,12 +25,12 @@ unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(this: usize, 
             b = 1;
         }
         if c < 3 {
-            crate::comparison::branch("cqk_8 mineiro terceiro abaixo de 3");
+            crate::comparison::branch("cqk_8 mineiro third below 3");
             write_progress_codes(e, a, b, 2); // cqk8: o terceiro código do Mineiro
             return e;
         }
     }
-    crate::comparison::branch("cqk_8 mineiro como vem");
+    crate::comparison::branch("cqk_8 mineiro as it comes");
     write_progress_codes(e, a, b, c); // cqk8: os códigos do Mineiro como vêm
     e
 }
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn usa_mls_set_club_progress(this: usize, clube: usize,
         let a = match a {
             1 => 1,
             2 => {
-                crate::comparison::branch("cqk_8 mls segundo");
+                crate::comparison::branch("cqk_8 mls second");
                 3 // cqk8: o código 2 da MLS
             }
             3 => 7,
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usize, clube: 
         let (a, c) = (serie_c_progress_code(a, 1), serie_c_progress_code(c, 9));
         let b2 = serie_c_progress_code(b, 1);
         if b == 3 {
-            crate::comparison::branch("cqk_8 serie c segundo 3");
+            crate::comparison::branch("cqk_8 serie c second 3");
         }
         write_progress_codes(e, a, b2, c); // cqk8: os códigos dos grupos da Série C
     } else {

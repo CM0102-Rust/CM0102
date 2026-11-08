@@ -6,9 +6,9 @@
 # - O sorteio da injury_word_0c para o pedido de transferencia passa de 12500 a 10000: mais pedidos (e reacoes do elenco).
 MUTACOES = [
     ('cqc10_interesse_45_dias', '        let p = mais(r + 8, fim.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias',
-     '        let p = mais(r + 8, fim.as_mut_ptr(), 0x2d); // mutacao: o interesse vale 31 dias', 'cqc_10 interesse'),
+     '        let p = mais(r + 8, fim.as_mut_ptr(), 0x2d); // mutacao: o interesse vale 31 dias', 'cqc_10 interest'),
     ('cqc10_boato_20', '            cqc10_sortear(0x19) == 0 // cqc10: o sorteio do boato',
-     '            cqc10_sortear(0x14) == 0 // mutacao: o sorteio do boato', 'cqc_10 sorteio do boato'),
+     '            cqc10_sortear(0x14) == 0 // mutacao: o sorteio do boato', 'cqc_10 rumour draw'),
     ('cqc10_pedido_10000', '                let rr = cqc10_sortear(0x30d4); // cqc10: o sorteio da reputação para o pedido',
-     '                let rr = cqc10_sortear(0x2710); // mutacao: o sorteio da reputação para o pedido', 'cqc_10 pedido de transferencia'),
+     '                let rr = cqc10_sortear(0x2710); // mutacao: o sorteio da reputação para o pedido', 'cqc_10 transfer request'),
 ]

@@ -56,7 +56,7 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     }
     let year = read_i16(this + league::YEAR) as u16;
     if year == 0x7d1 {
-        crate::comparison::branch("cqs_12 selecoes de 2001");
+        crate::comparison::branch("cqs_12 2001 national teams");
         for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
             write_usize(read_usize(this + 0xee) + k * 4, national_team_of_nation_id(read_usize(g)));
         }
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
     let n = read_usize(this + 0xf2) << 2;
     core::ptr::copy_nonoverlapping(read_usize(this + 0xee) as *const u8, v as *mut u8, n);
     exe::crt_qsort(v, read_usize(this + 0xf2) as u32, 4, 0x4b07d0);
-    crate::comparison::branch("cqs_12 previstas da copa america");
+    crate::comparison::branch("cqs_12 copa america expected");
     for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
             }
         }
     }
-    crate::comparison::branch("cqs_12 temporada nova da copa america");
+    crate::comparison::branch("cqs_12 copa america new season");
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, read_i16(this + league::YEAR).wrapping_add(2)); // cqs12: the Copa América every 2 years
     write_usize(this + league::ACTIVE, 0);
     write_usize(this + league::CURRENT_STAGE, usize::MAX);
@@ -265,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
         return 0;
     }
     if year_of_today == year && day_of_today == day && read_usize(this + league::ACTIVE) == 0 && full == 0 {
-        crate::comparison::branch("cqr_13 sorteio da copa america");
+        crate::comparison::branch("cqr_13 copa america draw");
         exe::goldcup_set_up_team_list(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
         predicted(this);
@@ -321,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparison::branch("cqr_13 linha do primeiro grupo");
+        crate::comparison::branch("cqr_13 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqr_13 time do grupo");
+        crate::comparison::branch("cqr_13 group team");
         write_usize(teams + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: the team in the group slot
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -848,7 +848,7 @@ pub(crate) const COPA_AMERICA_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3
 /// (seleções), os desempates (1, 2, 3, 0), dois classificados por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 20 do mês 2 do ano da competição num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_10 regras da copa america");
+    crate::comparison::branch("cqk_10 copa america rules");
     let win = 3; // cqk10: the win in the Copa América groups
     goldcup_write_rule_fields(this, &COPA_AMERICA_RULE_FIELDS, win);
     let day = 0x14; // cqk10: the day of the Copa América date

@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
                 }
             } else {
                 if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {
-                    crate::comparison::branch("cqj_1 brasil fixo");
+                    crate::comparison::branch("cqj_1 brazil fixed");
                     n = 1; // cqj1: o Palmeiras
                 }
                 if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE)), 2) {
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
         while (n as i8) < *((e + 8) as *const i8) {
             let c = exe::conmebolseeding_find_nth_unqualified_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 0);
             if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
-                crate::comparison::branch("cqj_1 cota da nacao");
+                crate::comparison::branch("cqj_1 nation quota");
                 enter_libertadores(c, 2); // cqj1: the quota slot
             }
             n = n.wrapping_add(1);
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
         loop {
             let c = read_u32(p) as usize;
             if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
-                crate::comparison::branch("cqj_1 ja com vaga");
+                crate::comparison::branch("cqj_1 already with a place");
                 p += 12; // cqj1: skips the club that already has a slot
             } else if without_human != 0 && c != 0 && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
                 p += 12;
@@ -211,9 +211,9 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                 let count = if mexico { 0 } else { read_u32(nation + nation::CONTINENT) as usize };
                 if mexico || (count != 0 && read_u32(count) == read_u32(KEY_CONTINENT_SOUTH_AMERICA)) {
                     if mexico {
-                        crate::comparison::branch("cqj_2 clube mexicano");
+                        crate::comparison::branch("cqj_2 mexican club");
                     }
-                    crate::comparison::branch("cqj_2 tira a vaga");
+                    crate::comparison::branch("cqj_2 removes the place");
                     *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX; // cqj2: no continental place
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
                     let division = read_u32(c + club::LAST_DIVISION) as usize;
                     if division != 0 {
-                        crate::comparison::branch("cqj_2 nivel da divisao");
+                        crate::comparison::branch("cqj_2 division level");
                         core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((division + competition::REPUTATION) as *const u16)); // cqj2: the division level
                         *((r + 0xb) as *mut u8) = *((c + club::LAST_POSITION) as *const u8);
                         let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
     if year == core::ptr::read_unaligned((this + 0x6f) as *const u16) {
         return;
     }
-    crate::comparison::branch("cqj_2 virada do ano");
+    crate::comparison::branch("cqj_2 year rollover");
     core::ptr::write_unaligned((this + 0x6f) as *mut u16, year);
     let mut t = 0usize;
     let n = exe::collect_conmebol_clubs(&mut t);
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, clu
 /// +0x71 (u32). Erro: a caixa "Error" (conmebol_seeding.cpp 0x2ee, 0x2f6, 0x2ff, 0x307, 0x30f), sem fechar o arquivo.
 pub(crate) unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0x9a7ed8;
-    crate::comparison::branch("cpx_6 gravar sementes da conmebol");
+    crate::comparison::branch("cpx_6 save CONMEBOL seeds");
     let f = open_temp_file_for_write(0x9a7f10);
     if f == 0 {
         show_error_at(FONTE, 0x2ee);

@@ -13,7 +13,7 @@ use super::*;
 /// "Error" (simulated_stats.cpp 0x209, 0x210, 0x218), sem fechar o item. Não confere o contêiner nulo.
 pub(crate) unsafe extern "thiscall" fn simulated_stats_save(this: usize, save: usize) {
     const FONTE: usize = 0xa8278c;
-    crate::comparison::branch("cpx_7 gravar estatisticas simuladas");
+    crate::comparison::branch("cpx_7 save simulated stats");
     let mut z = zip_open_item(save, 0xa827c0);
     if z == 0 {
         show_error_at(FONTE, 0x209);

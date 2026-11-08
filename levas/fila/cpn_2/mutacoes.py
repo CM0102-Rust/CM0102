@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpn_responder_todas', 'respond(vaga, tecnico, clube); // a resposta automática',
      '// mutacao: sem a resposta automatica',
-     'cpn_2 respond todas'),
+     'cpn_2 respond all'),
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == cpn2_i(e + 4) - 1 {\n            return 1;',
      'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;',
-     'cpn_2 respond todas'),
+     'cpn_2 respond all'),
     ('cpn_proximo_campo', '*proximo = p; // o próximo campo livre',
      '*proximo = p.wrapping_add(1); // mutacao: um campo adiante',
-     'cpn_2 proximo campo do texto'),
+     'cpn_2 next text field'),
 ]

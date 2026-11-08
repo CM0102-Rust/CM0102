@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpv13_sem_sorteio_59', 'if v59 <= 0xf { // cpv13: o +0x59',
      'if v59 <= 0x7f { // mutacao: sem sorteio pelo +0x59',
-     'cpv_13 sorteio do agradecimento'),
+     'cpv_13 thanks draw'),
     ('cpv13_sem_sorteio_5b', 'if cpv13_b(p + 0x5b) as i8 <= 0xa { // cpv13: o +0x5b',
      'if cpv13_b(p + 0x5b) as i8 <= 0x14 { // mutacao: sem sorteio pelo +0x5b',
-     'cpv_13 sorteio do agradecimento'),
+     'cpv_13 thanks draw'),
     ('cpv13_premio_em_dobro', 'core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: conta o prêmio',
      'core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(2)); // mutacao: conta 2',
-     'cpv_13 prêmio do técnico'),
+     'cpv_13 manager award'),
 ]

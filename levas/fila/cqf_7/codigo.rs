@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn update_coach_assignments(this: usize, clube: usize, 
             };
             // o byte de baixo, com sinal, em float dividido pelo float da quantidade (precisão dupla do x87)
             let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: o divisor da quantidade
-            crate::comparison::branch("cqf_7 nota do treinador");
+            crate::comparison::branch("cqf_7 coach rating");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
     }
@@ -226,7 +226,7 @@ unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, tec: usize, an
         } else {
             1
         };
-        crate::comparison::branch("cqf_7 programa do elenco novo");
+        crate::comparison::branch("cqf_7 new squad schedule");
         let c = carga(human_training_schedule(this, tec, *e));
         gravar_carga(cqf7_d(0xb63d28), p, c as u32);
     }

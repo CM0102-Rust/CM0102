@@ -121,7 +121,7 @@ unsafe fn add_commentary_speed_row(lista: usize, valor: u16, v: u32, sujo: (usiz
 /// −1 no parâmetro 8, o painel da aba (parâmetro 2), o estádio e, com o parâmetro 8 em −1, o painel de
 /// narração (com o lance do parâmetro 7 narrado por 0x6d7b00) no parâmetro 8.
 unsafe extern "C" fn build_match_screen() {
-    crate::comparison::branch("telas montar a partida");
+    crate::comparison::branch("screens build the match");
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MENOS1: usize = usize::MAX;
@@ -414,7 +414,7 @@ unsafe extern "C" fn build_match_screen() {
 /// do parâmetro 0xa), 0x723350; as respostas 0x722dc0 e 0x725860; a 10 converte o parâmetro 0x26 no
 /// 0x25). Por fim −11 com [0xb6b7b0] ou o redesenho (0x802d00) com [0xb6b7a8].
 unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond a partida");
+    crate::comparison::branch("screens respond match");
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let g = |a: usize| *(a as *const u32);
@@ -806,7 +806,7 @@ unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
 /// clube, placar ou "Match Abandoned"), o agregado ([+0x4b] ≥ 0), a barra de menu, as 7 abas, os
 /// botões de voltar e avançar e o painel da aba (parâmetro 2).
 unsafe extern "C" fn build_match_details_screen() {
-    crate::comparison::branch("telas montar os detalhes");
+    crate::comparison::branch("screens build the details");
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);

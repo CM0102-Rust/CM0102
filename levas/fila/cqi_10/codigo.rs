@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usi
                         }
                         let e = cqi10_d(this + 0xa7).wrapping_add((i as isize * 6) as usize);
                         if cqi10_b(e + 5) == 1 {
-                            crate::comparison::branch("cqi_10 vencedor na uefa");
+                            crate::comparison::branch("cqi_10 winner in uefa");
                             let s = cqi10_d(uefa + 0xa7).wrapping_add((vaga as isize * 6) as usize);
                             core::ptr::write_unaligned(s as *mut u32, cqi10_d(e) as u32);
                             *((s + 4) as *mut u8) = 0;
@@ -145,7 +145,7 @@ unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: 
             let peso = scale_by_round(0x3c, 0x64, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
             let uefa = cqi10_d(0xae23d0).wrapping_add(cqi10_d(0x9cf6f0).wrapping_mul(0x6b));
             european_cup_add_qualified_record(clube, uefa, 0, 0xa, peso);
-            crate::comparison::branch("cqi_10 vencedor do intertoto");
+            crate::comparison::branch("cqi_10 intertoto winner");
             core::ptr::write_unaligned((clube + 0x1db) as *mut u32, cqi10_d(0x9cf6f0) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: 
             let peso = scale_by_round(0x14, 0x50, cqi10_w(jogo + 0x34), cqi10_w(this + 0x3c) as u16 as u32);
             // ponytail: a rodada +0x30 vai num registrador com lixo nos 16 bits altos; a 0x86c000 só usa a palavra
             european_cup_add_knocked_out_record(clube, cqi10_d(this + 4), 0, core::ptr::read_unaligned((jogo + 0x30) as *const u16) as u32, peso);
-            crate::comparison::branch("cqi_10 caiu no intertoto");
+            crate::comparison::branch("cqi_10 dropped into intertoto");
             leave_euro_competition(clube); // cqi10: quem cai no Intertoto sai da competição europeia
         }
         _ => {}
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize
     let d = desfecho as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
-            crate::comparison::branch("cqi_10 caiu na uefa");
+            crate::comparison::branch("cqi_10 dropped into uefa");
         }
         core::ptr::write_unaligned((clube + 0x1db) as *mut i32, -1); // cqi10: quem termina na UEFA sai da competição europeia
     }

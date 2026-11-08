@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpt10_virada_um_dia_depois', 'if resto == 0 { // cpt10: o sétimo dia',
      'if resto == 1 { // mutacao: a virada um dia depois',
-     'cpt_10 semana'),
+     'cpt_10 week'),
     ('cpt10_duas_semanas', '*s = (*s).wrapping_add(1); // cpt10: mais uma semana',
      '*s = (*s).wrapping_add(2); // mutacao: duas semanas',
-     'cpt_10 semana'),
+     'cpt_10 week'),
     ('cpt10_semana_de_6_dias', 'let resto = v % 7; // cpt10: a semana de 7 dias',
      'let resto = v % 6; // mutacao: a semana de 6 dias',
-     'cpt_10 semana'),
+     'cpt_10 week'),
 ]

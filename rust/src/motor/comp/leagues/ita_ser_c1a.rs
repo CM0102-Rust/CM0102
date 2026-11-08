@@ -26,7 +26,7 @@ pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_passar_de_fase(this: usize, 
     let new = stage.wrapping_add(1);
     write_usize(this + league::CURRENT_STAGE, new as usize);
     if new == 0 {
-        crate::comparison::branch("cql_5 fases do fim da liga");
+        crate::comparison::branch("cql_5 league end stages");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(create);
         f(this); // cql5: the end-of-league stages
     }
@@ -258,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1a(this: usize, year: 
 /// (+0xbf = 4), do 14º ao 17º ao play-out de permanência (+0xc0 = 4), o último cai (+0xc1 = 1), a Série B acima
 /// ([0x9cf574]) e abaixo o id de [0x9cf57c] (o da C1/B, o outro grupo: assim no original).
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_6 regras da c1a");
+    crate::comparison::branch("cqi_6 c1a rules");
     ita_ser_a_apply_league_rules(this, &serie_c1a_rules(this))
 }
 

@@ -62,10 +62,10 @@ unsafe extern "thiscall" fn set_current_competition(this: usize, nacao: usize, c
         cpo13_por(p.fila, f);
     }
     let Some(nova) = p.nova else {
-        crate::comparison::branch("cpo_13 fase final fica");
+        crate::comparison::branch("cpo_13 final stage stays");
         return;
     };
-    crate::comparison::branch("cpo_13 competicao atual");
+    crate::comparison::branch("cpo_13 current competition");
     cpo13_por(p.vaga, nova);
     let g = cpo13_d(0xb67a44);
     if g != 0 {
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn mark_clubs_with_fixtures(this: usize, data: usize) {
                         let comp = cpo13_d(jogo + 0x14);
                         // o visitante +0x60 é lido sem conferir o ponteiro (como a original)
                         let codigo = if casa != 0 && (cpo13_d(casa + 0x57) == comp || cpo13_d(fora + 0x60) == comp) { 1 } else { 2 };
-                        crate::comparison::branch("cpo_13 clubes com jogo");
+                        crate::comparison::branch("cpo_13 clubs with a match");
                         mark_club_code(this, casa, n, codigo); // o mandante
                         mark_club_code(this, fora, n, codigo); // o visitante
                     }
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
         if e == 0 {
             continue;
         }
-        crate::comparison::branch("cpo_13 regen solta a vaga");
+        crate::comparison::branch("cpo_13 regen frees the slot");
         let i = core::ptr::read_unaligned((e + 6) as *const i16);
         if i > -1 {
             // o índice no ax; o alto do eax é o do ponteiro da entrada (a 0x556d00 só lê a palavra)

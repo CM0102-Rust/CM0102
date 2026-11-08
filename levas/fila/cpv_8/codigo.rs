@@ -73,14 +73,14 @@ unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partid
             let c = 0x2710i32.wrapping_sub(core::ptr::read_unaligned((vaga + 6) as *const i16) as i32);
             // ponytail: a original soma o ecx inteiro: o nível nos 16 de baixo, os 16 de cima de 10000 − condição
             let mut v = (c / 100).wrapping_add(((c as u32 & 0xffff_0000) | nivel as i16 as u16 as u32) as i32); // cpv8: o ritmo
-            crate::comparison::branch("cpv_8 ritmo");
+            crate::comparison::branch("cpv_8 pace");
             if cpv8_b(jogo + 0x40) == 0 {
-                crate::comparison::branch("cpv_8 metade");
+                crate::comparison::branch("cpv_8 half");
                 v = (v as i16 as i32) / 2; // cpv8: sem a marca do jogo, a metade
             } else if cpv8_b(pessoa + 0x18) as i32 > sorteio(3) + 0x21 {
                 v = ((v as i16 as i32) as f64 * read_f64_at(0x968928)) as i32;
             } else if (cpv8_b(pessoa + 0x18) as i32) < 0x17 - sorteio(5) {
-                crate::comparison::branch("cpv_8 jovem");
+                crate::comparison::branch("cpv_8 youngster");
                 v = v.wrapping_add(v); // cpv8: o jovem em dobro
             }
             if depois(0xdd6ec8, cpv8_d(0xae2c90) as u32, cpv8_d(0xae2c94) as u32) != 0 {
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn apply_match_effects(this: usize, jogo: usize, partid
                     }
                     let t = tipo_de_lesao(this, tipo, gravidade, pessoa);
                     if (t as i8) >= 0 {
-                        crate::comparison::branch("cpv_8 batida vira lesao");
+                        crate::comparison::branch("cpv_8 collision becomes injury");
                         end_player_injury(this, pessoa, 0);
                         let j = if cpv8_d(jogo) == -2 { 0 } else { jogo };
                         nova_lesao(this, t as u32, 0, pessoa, j, 1, -1, 0, 0);
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, jogo: usize
         }
     }
     if batida {
-        crate::comparison::branch("apply_match_effects com batida");
+        crate::comparison::branch("apply_match_effects with collision");
         return o(this, jogo, partida);
     }
     if cpv8_d(this + 0x28) != 0 {

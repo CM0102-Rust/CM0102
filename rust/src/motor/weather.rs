@@ -82,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             } else {
                 5000
             };
-            crate::comparison::branch("cpu_5 rolagem das financas");
+            crate::comparison::branch("cpu_5 finances rollover");
             if friendly_random(n) == 0 { // cpu5: the finances roll
                 return 0x12;
             }
@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             } else {
                 0xa
             };
-            crate::comparison::branch("cpu_5 chuva forte");
+            crate::comparison::branch("cpu_5 heavy rain");
             if friendly_random(n) != 0 { // cpu5: the heavy rain random draw
                 0
             } else {
@@ -313,13 +313,13 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         *s = if a < lim(0x20) {
             0
         } else if a < lim(0x21) {
-            crate::comparison::branch("cpu_6 vento fraco");
+            crate::comparison::branch("cpu_6 light wind");
             1 // cpu6: o vento fraco
         } else if a < lim(0x22) {
-            crate::comparison::branch("cpu_6 vento moderado");
+            crate::comparison::branch("cpu_6 moderate wind");
             2 // cpu6: o vento moderado
         } else if a < lim(0x23) {
-            crate::comparison::branch("cpu_6 vento forte");
+            crate::comparison::branch("cpu_6 strong wind");
             3 // cpu6: o vento forte
         } else if a >= lim(0x24) {
             0
@@ -529,7 +529,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
     if read_usize(this + 4) == 0 || read_usize(G_CITY_COUNT) as i32 <= 0 {
         return;
     }
-    crate::comparison::branch("cpt_5 tempo do dia");
+    crate::comparison::branch("cpt_5 weather of the day");
     let mut i = 0usize;
     loop {
         for k in 0..3usize { // cpt5: as três medidas
@@ -545,7 +545,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
             }
         }
         if friendly_random(10) == 0 { // cpt5: one in ten changes the wind
-            crate::comparison::branch("cpt_5 vento novo");
+            crate::comparison::branch("cpt_5 new wind");
             let r = friendly_random(3); // cpt5: o vento novo
             *((read_usize(this + 4) + i * 4 + 3) as *mut u8) = r as u8;
         }
@@ -571,7 +571,7 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
 /// períodos (0x922d20) em +0x1e, +0x31, +0x44 e +0x57. Devolve 1 se leu tudo (só o al, como a original).
 pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, region: usize) -> u8 {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
-    crate::comparison::branch("cpt_5 regiao do clima");
+    crate::comparison::branch("cpt_5 weather region");
     let mut row = [0u8; 2000];
     if read_config_line(f, row.as_mut_ptr()) == 0 {
         return 0;
@@ -608,7 +608,7 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
         show_error_at(0xad4dec, 0xea);
         return 0;
     }
-    crate::comparison::branch("cpt_5 periodo do clima");
+    crate::comparison::branch("cpt_5 weather period");
     let mut row = [0u8; 2000];
     if read_config_line(f, row.as_mut_ptr()) == 0 {
         return 0;
@@ -684,7 +684,7 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
     }
     let mut k = 0usize;
     while (k as i32) < read_i32(G_CITY_COUNT) {
-        crate::comparison::branch("cpt_7 clima inicial");
+        crate::comparison::branch("cpt_7 initial weather");
         for j in 0..3usize {
             let a = friendly_random(100);
             let b = friendly_random(100); // cpt7: the second random draw of the measure

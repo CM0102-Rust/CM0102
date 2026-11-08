@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cps7_selecao_com_casa', '            cps7_pd(nation_national_team(england_nation()) + 0x69, 0); // cps7: a seleção sem casa',
      '            let _ = nation_national_team(england_nation()); // mutacao: a seleção fica com o estádio',
-     'cps_7 fecha o estadio nacional'),
+     'cps_7 closes the national stadium'),
     ('cps7_sem_o_id', '            cps7_pd(0xa835a4, cps7_d(e) as u32); // cps7: guarda o id do estádio fechado',
      '            // mutacao: o id do estádio fechado não é guardado',
-     'cps_7 fecha o estadio nacional'),
+     'cps_7 closes the national stadium'),
     ('cps7_livre_invertido', '    (r == 0) as u32 // cps7: livre sem a reserva',
      '    (r != 0) as u32 // mutacao',
-     'cps_7 reserva conferida'),
+     'cps_7 reservation checked'),
 ]

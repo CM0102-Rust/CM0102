@@ -1,12 +1,12 @@
 # As receitas e a compensacao (finance.cpp, fin_prm.cpp no mapa):
 # - 0x5999a0 (Finance::add_prize_money): pelas copas (Cup::process_fixture 0x51a150, EuropeanCup::process_fixture
 #   0x583b10, os sorteios das fases 0x585680, 0x92a140), pelo fim das ligas (League::pay_prize_money 0x682e10) e pelas
-#   honras regionais; as copas inglesas rodam na carreira ("cpx_11 premio pago" 64 na base).
+#   honras regionais; as copas inglesas rodam na carreira ("cpx_11 bonus paid" 64 na base).
 # - 0x5987c0 (Finance::add_tv_revenue): so pelos direitos de TV da liga (League::pay_tv_rights 0x683010), chamados pela
 #   montagem da tabela de 34 ligas (EngPrm/EngFirst/EngSecond/EngThird/EngConf::create_table entre elas): na criacao do
 #   jogo e na temporada nova de cada liga.
 # - 0x599920 (Finance::pay_wages): so pela liberacao sem custo (TRANSFER_MANAGER::free_transfer_staff 0x8c1af0, a
-#   compensacao do contrato; "cps_3 compensacao" 8 na base, a cpy_13 da 261a).
+#   compensacao do contrato; "cps_3 compensation" 8 na base, a cpy_13 da 261a).
 # Convencoes conferidas nos pontos de chamada da original (licao da 258a): as tres thiscall com ecx = as financas
 # devolvidas pela 0x5a0590 (mov ecx, eax em 0x51a2fc, 0x68307f e 0x8c1d0b), 1 arg empurrado antes do argumento da
 # 0x5a0590 (push eax em 0x51a2ef, push ebp em 0x68305a, push edx em 0x8c1d04), ret 4. Nao chamam nada.

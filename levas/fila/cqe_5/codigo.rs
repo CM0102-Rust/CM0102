@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     let dono = if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 };
     let comp = cqe5_d(clube + 0x57);
     if comp == cqe5_d(dono + 0x57) && comp != 0 && cqe5_d(comp) == cqe5_d(0x9cf5bc) {
-        crate::comparison::branch("cqe_5 mesma divisao");
+        crate::comparison::branch("cqe_5 same division");
         if msg != 0 {
             let id = cqe5_d(0x9cf5bc);
             let r = cqe5_d(0xae23d0).wrapping_add(id.wrapping_mul(0x6b));
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     }
     if cqe5_b(season_loans_entry(clube)) as i8 >= 5 {
         // cqe5: cinco na temporada
-        crate::comparison::branch("cqe_5 cinco na temporada");
+        crate::comparison::branch("cqe_5 five in the season");
         if msg != 0 {
             let g = cqe5_b(clube + 0x52) as i8 as i32;
             texto(msg, 0x9c4534, g, g, clube + 0x38);
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
         }
     }
     if n > 1 { // cqe5: dois ao mesmo tempo
-        crate::comparison::branch("cqe_5 dois ao mesmo tempo");
+        crate::comparison::branch("cqe_5 two at the same time");
         if msg != 0 {
             let g = cqe5_b(clube + 0x52) as i8 as i32;
             texto(msg, 0x9c44d4, g, g, clube + 0x38);
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, clube: us
     if janela(this, 0xae2c90, 0) != 0 {
         return 1;
     }
-    crate::comparison::branch("cqe_5 fora da janela");
+    crate::comparison::branch("cqe_5 outside the window");
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nação; add esp, 0x10 -> cdecl (o adjetivo da nação)
         let adjetivo: unsafe extern "C" fn(usize, *mut u8, u32, u32) = core::mem::transmute(0x6181d0usize);
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn record_loan(_this: usize, oferta: usize) {
     let clube = cqe5_d(0xae23b4).wrapping_add(cqe5_d(oferta + 8).wrapping_mul(0x245));
     let nacao = cqe5_d(clube + 0x53);
     if nacao != 0 && cqe5_d(nacao) == cqe5_d(0x9cf2e4) {
-        crate::comparison::branch("cqe_5 emprestimo contado");
+        crate::comparison::branch("cqe_5 loan counted");
         let p = season_loans_entry(clube);
         *(p as *mut u8) = cqe5_b(p).wrapping_add(1); // cqe5: a conta da temporada
     }

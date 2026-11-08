@@ -66,11 +66,11 @@ unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, clube: usize
             return 1;
         }
         if item == antes {
-            crate::comparison::branch("cpm_7 amistoso no dia antes");
+            crate::comparison::branch("cpm_7 friendly the day before");
             return 1;
         }
         if item == depois {
-            crate::comparison::branch("cpm_7 amistoso no dia depois");
+            crate::comparison::branch("cpm_7 friendly the day after");
             return 1;
         }
         e = proximo(l);
@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn candidate_has_nearby_date(_this: usize, clube: usize
 /// devolvida fica na pilha) e os ids (o dword apontado por cada argumento) em +8, +0xc e +0x10; a conta sobe.
 unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, mandante: usize, visitante: usize, data: usize) {
     if cpm7_d(this + 0x34e0) == cpm7_d(this + 0x34e4) {
-        crate::comparison::branch("cpm_7 amistosos crescem");
+        crate::comparison::branch("cpm_7 friendlies grow");
         let cap = cpm7_d(this + 0x34e4).wrapping_add(100);
         cpm7_por(this + 0x34e4, cap);
         let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn add_planned_friendly(this: usize, anfitriao: usize, 
             return;
         }
     }
-    crate::comparison::branch("cpm_7 amistoso planejado");
+    crate::comparison::branch("cpm_7 planned friendly");
     let n = cpm7_d(this + 0x34e0);
     let item = cpm7_d(this + 0x34d8).wrapping_add(n.wrapping_mul(0x14));
     cpm7_por(item + 8, cpm7_d(anfitriao));

@@ -9,9 +9,9 @@ MUTACOES = [
     ('cqo5_c1_primeira_rodada_em_outro_dia',
      'const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [\n    (5, 8, 0, 6,',
      'const SERIE_C1_ROUNDS: [FraCfaScheduleRound; 34] = [\n    (5, 8, 0, 2,',
-     'cqo_5 calendario da c1'),
+     'cqo_5 c1 calendar'),
     ('cqo5_semifinais_uma_semana_antes',
      'const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0x15,',
      'const CFA_SEMIFINAL_ROUND: EngCcCupCupRound = cql10r((8, 4, 1, 0), (0xe,',
-     'cqo_5 play-offs da c1'),
+     'cqo_5 c1 play-offs'),
 ]

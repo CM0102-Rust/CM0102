@@ -58,7 +58,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cqm_5 divisao nova");
+    crate::comparison::branch("cqm_5 new division");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_usize(this + league::STAGE_COUNT, 0);
@@ -90,7 +90,7 @@ pub(crate) unsafe fn construct_division_league(this: usize, ano: u32, registro: 
     if p.low {
         let nacao = read_usize(read_usize(this + 4) + 0x5d);
         if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
-            crate::comparison::branch("cqm_5 divisao de baixo espanhola");
+            crate::comparison::branch("cqm_5 spanish lower division");
             let e = exe::crt_operator_new(0xee);
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
             // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
@@ -184,7 +184,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: usize, year:
 /// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
 /// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
 pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_5 regras da segunda");
+    crate::comparison::branch("cqj_5 second division rules");
     fra_first_apply_league_rules(this, &fra_first_second_division_rules(this))
 }
 
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
     if fra_first_fill_league_table(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
         return 0;
     }
-    crate::comparison::branch("cqj_6 tabela da segunda");
+    crate::comparison::branch("cqj_6 second division fixtures");
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, 0);
     *((this + league::PRIZE_MODE) as *mut u8) = 2;
     eng_prm_pay_tv_rights(this, 0x1e8480, comp_record_of(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: the TV money of those relegated from the first division

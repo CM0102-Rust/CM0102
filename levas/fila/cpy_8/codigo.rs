@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                     }
                     let b = nation_officials_block(this, k);
                     let conta = cpy8_i(b + 4) as f64;
-                    crate::comparison::branch("cpy_8 arbitro neutro");
+                    crate::comparison::branch("cpy_8 neutral referee");
                     (cpy8_i(b + 8).wrapping_sub(match_pl_ftol(conta * -0.75)), match_pl_ftol(conta * 0.25)) // cpy8: o quarto de cima
                 } else {
                     let nacao = if cpy8_d(comp + 0x5d) != 0 {
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                     }
                     match achou {
                         Some(band) => {
-                            crate::comparison::branch("cpy_8 band da liga");
+                            crate::comparison::branch("cpy_8 league band");
                             band // cpy8: a faixa da liga
                         }
                         None => (cpy8_i(b + 8), cpy8_i(b + 4)),
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
     let sorteado = if n == 1 {
         ini
     } else {
-        crate::comparison::branch("cpy_8 arbitro sorteado");
+        crate::comparison::branch("cpy_8 drawn referee");
         ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: o sorteio na faixa
     };
     let ocupado = |k: i32| {
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
         if idade <= 0x28 || (idade <= 0x2d && random(3) != 0) {
             continue;
         }
-        crate::comparison::branch("cpy_8 arbitro renovado");
+        crate::comparison::branch("cpy_8 referee renewed");
         let nac = cpy8_d(ficha + 0x16);
         let n1 = nome(nac);
         core::ptr::write_unaligned((ficha + 4) as *mut usize, n1);

@@ -68,7 +68,7 @@ unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
             false
         }
         _ => {
-            crate::comparison::branch("cpn_4 jogador aposentado");
+            crate::comparison::branch("cpn_4 retired player");
             cpn4_por(p + 0x3d, 0x10); // aposentado
             false
         }
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, jogador: usi
                 // ponytail: a original empurra o byte do elenco com lixo nos bits altos; a 0x7ad220 só lê o byte
                 let s = nota_de(jogador, clube, elenco as u32) as i16;
                 if s > melhor_nota {
-                    crate::comparison::branch("cpn_4 clube melhor para o jovem");
+                    crate::comparison::branch("cpn_4 better club for the youngster");
                     melhor = clube;
                     melhor_nota = s;
                 }
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, jogador: usi
                 .wrapping_sub((cpn4_w(ficha + 7) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_sub((cpn4_w(ficha + 5) as i32).wrapping_mul(50).wrapping_sub(rep).wrapping_abs())
                 .wrapping_add(0x1388);
-            crate::comparison::branch("cpn_4 sorteio do clube da nacao");
+            crate::comparison::branch("cpn_4 draw of the nation club");
             let nota = sorteio(c as i16 as i32) as i16;
             if nota > melhor_nota {
                 melhor = clube;

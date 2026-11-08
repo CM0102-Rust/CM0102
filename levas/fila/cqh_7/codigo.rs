@@ -27,7 +27,7 @@ unsafe extern "C" fn officials_manager_compare_nation_then_quality_desc(a: usize
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparison::branch("cqh_7 ordem decrescente");
+    crate::comparison::branch("cqh_7 descending order");
     if ka == kb {
         return cqh7_i(b).wrapping_sub(cqh7_i(a)); // cqh7: o empate pelo índice
     }
@@ -51,7 +51,7 @@ unsafe extern "C" fn officials_manager_compare_nation_then_quality_asc(a: usize,
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparison::branch("cqh_7 ordem crescente");
+    crate::comparison::branch("cqh_7 ascending order");
     if ka == kb {
         return cqh7_i(a).wrapping_sub(cqh7_i(b));
     }

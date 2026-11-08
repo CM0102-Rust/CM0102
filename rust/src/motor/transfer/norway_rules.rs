@@ -25,7 +25,7 @@ pub(crate) const NORWAY_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 ///
 /// [pt] { 0x7944f0 } (thiscall, ret 0x14, norway_rules.cpp, `NORWAY_RULES::NORWAY_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Noruega (regra 17): a base (0x8e84a0), a vtable 0x96dfe4, 1 janela(s) de `NORWAY_TRANSFER_WINDOWS`. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_norway_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqm_2 noruega");
+    crate::comparison::branch("cqm_2 norway");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96dfe4, 1, &NORWAY_TRANSFER_WINDOWS, 0xa69870, 0x51);
     this
 }

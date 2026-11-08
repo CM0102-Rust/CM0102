@@ -39,7 +39,7 @@ fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
 /// +0x52 = 2 [sem nome].
 unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_4 regras da primera");
+    crate::comparison::branch("cqk_4 primera rules");
     core::ptr::write_unaligned((this + 0xa9) as *mut u16, 0x26);
     spa_first_apply_league_rules(this, &primera_rules())
 }
@@ -57,7 +57,7 @@ unsafe fn primera_rules() -> Vec<(usize, u8, u32)> {
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
 unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_4 regras da segunda");
+    crate::comparison::branch("cqk_4 segunda rules");
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
 
@@ -75,7 +75,7 @@ unsafe fn segunda_rules(this: usize) -> Vec<(usize, u8, u32)> {
 /// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_4 regras da divisao de baixo");
+    crate::comparison::branch("cqk_4 lower division rules");
     spa_first_apply_league_rules(this, &lower_division_rules())
 }
 

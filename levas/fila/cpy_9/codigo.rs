@@ -77,14 +77,14 @@ unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize,
     }
     let mut r = t.wrapping_add(antes.wrapping_mul(0x2b) as usize);
     for _ in 0..conta.max(0) {
-        crate::comparison::branch("cpy_9 arbitro novo");
+        crate::comparison::branch("cpy_9 new referee");
         generate_official(r, nacao);
         r += 0x2b;
     }
     let n = cpy9_i(0xae2390).wrapping_add(conta);
     *(0xae2390 as *mut i32) = n;
     let ordenar: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(0x945333usize);
-    crate::comparison::branch("cpy_9 ordenar");
+    crate::comparison::branch("cpy_9 sort");
     ordenar(cpy9_d(0xae23e8), n, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
 
@@ -178,7 +178,7 @@ unsafe extern "C" fn officials_manager_validate_officials() {
         }
         for o in [0x1eusize, 0x20] {
             if fora(o) {
-                crate::comparison::branch("cpy_9 nota consertada");
+                crate::comparison::branch("cpy_9 rating fixed");
                 let nac = cpy9_d(e + 0x16);
                 let v = if nac != 0 {
                     let s = random(0x50) as u8;

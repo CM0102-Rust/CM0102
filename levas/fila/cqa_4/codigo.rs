@@ -90,14 +90,14 @@ unsafe extern "thiscall" fn cup_update_staff_records_for_status(copa: usize, clu
     let comp = cqa4_d(copa + 4);
     match desfecho as u8 {
         1 => {
-            crate::comparison::branch("cqa_4 campeao");
+            crate::comparison::branch("cqa_4 champion");
             cup_record_final_result(0x86a800, clube, jogo, final_); // cqa4: o registro de campeão
             if wins_uefa_cup_place(comp, clube) {
                 core::ptr::write_unaligned(club_state_record(clube) as *mut i32, cqa4_i(0x9cf6f0));
             }
         }
         2 => {
-            crate::comparison::branch("cqa_4 vice");
+            crate::comparison::branch("cqa_4 runner-up");
             cup_record_final_result(0x86b0b0, clube, jogo, final_); // cqa4: o registro de vice
         }
         3 => cup_record_final_result(0x86b710, clube, jogo, final_),

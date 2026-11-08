@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
     for cat in 1..=6u8 {
         let ano = ano_do_clube(clube);
         let id = if clube == 0 { 0xffff_ffff } else { cqf8_d(clube) as u32 }; // cqf8: o clube da temporada atual
-        crate::comparison::branch("cqf_8 temporada atual");
+        crate::comparison::branch("cqf_8 current season");
         let mut r = PlayerStatsEntry::nova(ano, id, cat, 0xffff_ffff);
         let c = categoria(this, f, cat as u32);
         if c != 0 {
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn build_career_history(this: usize, p: usize, conta: *
                 for cat in 1..=6u8 {
                     let mut r = PlayerStatsEntry::nova(ano_no, clube_no, cat, cqf8_d(no + 0x26) as u32);
                     r.0[0x2a] = (cat << 3) | (tipo & 7);
-                    crate::comparison::branch("cqf_8 temporada do historico");
+                    crate::comparison::branch("cqf_8 history season");
                     if *conta + cat as i32 - 1 >= cap {
                         tam += 0x53fc;
                         cap += 500;

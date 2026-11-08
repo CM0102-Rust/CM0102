@@ -1,7 +1,7 @@
 # Mutações da 232a leva (itens dbi_1, dbi_2, dbi_3, dbj_1, dbj_2, dbk_1, dbk_2). Uso: python mutacoes.py mutacoes\leva232.py --prova-save 232
 MUTACOES = [
-    ('dbi_liberar_historico_de_pessoas', '    crate::comparison::branch("banco liberar histórico de pessoas");', '    crate::comparison::branch("banco liberar histórico de pessoas");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
-    ('dbi_liberar_historico_de_premios', '    crate::comparison::branch("banco liberar histórico de prêmios");', '    crate::comparison::branch("banco liberar histórico de prêmios");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
+    ('dbi_liberar_historico_de_pessoas', '    crate::comparison::branch("database free people history");', '    crate::comparison::branch("database free people history");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
+    ('dbi_liberar_historico_de_premios', '    crate::comparison::branch("database free award history");', '    crate::comparison::branch("database free award history");\n    if true { return; } // mutacao: não libera (a tabela fica e vai para o save)'),
     ('dbi_crescer_historico_de_competicoes', '        core::ptr::write_unaligned(row as *mut i32, i); // the new row stores its own index', '        core::ptr::write_unaligned(row as *mut i32, i + 1); // mutacao: o índice + 1'),
     ('dbi_ordem_dos_clubes_pela_reputacao', '        1 // the lowest reputation afterwards', '        -1 // mutacao: a de menor reputação antes'),
     ('dbi_ordem_do_elenco_pela_habilidade', '    ability(pb) as i32 - ability(pa) as i32 // the largest first', '    ability(pa) as i32 - ability(pb) as i32 // mutacao: a menor primeiro'),

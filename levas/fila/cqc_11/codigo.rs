@@ -111,7 +111,7 @@ unsafe fn link_fixture_nations(this: usize, p: usize, usadas: usize, ens: Option
         None => {
             let por: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x68d0d0usize);
             *((usadas.wrapping_add(a as usize)) as *mut u8) = 1;
-            crate::comparison::branch("cqc_11 nacoes com jogo");
+            crate::comparison::branch("cqc_11 nations with a match");
             *((usadas.wrapping_add(b as usize)) as *mut u8) = 1; // cqc11: as nações com jogo perto da data
             let (va, vb) = (a, b);
             por(nation_friendly_list(this, a as usize), &vb as *const u32 as usize, 4);
@@ -254,7 +254,7 @@ unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u32, usadas:
                                 }
                             };
                             if !ja {
-                                crate::comparison::branch("cqc_11 amistoso entre selecoes");
+                                crate::comparison::branch("cqc_11 friendly between national teams");
                                 let casa = sortear(2) as u32; // cqc11: o mando sorteado
                                 match ens.as_deref_mut() {
                                     Some(e) => {

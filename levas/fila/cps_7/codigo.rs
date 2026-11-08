@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: usize) {
         let nacao = england_nation();
         let e = cps7_d(nacao + 0x80);
         if e != 0 {
-            crate::comparison::branch("cps_7 fecha o estadio nacional");
+            crate::comparison::branch("cps_7 closes the national stadium");
             cps7_pd(0xa835a4, cps7_d(e) as u32); // cps7: guarda o id do estádio fechado
             cps7_pd(nacao + 0x80, 0);
             cps7_pd(nation_national_team(england_nation()) + 0x69, 0); // cps7: a seleção sem casa
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: usize) {
     let r = nova(t.as_mut_ptr() as usize, 1, 6, 0x7d3, 0xffff_ffff);
     let reabre = cps7_d(r) as u32;
     if (reabre >> 16) as u16 == cps7_w(hoje + 2) && reabre as u16 == cps7_w(hoje) && cps7_d(0xa835a4) as i32 != -1 {
-        crate::comparison::branch("cps_7 reabre o estadio nacional");
+        crate::comparison::branch("cps_7 reopens the national stadium");
         cps7_pd(england_nation() + 0x80, stadium_by_id(cps7_d(0xa835a4)) as u32);
         let nacao = england_nation();
         cps7_pd(nation_national_team(nacao) + 0x69, cps7_d(nacao + 0x80) as u32);
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn stadium_daily_update(this: usize, hoje: usize) {
     if k as u16 == 0 {
         return;
     }
-    crate::comparison::branch("cps_7 reservas vencidas");
+    crate::comparison::branch("cps_7 reservations expired");
     let k = k as i16 as i32;
     let n = cps7_d(this + 4) as i32;
     if k < n {
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, estadio: usize,
     core::ptr::write_unaligned(chave.as_mut_ptr() as *mut u32, cps7_d(estadio) as u32);
     copia(chave.as_mut_ptr() as usize + 4, t.as_mut_ptr() as usize, data);
     let r = buscar(chave.as_ptr() as usize, cps7_d(this), cps7_d(this + 4) as u32, 0xc, 0x85e380);
-    crate::comparison::branch("cps_7 reserva conferida");
+    crate::comparison::branch("cps_7 reservation checked");
     (r == 0) as u32 // cps7: livre sem a reserva
 }
 

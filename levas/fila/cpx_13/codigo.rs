@@ -52,7 +52,7 @@ unsafe fn refresh_or_select_squad(this: usize, p: usize, clube: usize, reg: usiz
         return;
     }
     let escolher: unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32) = core::mem::transmute(0x76c120usize);
-    crate::comparison::branch("cpx_13 elenco pedido");
+    crate::comparison::branch("cpx_13 squad requested");
     escolher(this, cpx13_d(clube + 0x53), tipo, 0xae2c90, p, 0); // cpx13: o elenco
 }
 
@@ -187,7 +187,7 @@ unsafe extern "stdcall" fn national_teams_post_player_called_up_news(jogador: us
             return;
         }
     }
-    crate::comparison::branch("cpx_13 noticia do convocado");
+    crate::comparison::branch("cpx_13 call-up news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x21, 0);
@@ -266,7 +266,7 @@ unsafe extern "thiscall" fn add_team_result_news(copa: usize, clube: usize, desf
     if r == -1 || p == 0 {
         return 0;
     }
-    crate::comparison::branch("cpx_13 noticia do desfecho");
+    crate::comparison::branch("cpx_13 outcome news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x10, 0);

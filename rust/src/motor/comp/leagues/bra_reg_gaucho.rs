@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
     record_first_stage_honours(this); // cqj8: the state championship history
-    crate::comparison::branch("cqj_8 historico do estadual");
+    crate::comparison::branch("cqj_8 state league history");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: us
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     gaucho_rules(this);
-    crate::comparison::branch("cqi_8 regras do gaucho");
+    crate::comparison::branch("cqi_8 gaucho rules");
     create_main_schedule(this);
     1
 }

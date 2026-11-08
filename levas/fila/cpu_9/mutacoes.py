@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpu9_goleiros_no_geral', '*(ficha() as *mut u8) = 6; // cpu9: o programa dos goleiros',
      '*(ficha() as *mut u8) = 1; // mutacao: goleiros no programa geral',
-     'cpu_9 goleiro'),
+     'cpu_9 goalkeeper'),
     ('cpu9_linha_no_programa_2', '*(ficha() as *mut u8) = 1; // cpu9: o programa geral',
      '*(ficha() as *mut u8) = 2; // mutacao: os outros no programa 2',
-     'cpu_9 linha'),
+     'cpu_9 outfield'),
     ('cpu9_goleiro_so_com_20', 'if gol >= 0xf { // cpu9: goleiro de 15 para cima',
      'if gol >= 0x14 { // mutacao: so a nota 20 vai para o programa dos goleiros',
-     'cpu_9 goleiro'),
+     'cpu_9 goalkeeper'),
 ]

@@ -1,6 +1,6 @@
 # A escalação guardada do clube (tactics.cpp): Tactics::remove_player_from_selection 0x896c60 (pelos contratos, pelas
 # saídas do elenco 0x690730, pela escalação automática 0x6dbc50, pelas seleções, pela aposentadoria 0x7aace0 e pelas
-# transferências; a 257ª contou "vaga extra apagada" 65536 vezes, a maior parte por ela), Tactics::swap_selection_slots
+# transferências; a 257ª contou "extra slot deleted" 65536 vezes, a maior parte por ela), Tactics::swap_selection_slots
 # 0x8973e0 e Tactics::has_selection_undo 0x897250 (as duas só pela tela do elenco: passageiras). Iguais no
 # cm0102-1080.exe; sem SEH; sem x87; o quadro de 0x20c/0x200 bytes é só da caixa de erro (a original). Comparadores lado
 # a lado: a 0x896c60 e a 0x8973e0 pela devolução, pela linha do clube na tabela tática (0x91 bytes: as vagas, as extras

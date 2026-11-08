@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn construct_cup_stage(this: usize, pai: usize, n: u32,
         show_error_at(F, 0x53);
         return this;
     }
-    crate::comparison::branch("cqs_7 fase de copa");
+    crate::comparison::branch("cqs_7 cup stage");
     let m = cqs7_w(this + 0x3e) as i32;
     let mut i = 0i32;
     while i < m {
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
         }
         soltar(cqs7_d(this + 0xad));
     }
-    crate::comparison::branch("cqs_7 fim da fase de copa");
+    crate::comparison::branch("cqs_7 end of cup stage");
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518690usize);
     base(this)
 }

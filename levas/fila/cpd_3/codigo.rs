@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn clear_current_competition(this: usize, nacao: usize)
     let seguinte = cpd3_d(this + 8).wrapping_add((id as usize).wrapping_mul(4));
     let v = *(seguinte as *const i32);
     if v != -1 {
-        crate::comparison::branch("seleção a competição seguinte");
+        crate::comparison::branch("national team the next competition");
         core::ptr::write_unaligned(atual as *mut i32, v); // a seguinte vira a atual
         *(seguinte as *mut i32) = -1;
         notify_manager_manager(nacao); // o aviso da competição seguinte
@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn release_competitions_of_continent(this: usize, conti
             }
             let v = *((cpd3_d(this + 8) + 4 * i as usize) as *const i32);
             if v != -1 && *((cpd3_d(this + 4) + 0x6e * i as usize + 4) as *const i32) == -1 {
-                crate::comparison::branch("seleção continente a seguinte vira a atual");
+                crate::comparison::branch("national team continent next becomes current");
                 *((cpd3_d(this + 4) + 0x6e * i as usize + 4) as *mut i32) = v;
                 *((cpd3_d(this + 8) + 4 * i as usize) as *mut i32) = -1;
                 notify_manager_manager(nacao); // o aviso do continente
@@ -180,10 +180,10 @@ unsafe extern "thiscall" fn call_up_replacement(this: usize, nacao: usize, tipo:
             if outro == 0 && humano(time, 0, 1, 0, 0) == 0 {
                 continue;
             }
-            crate::comparison::branch("substituto sai do outro elenco");
+            crate::comparison::branch("replacement leaves the other squad");
             tirar(this, nacao, outro as u8 as u32, q);
         }
-        crate::comparison::branch("substituto convocado");
+        crate::comparison::branch("replacement called up");
         por(this, nacao, tipo, q);
         *(vaga as *mut u8) = cpd3_b(vaga).wrapping_sub(1); // uma vaga a menos
         noticia(this, q, nacao, tipo);

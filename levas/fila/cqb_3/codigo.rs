@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn build_international_date_table(this: usize) {
     if cqb3_i(this + 0x34f0) < 0x6e {
         return; // ponytail: inalcançável (a conta é a 0xc8 gravada acima); a original dá a caixa da linha 0x15d8
     }
-    crate::comparison::branch("cqb_3 tabela montada");
+    crate::comparison::branch("cqb_3 fixture list built");
     *((this + 0x34f0) as *mut i32) = 0x6e;
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     *((this + 0x34ec) as *mut usize) = realloc(cqb3_d(this + 0x34ec), 0x898);
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
     let hoje = cqb3_w(0xae2c92);
     let mut ciclo = hoje as u32;
     while ((ciclo & 0xffff) as i32 - 2) % 4 != 0 {
-        crate::comparison::branch("cqb_3 ano da copa adiante");
+        crate::comparison::branch("cqb_3 cup year ahead");
         ciclo = ciclo.wrapping_add(1); // cqb3: o ano da Copa
     }
     let acertar: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x54a130usize);
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
         let e = cqb3_d(this + 0x34ec).wrapping_add((k as usize).wrapping_mul(0x14));
         let mut ano = (cqb3_b(e + 0xb) as i8 as i16 as u16).wrapping_add(ciclo as u16);
         if ano as i32 - hoje as i32 > 3 {
-            crate::comparison::branch("cqb_3 ano para tras");
+            crate::comparison::branch("cqb_3 year backwards");
             ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente
         }
         let com_sinal = |o: usize| cqb3_b(e + o) as i8 as i16 as u16 as u32;

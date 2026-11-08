@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     let f = f + 1;
     write_usize(this + league::CURRENT_STAGE, f as usize);
     if f == 3 { // cqs10: the Merconorte semifinals after the groups
-        crate::comparison::branch("cqs_10 semifinais da merconorte");
+        crate::comparison::branch("cqs_10 merconorte semifinals");
         exe::conmerccup_create_semi_final_stage(this);
     }
 }
@@ -267,7 +267,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparison::branch("cqs_11 convidados da merconorte");
+    crate::comparison::branch("cqs_11 merconorte guests");
     exe::comp_util_sort_and_shuffle_top_clubs(mexico.clubs.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: the 4 from Mexico
     exe::comp_util_sort_and_shuffle_top_clubs(colombia.clubs.as_mut_ptr() as usize, colombia.n as u32, 5);
     exe::comp_util_sort_and_shuffle_top_clubs(peru.clubs.as_mut_ptr() as usize, peru.n as u32, 3);
@@ -291,7 +291,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         slot(1, mls[1]);
     } else {
         let record = read_usize(G_CLUB_COMP_TABLE) + read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) * 0x6b;
-        crate::comparison::branch("cqs_11 campeao da liga americana");
+        crate::comparison::branch("cqs_11 american league champion");
         slot(0, exe::comp_util_get_latest_placed_club(record, 0)); // cqs11: the American league champion
         slot(1, exe::comp_util_get_latest_placed_club(read_usize(americana + 4), 0));
         let l = read_usize(this + 0xee);
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
         let day = read_i16(this + 0xb6) as u16; // cqr12: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
-            crate::comparison::branch("cqr_12 sorteio da merconorte");
+            crate::comparison::branch("cqr_12 merconorte draw");
             exe::conmerccup_select_invited_clubs(this);
             if exe::conmerccup_create_first_group_table(this) == 0 {
                 show_error_at(0x9a7d6c, 0x385);
@@ -440,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_first_group_table(thi
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparison::branch("cqr_12 linha do primeiro grupo");
+        crate::comparison::branch("cqr_12 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, con_merc_cup_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -488,7 +488,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparison::branch("cqr_12 time do grupo");
+        crate::comparison::branch("cqr_12 group team");
         write_usize(teams + n * 4, con_merc_cup_drawn_club(this, k as usize)); // cqr12: the team in the group slot
         k += 1;
     }
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize,
 /// set_up_rules()`: os grupos da Copa Merconorte em dois turnos, 3/1 pontos, desempates (1, 2, 3, 0), um classificado
 /// por grupo, clubes internacionais, categoria 7, começo no dia 1 do mês 7, prêmios de 2.000.000.
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_11 regras da merconorte");
+    crate::comparison::branch("cqj_11 merconorte rules");
     apply_cup_rules(this, &MERCONORTE_RULES, MERCONORTE_RULES.day, 3)
 }
 

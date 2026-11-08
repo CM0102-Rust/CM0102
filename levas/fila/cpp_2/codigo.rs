@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn sign_loan_contract(this: usize, contrato: usize) {
         show_contract_error_box(0x16a9);
         return;
     }
-    crate::comparison::branch("cpp_2 assinar emprestimo");
+    crate::comparison::branch("cpp_2 sign loan");
     let m = principal + 0x35;
     let reserva = if club_has_reserve_squad(dono) != 0 {
         read_byte_volatile(pessoa + 0x5e) & 1 == 0
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn end_loan(this: usize, pessoa: usize) {
         show_contract_error_box(0x1735);
         return;
     }
-    crate::comparison::branch("cpp_2 encerrar emprestimo");
+    crate::comparison::branch("cpp_2 end loan");
     let ficha = contract_at_index(cpp2_d(cpp2_d(0xae1050) as usize), cpp2_d(staff_state_entry(pessoa)) as i32);
     cpp2_por(0xae1080, ficha as u32);
     let dono = if ficha == 0 { 0 } else { contract_manager_club_by_id(cpp2_d(ficha + 4)) };
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn toggle_squad_placement(this: usize, pessoa: usize, c
                 return 1;
             }
         }
-        crate::comparison::branch("cpp_2 trocar no clube");
+        crate::comparison::branch("cpp_2 change at the club");
         set_squad_flags(pessoa, l as u32); // 1 principal, 2 reserva
         remove_from_tactics_selection(clube, pessoa, if l == 1 { 1 } else { 0 }, 1);
         return 1;
@@ -351,13 +351,13 @@ unsafe extern "thiscall" fn toggle_squad_placement(this: usize, pessoa: usize, c
             let m = principal(pessoa) + 0x35;
             let cl = read_byte_volatile(m);
             *(m as *mut u8) = if cl & 0x40 == 0 { cl | 0x40 } else { cl & 0xbf };
-            crate::comparison::branch("cpp_2 trocar emprestado");
+            crate::comparison::branch("cpp_2 change loaned");
             contract_manager_remove_staff_from_club(origem, pessoa, 0, 0, 1);
             add_staff_to_club(destino, pessoa, 0xb, 0, 0, 1);
             return 1;
         }
     }
-    crate::comparison::branch("cpp_2 trocar de time");
+    crate::comparison::branch("cpp_2 change team");
     contract_manager_archive_player_stats(pessoa, 0, -1);
     contract_manager_remove_staff_from_club(origem, pessoa, 0, 1, 0);
     remove_from_tactics_selection(origem, pessoa, 1, 1);

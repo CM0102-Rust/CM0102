@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpn_poucas_partidas', 'r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // menos de 12 partidas',
      'r = r * s1f as f64 * (1.0f32 / 6.0) as f64; // mutacao: s1/6',
-     'cpn_3 poucas partidas'),
+     'cpn_3 few matches'),
     ('cpn_nota_negativa', 'r = r * player_club_reputation_ratio(jogador, clube); // a negativa pela reputação',
      'r = r / player_club_reputation_ratio(jogador, clube); // mutacao: tackle',
-     'cpn_3 nota negativa'),
+     'cpn_3 negative rating'),
     ('cpn_peso_da_historia', 'peso as f64 * (1.0f32 / 60.0) as f64; // o peso da história',
      'peso as f64 * (1.0f32 / 30.0) as f64; // mutacao: 1/30',
-     'cpn_3 nota do jogador'),
+     'cpn_3 player rating'),
 ]

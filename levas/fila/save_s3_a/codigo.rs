@@ -74,7 +74,7 @@ unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8)
     let primeiro_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x539c60usize);
     let segundo_nome: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53a1b0usize);
     let pos_humano: unsafe extern "C" fn(usize, usize) = core::mem::transmute(0x826f20usize);
-    crate::comparison::branch("save criar jogo pela configuracao");
+    crate::comparison::branch("save create game from configuration");
     let opcoes = || *(0xae3138 as *const usize);
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);

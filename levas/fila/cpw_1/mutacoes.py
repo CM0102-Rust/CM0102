@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpw1_insatisfacao_60', '    if !(razao >= read_f32_at(0x969560) as f64) { // cpw1: o limit da insatisfação',
      '    if !(razao >= 60.0) { // mutacao: o limit em 60',
-     'cpw_1 satisfacao avaliada'),
+     'cpw_1 satisfaction evaluated'),
     ('cpw1_satisfacao_70', '    if razao < read_f32_at(0x96ff70) as f64 { // cpw1: o limit da satisfação',
      '    if razao < 70.0 { // mutacao: o limit em 70',
-     'cpw_1 satisfacao avaliada'),
+     'cpw_1 satisfaction evaluated'),
     ('cpw1_recem_contratado_30', '        razao = razao + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado',
      '        razao = razao + 30.0 + adapt as f64 * read_f64_at(0x968eb0) - (dias / 2) as f64; // mutacao: +30',
-     'cpw_1 contratado ha pouco'),
+     'cpw_1 recently signed'),
 ]

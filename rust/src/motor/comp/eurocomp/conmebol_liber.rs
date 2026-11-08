@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
         let day = read_i16(this + 0xb6) as u16; // cqr10: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
-            crate::comparison::branch("cqr_10 sorteio da libertadores");
+            crate::comparison::branch("cqr_10 libertadores draw");
             exe::conmebolliber_select_qualified_clubs(this);
             if exe::conmebolliber_build_first_group_table(this) == 0 {
                 show_error_at(0x9a7de4, 0x365);
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparison::branch("cqr_10 linha do primeiro grupo");
+        crate::comparison::branch("cqr_10 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, conmebol_liber_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparison::branch("cqr_10 time do grupo");
+        crate::comparison::branch("cqr_10 group team");
         write_usize(teams + n * 4, conmebol_liber_drawn_club(this, k as usize)); // cqr10: the team in the group slot
         k += 1;
     }
@@ -299,7 +299,7 @@ pub(crate) const OCEANIA_RULES: ContinentalGroupRules = ContinentalGroupRules {
 /// desempates (1, 2, 3, 0), dois classificados por grupo, clubes internacionais (+0x42 = 2), categoria 7, 7 no banco e 3
 /// substituições, começo no dia 15 do mês 0 do ano da competição, prêmios de 2.000.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_11 regras da libertadores");
+    crate::comparison::branch("cqj_11 libertadores rules");
     let day = 0xf; // cqj11: the Libertadores start day
     let win = 3; // cqj11: the win in the Libertadores groups
     apply_cup_rules(this, &LIBERTADORES_RULES, day, win)
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
         show_error_at(0x9a7de4, 0x297);
         return 0;
     }
-    crate::comparison::branch("cqk_11 classificados da libertadores");
+    crate::comparison::branch("cqk_11 libertadores qualified");
     exe::comp_util_shuffle_pointer_array(list, read_i16(this + 0xf2) as u16 as u32); // cqk11: the 32 of the Libertadores shuffled
     1
 }
@@ -425,7 +425,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                 let mundial = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
                 let t = read_usize(mundial + cup::TEAM_TABLE);
                 let nation = read_usize(read_usize(t) + 0x53);
-                crate::comparison::branch("cqk_11 campeao da libertadores");
+                crate::comparison::branch("cqk_11 libertadores champion");
                 if nation != 0 && read_usize(read_usize(nation + nation::CONTINENT)) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) {
                     core::ptr::write_unaligned(t as *mut u32, club as u32); // cqk11: the champion in the South American slot
                 } else {
@@ -462,7 +462,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize)
     let f = f + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, f);
     if f == 7 { // cqk11: the knockout after the seven groups
-        crate::comparison::branch("cqk_11 mata-mata da libertadores");
+        crate::comparison::branch("cqk_11 libertadores knockout");
         exe::conmebolliber_create_knockout_stage(this);
     }
 }

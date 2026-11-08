@@ -96,7 +96,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
     if clube == 0 || jogador == 0 {
         return;
     }
-    crate::comparison::branch("cqb_8 reacao do elenco");
+    crate::comparison::branch("cqb_8 squad reaction");
     let mut chance: i32 = 0xa; // cqb8: a chance inicial
     if favorito(jogador, clube) != 0 {
         chance = 5;
@@ -165,7 +165,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
             if cqb8_b(jogador + 0x18) > 0x14 && cqb8_b(p + 0x18) < 0x17 && cqb8_w(cqb8_d(p + 0x61) + 0xb) < 0x109a {
                 continue;
             }
-            crate::comparison::branch("cqb_8 nota do jogador");
+            crate::comparison::branch("cqb_8 player rating");
             nota = cqb8_b(p + 0x5d).wrapping_add(10); // cqb8: a nota do jogador do elenco
             if cqb8_b(p + 0x18) < 0x14 {
                 nota = nota.wrapping_sub(5);
@@ -226,7 +226,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
         }
         let r1 = cqb8_sortear(chance);
         if r1 > cqb8_sortear(nota as i32) { // cqb8: o desafeto sorteado
-            crate::comparison::branch("cqb_8 desafeto sorteado");
+            crate::comparison::branch("cqb_8 drawn grudge");
             chamar(0x547af0, 0, [p as u32, jogador as u32, 1, 0, 0]);
             let c = chamar(0x4cf5f0, cqb8_d(0xae1050), [p as u32, clube as u32, 0, 0, 0]) as usize;
             if c != 0 {
@@ -304,7 +304,7 @@ unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, chamar: &mut d
     if cqb8_w(cqb8_d(jogador + 0x61) + 0xb) <= 0x128e {
         return;
     }
-    crate::comparison::branch("cqb_8 rival de posicao");
+    crate::comparison::branch("cqb_8 positional rival");
     let n = n as i32;
     let mut postou = false;
     for i in 0..50 {

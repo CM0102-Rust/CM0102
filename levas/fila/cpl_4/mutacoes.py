@@ -6,9 +6,9 @@
 # ali estraga a criacao do jogo, nao uma carreira).
 MUTACOES = [
     ('cpl_contrato_ligacao', 'cpl4_por(cpl4_d(0xae2d0c).wrapping_add(cpl4_d(pessoa).wrapping_mul(0x4f)), i as usize); // a pessoa aponta a vaga',
-     '// mutacao: a pessoa nao aponta a vaga', 'cpl_4 contrato da pessoa'),
+     '// mutacao: a pessoa nao aponta a vaga', 'cpl_4 person contract'),
     ('cpl_contrato_valor', 'gerar(c, pessoa, valor) // o valor da pessoa',
-     'gerar(c, pessoa, valor / 2) // mutacao: metade do valor', 'cpl_4 contrato da pessoa'),
+     'gerar(c, pessoa, valor / 2) // mutacao: metade do valor', 'cpl_4 person contract'),
     ('cpl_decisao_conta', 'cpl4_por(this + 0x14, n.wrapping_add(1)); // a data da decisão',
-     'cpl4_por(this + 0x14, n); // mutacao: a conta nao sobe', 'cpl_4 data de decisao'),
+     'cpl4_por(this + 0x14, n); // mutacao: a conta nao sobe', 'cpl_4 decision date'),
 ]

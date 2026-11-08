@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         publico = cqb1_i(resultado + 0x34);
         renda = cqb1_i(resultado + 0x38);
         let q = div_trunc(1, cqb1_sortear(10).wrapping_add(2));
-        crate::comparison::branch("cqb_1 publico pagante");
+        crate::comparison::branch("cqb_1 paying attendance");
         tv = match_pl_ftol((q as f64 + read_f64_at(0x968f98)) * publico as f64); // cqb1: a TV pelo público (1,75)
     }
     let casa = cqb1_d(partida + 0x1c);
@@ -195,7 +195,7 @@ unsafe extern "thiscall" fn process_match_income(tabela: usize, partida: usize, 
         let x = dinheiro as f64;
         somar(mandante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x969040)));
         somar(visitante, 0x158, 0xb8, match_pl_ftol(x * read_f64_at(0x9689e0)));
-        crate::comparison::branch("cqb_1 liquido ao mandante");
+        crate::comparison::branch("cqb_1 net to the home side");
         somar(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
         let casa = cqb1_d(partida + 0x1c);
         let est = cqb1_d(casa + 0x69);
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn calc_gate_receipts(tabela: usize, partida: usize, pu
         v = (cqb1_w(comp + 0x69) as i32).wrapping_add(8).wrapping_mul(publico);
     } else {
         let casa = cqb1_d(partida + 0x1c);
-        crate::comparison::branch("cqb_1 preco pela injury_word_0c");
+        crate::comparison::branch("cqb_1 price by injury_word_0c");
         let preco = div_trunc(cqb1_w(casa + 0x80) as i32, 500); // cqb1: o preço pela reputação
         let amistoso = comp != 0 && {
             let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5c6710usize);

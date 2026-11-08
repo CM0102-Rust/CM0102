@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
     }
     let mut nacao = cqb11_b(round_entry(copa, r) + 0xb) & 4 != 0; // a regra 4 (+0xb) da rodada
     let n = take_round_teams(copa, r, vetor, |_| {}) as i16;
-    crate::comparison::branch("cqb_11 ordena pela semente");
+    crate::comparison::branch("cqb_11 sorts by seed");
     ordenar(vetor, n as i32, 7, 0x51ebc0); // cqb11: pela semente, a maior primeiro
     let mut segunda = false;
     let mut j: i16 = 0;
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn sort_round_teams(copa: usize, rodada: u32) {
             } else if casa < 0 && fora < 0 {
                 if fora == -2 {
                     if casa == -2 && sorteio(2) != 0 {
-                        crate::comparison::branch("cqb_11 semente lado sorteado");
+                        crate::comparison::branch("cqb_11 seed drawn side");
                         lado = Some(true); // cqb11: o lado sorteado
                     } else {
                         lado = Some(false);
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn check_round_teams_for_nation(copa: usize, rodada: u3
                 // ponytail: sem conferir o clube nulo, como a original (que leria o +0x53 dele)
                 let nacao = read_ptr(read_ptr(cup_team_entry(copa, cpq11_w(e))) + 0x53);
                 if nacao != 0 {
-                    crate::comparison::branch("cqb_11 conta da nacao");
+                    crate::comparison::branch("cqb_11 nation count");
                     *((e + 6) as *mut u8) = cqb11_b(read_ptr(nacao).wrapping_add(contas)); // cqb11: o nível vira a conta da nação
                 }
             }

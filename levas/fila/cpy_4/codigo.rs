@@ -38,7 +38,7 @@ unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option<(usize, u3
     semanas(0xae2c90, &mut lim, 0xc); // cpy4: hoje + 12 semanas
     let hoje = cpy4_w(0xae2c90);
     if hoje == 0 && !ensaio {
-        crate::comparison::branch("cpy_4 virada do ano");
+        crate::comparison::branch("cpy_4 year rollover");
         let mut i = 0i32;
         while i < cpy4_d(0xae2350) as i32 {
             let l = cpy4_d(cpy4_d(this + 0x34f6).wrapping_add(i as usize * 4));
@@ -102,7 +102,7 @@ unsafe fn update_friendlies_body(this: usize, ensaio: bool) -> Option<(usize, u3
     if ensaio {
         return Some((primeira, quantas));
     }
-    crate::comparison::branch("cpy_4 amistosos marcados");
+    crate::comparison::branch("cpy_4 friendlies scheduled");
     marcar(this, primeira, quantas); // cpy4: marcar os amistosos da data
     *((this + 0x34f4) as *mut u16) = cpy4_w(0xae2c90);
     Some((primeira, quantas))

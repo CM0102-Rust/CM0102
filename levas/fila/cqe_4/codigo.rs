@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         if idade < 0x10 && estrangeira(p1, cqe4_d(p2 + 0x53), 1) != 0 {
             return zero;
         }
-        ramo("cqe_4 base de outro clube");
+        ramo("cqe_4 youth from another club");
         f8 = 2.75; // cqe4: a base para outro clube
         if c != 0 && cqe4_b(c + 0x49) != 0 {
             let dd = days_until_date(c + 0x2f, c + 0x2d);
@@ -1069,7 +1069,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
                 *p6 |= 0x100000;
             }
         }
-        ramo("cqe_4 fator da injury_word_0c");
+        ramo("cqe_4 injury_word_0c factor");
         let mut e0 = dv * k(0x96f960) + k(0x967890); // cqe4: o fator da reputação comparada
         if e0 < k(0x96a350) {
             e0 = f64::from_bits(0x3f50624dd2f1a9fc);
@@ -1171,7 +1171,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         return f8;
     }
     // o salário: o padrão (num STAFF_CONTRACT local) contra o teto do clube
-    ramo("cqe_4 salario");
+    ramo("cqe_4 wage");
     let mut contrato_local = [0u32; 0x14];
     // 0x85e410: lea ecx, [base+0xa0] -> thiscall, ret 0
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x85e410usize);

@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpo_prazo_sorteio', 'let s = sortear(estatuto as i32 / 10 + 0xc) as i8;',
      'let s = sortear(estatuto as i32 / 10 + 6) as i8; // mutacao: ate +6',
-     'cpo_10 prazo sorteado'),
+     'cpo_10 drawn deadline'),
     ('cpo_prestacao_acabada', 'tirar(lista, e);',
      'let _ = (tirar, lista); // mutacao: a acabada fica',
-     'cpo_10 prestacao acabada'),
+     'cpo_10 instalment finished'),
     ('cpo_tirar_ofertas_pessoa', '*q = (*q).wrapping_sub(1); // as ofertas pela pessoa',
      '// mutacao: sem baixar as ofertas pela pessoa',
-     'cpo_10 tirar oferta'),
+     'cpo_10 remove offer'),
 ]

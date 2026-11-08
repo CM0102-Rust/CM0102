@@ -42,7 +42,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
     let salario: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8626e0usize);
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x85add0usize);
     let dar_numero: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x85a470usize);
-    crate::comparison::branch("cpv_9 regen contratado");
+    crate::comparison::branch("cpv_9 regen signed");
     cpv9_por(clube + 0xd7 + 4 * k, pessoa as i32);
     cpv9_por(pessoa + 0x39, clube as i32);
     cpv9_por(pessoa + 0x4e, 0);
@@ -50,7 +50,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
     cpv9_por(pessoa + 0x52, v); // cpv9: o valor do regen
     elenco(pessoa, 1);
     if sorteio(4) == 0 { // cpv9: uma vez em quatro
-        crate::comparison::branch("cpv_9 uma em quatro");
+        crate::comparison::branch("cpv_9 one in four");
         f547d90(pessoa, clube, 0);
     }
     if *((clube + 0x64) as *const u8) == 3 && cpv9_d(pessoa + 0x52) > 0x1388 {
@@ -60,7 +60,7 @@ unsafe extern "stdcall" fn player_regen_sign_for_club(pessoa: usize, clube: usiz
     let ano = *(0xae2c92 as *const u16) as u32;
     let (mut d, mut ret) = ([0u8; 8], [0u8; 8]);
     let dia_e_ano = if *((pessoa + 0x18) as *const i8) < 0x13 {
-        crate::comparison::branch("cpv_9 contrato do jovem");
+        crate::comparison::branch("cpv_9 youngster contract");
         let a = ano.wrapping_add(2); // cpv9: o jovem por dois anos
         let mes = mes_do_fim(clube);
         (sorteio(0x1c), mes, a)
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, pessoa: usiz
         let base = cpv9_d(this + 4) as usize;
         let id = cpv9_d(pessoa);
         if let Some(i) = (0..n as usize).find(|&i| cpv9_d(base + 0x1a * i) == id) {
-            crate::comparison::branch("cpv_9 tira a aposentadoria pendente");
+            crate::comparison::branch("cpv_9 removes the pending retirement");
             tirar(this, base + 0x1a * i);
         }
     }

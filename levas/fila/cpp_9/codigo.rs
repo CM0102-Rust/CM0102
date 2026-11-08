@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
             }
             let jogador = cpp9_d(p + 0x61);
             if jogador != 0 {
-                crate::comparison::branch("cpp_9 forma inicial");
+                crate::comparison::branch("cpp_9 initial form");
                 let v = dias - (cpp9_b(jogador + 0x34) as i8 as i32) / 2 - (cpp9_b(p + 0x5b) as i8 as i32) / 4;
                 let v = v.clamp(1, 0x28);
                 let r = cpp9_d(this).wrapping_add((cpp9_i(p) as usize).wrapping_mul(31));
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn init_records(this: usize) {
                 *((r + 0x12) as *mut u8) = t;
             }
             if cpp9_sorteio(100) == 0 { // 1 em 100 começa lesionado
-                crate::comparison::branch("cpp_9 lesao inicial");
+                crate::comparison::branch("cpp_9 initial injury");
                 // ponytail: a original empurra dwords da pilha com só o byte baixo gravado (o resto é lixo); a 0x62d140
                 // e a 0x62d250 leem só o byte: aqui vão limpos
                 let categoria = cpp9_sorteio(0xc) as u8;
@@ -169,7 +169,7 @@ unsafe fn injury_youth_list_nation(clube: usize) -> usize {
         return 0;
     }
     if cpp9_b(nacao + 0x11c) != 0 {
-        crate::comparison::branch("cpp_9 nacao chave");
+        crate::comparison::branch("cpp_9 key nation");
         if !(cpp9_w(clube + 0x80) <= 2 && cpp9_d(clube + 0x57) != 0) { // nação com +0x11c
             return 0;
         }
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
         let clube = base.wrapping_add((j as usize).wrapping_mul(0x245));
         let nacao = injury_youth_list_nation(clube);
         if nacao != 0 {
-            crate::comparison::branch("cpp_9 clube na lista");
+            crate::comparison::branch("cpp_9 club in the list");
             let l = cpp9_d(cpp9_d(this).wrapping_add((cpp9_i(nacao) as usize).wrapping_mul(4)));
             acrescentar(l, clube, 4);
         }

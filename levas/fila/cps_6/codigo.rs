@@ -65,7 +65,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
     let falta: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x41a360usize);
     let n = cps6_d(0xae2364) as i32;
     let q = n / 250;
-    crate::comparison::branch("cps_6 faltas do dia");
+    crate::comparison::branch("cps_6 absences of the day");
     let r = cps6_sortear(n - q - 1); // cps6: a primeira pessoa
     let mut atual = cps6_d(0xae23bc).wrapping_add((r as usize).wrapping_mul(0x6e));
     for _ in 0..q {
@@ -119,7 +119,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
             } else if days_since_staff_date(p) < 0xb4 {
                 s = s.wrapping_add(0x19);
             }
-            crate::comparison::branch("cps_6 falta pela soma");
+            crate::comparison::branch("cps_6 absence by sum");
             if cps6_sortear(s as i8 as i32) == 0 { // cps6: o sorteio da soma
                 e_falta = true;
             }
@@ -146,7 +146,7 @@ unsafe extern "C" fn game_check_players_missing_training() {
             }
         }
         if e_falta {
-            crate::comparison::branch("cps_6 falta ao treino");
+            crate::comparison::branch("cps_6 missed training");
             falta(cps6_d(0xad9c6c), p); // cps6: a falta
         }
     }
@@ -172,7 +172,7 @@ unsafe extern "C" fn game_update_comps_for_date(marca: u32) {
         i += 1;
     }
     if m != 0 {
-        crate::comparison::branch("cps_6 competicoes do dia");
+        crate::comparison::branch("cps_6 competitions of the day");
         let seguinte: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5aaf00usize);
         seguinte(cps6_d(0xae2a58));
     }

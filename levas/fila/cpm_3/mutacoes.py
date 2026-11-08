@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpm_estadio_obra', 'obra(f, capacidade as i32, lugares as i32, id, 0); // a obra do estádio',
      'let _ = (obra, f, capacidade); // mutacao: sem a obra',
-     'cpm_3 estadio da divisao'),
+     'cpm_3 division stadium'),
     ('cpm_melhores_trocas', 'for _ in 0..m as i32 { // m trocas',
      'for _ in 1..m as i32 { // mutacao: uma troca a menos',
-     'cpm_3 embaralhar os melhores'),
+     'cpm_3 shuffle the best'),
     ('cpm_ponteiros_trocas', 'k = k.wrapping_add(1); // mais uma troca',
      'k = k.wrapping_add(2); // mutacao: metade das trocas',
-     'cpm_3 embaralhar ponteiros'),
+     'cpm_3 shuffle pointers'),
 ]

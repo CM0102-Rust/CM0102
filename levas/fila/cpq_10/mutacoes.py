@@ -9,8 +9,8 @@ MUTACOES = [
      'let i = cpq10_d(vaga ^ 4) as i32; // mutacao: a categoria vizinha'),
     ('cpq10_indice_do_anterior', 'cpq10_por(vaga, cpq10_d(this + 0xc)); // o índice novo',
      'cpq10_por(vaga, cpq10_d(this + 0xc).wrapping_sub(1)); // mutacao: o do anterior',
-     'cpq_10 registro novo'),
+     'cpq_10 new record'),
     ('cpq10_aposentadoria_ignorada', 'return 1; // está na lista',
      'return 0; // mutacao: nao conta a lista',
-     'cpq_10 aposentadoria marcada'),
+     'cpq_10 retirement scheduled'),
 ]

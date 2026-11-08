@@ -8,11 +8,11 @@
 MUTACOES = [
     ('cpz10_sem_sorteio', '    let r = sortear(n as i32); // cpz10: o sorteio do comentarista',
      '    let r = { let _ = sortear; 0i32 }; // mutacao: sem o sorteio',
-     'cpz_10 sorteio do comentarista'),
+     'cpz_10 commentator draw'),
     ('cpz10_sem_locais', '            if cpz10_u(p + 0xcb) == cpz10_u(cpz10_d(cpz10_d(clube + 0x69) + 0x38)) { // cpz10: o comentarista local',
      '            if cpz10_u(p + 0xcb) == cpz10_u(cpz10_d(cpz10_d(clube + 0x69) + 0x38)) && false { // mutacao: nenhum local',
-     'cpz_10 comentarista local'),
+     'cpz_10 local commentator'),
     ('cpz10_sem_qualquer_nacao', '                    true // cpz10: qualquer nação',
      '                    cpz10_u(p + 0xcf) as i32 == nacao // mutacao: -1 nao e qualquer nacao',
-     'cpz_10 comentarista de qualquer nacao'),
+     'cpz_10 commentator of any nation'),
 ]

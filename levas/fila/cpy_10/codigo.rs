@@ -23,7 +23,7 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
         if r != 0 {
-            crate::comparison::branch("cpy_10 prêmio do técnico");
+            crate::comparison::branch("cpy_10 manager award");
             let a = (r + 0x9e) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
         }
@@ -53,13 +53,13 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
             let dono = contract_club_except_type5(p);
             let x = entrada(cpy10_d(cpy10_d(0xde1f54) + 0x856), dono, p, 0, 0);
             if x != 0 && cpy10_d(x + 0xf) == cpy10_d(p) {
-                crate::comparison::branch("cpy_10 renovação");
+                crate::comparison::branch("cpy_10 renewal");
                 offer_renewal(p);
             }
         }
     }
     if credito as u8 != 1 {
-        crate::comparison::branch("cpy_10 sem crédito");
+        crate::comparison::branch("cpy_10 without credit");
         return; // cpy10: só o creditado
     }
     if cpy10_d(k + 0x45) != 0 {
@@ -72,7 +72,7 @@ unsafe fn add_year_award(this: usize, p: usize, clube: usize, premio: usize, a4:
     if cpy10_b(p + 0x5b) as i8 <= 0xa {
         return;
     }
-    crate::comparison::branch("cpy_10 sorteio do agradecimento");
+    crate::comparison::branch("cpy_10 thanks draw");
     if random(v59 as i32) <= 5 {
         return;
     }
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn compare_add_year_award_record(this: usize, p: usize,
     }
     let (t3d, t28) = (cpy10_b(p + 0x3d), cpy10_b(p + 0x28));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparison::branch("add_year_award_record jogador");
+        crate::comparison::branch("add_year_award_record player");
         return o(this, p, clube, premio, a4, a5, credito);
     }
     let r = staff_records_manager_record(this, p);

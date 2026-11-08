@@ -28,7 +28,7 @@ unsafe fn zf_next_byte(z: usize) -> u8 {
         return b;
     }
     // ponytail: o ramo marca o bloco, nao cada chamada (a zread roda milhoes de vezes na carga)
-    crate::comparison::branch("save zread bloco");
+    crate::comparison::branch("save zread block");
     zf_write_i32(z, 0xa318d, ler(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize));
     let b = *((z + 0x41705) as *const u8);
     zf_write_i32(z, 0xa3185, 1);
@@ -57,7 +57,7 @@ unsafe extern "C" fn zipdir_zread(buf: *mut u8, tam: i32, quantos: i32, z: usize
     let fim = zf_read_i32(z, 8).wrapping_add(pedido);
     zf_write_i32(z, 8, fim);
     if zf_read_i32(z, 0x19) != 4 {
-        crate::comparison::branch("save zread tipo 3");
+        crate::comparison::branch("save zread type 3");
         let q = pedido / tam;
         zf_write_i32(z, 8, tam.wrapping_mul(q).wrapping_sub(pedido).wrapping_add(fim));
         return ler(buf, tam, q, zf_read_i32(z, 0) as usize);
@@ -128,7 +128,7 @@ unsafe fn zf_put_byte(z: usize, b: u8) {
         return;
     }
     // ponytail: o ramo marca o bloco, nao cada chamada (a zwrite roda milhoes de vezes no save)
-    crate::comparison::branch("save zwrite bloco");
+    crate::comparison::branch("save zwrite block");
     escrever(z + 0x72445, 1, p, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
@@ -149,7 +149,7 @@ unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: us
     zf_write_i32(z, item, zf_read_i32(z, item).wrapping_add(total));
     zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
     if zf_read_i32(z, 0x19) != 4 {
-        crate::comparison::branch("save zwrite tipo 3");
+        crate::comparison::branch("save zwrite type 3");
         return escrever(buf, tam, quantos, zf_read_i32(z, 0) as usize);
     }
     let repetido = (z + 0x18) as *mut u8;
@@ -165,7 +165,7 @@ unsafe extern "C" fn zipdir_zwrite(buf: *const u8, tam: i32, quantos: i32, z: us
                     continue;
                 }
                 // 0x7f cópias: sai o par e recomeça
-                crate::comparison::branch("save zwrite par 0x7f");
+                crate::comparison::branch("save zwrite pair 0x7f");
                 zf_put_byte(z, (n as u8).wrapping_add(0x80));
                 zf_put_byte(z, *repetido);
             } else if n <= 1 && c <= 0x80 {

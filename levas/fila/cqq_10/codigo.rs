@@ -32,7 +32,7 @@ fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     u[3].times.3 = (m + 0x89) as u16;
     let mut n = 0;
     if b > 0 {
-        crate::comparison::branch("cqq_10 preliminar da uefa");
+        crate::comparison::branch("cqq_10 uefa preliminary");
         t[0].times = (b as u16, m as u16, b as u16, 0);
         n = 1;
     }
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, fase: u32, 
         show_error_at(0xaa19e0, 0xe0);
         return 0;
     }
-    crate::comparison::branch("cqq_10 tabela da uefa");
+    crate::comparison::branch("cqq_10 uefa fixtures");
     let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
     let (tab, n) = uefa_cup_rounds(*((this + 0xb2) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
@@ -125,7 +125,7 @@ unsafe fn collect_intertoto_entrants(this: usize) -> (i32, i32) {
         show_error_at(F, 0x17c);
         return (-1, 0);
     }
-    crate::comparison::branch("cqq_10 inscritos da intertoto");
+    crate::comparison::branch("cqq_10 intertoto entrants");
     let mut j: i16 = 0;
     while j < cqq10_w(this + 0x3e) {
         let c = cqq10_d(v + j as usize * 4);
@@ -195,7 +195,7 @@ unsafe fn collect_club_list(this: usize, saida: *mut usize, ativos: u32) -> u16 
         *saida = 0;
         return 0;
     }
-    crate::comparison::branch("cqq_10 lista da intertoto");
+    crate::comparison::branch("cqq_10 intertoto list");
     let mut k: i16 = 0;
     let mut i: i16 = 0;
     while i < cqq10_w(this + 0x3e) {

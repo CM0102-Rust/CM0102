@@ -193,7 +193,7 @@ unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         }
         i += 1;
     }
-    crate::comparison::branch("cqo_13 convidados da mercosul");
+    crate::comparison::branch("cqo_13 mercosul guests");
     // ponytail: a original empurra a palavra +0xf2 com lixo nos 16 bits altos (o eax de antes); a 0x4afb40 lê a palavra
     embaralhar(cqo13_d(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)

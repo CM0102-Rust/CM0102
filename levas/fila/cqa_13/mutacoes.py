@@ -8,11 +8,11 @@
 MUTACOES = [
     ('cqa13_torcida_sem_500', '            let x = cqa13_w(linha + 8).wrapping_add(0x1f4); // cqa13: a goal_crowd_reaction comemora',
      '            let x = cqa13_w(linha + 8).wrapping_add(0); // mutacao: a goal_crowd_reaction nao comemora',
-     'cqa_13 goal_crowd_reaction comemora'),
+     'cqa_13 goal_crowd_reaction celebrates'),
     ('cqa13_elenco_forte_100', '    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limit do elenco forte',
      '    let limit = 0x64 + 0 * rn as i32; // mutacao: limit de 100',
-     'cqa_13 elenco forte'),
+     'cqa_13 strong squad'),
     ('cqa13_moral_menos_50', '                let x = cqa13_c(c + 0x44) - 0x19; // cqa13: a moral do companheiro cai',
      '                let x = cqa13_c(c + 0x44) - 0x32; // mutacao: a moral cai 50',
-     'cqa_13 moral cai'),
+     'cqa_13 morale drops'),
 ]

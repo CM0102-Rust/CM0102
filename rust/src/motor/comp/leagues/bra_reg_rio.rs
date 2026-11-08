@@ -324,7 +324,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                     add(v);
                 }
                 raise_attendance_floor(c, league_comp_reputation(cima), f);
-                crate::comparison::branch("cqt_4 publico de quem subiu");
+                crate::comparison::branch("cqt_4 attendance of promoted");
             }
         } else if *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) != 0 && pos as i32 <= *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) as i32 {
             let a = (prevista as i16).wrapping_sub(pos as i16);
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let rb = league_comp_reputation(low);
                 let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
-                crate::comparison::branch("cqt_4 publico de quem caiu");
+                crate::comparison::branch("cqt_4 attendance of relegated");
             }
         } else {
             let r16 = read_i16(read_usize(league + 4) + 0x69);
@@ -389,7 +389,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
                 write_i32(c + club::ATTENDANCE, ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
-            crate::comparison::branch("cqt_4 publico do meio da tabela");
+            crate::comparison::branch("cqt_4 attendance of mid-table");
             raise_attendance_floor(c, league_comp_reputation(league), f);
             let r = league_comp_reputation(league);
             let ceiling = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     let b = half_champion(this, 1);
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
-        crate::comparison::branch("cqo_9 mesmo campeao");
+        crate::comparison::branch("cqo_9 same champion");
         core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
         core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
@@ -758,7 +758,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
-        crate::comparison::branch("cqo_9 historico da final");
+        crate::comparison::branch("cqo_9 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -769,7 +769,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_9 premios");
+    crate::comparison::branch("cqo_9 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -830,7 +830,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: us
 /// Carioca (0x968608); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     carioca_rules(this);
-    crate::comparison::branch("cqi_9 regras do carioca");
+    crate::comparison::branch("cqi_9 carioca rules");
     create_main_schedule(this);
     1
 }

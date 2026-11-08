@@ -42,7 +42,7 @@ unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize, b: usize) 
         if b_ano < ano || (b_ano == ano && b_dia < dia) {
             break; // depois da janela: a lista está em ordem
         }
-        crate::comparison::branch("cpp_12 convocado na janela");
+        crate::comparison::branch("cpp_12 called up in the window");
         soma = soma.wrapping_add(*((e + 8) as *const i8));
     }
     soma > 2 // mais de dois convocados
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, jogo: usize) 
         return 0;
     }
     if has_too_many_called_up(this, cpp12_d(jogo + 0x20), pa, pb) {
-        crate::comparison::branch("cpp_12 visitante convocado");
+        crate::comparison::branch("cpp_12 away side called up");
         return 0; // o visitante com convocados demais
     }
     1

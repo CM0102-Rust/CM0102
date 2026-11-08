@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpv3_sem_retirar', 'retirar(this, cpv3_d(this).wrapping_add((i - 1) * 4), 0, 0); // cpv3: o comprador retira',
      'let _ = retirar; // mutacao: nao retira',
-     'cpv_3 retirada na janela'),
+     'cpv_3 withdrawn in the window'),
     ('cpv3_status_1', 'cpv3_pb(o + 0x2c, 3); // cpv3: status 3',
      'cpv3_pb(o + 0x2c, 1); // mutacao: status 1',
-     'cpv_3 reagendada na janela'),
+     'cpv_3 rescheduled in the window'),
     ('cpv3_volta_em_3', 'agendar(this, o, 1, 0); // cpv3: de volta amanhã',
      'agendar(this, o, 3, 0); // mutacao: 3 dias',
-     'cpv_3 reagendada na janela'),
+     'cpv_3 rescheduled in the window'),
 ]

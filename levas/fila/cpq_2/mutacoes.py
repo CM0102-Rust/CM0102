@@ -9,8 +9,8 @@ MUTACOES = [
      '    1 // mutacao: sem olhar o saldo'),
     ('cpq2_selecao_sem_piso', '        cpq2_pw(cpq2_linha(this, selecao) + 6, 0x1964); // técnico novo',
      '        // mutacao: sem o piso do tecnico novo',
-     'cpq_2 selecao avaliada'),
+     'cpq_2 national team evaluated'),
     ('cpq2_federacao_demite', '    let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x69aba0usize);\n    pensar(this, selecao, 0);',
      '    record_national_departure(this, selecao, 0); // mutacao: demite em vez de pensar',
-     'cpq_2 a federacao pensa'),
+     'cpq_2 the federation considers'),
 ]

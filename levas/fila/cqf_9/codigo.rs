@@ -17,7 +17,7 @@ unsafe fn strncmp(a: usize, b: usize, n: u32) -> i32 {
 unsafe extern "C" fn player_setup_injury_from_name(nome: usize) -> u32 {
     for &(n, texto, tipo) in INJURY_NAMES.iter() {
         if strncmp(nome, texto, n) == 0 {
-            crate::comparison::branch("cqf_9 lesao pelo nome");
+            crate::comparison::branch("cqf_9 injury by name");
             return tipo as u32; // cqf9: o tipo da lesão pelo nome
         }
     }
@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                 let mut seguir = true;
                 if feliz {
                     let v = cqf9_sb(c + 0x44) as i32 + 0xf; // cqf9: a felicidade sobe 15
-                    crate::comparison::branch("cqf_9 felicidade pelas ferias");
+                    crate::comparison::branch("cqf_9 happiness by holidays");
                     *((c + 0x44) as *mut i8) = if v > 100 { 100 } else if v < -100 { -100 } else { v as i8 };
                 }
                 if feliz && caiu {
@@ -209,7 +209,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
                                 *((f + 0x44) as *mut i8) -= 1;
                             }
                         };
-                        crate::comparison::branch("cqf_9 acerto pelas ferias");
+                        crate::comparison::branch("cqf_9 fitness by holidays");
                         if r == 0 {
                             subir_57(p); // cqf9: o sorteio 0 sobe +0x57
                             descer_5d_44(p, f);
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
             } else {
                 let forma = physical_record_of_player(this, p);
                 let mut v: Option<i8> = None;
-                crate::comparison::branch("cqf_9 tratamento");
+                crate::comparison::branch("cqf_9 treatment");
                 if s == 0 { // cqf9: o tratamento dá certo
                     res = 2;
                     *((forma + 0x12) as *mut u8) = 0xff;
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize, estagio: u
             }
         } else {
             let forma = physical_record_of_player(this, p);
-            crate::comparison::branch("cqf_9 volta da lesao");
+            crate::comparison::branch("cqf_9 return from injury");
             if tp == 0x4f {
                 if s < 30000 { // cqf9: a volta 'O' completa
                     res = 2;

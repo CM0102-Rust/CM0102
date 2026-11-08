@@ -1,7 +1,7 @@
 # As notícias do técnico (manager_manager.cpp): MANAGER_MANAGER::post_manager_under_pressure_news 0x6a0e70 (por pensar
 # em demitir o técnico 0x69aba0, já em Rust: sorteia o motivo e o boato e grava a data em +0x18 da linha da diretoria,
 # que a 0x69aba0 lê nos prazos de 14 e 30 dias), MANAGER_MANAGER::post_manager_departure_news 0x6a1b00 (por tirar o
-# técnico do cargo 0x69b790; a 257ª contou "cpq_1 o tecnico sai") e MANAGER_MANAGER::post_manager_appointment_news
+# técnico do cargo 0x69b790; a 257ª contou "cpq_1 the manager leaves") e MANAGER_MANAGER::post_manager_appointment_news
 # 0x6a2e00 (pelo mercado de técnicos 0x68f9c0 e pela nomeação 0x69ebc0). Iguais no cm0102-1080.exe; quadro SEH só pela
 # notícia local (0x77bbe0, já em Rust; sem destrutor no caminho normal); sem x87. Comparadores em ensaio: a cópia roda
 # sem entregar a notícia (as entregas 0x786780/0x7863f0/0x7862d0 copiam a notícia nas caixas dos humanos, alocam e dão a

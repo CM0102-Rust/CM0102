@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, hoje: usize, fa
             }
             soltar(cqt5_d(this + 0xad));
         }
-        crate::comparison::branch("cqt_5 copa do rei refeita");
+        crate::comparison::branch("cqt_5 copa del rey redone");
         core::ptr::write_unaligned((this + 0x45) as *mut u32, 1); // cqt5: a Copa do Rei refeita uma vez
         let inscritos: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x84d910usize);
         // ponytail: nas caixas a original zera só o al (o resto do eax vem da caixa); quem chama lê o byte

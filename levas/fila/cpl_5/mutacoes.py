@@ -7,9 +7,9 @@
 MUTACOES = [
     ('cpl_proposta_fim', 'core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(fim as *const [u8; 8])); // o fim do contrato',
      'core::ptr::write_unaligned((this + 0x2d) as *mut [u8; 8], core::ptr::read_unaligned(0xae2c90 as *const [u8; 8])); let _ = fim; // mutacao: vence hoje',
-     'cpl_5 contrato pelo atual'),
+     'cpl_5 contract by the current one'),
     ('cpl_felicidade', 'cpl5_por_b(this + 0x3f, 0); // a felicidade',
-     'cpl5_por_b(this + 0x3f, 10); // mutacao: 10', 'cpl_5 moral zerada'),
+     'cpl5_por_b(this + 0x3f, 10); // mutacao: 10', 'cpl_5 morale zeroed'),
     ('cpl_faixa_meio', 'if m(0xae1010) { // depois do limit do meio',
      'if m(0xae1030) { // mutacao: o limit de baixo'),
 ]

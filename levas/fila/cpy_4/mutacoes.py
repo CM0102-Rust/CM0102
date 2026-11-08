@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpy4_sem_marcar_amistosos', '    marcar(this, primeira, quantas); // cpy4: marcar os amistosos da data',
      '    let _ = marcar; // mutacao: os amistosos nao sao marcados',
-     'cpy_4 amistosos marcados'),
+     'cpy_4 friendlies scheduled'),
     ('cpy4_onze_semanas', '    semanas(0xae2c90, &mut lim, 0xc); // cpy4: hoje + 12 semanas',
      '    semanas(0xae2c90, &mut lim, 0xb); // mutacao: hoje + 11 semanas',
-     'cpy_4 amistosos marcados'),
+     'cpy_4 friendlies scheduled'),
     ('cpy4_nacoes_sem_ordem', '        ordenar(cpy4_d(this + 0x34fa), cpy4_d(this + 0x34fe) as u32, 4, 0x5cc5f0); // cpy4: as nações pela reputação',
      '        // mutacao: as nacoes ficam fora da ordem de injury_word_0c',
-     'cpy_4 virada do ano'),
+     'cpy_4 year rollover'),
 ]

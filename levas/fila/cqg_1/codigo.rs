@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
     let mut tmp = [0u8; 8];
     let mut tmp2 = [0u8; 8];
     if emprestimo() {
-        crate::comparison::branch("cqg_1 empréstimo");
+        crate::comparison::branch("cqg_1 loan");
         if (elenco(clube, 0, 0) as i32) + 1 > 0x32 {
             noticia_teste(this, pessoa, clube);
             return 0;
@@ -161,7 +161,7 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
     let (ini_dia, ini_ano) = (cqg1_w(c + 0x25), cqg1_u(c + 0x27));
     let fim_ano = cqg1_u(c + 0x2f);
     if ini_ano > fim_ano || (ini_ano == fim_ano && !(ini_dia < cqg1_w(c + 0x2d))) {
-        crate::comparison::branch("cqg_1 fim em 4 semanas");
+        crate::comparison::branch("cqg_1 ends in 4 weeks");
         let p = mais_semanas(c + 0x25, tmp2.as_mut_ptr(), 4); // cqg1: as 4 semanas
         copiar_data(c + 0x2d, tmp.as_mut_ptr(), p);
     }
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
         let off = (idx as usize).wrapping_mul(0x50);
         let r = cqg1_d(this).wrapping_add(off);
         if cqg1_d(r + 4) == cqg1_d(c + 4) { // cqg1: o mesmo clube
-            crate::comparison::branch("cqg_1 mesmo clube");
+            crate::comparison::branch("cqg_1 same club");
             let r = || cqg1_d(this).wrapping_add(off);
             cqg1_pb(c + 0x3a, cqg1_b(r() + 0x3a));
             for k in [0x3dusize, 0x3e, 0x3f, 0x44] {
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
         while i < conta {
             let r = cqg1_d(this).wrapping_add((i as usize).wrapping_mul(0x50));
             if cqg1_d(r) as i32 == -1 { // cqg1: a vaga livre
-                crate::comparison::branch("cqg_1 vaga livre");
+                crate::comparison::branch("cqg_1 free slot");
                 set_contract_type_from_job(c);
                 cqg1_pb(c + 0x49, 0);
                 cqg1_pd(c + 0x4a, u32::MAX as usize);
@@ -247,7 +247,7 @@ unsafe extern "thiscall" fn sign_contract(this: usize, contrato: usize, cargo: u
         cqg1_pd(this + 8, n.wrapping_add(1));
         copy_contract(r, c);
     }
-    crate::comparison::branch("cqg_1 valor na pessoa");
+    crate::comparison::branch("cqg_1 value on the person");
     cqg1_pd(pessoa + 0x4e, cqg1_d(c + 0xc)); // cqg1: o valor do contrato na pessoa
     if cqg1_b(c + 0x35) & 0x3f == 2 && cqg1_d(pessoa + 0x61) != 0 {
         moral(pessoa, 0x14, 0);

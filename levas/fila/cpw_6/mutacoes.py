@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpw6_aumento_mundial', '        add_to_word(p + 0xd, match_pl_ftol(mundo as i32 as f64 * read_f64_at(0x967888))); // cpw6: o aumento mundial',
      '        add_to_word(p + 0xd, match_pl_ftol(mundo as i32 as f64 * read_f64_at(0x967880))); // mutacao: 10%',
-     'cpw_6 premio de jogador'),
+     'cpw_6 player award'),
     ('cpw6_sem_piso_mundial', '        if cpw6_w(p + 0xd) <= mundo { // cpw6: o piso mundial',
      '        if false { // mutacao: sem o piso',
-     'cpw_6 premio de jogador'),
+     'cpw_6 player award'),
     ('cpw6_nacao_invertida', '        if clube != 0 && cpw6_d(clube + 0x53) == cpw6_d(pessoa + 0x1a) { // cpw6: o clube da nação do jogador',
      '        if clube != 0 && cpw6_d(clube + 0x53) != cpw6_d(pessoa + 0x1a) { // mutacao: invertido',
-     'cpw_6 premio de jogador'),
+     'cpw_6 player award'),
 ]

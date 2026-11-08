@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         let b127 = cqc8_u(base + 0x127) as i32;
         let b128 = cqc8_u(base + 0x128) as i32;
         let o127 = cqc8_u(ob + 0x127) as i32;
-        crate::comparison::branch("cqc_8 nota do jogo");
+        crate::comparison::branch("cqc_8 match rating");
         let mut v = (b127 - 10) as f64 * cqc8_f(0x969020) + media;
         v += (b128 - 10) as f64 * cqc8_f(0x969020);
         v += (b127 - o127) as f64 * cqc8_f(0x968a98);
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     let mut fl: u32;
     if a > b {
         fl = 0x800;
-        crate::comparison::branch("cqc_8 vitoria");
+        crate::comparison::branch("cqc_8 win");
         aj = aj.wrapping_add((c16 / 10 + 20).wrapping_mul(a - b)); // cqc8: a vitória
     } else if a < b {
         aj = aj.wrapping_add((20 - c16 / 10).wrapping_mul(a - b));
@@ -522,7 +522,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     }
     // a confiança
     let v = (aj as i16) as f64;
-    crate::comparison::branch("cqc_8 confianca");
+    crate::comparison::branch("cqc_8 confidence");
     for (o, k) in [(6usize, 0x968e40usize), (0xa, 0x968968), (8, 0x968980), (0xc, 0x968918)] {
         let l = board_row(this, clube) + o;
         let t = ftol(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste
@@ -641,7 +641,7 @@ unsafe extern "thiscall" fn post_board_match_reaction_news(this: usize, clube: u
     let registro: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7e4750usize);
     let no_registro: unsafe extern "C" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(0x7e4de0usize);
     let ao_tecnico: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparison::branch("cqc_8 noticia da reacao");
+    crate::comparison::branch("cqc_8 reaction news");
     let mut noticia = [0u32; 0x3a]; // a notícia local (0xe0 bytes na original)
     let n = noticia.as_mut_ptr() as usize;
     let mut reg = [0u8; 0x20]; // o registro da partida
@@ -694,7 +694,7 @@ unsafe extern "thiscall" fn post_fa_performance_news(_this: usize, comp: usize, 
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let por_alcance: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x786090usize);
-    crate::comparison::branch("cqc_8 avaliacao da federacao");
+    crate::comparison::branch("cqc_8 federation evaluation");
     let mut local = [0u32; 0x3a]; // a notícia local (0xe8 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0x1781, 0);

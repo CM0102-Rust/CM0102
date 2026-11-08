@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpt12_largura', 'let largura = (n as u8).wrapping_mul(2).wrapping_add(1) as i8 as i16; // cpt12: a largura da excursão',
      'let largura = (n as u8).wrapping_mul(2).wrapping_add(3) as i8 as i16; // mutacao: mais larga',
-     'cpt_12 janela da excursão'),
+     'cpt_12 tour window'),
     ('cpt12_mando_trocado', 'let m = acrescentar(this, clube, &mut d1, outro, 0); // cpt12: o clube em casa',
      'let m = acrescentar(this, outro, &mut d1, clube, 0); // mutacao: mando trocado',
-     'cpt_12 jogo da excursão marcado'),
+     'cpt_12 tour match scheduled'),
     ('cpt12_tres_dias', 'let r = mais_dias(d1.as_ptr() as usize, &mut t, 2); // cpt12: o próximo jogo',
      'let r = mais_dias(d1.as_ptr() as usize, &mut t, 3); // mutacao: de 3 em 3 dias',
-     'cpt_12 data do jogo seguinte'),
+     'cpt_12 next match date'),
 ]

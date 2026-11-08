@@ -76,7 +76,7 @@ unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize) -> usize 
     let mut item = cps11_proximo(l);
     while item != 0 {
         if core::slice::from_raw_parts(item as *const u8, 0x4f) == alvo {
-            crate::comparison::branch("cps_11 achou o jogo guardado");
+            crate::comparison::branch("cps_11 found the stored match");
             return item; // cps11: a cópia guardada
         }
         item = cps11_proximo(l);
@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
     if copiar(l, f, 0x4f) == 0 { // cps11: guardar
         return show_error_at(0x9cc208, 0x3eb);
     }
-    crate::comparison::branch("cps_11 jogo guardado");
+    crate::comparison::branch("cps_11 stored match");
 }
 
 /// { 0x5abc30 } (thiscall, ret 4, fix_man.cpp): `FIXTURE_MANAGER::remove_fixture(jogo)`: tira da lista do dia, fatia e
@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn remove_fixture(this: usize, f: usize) -> u32 {
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
     let r = tirar(fixture_list_in_block(b, f), f); // cps11: tirar
     if r != 0 {
-        crate::comparison::branch("cps_11 jogo tirado");
+        crate::comparison::branch("cps_11 match removed");
     }
     (r != 0) as u32
 }

@@ -6,9 +6,9 @@
 # - O texto entre aspas em minusculas: os nomes nao batem mais.
 MUTACOES = [
     ('cqh9_lesao_vira_tecnico', '(0xa6b3a0, 1),      // INJURY',
-     '(0xa6b3a0, 2),      // mutacao INJURY', 'cqh_9 tipo da linha'),
+     '(0xa6b3a0, 2),      // mutacao INJURY', 'cqh_9 line type'),
     ('cqh9_elenco_sem_segundo_nome', 'if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 8, segundo) && name_matches(q, 0xc, comum) {',
-     'if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 0xc, comum) {', 'cqh_9 jogador do clube pelo nome'),
+     'if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 0xc, comum) {', 'cqh_9 club player by name'),
     ('cqh9_texto_minusculo', '*((destino + n) as *mut u8) = c; // cqh9: o caractere do texto',
-     '*((destino + n) as *mut u8) = c.to_ascii_lowercase(); // mutacao: o caractere do texto', 'cqh_9 texto entre aspas'),
+     '*((destino + n) as *mut u8) = c.to_ascii_lowercase(); // mutacao: o caractere do texto', 'cqh_9 quoted text'),
 ]

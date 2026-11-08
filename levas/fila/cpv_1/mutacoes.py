@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpv1_permissao_16', 'let dias = (r as u32 & !0xff) | (r as u8).wrapping_add(0x12) as u32; // cpv1: a espera da permissao',
      'let dias = (r as u32 & !0xff) | (r as u8).wrapping_add(0x10) as u32; // mutacao: 16 a 22 dias',
-     'cpv_1 permissao de trabalho'),
+     'cpv_1 work permit'),
     ('cpv1_rivais_10', 'agendar(this, cpv1_d(cpv1_d(this) + cpv1_d(x) * 4), 0x14, 0); // cpv1: as rivais em 20 dias',
      'agendar(this, cpv1_d(cpv1_d(this) + cpv1_d(x) * 4), 0xa, 0); // mutacao: 10 dias',
-     'cpv_1 ofertas rivais canceladas'),
+     'cpv_1 rival offers cancelled'),
     ('cpv1_sem_confirmar', 'confirmar(this, vaga, vendedor); // cpv1: o vendedor confirma',
      'let _ = (confirmar, vaga); // mutacao: o vendedor nao confirma',
-     'cpv_1 confirmada pelo vendedor'),
+     'cpv_1 confirmed by the seller'),
 ]

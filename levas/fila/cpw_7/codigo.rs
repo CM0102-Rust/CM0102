@@ -66,7 +66,7 @@ unsafe fn close_awol_case(this: usize, r: usize) {
     }
     *m ^= 2;
     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);
-    crate::comparison::branch("cpw_7 falta tirada da lista");
+    crate::comparison::branch("cpw_7 absence removed from the list");
     tirar(cpw7_d(this + 4), r); // cpw7: tira o caso da lista
 }
 
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                     return;
                 }
                 if weeks_after_have_passed(r + 4, 1) { // cpw7: uma semana depois
-                    crate::comparison::branch("cpw_7 falta vencida");
+                    crate::comparison::branch("cpw_7 absence expired");
                     resolve_awol_case(this, r);
                     break;
                 }
@@ -192,7 +192,7 @@ unsafe fn resolve_awol_case(this: usize, r: usize) {
     if cpw7_b(r + 0xc) != 0 {
         // o caso repetido
         if cpw7_d(pessoa + 0x61) != 0 {
-            crate::comparison::branch("cpw_7 caso repetido");
+            crate::comparison::branch("cpw_7 repeated case");
             if cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32) == 0 && cpw7_sortear(cpw7_b(pessoa + 0x5d) as i8 as i32) == 0 { // cpw7: os sorteios do caso repetido
                 maybe_drop_attribute(pessoa + 0x5b, true);
                 maybe_drop_attribute(pessoa + 0x5d, true);
@@ -204,7 +204,7 @@ unsafe fn resolve_awol_case(this: usize, r: usize) {
         return close_awol_case(this, r);
     }
     // o caso novo: os colegas do clube
-    crate::comparison::branch("cpw_7 caso novo");
+    crate::comparison::branch("cpw_7 new case");
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contract_of(cpw7_d(0xae1050), pessoa);
     cpw7_pd(0xae1080, k as u32);
@@ -407,7 +407,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
                 && cpw7_sortear(cpw7_b(pessoa + 0x5b) as i8 as i32 + 10) == 0
                 && cpw7_sortear(cpw7_b(pessoa + 0x59) as i8 as i32 + 10) == 0
             {
-                crate::comparison::branch("cpw_7 sumiu em vez de faltar");
+                crate::comparison::branch("cpw_7 vanished instead of missing");
                 if MISS_TRAINING_DRY_RUN {
                     MISS_TRAINING_DECISION = 1;
                     return;
@@ -418,7 +418,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
             }
         }
     }
-    crate::comparison::branch("cpw_7 marcou a falta");
+    crate::comparison::branch("cpw_7 marked the absence");
     if MISS_TRAINING_DRY_RUN {
         MISS_TRAINING_DECISION = 2;
         return;
@@ -461,7 +461,7 @@ unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
     let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
     let a = cpw7_sortear(nota(np, cpw7_b(np + 0x19) as u32) as i32);
     let b = cpw7_sortear(5);
-    crate::comparison::branch("cpw_7 multa pela falta");
+    crate::comparison::branch("cpw_7 fine for absence");
     let multar: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(0x5a5980usize);
     multar(cpw7_d(0xae2a3c), pessoa, if a > b { 1 } else { 2 }, 1);
 }
@@ -507,7 +507,7 @@ unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     if *m == 0 {
         return;
     }
-    crate::comparison::branch("cpw_7 fim da ausencia");
+    crate::comparison::branch("cpw_7 end of absence");
     let pessoa = cpw7_d(0xae23bc).wrapping_add((cpw7_i(r) as usize).wrapping_mul(0x6e));
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let k = contract_of(cpw7_d(0xae1050), pessoa);
@@ -590,7 +590,7 @@ unsafe extern "thiscall" fn set_flags(c: usize, marcas: u32) {
     if cpw7_b(pessoa + 0x18) as i8 <= 0x14 && cpw7_w(cpw7_d(pessoa + 0x61) + 0xb) <= 0x109a {
         return;
     }
-    crate::comparison::branch("cpw_7 pedido de saida");
+    crate::comparison::branch("cpw_7 transfer request");
     if MISS_TRAINING_DRY_RUN {
         MISS_TRAINING_DECISION = 1;
         return;

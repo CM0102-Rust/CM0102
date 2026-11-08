@@ -148,7 +148,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
         let league = read_usize(c + 0x57);
         if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && (exe::usa_mls_get_club_division(c) as i16) as i32 == conferencia {
             if k == 0 {
-                crate::comparison::branch("cqr_6 estadio do jogo das estrelas");
+                crate::comparison::branch("cqr_6 all-star game stadium");
                 let first = read_usize(read_usize(this + cup::TEAM_TABLE));
                 write_usize(first + 0x69, read_usize(c + 0x69)); // cqr6: the stadium of the drawn club
                 *((read_usize(read_usize(this + cup::TEAM_TABLE)) + 0x6d) as *mut u8) = 0;
@@ -195,7 +195,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
     let year = read_i16(today + 2) as u16 as u32;
     let d = make_date_dword(0x1a, 6, year, 6); // cqn10: the All-Star Game call-up
     if stage != 0 && is_date_today(d, today) {
-        crate::comparison::branch("cqn_10 convocacao do jogo das estrelas");
+        crate::comparison::branch("cqn_10 all-star game call-up");
         exe::usamlsallstars_select_squads(this);
     }
     eng_cc_cup_cup_update_for_date(this, today, stage)
@@ -232,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
         show_error_at(0xaa20a0, 0x9a);
         return 0;
     }
-    crate::comparison::branch("cqm_12 tabela do jogo das estrelas");
+    crate::comparison::branch("cqm_12 all-star game fixture");
     let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     exe::cup_set_round_draw_date(t, 0, 0xf, 5, 0, 5, year);
     exe::cup_set_round_match_date(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August

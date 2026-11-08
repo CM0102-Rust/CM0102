@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_start_new_season(th
 /// Comparer for `bra_nat_first_process_promotion_relegation_chain`.
 ///
 /// [pt] Comparador do acesso e rebaixamento: só a original (simplification: move clubes entre as listas das ligas, que realocam).
-/// A cópia roda no modo Rust (contador "cqq_8 acesso e rebaixamento") e é provada pelas mutações e pelas carreiras.
+/// A cópia roda no modo Rust (contador "cqq_8 promotion and relegation") e é provada pelas mutações e pelas carreiras.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_first_process_promotion_relegation_chain(this: usize, pairs: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_BRA_NAT_FIRST_PROCESS_PROMOTION_RELEGATION_CHAIN)(this, pairs)
 }

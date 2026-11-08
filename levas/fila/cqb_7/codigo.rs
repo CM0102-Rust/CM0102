@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
         return (cqb7_w(np + 0xc) > 0xa0) as u32;
     }
     if cqb7_w(0xae2c92) == 0x7d1 && (is_falkirk_name_exception(p, 0x9b5ac0, oferta) || cqb7_w(0xae2c92) == 0x7d1 && is_falkirk_name_exception(p, 0x9b5ab0, oferta)) {
-        crate::comparison::branch("cqb_7 excecao de 2001");
+        crate::comparison::branch("cqb_7 2001 exception");
         return 1;
     }
     let ficha = cqb7_d(p + 0x61);
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
             return 1;
         }
     } else if ficha != 0 {
-        crate::comparison::branch("cqb_7 confere o potencial");
+        crate::comparison::branch("cqb_7 checks the potential");
         if cqb7_w(ficha + 0xd) > 0x2134 { // cqb7: o potencial acima de 8500
             return 1;
         }
@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
     }
     let idade = cqb7_b(p + 0x18) as i8;
     if idade < 0x18 && ficha != 0 {
-        crate::comparison::branch("cqb_7 confere o jovem");
+        crate::comparison::branch("cqb_7 checks the youngster");
         if cqb7_w(ficha + 7) > 0xbe { // cqb7: o jovem acima de 190
             return 1;
         }
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
         let limit = 0x46 - b + cqb7_sorteio(10);
         return ((marcados as i32 * 100) / janela as i32 > limit) as u32;
     }
-    crate::comparison::branch("cqb_7 jogos pela selecao");
+    crate::comparison::branch("cqb_7 national team caps");
     if marcados > 0xb { // cqb7: mais de 11 jogos marcados
         return 1;
     }

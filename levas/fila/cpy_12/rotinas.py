@@ -4,7 +4,7 @@
 #   jogador lesionado, os fisioterapeutas sorteiam (semeando o rand da CRT pelos ids e voltando ao relogio); clube
 #   humano (o de ferias conta): o limite pela reputacao, a verba (comprando) e o pedido (vendendo) mexem nas confiancas
 #   da diretoria (+6/+0x14/+0x16 do registro de 0x49 bytes) e vetam (0x200, 0x800, 0x2000).
-# - 0x6ac700 (post_board_ultimatum_news, 4 chamadas; "cpq_1 ultimato dado" 2 na base): a noticia 0x178d, com sorteio.
+# - 0x6ac700 (post_board_ultimatum_news, 4 chamadas; "cpq_1 ultimatum given" 2 na base): a noticia 0x178d, com sorteio.
 # - 0x6ac880 (news_board_ultimatum_text, 11 chamadas): o texto dela (so pelas telas e caixas de entrada).
 # Convencoes conferidas nos pontos de chamada da original (licao da 258a):
 #   0x62ed70 lesao: thiscall (mov ecx, [0xb63d28]), 1 arg. 0x9469fa srand: cdecl (add esp, 4), 1 arg. 0x7a7ed0

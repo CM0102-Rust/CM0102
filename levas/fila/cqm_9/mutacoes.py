@@ -17,5 +17,5 @@ MUTACOES = [
     ('cqm9_nsl_girada',
      'jap_j1_init_table_row(this, k as u8, cqm9_w(this + 0x3e), 0, clube); // cqm9: a linha da NSL',
      'jap_j1_init_table_row(this, k as u8, cqm9_w(this + 0x3e), 1, clube); // mutacao: a linha da NSL',
-     'cqm_9 nsl cheia'),
+     'cqm_9 nsl full'),
 ]

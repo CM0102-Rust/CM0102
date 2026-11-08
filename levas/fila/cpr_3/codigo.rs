@@ -60,7 +60,7 @@ unsafe fn get_future_transfer_body(this: usize, jogador: usize, saida: *mut usiz
         *staff_flags_byte(this, cpr3_d(jogador)) &= 0xef; // sem transferência futura: a marca sai
         return 0;
     };
-    crate::comparison::branch("cpr_3 futura achada");
+    crate::comparison::branch("cpr_3 future found");
     if !saida.is_null() {
         let n = cpr3_d(this + 0x928) as i32;
         for i in 0..n.max(0) as usize {
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn remove_future_transfer(this: usize, oferta: usize) {
     let alvo = cpr3_d(oferta + 0x20);
     for i in 0..n.max(0) {
         if cpr3_d(cpr3_d(this + 0x920).wrapping_add(i as usize * 0xc) + 8) == alvo {
-            crate::comparison::branch("cpr_3 tirar futura");
+            crate::comparison::branch("cpr_3 remove future");
             let mut j = i;
             while j < cpr3_d(this + 0x928) as i32 - 1 {
                 let r = cpr3_d(this + 0x920).wrapping_add(j as usize * 0xc);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn remove_future_transfer(this: usize, oferta: usize) {
 /// [this+0x856], com 0) e liga a marca 0x10 dele; com contrato (0x4cf5a0) marcado em +0x49, a oferta vai a +0x4a do
 /// contrato. O mesmo (suspender e marcar) para cada jogador da troca (lista +4).
 unsafe extern "thiscall" fn add_future_transfer(this: usize, oferta: usize, data: usize) {
-    crate::comparison::branch("cpr_3 acrescentar futura");
+    crate::comparison::branch("cpr_3 add future");
     if !grow_record_vector(this, 0x920, 4, 10, 0xc, 0x27c3, 0xa8ec74) {
         return;
     }

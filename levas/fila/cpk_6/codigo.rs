@@ -17,7 +17,7 @@ unsafe extern "thiscall" fn get_slot_string(noticia: usize, dado: u32, destino: 
     if !(0..0x32).contains(&k) || destino.is_null() || n < 1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(%%I0%%)(noticia, dado, destino, n); // caixa: só a original
     }
-    crate::comparison::branch("cpk_6 texto do dado");
+    crate::comparison::branch("cpk_6 data text");
     let origem = (noticia + 5 + 4 * k as usize) as *const u8; // o dado
     let mut fim = false;
     for i in 0..n as usize {
@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize, clube: usi
     if ficha == 0 || cpk6_d(ficha + 0x38) == 0 || cpk6_d(clube + 0x57) == 0 {
         return;
     }
-    crate::comparison::branch("cpk_6 apuro financeiro");
+    crate::comparison::branch("cpk_6 financial trouble");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nacao: usize, clu
     let f = get_club_finance(cpk6_d(0xae2a38), c);
     if f != 0 && core::ptr::read_unaligned(f as *const i64) < 1_000_000 && cpk6_w(c + 0x80) < 5000 {
         if *((cpk6_d(c + 0x53) + 0x76) as *const u8) != *((nacao + 0x76) as *const u8) { // fora da região
-            crate::comparison::branch("cpk_6 olheiro fora da regiao");
+            crate::comparison::branch("cpk_6 scout outside the region");
             return 0;
         }
     }

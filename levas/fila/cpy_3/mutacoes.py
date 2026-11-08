@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpy3_verba_de_titular_por_tres', '                        Some(a * 2) // cpy3: a verba da vaga de titular',
      '                        Some(a * 3) // mutacao: abertas x 3',
-     'cpy_3 verba da vaga de titular'),
+     'cpy_3 funds for the starter slot'),
     ('cpy3_sem_reducao_pela_sobra', '                cpy3_pi(v + 7, e.wrapping_sub(x)); // cpy3: a redução da vaga pela sobra',
      '                let _ = (e, x); // mutacao: sem a reducao',
-     'cpy_3 reducao pela sobra'),
+     'cpy_3 reduction by surplus'),
     ('cpy3_vaga_sem_preencher', '            preencher(this, v, clube, 0); // cpy3: a vaga é preenchida',
      '            let _ = preencher; // mutacao: a vaga fica sem alvo',
-     'cpy_3 vaga preenchida'),
+     'cpy_3 slot filled'),
 ]

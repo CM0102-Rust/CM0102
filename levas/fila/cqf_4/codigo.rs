@@ -97,7 +97,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         while conta[r as i16 as usize] >= lim {
             r = sorteio(8);
         }
-        crate::comparison::branch("cqf_4 vaga no grupo");
+        crate::comparison::branch("cqf_4 place in the group");
         cqf4_pd(dst, cqf4_d(src));
         src += 5;
         cqf4_pb(dst + 4, (r as u8).wrapping_add(1));
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     if cqf4_w(this + 0x40) != 0x7d2 {
         return lista;
     }
-    crate::comparison::branch("cqf_4 sorteio de 2002");
+    crate::comparison::branch("cqf_4 2002 draw");
     for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: as nações do sorteio real
         let nacao = cqf4_d(0xae23a8).wrapping_add((cqf4_d(chave) as i32).wrapping_mul(0x122) as usize);
         cqf4_pd(lista + i * 5, cqf4_d(principal(nacao)));
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, hoje: usize, 
     }
     let dia_do_sorteio = cqf4_w(this + 0xb6) as u16; // cqf4: o dia do sorteio
     if dia_do_sorteio == dia && cqf4_w(this + 0xb8) as i32 + cqf4_w(this + 0x40) as i32 == ano && completo != 0 && cqf4_d(this + 0xb1) == 0 {
-        crate::comparison::branch("cqf_4 dia do sorteio");
+        crate::comparison::branch("cqf_4 draw day");
         sortear(this);
     }
     liga(this, hoje, completo)

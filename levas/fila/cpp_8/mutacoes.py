@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpp8_surto_novo', '} else if cpp8_sorteio(4) == 0 { // 1 em 4 fica de fora',
      '} else if cpp8_sorteio(5) == 0 { // mutacao: 1 em 5 fica de fora',
-     'cpp_8 surto novo'),
+     'cpp_8 new outbreak'),
     ('cpp8_espalhar', 'Some(cpp8_sorteio(3) as u8) // 0 a 2 doentes',
      'Some(cpp8_sorteio(2) as u8) // mutacao: 0 a 1 doente',
-     'cpp_8 espalhar'),
+     'cpp_8 spread'),
     ('cpp8_surto_antigo', 'datar(0xae2c90, &mut d, 5); // cinco dias atrás',
      'datar(0xae2c90, &mut d, 6); // mutacao: seis dias',
-     'cpp_8 surto antigo'),
+     'cpp_8 old outbreak'),
 ]

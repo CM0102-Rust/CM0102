@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cps6_primeira_sem_sorteio', '    let r = cps6_sortear(n - q - 1); // cps6: a primeira pessoa',
      '    let r = (n - q - 1) / 2; // mutacao: sem o sorteio',
-     'cps_6 faltas do dia'),
+     'cps_6 absences of the day'),
     ('cps6_soma_sem_sorteio', '            if cps6_sortear(s as i8 as i32) == 0 { // cps6: o sorteio da soma',
      '            if s == 0 { // mutacao: sem o sorteio',
-     'cps_6 falta pela soma'),
+     'cps_6 absence by sum'),
     ('cps6_sem_falta', '            falta(cps6_d(0xad9c6c), p); // cps6: a falta',
      '            let _ = (falta, p); // mutacao: sem a falta',
-     'cps_6 falta ao treino'),
+     'cps_6 missed training'),
 ]

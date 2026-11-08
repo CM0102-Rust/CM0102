@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpx4_sem_contrato_de_emprestimo', '    assinar(cpx4_d(0xae1050), l); // cpx4: o contrato de empréstimo',
      '    let _ = assinar; // mutacao: sem o contrato de emprestimo',
-     'cpx_4 emprestimo da configuracao'),
+     'cpx_4 loan from the settings'),
     ('cpx4_sem_permissao', '        permissao(this, p, cpx4_d(clube + 0x53), cpx4_w(inicio + 2) as u16 as u32, 1, 1); // cpx4: a permissão de trabalho',
      '        let _ = permissao; // mutacao: sem a permissao de trabalho',
-     'cpx_4 permissao de trabalho'),
+     'cpx_4 work permit'),
     ('cpx4_sem_estender_contrato', '        transfer_manager_assign_date(contrato(cpx4_d(0xae1050), p) + 0x2d, fim); // cpx4: o fim do contrato até o fim do empréstimo',
      '        let _ = contrato; // mutacao: o fim do contrato fica antes do fim do emprestimo',
-     'cpx_4 contrato estendido'),
+     'cpx_4 contract extended'),
 ]

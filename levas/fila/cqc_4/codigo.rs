@@ -173,7 +173,7 @@ unsafe extern "thiscall" fn find_new_fixture_date(this: usize, jogo: usize) {
                     let t = [cqc4_d(t), cqc4_d(t + 4)];
                     let pt = t.as_ptr() as usize;
                     if !fix_man_date_is_after(pt, ph) && !fix_man_date_is_after(ph, pe) {
-                        crate::comparison::branch("cqc_4 nova data");
+                        crate::comparison::branch("cqc_4 new date");
                         cqc4_pw(jogo + 0x28, cqc4_w(ph + 2));
                         cqc4_pw(jogo + 0x2a, cqc4_w(ph));
                         *((jogo + 0x3f) as *mut u8) = fixture_time_slice(this, cqc4_d(jogo + 0x14), alvo as u16 as u32);
@@ -267,7 +267,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
             if preferido != dia && (dia == 5 || dia == 6) {
                 let mut t = [0u8; 8];
                 date_default(&mut t);
-                crate::comparison::branch("cqc_4 dia preferido do mandante");
+                crate::comparison::branch("cqc_4 home side preferred day");
                 nearest_weekday(pd, preferido as i8 as i16 as u16 as u32, &mut t); // cqc4: o dia preferido do mandante
                 let pt = t.as_ptr() as usize;
                 cqc4_pw(jogo + 0x28, cqc4_w(pt + 2));
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn add_fixture(this: usize, jogo: usize, zerar: u32) ->
         if l != 0 || g != 0 {
             *contagem = (*contagem).wrapping_add(1);
             if g == 0x14 {
-                crate::comparison::branch("cqc_4 mesmo dia");
+                crate::comparison::branch("cqc_4 same day");
                 let mesmo_dia: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x5ae380usize);
                 mesmo_dia(this, jogo, l); // cqc4: o conflito do mesmo dia
                 if l != 0 {
@@ -487,7 +487,7 @@ unsafe extern "thiscall" fn set_year(this: usize, ano: u32) -> u32 {
     *((this + 0x1132) as *mut u8) = (is_leap_year(ano) != 0) as u8;
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let construir: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
-    crate::comparison::branch("cqc_4 ano novo do calendario");
+    crate::comparison::branch("cqc_4 calendar new year");
     for dia in 0..0x16eusize {
         if n() > 0 {
             let e = this + dia * 0xc;

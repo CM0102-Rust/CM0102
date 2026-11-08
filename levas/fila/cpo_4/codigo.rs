@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn process_pending_departures(this: usize) {
                 let b = (id.wrapping_mul(145) & 0xffff_ff00) | cpo4_b(item + 1) as u32;
                 sair(this, clube, a, b, 0);
                 if abre_vaga(clube) as u8 != 0 {
-                    crate::comparison::branch("cpo_4 abrir a vaga");
+                    crate::comparison::branch("cpo_4 open the slot");
                     vaga(this, clube, tecnico); // a vaga do clube
                 }
             }
@@ -80,7 +80,7 @@ unsafe fn remove_from_squad(clube: usize, pessoa: usize) {
     for k in 0..0x32usize {
         let v = clube + 0xd7 + 4 * k;
         if cpo4_d(v) == pessoa {
-            crate::comparison::branch("cpo_4 tirar do elenco");
+            crate::comparison::branch("cpo_4 remove from squad");
             cpo4_por(v, 0); // a vaga do elenco
             return;
         }
@@ -155,7 +155,7 @@ unsafe fn detach_staff_from_club(pessoa: usize, s: usize, clube: usize, c: usize
             }
             4 => {
                 if cpo4_d(c + 0xcf) == pessoa {
-                    crate::comparison::branch("cpo_4 tirar o tecnico");
+                    crate::comparison::branch("cpo_4 remove the manager");
                     cpo4_por(c + 0xcf, 0); // o técnico do clube
                 }
                 cpo4_por(s + 0x39, 0);

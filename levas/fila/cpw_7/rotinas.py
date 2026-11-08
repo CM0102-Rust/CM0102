@@ -1,5 +1,5 @@
 # As faltas do dia (awol.cpp): AWOL::daily_update 0x4190d0 (todo dia pelo laço do jogo 0x5cccd0: as ausências, as
-# faltas ao treino marcadas pela 0x41a360, que a 255ª conta em "cps_6 falta ao treino", e os atrasos),
+# faltas ao treino marcadas pela 0x41a360, que a 255ª conta em "cps_6 missed training", e os atrasos),
 # AWOL::has_missed_training 0x418ff0 e AWOL::has_fitness_incident 0x419070 (pelos jogadores do dia 0x5a69b0 e pelas
 # telas). Família fora das do brief (finance, club, stadium, game e human_manager esgotadas para simulação): awol.cpp,
 # que nenhum outro agente usa. Iguais no cm0102-1080.exe; sem SEH; sem x87. Comparadores: a 0x4190d0 só a original

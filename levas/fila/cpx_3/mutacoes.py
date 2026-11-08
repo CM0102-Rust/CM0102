@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpx3_sem_pagamento', '        com_a_oferta(0x8ca8a0, this); // cpx3: o pagamento da transferência',
      '        // mutacao: sem o pagamento',
-     'cpx_3 paga a transferencia'),
+     'cpx_3 pays the transfer'),
     ('cpx3_sem_parte_dos_anteriores', '        com_a_oferta(0x8e4f20, this); // cpx3: a parte dos clubes anteriores',
      '        // mutacao: sem a parte dos clubes anteriores',
-     'cpx_3 parte dos clubes anteriores'),
+     'cpx_3 share of previous clubs'),
     ('cpx3_sem_confianca', '    confianca(cpx3_d(0xb67a44), o); // cpx3: a confiança das diretorias',
      '    let _ = confianca; // mutacao: sem a confianca das diretorias',
-     'cpx_3 confianca das diretorias'),
+     'cpx_3 boards confidence'),
 ]

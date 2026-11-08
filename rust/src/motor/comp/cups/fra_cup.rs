@@ -250,7 +250,7 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
         read_usize(c + 0x53) != 0 && exe::database_is_national_team(c) == 0 && read_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
-    crate::comparison::branch("cqm_11 inscritos da copa da franca");
+    crate::comparison::branch("cqm_11 french cup entrants");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the Coupe de France
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the Coupe de France
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
@@ -315,7 +315,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
         }
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqm_11 inscritos da copa da liga francesa");
+    crate::comparison::branch("cqm_11 french league cup entrants");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the League Cup
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the League Cup
     ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
@@ -356,7 +356,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqm_11 dobradinha francesa");
+        crate::comparison::branch("cqm_11 french double");
         let b = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 1);
         core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
         if b == 0 {
@@ -364,7 +364,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqm_11 clubes da supercopa francesa");
+    crate::comparison::branch("cqm_11 french super cup clubs");
     *((l + 4) as *mut u8) = 0;
     *((l + 5) as *mut u8) = 0;
     *((l + 0xa) as *mut u8) = 0;

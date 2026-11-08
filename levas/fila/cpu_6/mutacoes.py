@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu6_vento_fraco_moderado', '            1 // cpu6: o vento fraco',
      '            2 // mutacao: moderado',
-     'cpu_6 vento fraco'),
+     'cpu_6 light wind'),
     ('cpu6_vento_moderado_forte', '            2 // cpu6: o vento moderado',
      '            3 // mutacao: forte',
-     'cpu_6 vento moderado'),
+     'cpu_6 moderate wind'),
     ('cpu6_vento_forte_mais', '            3 // cpu6: o vento forte',
      '            4 // mutacao: o mais forte',
-     'cpu_6 vento forte'),
+     'cpu_6 strong wind'),
 ]

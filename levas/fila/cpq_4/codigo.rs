@@ -144,9 +144,9 @@ unsafe fn record_transfer(this: usize, t: usize, gravar: bool) {
         let tec = cpq4_d(comprador + 0xcf);
         let r = if staff_records_is_player_job(cpq4_b(t + 0x11)) { staff_records_manager_record(this, tec) } else { 0 };
         if r != 0 {
-            crate::comparison::branch("cpq_4 compra");
+            crate::comparison::branch("cpq_4 purchase");
             if valor > cpq4_i(r + 0x18) {
-                crate::comparison::branch("cpq_4 maior compra");
+                crate::comparison::branch("cpq_4 biggest purchase");
                 for k in 0..4usize {
                     cpq4_pi(r + 4 * k, if k == 0 { cpq4_i(pessoa) } else { cpq4_i(cpq4_d(pessoa + 4 * k) + 0x33) });
                 }
@@ -187,7 +187,7 @@ unsafe fn record_transfer(this: usize, t: usize, gravar: bool) {
         let tec = cpq4_d(vendedor + 0xcf);
         let r = if staff_records_is_player_job(cpq4_b(pessoa + 0x3d)) { staff_records_manager_record(this, tec) } else { 0 };
         if r != 0 {
-            crate::comparison::branch("cpq_4 venda");
+            crate::comparison::branch("cpq_4 sale");
             if valor > cpq4_i(r + 0x3d) {
                 for k in 0..4usize {
                     cpq4_pi(r + 0x25 + 4 * k, if k == 0 { cpq4_i(pessoa) } else { cpq4_i(cpq4_d(pessoa + 4 * k) + 0x33) });
@@ -304,7 +304,7 @@ unsafe fn stage_history_entry(clube: usize, tipo: u8, comp: usize, fase: u32) ->
 unsafe fn end_national_duty(clube: usize, comp: usize) {
     let especial: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x76d940usize);
     if especial(cpq4_d(0xb74318), comp) != 0 {
-        crate::comparison::branch("cpq_4 fim das convocacoes");
+        crate::comparison::branch("cpq_4 end of call-ups");
         let encerrar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x774f90usize);
         encerrar(cpq4_d(0xb74318), clube, comp);
     }
@@ -317,7 +317,7 @@ unsafe extern "thiscall" fn add_knocked_out_record(this: usize, clube: usize, co
     if clube == 0 {
         return show_error_at(0xa83b78, 0x73b);
     }
-    crate::comparison::branch("cpq_4 eliminado");
+    crate::comparison::branch("cpq_4 eliminated");
     let mut e = stage_history_entry(clube, 4, comp, fase);
     let base: unsafe extern "C" fn(u32) -> u32 = core::mem::transmute(0x4b0870usize);
     put_i32(&mut e, 0x15, base(rodada) as u16 as i16 as i32);
@@ -340,7 +340,7 @@ unsafe extern "thiscall" fn add_failed_to_qualify_record(this: usize, clube: usi
     if clube == 0 {
         return show_error_at(0xa83b78, 0x768);
     }
-    crate::comparison::branch("cpq_4 nao classificado");
+    crate::comparison::branch("cpq_4 not qualified");
     let e = stage_history_entry(clube, 7, comp, fase);
     if cpq4_d(clube + 0xcf) != 0 {
         append_person_history_by_id(true, this, cpq4_d(cpq4_d(clube + 0xcf)), &e);

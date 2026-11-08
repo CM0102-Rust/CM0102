@@ -3,5 +3,5 @@ MUTACOES = [
     ('cqq4_segunda_impar_primeira_rodada_em_outro_dia',
      'const SEGUNDA_ODD_ALL_ROUNDS: [SpaSecondScheduleRound; 42] = [\n    (22, 7, 0, 6,',
      'const SEGUNDA_ODD_ALL_ROUNDS: [SpaSecondScheduleRound; 42] = [\n    (22, 7, 0, 2,',
-     'cqq_4 calendario da segunda espanhola'),
+     'cqq_4 spanish second division calendar'),
 ]

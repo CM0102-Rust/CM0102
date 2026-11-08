@@ -178,7 +178,7 @@ pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i3
     }
     sort_clubs_by_strength(v as *mut u32, k as *mut i32, n);
     if n > 1 {
-        crate::comparison::branch("cpt_13 clubes ordenados");
+        crate::comparison::branch("cpt_13 clubs sorted");
     }
     exe::crt_free(k);
 }
@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
     if e == 0 {
         e = exe::comp_stats_add_club_entry(this, club);
     }
-    crate::comparison::branch("cpt_13 posição gravada");
+    crate::comparison::branch("cpt_13 position recorded");
     core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: the position
     e
 }
@@ -254,7 +254,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 s = s.wrapping_add(1);
                 chamadas.push((c, a));
                 if write != 0 {
-                    crate::comparison::branch("cpt_13 posição pela rodada");
+                    crate::comparison::branch("cpt_13 position by round");
                     write_position(read_usize(this + 8), c, a as u32);
                 }
             }
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
     if field == read_u32(other + club::STADIUM) {
         return if club != home { 2 } else { 1 }; // the same stadium for both
     }
-    crate::comparison::branch("cpq_12 em casa");
+    crate::comparison::branch("cpq_12 at home");
     1 // the club’s stadium
 }
 
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "C" fn comp_util_shuffle_pointer_array(items: usize, n:
     if 3 * n <= 0 {
         return;
     }
-    crate::comparison::branch("cpm_3 embaralhar ponteiros");
+    crate::comparison::branch("cpm_3 shuffle pointers");
     let mut k = 0i16;
     loop {
         swap_random_pair(items, n);
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usiz
     if m <= 0 {
         return;
     }
-    crate::comparison::branch("cpm_3 embaralhar os melhores");
+    crate::comparison::branch("cpm_3 shuffle the best");
     for _ in 0..m as i32 { // m trocas
         swap_random_pair(clubs, m as i32);
     }
@@ -831,7 +831,7 @@ pub(crate) unsafe extern "C" fn comp_util_scale_by_round(low: u32, high: u32, ro
         return original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_COMP_UTIL_SCALE_BY_ROUND)(low, high, round, rounds);
     }
     if rounds as u16 != 1 {
-        crate::comparison::branch("cpq_11 escala pela rodada");
+        crate::comparison::branch("cpq_11 lineup by round");
     }
     eax
 }
@@ -852,7 +852,7 @@ pub(crate) unsafe extern "C" fn comp_util_scale_by_round(low: u32, high: u32, ro
 pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let mut r = free_comp_history_row();
     if r == 0 {
-        crate::comparison::branch("histórico de competições crescer");
+        crate::comparison::branch("competition history grow");
         if exe::database_grow_comp_history_table(0x14) == 0 {
             return 0;
         }
@@ -891,7 +891,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
         return 0x47a;
     }
     if em(0x3fd, 0x406) {
-        crate::comparison::branch("cqg_6 grupo 0xa");
+        crate::comparison::branch("cqg_6 group 0xa");
         return 0xa; // cqg6: the group of stages 0x3fd..0x406
     }
     if em(0x407, 0x40b) || id == 0x472 {

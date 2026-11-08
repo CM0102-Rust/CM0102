@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
                     continue;
                 }
                 if k >= 11 && *((vaga + 0x32) as *const u8) == 0xff { // cpw12: a reserva que não entrou
-                    crate::comparison::branch("cpw_12 reserva sem entrar");
+                    crate::comparison::branch("cpw_12 reserve not coming on");
                     continue;
                 }
                 let pessoa = cpw12_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn record_international_result(this: usize, p: usize, m
                         primeira(cpw12_d(0xdd7f00), pessoa, adversario);
                     }
                 }
-                crate::comparison::branch("cpw_12 jogo pela seleção");
+                crate::comparison::branch("cpw_12 national team match");
                 *((pessoa + 0x22) as *mut u8) = (*((pessoa + 0x22) as *const u8)).wrapping_add(1); // cpw12: um jogo
                 *((pessoa + 0x23) as *mut u8) = (*((pessoa + 0x23) as *const u8)).wrapping_add(*((vaga + 0x21) as *const u8)); // cpw12: os gols
                 if !INTERNATIONAL_RESULT_DRY_RUN {

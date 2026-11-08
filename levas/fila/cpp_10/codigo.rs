@@ -43,7 +43,7 @@ unsafe fn fan_rating(p: usize, clube: usize, st: usize) -> f64 {
     let mut nota = media + cpp10_b(st + 2) as i32 as f64 * cpp10_q(0x967878);
     nota = nota + cpp10_b(st + 6) as i32 as f64 * cpp10_q(0x968958);
     if favorito(p, clube) != 0 {
-        crate::comparison::branch("cpp_10 favorito do clube");
+        crate::comparison::branch("cpp_10 club favourite");
         nota = nota + cpp10_q(0x968918); // o clube gosta dele
     } else if desafeto(p, clube) != 0 {
         nota = nota - cpp10_q(0x968950);
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, nacao: usize)
                     continue;
                 }
                 if emprestimo(cpp10_d(0xae1050), p) == 0 || cpp10_d(p + 0x39) == clube {
-                    crate::comparison::branch("cpp_10 arquivar");
+                    crate::comparison::branch("cpp_10 archive");
                     arquivar(this, p, -1, 0, 0, -1, 0);
                 }
             }
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
     }
     let valor = cpp10_i(t + 0x1b);
     if valor != 0 && valor > cpp10_i(s + 0x313) {
-        crate::comparison::branch("cpp_10 recorde pago");
+        crate::comparison::branch("cpp_10 record fee paid");
         core::ptr::write_unaligned((s + 0x313) as *mut i32, valor);
         referencia(pessoa, s + 0x317);
         core::ptr::write_unaligned((s + 0x32f) as *mut usize, cpp10_d(vendedor));
@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -
         if cpp10_i(t + 0x1b) > cpp10_i(a + 0x313) {
             copy_transfer_record(a, s, 0x313);
             if is_big_transfer(cpp10_i(a + 0x313), comprador) {
-                crate::comparison::branch("cpp_10 transferencia grande");
+                crate::comparison::branch("cpp_10 big transfer");
                 if !record_news_queued(this, cpp10_d(comprador), 0x1c) {
                     noticia(this, cpp10_d(comprador) as u32, 0x1c);
                 }

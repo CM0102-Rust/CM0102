@@ -160,11 +160,11 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
     if cqf2_b(oferta + 0x1f) != 1 {
         // ponytail: a resposta (2) vai num dword com bytes altos de sobra na original; a 0x8d8e90 lê o byte
         noticia_resposta(this, pessoa, a, b, 2, oferta, 0, noticia, 0);
-        crate::comparison::branch("cqf_2 seguir a oferta");
+        crate::comparison::branch("cqf_2 follow the offer");
         seguir(this, oferta); // cqf2: a oferta segue
         return;
     }
-    crate::comparison::branch("cqf_2 empréstimo");
+    crate::comparison::branch("cqf_2 loan");
     let mut motivo: u32 = 0;
     if (elenco(a, 0, 0) as i32) + 1 > 0x32 { // cqf2: o elenco cheio
         motivo = 4;
@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
         }
     }
     if motivo as u16 != 0 {
-        crate::comparison::branch("cqf_2 empréstimo recusado");
+        crate::comparison::branch("cqf_2 loan refused");
         recusar(this, oferta, motivo);
         cqf2_pb(oferta + 0x2c, 0x10);
         fechar(this, oferta);
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn handle_player_accepted_terms(this: usize, pessoa: us
         clear_under_offer_mark(this, oferta);
         return;
     }
-    crate::comparison::branch("cqf_2 empréstimo na hora");
+    crate::comparison::branch("cqf_2 immediate loan");
     termos(this, oferta, contrato);
     if let Some(r) = nation_transfer_rules_opt(this, cqf2_d(cqf2_clube(cqf2_d(oferta + 8)) + 0x53)) {
         if r != 0 {
@@ -303,7 +303,7 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
         gravar(n, 9, cqf2_d(c + 0x45) as u32);
         gravar(n, 10, (cqf2_b(c + 0x4f) >> 4) as u32);
         gravar(n, 11, mascara(cqf2_d(jogador + 0x61)) as i32 as u32);
-        crate::comparison::branch("cqf_2 notícia do listado");
+        crate::comparison::branch("cqf_2 listed player news");
         let s = sorteio(2); // cqf2: o sorteio do dado 12
         gravar(n, 12, s as u32);
         let fora_da_lista = (listado(jogador, clube) == 0) as u32;
@@ -325,7 +325,7 @@ unsafe extern "thiscall" fn post_transfer_listed_news(this: usize, jogador: usiz
         };
         gravar(n, 0xd, preco as u32);
         if preco >= 500_000 {
-            crate::comparison::branch("cqf_2 interessados no listado");
+            crate::comparison::branch("cqf_2 interested in listed player");
             let mut clubes = [0usize; 30];
             let mut q: i8 = 0;
             interessados(cqf2_d(cqf2_d(0xde1f54) + 0x856), jogador, l, 1, 1, 0);

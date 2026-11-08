@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpr4_desfeita_conta', 'cpr4_b(o + 0x2e) < 3 // desfeita (+0x2e = 3) não conta',
      'true // mutacao: a desfeita conta',
-     'cpr_4 oferta desfeita'),
+     'cpr_4 offer undone'),
     ('cpr4_emprestimo_conta', 'let dono = if c != 0 && cpr4_b(c + 0x35) & 0x3f != 5 { cpr4_clube(cpr4_d(c + 4)) } else { 0 }; // o empréstimo não conta',
      'let dono = if c != 0 { cpr4_clube(cpr4_d(c + 4)) } else { 0 }; // mutacao: o emprestimo conta',
-     'cpr_4 jogador emprestado'),
+     'cpr_4 loaned player'),
     ('cpr4_sem_agenda', 'agendar(this, o, 0xa, 0); // a oferta volta daqui a 10 dias',
      'let _ = agendar; // mutacao: sem agenda',
-     'cpr_4 desfazer oferta'),
+     'cpr_4 undo offer'),
 ]

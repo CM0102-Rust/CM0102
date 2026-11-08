@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu10_um_jogo_a_mais', '*(r as *mut u8) = jogos; // cpu10: os jogos da suspensão',
      '*(r as *mut u8) = jogos.wrapping_add(1); // mutacao: um jogo a mais',
-     'cpu_10 punicao'),
+     'cpu_10 punishment'),
     ('cpu10_sem_punicao', '1 // cpu10: a punição feita',
      '0 // mutacao: diz que nao ha suspensao',
-     'cpu_10 punicao'),
+     'cpu_10 punishment'),
     ('cpu10_falta_do_outro_campo', '0 => *((j + 0x2e) as *const i8) as i32, // cpu10: a falta do primeiro tipo',
      '0 => *((j + 0x2f) as *const i8) as i32, // mutacao: o codigo do outro campo',
-     'cpu_10 punicao'),
+     'cpu_10 punishment'),
 ]

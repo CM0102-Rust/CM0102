@@ -183,7 +183,7 @@ unsafe extern "stdcall" fn staff_can_take_job(cargo: u32, pessoa: usize) -> u32 
         return 0;
     }
     if pessoa == 0 {
-        crate::comparison::branch("cpp_4 pessoa nula");
+        crate::comparison::branch("cpp_4 null person");
         return 0; // pessoa nula
     }
     let p = pessoa;
@@ -380,7 +380,7 @@ unsafe extern "thiscall" fn contract_manager_lower_match_morale(this: usize, pes
             let nota = cpp4_w(jogador + 0xb);
             if nota > cpp4_w(clube + 0x80) && nota > 0x8ca {
                 if transfer_window_open(pessoa, clube) {
-                    crate::comparison::branch("cpp_4 queixa na janela");
+                    crate::comparison::branch("cpp_4 complaint in the window");
                     apagar(contrato, 4);
                     marcar(contrato, 4, 0);
                 }

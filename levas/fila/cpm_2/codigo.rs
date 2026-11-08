@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, clube: usize, ma
     }
     let n = cpm2_w(this + 0x3e) as isize;
     if idx == n - 1 && cpm2_d(l + 5) != 0 {
-        crate::comparison::branch("cpm_2 confrontos diretos");
+        crate::comparison::branch("cpm_2 head to head");
         let mut a = 0isize;
         while a < cpm2_w(this + 0x3e) as isize {
             let mut k = 0usize;
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn league_get_club_array(this: usize, saida: *mut usize
         *n = 0;
         return;
     }
-    crate::comparison::branch("cpm_2 vetor dos clubes");
+    crate::comparison::branch("cpm_2 clubs array");
     let mut i = 0i16;
     while i < cpm2_w(this + 0x3e) {
         cpm2_por(p + 4 * i as usize, cpm2_d(cpm2_d(this + 0xb1) + i as usize * TABLE_ROW_SIZE));
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn record_final_positions(this: usize) {
         let divisao = cpm2_d(this + 4);
         let c = cpm2_d(cpm2_d(this + 0xb1) + i as usize * TABLE_ROW_SIZE);
         if cpm2_d(c + 0x57) == divisao {
-            crate::comparison::branch("cpm_2 posicao final");
+            crate::comparison::branch("cpm_2 final position");
             cpm2_por(c + 0x5b, divisao);
             *((c + 0x5f) as *mut u8) = (i as u8).wrapping_add(1); // a posição final
         }

@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
                         || (marcas & 0x2000 != 0 && p == 7)
                         || (marcas & 0x4000 != 0 && p == 8);
                     if vez && ((partida != 0 && cqo1_d(partida) == cqo1_d(0x9cf76c)) || is_stadium_free(this, cqo1_d(e + 0xc), data)) {
-                        crate::comparison::branch("cqo_1 rodizio");
+                        crate::comparison::branch("cqo_1 rotation");
                         add_stadium_booking(this, cqo1_d(e + 0xc), data);
                         return cqo1_d(e + 0xc);
                     }
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn find_available_venue(this: usize, marcas: u32, cont:
             }
         }
         if melhor > 0 {
-            crate::comparison::branch("cqo_1 neutro pela nota");
+            crate::comparison::branch("cqo_1 neutral by rating");
             if partida != 0 {
                 add_stadium_booking(this, cqo1_d(escolhida + 0xc), data);
             }
@@ -322,7 +322,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
                 amistoso = e(cqo1_d(0xae2c74), cqo1_d(fx + 0x14)) != 0;
             }
             if !amistoso {
-                crate::comparison::branch("cqo_1 estadio do mandante");
+                crate::comparison::branch("cqo_1 home team stadium");
                 fixar(cqo1_d(cqo1_d(fx + 0x1c) + 0x69)); // cqo1: o estádio do mandante
                 return;
             }
@@ -400,7 +400,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
             alt = na;
         }
     } else if r == 1 {
-        crate::comparison::branch("cqo_1 uma sede");
+        crate::comparison::branch("cqo_1 single host");
         alvo = nation_by_id(a as usize); // cqo1: a sede única
     } else {
         alvo = cqo1_d(comp + 0x5d);
@@ -411,7 +411,7 @@ unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida:
     if f & 4 != 0 && alvo != 0 {
         let st = cqo1_d(alvo + 0x80);
         if st != 0 {
-            crate::comparison::branch("cqo_1 estadio nacional");
+            crate::comparison::branch("cqo_1 national stadium");
             fixar(st);
             add_stadium_booking(this, cqo1_d(fx + 0x18), pd);
             return;

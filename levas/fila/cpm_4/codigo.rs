@@ -71,13 +71,13 @@ unsafe fn serve_ban_match_plan(this: usize, id: u32, regra: u32, conta: u32) -> 
     if jogos != 0xff {
         let (dia0, ano0) = (cpm4_w(s + 4), cpm4_w(s + 6) as u16);
         if ano < ano0 || (ano == ano0 && dia < dia0) { // ainda não começou
-            crate::comparison::branch("cpm_4 antes do inicio");
+            crate::comparison::branch("cpm_4 before the start");
             return j;
         }
         if conta == 0 {
             return j;
         }
-        crate::comparison::branch("cpm_4 jogo cumprido");
+        crate::comparison::branch("cpm_4 match served");
         let n = (*((s + 1) as *const u8)).wrapping_add(1); // mais um jogo cumprido
         j.contador = Some(n);
         j.cumprida = n == jogos;
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn release_ban(this: usize, id: u32, indice: u32) -> us
         if regra == 0xff {
             continue;
         }
-        crate::comparison::branch("cpm_4 soltar do orgao");
+        crate::comparison::branch("cpm_4 release from the body");
         esquecer(ruling_body_for_rule(this, regra), id); // o órgão esquece a suspensão
         if k != 3 {
             continue;

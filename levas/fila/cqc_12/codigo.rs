@@ -31,7 +31,7 @@ unsafe fn mark_clubs_three_days(this: usize, d: usize) {
     // 0x7775c0: push &data; mov ecx, edi -> thiscall, ret 4
     let (mut t, mut u) = ([0u8; 8], [0u8; 8]);
     let (pt, pu) = (t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
-    crate::comparison::branch("cqc_12 marca os clubes");
+    crate::comparison::branch("cqc_12 marks the clubs");
     marcar(this, d);
     copiar(d, pu, menos(d, pt, 1));
     marcar(this, d);
@@ -56,7 +56,7 @@ unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
     cqc12_pd(l + 0xa, cqc12_d(l + 2));
     let mut p = proximo(l);
     while p != 0 {
-        crate::comparison::branch("cqc_12 convoca");
+        crate::comparison::branch("cqc_12 calls up");
         convocar(this, p); // cqc12: as convocações para o jogo
         let comp = cqc12_d(p + 0x14);
         let final_ = comp != 0
@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn national_teams_daily_update(this: usize, hoje: usize
         || is_today(dma(pt, 0xf, 3, ano, u32::MAX), hoje)
         || is_today(dma(pt, 1, 7, ano, u32::MAX), hoje)
     {
-        crate::comparison::branch("cqc_12 refaz as reservas");
+        crate::comparison::branch("cqc_12 redoes the reserves");
         refazer(this);
     }
     let fixman = cqc12_d(0xae2a58);
@@ -610,7 +610,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
         let (mut d88c, mut d87c, mut d8a0) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         let (p88c, p87c, p8a0) = (d88c.as_mut_ptr() as usize, d87c.as_mut_ptr() as usize, d8a0.as_mut_ptr() as usize);
         if finais {
-            crate::comparison::branch("cqc_12 elenco das fases finais");
+            crate::comparison::branch("cqc_12 finals squad");
             let d = data_nova(p87c, cqc12_uw(p + 0x2a) as u32, cqc12_uw(p + 0x28) as u32);
             menos(d, p88c, 10);
             let comp = cqc12_d(p + 0x14);
@@ -681,7 +681,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
             }
         }
         if decide() {
-            crate::comparison::branch("cqc_12 elenco pelo técnico humano");
+            crate::comparison::branch("cqc_12 squad by the human manager");
             cqc12_pb(r + 0x44, 0);
             pedir(this, elenco, time, p);
             return;
@@ -718,7 +718,7 @@ unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, tipo: u32, d
     let n = collect_squad_candidates(this, nacao, t, data, p, elenco, reg, lim, &mut cand, &mut cursor);
     let modo: u32 = if t == 1 { 0x2100914 } else if t != 2 { 0x2000814 } else { 0x814 };
     let mut saida = [0usize; 50];
-    crate::comparison::branch("cqc_12 escala do elenco");
+    crate::comparison::branch("cqc_12 squad lineup");
     pick(cand.as_ptr() as usize, n as u32, codigos.as_ptr() as usize, (modo & !0xff) | cqc12_b(tam) as u32, 0,
         saida.as_mut_ptr() as usize, modo, elenco, 0, 0, 0, 0, 0, 0, 0);
     let mut i = 0usize;

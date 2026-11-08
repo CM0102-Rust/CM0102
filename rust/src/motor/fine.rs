@@ -63,7 +63,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if current != 0 && !club_has_human_manager(current) {
         return;
     }
-    crate::comparison::branch("cpz_9 noticia da reacao a multa");
+    crate::comparison::branch("cpz_9 news of the reaction to the fine");
     if FINE_NEWS_DRY_RUN {
         FINE_NEWS_WOULD_BUILD = true;
         return;
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
     if coach == 0 || read_usize(coach + staff::PLAYER) == 0 || read_usize(coach + staff::NATION) == 0 {
         return;
     }
-    crate::comparison::branch("cpz_9 noticia do retorno do treinador");
+    crate::comparison::branch("cpz_9 news of the coach return");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0x1394, 0);

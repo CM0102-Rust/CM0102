@@ -107,7 +107,7 @@ unsafe extern "stdcall" fn transfer_manager_calc_compensation_fee(pessoa: usize,
     if britanica(cpq6_d(comprador + 0x53)) == 0 || britanica(cpq6_d(vendedor + 0x53)) == 0 {
         return 0;
     }
-    crate::comparison::branch("cpq_6 compensacao britanica");
+    crate::comparison::branch("cpq_6 British compensation");
     valor(gerente(), pessoa, vendedor, 1, 0xffff_ffff, 0) / 2 // menor de 24 anos entre clubes britânicos
 }
 
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, oferta: usiz
     let n = cpq6_b(oferta + 0x40) as i8;
     let primeira = if n > 0 { (valor / n as i32) as i64 } else { valor as i64 };
     totais(cpq6_d(0xad9dac), valor, comprador, vendedor);
-    crate::comparison::branch("cpq_6 pagar transferencia");
+    crate::comparison::branch("cpq_6 pay transfer");
     pagar(fin_c, primeira);
     if fin_v != 0 {
         receber(fin_v, primeira); // o vendedor recebe
@@ -218,7 +218,7 @@ unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(oferta: usi
         return 1;
     }
     let c = contract_of(cpq6_d(0xae1050), pessoa);
-    crate::comparison::branch("cpq_6 clube deve aceitar");
+    crate::comparison::branch("cpq_6 club must accept");
     if ativa(c) != 0 && cpq6_d(oferta + 4) == 0 && cpq6_b(oferta + 0x40) == 0 {
         let (multa, valor) = (cpq6_d(c + 0x21) as u32, cpq6_d(oferta + 0x1b) as u32);
         let m = exibir(&multa, 4);

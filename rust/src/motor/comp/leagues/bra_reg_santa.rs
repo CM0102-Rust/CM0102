@@ -11,7 +11,7 @@ use super::*;
 /// Catarinense (0x9686bc); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_santa_set_up_rules(this: usize) -> u32 {
     catarinense_rules(this);
-    crate::comparison::branch("cqi_8 regras do catarinense");
+    crate::comparison::branch("cqi_8 catarinense rules");
     create_main_schedule(this);
     1
 }

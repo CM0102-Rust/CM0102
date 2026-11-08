@@ -70,7 +70,7 @@ unsafe fn match_stats_category(p: usize, lado: i32, avisar: bool, erro: &mut boo
         2 => 4,
         1 => {
             if avisar {
-                crate::comparison::branch("cpx_12 categoria da liga");
+                crate::comparison::branch("cpx_12 league category");
             }
             if conta(cpx12_d(p) as i32) != 0 { 2 } else { 3 } // cpx12: a categoria da liga
         }
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn player_stats_record_match(this: usize, p: usize, jog
             }
             if !contou {
                 contou = true;
-                crate::comparison::branch("cpx_12 jogo registrado");
+                crate::comparison::branch("cpx_12 match recorded");
             }
             for c in stats_categories_for(cat).into_iter().flatten() {
                 let mut r = player_category_record(this, dados, c);
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn update_league_position_records(this: usize, liga0: u
                 }
                 let v = cpx12_d(s + 1) as i32;
                 if sempre != 0 && (fora(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < cpx12_b(s))) {
-                    crate::comparison::branch("cpx_12 melhor posicao de sempre");
+                    crate::comparison::branch("cpx_12 best position ever");
                     *(s as *mut u8) = pos;
                     core::ptr::write_unaligned((s + 1) as *mut i32, comp);
                     core::ptr::write_unaligned((s + 5) as *mut u16, ano);
@@ -483,7 +483,7 @@ unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         if humano(clube) == 0 && selecao(clube) == 0 {
             continue;
         }
-        crate::comparison::branch("cpx_12 noticia de recorde");
+        crate::comparison::branch("cpx_12 record news");
         let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
         let n = local.as_mut_ptr() as usize;
         construir(n, 0x3e8, 0);

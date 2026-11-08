@@ -127,11 +127,11 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
             }
         }
         if human_club(comprador, 0, 1, 0, 0) == 0 {
-            crate::comparison::branch("cpv_2 recusa anotada na lista");
+            crate::comparison::branch("cpv_2 refusal noted in the list");
             // a original testa o byte com o eax zerado pela pergunta de antes (em cima, zero)
             anotar(cpv2_d(this + 0x856), pessoa, comprador, 1, (cpv2_b(o + 0x11) != 0xb) as u32); // cpv2: a recusa na lista
         }
-        crate::comparison::branch("cpv_2 recusa do jogador");
+        crate::comparison::branch("cpv_2 player refusal");
         agendar(this, o, 0xa, 0); // cpv2: de volta em 10 dias
         if is_offer_resolved(o) {
             let rivais = cpv2_d(o);
@@ -181,7 +181,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
                     } else {
                         core::ptr::read_unaligned(0x967878 as *const f64)
                     };
-                    crate::comparison::branch("cpv_2 injury_word_0c do jogador");
+                    crate::comparison::branch("cpv_2 player injury_word_0c");
                     let soma = match_pl_ftol(dif * k) as i16; // cpv2: a reputação sobe
                     let r = (ficha + 0xb) as *mut i16;
                     core::ptr::write_unaligned(r, core::ptr::read_unaligned(r).wrapping_add(soma));
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize, pessoa: us
     if x == 0 {
         return seguir(this, o);
     }
-    crate::comparison::branch("cpv_2 jogador saiu da troca");
+    crate::comparison::branch("cpv_2 player left the exchange");
     let comprador = cpv2_clube(cpv2_d(o + 8));
     let novo_preco = valor(cpv2_d(0xae1050), pessoa, comprador, 0, -1, 0).wrapping_add(cpv2_d(o + 0x1b) as i32);
     let vendedor = manager_manager_contract_club(cpv2_contrato(cpv2_pessoa(cpv2_d(o + 0xc))), false);
@@ -285,7 +285,7 @@ unsafe extern "thiscall" fn post_board_expectations_news(_this: usize, clube: us
     if news_date_not_reached() {
         return;
     }
-    crate::comparison::branch("cpv_2 noticia das expectativas");
+    crate::comparison::branch("cpv_2 expectations news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);

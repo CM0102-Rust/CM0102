@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn add_staff_contract(this: usize, pessoa: usize, valor
     if i < 0 {
         return i as u32;
     }
-    crate::comparison::branch("cpl_4 contrato da pessoa");
+    crate::comparison::branch("cpl_4 person contract");
     cpl4_por(cpl4_d(0xae2d0c).wrapping_add(cpl4_d(pessoa).wrapping_mul(0x4f)), i as usize); // a pessoa aponta a vaga
     let c = cpl4_d(this).wrapping_add((i as usize).wrapping_mul(0x50));
     cpl4_por(c, cpl4_d(pessoa));
@@ -131,7 +131,7 @@ unsafe fn decision_reminder_dates(this: usize, pessoa: usize, data: usize, tipo:
 /// (`decision_reminder_dates`), sem fatia (+0xc fica como está). Pelas propostas: a decisão da pessoa (0x4cd230, 0x4ce4e0).
 /// As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 unsafe extern "thiscall" fn add_decision_date(this: usize, pessoa: usize, data: usize, fatia: u32, tipo: u32) {
-    crate::comparison::branch("cpl_4 data de decisao");
+    crate::comparison::branch("cpl_4 decision date");
     if cpl4_d(this + 0x14) as i32 > (cpl4_d(this + 0x10) as i32).wrapping_sub(4) {
         let cap = cpl4_d(this + 0x10).wrapping_add(100);
         cpl4_por(this + 0x10, cap);

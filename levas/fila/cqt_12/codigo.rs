@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize) {
     let f = f + 1;
     cqt12_pd(this + 0x30, f as usize);
     if f == 1 {
-        crate::comparison::branch("cqt_12 grupos da asia");
+        crate::comparison::branch("cqt_12 asia groups");
         let grupos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x40c110usize);
         grupos(this);
     } else if f == 3 {
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn create_group_stages(this: usize) {
         return show_error_at(0x987a40, 0x39e);
     }
     noticia(f);
-    crate::comparison::branch("cqt_12 dois grupos da asia");
+    crate::comparison::branch("cqt_12 two asia groups");
     let grupo_2 = [v[4], v[5], v[6], v[7]]; // cqt12: o grupo 2
     let f = create_asia_group(this, 2, grupo_2.as_ptr(), 1);
     if f == 0 {
@@ -199,7 +199,7 @@ unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize)
     if lista == 0 {
         return show_error_at(0x987a40, 0x3d1);
     }
-    crate::comparison::branch("cqt_12 cruzamentos da asia");
+    crate::comparison::branch("cqt_12 asia pairings");
     for (k, &c) in asia_semi_finalists(this).iter().enumerate() {
         cqt12_pd(lista + k * 4, c);
     }

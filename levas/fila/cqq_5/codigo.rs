@@ -299,7 +299,7 @@ unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0xa82880, 0x8b);
                 return 0;
             }
-            crate::comparison::branch("cqq_5 calendario da divisao de baixo espanhola");
+            crate::comparison::branch("cqq_5 spanish lower division calendar");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
                 set_rounds_around_christmas(t, ano, &LOWER_ODD_YEAR_CHRISTMAS, 0xa82880);

@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     }
     let estadio: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x85c260usize);
     estadio(cqc5_d(0xdd7ef4), cqc5_d(e + 0x13), p, cqc5_d(this + 0x24));
-    crate::comparison::branch("cqc_5 jogo do confronto");
+    crate::comparison::branch("cqc_5 tie match");
     add_fixture_to_calendar(p);
     let (casa, fora) = (cqc5_d(p + 0x1c), cqc5_d(p + 0x20));
     if (cup_has_human_manager(casa) || cup_has_human_manager(fora)) && cqc5_w(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn create_tie_fixtures(this: usize, rodada: u32, confro
     if cqc5_d(cqc5_d(0xadadfc) + id * 4) == 0 || cqc5_b(e + 0x21) != 2 {
         return 1;
     }
-    crate::comparison::branch("cqc_5 jogo de volta");
+    crate::comparison::branch("cqc_5 return leg");
     if (cqc5_b(e + 0x20) as i8) < 1 {
         cqc5_pb(p + 0x4e, cqc5_b(p + 0x4e) & !4);
     } else {
@@ -377,7 +377,7 @@ unsafe extern "thiscall" fn post_draw_news(this: usize, rodada: u32, confronto: 
     } else {
         fora = cqc5_d(cup_team_entry(this, v));
     }
-    crate::comparison::branch("cqc_5 confronto pendente");
+    crate::comparison::branch("cqc_5 pending tie");
     let mut noticia = [0u32; 0x38];
     let n = noticia.as_mut_ptr() as usize;
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
@@ -496,7 +496,7 @@ unsafe extern "thiscall" fn update_transfer_window_news(this: usize, hoje: usize
                 aviso(w, 0);
                 let nacao = cqc5_d(regras(cqc5_d(v)) + 0xa);
                 if nacao != 0 {
-                    crate::comparison::branch("cqc_5 janela aberta");
+                    crate::comparison::branch("cqc_5 window open");
                     espera(this, nacao); // cqc5: as ofertas em espera da janela que abriu
                 }
                 break;

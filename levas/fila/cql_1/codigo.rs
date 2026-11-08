@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -
     }
     let k = contrato(cql1_d(0xae1050) as usize, p);
     if k != 0 && jogador(*((p + 0x3d) as *const i8)) != 0 && contract_valid_for_club(k, c) {
-        crate::comparison::branch("cql_1 numero do contrato");
+        crate::comparison::branch("cql_1 contract number");
         return *((k + 0x3a) as *const i8); // cql1: o número do contrato
     }
     let k = emprestimo(cql1_d(0xae1050) as usize, p);
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, outr
             return 0;
         }
     }
-    crate::comparison::branch("cql_1 usa numeros");
+    crate::comparison::branch("cql_1 uses numbers");
     1 // cql1: usa números
 }
 
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n
     }
     let k = contrato(cql1_d(0xae1050) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
-        crate::comparison::branch("cql_1 grava no contrato");
+        crate::comparison::branch("cql_1 writes into contract");
         *((k + 0x3a) as *mut i8) = n; // cql1: grava no contrato
         return;
     }

@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32
         if t9a01(gerente, cpx8_d(clube + 0xcf)) == 0 || opcao(gerente, 2, cpx8_d(clube + 0xcf)) != 0 {
             let escolher: unsafe extern "thiscall" fn(usize, u32, usize, usize) = core::mem::transmute(0x5fbe20usize);
             let ativa: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5fbd00usize);
-            crate::comparison::branch("cpx_8 tatica do humano");
+            crate::comparison::branch("cpx_8 human tactic");
             escolher(gerente, time, clube, cpx8_d(clube + 0xcf)); // cpx8: a vaga pelo time
             return ativa(gerente, cpx8_d(clube + 0xcf));
         }
@@ -134,10 +134,10 @@ unsafe extern "thiscall" fn get_club_tactic(this: usize, clube: usize, time: u32
     let indice = cpx8_w(cpx8_d(this + 0x601).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
     let prontas = cpx8_i(this + 0x5fd);
     if indice < prontas { // cpx8: tática pronta ou própria
-        crate::comparison::branch("cpx_8 tatica pronta");
+        crate::comparison::branch("cpx_8 preset tactic");
         cpx8_d(this + 0x5f9).wrapping_add(indice.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto
     } else {
-        crate::comparison::branch("cpx_8 tatica propria");
+        crate::comparison::branch("cpx_8 own tactic");
         cpx8_d(this + 0x5f1).wrapping_add(indice.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
     }
 }

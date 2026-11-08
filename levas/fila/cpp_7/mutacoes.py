@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpp_tentativa', '*((oferta + 0x2e) as *mut u8) = cpp7_b(oferta + 0x2e).wrapping_add(1); // mais uma tentativa',
      '// mutacao: sem contar a tentativa',
-     'cpp_7 recusa'),
+     'cpp_7 refusal'),
     ('cpp_soltar', 'tirar(this, cpp7_pessoa(cpp7_d(oferta + 0xc)), oferta, 0, 0); // o jogador da oferta',
      '// mutacao: o jogador segue nas outras ofertas',
-     'cpp_7 soltar jogadores'),
+     'cpp_7 release players'),
     ('cpp_valor', 'iniciar(oferta, jogador, clube, valor); // o valor da oferta',
      'iniciar(oferta, jogador, clube, valor.wrapping_add(1000)); // mutacao: 1000 a mais',
-     'cpp_7 oferta em dinheiro'),
+     'cpp_7 cash offer'),
 ]

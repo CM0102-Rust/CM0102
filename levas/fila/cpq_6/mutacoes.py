@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpq6_britanica', 'valor(gerente(), pessoa, vendedor, 1, 0xffff_ffff, 0) / 2 // menor de 24 anos entre clubes britânicos',
      'valor(gerente(), pessoa, vendedor, 1, 0xffff_ffff, 0) / 4 // mutacao: um quarto',
-     'cpq_6 compensacao britanica'),
+     'cpq_6 British compensation'),
     ('cpq6_vendedor_recebe', 'receber(fin_v, primeira); // o vendedor recebe',
      'let _ = receber; // mutacao: o vendedor nao recebe',
-     'cpq_6 pagar transferencia'),
+     'cpq_6 pay transfer'),
     ('cpq6_multa', 'if ativa(c) != 0 && cpq6_d(oferta + 4) == 0',
      'if (ativa(c) | 1) != 0 && cpq6_d(oferta + 4) == 0',
-     'cpq_6 clube deve aceitar'),
+     'cpq_6 club must accept'),
 ]

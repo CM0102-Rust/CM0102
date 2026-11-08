@@ -244,7 +244,7 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: usize) -> (i32, i32) {
         if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
             let e = read_usize(this + cup::TEAM_TABLE) + n as usize * 6;
             core::ptr::write_unaligned(e as *mut u32, c as u32);
-            crate::comparison::branch("cqn_12 semente da j1");
+            crate::comparison::branch("cqn_12 j1 seed");
             let s = jap_j_cup_random(0x14); // cqn12: the drawn class of the J1 clubs
             *((e + 4) as *mut u8) = s as u8;
             *((e + 5) as *mut u8) = 0;
@@ -361,7 +361,7 @@ pub(crate) unsafe fn collect_us_open_cup_entrants(this: usize) -> (i32, i32) {
         eng_cc_cup_write_entrant(this, k as i32, c, 2); // cqn12: the 10 from each lower league
         k = k.wrapping_add(1);
     }
-    crate::comparison::branch("cqn_12 inscritos da copa dos eua");
+    crate::comparison::branch("cqn_12 us cup entrants");
     let mut i = 0i32;
     while i < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i);
@@ -459,7 +459,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     sort_and_shuffle_top_clubs(vb.as_mut_ptr(), nb as i32, 2);
     sort_and_shuffle_top_clubs(vc.as_mut_ptr(), nc as i32, 3);
     sort_and_shuffle_top_clubs(vd.as_mut_ptr(), nd as i32, 1);
-    crate::comparison::branch("cqn_12 inscritos da copa do imperador");
+    crate::comparison::branch("cqn_12 emperor cup entrants");
     let mut n = 0i32;
     for &c in va.iter().take(0x2f).chain(vb.iter().take(2)).chain(vc.iter().take(3)) {
         eng_cc_cup_write_entrant(this, n, c, 0); // cqn12: those drawn from the lower divisions
@@ -478,7 +478,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: usize) -> (i32, i32) {
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = jap_j_cup_club_by_index(i as i32);
         if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < read_i16(this + cup::TEAM_COUNT) as i32 {
-            crate::comparison::branch("cqn_12 classe da j1 na copa do imperador");
+            crate::comparison::branch("cqn_12 j1 class in emperor cup");
             eng_cc_cup_write_entrant(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: the class of the J1 clubs in the Emperor’s Cup
             n += 1;
             if n == read_i16(this + cup::TEAM_COUNT) as i32 {

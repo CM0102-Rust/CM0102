@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         if !(tipo == 0x4d || tipo == 0x4e || tipo == 0x4f || tipo == 0x51) {
             return -1;
         }
-        crate::comparison::branch("cqb_5 troca a lesao");
+        crate::comparison::branch("cqb_5 swaps the injury");
         let r = physical_record(this, cqb5_d(p));
         let l = injury_entry(this, antiga as usize);
         restantes = cqb5_w(l + 0x2c) as u16;
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         }
     }
     // os dias
-    crate::comparison::branch("cqb_5 duracao");
+    crate::comparison::branch("cqb_5 duration");
     let mut extra = (cqb5_w(0x9e7add + t) as i32).wrapping_mul(0x23 - melhor as i32) / 20; // cqb5: o fisioterapeuta encurta
     let s1 = cqb5_sorteio(melhor as i32 + 5);
     let s2 = cqb5_sorteio(0x14);
@@ -273,14 +273,14 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         }
         let s = cqb5_sorteio(0x32);
         if n >= s + 0x1e && cqb5_d(0xde1f54) != 0 && cqb5_d(cqb5_d(0xde1f54) + 0x856) != 0 {
-            crate::comparison::branch("cqb_5 suspende as miras");
+            crate::comparison::branch("cqb_5 suspends the targets");
             let suspender: unsafe extern "thiscall" fn(usize, usize, u8) = core::mem::transmute(0x842b00usize);
             suspender(cqb5_d(cqb5_d(0xde1f54) + 0x856), p, 0); // cqb5: os clubes que o miram suspendem
         }
     }
     cqb5_por_w(cqb5_d(this + 4) + off + 0x28, dias);
     cqb5_por_w(cqb5_d(this + 4) + off + 0x2c, dias);
-    crate::comparison::branch("cqb_5 volta ao treino");
+    crate::comparison::branch("cqb_5 back to training");
     let volta = return_to_training_days(tipo, dias); // cqb5: a volta ao treino pelo percentual
     cqb5_por_w(cqb5_d(this + 4) + off + 0x2a, volta);
     cqb5_por_w(cqb5_d(this + 4) + off + 0x2e, cqb5_w(cqb5_d(this + 4) + off + 0x2a));
@@ -335,7 +335,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
             let s1 = cqb5_sorteio(c as i32);
             let s2 = cqb5_sorteio(e);
             if s1 > s2 && cqb5_d(0xb7434c) != 0 {
-                crate::comparison::branch("cqb_5 aposenta pelas recaidas");
+                crate::comparison::branch("cqb_5 retires through relapses");
                 aposentar(cqb5_d(0xb7434c), p, cqb5_w(cqb5_d(this + 4) + off + 0x2a));
             }
         }
@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
         || (idade > 0x1f && volta() > 0x12c - anos() && cqb5_sorteio(volta()) > 0xc8 - anos())
         || (volta() > 0x1f4 && cqb5_sorteio(cqb5_c(cqb5_d(p + 0x61) + 0x34) + 5) == 0);
     if encerra && cqb5_d(0xb7434c) != 0 {
-        crate::comparison::branch("cqb_5 aposenta pela lesao");
+        crate::comparison::branch("cqb_5 retires through injury");
         aposentar(cqb5_d(0xb7434c), p, cqb5_w(cqb5_d(this + 4) + off + 0x2a));
     }
     if surto != 0 && (tipo == 1 || tipo == 0 || tipo == 2) {
@@ -410,7 +410,7 @@ unsafe extern "thiscall" fn compare_add_injury(this: usize, tipo_arg: u32, retro
 /// ficha) acima de 8000, a todos (0x786780); senão aos interessados (0x7861e0). Até 100: clube humano (0x7875e0), ao
 /// clube; o clube do contrato (0x4cf5a0) se for outro; a seleção.
 unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: usize, l: usize, arg: u32) {
-    crate::comparison::branch("cqb_5 noticia da lesao");
+    crate::comparison::branch("cqb_5 injury news");
     let tm = cqb5_d(0xde1f54);
     let mut clubes = [0usize; 30];
     let mut n: i8 = 0;
@@ -511,7 +511,7 @@ unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_ler: u32) -
     if so_ler == 0 && marca() != 0 {
         let c = injury_main_contract_stored(p);
         if c == 0 || injury_club_of_contract(c) == 0 {
-            crate::comparison::branch("cqb_5 ausencia acaba sem clube");
+            crate::comparison::branch("cqb_5 absence ends without club");
             let acabar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4196a0usize);
             acabar(this, p);
         }

@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
             return 0;
         }
         if quantos < 0x9c4 {
-            crate::comparison::branch("eventos arquivo com espaco");
+            crate::comparison::branch("events file with space");
             aberto = f;
             break;
         }
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
             return 0;
         }
         versao = 1;
-        crate::comparison::branch("eventos arquivo novo");
+        crate::comparison::branch("events new file");
         quantos = 0;
         let r = *(G_MATCH_STATS as *const usize) + 0x18;
         numero = *(r as *const i32) + 1;
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
             return 0;
         }
         if numero as u32 == *desc.add(2) {
-            crate::comparison::branch("eventos lidos");
+            crate::comparison::branch("events read");
             exe::crt_fseek(f, *desc as i32, 0);
             let r = exe::crt_fread(e + 0x720, 0xe, *desc.add(1), f);
             *((e + 6) as *mut u16) = *desc.add(1) as u16;
@@ -500,7 +500,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
             return 0;
         }
     }
-    crate::comparison::branch("texto do evento");
+    crate::comparison::branch("event text");
     let t = |i: i16| *((s as isize + i as isize) as *const u8);
     let dest = |o: i16| (BUF as isize + o as isize) as usize;
     let b = |o: usize| *((ev + o) as *const u8);
@@ -774,7 +774,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 
     let valido = (0..0x2a5).contains(&k) && *((e + 1) as *const u8) == 0;
     if valido {
-        crate::comparison::branch("narracao no painel");
+        crate::comparison::branch("commentary on the panel");
         if sons() == 0 {
             return 0;
         }
@@ -1171,7 +1171,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
     if *((t + commentary_queue::ACTIVE) as *const u8) == 0 {
         return 0;
     }
-    crate::comparison::branch("narracao proximo evento");
+    crate::comparison::branch("commentary next event");
     if !out.is_null() {
         *out = (t as isize + 0xd8 + *((t + commentary_queue::READ_POS) as *const i16) as isize * 0x86) as usize;
     }
@@ -1206,7 +1206,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
             c = c.wrapping_sub(1);
             if c < 0 {
                 s += 1;
-                crate::comparison::branch("narracao texto em partes");
+                crate::comparison::branch("commentary text in parts");
                 *(p as *mut u16) |= 0x8000;
                 *part = (*part).wrapping_add(1);
                 break;
@@ -1247,7 +1247,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
         exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 1, d(0x190));
         return;
     }
-    crate::comparison::branch("narracao nome curto");
+    crate::comparison::branch("commentary short name");
     exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));
     for k in 0..2 {
         let club = *((pt + 4 * k) as *const u32) as usize;
@@ -1264,7 +1264,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
             let mut other = [0u8; 200];
             exe::database_format_name_from_ids(n(1), n(2), n(3), other.as_mut_ptr(), 200, 5, d(0x190));
             if exe::utils_string_compare(buf, other.as_ptr(), 1, 0) == 0 {
-                crate::comparison::branch("narracao nome forma longa");
+                crate::comparison::branch("commentary long form name");
                 exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, longa, d(0x190));
                 return;
             }
@@ -1833,7 +1833,7 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 /// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
 pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const u32) -> u8 {
     let now = exe::utils_get_time_ms();
-    crate::comparison::branch("sons dos eventos");
+    crate::comparison::branch("event sounds");
     for k in 0..16usize {
         if *ativos.add(k) == 0 {
             continue;

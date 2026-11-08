@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         let day = read_i16(this + 0xb6) as u16; // cqr11: the draw day
         let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
-            crate::comparison::branch("cqr_11 sorteio da mercosul");
+            crate::comparison::branch("cqr_11 mercosul draw");
             exe::conmebolmerc_select_invited_clubs(this);
             if exe::conmebolmerc_create_first_group_table(this) == 0 {
                 show_error_at(0x9a7e5c, 0x396);
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparison::branch("cqr_11 linha do primeiro grupo");
+        crate::comparison::branch("cqr_11 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparison::branch("cqr_11 time do grupo");
+        crate::comparison::branch("cqr_11 group team");
         write_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
         k += 1;
     }
@@ -419,7 +419,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         }
         i += 1;
     }
-    crate::comparison::branch("cqo_13 convidados da mercosul");
+    crate::comparison::branch("cqo_13 mercosul guests");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
     exe::comp_util_shuffle_pointer_array(read_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
     (1, k as i32)

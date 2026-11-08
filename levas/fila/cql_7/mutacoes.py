@@ -17,5 +17,5 @@ MUTACOES = [
     ('cql7_sorteio_da_serie_c_menor',
      'embaralhar(cql7_d(this + 0xee), k as i8 as i32); // cql7: o sorteio dos clubes da Série C',
      'embaralhar(cql7_d(this + 0xee), k as i8 as i32 - 1); // mutacao: o sorteio dos clubes da Série C',
-     'cql_7 serie c sorteio'),
+     'cql_7 serie c draw'),
 ]

@@ -35,7 +35,7 @@ unsafe extern "C" fn check_quick_start_file(caminho: usize) -> u32 {
     }
     let zget_archive_id: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x9331c0usize);
     let versao_valida: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x838eb0usize);
-    crate::comparison::branch("save filtro do inicio rapido");
+    crate::comparison::branch("save quick start filter");
     let id = zget_archive_id(caminho);
     if id != 0x17 {
         return (id & 0xffff0000) | 2;
@@ -85,7 +85,7 @@ unsafe extern "C" fn valid_saved_game_version(caminho: usize) -> u32 {
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
     let versao: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(0x90d130usize);
-    crate::comparison::branch("save versao do jogo salvo");
+    crate::comparison::branch("save saved game version");
     let mut resumo = [0u8; 0xf74];
     let mut v = 0i32;
     data_padrao(resumo.as_mut_ptr() as usize + 0xf64);

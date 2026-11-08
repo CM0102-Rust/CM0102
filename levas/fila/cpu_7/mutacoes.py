@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu7_rica_vira_confortavel', '        return 2; // cpu7: a band rica',
      '        return 1; // mutacao: confortavel',
-     'cpu_7 rica'),
+     'cpu_7 rich'),
     ('cpu7_confortavel_vira_normal', '        return 1; // cpu7: a band confortável',
      '        return 0; // mutacao: normal',
-     'cpu_7 confortavel'),
+     'cpu_7 comfortable'),
     ('cpu7_devendo_vira_normal', '        return 0xff; // cpu7: a band devendo',
      '        return 0; // mutacao: normal',
-     'cpu_7 devendo'),
+     'cpu_7 in debt'),
 ]

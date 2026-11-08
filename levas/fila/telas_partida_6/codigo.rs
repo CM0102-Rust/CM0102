@@ -7,7 +7,7 @@ unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
     if grupo == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo);
     }
-    crate::comparison::branch("telas abrir os jogos do dia");
+    crate::comparison::branch("screens open the day matches");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
     if abrir(SCREEN_MANAGER, vaga, 0x717db0, 0x718930, 0, 0, 0) == 0 {
         return;
@@ -24,7 +24,7 @@ unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
 /// +0xba9a6 do item) e 2 o andamento da competição (0x49b830 com o dado), ambos −11; senão a barra de
 /// menu (0x7615d0, senão 0x7643d0). O item vai inteiro (32 bits) para a barra, como na original.
 unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond aos jogos do dia");
+    crate::comparison::branch("screens respond day matches");
     let i = item as i16;
     let id = |i: i16| if i == -1 { *(0xdd6bde as *const u16) } else { display_item_id(i) };
     let dado = |i: i16| {

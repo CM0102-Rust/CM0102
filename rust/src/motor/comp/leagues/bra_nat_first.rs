@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
     }
     for (k, g) in BRAZIL_TURNOVER_COMPS.iter().enumerate() {
         if k == 13 {
-            crate::comparison::branch("cqq_8 virada do paulista");
+            crate::comparison::branch("cqq_8 paulista rollover");
         }
         bra_nat_first_call_virtual_no_args(comp_by_global(*g), 8); // cqq8: the rollover of each one
     }
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
         bra_nat_first_call_virtual_no_args(read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 0xa4);
     }
     let swap: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, i32, i32) -> u32 = core::mem::transmute(FN_LEAGUE_PROMOTE_AND_RELEGATE);
-    crate::comparison::branch("cqq_8 acesso e rebaixamento");
+    crate::comparison::branch("cqq_8 promotion and relegation");
     swap(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B
     let mut r = swap(this, comp_by_global(b), comp_by_global(c), 1, 1, -1, -1); // cqq8: B e C
     for k in 0..7 {
@@ -532,7 +532,7 @@ pub(crate) unsafe fn set_serie_c_rules(o: usize) {
 /// calendário da fase principal; devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_set_up_rules(this: usize) -> u32 {
     set_serie_a_rules(this);
-    crate::comparison::branch("cqi_7 regras da serie a");
+    crate::comparison::branch("cqi_7 serie a rules");
     create_main_schedule(this);
     1
 }
@@ -585,7 +585,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
         // the round-robin stage
         if st == 6 {
             if fazer {
-                crate::comparison::branch("cqj_9 serie a classificado");
+                crate::comparison::branch("cqj_9 serie a qualified");
                 bra_nat_first_add_qualified_record(club, comp, 0x41c, 0, 0x28);
             }
         } else if st == 3 && fazer {
@@ -600,7 +600,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
     if st == 1 {
         let l = bra_nat_first_find_club_row(this, club);
         if fazer {
-            crate::comparison::branch("cqj_9 serie a campeao");
+            crate::comparison::branch("cqj_9 serie a champion");
             add_champions_record(club, comp); // cqj9: the Serie A champion record
             *((l + 0x37) as *mut u8) = 5;
         }
@@ -671,7 +671,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: usize, club: usize, status: u32
             k += 1;
         }
         if achada != 0 && fazer {
-            crate::comparison::branch("cqj_9 serie c promovido");
+            crate::comparison::branch("cqj_9 serie c promoted");
             *((achada + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C
         }
         return (0, achada, 0);
@@ -700,7 +700,7 @@ pub(crate) unsafe fn baiano_staff_records(this: usize, club: usize, status: u32,
                 bra_nat_first_add_qualified_record(club, comp, 0, 0x82, 0x32);
             }
         } else if st == 3 && fazer {
-            crate::comparison::branch("cqj_9 baiano rebaixado");
+            crate::comparison::branch("cqj_9 baiano relegated");
             bra_nat_first_add_relegation_record(club, comp); // cqj9: the club relegated from the Baiano
         }
         return (0, 0, 0);

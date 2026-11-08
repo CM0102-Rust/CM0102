@@ -35,7 +35,7 @@ unsafe fn add_month_award_record_body(this: usize, p: usize, clube: usize, premi
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
         if r != 0 {
-            crate::comparison::branch("cpv_13 prêmio do técnico");
+            crate::comparison::branch("cpv_13 manager award");
             let a = (r + 0x9e) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1)); // cpv13: conta o prêmio
         }
@@ -65,7 +65,7 @@ unsafe fn add_month_award_record_body(this: usize, p: usize, clube: usize, premi
             let entrada: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> usize = core::mem::transmute(0x849ce0usize);
             let x = entrada(cpv13_d(cpv13_d(0xde1f54) + 0x856), contract_club_except_type5(p), p, 0, 0);
             if x != 0 && cpv13_d(x + 0xf) == cpv13_d(p) {
-                crate::comparison::branch("cpv_13 renovação");
+                crate::comparison::branch("cpv_13 renewal");
                 offer_renewal(p);
             }
         }
@@ -80,7 +80,7 @@ unsafe fn add_month_award_record_body(this: usize, p: usize, clube: usize, premi
     if cpv13_b(p + 0x5b) as i8 <= 0xa { // cpv13: o +0x5b
         return;
     }
-    crate::comparison::branch("cpv_13 sorteio do agradecimento");
+    crate::comparison::branch("cpv_13 thanks draw");
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     if sorteio(v59 as i32) <= 5 {
         return;
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn compare_add_month_award_record(this: usize, p: usize
     }
     let (t3d, t28) = (cpv13_b(p + 0x3d), cpv13_b(p + 0x28));
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparison::branch("add_month_award_record jogador");
+        crate::comparison::branch("add_month_award_record player");
         return o(this, p, clube, premio, a4, a5);
     }
     let r = staff_records_manager_record(this, p);

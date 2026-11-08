@@ -11,9 +11,9 @@
 # tecnicos nao chega a impressao antes de 2002-06-01 [inferencia: tecnicos sem a ficha de historico +0xcf]).
 MUTACOES = [
     ('cqk7_campeao_estadual', 'cqk7_campeao(clube, comp); // cqk7: o registro do campeão do estadual',
-     '// mutacao: sem o registro do campeão do estadual', 'cqk_7 campeao do estadual'),
+     '// mutacao: sem o registro do campeão do estadual', 'cqk_7 state league champion'),
     ('cqk7_rebaixado_estadual', 'cqk7_rebaixado(clube, comp); // cqk7: o rebaixado do estadual',
-     '// mutacao: sem o registro do rebaixado do estadual', 'cqk_7 rebaixado do estadual'),
+     '// mutacao: sem o registro do rebaixado do estadual', 'cqk_7 state league relegated'),
     ('cqk7_classificado_estadual', 'cqk7_classificou(clube, comp, 0, 0x82, 0x32); // cqk7: o classificado do estadual',
-     '// mutacao: sem o registro do classificado do estadual', 'cqk_7 classificado do estadual'),
+     '// mutacao: sem o registro do classificado do estadual', 'cqk_7 state league qualified'),
 ]

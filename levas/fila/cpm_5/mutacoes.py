@@ -5,9 +5,9 @@
 # de -1000 so desce 1); os regens da carreira (0x7abac0) passam por ela.
 MUTACOES = [
     ('cpm5_recorrente_um_em_dez', 'if s != 0 { // 1 em 20',
-     'if s > 1 { // mutacao: 1 em 10', 'cpm_5 lesao recorrente'),
+     'if s > 1 { // mutacao: 1 em 10', 'cpm_5 recurring injury'),
     ('cpm5_recorrente_sem_parar', 'if melhor >= 0x5f { // forte o bastante: para',
-     'if melhor >= 0x5f && false { // mutacao: nao para', 'cpm_5 recorrente forte'),
+     'if melhor >= 0x5f && false { // mutacao: nao para', 'cpm_5 strong recurring'),
     ('cpm5_desgaste_do_regen', 'core::ptr::write_unaligned((r + 0xc) as *mut i16, 0); // sem desgaste',
-     'core::ptr::write_unaligned((r + 0xc) as *mut i16, -2000); // mutacao: desgaste -2000', 'cpm_5 reiniciar jogador'),
+     'core::ptr::write_unaligned((r + 0xc) as *mut i16, -2000); // mutacao: desgaste -2000', 'cpm_5 reset player'),
 ]

@@ -33,7 +33,7 @@
 # Comparadores: 0x904580 lado a lado (a classificação com as finais em +0x440, os clubes, o sorteio com a cópia sem
 # contar, a marca da caixa); 0x903890 em 2001 a devolução das duas (sem efeito), fora disso só a original (sorteia, aloca,
 # notícia); 0x9035a0 só a original (refaz a classificação pelas rotinas de dentro e entrega notícias; a cópia leva o
-# contador "cqi_3 virada da classificacao").
+# contador "cqi_3 qualification rollover").
 # Determinismo: as notícias locais começam zeradas na cópia e o construtor (0x77bbe0) as preenche; o [S+0x1a] da original
 # (a última fase com vaga) só é lido depois de gravado na mesma nação ou na anterior (começa 0 na cópia). Nada lê pilha,
 # heap ou endereço como valor.

@@ -35,7 +35,7 @@ unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, res
         if *((pessoa + 0x5f) as *const u8) != 1 {
             continue;
         }
-        crate::comparison::branch("cqc_13 olheiros do humano");
+        crate::comparison::branch("cqc_13 human scouts");
         let marcas = zerado(10, 4);
         for _ in 0..10 { // cqc13: os 10 observadores
             let q = loop {

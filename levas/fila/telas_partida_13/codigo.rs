@@ -187,7 +187,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
             let t = *topo;
             let y = (*base - t - 0x46) / 2 + t;
             if get_screen_param(7) != 0 {
-                crate::comparison::branch("telas visao geral com o narrador");
+                crate::comparison::branch("screens overview with the commentator");
                 let rel = u(u(p0 + 0x57) + 0x8f7a);
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
                 let m = u(p0 + 0x57);

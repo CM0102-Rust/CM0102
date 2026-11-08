@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
     // neles (o float A e a conta das linhas na escala pela reputação, o que resta de jogos do clube no terceiro)
     let (mut normal, mut melhor, mut pior) = (0u32, 0u32, 0u32);
     if (*((linha + 0x11) as *const i8) as i32) * 3 < cpr11_w(this + 0xa7) as i32 {
-        crate::comparison::branch("cpr_11 projecao pela injury_word_0c");
+        crate::comparison::branch("cpr_11 projection by injury_word_0c");
         let n = cpr11_w(this + 0x3e);
         qsort(buf, n as i32 as u32, 0xe, 0x68afb0);
         let c = *((this + 0xc2) as *const i8) as f64;
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn update_projected_positions(this: usize, clube: usize
         }
     }
     liberar(buf);
-    crate::comparison::branch("cpr_11 projecao");
+    crate::comparison::branch("cpr_11 projection");
     // ponytail: os bytes altos que a original deixa nos três locais fora da escala pela reputação são sobra de pilha
     // (aqui, zero); as 69 versões da virtual +0x68 só leem o byte baixo de cada argumento (ou repassam os dwords a
     // outra que lê)

@@ -12,7 +12,7 @@ unsafe extern "thiscall" fn advance_week_counter(this: usize, dia: *const i16) -
     let v = *dia as i32;
     let resto = v % 7; // cpt10: a semana de 7 dias
     if resto == 0 { // cpt10: o sétimo dia
-        crate::comparison::branch("cpt_10 semana");
+        crate::comparison::branch("cpt_10 week");
         let s = (this + 0x688d) as *mut u16;
         *s = (*s).wrapping_add(1); // cpt10: mais uma semana
     }
@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn compare_advance_week_counter(this: usize, dia: *cons
 /// jogador (this +0x1c: id, nação e segunda nação) para as três saídas e tira-o da reserva
 /// (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 com o id lido da saída); devolve o eax dela.
 unsafe extern "thiscall" fn take_spare_non_player_record(this: usize, id: *mut u32, nacao: *mut u32, segunda: *mut u32) -> u32 {
-    crate::comparison::branch("cpt_10 ficha reservada");
+    crate::comparison::branch("cpt_10 reserved record");
     *id = cpt10_d(cpt10_d(this + 0x1c)) as u32;
     *nacao = cpt10_d(cpt10_d(this + 0x1c) + 4) as u32;
     *segunda = cpt10_d(cpt10_d(this + 0x1c) + 8) as u32;

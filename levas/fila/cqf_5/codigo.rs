@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn world_cup_create_group_table(this: usize, lista: usi
     while linha < 4 {
         let e = i as usize; // cqf5: a entrada da lista
         if cqf5_b(lista + e * 5 + 4) == 1 {
-            crate::comparison::branch("cqf_5 time do grupo um");
+            crate::comparison::branch("cqf_5 group one team");
             let clube = draw_list_club(lista, e);
             linha_da_tabela(this, linha as u8 as u32, clube, 0, 0);
             linha += 1;
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize, g: i32, li
     while n < 4 {
         let e = lista + i as usize * 5;
         if cqf5_b(e + 4) as i8 as i32 == g + 2 {
-            crate::comparison::branch("cqf_5 time do grupo");
+            crate::comparison::branch("cqf_5 group team");
             cqf5_pd(times + n as usize * 4, draw_list_club(lista, i as usize)); // cqf5: o time na vaga do grupo
             n += 1;
         }
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
     }
     let mut i = 0i16;
     while i < cqf5_w(this + 0x36) {
-        crate::comparison::branch("cqf_5 competição da nação");
+        crate::comparison::branch("cqf_5 nation competition");
         competicao(cqf5_d(0xb74318), cqf5_d(cqf5_d(v + i as usize * 4) + 0x53), cqf5_d(this + 4));
         i += 1; // cqf5: a próxima nação
     }

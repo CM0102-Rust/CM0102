@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
             }
             exe::crt_free(read_usize(this + cup::TIE_TABLES));
         }
-        crate::comparison::branch("cqt_5 copa do rei refeita");
+        crate::comparison::branch("cqt_5 copa del rey redone");
         core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1); // cqt5: the Copa del Rey redone once
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if exe::spacup_collect_entrants(this) < 0 {

@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn compare_write_deadline_news_text(this: usize, notici
 unsafe extern "thiscall" fn compare_can_end_loan(this: usize, clube: usize, jogador: usize, a: u32, b: u32, c: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(%%I1%%)(this, clube, jogador, a, b, c);
     if loan_transfer_rules(this, clube, jogador).is_some() {
-        crate::comparison::branch("can_end_loan pelas regras");
+        crate::comparison::branch("can_end_loan by the rules");
         return r;
     }
     SCOREBOARD.record(r == 1, || format!("can_end_loan({:x}, {:x}) original={} rust=1", clube, jogador, r));

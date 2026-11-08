@@ -25,7 +25,7 @@ unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let gravar: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932e10usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparison::branch("save gravar regras fifa");
+    crate::comparison::branch("save write fifa rules");
     if save == 0 {
         setup_warning(0x3b24);
         return;
@@ -62,7 +62,7 @@ unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     let abrir_item: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler_item: unsafe extern "C" fn(usize, i32, i32, usize) -> i32 = core::mem::transmute(0x932c30usize);
     let fechar_item: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
-    crate::comparison::branch("save carregar regras fifa");
+    crate::comparison::branch("save load fifa rules");
     if save == 0 {
         setup_warning(0x3b4f);
         return;

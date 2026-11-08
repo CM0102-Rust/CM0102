@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn serve_international_bans(this: usize, time: usize) {
         core::ptr::write_unaligned((lista + 0xa) as *mut usize, cqb9_d(lista + 2));
         let mut p = proximo(lista);
         while p != 0 {
-            crate::comparison::branch("cqb_9 jogo cumprido");
+            crate::comparison::branch("cqb_9 match served");
             contar(this, cqb9_d(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0
             p = proximo(lista);
         }
@@ -158,7 +158,7 @@ unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, regra: u32
     if r.suspensao == 0 {
         return;
     }
-    crate::comparison::branch("cqb_9 recurso");
+    crate::comparison::branch("cqb_9 appeal");
     tirar_pendentes(r.orgao, id);
     let s = r.suspensao;
     *(s as *mut u8) = r.jogos;

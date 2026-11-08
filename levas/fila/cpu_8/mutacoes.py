@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu8_geral_mais_forte', 'set_schedule_levels(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral',
      'set_schedule_levels(this, [0x32, 0x19, 0x19, 0x19, 0]); // mutacao: 50 na primeira categoria',
-     'cpu_8 geral'),
+     'cpu_8 general'),
     ('cpu8_goleiros_mais_fraco', 'set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: o treino dos goleiros',
      'set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x19]); // mutacao: 25 na quinta categoria',
-     'cpu_8 goleiros'),
+     'cpu_8 goalkeepers'),
     ('cpu8_computador_tipo_2', 'tipo(this + 0x9b, 1, 1); // cpu8: o programa geral do computador',
      'tipo(this + 0x9b, 1, 2); // mutacao: o programa 1 do computador com o tipo 2',
-     'cpu_8 programas padrao'),
+     'cpu_8 default schedules'),
 ]

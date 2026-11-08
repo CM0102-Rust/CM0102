@@ -24,7 +24,7 @@ pub(crate) unsafe fn zip_close(z: &mut usize) {
 /// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`fatal_error_at`).
 pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usize) -> u32 {
     const FONTE: usize = 0x98b644;
-    crate::comparison::branch("cpx_7 gravar historico dos clubes");
+    crate::comparison::branch("cpx_7 save club history");
     if save == 0 {
         show_error_at(FONTE, 0x329);
         return 0;

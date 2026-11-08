@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn league_update_for_date(this: usize, data: usize, com
         }
         if cqd5_d(this + 0xdd) == 0 {
             semanas(pd0, px, 4); // cqd5: a TV quatro semanas adiante
-            crate::comparison::branch("cqd_5 jogos para a tv");
+            crate::comparison::branch("cqd_5 matches for tv");
             tv(this, px);
         }
     }
@@ -237,7 +237,7 @@ unsafe fn add_league_fixture(this: usize, r: usize, ea: usize, eb: usize, off: u
     } else {
         cqd5_pw(r + 0x4d, cqd5_w(r + 0x4d) as u16 & 0xf7ff);
     }
-    crate::comparison::branch("cqd_5 jogo da tabela");
+    crate::comparison::branch("cqd_5 fixture list match");
     calendario(cqd5_d(0xae2a58), r, 1);
 }
 
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     montar(grade, n);
     let c = cqd5_d(this + 4);
     if c == 0 || (cqd5_d(c) != cqd5_d(0x9cf79c) && cqd5_d(c) != cqd5_d(0x9cf7a4)) {
-        crate::comparison::branch("cqd_5 ordem sorteada");
+        crate::comparison::branch("cqd_5 order drawn");
         sortear(this, n as u32); // cqd5: a ordem dos clubes
     }
     // o registro do jogo; os bytes que a original não grava (+4..+7, +0x18, +0x2e, +0x39, +0x4d e os bits altos de

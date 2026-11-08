@@ -343,7 +343,7 @@ unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0x9c4374, 0xae);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 calendario da primeira inglesa");
+            crate::comparison::branch("cqp_5 english first division calendar");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, ano, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
@@ -359,7 +359,7 @@ unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 play-offs da primeira inglesa");
+            crate::comparison::branch("cqp_5 english first division play-offs");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, ano);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, ano);
@@ -390,7 +390,7 @@ unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, fase: u32, roda
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 calendario da premiership");
+            crate::comparison::branch("cqp_5 premiership calendar");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, ano, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t

@@ -21,7 +21,7 @@ unsafe extern "thiscall" fn set_type(this: usize, vaga: i8, tipo: i8) {
     *((this + 0x15) as *mut i8) = tipo;
     match tipo {
         1 => {
-            crate::comparison::branch("cpu_8 geral");
+            crate::comparison::branch("cpu_8 general");
             set_schedule_levels(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral
         }
         2 => set_schedule_levels(this, [0x32, 0xa, 0xa, 0xa, 0]),
@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn set_type(this: usize, vaga: i8, tipo: i8) {
         4 => set_schedule_levels(this, [0xa, 0xa, 0xa, 0x32, 0]),
         5 => set_schedule_levels(this, [0xa, 0x32, 0xa, 0xa, 0]),
         6 => {
-            crate::comparison::branch("cpu_8 goleiros");
+            crate::comparison::branch("cpu_8 goalkeepers");
             set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: o treino dos goleiros
         }
         0 | 7 => set_schedule_levels(this, [0; 5]),
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     let tipo: unsafe extern "thiscall" fn(usize, i8, i8) = core::mem::transmute(0x8b4e50usize);
     let humano: unsafe extern "thiscall" fn(usize, usize, i8) -> usize = core::mem::transmute(0x8b3930usize);
     tipo(this, 0, 0);
-    crate::comparison::branch("cpu_8 programas padrao");
+    crate::comparison::branch("cpu_8 default schedules");
     tipo(this + 0x9b, 1, 1); // cpu8: o programa geral do computador
     for k in 2..7i8 {
         tipo(this + 0x9b * k as usize, k, k);

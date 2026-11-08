@@ -33,7 +33,7 @@ unsafe extern "C" fn fix_man_save_club_dates() {
     if f == 0 {
         return;
     }
-    crate::comparison::branch("cpy_7 gravar datas dos clubes");
+    crate::comparison::branch("cpy_7 save club dates");
     if escrever(cpy7_d(0xae2a5c), 2, cpy7_clubes(), f) != cpy7_clubes() { // cpy7: as datas dos clubes
         show_error_at(0x9cc208, 0x101b);
     }
@@ -65,11 +65,11 @@ unsafe extern "C" fn fix_man_load_club_dates() {
     }
     let f = open_temp_file(0x9cc248, 0x98f928);
     if f == 0 {
-        crate::comparison::branch("cpy_7 datas dos clubes zeradas");
+        crate::comparison::branch("cpy_7 club dates zeroed");
         core::ptr::write_bytes(cpy7_d(0xae2a5c) as *mut u8, 0, cpy7_clubes().wrapping_mul(2) as usize);
         return;
     }
-    crate::comparison::branch("cpy_7 datas dos clubes lidas");
+    crate::comparison::branch("cpy_7 club dates read");
     if ler(cpy7_d(0xae2a5c), 2, cpy7_clubes(), f) != cpy7_clubes() { // cpy7: a leitura das datas
         show_error_at(0x9cc208, 0xff6);
     }
@@ -98,7 +98,7 @@ unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
     if f == 0 {
         return;
     }
-    crate::comparison::branch("cpy_7 gravar conferencia das pernas");
+    crate::comparison::branch("cpy_7 save leg check");
     escrever(&conta as *const usize as usize, 2, 1, f);
     *(0xae2a52 as *mut usize) = cpy7_d(0xae2a4a);
     loop {

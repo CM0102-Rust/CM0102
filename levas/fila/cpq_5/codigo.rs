@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn transfer_manager_get_offer_completion_date(this: usi
     let vendedor = offer_seller_club(oferta);
     match cpq5_b(oferta + 0x30) & 0xf {
         0 => {
-            crate::comparison::branch("cpq_5 conclusao imediata");
+            crate::comparison::branch("cpq_5 immediate completion");
             copia(saida, &mut t, hoje); // tipo 0: hoje
         }
         5 => {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta:
     }
     let regra_c = nation_transfer_rules_or_zero(this, cpq5_d(comprador + 0x53));
     let regra_v = if vendedor != 0 && cpq5_d(oferta + 4) != 0 { nation_transfer_rules_or_zero(this, cpq5_d(vendedor + 0x53)) } else { 0 };
-    crate::comparison::branch("cpq_5 dia permitido");
+    crate::comparison::branch("cpq_5 allowed day");
     copia(&mut dia, &mut t, &inicio); // o primeiro dia testado é o início
     while date_pair_before(&dia, &limit) {
         let mut ve_vendedor = true;
@@ -230,7 +230,7 @@ unsafe extern "stdcall" fn transfer_manager_get_next_window_dates(inicio: *mut [
             copia(fim, &mut t, &d);
         }
     } else if h < dia(&a) {
-        crate::comparison::branch("cpq_5 janela de julho");
+        crate::comparison::branch("cpq_5 July window");
         copia(inicio, &mut t, &a);
         if !fim.is_null() {
             copia(fim, &mut t, &b);

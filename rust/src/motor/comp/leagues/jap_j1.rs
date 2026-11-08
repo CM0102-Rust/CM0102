@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     let a = core::ptr::read_unaligned((this + league::YEAR) as *const i16);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1)); // cqq9: the next year of the J1
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
-    crate::comparison::branch("cqq_9 virada da j1");
+    crate::comparison::branch("cqq_9 j1 rollover");
     let error = if virtual_(this, 0x8c) == 0 {
         0x1be
     } else if core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize) -> u32>(0x6634e0usize)(this) == 0 {
@@ -320,7 +320,7 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: usize, n: i16, g: 
 /// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
     j1_rules(this);
-    crate::comparison::branch("cqj_7 regras da j1");
+    crate::comparison::branch("cqj_7 j1 rules");
     create_main_schedule(this);
     1
 }

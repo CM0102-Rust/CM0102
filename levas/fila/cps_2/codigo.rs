@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn init_work_permits(this: usize) {
                     }
                     let a = cps2_w(e - 2);
                     if a < ano { // cps2: o ano mais antigo
-                        crate::comparison::branch("cps_2 ano mais antigo");
+                        crate::comparison::branch("cps_2 oldest year");
                         ano = a;
                     }
                 }
@@ -79,12 +79,12 @@ unsafe extern "thiscall" fn init_work_permits(this: usize) {
                     let r = mais_semanas(dp, t2.as_mut_ptr() as usize, 0x34);
                     copiar(dp, t3.as_mut_ptr() as usize, r);
                 }
-                crate::comparison::branch("cps_2 permissao pela carreira");
+                crate::comparison::branch("cps_2 permit by career");
                 // ponytail: a original empurra o registrador do ano com os 16 bits altos de um ponteiro; a 0x8c7070
                 // só grava a palavra baixa
                 dar(this, p, cps2_d(cps2_d(p + 0x39) + 0x53), ano as u32, 1, 0);
             } else {
-                crate::comparison::branch("cps_2 segunda nacionalidade");
+                crate::comparison::branch("cps_2 second nationality");
                 core::ptr::write_unaligned((p + 0x1e) as *mut usize, cps2_d(cps2_d(p + 0x39) + 0x53)); // cps2: a segunda nacionalidade
             }
         }

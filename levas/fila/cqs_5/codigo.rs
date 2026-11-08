@@ -78,7 +78,7 @@ unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             let c = base + i as u16 as usize * 0x245;
             let antes = cqs5_d(c + 0x5b);
             if eng_auto_cup_is_in_comp(c, 0x9cf69c) && antes != 0 && cqs5_d(antes) == cqs5_d(0x9cf5c8) {
-                crate::comparison::branch("cqs_5 rebaixado para a conference");
+                crate::comparison::branch("cqs_5 relegated to the conference");
                 push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
                 achado = c;
                 break;
@@ -178,7 +178,7 @@ unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     if k != cqs5_d(this + 0xb6) as i32 {
         return 0;
     }
-    crate::comparison::branch("cqs_5 chaves do trofeu da liga");
+    crate::comparison::branch("cqs_5 league trophy sections");
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
     ordenar(cqs5_d(this + 0xb2), cqs5_d(this + 0xb6) as u32, 4, 0x53fd40); // cqs5: Norte e Sul pela latitude
     let metade = (cqs5_d(this + 0xb6) as i32) / 2;
@@ -276,7 +276,7 @@ unsafe extern "thiscall" fn create_section_stage(this: usize) {
     if cqs5_d(cqs5_d(this + 0xc)) == 0 {
         return show_error_at(0x9c4180, 0x300);
     }
-    crate::comparison::branch("cqs_5 fase das chaves do trofeu");
+    crate::comparison::branch("cqs_5 trophy sections stage");
     cqs5_pd(this + 0x30, 0);
 }
 
@@ -299,7 +299,7 @@ unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let fase = fase + 1;
     cqs5_pd(this + 0x30, fase as usize);
     if fase == 1 {
-        crate::comparison::branch("cqs_5 final do trofeu");
+        crate::comparison::branch("cqs_5 trophy final");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x56bce0usize);
         f(this);
     }

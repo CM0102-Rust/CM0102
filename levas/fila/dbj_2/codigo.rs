@@ -11,7 +11,7 @@ const COMPETITION_V1_LAYOUT: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33, 1)
 /// 1. Chamado por `db_files_read_comps` 0x54feb0 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
 unsafe extern "C" fn db_files_read_comps_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco ler competições v1");
+    crate::comparison::branch("database read competitions v1");
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 =
         core::mem::transmute(if use_zip != 0 { 0x932c30usize } else { 0x945bfeusize });
     for i in 0..n as usize {

@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
     if (cqb6_b(p + 0x18) as i8) < 0x17 { // cqb6: só acima de 22 anos
         return;
     }
-    crate::comparison::branch("cqb_6 parte dos clubes anteriores");
+    crate::comparison::branch("cqb_6 share of previous clubs");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     if !FORMER_CLUB_FEE_DRY_RUN {
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
         let clube = cqb6_clube(i);
         let valor = vinte.wrapping_div(divisor).wrapping_mul(peso); // cqb6: a parte da vaga
         let fin = cqb6_financas(cqb6_clube(cqb6_d(o + 8)));
-        crate::comparison::branch("cqb_6 parte paga");
+        crate::comparison::branch("cqb_6 share paid");
         post_finance_amount(0x599800, fin, valor); // cqb6: entra nas vendas do comprador
         if valor > (cqb6_w(clube + 0x80) as i32).wrapping_mul(11).wrapping_sub(10000) {
             FORMER_CLUB_FEE_DELIVERIES += 1;
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: usize, o: u
     if parte < 1000 {
         return 0;
     }
-    crate::comparison::branch("cqb_6 write_percent_pair pago");
+    crate::comparison::branch("cqb_6 write_percent_pair paid");
     if !FORMER_CLUB_FEE_DRY_RUN {
         let noticia: unsafe extern "thiscall" fn(usize, usize, i32, usize, u32) = core::mem::transmute(0x8db3a0usize);
         noticia(this, e, parte, o, da_oferta);
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn compare_pay_next_sale_percentage(this: usize, p: usi
 /// oferta) com `da_oferta`; senão o id do clube do contrato (0x4cf5a0; sem contrato ou sem clube: acaba sem entregar).
 /// Vai aos técnicos do clube da cláusula e do vendedor (0x7861e0).
 unsafe extern "thiscall" fn post_sale_percentage_news(_this: usize, e: usize, parte: i32, o: usize, da_oferta: u32) {
-    crate::comparison::branch("cqb_6 noticia do write_percent_pair");
+    crate::comparison::branch("cqb_6 write_percent_pair news");
     let p = cqb6_pessoa(cqb6_d(e + 9));
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;

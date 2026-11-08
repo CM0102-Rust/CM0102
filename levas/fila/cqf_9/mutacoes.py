@@ -5,9 +5,9 @@
 # - O ultimo (ARTHRITIS) e o desconhecido trocados.
 MUTACOES = [
     ('cqf9_tipo_mais_1', 'return tipo as u32; // cqf9: o tipo da lesão pelo nome',
-     'return tipo as u32 + 1; // mutacao: o tipo da lesão pelo nome', 'cqf_9 lesao pelo nome'),
+     'return tipo as u32 + 1; // mutacao: o tipo da lesão pelo nome', 'cqf_9 injury by name'),
     ('cqf9_nenhum_bate', 'if strncmp(nome, texto, n) == 0 {',
-     'if strncmp(nome, texto, n) == 0 && false {', 'cqf_9 lesao pelo nome'),
+     'if strncmp(nome, texto, n) == 0 && false {', 'cqf_9 injury by name'),
     ('cqf9_artrite_trocada', 'if strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }',
-     'if strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4b } else { 0x4c }', 'cqf_9 lesao pelo nome'),
+     'if strncmp(nome, 0xa6b3a8, 8) == 0 { 0x4b } else { 0x4c }', 'cqf_9 injury by name'),
 ]

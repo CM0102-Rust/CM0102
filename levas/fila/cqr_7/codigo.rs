@@ -84,7 +84,7 @@ unsafe fn advance_cup_stage(this: usize, arquivo: usize, linha: u32, fim_dos_gru
     let fase = fase + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, fase);
     if fase == fim_dos_grupos {
-        crate::comparison::branch("cqr_7 mata-mata das copas italianas");
+        crate::comparison::branch("cqr_7 italian cups knockout");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(mata_mata);
         f(this); // cqr7: monta o mata-mata
     }

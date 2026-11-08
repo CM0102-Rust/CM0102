@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -
         show_error_at(0x9a7de4, 0x297);
         return 0;
     }
-    crate::comparison::branch("cqk_11 classificados da libertadores");
+    crate::comparison::branch("cqk_11 libertadores qualified");
     embaralhar(lista, cqk11_w(this + 0xf2) as u16 as u32); // cqk11: os 32 da Libertadores embaralhados
     1
 }
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this:
                 let mundial = cqk11_d(cqk11_d(0xadadfc).wrapping_add(cqk11_d(0x9cf6e4).wrapping_mul(4)));
                 let t = cqk11_d(mundial + 0xa7);
                 let nacao = cqk11_d(cqk11_d(t) + 0x53);
-                crate::comparison::branch("cqk_11 campeao da libertadores");
+                crate::comparison::branch("cqk_11 libertadores champion");
                 if nacao != 0 && cqk11_d(cqk11_d(nacao + 0x71)) == cqk11_d(0x9cfa1c) {
                     core::ptr::write_unaligned(t as *mut u32, clube as u32); // cqk11: o campeão na vaga sul-americana
                 } else {
@@ -184,7 +184,7 @@ unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize) {
     let f = f + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
     if f == 7 { // cqk11: o mata-mata depois dos sete grupos
-        crate::comparison::branch("cqk_11 mata-mata da libertadores");
+        crate::comparison::branch("cqk_11 libertadores knockout");
         let mata: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c3d10usize);
         mata(this);
     }

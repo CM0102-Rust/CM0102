@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn record_match_ratings(this: usize, jogo: usize, parti
                 continue;
             }
             if l == 1 {
-                crate::comparison::branch("cpw_5 notas do visitante");
+                crate::comparison::branch("cpw_5 away side ratings");
             }
             nota(this, e);
         }
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     cpw5_pd(r + 4, liga as u32);
     core::ptr::write_unaligned((r + 8) as *mut u16, 0);
     *((r + 0xb) as *mut u8) = cpw5_b(p + 0x18);
-    crate::comparison::branch("cpw_5 jogador novo no mes");
+    crate::comparison::branch("cpw_5 new player in the month");
     *((r + 0xa) as *mut u8) = 0; // cpw5: começa sem jogos
     cpw5_pd(this + 4, n.wrapping_add(1) as u32);
     add_match_rating(r, e);
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e: usize) {
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
 unsafe extern "thiscall" fn find_best_player(this: usize, liga: i32, idade: u32) -> usize {
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    crate::comparison::branch("cpw_5 ordenou as notas");
+    crate::comparison::branch("cpw_5 sorted the ratings");
     ordenar(cpw5_d(this), cpw5_d(this + 4) as u32, 0xc, 0x768200); // cpw5: ordena pela média
     let tab = cpw5_d(this);
     let n = cpw5_i(this + 4);

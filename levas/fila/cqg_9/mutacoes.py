@@ -6,9 +6,9 @@
 # - A parte de cada vaga uma a mais (os arbitros por competicao).
 MUTACOES = [
     ('cqg9_ficam_5', 'let limit = if *((nac + 0x11c) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação',
-     'let limit = if *((nac + 0x11c) as *const u8) == 0 { 4 } else { 0x3c }; // mutacao: os árbitros que ficam por nação', 'cqg_9 arbitro mantido'),
+     'let limit = if *((nac + 0x11c) as *const u8) == 0 { 4 } else { 0x3c }; // mutacao: os árbitros que ficam por nação', 'cqg_9 referee kept'),
     ('cqg9_pedido_mais_11', 'let pedido = cqg9_w(cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga',
-     'let pedido = cqg9_w(cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xb; // mutacao: o pedido da vaga', 'cqg_9 vaga de competicao'),
+     'let pedido = cqg9_w(cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xb; // mutacao: o pedido da vaga', 'cqg_9 competition slot'),
     ('cqg9_parte_mais_1', 'cqg9_pd(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c) as u32); // cqg9: a parte de cada vaga',
-     'cqg9_pd(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c + 1) as u32); // mutacao: a parte de cada vaga', 'cqg_9 parte da vaga'),
+     'cqg9_pd(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c + 1) as u32); // mutacao: a parte de cada vaga', 'cqg_9 part of the slot'),
 ]

@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
         }
         let e = cpo11_entrada(ruling_body_of_rule(this, regra), id);
         if e != 0 && cpo11_w(e + 6) > -1 {
-            crate::comparison::branch("cpo_11 suspensao estendida");
+            crate::comparison::branch("cpo_11 suspension extended");
             let s = cpo11_d(this + 4).wrapping_add((cpo11_w(e + 6) as i32 as usize).wrapping_mul(20));
             let jogos = *(s as *const u8);
             let novos = *(ban as *const u8);
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
             }
         }
     }
-    crate::comparison::branch("cpo_11 suspensao nova");
+    crate::comparison::branch("cpo_11 new suspension");
     let ligar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x7e8510usize);
     for k in 0..4usize {
         let regra = *((ban + 0xc + k) as *const u8);
@@ -202,7 +202,7 @@ unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, pessoa: usi
         if e == 0 {
             continue;
         }
-        crate::comparison::branch("cpo_11 transferido solta a vaga");
+        crate::comparison::branch("cpo_11 transferred frees the slot");
         release_entry_ban(this, id, e);
         if *((r + 0x1c) as *const u8) != 0 {
             show_error_at(0x9b8f18, 0x239);
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
                     clear_discipline_slot(this, id, k, e);
                 }
             }
-            crate::comparison::branch("cpo_11 guardada devolvida");
+            crate::comparison::branch("cpo_11 stored one returned");
             marcas[k & 3] = 1;
             let v = r.wrapping_add(k.wrapping_mul(5));
             cpo11_por(v, cpo11_d(item + 5) as u32);
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn restore_held_bans(this: usize, pessoa: usize) {
         }
         let e = cpo11_entrada(orgao, id);
         if e != 0 {
-            crate::comparison::branch("cpo_11 fim do emprestimo solta a vaga");
+            crate::comparison::branch("cpo_11 loan end frees the slot");
             release_entry_ban(this, id, e);
             clear_discipline_slot(this, id, k, e);
         }

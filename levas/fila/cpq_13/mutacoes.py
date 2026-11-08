@@ -6,8 +6,8 @@
 MUTACOES = [
     ('cpq_limpar_outra_vaga', '    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga',
      '    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * (v as usize + 1)) as *mut i32, -1); // mutacao: a vaga seguinte',
-     'cpq_13 limpar vaga'),
+     'cpq_13 clear slot'),
     ('cpq_batedor_fica', '    core::ptr::write_unaligned(celula(e), -1); // sem batedor',
      '    // mutacao: o batedor tirado fica na celula',
-     'cpq_13 batedor limpo'),
+     'cpq_13 taker cleared'),
 ]

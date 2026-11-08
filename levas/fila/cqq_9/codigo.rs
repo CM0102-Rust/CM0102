@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
     let a = core::ptr::read_unaligned((this + 0x40) as *const i16);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(1)); // cqq9: o ano seguinte da J1
     core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    crate::comparison::branch("cqq_9 virada da j1");
+    crate::comparison::branch("cqq_9 j1 rollover");
     let erro = if virtual_(this, 0x8c) == 0 {
         0x1be
     } else if core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize) -> u32>(0x6634e0usize)(this) == 0 {

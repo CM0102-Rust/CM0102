@@ -8,9 +8,9 @@
 MUTACOES = [
     ('cqb10_busca_pelo_segundo', '    let mut no = cqb10_d(this + 2); // cqb10: a busca começa na cabeça',
      '    let mut no = { let c = cqb10_d(this + 2); if c != 0 { cqb10_d(c + 6) } else { 0 } }; // mutacao: a busca começa no segundo',
-     'cqb_10 tirado'),
+     'cqb_10 removed'),
     ('cqb10_cauda_parada', '        cqb10_por(this + 6, ant); // cqb10: a cauda volta ao anterior',
-     '        // mutacao: a cauda volta ao anterior', 'cqb_10 cauda'),
+     '        // mutacao: a cauda volta ao anterior', 'cqb_10 tail'),
     ('cqb10_cursor_parado', '        cqb10_por(this + 0xa, cqb10_d(no + 6)); // cqb10: o cursor anda',
      '        // mutacao: o cursor anda', 'cqb_10 cursor'),
 ]

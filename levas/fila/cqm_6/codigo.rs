@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn construct_spa_lower(this: usize, ano: u32) -> usize 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cqm_6 divisao de baixo nova");
+    crate::comparison::branch("cqm_6 new lower division");
     *((this + 0x44) as *mut u8) = 0xff;
     cqm6_pd(this + 0x30, 0xffff_ffff);
     cqm6_pd(this + 0x2c, 0);
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
         if spa_lower_is_in_comp(c, 0x9cf628) {
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, 0x9cf624) {
-                crate::comparison::branch("cqm_6 time b na segunda");
+                crate::comparison::branch("cqm_6 b team in the second division");
                 *((cqm6_d(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
         }
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqm_6 tabela da segunda");
+    crate::comparison::branch("cqm_6 second division fixtures");
     if k as i8 as i16 != cqm6_w(this + 0x3e) {
         return 0;
     }
@@ -258,7 +258,7 @@ unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
             }
         });
     }
-    crate::comparison::branch("cqm_6 tabela da divisao de baixo");
+    crate::comparison::branch("cqm_6 lower division fixtures");
     let mut lista = spanish_lower_candidates();
     let quantos = lista.len() as u16 as u32;
     let faltam = (cqm6_w(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam

@@ -47,7 +47,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
             }
         }
         let soma = if n < 8000 {
-            crate::comparison::branch("cpu_13 base pela reputação");
+            crate::comparison::branch("cpu_13 base by reputation");
             n.wrapping_mul(3).wrapping_add(ebx).wrapping_add(l.wrapping_add(rep.wrapping_mul(2)).wrapping_mul(4))
         } else {
             ebx.wrapping_add(rep.wrapping_mul(7)).wrapping_add(n.wrapping_add(l).wrapping_mul(4))
@@ -64,7 +64,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
     } else if esi > 5000 {
         match_pl_ftol(esi as f64 * read_f64_at(0x968e18) + read_f64_at(0x9690b8))
     } else if esi > 3000 {
-        crate::comparison::branch("cpu_13 band de 3000 a 5000");
+        crate::comparison::branch("cpu_13 band from 3000 to 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio
     } else {
         match_pl_ftol(esi as f64 * read_f64_at(0x969018) + read_f64_at(0x9688e8))
@@ -110,7 +110,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
                         edi = match_pl_ftol(if x > y { x } else { y });
                     }
                     2 => {
-                        crate::comparison::branch("cpu_13 clube rico");
+                        crate::comparison::branch("cpu_13 rich club");
                         let (x, y) = (v * read_f64_at(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico
                         edi = match_pl_ftol(if x > y { x } else { y });
                     }

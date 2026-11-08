@@ -3,7 +3,7 @@
 /// registros de 60 bytes (first_names.dat, second_names.dat e common_names.dat, ids 13 a 15: a mesma rotina para os três) por `zwrite` 0x932e10 (use_zip ≠ 0: o save) ou `fwrite` 0x945ce6
 /// (a pasta Data); 1 se foi tudo. Sem quadro de pilha: nada da pilha vai para o arquivo.
 unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar nomes");
+    crate::comparison::branch("database write names");
     let escritos = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 60, n, stream)
@@ -42,7 +42,7 @@ unsafe fn check_database_path(rotina: &str, pasta: usize, nome: usize) {
 /// (`_makepath`, ver `database_path`) e devolve `fopen(0xde1f64, "rb")` (0x945b00; "rb" em 0x98f928). Na
 /// criação do jogo, `load_database` abre assim o index.dat e cada tabela da pasta Data.
 unsafe extern "C" fn db_files_open_for_read(pasta: usize, nome: usize) -> usize {
-    crate::comparison::branch("banco abrir .dat");
+    crate::comparison::branch("database open .dat");
     database_path(0xde1f64, pasta, nome); // abrir (rb)
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     fopen(0xde1f64, 0x98f928)
@@ -60,7 +60,7 @@ unsafe extern "C" fn compare_db_files_open_for_read(pasta: usize, nome: usize) -
 /// `fopen(0xde1f64, "wb")` ("wb" em 0x9a7f28). Só `save_database(…, 0, …)` (gravar a base na pasta) chama:
 /// no save (use_zip ≠ 0) as tabelas vão por `zopen` 0x9326e0.
 unsafe extern "C" fn db_files_open_for_write(pasta: usize, nome: usize) -> usize {
-    crate::comparison::branch("banco criar .dat");
+    crate::comparison::branch("database create .dat");
     database_path(0xde1f64, pasta, nome);
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x945b00usize);
     fopen(0xde1f64, 0x9a7f28) // criar (wb)

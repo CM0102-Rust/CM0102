@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize, hoje: usi
         let dia = cqr11_w(this + 0xb6) as u16; // cqr11: o dia do sorteio
         let ano = (cqr11_w(this + 0xb8) as u16).wrapping_add(cqr11_w(this + 0x40) as u16);
         if ano == core::ptr::read_unaligned((hoje + 2) as *const u16) && dia == core::ptr::read_unaligned(hoje as *const u16) {
-            crate::comparison::branch("cqr_11 sorteio da mercosul");
+            crate::comparison::branch("cqr_11 mercosul draw");
             clubes(this);
             if primeiro(this) == 0 {
                 show_error_at(0x9a7e5c, 0x396);
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(this: usize) 
     }
     let mut i = 0i8;
     while (i as i16) < cqr11_w(this + 0x3e) {
-        crate::comparison::branch("cqr_11 linha do primeiro grupo");
+        crate::comparison::branch("cqr_11 first group row");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: usize, g: i32
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparison::branch("cqr_11 time do grupo");
+        crate::comparison::branch("cqr_11 group team");
         cqr11_pd(times + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: o time na vaga do grupo
         k += 1;
     }

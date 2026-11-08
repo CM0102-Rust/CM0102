@@ -10,5 +10,5 @@ MUTACOES = [
      '(ano as u16 == ano1 as u16 && dia as u16 >= dia1 as u16) /* mutacao: sem o ultimo dia */'),
     ('cpr12_qualquer_rodada', 'ok = false; // outra rodada',
      '// mutacao: a rodada nao filtra',
-     'cpr_12 jogo da rodada'),
+     'cpr_12 round match'),
 ]

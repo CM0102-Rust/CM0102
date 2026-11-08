@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpo12_idioma_sem_aumento', 'let f = (*((r + 5) as *const u8)).wrapping_add(aumento as u8);',
      'let f = *((r + 5) as *const u8); // mutacao: sem o aumento',
-     'cpo_12 idioma melhorado'),
+     'cpo_12 language improved'),
     ('cpo12_idioma_novo_pela_metade', '*((r + 5) as *mut u8) = if (f as i8) > 10 { 10 } else { f };',
      '*((r + 5) as *mut u8) = (if (f as i8) > 10 { 10 } else { f }) / 2; // mutacao: metade da fluencia',
-     'cpo_12 idioma novo'),
+     'cpo_12 new language'),
     ('cpo12_idiomas_sem_ordem', 'qsort(cpo12_d(this + 0x3c), cpo12_d(this + 0x44) as u32, 6, 0x7c6d40);',
      'let _ = &qsort; // mutacao: sem ordenar',
-     'cpo_12 idiomas ordenados'),
+     'cpo_12 languages sorted'),
 ]

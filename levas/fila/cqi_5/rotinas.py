@@ -2,7 +2,7 @@
 # eng_first.cpp; Agente B da frente das competições, 03/11/2026): aloca a tabela, põe os clubes da divisão na ordem do
 # banco, calcula o fundo de prêmios e paga o dinheiro da TV. Rodam uma vez cada, na criação da carreira (o construtor
 # as chama direto: 0x57343f mov ecx, esi; call 0x574a20 -> thiscall, ret 0; idem nas outras), na carreira de 8 ligas.
-# A 0x572bf0 (EngFirst) não aparece na docs/cobertura_competicoes.txt, mas roda (o contador "cqi_5 tabela cheia" chega a 4
+# A 0x572bf0 (EngFirst) não aparece na docs/cobertura_competicoes.txt, mas roda (o contador "cqi_5 full table" chega a 4
 # na carreira Rust de 8 ligas).
 # Iguais no cm0102-1080.exe (inteiras). Convenções conferidas nos pontos de chamada da original:
 # - 0x944e46 (malloc): push n; call; add esp, 4 -> cdecl;

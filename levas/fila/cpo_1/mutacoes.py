@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpo_comprador_no_limite', 'or_byte(f1, 4); // o comprador: taxa dentro do limit',
      'or_byte(f1, 8); // mutacao: o comprador ganha a marca da barganha',
-     'cpo_1 comprador no limit'),
+     'cpo_1 buyer at the limit'),
     ('cpo_vendedor_no_limite', 'or_byte(f2, 4); // o vendedor: taxa dentro do limit',
      'or_byte(f2, 2); // mutacao: o vendedor perde confianca',
-     'cpo_1 vendedor no limit'),
+     'cpo_1 seller at the limit'),
     ('cpo_tirar_favorito', 'tirar(cpo1_d(cpo1_d(pessoa + 0x39) + 0xbf), pessoa); // o presidente do vendedor',
      'let _ = tirar; // mutacao: o jogador fica nas favoritas do presidente',
-     'cpo_1 tirar favorito'),
+     'cpo_1 remove favourite'),
 ]

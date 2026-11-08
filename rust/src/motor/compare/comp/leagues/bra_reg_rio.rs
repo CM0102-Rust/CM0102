@@ -99,12 +99,12 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_final_stage(th
 /// season end; only the original routine runs (simplification: it writes the history, which allocates the record, pays
 /// the prizes and sends the news, and may build the Champions Cup; it cannot run twice).
 ///
-/// The copy runs in Rust mode (counters "cqo_9 historico da final" and "cqo_9 premios") and is proven by the mutations
+/// The copy runs in Rust mode (counters "cqo_9 final history" and "cqo_9 prizes") and is proven by the mutations
 /// and by the two Rust careers.
 ///
 /// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
-/// "cqo_9 historico da final" e "cqo_9 premios") e é provada pelas mutações e pelas duas carreiras Rust.
+/// "cqo_9 final history" e "cqo_9 prizes") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_RIO_RECORD_SEASON_HONOURS)(this)
 }

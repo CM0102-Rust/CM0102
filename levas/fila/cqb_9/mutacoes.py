@@ -8,9 +8,9 @@
 # mede: sem ramo, a mutacao e pulada como lacuna).
 MUTACOES = [
     ('cqb9_jogo_nao_conta', '            contar(this, cqb9_d(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0',
-     '            contar(this, cqb9_d(p) as u32, 0, 0); // mutacao: o jogo cumprido na regra 0', 'cqb_9 jogo cumprido'),
+     '            contar(this, cqb9_d(p) as u32, 0, 0); // mutacao: o jogo cumprido na regra 0', 'cqb_9 match served'),
     ('cqb9_regra_1', '            contar(this, cqb9_d(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0',
-     '            contar(this, cqb9_d(p) as u32, 1, 1); // mutacao: o jogo cumprido na regra 0', 'cqb_9 jogo cumprido'),
+     '            contar(this, cqb9_d(p) as u32, 1, 1); // mutacao: o jogo cumprido na regra 0', 'cqb_9 match served'),
     ('cqb9_conta_duas_vezes', '            contar(this, cqb9_d(p) as u32, 0, 1); // cqb9: o jogo cumprido na regra 0',
-     '            contar(this, cqb9_d(p) as u32, 0, 1); contar(this, cqb9_d(p) as u32, 0, 1); // mutacao: o jogo cumprido na regra 0', 'cqb_9 jogo cumprido'),
+     '            contar(this, cqb9_d(p) as u32, 0, 1); contar(this, cqb9_d(p) as u32, 0, 1); // mutacao: o jogo cumprido na regra 0', 'cqb_9 match served'),
 ]

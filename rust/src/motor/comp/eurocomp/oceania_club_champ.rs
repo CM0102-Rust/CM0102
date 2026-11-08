@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
         return 0;
     }
     if year_of_today == year && day_of_today == day && read_usize(this + league::ACTIVE) == 0 && full == 0 {
-        crate::comparison::branch("cqt_10 sorteio da oceania");
+        crate::comparison::branch("cqt_10 oceania draw");
         exe::oceaniaclubchamp_select_qualified_clubs(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
         predicted(this);
@@ -102,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     }
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
-        crate::comparison::branch("cqt_10 linha do grupo a");
+        crate::comparison::branch("cqt_10 group a row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: row i of group A
         i = i.wrapping_add(1);
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqt_10 time do grupo b");
+        crate::comparison::branch("cqt_10 group b team");
         write_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: the team in the group B slot
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -344,7 +344,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparison::branch("cqt_11 clubes da oceania");
+    crate::comparison::branch("cqt_11 oceania clubs");
     if champion == 0 {
         aus.ordenar(1);
         champion = aus.clubs[0];
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
     let f = f + 1;
     write_usize(this + league::CURRENT_STAGE, f as usize);
     if f == 1 {
-        crate::comparison::branch("cqt_11 semifinais da oceania");
+        crate::comparison::branch("cqt_11 oceania semifinals");
         exe::oceaniaclubchamp_create_knockout_stage(this);
     }
 }
@@ -439,7 +439,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
-    crate::comparison::branch("cqt_11 cruzamentos da oceania");
+    crate::comparison::branch("cqt_11 oceania pairings");
     for (k, &c) in semifinalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }
@@ -768,7 +768,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
 /// desempates (1, 2, 4, 0), dois classificados, categoria 8, 3 no banco e 3 substituições, +0x43 = 2, os bits de regra
 /// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_11 regras da oceania");
+    crate::comparison::branch("cqj_11 oceania rules");
     let day = 0x14; // cqj11: the start day in Oceania
     apply_cup_rules(this, &OCEANIA_RULES, day, 3)
 }

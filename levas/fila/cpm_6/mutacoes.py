@@ -5,9 +5,9 @@
 # (sem efeito lido pela carreira que se conheca).
 MUTACOES = [
     ('cpm_noticia_recebido', 'noticia(this, cpm6_d(vendedor) as u32, 0x1f); // recorde de valor recebido',
-     '// mutacao: sem a noticia de recorde recebido', 'cpm_6 noticia de recorde recebido'),
+     '// mutacao: sem a noticia de recorde recebido', 'cpm_6 record fee received news'),
     ('cpm_noticia_pago', 'noticia(this, cpm6_d(comprador) as u32, 0x1e); // recorde de valor pago',
-     '// mutacao: sem a noticia de recorde pago', 'cpm_6 noticia de recorde pago'),
+     '// mutacao: sem a noticia de recorde pago', 'cpm_6 record fee paid news'),
     ('cpm_nota_metade', 'if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 / 2 { // menos da metade dos jogos',
-     'if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 { // mutacao: todos os jogos', 'cpm_6 recorde de nota da temporada'),
+     'if (jogou as i32) < *((entrada + 0x10) as *const i8) as i32 { // mutacao: todos os jogos', 'cpm_6 season rating record'),
 ]

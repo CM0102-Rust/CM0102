@@ -123,7 +123,7 @@ unsafe fn select_qualified_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparison::branch("cqt_11 clubes da oceania");
+    crate::comparison::branch("cqt_11 oceania clubs");
     if campeao == 0 {
         aus.ordenar(1);
         campeao = aus.clubes[0];
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: usize) {
     let f = f + 1;
     cqt11_pd(this + 0x30, f as usize);
     if f == 1 {
-        crate::comparison::branch("cqt_11 semifinais da oceania");
+        crate::comparison::branch("cqt_11 oceania semifinals");
         let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x798050usize);
         semifinais(this);
     }
@@ -232,7 +232,7 @@ unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(this: usize
     if lista == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
-    crate::comparison::branch("cqt_11 cruzamentos da oceania");
+    crate::comparison::branch("cqt_11 oceania pairings");
     for (k, &c) in semifinalists(this).iter().enumerate() {
         cqt11_pd(lista + k * 4, c);
     }

@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn find_new_retirements(this: usize) {
             if pela_idade(this, p, e.as_mut_ptr()) != 0 {
                 acrescentar(this, e.as_ptr());
             } else if desempregado(p, e.as_mut_ptr()) != 0 {
-                crate::comparison::branch("cpr_9 desempregado");
+                crate::comparison::branch("cpr_9 unemployed");
                 acrescentar(this, e.as_ptr());
             }
         }
@@ -102,7 +102,7 @@ unsafe fn leave_job_slot(pessoa: usize, c: usize, cargo: i8, campo: usize) {
             if cpr9_d(c + 0xcf) != pessoa {
                 return;
             }
-            crate::comparison::branch("cpr_9 tecnico");
+            crate::comparison::branch("cpr_9 manager");
             if cargo == 5 && (cpr9_d(pessoa) as i32) >= (cpr9_d(0xae2364) as i32).wrapping_sub(0x10) {
                 let cancelar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c4950usize);
                 cancelar(cpr9_d(0xde1f54), c);
@@ -121,7 +121,7 @@ unsafe fn leave_job_slot(pessoa: usize, c: usize, cargo: i8, campo: usize) {
                 let treinadores: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x8b2880usize);
                 treinadores(cpr9_d(0xde1f44), c, 0);
             }
-            crate::comparison::branch("cpr_9 treinador");
+            crate::comparison::branch("cpr_9 coach");
             limpar(0x19f, 5); // cpr9: as vagas de treinador
         }
         9 => {
@@ -161,7 +161,7 @@ unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff(pessoa: us
 /// três ids +0x33 de +4, +8 e +0xc dela); depois o da pessoa (tipo 0x67: o clube ou −1), no arquivo (0x58e340).
 /// Pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_free_release_records(this: usize, pessoa: usize) {
-    crate::comparison::branch("cpr_9 liberado");
+    crate::comparison::branch("cpr_9 released");
     let mut e = history_entry();
     let de: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let c = de(cpr9_d(0xae1050), pessoa);

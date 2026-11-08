@@ -9,7 +9,7 @@ MUTACOES = [
     ('cqs1_tabela_de_baixo_para_cima',
      'iniciar(this, n as u8 as u32, c, 0, 0); // cqs1: a linha seguinte da primeira divisão',
      'iniciar(this, (3 - n) as u8 as u32, c, 0, 0); // mutacao: as linhas de baixo para cima',
-     'cqs_1 tabela da mls'),
+     'cqs_1 mls fixtures'),
     ('cqs1_segunda_vitoria_vale_empate',
      'create_division_stage(this, 0x47b, 0, 0, 0xc2,',
      'create_division_stage(this, 0x47b, 0, 0, 0xc3, /* mutacao: a vitoria vale o empate */',

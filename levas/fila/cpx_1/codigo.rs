@@ -210,7 +210,7 @@ unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize,
     if marcar != 0 {
         *((*vaga + 0x2d) as *mut u8) = 1;
     }
-    crate::comparison::branch("cpx_1 recusa desassossega");
+    crate::comparison::branch("cpx_1 refusal unsettles");
     call_with_offer(0x8c1290, this, o); // cpx1: o desassossego da recusa
     let atual = *vaga;
     if cpx1_b(atual + 0x2c) == 0x13 {
@@ -218,7 +218,7 @@ unsafe extern "thiscall" fn reject_transfer_offer(this: usize, vaga: *mut usize,
     }
     *((o + 0x2c) as *mut u8) = 2;
     let vendedor2 = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
-    crate::comparison::branch("cpx_1 recusa desmarca");
+    crate::comparison::branch("cpx_1 refusal unmarks");
     clear_offer_and_exchange_markers(this, o, vendedor2);
     call_with_offer(0x8c6db0, this, o);
     transfer_manager_post_offer_rejected_news(this, o, motivo);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, vaga: *mut usiz
     if motivo as u16 == 2 { // cpx1: só o motivo 2 desassossega
         call_with_offer(0x8c1290, this, o);
     } else {
-        crate::comparison::branch("cpx_1 retirada sem desassossego");
+        crate::comparison::branch("cpx_1 withdrawal without unsettling");
     }
     update_buyer_shortlist_entry(this, o);
     transfer_manager_post_offer_rejected_news(cpx1_d(0xde1f54), o, motivo);
@@ -352,7 +352,7 @@ unsafe extern "thiscall" fn post_offer_rejected_news(this: usize, o: usize, moti
     if motivo as i16 == 6 && cpx1_b(o + 0x2f) != 0 {
         clube = 0;
     }
-    crate::comparison::branch("cpx_1 noticia da recusa");
+    crate::comparison::branch("cpx_1 refusal news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa1, 0);

@@ -10,9 +10,9 @@
 # posicao atual uma abaixo quando o terceiro e menor que 3 (a tabela geral desses estaduais nao da titulo).
 MUTACOES = [
     ('cqk8_atual_mineiro', 'write_progress_codes(e, a, b, c); // cqk8: os códigos do Mineiro como vêm',
-     'write_progress_codes(e, a.wrapping_add(1), b, c); // mutacao: os códigos do Mineiro como vêm', 'cqk_8 mineiro como vem'),
+     'write_progress_codes(e, a.wrapping_add(1), b, c); // mutacao: os códigos do Mineiro como vêm', 'cqk_8 mineiro as it comes'),
     ('cqk8_codigo_2_mls', '3 // cqk8: o código 2 da MLS',
-     '4 // mutacao: o código 2 da MLS', 'cqk_8 mls segundo'),
+     '4 // mutacao: o código 2 da MLS', 'cqk_8 mls second'),
     ('cqk8_segundo_serie_c', 'write_progress_codes(e, a, b2, c); // cqk8: os códigos dos grupos da Série C',
-     'write_progress_codes(e, a, if b == 3 { 0x12 } else { b2 }, c); // mutacao: os códigos dos grupos da Série C', 'cqk_8 serie c segundo 3'),
+     'write_progress_codes(e, a, if b == 3 { 0x12 } else { b2 }, c); // mutacao: os códigos dos grupos da Série C', 'cqk_8 serie c second 3'),
 ]

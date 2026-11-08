@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
             if ano > hano || (ano == hano && dia as i16 > hdia as i16) { // cps13: a data do sorteio
                 return 0;
             }
-            crate::comparison::branch("cps_13 sorteio da rodada");
+            crate::comparison::branch("cps_13 round draw");
             sortear(this, cps13_b(this + 0xac) as i8 as i32 as u32);
             let novo = cps13_b(this + 0xac) as i8;
             if novo == k || novo as i16 == cps13_w(this + 0x3c) as i16 {
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn cup_update_for_date(this: usize, hoje: usize, fase: 
                 return 0; // nem a data nem pendente
             }
         }
-        crate::comparison::branch("cps_13 montagem da rodada");
+        crate::comparison::branch("cps_13 round setup");
         montar(this, cps13_b(this + 0xab) as i8 as i32 as u32);
         let novo = cps13_b(this + 0xab) as i8;
         if novo == k || novo as i16 == cps13_w(this + 0x3c) as i16 {
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
         let p = mais_dias(&mut d, &mut amanha, 1);
         atribuir(&mut d, &mut copia, p);
         let (dia, ano) = cup_date_day_year(&d);
-        crate::comparison::branch("cps_13 rodada adiada");
+        crate::comparison::branch("cps_13 round postponed");
         let r = round_record_at(this, ri as isize);
         core::ptr::write_unaligned(r as *mut u16, dia);
         *((r + 2) as *mut u8) = (ano as u8).wrapping_sub(cps13_b(this + 0x40));
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn set_up_round(this: usize, rodada: u32) -> u32 {
         0
     };
     let levar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x51ebe0usize);
-    crate::comparison::branch("cps_13 jogos da rodada");
+    crate::comparison::branch("cps_13 round matches");
     levar(this, data, atual as i32 as u32);
     if data != 0 {
         let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
@@ -327,13 +327,13 @@ unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, f: usize) {
     }
     let casa = cps13_d(f + 0x1c);
     if casa != 0 && cps13_d(casa + 0x53) != nacao {
-        crate::comparison::branch("cps_13 doenca do mandante");
+        crate::comparison::branch("cps_13 home side illness");
         // a original empurra o ano no eax do clube e o dia no ecx da nação (metades altas dos ponteiros)
         add_illness_risk_before_match(f, cps13_d(f + 0xc), cps13_d(cps13_d(cps13_d(f + 0x18) + 0x38) + 0x1f), nacao as u32, casa as u32);
     }
     let fora = cps13_d(f + 0x20);
     if fora != 0 && cps13_d(fora + 0x53) != cps13_d(cps13_d(cps13_d(f + 0x18) + 0x38) + 0x1f) {
-        crate::comparison::branch("cps_13 doenca do visitante");
+        crate::comparison::branch("cps_13 away side illness");
         // o ano no ecx do estádio e o dia no edx da cidade
         let (e, c) = (cps13_d(f + 0x18), cps13_d(cps13_d(f + 0x18) + 0x38));
         add_illness_risk_before_match(f, cps13_d(f + 0x10), cps13_d(c + 0x1f), c as u32, e as u32);

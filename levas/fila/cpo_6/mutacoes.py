@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpo_sem_sorteio_descartado', 'sorteio(cpo6_c(tecnico + 0x59)); // o original descarta o resultado',
      '// mutacao: sem o sorteio descartado',
-     'cpo_6 sorteio descartado'),
+     'cpo_6 draw discarded'),
     ('cpo_tipos_comuns_limite', 'let y = sorteio(0x24);\n            if x <= y {\n                return 3;',
      'let y = sorteio(0x20); // mutacao\n            if x <= y {\n                return 3;',
-     'cpo_6 tipos comuns'),
+     'cpo_6 common types'),
     ('cpo_nota_x4', 'nota = match_pl_ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * *(0x968990 as *const f32) as f64);',
      'nota = match_pl_ftol(nota_da_historia(this, jogador, clube, contrato, tipo, 3, 0.0) * 4.0); // mutacao',
-     'cpo_6 tipos comuns'),
+     'cpo_6 common types'),
 ]

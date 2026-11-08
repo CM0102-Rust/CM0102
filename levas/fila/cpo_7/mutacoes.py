@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpo_gratidao_tipo_sem_sorteio', 'let s = sorteio(10);\n            t = if cpo7_c(jogador + 0x5d) >= s { 0x12 } else { 0x21 };',
      'let s = 0; // mutacao: sem o sorteio\n            t = if cpo7_c(jogador + 0x5d) >= s { 0x12 } else { 0x21 };',
-     'cpo_7 gratidao tipo'),
+     'cpo_7 gratitude type'),
     ('cpo_gratidao_nao_sobe', '*((ficha + 0x44) as *mut u8) += 1;',
      '// mutacao: sem subir +0x44',
-     'cpo_7 gratidao sobe'),
-    ('cpo_gratidao_sem_sorteio_3', 'crate::comparison::branch("cpo_7 gratidao sorteio 3");\n            sorteio(3)',
-     'crate::comparison::branch("cpo_7 gratidao sorteio 3");\n            0 // mutacao: sem o sorteio',
-     'cpo_7 gratidao sorteio 3'),
+     'cpo_7 gratitude rises'),
+    ('cpo_gratidao_sem_sorteio_3', 'crate::comparison::branch("cpo_7 gratitude draw 3");\n            sorteio(3)',
+     'crate::comparison::branch("cpo_7 gratitude draw 3");\n            0 // mutacao: sem o sorteio',
+     'cpo_7 gratitude draw 3'),
 ]

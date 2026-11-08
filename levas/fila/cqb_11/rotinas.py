@@ -1,6 +1,6 @@
 # Os sorteios da copa (Cup.cpp):
 # - 0x51d2d0 (Cup::sort_round_teams): o sorteio pela semente (regra 0x400 da rodada), pelo sorteio da rodada 0x51c410
-#   (copa_sortear_rodada, cqa_3, ramo "cqa_3 sorteio pela semente"); 5 chamadas na carreira automatica ate 2002-06-01
+#   (copa_sortear_rodada, cqa_3, ramo "cqa_3 seeded draw"); 5 chamadas na carreira automatica ate 2002-06-01
 #   (docs/cobertura_simulacao.txt, 17/10). Os confrontos sorteados sao a tabela da copa (quem joga com quem e onde).
 # - 0x51d9f0 (Cup::check_round_teams_for_nation): o sorteio que separa as nacoes (regra 4 sem 0x400), pela mesma 0x51c410;
 #   3 chamadas na mesma carreira.

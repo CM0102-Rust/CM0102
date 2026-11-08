@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
     if contrato == 0 {
         return;
     }
-    crate::comparison::branch("cpo_7 gratidao");
+    crate::comparison::branch("cpo_7 gratitude");
     let (construir, gravar) = news_item_fns();
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let lesionado: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x62ed70usize);
@@ -80,7 +80,7 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
     let mut t = tipo;
     if in_list || f45 & 0x2000 != 0 || f45 & 8 != 0 {
         if [0xe, 0, 2, 9, 0x23, 4, 7].contains(&(tipo as i16)) {
-            crate::comparison::branch("cpo_7 gratidao tipo");
+            crate::comparison::branch("cpo_7 gratitude type");
             let s = sorteio(10);
             t = if cpo7_c(jogador + 0x5d) >= s { 0x12 } else { 0x21 };
         }
@@ -101,7 +101,7 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
                 if s == 0 || s == 1 {
                     let ficha = cpo7_d(jogador + 0x61);
                     if ficha != 0 && cpo7_c(ficha + 0x44) < 0x14 {
-                        crate::comparison::branch("cpo_7 gratidao sobe");
+                        crate::comparison::branch("cpo_7 gratitude rises");
                         *((ficha + 0x44) as *mut u8) += 1;
                     }
                 }
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn queue_player_gratitude_news(this: usize, jogador: us
         }
         1 => sorteio(2),
         2 => {
-            crate::comparison::branch("cpo_7 gratidao sorteio 3");
+            crate::comparison::branch("cpo_7 gratitude draw 3");
             sorteio(3)
         }
         3 => sorteio(4),
@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn post_player_backing_request_news(_this: usize, jogad
     if human_club(clube, 0, 1, 0, 0) == 0 {
         return;
     }
-    crate::comparison::branch("cpo_7 pedido de apoio");
+    crate::comparison::branch("cpo_7 request for support");
     let (construir, gravar) = news_item_fns();
     let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this: usize, jo
     if contrato == 0 {
         return;
     }
-    crate::comparison::branch("cpo_7 reacao a critica");
+    crate::comparison::branch("cpo_7 reaction to criticism");
     let (construir, gravar) = news_item_fns();
     let categoria: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x4ca470usize);
     let clubes_interessados: unsafe extern "thiscall" fn(usize, usize, u32, *mut usize, u32) -> u8 = core::mem::transmute(0x8d1da0usize);

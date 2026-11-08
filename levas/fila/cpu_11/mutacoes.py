@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu11_x_par', 'core::ptr::write_unaligned(cel as *mut u32, coord); // cpu11: a coordenada',
      'core::ptr::write_unaligned(cel as *mut u32, coord & !1); // mutacao: x par',
-     'cpu_11 coordenada gravada'),
+     'cpu_11 coordinate recorded'),
     ('cpu11_sem_dobro', 'dist = dist.wrapping_add(dist); // cpu11: o dobro',
      '// mutacao: sem o dobro',
-     'cpu_11 distância dobrada'),
+     'cpu_11 distance doubled'),
     ('cpu11_sem_empate', 'if dist <= melhor[p] { // cpu11: o empate entra na lista',
      'if dist < melhor[p] { // mutacao: sem empates',
-     'cpu_11 empate na lista'),
+     'cpu_11 tie in the list'),
 ]

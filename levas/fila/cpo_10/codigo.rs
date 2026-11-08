@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn get_offer_response_delay(this: usize, oferta: usize,
     let v = match valor {
         Some(v) => v,
         None => {
-            crate::comparison::branch("cpo_10 prazo sorteado");
+            crate::comparison::branch("cpo_10 drawn deadline");
             let s = sortear(estatuto as i32 / 10 + 0xc) as i8;
             if sortear(3) + 1 > s as i32 {
                 (sortear(3) as u8).wrapping_add(1)
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
             cpo10_w(fr + 0x1c, cpo10_i(fr + 0x1c).wrapping_add(match_pl_ftol(cpo10_i(e) as f64 * read_f64_at(b))) as u32);
         }
         if cpo10_b(e + 0xc) == 0 {
-            crate::comparison::branch("cpo_10 prestacao acabada");
+            crate::comparison::branch("cpo_10 instalment finished");
             tirar(lista, e);
         } else {
             *((recebe + cpo10_d(cpo10_clube(cpo10_d(e + 8)))) as *mut u8) = 1;
@@ -198,7 +198,7 @@ unsafe extern "thiscall" fn remove_offer(this: usize, oferta: usize) {
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x8e5710usize);
     let apagar: unsafe extern "C" fn(usize) = core::mem::transmute(0x944c94usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
-    crate::comparison::branch("cpo_10 tirar oferta");
+    crate::comparison::branch("cpo_10 remove offer");
     if cpo10_i(oferta + 0x28) != -1 {
         let x = cpo10_d(cpo10_d(this + 0xc).wrapping_add((cpo10_i(oferta + 0x28) as usize).wrapping_mul(4)));
         if x != 0 {

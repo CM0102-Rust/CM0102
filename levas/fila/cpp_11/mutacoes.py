@@ -5,7 +5,7 @@
 MUTACOES = [
     ('cpp_par_proibido', 'return 1; // o par proibido',
      'return 0; // mutacao: o par proibido joga',
-     'cpp_11 par proibido'),
+     'cpp_11 forbidden pair'),
     ('cpp_ordem_das_nacoes', 'rb - ra // a maior reputação primeiro',
      'ra - rb // mutacao: a menor primeiro'),
     ('cpp_ordem_dos_amistosos', 'r // a data mais cedo primeiro',

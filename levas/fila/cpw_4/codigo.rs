@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
     }
     let tipo6 = cpw4_b(termos + 0x35) & 0x3f == 6;
     if item != 0 {
-        crate::comparison::branch("cpw_4 oferta atualizada");
+        crate::comparison::branch("cpw_4 offer updated");
         // ponytail: a original embute o operator= (0x4cc810) aqui; a cópia chama a versão Rust dele, as mesmas gravações
         contract_manager_operator(item, termos);
         *((item + 0x50) as *mut u8) = if acertado != 0 { 2 } else { 0 };
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
             let acrescentar: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x68d0d0usize);
             acrescentar(cpw4_d(this + 0x34), r, 0x6f);
         }
-        crate::comparison::branch("cpw_4 oferta nova");
+        crate::comparison::branch("cpw_4 new offer");
         let c = contract_offer_counter(termos) as *mut u8;
         *c = (*c).wrapping_add(1); // cpw4: o contador de ofertas da pessoa
     }
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         let tm = cpw4_d(0xde1f54);
         let v = vaga_da(tm, vaga);
         if cpw4_d(cpw4_d(v) + 0xc) == cpw4_d(termos) {
-            crate::comparison::branch("cpw_4 termos ao jogador");
+            crate::comparison::branch("cpw_4 terms to the player");
             let marcar: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(0x8c1f80usize);
             marcar(cpw4_d(0xde1f54), vaga); // cpw4: os termos oferecidos ao jogador
         } else {
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn add_contract_offer(this: usize, termos: usize, vaga:
         }
     }
     if decidir != 0 {
-        crate::comparison::branch("cpw_4 agendar decisao");
+        crate::comparison::branch("cpw_4 schedule decision");
         let decisao: unsafe extern "thiscall" fn(usize, u32, i32) = core::mem::transmute(0x4cd230usize);
         decisao(this, cpw4_d(termos) as u32, vaga); // cpw4: a decisão agendada
     }
@@ -219,7 +219,7 @@ unsafe extern "thiscall" fn remove_contract_offer_for_transfer(this: usize, pess
     if x == 0 {
         return;
     }
-    crate::comparison::branch("cpw_4 oferta tirada pela vaga");
+    crate::comparison::branch("cpw_4 offer removed by the slot");
     if cpw4_d(x + 0x63) as i32 != -1 {
         let f: unsafe extern "thiscall" fn(usize, u32, u32, u32) = core::mem::transmute(0x7a81a0usize);
         f(cpw4_d(0xb7434c), cpw4_d(x + 0x63) as u32, cpw4_d(x + 0x67) as u32, cpw4_d(x + 0x6b) as u32);

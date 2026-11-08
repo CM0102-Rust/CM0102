@@ -96,7 +96,7 @@ pub(crate) unsafe fn advance_cup_stage(this: usize, file: usize, row: u32, end_o
     let stage = stage + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == end_of_groups {
-        crate::comparison::branch("cqr_7 mata-mata das copas italianas");
+        crate::comparison::branch("cqr_7 italian cups knockout");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(knockout_knockout);
         f(this); // cqr7: monta o mata-mata
     }
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize
     if teams == 0 {
         return show_error_at(0x9ea23c, 0x29c);
     }
-    crate::comparison::branch("cqr_9 mata-mata da copa da italia");
+    crate::comparison::branch("cqr_9 italy cup knockout");
     for i in 0..8usize {
         write_usize(teams + i * 4, read_usize(group_table(this, i))); // cqr9: the winner of group i
     }
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     if teams == 0 {
         return show_error_at(0x9ea204, 0x2ba);
     }
-    crate::comparison::branch("cqr_9 mata-mata da copa da serie c");
+    crate::comparison::branch("cqr_9 serie c cup knockout");
     for i in 0..16usize {
         write_usize(teams + i * 4, read_usize(group_table(this, i)));
     }
@@ -836,7 +836,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
                 }
                 let before = comp_id_at(c, 0x5b);
                 if (before == Some(c1a) || before == Some(c1b)) && last_season_position(c) == place {
-                    crate::comparison::branch("cqo_11 completar com a c1");
+                    crate::comparison::branch("cqo_11 fill with c1");
                     v[k] = c;
                     k += 1;
                     if k == 32 {
@@ -852,7 +852,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
     for _ in 0..8 {
         let mut pot = 0usize;
         while pot < 32 {
-            crate::comparison::branch("cqo_11 potes da copa da italia");
+            crate::comparison::branch("cqo_11 italy cup pots");
             let mut r = jap_j_cup_random(8) as i8 as i32; // cqo11: the club drawn from each pot
             while v[pot + r as usize] == 0 {
                 r += 1;
@@ -1004,7 +1004,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
         };
         let p = last_season_position(c);
         if before == serie_b || (before == c1a || before == c1b) && (p == 3 || p == 4 || p == 5) {
-            crate::comparison::branch("cqo_11 vagas do fim da copa da serie c");
+            crate::comparison::branch("cqo_11 serie c cup final places");
             let e = l + (j as i16 as isize * 4) as usize;
             let t = read_usize(e);
             core::ptr::write_unaligned(e as *mut u32, c as u32);
@@ -1017,7 +1017,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
     }
     shuffle_pointers(l, 0x50);
     sort_pointers(l, 0x50, 0x53fe50);
-    crate::comparison::branch("cqo_11 dezenas da copa da serie c");
+    crate::comparison::branch("cqo_11 serie c cup tens");
     for k in 0..8usize {
         shuffle_pointers(l + k * 0x28, 0xa); // cqo11: the tens of the Serie C Cup
     }
@@ -1050,12 +1050,12 @@ pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqo_11 dobradinha italiana");
+        crate::comparison::branch("cqo_11 italian double");
         if !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_ITALIAN_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqo_11 clubes da supercopa da italia");
+    crate::comparison::branch("cqo_11 italian super cup clubs");
     finish_two_team_list(l)
 }
 
@@ -1141,7 +1141,7 @@ pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: usize, g: &GroupSt
 /// em turno único, 3 pontos a vitória e 1 o empate, a categoria 4 (copa nacional), o desempate (4, 1, 2), um
 /// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_12 regras da copa da italia");
+    crate::comparison::branch("cqi_12 italy cup rules");
     let mut g = ITALIAN_CUP_GROUP_RULES;
     g.win = 3; // cqi12: the win in the Coppa Italia groups
     g.category = 4; // cqi12: the category of the Coppa Italia matches

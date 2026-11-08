@@ -54,7 +54,7 @@ unsafe fn construct_italian_division(this: usize, ano: u32, registro: usize, p: 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cqm_4 divisao italiana nova");
+    crate::comparison::branch("cqm_4 new italian division");
     if p.serie {
         *((this + 0xee) as *mut u8) = 0;
         cqm4_pd(this + 0x4c, 1); // cqm4: a marca do histórico da A e da B

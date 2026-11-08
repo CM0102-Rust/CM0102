@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
         let request = read_usize(this + scout_manager_fields::SCOUT_REQUESTS) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = judge_scout_request(request, catorze);
         if processar && !SCOUT_DAILY_DRY_RUN {
-            crate::comparison::branch("cqf_12 pedido processado");
+            crate::comparison::branch("cqf_12 request processed");
             let mut feitos: i8 = 0;
             for k in 0..10u32 {
                 if feitos >= 3 { // cqf12: up to three reports
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
                     exe::player_search_report_on_player(lo, jogador, reg, -1000, 1, 0, 0, 1);
                     feitos += 1;
                     if (read_u8(reg + 0x66) as i8) > -1 {
-                        crate::comparison::branch("cqf_12 relatorio do pedido");
+                        crate::comparison::branch("cqf_12 request report");
                         append(l, reg, 0x67);
                     }
                 }
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     for k in 0..0x10i32 {
         let p = staff_records_staff_by_id((read_i32(G_STAFF_COUNT) - k - 1) as usize);
         if read_u8(p + staff::CLASSIFICATION) == 1 {
-            crate::comparison::branch("cqf_12 busca do humano");
+            crate::comparison::branch("cqf_12 human search");
             for j in 0..10u32 {
                 exe::player_search_run_scout_day(exe::scout_manager_get_search(this, j, p)); // cqf12: the search of each list
             }
@@ -343,7 +343,7 @@ pub(crate) unsafe fn mark_clubs_three_days(this: usize, d: usize) {
     // 0x7775c0: push &data; mov ecx, edi -> thiscall, ret 4
     let (mut t, mut u) = ([0u8; 8], [0u8; 8]);
     let (pt, pu) = (t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
-    crate::comparison::branch("cqc_12 marca os clubes");
+    crate::comparison::branch("cqc_12 marks the clubs");
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
     exe::date_operator_3d(d, pu, minus(d, pt, 1));
     exe::nationalteams_mark_clubs_with_fixtures(this, d);
@@ -373,7 +373,7 @@ pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
     let mut p = exe::llist_get_next(l);
     while p != 0 {
-        crate::comparison::branch("cqc_12 convoca");
+        crate::comparison::branch("cqc_12 calls up");
         exe::nationalteams_select_squads_for_fixture(this, p); // cqc12: the call-ups for the match
         let comp = read_usize(p + fixture::COMPETITION);
         let final_ = comp != 0
@@ -520,7 +520,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
         if *((person + staff::CLASSIFICATION) as *const u8) != 1 {
             continue;
         }
-        crate::comparison::branch("cqc_13 olheiros do humano");
+        crate::comparison::branch("cqc_13 human scouts");
         let marks = exe::crt_calloc(10, 4);
         for _ in 0..10 { // cqc13: os 10 observadores
             let q = loop {
@@ -629,7 +629,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
     weeks(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas
     let today = read_u16(G_CURRENT_DATE);
     if today == 0 && !dry_run {
-        crate::comparison::branch("cpy_4 virada do ano");
+        crate::comparison::branch("cpy_4 year rollover");
         let mut i = 0i32;
         while i < read_usize(G_NATION_COUNT) as i32 {
             let l = read_usize(read_usize(this + friendly::NATION_LISTS).wrapping_add(i as usize * 4));
@@ -693,7 +693,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
     if dry_run {
         return Some((first, how_many));
     }
-    crate::comparison::branch("cpy_4 amistosos marcados");
+    crate::comparison::branch("cpy_4 friendlies scheduled");
     exe::friendly_arrange_international_friendlies(this, first, how_many); // cpy4: schedule the friendlies of the date
     *((this + friendly::INTL_LAST_DAY_DONE) as *mut u16) = read_u16(G_CURRENT_DATE);
     Some((first, how_many))
@@ -775,7 +775,7 @@ pub(crate) unsafe extern "thiscall" fn set_selected_list(this: usize, list: u32,
 pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
     let (c1, c2) = (read_usize(partida + fixture::HOME_CLUB), read_usize(partida + fixture::AWAY_CLUB));
     if read_i32(partida) < 0 {
-        crate::comparison::branch("cps_8 competicao negativa");
+        crate::comparison::branch("cps_8 negative competition");
         return 0; // cps8: negative competition
     }
     core::ptr::write_unaligned(G_SCOUT_CLUB_TABLE_LIST_CURSOR as *mut u32, read_usize(G_SCOUT_CLUB_TABLE_LIST_HEAD) as u32);
@@ -788,7 +788,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
     }
     if read_usize(this + scout_manager_fields::SCOUT_REQUESTS) == 0 || read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT) <= 0 {
-        crate::comparison::branch("cps_8 sem pedidos");
+        crate::comparison::branch("cps_8 no requests");
         return 0; // cps8: without scouting requests
     }
     let mut k = 0i32;
@@ -872,7 +872,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_shortlisted(this: usize, person
         let l = exe::scout_manager_get_search(this, i, m);
         if l != 0 && *((l + 0xa) as *const u8) == 1 {
             let r = exe::player_search_contains_player(l, person);
-            crate::comparison::branch("cps_8 lista do olheiro");
+            crate::comparison::branch("cps_8 scout list");
             return r; // cps8: the reply of the scout list
         }
     }
@@ -906,7 +906,7 @@ pub(crate) unsafe extern "thiscall" fn scout_record(t: usize, which: i8, manager
     if i < 0 || i > (*((t + 8) as *const i32)).wrapping_sub(1) {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, *const i32) -> usize>(IDX_SCOUT_RECORD)(t, which, manager);
     }
-    crate::comparison::branch("registro do observador");
+    crate::comparison::branch("scout record");
     (*(t as *const usize)).wrapping_add(i as usize * 0x2b0)
 }
 
@@ -1019,7 +1019,7 @@ pub(crate) unsafe extern "thiscall" fn can_club_scout_nation(this: usize, nation
     let f = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c);
     if f != 0 && core::ptr::read_unaligned(f as *const i64) < 1_000_000 && read_i16(c + club::REPUTATION) < 5000 {
         if *((read_usize(c + club::NATION) + 0x76) as *const u8) != *((nation + nation::ACTUAL_REGION) as *const u8) { // outside the region
-            crate::comparison::branch("cpk_6 olheiro fora da regiao");
+            crate::comparison::branch("cpk_6 scout outside the region");
             return 0;
         }
     }
@@ -1065,7 +1065,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
                 continue;
             }
         }
-        crate::comparison::branch("cqa_6 lista sem olheiro");
+        crate::comparison::branch("cqa_6 list without scout");
         set_search_scout(l, 0);
     }
     if club != 0 {
@@ -1091,7 +1091,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
                 }
             }
             if !has && free > -1 {
-                crate::comparison::branch("cqa_6 olheiro na lista livre");
+                crate::comparison::branch("cqa_6 scout in the free list");
                 set_search_scout(get_search(this, free as u8, m), s);
             }
         }
@@ -1215,7 +1215,7 @@ pub(crate) unsafe extern "thiscall" fn has_scout_request(this: usize, player: us
         search(key.as_ptr(), list, read_u32(this + scout_manager_fields::SCOUT_REQUEST_COUNT), 0x11, 0x7fc270)
     };
     if found == 0 {
-        crate::comparison::branch("cpq_12 sem pedido");
+        crate::comparison::branch("cpq_12 without request");
         return 0; // no request
     }
     if *((found + scout_request::REPORT_COUNT) as *const i8) >= 3 {

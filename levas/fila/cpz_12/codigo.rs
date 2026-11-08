@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn add_players_sold(this: usize, baixo: u32, alto: u32)
     fin_prm_add_i64(this + 0x78, v);
     fin_prm_add_i64(this + 0x118, v);
     if v != 0 {
-        crate::comparison::branch("cpz_12 venda recebida"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_12 sale received"); // só valor diferente de zero muda o saldo
     }
     fin_prm_add_i64(this, v); // cpz12: a venda entra no saldo
 }
@@ -44,7 +44,7 @@ unsafe extern "thiscall" fn pay_players_bought(this: usize, baixo: u32, alto: u3
     fin_prm_add_i64(this + 0x70, v);
     fin_prm_add_i64(this + 0x110, v);
     if v != 0 {
-        crate::comparison::branch("cpz_12 compra paga"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_12 purchase paid"); // só valor diferente de zero muda o saldo
     }
     fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo
 }
@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, valor: i32) {
     fin_prm_add_i32(this + 0x13c, valor);
     fin_prm_add_i32(this + 0x9c, valor);
     if valor != 0 {
-        crate::comparison::branch("cpz_12 luvas pagas"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_12 signing-on fees paid"); // só valor diferente de zero muda o saldo
     }
     fin_prm_add_i64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo
 }

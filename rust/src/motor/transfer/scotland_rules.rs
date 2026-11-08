@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
     };
     let comp = read_usize(club + club::DIVISION);
     if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
-        crate::comparison::branch("cqe_6 escocia mesma divisao");
+        crate::comparison::branch("cqe_6 scotland same division");
         let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
         return refuse_loan(msg, reason, 0x9c4590, r, 0x1d);
     }
@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
     let e = month_of_end(read_usize(G_CONTRACT_MANAGER), a1) as i8;
     *end_month = e;
     if (read_u8(player + staff::AGE) as i8) < 0x16 {
-        crate::comparison::branch("cqe_6 escocia ate o fim da temporada");
+        crate::comparison::branch("cqe_6 scotland until end of season");
         if *start_month < e {
             *end_year = *start_year;
         } else {
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 /// [pt] { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Escócia (regra 21): a base (0x8e84a0), a vtable 0x96f838, 1 janela(s) de `SCOTLAND_TRANSFER_WINDOWS` e o dword +0x15 = 1. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqk_3 escocia");
+    crate::comparison::branch("cqk_3 scotland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &SCOTLAND_TRANSFER_WINDOWS, 0xa7b058, 0x50);
     core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
     this

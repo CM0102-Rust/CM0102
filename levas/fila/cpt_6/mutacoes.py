@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpt6_bonus_fator_1', '* read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro',
      '* read_f64_at(0x967890) + h[5]; // mutacao: fator 1',
-     'cpt_6 bonus de dezembro'),
+     'cpt_6 December bonus'),
     ('cpt6_ano_corrente_fica', '    h[5] = 0.0; // cpt6: o ano corrente zerado',
      '    // mutacao: o ano corrente fica',
-     'cpt_6 dezembro'),
+     'cpt_6 December'),
     ('cpt6_dezembro_invertido', '    let dez = cpt6_w(0x9cd216) == cpt6_w(0xae2c90); // cpt6: o dia de dezembro',
      '    let dez = cpt6_w(0x9cd216) != cpt6_w(0xae2c90); // mutacao',
-     'cpt_6 dezembro'),
+     'cpt_6 December'),
 ]

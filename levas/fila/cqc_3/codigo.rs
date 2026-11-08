@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
         let nc = if comp != 0 { cqc3_d(comp + 0x5d) } else { 0 };
         let e_da = |g: usize| nc != 0 && cqc3_i(nc) == cqc3_i(g);
         if mesma(day_of_year(0x19, 0xb, ano())) && !e_da(0x9cf36c) {
-            crate::comparison::branch("cqc_3 natal");
+            crate::comparison::branch("cqc_3 Christmas");
             return dezenove();
         }
         if e_da(0x9cf3e4) && semana(&dia) as i16 == 6 {
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
                         let c2 = cqc3_d(x + 0x20);
                         let (sx0, sx1, s0, s1b) = (cqc3_b(x + 0x40), cqc3_b(x + 0x41), cqc3_b(jogo + 0x40), cqc3_b(jogo + 0x41));
                         if (c1 == h && sx0 == s0) || (c1 == a && sx0 == s1b) || (c2 == h && sx1 == s0) || (c2 == a && sx1 == s1b) {
-                            crate::comparison::branch("cqc_3 mesmo clube na mesma fatia");
+                            crate::comparison::branch("cqc_3 same club in the same pot");
                             add_clash_by_type(grav, lista, x, true); // cqc3: o mesmo clube na mesma fatia
                         } else if (flag == 0 && c1 == h && sx0 != s0) || (c1 == a && sx0 != s1b) || (c2 == h && sx1 != s0) || (c2 == a && sx1 != s1b) {
                             if cqc3_b(x + 0x43) != 0xff {
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn collect_day_clashes(this: usize, jogo: usize, grav: 
                                 append_fixture(lista, x);
                                 if cqc3_b(jogo + 0x3f) == cqc3_b(x + 0x3f) || cqc3_b(x + 0x3a) != 1 {
                                     if *grav == 0 {
-                                        crate::comparison::branch("cqc_3 mesmo clube noutra fatia");
+                                        crate::comparison::branch("cqc_3 same club in another pot");
                                     }
                                     default_clash_severity(grav, true); // cqc3: o mesmo clube noutra fatia
                                 } else if cqc3_b(jogo + 0x3a) != 1 {
@@ -386,7 +386,7 @@ unsafe extern "thiscall" fn find_fixture_clashes(this: usize, jogo: usize, saida
         do_dia(this, jogo, &mut g, lista, pa, n as u32, pd, -1i32 as u32);
     }
     do_dia(this, jogo, &mut g, lista, pa, n as u32, pd, 0);
-    crate::comparison::branch("cqc_3 dia seguinte");
+    crate::comparison::branch("cqc_3 next day");
     do_dia(this, jogo, &mut g, lista, pa, n as u32, pd, 1); // cqc3: o dia seguinte
     if dois != 0 {
         do_dia(this, jogo, &mut g, lista, pa, n as u32, pd, -2i32 as u32);

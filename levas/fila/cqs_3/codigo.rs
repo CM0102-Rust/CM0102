@@ -56,7 +56,7 @@ unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g: u32, pv: u
     if cqs3_d(cqs3_d(this + 0xc) + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
-    crate::comparison::branch("cqs_3 grupo");
+    crate::comparison::branch("cqs_3 group");
     soltar(v);
     soltar(t);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, k);
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     if cqs3_d(cqs3_d(this + 0xc) + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
-    crate::comparison::branch("cqs_3 segunda fase");
+    crate::comparison::branch("cqs_3 second stage");
     soltar(t);
     soltar(lista);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 7);
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         }
         soltar(t);
     }
-    crate::comparison::branch("cqs_3 terceira fase");
+    crate::comparison::branch("cqs_3 third stage");
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 9);
 }
 

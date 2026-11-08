@@ -88,7 +88,7 @@ unsafe fn select_invited_clubs(this: usize) -> u32 {
         i += 1;
         c += 0x245;
     }
-    crate::comparison::branch("cqs_11 convidados da merconorte");
+    crate::comparison::branch("cqs_11 merconorte guests");
     ordenar(mexico.clubes.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: os 4 do México
     ordenar(colombia.clubes.as_mut_ptr() as usize, colombia.n as u32, 5);
     ordenar(peru.clubes.as_mut_ptr() as usize, peru.n as u32, 3);
@@ -112,7 +112,7 @@ unsafe fn select_invited_clubs(this: usize) -> u32 {
         vaga(1, mls[1]);
     } else {
         let registro = cqs11_d(0xae23d0) + cqs11_d(0x9cf590) * 0x6b;
-        crate::comparison::branch("cqs_11 campeao da liga americana");
+        crate::comparison::branch("cqs_11 american league champion");
         vaga(0, colocado(registro, 0)); // cqs11: o campeão da liga americana
         vaga(1, colocado(cqs11_d(americana + 4), 0));
         let l = cqs11_d(this + 0xee);

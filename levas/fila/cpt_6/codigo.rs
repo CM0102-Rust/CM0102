@@ -38,9 +38,9 @@ unsafe fn current_month() -> i32 {
 /// Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
 /// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
 unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], marca: &mut u8) {
-    crate::comparison::branch("cpt_6 dezembro");
+    crate::comparison::branch("cpt_6 December");
     if (*marca as i8) < 0xc {
-        crate::comparison::branch("cpt_6 bonus de dezembro");
+        crate::comparison::branch("cpt_6 December bonus");
         h[5] = cpt6_w(na + 0x8e) as i32 as f64 * read_f64_at(0x967888) * (0xc - *marca as i8 as i32) as f64 * read_f64_at(0x968930) + h[5]; // cpt6: o bônus de dezembro
     }
     h[0] = h[1];

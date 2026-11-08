@@ -17,7 +17,7 @@ unsafe extern "thiscall" fn send_to_continent_managers(this: usize, noticia: usi
         if c != 0 {
             let n = cpk5_d(c + 0x53);
             if n != 0 && cpk5_d(n + 0x71) == continente { // o continente da nação do clube
-                crate::comparison::branch("cpk_5 continente pelo clube");
+                crate::comparison::branch("cpk_5 continent by club");
                 return true;
             }
         }
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn send_to_comp_region(this: usize, noticia: usize, com
     }
     let nacao = cpk5_d(comp + 0x5d);
     if nacao != 0 {
-        crate::comparison::branch("cpk_5 noticia da nacao da competicao");
+        crate::comparison::branch("cpk_5 news of the competition nation");
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x786520usize);
         return f(this, noticia, nacao);
     }
@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn is_important_for(noticia: usize, pessoa: usize) -> u
         5 => match t {
             0xfa0 | 0xfa4 | 0xfad | 0xfae | 0xfaf | 0xfb0 | 0xfb2 | 0xfb4 | 0xfb7 | 0xfb8 | 0xfbb | 0xfbf | 0xfc0 => true,
             0xfa1 => {
-                crate::comparison::branch("cpk_5 importante oferta pelo clube");
+                crate::comparison::branch("cpk_5 important offer by club");
                 manager_of_news_club(noticia, 0x19) == pessoa // o técnico do clube da oferta
             }
             0xfb6 => manager_of_news_club(noticia, 0x15) == pessoa || manager_of_news_club(noticia, 0x19) == pessoa,

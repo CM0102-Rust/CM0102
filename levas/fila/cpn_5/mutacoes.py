@@ -5,9 +5,9 @@
 # acusa pelo plano tambem).
 MUTACOES = [
     ('cpn_vaga_nunca_achada', 'return Some(true);',
-     'return Some(false); // mutacao: a vaga aberta nao conta', 'cpn_5 clube com vaga aberta'),
+     'return Some(false); // mutacao: a vaga aberta nao conta', 'cpn_5 club with open vacancy'),
     ('cpn_candidato_conta_o_atual', "break 'f true; // o atual fica de fora",
-     "if false { break 'f true; } // mutacao: o tecnico atual entra", 'cpn_5 o tecnico atual fica de fora'),
+     "if false { break 'f true; } // mutacao: o tecnico atual entra", 'cpn_5 the current manager is left out'),
     ('cpn_oferta_um_dia_depois', 'let r = somar(0xae2c90, tmp.as_mut_ptr(), dias as i16 as i32 as u32);',
-     'let r = somar(0xae2c90, tmp.as_mut_ptr(), (dias as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 agendar oferta'),
+     'let r = somar(0xae2c90, tmp.as_mut_ptr(), (dias as i16 + 1) as i32 as u32); // mutacao: um dia depois', 'cpn_5 schedule offer'),
 ]

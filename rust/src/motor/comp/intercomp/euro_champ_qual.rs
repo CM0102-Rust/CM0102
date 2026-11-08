@@ -44,7 +44,7 @@ pub(crate) unsafe fn set_up_rules(this: usize) -> u32 {
     construct(&mut data, 0xa, 2, read_i16(this + league::YEAR) as u16 as u32, 5); // cqs8: the draw date
     core::ptr::write_unaligned((this + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
-    crate::comparison::branch("cqs_8 regras da eurocopa");
+    crate::comparison::branch("cqs_8 euro rules");
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
     let t = rounds(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
     core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut u32, t as u32);
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     }
     let n = read_i16(this + league::CLUB_COUNT);
     core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut i16, n.wrapping_sub(1).wrapping_mul(read_i16(this + league::LEGS))); // cqs8: the group 1 rounds
-    crate::comparison::branch("cqs_8 grupo 1 da eurocopa");
+    crate::comparison::branch("cqs_8 euro group 1");
     let mut i: i8 = 0;
     if n > 0 {
         loop {

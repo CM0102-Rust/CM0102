@@ -1,0 +1,854 @@
+...	...
+add_month_award_record jogador	add_month_award_record player
+add_year_award_record jogador	add_year_award_record player
+andar ate o fim	walk to the end
+andar com motor	walk with engine
+andar partida terminada	walk match finished
+andar um step_towards	walk one step_towards
+apply_match_effects com batida	apply_match_effects with collision
+banco abrir .dat	database open .dat
+banco crescer histórico de competições	database grow competition history
+banco criar .dat	database create .dat
+banco gravar cidades	database write cities
+banco gravar clubes	database write clubs
+banco gravar competições	database write competitions
+banco gravar competições de pessoal	database write staff competitions
+banco gravar continentes	database write continents
+banco gravar estádios	database write stadiums
+banco gravar histórico de pessoas	database write people history
+banco gravar históricos de competição	database write competition histories
+banco gravar jogadores	database write players
+banco gravar nações	database write nations
+banco gravar nomes	database write names
+banco gravar não jogadores	database write non-players
+banco gravar pessoas 110	database write people 110
+banco gravar preferências	database write preferences
+banco gravar registros de 58 bytes	database write 58-byte records
+banco gravar árbitros	database write referees
+banco ler cidades	database read cities
+banco ler clubes	database read clubs
+banco ler clubes v1	database read clubs v1
+banco ler clubes versão 1	database read clubs version 1
+banco ler competições	database read competitions
+banco ler competições de pessoal	database read staff competitions
+banco ler competições v1	database read competitions v1
+banco ler competições versão 1	database read competitions version 1
+banco ler continentes	database read continents
+banco ler cores	database read colours
+banco ler estádios	database read stadiums
+banco ler histórico de competições de pessoal	database read staff competition history
+banco ler histórico de pessoas	database read people history
+banco ler históricos de competição	database read competition histories
+banco ler jogadores	database read players
+banco ler jogadores v1	database read players v1
+banco ler jogadores versão 1	database read players version 1
+banco ler nações	database read nations
+banco ler nomes	database read names
+banco ler não jogadores	database read non-players
+banco ler não jogadores v1	database read non-players v1
+banco ler não jogadores versão 1	database read non-players version 1
+banco ler pessoas 110	database read people 110
+banco ler pessoas 157	database read people 157
+banco ler preferências	database read preferences
+banco ler árbitros	database read referees
+banco liberar histórico de pessoas	database free people history
+banco liberar histórico de prêmios	database free award history
+batedor alem das pessoas	taker beyond the people
+batedor de fora do clube	taker from outside the club
+batedor do clube	taker of the club
+batedor saiu do clube	taker left the club
+batedor sem ficha	taker without record
+batedor sem linha	taker without row
+batedor vazio	taker empty
+can_end_loan pelas regras	can_end_loan by the rules
+clear_inbox	clear_inbox
+clube 547d90	club 547d90
+clube 5896d0	club 5896d0
+clube 589bc0	club 589bc0
+clube elenco	club squad
+clube jovem	club youth
+clube segue	club continues
+conducao alivia de longe	dribble clears from distance
+conducao alivia sem companheiro	dribble clears without teammate
+conducao alivio	dribble clearance
+conducao armador	dribble playmaker
+conducao cara a cara	dribble one on one
+conducao chuta	dribble shoots
+conducao corner sem companheiro	dribble corner without teammate
+conducao cruza da linha de fundo	dribble crosses from the byline
+conducao divide	dribble 50-50 challenge
+conducao falta direta	dribble direct free kick
+conducao falta na area	dribble foul in the box
+conducao folego	dribble stamina
+conducao goleiro adiantado	dribble keeper off his line
+conducao goleiro fica	dribble keeper stays
+conducao goleiro no gol	dribble keeper in goal
+conducao instrucao de avancar	dribble instruction to push forward
+conducao lanca sem companheiro	dribble long ball without teammate
+conducao lancamento	dribble long ball
+conducao mata-mata perde folego	dribble knockout loses stamina
+conducao passa	dribble passes
+conducao penalty	dribble penalty
+conducao ponta de lanca	dribble target man
+conducao segura a bola	dribble holds the ball
+conducao segura no canto	dribble holds in the corner
+conducao segura o resultado	dribble holds the result
+conducao sem saida divide	dribble no way out challenges
+conducao sem saida lanca	dribble no way out long ball
+conducao shot colocado	dribble placed shot
+conducao shot de longe	dribble long-range shot
+conducao tabela devolvida	dribble one-two returned
+conducao throw_in sorteada	dribble throw_in drawn
+conducao vira para o gol	dribble turns towards goal
+contest aponta para o lance marcado	contest points to the marked play
+contest defesa	contest defence
+contest expulsao	contest sending off
+contest falta do perdedor	contest foul by the loser
+contest falta do vencedor	contest foul by the winner
+contest falta pendente	contest pending foul
+contest fora do campo	contest out of play
+contest penalty	contest penalty
+contest punida lance especial	contest special play punished
+contest sem desafiante	contest without challenger
+contest so um desafiante	contest only one challenger
+contest vantagem sem resposta	contest advantage without reply
+contexto media	context average
+contexto minuto 31	context minute 31
+contexto noticia	context news
+convocações descer as que ficam	call-ups shift down the remaining
+convocações soltar o vetor	call-ups free the array
+cpk_1 noticia de recorde	cpk_1 record news
+cpk_1 recordes da temporada novos	cpk_1 new season records
+cpk_1 recordes de sempre novos	cpk_1 new all-time records
+cpk_2 aposentadoria	cpk_2 retirement
+cpk_2 reserva de tecnico	cpk_2 manager reservation
+cpk_2 vaga para o regen	cpk_2 slot for the regen
+cpk_3 clausula de rebaixamento	cpk_3 relegation clause
+cpk_3 suspenso pela competicao	cpk_3 suspended by the competition
+cpk_3 tirar oferta de contrato	cpk_3 remove contract offer
+cpk_4 escopo da nacao	cpk_4 nation scope
+cpk_4 regra da partida	cpk_4 match rule
+cpk_4 vaga do amistoso	cpk_4 friendly slot
+cpk_5 continente pelo clube	cpk_5 continent by club
+cpk_5 importante oferta pelo clube	cpk_5 important offer by club
+cpk_5 noticia da nacao da competicao	cpk_5 news of the competition nation
+cpk_6 apuro financeiro	cpk_6 financial trouble
+cpk_6 olheiro fora da regiao	cpk_6 scout outside the region
+cpk_6 texto do dado	cpk_6 data text
+cpk_7 formacao mesma posicao	cpk_7 formation same position
+cpk_7 formacao posicao extra	cpk_7 formation extra position
+cpk_7 recomecar historico	cpk_7 restart history
+cpl_1 clube tem oferta	cpl_1 club has offer
+cpl_1 oferta do clube	cpl_1 club offer
+cpl_1 oferta pendente	cpl_1 pending offer
+cpl_2 veto da diretoria valores	cpl_2 board veto values
+cpl_3 permissao de trabalho	cpl_3 work permit
+cpl_3 premio por jogo	cpl_3 appearance bonus
+cpl_3 transferencia passada	cpl_3 past transfer
+cpl_4 contrato da pessoa	cpl_4 person contract
+cpl_4 data de decisao	cpl_4 decision date
+cpl_5 contrato pelo atual	cpl_5 contract by the current one
+cpl_5 moral zerada	cpl_5 morale zeroed
+cpl_6 expirar historia do time	cpl_6 expire team story
+cpl_6 historia do time ja contada	cpl_6 team story already told
+cpl_6 registrar historia	cpl_6 record story
+cpl_7 interesse novo	cpl_7 new interest
+cpl_7 interesse repetido	cpl_7 repeated interest
+cpm_1 confronto empatado no agregado	cpm_1 tie level on aggregate
+cpm_1 jogo na prorrogacao	cpm_1 match in extra time
+cpm_1 ordem dos cabecas de chave	cpm_1 seeding order
+cpm_2 confrontos diretos	cpm_2 head to head
+cpm_2 posicao final	cpm_2 final position
+cpm_2 vetor dos clubes	cpm_2 clubs array
+cpm_3 embaralhar os melhores	cpm_3 shuffle the best
+cpm_3 embaralhar ponteiros	cpm_3 shuffle pointers
+cpm_3 estadio da divisao	cpm_3 division stadium
+cpm_3 mudar de divisao	cpm_3 change division
+cpm_4 antes do inicio	cpm_4 before the start
+cpm_4 jogo cumprido	cpm_4 match served
+cpm_4 soltar do orgao	cpm_4 release from the body
+cpm_5 lesao recorrente	cpm_5 recurring injury
+cpm_5 recorrente forte	cpm_5 strong recurring
+cpm_5 reiniciar jogador	cpm_5 reset player
+cpm_6 noticia de recorde pago	cpm_6 record fee paid news
+cpm_6 noticia de recorde recebido	cpm_6 record fee received news
+cpm_6 recorde de nota da temporada	cpm_6 season rating record
+cpm_7 amistoso no dia antes	cpm_7 friendly the day before
+cpm_7 amistoso no dia depois	cpm_7 friendly the day after
+cpm_7 amistoso planejado	cpm_7 planned friendly
+cpm_7 amistosos crescem	cpm_7 friendlies grow
+cpn_1 alcance do clube	cpn_1 club reach
+cpn_1 noticia ao tecnico humano	cpn_1 news to the human manager
+cpn_1 resposta automatica	cpn_1 automatic reply
+cpn_2 proximo campo do texto	cpn_2 next text field
+cpn_2 respond todas	cpn_2 respond all
+cpn_3 nota do jogador	cpn_3 player rating
+cpn_3 nota negativa	cpn_3 negative rating
+cpn_3 poucas partidas	cpn_3 few matches
+cpn_3 texto da crise financeira	cpn_3 financial crisis text
+cpn_4 clube melhor para o jovem	cpn_4 better club for the youngster
+cpn_4 jogador aposentado	cpn_4 retired player
+cpn_4 sorteio do clube da nacao	cpn_4 draw of the nation club
+cpn_5 agendar oferta	cpn_5 schedule offer
+cpn_5 clube com vaga aberta	cpn_5 club with open vacancy
+cpn_5 o tecnico atual fica de fora	cpn_5 the current manager is left out
+cpn_6 alvo fora do clube	cpn_6 target outside the club
+cpn_6 estatuto pela lista	cpn_6 status by list
+cpn_6 estatuto pelo contrato	cpn_6 status by contract
+cpn_7 mesma regiao	cpn_7 same region
+cpn_7 nacao do olheiro	cpn_7 scout nation
+cpn_7 tirar o amistoso	cpn_7 remove the friendly
+cpo_1 comprador no limit	cpo_1 buyer at the limit
+cpo_1 tirar favorito	cpo_1 remove favourite
+cpo_1 ultimato cumprido	cpo_1 ultimatum met
+cpo_1 vendedor no limit	cpo_1 seller at the limit
+cpo_10 prazo sorteado	cpo_10 drawn deadline
+cpo_10 prestacao acabada	cpo_10 instalment finished
+cpo_10 tirar oferta	cpo_10 remove offer
+cpo_11 fim do emprestimo solta a vaga	cpo_11 loan end frees the slot
+cpo_11 guardada devolvida	cpo_11 stored one returned
+cpo_11 suspensao estendida	cpo_11 suspension extended
+cpo_11 suspensao nova	cpo_11 new suspension
+cpo_11 transferido solta a vaga	cpo_11 transferred frees the slot
+cpo_12 idioma melhorado	cpo_12 language improved
+cpo_12 idioma novo	cpo_12 new language
+cpo_12 idiomas ordenados	cpo_12 languages sorted
+cpo_13 clubes com jogo	cpo_13 clubs with a match
+cpo_13 competicao atual	cpo_13 current competition
+cpo_13 fase final fica	cpo_13 final stage stays
+cpo_13 regen solta a vaga	cpo_13 regen frees the slot
+cpo_2 reenviar oferta	cpo_2 resend offer
+cpo_2 tirar contrato	cpo_2 remove contract
+cpo_3 fim da liga	cpo_3 end of the league
+cpo_3 melhor do mes	cpo_3 best of the month
+cpo_3 tecnico recente	cpo_3 recent manager
+cpo_3 virada do mes	cpo_3 month rollover
+cpo_4 abrir a vaga	cpo_4 open the slot
+cpo_4 tirar do elenco	cpo_4 remove from squad
+cpo_4 tirar o tecnico	cpo_4 remove the manager
+cpo_5 diretoria	cpo_5 board
+cpo_5 diretoria noticia	cpo_5 board news
+cpo_5 goal_crowd_reaction	cpo_5 goal_crowd_reaction
+cpo_6 noticia lida	cpo_6 news read
+cpo_6 sorteio descartado	cpo_6 draw discarded
+cpo_6 tipos comuns	cpo_6 common types
+cpo_7 gratidao	cpo_7 gratitude
+cpo_7 gratidao sobe	cpo_7 gratitude rises
+cpo_7 gratidao sorteio 3	cpo_7 gratitude draw 3
+cpo_7 gratidao tipo	cpo_7 gratitude type
+cpo_7 pedido de apoio	cpo_7 request for support
+cpo_7 reacao a critica	cpo_7 reaction to criticism
+cpo_8 band do contrato	cpo_8 contract band
+cpo_8 clube interessado	cpo_8 interested club
+cpo_8 montar listas	cpo_8 build lists
+cpo_9 negocia	cpo_9 negotiates
+cpo_9 nova entrada	cpo_9 new entry
+cpo_9 recua o mes	cpo_9 steps back the month
+cpp_1 decidir ofertas	cpp_1 decide offers
+cpp_1 oferta do clube	cpp_1 club offer
+cpp_10 arquivar	cpp_10 archive
+cpp_10 favorito do clube	cpp_10 club favourite
+cpp_10 recorde pago	cpp_10 record fee paid
+cpp_10 transferencia grande	cpp_10 big transfer
+cpp_11 par proibido	cpp_11 forbidden pair
+cpp_12 convocado na janela	cpp_12 called up in the window
+cpp_12 visitante convocado	cpp_12 away side called up
+cpp_13 teto da divisao	cpp_13 division ceiling
+cpp_2 assinar emprestimo	cpp_2 sign loan
+cpp_2 encerrar emprestimo	cpp_2 end loan
+cpp_2 trocar de time	cpp_2 change team
+cpp_2 trocar emprestado	cpp_2 change loaned
+cpp_2 trocar no clube	cpp_2 change at the club
+cpp_3 abrir passagem	cpp_3 open spell
+cpp_3 base no teto	cpp_3 base at the ceiling
+cpp_3 criar registro	cpp_3 create record
+cpp_3 motivo 2	cpp_3 reason 2
+cpp_3 motivo da saida	cpp_3 reason for leaving
+cpp_4 pessoa nula	cpp_4 null person
+cpp_4 queixa na janela	cpp_4 complaint in the window
+cpp_5 refazer lista	cpp_5 redo list
+cpp_5 suspender clube	cpp_5 suspend club
+cpp_5 vagas da formacao	cpp_5 formation slots
+cpp_6 clube acrescentou	cpp_6 club added
+cpp_6 por a venda	cpp_6 put up for sale
+cpp_6 premio por jogos	cpp_6 appearances bonus
+cpp_7 oferta em dinheiro	cpp_7 cash offer
+cpp_7 recusa	cpp_7 refusal
+cpp_7 soltar jogadores	cpp_7 release players
+cpp_8 espalhar	cpp_8 spread
+cpp_8 surto antigo	cpp_8 old outbreak
+cpp_8 surto novo	cpp_8 new outbreak
+cpp_9 clube na lista	cpp_9 club in the list
+cpp_9 forma inicial	cpp_9 initial form
+cpp_9 lesao inicial	cpp_9 initial injury
+cpp_9 nacao chave	cpp_9 key nation
+cpq_1 demitido	cpq_1 sacked
+cpq_1 o tecnico sai	cpq_1 the manager leaves
+cpq_1 tirar o tecnico	cpq_1 remove the manager
+cpq_1 ultimato dado	cpq_1 ultimatum given
+cpq_10 aposentadoria marcada	cpq_10 retirement scheduled
+cpq_10 registro novo	cpq_10 new record
+cpq_10 registro solto	cpq_10 record freed
+cpq_11 escala pela rodada	cpq_11 lineup by round
+cpq_11 estadio comparado	cpq_11 stadium compared
+cpq_11 sorteio mandante	cpq_11 home side draw
+cpq_12 em casa	cpq_12 at home
+cpq_12 sem pedido	cpq_12 without request
+cpq_13 batedor limpo	cpq_13 taker cleared
+cpq_13 batedor sobe	cpq_13 taker moves up
+cpq_13 limpar vaga	cpq_13 clear slot
+cpq_2 a federacao pensa	cpq_2 the federation considers
+cpq_2 selecao avaliada	cpq_2 national team evaluated
+cpq_3 acesso	cpq_3 promotion
+cpq_3 acesso do tecnico	cpq_3 manager promotion
+cpq_3 acesso renova	cpq_3 promotion renews
+cpq_3 classificado clube	cpq_3 qualified club
+cpq_3 classificado selecao	cpq_3 qualified national team
+cpq_3 rebaixamento	cpq_3 relegation
+cpq_3 rebaixamento do tecnico	cpq_3 manager relegation
+cpq_3 rebaixamento renova	cpq_3 relegation renews
+cpq_4 compra	cpq_4 purchase
+cpq_4 eliminado	cpq_4 eliminated
+cpq_4 fim das convocacoes	cpq_4 end of call-ups
+cpq_4 maior compra	cpq_4 biggest purchase
+cpq_4 nao classificado	cpq_4 not qualified
+cpq_4 venda	cpq_4 sale
+cpq_5 conclusao imediata	cpq_5 immediate completion
+cpq_5 dia permitido	cpq_5 allowed day
+cpq_5 janela de julho	cpq_5 July window
+cpq_6 clube deve aceitar	cpq_6 club must accept
+cpq_6 compensacao britanica	cpq_6 British compensation
+cpq_6 pagar transferencia	cpq_6 pay transfer
+cpq_7 contrato da oferta	cpq_7 offer contract
+cpq_7 luvas	cpq_7 signing-on fee
+cpq_7 permissao nova	cpq_7 new permit
+cpq_8 desfazer oferta	cpq_8 undo offer
+cpq_8 oferta de emprestimo	cpq_8 loan offer
+cpq_8 transferencia futura	cpq_8 future transfer
+cpr_1 conta nao comunitarios	cpr_1 count non-EU players
+cpr_1 limit de nao comunitarios	cpr_1 non-EU limit
+cpr_1 permissao achada	cpr_1 permit found
+cpr_10 nova decisao	cpr_10 new decision
+cpr_11 projecao	cpr_11 projection
+cpr_11 projecao pela injury_word_0c	cpr_11 projection by injury_word_0c
+cpr_12 jogo da rodada	cpr_12 round match
+cpr_13 clube livre	cpr_13 free club
+cpr_13 copa tem o clube	cpr_13 cup has the club
+cpr_13 ocupado	cpr_13 busy
+cpr_2 contrato acertado	cpr_2 contract agreed
+cpr_2 oferta em negociacao	cpr_2 offer under negotiation
+cpr_2 transferencia futura	cpr_2 future transfer
+cpr_3 acrescentar futura	cpr_3 add future
+cpr_3 futura achada	cpr_3 future found
+cpr_3 tirar futura	cpr_3 remove future
+cpr_4 desfazer oferta	cpr_4 undo offer
+cpr_4 jogador emprestado	cpr_4 loaned player
+cpr_4 oferta desfeita	cpr_4 offer undone
+cpr_4 write_percent_pair da proxima venda	cpr_4 write_percent_pair of the next sale
+cpr_5 apelacao decidida	cpr_5 appeal decided
+cpr_5 confianca baixa	cpr_5 low confidence
+cpr_5 diretoria com tecnico	cpr_5 board with manager
+cpr_5 diretoria sem tecnico	cpr_5 board without manager
+cpr_8 datas pela nacao	cpr_8 dates by nation
+cpr_8 fora do jogo	cpr_8 out of the game
+cpr_8 inicio habilidade	cpr_8 initial ability
+cpr_8 lista inicial	cpr_8 initial list
+cpr_9 desempregado	cpr_9 unemployed
+cpr_9 liberado	cpr_9 released
+cpr_9 tecnico	cpr_9 manager
+cpr_9 treinador	cpr_9 coach
+cps_1 listado pelo clube	cps_1 listed by club
+cps_1 pedido no clube do computador	cps_1 request at computer club
+cps_1 queixa do pedido	cps_1 request complaint
+cps_10 pontos dos dois	cps_10 points of both
+cps_10 selecao do ano	cps_10 team of the year
+cps_11 achou o jogo guardado	cps_11 found the stored match
+cps_11 jogo guardado	cps_11 stored match
+cps_11 jogo tirado	cps_11 match removed
+cps_12 amistoso em casa	cps_12 home friendly
+cps_12 amistoso planejado	cps_12 planned friendly
+cps_12 data livre	cps_12 free date
+cps_13 doenca do mandante	cps_13 home side illness
+cps_13 doenca do visitante	cps_13 away side illness
+cps_13 jogos da rodada	cps_13 round matches
+cps_13 montagem da rodada	cps_13 round setup
+cps_13 rodada adiada	cps_13 round postponed
+cps_13 sorteio da rodada	cps_13 round draw
+cps_2 ano mais antigo	cps_2 oldest year
+cps_2 permissao pela carreira	cps_2 permit by career
+cps_2 segunda nacionalidade	cps_2 second nationality
+cps_3 compensacao	cps_3 compensation
+cps_3 desafeto do tecnico	cps_3 manager grudge
+cps_3 liberado	cps_3 released
+cps_4 premio na selecao	cps_4 national team bonus
+cps_4 premio no time	cps_4 team bonus
+cps_4 write_percent_pair da venda	cps_4 write_percent_pair of the sale
+cps_5 atrito com o tecnico	cps_5 friction with the manager
+cps_5 moral sobe	cps_5 morale rises
+cps_5 moral sorteado	cps_5 drawn morale
+cps_5 tecnico sorteado	cps_5 drawn manager
+cps_6 competicoes do dia	cps_6 competitions of the day
+cps_6 falta ao treino	cps_6 missed training
+cps_6 falta pela soma	cps_6 absence by sum
+cps_6 faltas do dia	cps_6 absences of the day
+cps_7 fecha o estadio nacional	cps_7 closes the national stadium
+cps_7 reabre o estadio nacional	cps_7 reopens the national stadium
+cps_7 reserva conferida	cps_7 reservation checked
+cps_7 reservas vencidas	cps_7 reservations expired
+cps_8 competicao negativa	cps_8 negative competition
+cps_8 lista do olheiro	cps_8 scout list
+cps_8 primeira convocacao	cps_8 first call-up
+cps_8 sem pedidos	cps_8 no requests
+cps_9 data igual	cps_9 same date
+cps_9 emprestimo	cps_9 loan
+cpt_10 ficha reservada	cpt_10 reserved record
+cpt_10 semana	cpt_10 week
+cpt_11 candidato da pré-temporada	cpt_11 pre-season candidate
+cpt_11 janela gravada	cpt_11 window recorded
+cpt_11 planejou a pré-temporada	cpt_11 planned the pre-season
+cpt_12 data do jogo seguinte	cpt_12 next match date
+cpt_12 janela da excursão	cpt_12 tour window
+cpt_12 jogo da excursão marcado	cpt_12 tour match scheduled
+cpt_13 clubes ordenados	cpt_13 clubs sorted
+cpt_13 posição gravada	cpt_13 position recorded
+cpt_13 posição pela rodada	cpt_13 position by round
+cpt_2 resultado	cpt_2 result
+cpt_5 periodo do clima	cpt_5 weather period
+cpt_5 regiao do clima	cpt_5 weather region
+cpt_5 tempo do dia	cpt_5 weather of the day
+cpt_5 vento novo	cpt_5 new wind
+cpt_6 bonus de dezembro	cpt_6 December bonus
+cpt_6 dezembro	cpt_6 December
+cpt_7 clima inicial	cpt_7 initial weather
+cpt_7 nota do estadio	cpt_7 stadium rating
+cpt_8 sem tecnico	cpt_8 without manager
+cpt_8 treinadores	cpt_8 coaches
+cpu_10 nova temporada	cpu_10 new season
+cpu_10 punicao	cpu_10 punishment
+cpu_10 suspensao velha	cpu_10 old suspension
+cpu_11 coordenada gravada	cpu_11 coordinate recorded
+cpu_11 distância dobrada	cpu_11 distance doubled
+cpu_11 empate na lista	cpu_11 tie in the list
+cpu_12 clube na vaga livre	cpu_12 club in the free slot
+cpu_12 ordem sorteada	cpu_12 drawn order
+cpu_13 band de 3000 a 5000	cpu_13 band from 3000 to 5000
+cpu_13 base pela reputação	cpu_13 base by reputation
+cpu_13 clube rico	cpu_13 rich club
+cpu_5 chuva forte	cpu_5 heavy rain
+cpu_5 rolagem das financas	cpu_5 finances rollover
+cpu_6 vento forte	cpu_6 strong wind
+cpu_6 vento fraco	cpu_6 light wind
+cpu_6 vento moderado	cpu_6 moderate wind
+cpu_7 confortavel	cpu_7 comfortable
+cpu_7 devendo	cpu_7 in debt
+cpu_7 rica	cpu_7 rich
+cpu_8 geral	cpu_8 general
+cpu_8 goleiros	cpu_8 goalkeepers
+cpu_8 programas padrao	cpu_8 default schedules
+cpu_9 banco de jogadores	cpu_9 player bench
+cpu_9 goleiro	cpu_9 goalkeeper
+cpu_9 linha	cpu_9 outfield
+cpv_1 confirmada pelo vendedor	cpv_1 confirmed by the seller
+cpv_1 noticia da oferta aceita	cpv_1 offer accepted news
+cpv_1 noticia do emprestimo	cpv_1 loan news
+cpv_1 ofertas rivais canceladas	cpv_1 rival offers cancelled
+cpv_1 permissao de trabalho	cpv_1 work permit
+cpv_10 entrada zero	cpv_10 zero entry
+cpv_10 fim da lesao	cpv_10 end of injury
+cpv_10 metade de cima	cpv_10 top half
+cpv_11 doença	cpv_11 illness
+cpv_11 lesão de 14 a 27 dias	cpv_11 injury of 14 to 27 days
+cpv_11 notícia da saída	cpv_11 departure news
+cpv_11 notícia do pedido	cpv_11 request news
+cpv_11 pedido de substituto	cpv_11 replacement request
+cpv_11 substituto	cpv_11 replacement
+cpv_11 tipo pelas marcas	cpv_11 type by flags
+cpv_12 aposentado	cpv_12 retired
+cpv_12 data passada	cpv_12 past date
+cpv_12 jogo hoje	cpv_12 match today
+cpv_12 sem janela	cpv_12 without window
+cpv_13 prêmio do técnico	cpv_13 manager award
+cpv_13 renovação	cpv_13 renewal
+cpv_13 sorteio do agradecimento	cpv_13 thanks draw
+cpv_2 injury_word_0c do jogador	cpv_2 player injury_word_0c
+cpv_2 jogador saiu da troca	cpv_2 player left the exchange
+cpv_2 noticia das expectativas	cpv_2 expectations news
+cpv_2 recusa anotada na lista	cpv_2 refusal noted in the list
+cpv_2 recusa do jogador	cpv_2 player refusal
+cpv_3 noticia da federacao	cpv_3 federation news
+cpv_3 noticia do protesto	cpv_3 protest news
+cpv_3 reagendada na janela	cpv_3 rescheduled in the window
+cpv_3 recusada na janela	cpv_3 refused in the window
+cpv_3 retirada na janela	cpv_3 withdrawn in the window
+cpv_4 boato do tecnico	cpv_4 manager rumour
+cpv_4 negociacao agendada	cpv_4 negotiation scheduled
+cpv_4 recusa em se mudar	cpv_4 refuses to move
+cpv_4 vaga nova	cpv_4 new slot
+cpv_5 ingressos vendidos	cpv_5 tickets sold
+cpv_5 merchandising	cpv_5 merchandising
+cpv_6 impulso na band 0	cpv_6 boost in band 0
+cpv_6 injecao avaliada	cpv_6 injection evaluated
+cpv_6 sorteio da divida	cpv_6 debt draw
+cpv_7 bonus pagos	cpv_7 bonuses paid
+cpv_7 clube grande	cpv_7 big club
+cpv_7 peso da liga	cpv_7 league weight
+cpv_8 batida vira lesao	cpv_8 collision becomes injury
+cpv_8 jovem	cpv_8 youngster
+cpv_8 metade	cpv_8 half
+cpv_8 ritmo	cpv_8 pace
+cpv_9 contrato do jovem	cpv_9 youngster contract
+cpv_9 regen contratado	cpv_9 regen signed
+cpv_9 tira a aposentadoria pendente	cpv_9 removes the pending retirement
+cpv_9 uma em quatro	cpv_9 one in four
+cpw_1 contratado ha pouco	cpw_1 recently signed
+cpw_1 noticia do contrato novo	cpw_1 new contract news
+cpw_1 pedido retirado	cpw_1 request withdrawn
+cpw_1 satisfacao avaliada	cpw_1 satisfaction evaluated
+cpw_10 regen da fila	cpw_10 queued regen
+cpw_10 reservas so na original	cpw_10 reserves only in the original
+cpw_10 tecnico de reserva	cpw_10 reserve manager
+cpw_10 vencidas so na original	cpw_10 expired only in the original
+cpw_11 resultado aplicado	cpw_11 result applied
+cpw_12 jogo pela seleção	cpw_12 national team match
+cpw_12 reserva sem entrar	cpw_12 reserve not coming on
+cpw_13 registro novo	cpw_13 new record
+cpw_13 soma na data	cpw_13 sum at the date
+cpw_13 último clube sem registro	cpw_13 last club without record
+cpw_2 agendar conclusao	cpw_2 schedule completion
+cpw_2 concluir agora	cpw_2 complete now
+cpw_2 futura no fim do contrato	cpw_2 future at contract end
+cpw_2 premio por jogo anterior	cpw_2 previous appearance bonus
+cpw_2 transferencia futura	cpw_2 future transfer
+cpw_2 write_percent_pair da venda anterior	cpw_2 write_percent_pair of the previous sale
+cpw_3 avisar interessados	cpw_3 notify interested parties
+cpw_3 conta do inicio	cpw_3 count from the start
+cpw_3 interesse no emprestimo	cpw_3 loan interest
+cpw_3 saida pela lei bosman	cpw_3 departure under the Bosman ruling
+cpw_3 tres semanas	cpw_3 three weeks
+cpw_4 agendar decisao	cpw_4 schedule decision
+cpw_4 oferta atualizada	cpw_4 offer updated
+cpw_4 oferta nova	cpw_4 new offer
+cpw_4 oferta tirada pela vaga	cpw_4 offer removed by the slot
+cpw_4 termos ao jogador	cpw_4 terms to the player
+cpw_5 jogador novo no mes	cpw_5 new player in the month
+cpw_5 notas do visitante	cpw_5 away side ratings
+cpw_5 ordenou as notas	cpw_5 sorted the ratings
+cpw_6 premio de jogador	cpw_6 player award
+cpw_6 premiou o melhor do mes	cpw_6 awarded the best of the month
+cpw_6 vencedor do mes	cpw_6 winner of the month
+cpw_7 caso novo	cpw_7 new case
+cpw_7 caso repetido	cpw_7 repeated case
+cpw_7 falta tirada da lista	cpw_7 absence removed from the list
+cpw_7 falta vencida	cpw_7 absence expired
+cpw_7 fim da ausencia	cpw_7 end of absence
+cpw_7 marcou a falta	cpw_7 marked the absence
+cpw_7 multa pela falta	cpw_7 fine for absence
+cpw_7 pedido de saida	cpw_7 transfer request
+cpw_7 sumiu em vez de faltar	cpw_7 vanished instead of missing
+cpw_8 fim da lesao so na original	cpw_8 end of injury only in the original
+cpw_8 perda	cpw_8 loss
+cpw_8 recuperacao	cpw_8 recovery
+cpw_8 sorteio da forma	cpw_8 form draw
+cpw_9 dia de treino	cpw_9 training day
+cpw_9 lesao nova so na original	cpw_9 new injury only in the original
+cpw_9 noticias de volta	cpw_9 news back
+cpw_9 risco sem recorrencia	cpw_9 risk without recurrence
+cpx_1 noticia da recusa	cpx_1 refusal news
+cpx_1 recusa desassossega	cpx_1 refusal unsettles
+cpx_1 recusa desmarca	cpx_1 refusal unmarks
+cpx_1 retirada sem desassossego	cpx_1 withdrawal without unsettling
+cpx_10 data da pressure	cpx_10 pressure date
+cpx_10 motivo pela avaliacao	cpx_10 reason by evaluation
+cpx_10 noticia da saida	cpx_10 departure news
+cpx_10 noticia do tecnico novo	cpx_10 new manager news
+cpx_10 sorteio do boato	cpx_10 rumour draw
+cpx_11 noticia da situacao	cpx_11 situation news
+cpx_11 premio pago	cpx_11 bonus paid
+cpx_11 registro do acesso	cpx_11 promotion record
+cpx_11 registro do rebaixamento	cpx_11 relegation record
+cpx_11 registro do titulo	cpx_11 title record
+cpx_12 categoria da liga	cpx_12 league category
+cpx_12 jogo registrado	cpx_12 match recorded
+cpx_12 melhor posicao de sempre	cpx_12 best position ever
+cpx_12 noticia de recorde	cpx_12 record news
+cpx_13 elenco pedido	cpx_13 squad requested
+cpx_13 noticia do convocado	cpx_13 call-up news
+cpx_13 noticia do desfecho	cpx_13 outcome news
+cpx_2 desassossegado	cpx_2 unsettled
+cpx_2 interesse avaliado	cpx_2 interest evaluated
+cpx_2 listado	cpx_2 listed
+cpx_2 noticia da oferta desfeita	cpx_2 offer undone news
+cpx_2 noticia do premio por jogos	cpx_2 appearances bonus news
+cpx_2 sorteio do desassossego	cpx_2 unsettling draw
+cpx_3 confianca das diretorias	cpx_3 boards confidence
+cpx_3 noticia da transferencia acertada	cpx_3 transfer agreed news
+cpx_3 noticia da transferencia concluida	cpx_3 transfer completed news
+cpx_3 paga a transferencia	cpx_3 pays the transfer
+cpx_3 parte dos clubes anteriores	cpx_3 share of previous clubs
+cpx_4 contrato estendido	cpx_4 contract extended
+cpx_4 emprestimo da configuracao	cpx_4 loan from the settings
+cpx_4 noticia do adiamento	cpx_4 postponement news
+cpx_4 noticia do fim do contrato	cpx_4 contract end news
+cpx_4 permissao de trabalho	cpx_4 work permit
+cpx_5 carregar financas	cpx_5 load finances
+cpx_5 gravar financas	cpx_5 save finances
+cpx_5 gravar gerente de elencos	cpx_5 save squad manager
+cpx_6 gravar paises anfitrioes	cpx_6 save host countries
+cpx_6 gravar sementes da conmebol	cpx_6 save CONMEBOL seeds
+cpx_6 gravar sementes da uefa	cpx_6 save UEFA seeds
+cpx_7 gravar estatisticas dos arbitros	cpx_7 save referee stats
+cpx_7 gravar estatisticas simuladas	cpx_7 save simulated stats
+cpx_7 gravar historico dos clubes	cpx_7 save club history
+cpx_8 tatica do humano	cpx_8 human tactic
+cpx_8 tatica pronta	cpx_8 preset tactic
+cpx_8 tatica propria	cpx_8 own tactic
+cpx_9 batedor tirado	cpx_9 taker removed
+cpy_1 alvo sem lance	cpy_1 target without bid
+cpy_1 lance vencido	cpy_1 bid expired
+cpy_1 outra posicao	cpy_1 other position
+cpy_1 vaga com lance	cpy_1 slot with bid
+cpy_10 prêmio do técnico	cpy_10 manager award
+cpy_10 renovação	cpy_10 renewal
+cpy_10 sem crédito	cpy_10 without credit
+cpy_10 sorteio do agradecimento	cpy_10 thanks draw
+cpy_11 falta contada	cpy_11 absence counted
+cpy_11 jogo contado	cpy_11 match counted
+cpy_11 noticia da transferencia finalizada	cpy_11 transfer finalised news
+cpy_11 premio na selecao guardado	cpy_11 national team bonus stored
+cpy_11 premio pago	cpy_11 bonus paid
+cpy_12 diretoria acha caro	cpy_12 board finds it expensive
+cpy_12 diretoria sem verba	cpy_12 board without funds
+cpy_12 diretoria vendendo	cpy_12 board selling
+cpy_12 fisioterapeuta avalia	cpy_12 physio evaluates
+cpy_12 noticia do ultimato	cpy_12 ultimatum news
+cpy_12 texto do ultimato	cpy_12 ultimatum text
+cpy_13 compensacao paga	cpy_13 compensation paid
+cpy_13 ferias do humano	cpy_13 human on holiday
+cpy_13 liberado	cpy_13 released
+cpy_13 noticia ao comprador	cpy_13 news to the buyer
+cpy_13 noticia ao vendedor	cpy_13 news to the seller
+cpy_13 sai do clube atual	cpy_13 leaves the current club
+cpy_2 bloqueio de 14 dias	cpy_2 14-day block
+cpy_2 contagem da lista	cpy_2 list count
+cpy_2 vaga refeita	cpy_2 slot redone
+cpy_3 reducao pela sobra	cpy_3 reduction by surplus
+cpy_3 sobra ao jogador do clube	cpy_3 surplus to the club player
+cpy_3 vaga preenchida	cpy_3 slot filled
+cpy_3 verba da vaga de titular	cpy_3 funds for the starter slot
+cpy_4 amistosos marcados	cpy_4 friendlies scheduled
+cpy_4 virada do ano	cpy_4 year rollover
+cpy_5 entrada da banda 2	cpy_5 band 2 entry
+cpy_5 entrada da banda 3	cpy_5 band 3 entry
+cpy_5 entrada da banda 4	cpy_5 band 4 entry
+cpy_5 fase seguinte	cpy_5 next stage
+cpy_6 premio da vitoria	cpy_6 win bonus
+cpy_6 premio do empate	cpy_6 draw bonus
+cpy_7 datas dos clubes lidas	cpy_7 club dates read
+cpy_7 datas dos clubes zeradas	cpy_7 club dates zeroed
+cpy_7 gravar conferencia das pernas	cpy_7 save leg check
+cpy_7 gravar datas dos clubes	cpy_7 save club dates
+cpy_8 arbitro neutro	cpy_8 neutral referee
+cpy_8 arbitro renovado	cpy_8 referee renewed
+cpy_8 arbitro sorteado	cpy_8 drawn referee
+cpy_8 band da liga	cpy_8 league band
+cpy_9 arbitro novo	cpy_9 new referee
+cpy_9 nota consertada	cpy_9 rating fixed
+cpy_9 ordenar	cpy_9 sort
+cpz_10 comentarista de qualquer nacao	cpz_10 commentator of any nation
+cpz_10 comentarista local	cpz_10 local commentator
+cpz_10 noticia da queixa a federacao	cpz_10 news of the complaint to the federation
+cpz_10 sorteio do comentarista	cpz_10 commentator draw
+cpz_11 dias ate a temporada	cpz_11 days until the season
+cpz_11 folha do pessoal	cpz_11 staff payroll
+cpz_11 folha pela injury_word_0c	cpz_11 payroll by injury_word_0c
+cpz_12 compra paga	cpz_12 purchase paid
+cpz_12 luvas pagas	cpz_12 signing-on fees paid
+cpz_12 venda recebida	cpz_12 sale received
+cpz_13 premio recebido	cpz_13 prize received
+cpz_13 salario pago	cpz_13 wages paid
+cpz_13 tv recebida	cpz_13 TV money received
+cpz_2 acesso na tabela	cpz_2 promotion in the table
+cpz_2 rebaixamento na tabela	cpz_2 relegation in the table
+cpz_2 vaga no mata-mata	cpz_2 knockout place
+cpz_2 venceu o mata-mata	cpz_2 won the knockout
+cpz_3 clausulas de rebaixamento	cpz_3 relegation clauses
+cpz_3 titulo	cpz_3 title
+cpz_3 vaga no mata-mata	cpz_3 knockout slot
+cpz_4 caiu na fase 1	cpz_4 out in stage 1
+cpz_4 caiu na qualificacao	cpz_4 out in qualifying
+cpz_4 lista dos inscritos	cpz_4 list of entrants
+cpz_4 passou da fase 2	cpz_4 past stage 2
+cpz_4 sorteio das quartas	cpz_4 quarter-final draw
+cpz_5 linha da tatica	cpz_5 tactic row
+cpz_6 a servico da selecao	cpz_6 on national team duty
+cpz_6 no time da selecao	cpz_6 in the national team
+cpz_6 time das estrelas	cpz_6 all-star team
+cpz_7 placar do mandante	cpz_7 home side score
+cpz_7 placar do visitante	cpz_7 away side score
+cpz_8 jogo adiado	cpz_8 match postponed
+cpz_8 jogo antecipado	cpz_8 match brought forward
+cpz_8 jogo dois dias antes	cpz_8 match two days before
+cpz_8 jogo remarcado pela selecao	cpz_8 match rescheduled by national team
+cpz_8 noticia do jogo remarcado	cpz_8 rescheduled match news
+cpz_9 multa avaliada	cpz_9 fine evaluated
+cpz_9 multa pela forma	cpz_9 fine by form
+cpz_9 noticia da reacao a multa	cpz_9 news of the reaction to the fine
+cpz_9 noticia do retorno do treinador	cpz_9 news of the coach return
+cqa_1 premio do vencedor	cqa_1 winner prize
+cqa_1 premio pelo fundo	cqa_1 prize from the fund
+cqa_10 a diretoria sorteia	cqa_10 the board draws
+cqa_10 diretoria culpa	cqa_10 board blames
+cqa_10 diretoria elogia	cqa_10 board praises
+cqa_10 texto da diretoria	cqa_10 board text
+cqa_11 fim da liga	cqa_11 end of the league
+cqa_11 goal_crowd_reaction favorita	cqa_11 favourite goal_crowd_reaction
+cqa_11 nota do mandante	cqa_11 home side rating
+cqa_11 pontos do mes	cqa_11 points of the month
+cqa_11 vitoria do mandante	cqa_11 home win
+cqa_12 injury_word_0c do terceiro	cqa_12 third place injury_word_0c
+cqa_12 injury_word_0c do vice	cqa_12 runner-up injury_word_0c
+cqa_12 passagem fechada	cqa_12 spell closed
+cqa_12 passagem nova	cqa_12 new spell
+cqa_13 elenco forte	cqa_13 strong squad
+cqa_13 goal_crowd_reaction comemora	cqa_13 goal_crowd_reaction celebrates
+cqa_13 historia da midia	cqa_13 media story
+cqa_13 moral cai	cqa_13 morale drops
+cqa_13 noticia da comemoracao	cqa_13 celebration news
+cqa_13 noticia do desassossego	cqa_13 unsettling news
+cqa_13 queixa limpa	cqa_13 complaint cleared
+cqa_13 reacoes so na original	cqa_13 reactions only in the original
+cqa_2 amistoso aceito	cqa_2 friendly accepted
+cqa_2 decisao do amistoso	cqa_2 friendly decision
+cqa_2 distancia do amistoso	cqa_2 friendly distance
+cqa_2 pedido ao humano	cqa_2 request to the human
+cqa_2 pedido respondido pelo assistente	cqa_2 request answered by the assistant
+cqa_3 sorteio adiado	cqa_3 draw postponed
+cqa_3 sorteio livre	cqa_3 open draw
+cqa_3 sorteio pela semente	cqa_3 seeded draw
+cqa_4 campeao	cqa_4 champion
+cqa_4 vice	cqa_4 runner-up
+cqa_5 conta o elenco	cqa_5 counts the squad
+cqa_5 elenco cheio	cqa_5 squad full
+cqa_5 emprestimo recusado	cqa_5 loan refused
+cqa_5 libera o mais barato	cqa_5 releases the cheapest
+cqa_5 vendedor sem troca	cqa_5 seller without exchange
+cqa_6 achado	cqa_6 found
+cqa_6 busca vazia	cqa_6 empty search
+cqa_6 lista sem olheiro	cqa_6 list without scout
+cqa_6 olheiro na lista livre	cqa_6 scout in the free list
+cqa_6 removido	cqa_6 removed
+cqa_7 idade	cqa_7 age
+cqa_7 jovem valorizado	cqa_7 valued youngster
+cqa_7 listado para transferencia	cqa_7 transfer listed
+cqa_7 valor base	cqa_7 base value
+cqa_8 evolui quem ficou de fora	cqa_8 develops who was left out
+cqa_8 moral do vencedor	cqa_8 winner morale
+cqa_8 testa a moral	cqa_8 tests the morale
+cqb_1 liquido ao mandante	cqb_1 net to the home side
+cqb_1 preco pela injury_word_0c	cqb_1 price by injury_word_0c
+cqb_1 publico pagante	cqb_1 paying attendance
+cqb_10 cauda	cqb_10 tail
+cqb_10 cursor	cqb_10 cursor
+cqb_10 tirado	cqb_10 removed
+cqb_11 conta da nacao	cqb_11 nation count
+cqb_11 ordena pela semente	cqb_11 sorts by seed
+cqb_11 semente lado sorteado	cqb_11 seed drawn side
+cqb_12 clube sem nacao chave	cqb_12 club without key nation
+cqb_12 nacao chave do clube	cqb_12 club key nation
+cqb_12 nacao chave do estadio	cqb_12 stadium key nation
+cqb_13 dia alvo	cqb_13 target day
+cqb_13 novo vence	cqb_13 new one wins
+cqb_13 sai o jogo da lista	cqb_13 match leaves the list
+cqb_2 com a ficha	cqb_2 with the record
+cqb_2 divisor da band 0 baixa	cqb_2 low band 0 divisor
+cqb_2 sem a ficha	cqb_2 without the record
+cqb_2 troca do presidente	cqb_2 chairman change
+cqb_3 ano da copa adiante	cqb_3 cup year ahead
+cqb_3 ano para tras	cqb_3 year backwards
+cqb_3 tabela montada	cqb_3 fixture list built
+cqb_4 adversario achado	cqb_4 opponent found
+cqb_4 clube planejado	cqb_4 planned club
+cqb_4 torneio acrescentado	cqb_4 tournament added
+cqb_5 aposenta pela lesao	cqb_5 retires through injury
+cqb_5 aposenta pelas recaidas	cqb_5 retires through relapses
+cqb_5 ausencia acaba sem clube	cqb_5 absence ends without club
+cqb_5 duracao	cqb_5 duration
+cqb_5 noticia da lesao	cqb_5 injury news
+cqb_5 suspende as miras	cqb_5 suspends the targets
+cqb_5 troca a lesao	cqb_5 swaps the injury
+cqb_5 volta ao treino	cqb_5 back to training
+cqb_6 noticia do write_percent_pair	cqb_6 write_percent_pair news
+cqb_6 parte dos clubes anteriores	cqb_6 share of previous clubs
+cqb_6 parte paga	cqb_6 share paid
+cqb_6 write_percent_pair pago	cqb_6 write_percent_pair paid
+cqb_7 confere o jovem	cqb_7 checks the youngster
+cqb_7 confere o potencial	cqb_7 checks the potential
+cqb_7 excecao de 2001	cqb_7 2001 exception
+cqb_7 jogos pela selecao	cqb_7 national team caps
+cqb_8 desafeto sorteado	cqb_8 drawn grudge
+cqb_8 nota do jogador	cqb_8 player rating
+cqb_8 reacao do elenco	cqb_8 squad reaction
+cqb_8 rival de posicao	cqb_8 positional rival
+cqb_9 jogo cumprido	cqb_9 match served
+cqb_9 recurso	cqb_9 appeal
+cqc_1 dividendo	cqc_1 dividend
+cqc_1 dividendo do pequeno pelo presidente	cqc_1 small club dividend by chairman
+cqc_1 lugares sentados	cqc_1 seats
+cqc_1 nacao inativa abaixo de 6000	cqc_1 inactive nation below 6000
+cqc_10 boato	cqc_10 rumour
+cqc_10 interesse	cqc_10 interest
+cqc_10 nao vende	cqc_10 will not sell
+cqc_10 noticia do titulo	cqc_10 title news
+cqc_10 noticia nao vende	cqc_10 will not sell news
+cqc_10 pedido de transferencia	cqc_10 transfer request
+cqc_10 sorteio do boato	cqc_10 rumour draw
+cqc_11 amistoso entre selecoes	cqc_11 friendly between national teams
+cqc_11 nacoes com jogo	cqc_11 nations with a match
+cqc_12 convoca	cqc_12 calls up
+cqc_12 elenco das fases finais	cqc_12 finals squad
+cqc_12 elenco pelo técnico humano	cqc_12 squad by the human manager
+cqc_12 escala do elenco	cqc_12 squad lineup
+cqc_12 marca os clubes	cqc_12 marks the clubs
+cqc_12 refaz as reservas	cqc_12 redoes the reserves
+cqc_13 olheiros do humano	cqc_13 human scouts
+cqc_2 presidente	cqc_2 chairman
+cqc_2 teto pela injury_word_0c	cqc_2 ceiling by injury_word_0c
+cqc_2 teto pela tabela	cqc_2 ceiling by the table
+cqc_3 dia seguinte	cqc_3 next day
+cqc_3 mesmo clube na mesma fatia	cqc_3 same club in the same pot
+cqc_3 mesmo clube noutra fatia	cqc_3 same club in another pot
+cqc_3 natal	cqc_3 Christmas
+cqc_4 ano novo do calendario	cqc_4 calendar new year
+cqc_4 dia preferido do mandante	cqc_4 home side preferred day
+cqc_4 mesmo dia	cqc_4 same day
+cqc_4 nova data	cqc_4 new date
+cqc_5 confronto pendente	cqc_5 pending tie
+cqc_5 janela aberta	cqc_5 window open
+cqc_5 jogo de volta	cqc_5 return leg
+cqc_5 jogo do confronto	cqc_5 tie match
+cqc_6 conflito na janela	cqc_6 conflict in the window
+cqc_6 jogo para a TV	cqc_6 match for TV
+cqc_6 noticia da tabela	cqc_6 fixture list news
+cqc_6 noticia do grupo	cqc_6 group news
+cqc_7 jogo levado a data	cqc_7 match moved to the date
+cqc_7 permissao recusada	cqc_7 permit refused
+cqc_7 sai da troca da oferta	cqc_7 leaves the offer exchange
+cqc_7 sai da troca das outras	cqc_7 leaves the other exchanges
+cqc_7 troca recusada pela permissao	cqc_7 exchange refused by the permit
+cqc_8 avaliacao da federacao	cqc_8 federation evaluation
+cqc_8 confianca	cqc_8 confidence
+cqc_8 nota do jogo	cqc_8 match rating
+cqc_8 noticia da reacao	cqc_8 reaction news
+cqc_8 vitoria	cqc_8 win
+cqc_9 candidato melhor	cqc_9 better candidate
+cqc_9 confianca de volta	cqc_9 confidence back
+cqc_9 meta	cqc_9 target
+cqc_9 noticia da oferta	cqc_9 offer news
+cqc_9 saida pelo tempo	cqc_9 departure by time
+cqc_9 sorteio do presidente	cqc_9 chairman draw
+cqd_1 contrato ao jogador	cqd_1 contract to the player
+cqd_1 oferta do dia	cqd_1 offer of the day
+cqd_1 orçamento	cqd_1 budget
+cqd_1 prestações do mês	cqd_1 instalments of the month
+cqd_1 resposta da IA	cqd_1 AI reply
+cqd_10 aposentadoria anunciada	cqd_10 retirement announced

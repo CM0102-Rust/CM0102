@@ -45,7 +45,7 @@ unsafe fn can_club_bid_body(this: usize, jogador: usize, clube: usize, ignorar_a
     let marca = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8));
     if cpr2_b(marca) & 0x40 != 0 {
         if acertada(cpr2_d(0xae1050), cpr2_d(jogador) as i32) != 0 {
-            crate::comparison::branch("cpr_2 contrato acertado");
+            crate::comparison::branch("cpr_2 contract agreed");
             return (0x21, 0); // contrato acertado
         }
         let m = cpr2_d(this + 0x86e).wrapping_add(cpr2_d(jogador).wrapping_mul(8)) as *mut u8;
@@ -74,12 +74,12 @@ unsafe fn can_club_bid_body(this: usize, jogador: usize, clube: usize, ignorar_a
             let o = cpr2_d(vaga);
             let st = cpr2_b(o + 0x2c);
             if (0xa..=0xe).contains(&st) {
-                crate::comparison::branch("cpr_2 oferta em negociacao");
+                crate::comparison::branch("cpr_2 offer under negotiation");
                 *((o + 0x2d) as *mut u8) = 1;
                 return (0x12, 0); // já em negociação
             }
             if st == 0x13 {
-                crate::comparison::branch("cpr_2 transferencia futura");
+                crate::comparison::branch("cpr_2 future transfer");
                 return (0x20, 0); // transferência futura acertada
             }
             e = proximo(l);

@@ -10,9 +10,9 @@ MUTACOES = [
     ('cqo12_vagas_de_tras_para_frente',
      'let fonte = o; // cqo12: a inscrição de cada vaga',
      'let fonte = (cqo12_w(this + 0x3e) as usize - 1 - i as usize) * 6; // mutacao: de tras para a frente',
-     'cqo_12 times da copa do brasil'),
+     'cqo_12 copa do brasil teams'),
     ('cqo12_uma_substituicao',
      '*((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil',
      '*((this + 0x4a) as *mut u8) = 1; // mutacao: uma so',
-     'cqo_12 regras da copa do brasil'),
+     'cqo_12 copa do brasil rules'),
 ]

@@ -8,9 +8,9 @@
 # - A primeira categoria nao e arquivada nem zerada.
 MUTACOES = [
     ('cqh8_sem_zerar', 'core::ptr::write_bytes(dados as *mut u8, 0, 32); // cqh8: o registro da categoria zerado',
-     'let _ = dados; // mutacao: o registro da categoria zerado', 'cqh_8 categoria arquivada'),
+     'let _ = dados; // mutacao: o registro da categoria zerado', 'cqh_8 archived category'),
     ('cqh8_zera_metade', 'core::ptr::write_bytes(dados as *mut u8, 0, 32); // cqh8: o registro da categoria zerado',
-     'core::ptr::write_bytes(dados as *mut u8, 0, 16); // mutacao: o registro da categoria zerado', 'cqh_8 categoria arquivada'),
+     'core::ptr::write_bytes(dados as *mut u8, 0, 16); // mutacao: o registro da categoria zerado', 'cqh_8 archived category'),
     ('cqh8_sem_a_primeira', 'let no = career_history_node(clube, Some(dados), valor, (((cat + 1) as u8) << 3) | tipo); // cqh8: a categoria e o tipo do nó',
-     'if cat == 0 { continue; } let no = career_history_node(clube, Some(dados), valor, (((cat + 1) as u8) << 3) | tipo); // mutacao: a categoria e o tipo do nó', 'cqh_8 categoria arquivada'),
+     'if cat == 0 { continue; } let no = career_history_node(clube, Some(dados), valor, (((cat + 1) as u8) << 3) | tipo); // mutacao: a categoria e o tipo do nó', 'cqh_8 archived category'),
 ]

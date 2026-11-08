@@ -8,11 +8,11 @@
 MUTACOES = [
     ('cqb12_clube_sem_indice', '            return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: o índice ativo da nação do clube',
      '            return 3 + 0 * *((key_nation_entry(k) + 0x14) as *const u8); // mutacao: como fora das nacoes-chave',
-     'cqb_12 nacao chave do clube'),
+     'cqb_12 club key nation'),
     ('cqb12_estadio_sem_indice', '            *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: o índice ativo da nação do estádio',
      '            3 + 0 * *((key_nation_entry(k) + 0x14) as *const u8) // mutacao: como fora das nacoes-chave',
-     'cqb_12 nacao chave do estadio'),
+     'cqb_12 stadium key nation'),
     ('cqb12_clube_de_fora_0', '    3 // cqb12: clube fora das nações-chave',
      '    0 // mutacao: clube de fora na primeira nacao-chave',
-     'cqb_12 clube sem nacao chave'),
+     'cqb_12 club without key nation'),
 ]

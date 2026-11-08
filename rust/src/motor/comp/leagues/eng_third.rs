@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_third(this: usize, year: u3
 /// ([0x9cf69c]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da nação, [[+4]+0x5d]
 /// [inferência]), senão −1; 5 reservas e 3 substituições.
 pub(crate) unsafe extern "thiscall" fn eng_third_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_4 regras da third");
+    crate::comparison::branch("cqi_4 third division rules");
     eng_prm_apply_league_rules(this, &third_division_rules(this))
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn eng_third_create_schedule(this: usize, st
                 show_error_at(0x9c4424, 0xb3);
                 return 0;
             }
-            crate::comparison::branch("cqp_4 calendario da terceira inglesa");
+            crate::comparison::branch("cqp_4 english third division calendar");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_second_set_christmas_rounds(t, year, &THIRD_DIVISION_CHRISTMAS_SCHEDULE, 0x9c4424);
             t
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn eng_third_create_schedule(this: usize, st
                 show_error_at(0x9c4424, 0x1ba);
                 return 0;
             }
-            crate::comparison::branch("cqp_4 play-offs da terceira inglesa");
+            crate::comparison::branch("cqp_4 english third division play-offs");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &THIRD_DIVISION_PLAYOFF_SEMIFINAL, year);
             eng_cc_cup_write_cup_round(t, 1, &DIVISION_THREE_PLAYOFF_1, year);

@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     }
     let l = board_row_of(this, clube);
     let motivo: i8 = if (cpx10_w(l + 8) as i32) < cpx10_w(l + 6) as i32 - 500 /* cpx10: o limit pela avaliação +8 */ && {
-        crate::comparison::branch("cpx_10 motivo pela avaliacao");
+        crate::comparison::branch("cpx_10 reason by evaluation");
         cpx10_sortear(3) == 0
     } {
         2
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     };
     news_set_slot(n, 8, motivo as i32 as u32);
     news_set_slot(n, 9, tipo as u8 as i8 as i32 as u32);
-    crate::comparison::branch("cpx_10 sorteio do boato");
+    crate::comparison::branch("cpx_10 rumour draw");
     let mut boato = cpx10_sortear(10); // cpx10: o sorteio do boato
     let nj = cpx10_d(tec + 0x69);
     if nj != 0 {
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
     }
     let copiar: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(0x417c10usize);
     let mut data = [0u32; 2];
-    crate::comparison::branch("cpx_10 data da pressure");
+    crate::comparison::branch("cpx_10 pressure date");
     copiar(board_row_of(this, clube) + 0x18, data.as_mut_ptr() as usize, 0xae2c90); // cpx10: a data da notícia na linha
 }
 
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn post_manager_departure_news(this: usize, tec: usize,
         news_set_slot(n, k, if pres != 0 { cpx10_d(cpx10_d(pres + d) + 0x33) as u32 } else { u32::MAX });
     }
     news_set_slot(n, 0xb, motivo as u8 as i8 as i32 as u32);
-    crate::comparison::branch("cpx_10 noticia da saida");
+    crate::comparison::branch("cpx_10 departure news");
     if is_human_manager(tec) {
         news_set_manager_names(n, tec, 0xd, 0xc);
         deliver_news(n, 4, 0);
@@ -319,7 +319,7 @@ unsafe extern "thiscall" fn post_manager_appointment_news(this: usize, tec: usiz
         cpx10_b(tec + 0x3d) as i8 as i32 as u32
     };
     news_set_slot(n, 7, funcao);
-    crate::comparison::branch("cpx_10 noticia do tecnico novo");
+    crate::comparison::branch("cpx_10 new manager news");
     if is_human_manager(tec) {
         news_set_manager_names(n, tec, 8, 7);
         deliver_news(n, 4, 0);

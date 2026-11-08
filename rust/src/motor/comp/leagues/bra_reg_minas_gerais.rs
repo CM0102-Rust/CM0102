@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     let b = half_champion(this, 1);
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
-        crate::comparison::branch("cqo_7 mesmo campeao");
+        crate::comparison::branch("cqo_7 same champion");
         core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
         core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
-        crate::comparison::branch("cqo_7 historico da final");
+        crate::comparison::branch("cqo_7 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_7 premios");
+    crate::comparison::branch("cqo_7 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -194,12 +194,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
             b = 1;
         }
         if c < 3 {
-            crate::comparison::branch("cqk_8 mineiro terceiro abaixo de 3");
+            crate::comparison::branch("cqk_8 mineiro third below 3");
             write_progress_codes(e, a, b, 2); // cqk8: the third Mineiro code
             return e;
         }
     }
-    crate::comparison::branch("cqk_8 mineiro como vem");
+    crate::comparison::branch("cqk_8 mineiro as it comes");
     write_progress_codes(e, a, b, c); // cqk8: the Mineiro codes as they come
     e
 }

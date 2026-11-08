@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpr1_limite_em_2', '*t.add(5) = v; // o limit de não comunitários',
      '*t.add(2) = v; // mutacao: o limit vai para +2',
-     'cpr_1 limit de nao comunitarios'),
+     'cpr_1 non-EU limit'),
     ('cpr1_conta_comunitarios', '1 => estrangeira(p, cpr1_d(clube + 0x53), 1) != 0 && comunitaria(p, cpr1_d(clube + 0x53)) == 0,',
      '1 => estrangeira(p, cpr1_d(clube + 0x53), 1) != 0, // mutacao: conta os da UE',
-     'cpr_1 conta nao comunitarios'),
+     'cpr_1 count non-EU players'),
     ('cpr1_permissao_ignorada', 'return 0; // tem a permissão',
      'return 1; // mutacao: a permissao nao vale',
-     'cpr_1 permissao achada'),
+     'cpr_1 permit found'),
 ]

@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
     // ponytail: a original empurra a vaga num dword com 3 bytes de lixo da pilha acima; a 0x844300 só lê o byte
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(0x844300usize);
-    crate::comparison::branch("cpo_8 montar listas");
+    crate::comparison::branch("cpo_8 build lists");
     for k in 0..32usize {
         let v = this + 0x18 + k * 4;
         if cpo8_d(v) != 0 {
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn sort_position_lists(this: usize) {
                 }
             } else {
                 if k != 0 {
-                    crate::comparison::branch("cpo_8 band do contrato");
+                    crate::comparison::branch("cpo_8 contract band");
                 }
                 cpo8_w(cpo8_d(this + 0x18 + vaga * 4) + o + 8, 0);
             }
@@ -259,7 +259,7 @@ unsafe extern "thiscall" fn collect_interested_clubs(this: usize, jogador: usize
         if !(ignorar == 0 && cpo8_b(entrada + 8) >= 100) && valor > cpo8_i(jogador + 0x52) {
             let c = cpo8_d(jogador + 0x39);
             if !(c != 0 && cpo8_d(c) == clube_id) {
-                crate::comparison::branch("cpo_8 clube interessado");
+                crate::comparison::branch("cpo_8 interested club");
                 acrescentar(saida, e, 8);
             }
         }

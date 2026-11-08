@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpn_estatuto_lista', 'return (cpn6_b(e + 0x24) >> 1) & 0xf; // os bits 1..4 da entrada',
      'return (cpn6_b(e + 0x24) >> 2) & 0xf; // mutacao: os bits 2..5',
-     'cpn_6 estatuto pela lista'),
+     'cpn_6 status by list'),
     ('cpn_estatuto_contrato', 'cpn6_b(k + 0x4f) >> 4 // o nibble alto do contrato',
      'cpn6_b(k + 0x4f) & 0xf // mutacao: o nibble baixo',
-     'cpn_6 estatuto pelo contrato'),
+     'cpn_6 status by contract'),
     ('cpn_alvos_evento', 'atualizar(this, p, clube, 3, tipo);',
      'let _ = (atualizar, tipo); // mutacao: sem o evento 3',
-     'cpn_6 alvo fora do clube'),
+     'cpn_6 target outside the club'),
 ]

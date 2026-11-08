@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let b = cqo9_campeao_do_turno(this, 1);
     core::ptr::write_unaligned((lista + 4) as *mut usize, b);
     if a == b {
-        crate::comparison::branch("cqo_9 mesmo campeao");
+        crate::comparison::branch("cqo_9 same champion");
         core::ptr::write_unaligned((this + 0x30) as *mut u32, 1);
         core::ptr::write_unaligned((this + 0x2c) as *mut u32, 2);
         for k in 0..2 {
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u3
         let f = cqo9_d(cqo9_d(this + 0xc) + 8);
         let historico: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqo9_d(cqo9_d(f) + 0x30));
         historico(f);
-        crate::comparison::branch("cqo_9 historico da final");
+        crate::comparison::branch("cqo_9 final history");
         return campeoes();
     }
     let historico: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x684640usize);
@@ -129,7 +129,7 @@ unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u3
         premio(financas(cqo9_d(0xae2a38), c), valor);
         noticia(this, cqo9_d(cqo9_d(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_9 premios");
+    crate::comparison::branch("cqo_9 prizes");
     campeoes()
 }
 
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn compare_bra_reg_rio_create_final_stage(this: usize) 
 
 /// Comparador do fim da temporada: só a original (ponytail: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
-/// "cqo_9 historico da final" e "cqo_9 premios") e é provada pelas mutações e pelas duas carreiras Rust.
+/// "cqo_9 final history" e "cqo_9 prizes") e é provada pelas mutações e pelas duas carreiras Rust.
 unsafe extern "thiscall" fn compare_bra_reg_rio_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%)(this)
 }

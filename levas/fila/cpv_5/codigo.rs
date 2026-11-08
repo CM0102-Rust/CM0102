@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn sell_season_tickets(this: usize, aplicar: i32) {
     }
     *((this + 0x164) as *mut i8) = step_towards;
     let b = match_pl_ftol(n.wrapping_sub(ja) as f64 * read_f32_at(0x9c8758 + step_towards as usize * 4) as f64);
-    crate::comparison::branch("cpv_5 ingressos vendidos");
+    crate::comparison::branch("cpv_5 tickets sold");
     let r = cpv5_sortear(0xb);
     let novos = (r + 0x5f).wrapping_mul(b) / 100;
     let total = ja.wrapping_add(novos);

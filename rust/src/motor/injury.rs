@@ -22,7 +22,7 @@ pub(crate) fn is_recording_injury() -> bool {
 pub(crate) unsafe fn register_injury_with(this: usize, sheet: usize, kind: *mut u8, chance: *mut u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let l = *((this + injury_fields::MATCH_HIT_LIST) as *const usize);
     if l == 0 {
-        crate::comparison::branch("lesao lista nova");
+        crate::comparison::branch("injury new list");
         let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_REGISTER_INJURY);
         return o(this, sheet, kind, chance);
     }
@@ -33,7 +33,7 @@ pub(crate) unsafe fn register_injury_with(this: usize, sheet: usize, kind: *mut 
         e = exe::llist_get_next(l);
     }
     if e == 0 {
-        crate::comparison::branch("lesao registrada");
+        crate::comparison::branch("injury recorded");
         let mut r = [0u8; 6];
         r[..4].copy_from_slice(&id.to_le_bytes());
         r[4] = *kind;
@@ -44,10 +44,10 @@ pub(crate) unsafe fn register_injury_with(this: usize, sheet: usize, kind: *mut 
     }
     let (t, g) = ((e + 4) as *mut u8, (e + 5) as *mut u8);
     if *t == *kind {
-        crate::comparison::branch("lesao agravada");
+        crate::comparison::branch("injury worsened");
         *g = if *chance as i8 as i32 + *g as i8 as i32 > 0x64 { 0x64 } else { (*chance).wrapping_add(*g) };
     } else if *chance as i8 > *g as i8 {
-        crate::comparison::branch("lesao mais grave");
+        crate::comparison::branch("injury more serious");
         *g = *chance;
         *t = *kind;
     }
@@ -119,7 +119,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
     let c = g as i8 as i32;
     let mut local = 0f32;
     if g as i8 > 0x32 {
-        crate::comparison::branch("lesao grave");
+        crate::comparison::branch("injury serious");
         *b(p, match_player::INJURY_FORCES_OFF) = 1;
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
@@ -131,7 +131,7 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         *d5 = (*d5 as f64 * read_f32_at(rdata::F32_0_5) as f64) as f32;
     }
     if !(*folego as f64 >= read_f64_at(rdata::F64_5000)) {
-        crate::comparison::branch("lesao sem folego");
+        crate::comparison::branch("injury out of breath");
         *b(m, engine::SUBSTITUTION_PENDING) = 1;
         *b(p, match_player::INJURY_PENDING) = 1;
         *b(p, match_player::INJURY_FORCES_OFF) = 1;
@@ -139,14 +139,14 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         let person = *((p + match_player::PLAYER) as *const usize);
         let v = (byte(person, player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64_at(rdata::F64_7100);
         if v > *folego as f64 {
-            crate::comparison::branch("lesao para 5");
+            crate::comparison::branch("injury to 5");
             write_2b(p, 5);
             *b(m, engine::SUBSTITUTION_PENDING) = 1;
             *b(p, match_player::INJURY_PENDING) = 1;
         } else {
             write_2b(p, 3);
             if local >= read_f32_at(rdata::F32_500) && *b(p, match_player::INJURY_FORCES_OFF) != 0 {
-                crate::comparison::branch("lesao para 3 e sai");
+                crate::comparison::branch("injury to 3 and leaves");
                 *b(m, engine::SUBSTITUTION_PENDING) = 1;
                 *b(p, match_player::INJURY_PENDING) = 1;
             }
@@ -292,7 +292,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         0x21b6 => {
             let yes = atuacao > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
             if yes {
-                crate::comparison::branch("destaque marca 21b5");
+                crate::comparison::branch("highlight mark 21b5");
                 *((m + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
             }
             yes
@@ -507,7 +507,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                 let mut follow = true;
                 if feliz {
                     let v = read_i8(c + 0x44) as i32 + 0xf; // cqf9: a felicidade sobe 15
-                    crate::comparison::branch("cqf_9 felicidade pelas ferias");
+                    crate::comparison::branch("cqf_9 happiness by holidays");
                     *((c + 0x44) as *mut i8) = if v > 100 { 100 } else if v < -100 { -100 } else { v as i8 };
                 }
                 if feliz && caiu {
@@ -553,7 +553,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                                 *((f + player_sheet::WORK_RATE) as *mut i8) -= 1;
                             }
                         };
-                        crate::comparison::branch("cqf_9 acerto pelas ferias");
+                        crate::comparison::branch("cqf_9 fitness by holidays");
                         if r == 0 {
                             subir_57(p); // cqf9: random draw 0 raises +0x57
                             descer_5d_44(p, f);
@@ -576,7 +576,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
             } else {
                 let form = physical_record_of_player(this, p);
                 let mut v: Option<i8> = None;
-                crate::comparison::branch("cqf_9 tratamento");
+                crate::comparison::branch("cqf_9 treatment");
                 if s == 0 { // cqf9: o tratamento dá certo
                     res = 2;
                     *((form + physical_record::RECURRING_TYPE) as *mut u8) = 0xff;
@@ -613,7 +613,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
             }
         } else {
             let form = physical_record_of_player(this, p);
-            crate::comparison::branch("cqf_9 volta da lesao");
+            crate::comparison::branch("cqf_9 return from injury");
             if tp == 0x4f {
                 if s < 30000 { // cqf9: a volta 'O' completa
                     res = 2;
@@ -821,7 +821,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         if !(kind == 0x4d || kind == 0x4e || kind == 0x4f || kind == 0x51) {
             return -1;
         }
-        crate::comparison::branch("cqb_5 troca a lesao");
+        crate::comparison::branch("cqb_5 swaps the injury");
         let r = physical_record(this, read_usize(p));
         let l = injury_entry(this, antiga as usize);
         remaining = read_i16(l + injury_entry::DAYS_LEFT) as u16;
@@ -913,7 +913,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         }
     }
     // the days
-    crate::comparison::branch("cqb_5 duracao");
+    crate::comparison::branch("cqb_5 duration");
     let mut extra = (read_i16(G_INJURY_TYPE_VARIABLE_DAYS + t) as i32).wrapping_mul(0x23 - best as i32) / 20; // cqb5: o fisioterapeuta encurta
     let s1 = friendly_random(best as i32 + 5);
     let s2 = friendly_random(0x14);
@@ -964,13 +964,13 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         }
         let s = friendly_random(0x32);
         if n >= s + 0x1e && read_usize(G_TRANSFER_MANAGER) != 0 && read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856) != 0 {
-            crate::comparison::branch("cqb_5 suspende as miras");
+            crate::comparison::branch("cqb_5 suspends the targets");
             exe::shortlist_manager_suspend_clubs_shortlisting_player(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), p, (0) as u32); // cqb5: the clubs targeting him suspend
         }
     }
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x28, days);
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2c, days);
-    crate::comparison::branch("cqb_5 volta ao treino");
+    crate::comparison::branch("cqb_5 back to training");
     let volta = return_to_training_days(kind, days); // cqb5: the return to training by percentage
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a, volta);
     write_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2e, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a));
@@ -1020,7 +1020,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
             let s1 = friendly_random(c as i32);
             let s2 = friendly_random(e);
             if s1 > s2 && read_usize(G_PLAYER_REGEN) != 0 {
-                crate::comparison::branch("cqb_5 aposenta pelas recaidas");
+                crate::comparison::branch("cqb_5 retires through relapses");
                 exe::player_regen_schedule_injury_retirement(read_usize(G_PLAYER_REGEN), p, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a));
             }
         }
@@ -1034,7 +1034,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         || (age > 0x1f && volta() > 0x12c - years() && friendly_random(volta()) > 0xc8 - years())
         || (volta() > 0x1f4 && friendly_random(read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x34) + 5) == 0);
     if encerra && read_usize(G_PLAYER_REGEN) != 0 {
-        crate::comparison::branch("cqb_5 aposenta pela lesao");
+        crate::comparison::branch("cqb_5 retires through injury");
         exe::player_regen_schedule_injury_retirement(read_usize(G_PLAYER_REGEN), p, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a));
     }
     if surto != 0 && (kind == 1 || kind == 0 || kind == 2) {
@@ -1073,7 +1073,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
 /// ficha) acima de 8000, a todos (0x786780); senão aos interessados (0x7861e0). Até 100: clube humano (0x7875e0), ao
 /// clube; o clube do contrato (0x4cf5a0) se for outro; a seleção.
 pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: usize, l: usize, arg: u32) {
-    crate::comparison::branch("cqb_5 noticia da lesao");
+    crate::comparison::branch("cqb_5 injury news");
     let tm = read_usize(G_TRANSFER_MANAGER);
     let mut clubs = [0usize; 30];
     let mut n: i8 = 0;
@@ -1256,7 +1256,7 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
         }
     }
     if exe::date_get_weekday(G_CURRENT_DATE) as i16 != 6 && exe::date_get_weekday(G_CURRENT_DATE) as i16 != 5 { // cpw9: no training on Saturday and Sunday
-        crate::comparison::branch("cpw_9 dia de treino");
+        crate::comparison::branch("cpw_9 training day");
         roll_training_injuries(this);
     }
     if INJURY_DAILY_DRY_RUN {
@@ -1316,7 +1316,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
                 if r > lim {
                     break 'proximo;
                 }
-                crate::comparison::branch("cpw_9 risco sem recorrencia");
+                crate::comparison::branch("cpw_9 risk without recurrence");
             }
             if friendly_random(3) != 0 {
                 break 'proximo;
@@ -1458,7 +1458,7 @@ pub(crate) unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: usize
 /// 0x456740) dão a notícia com os dias entre B e A (0x54cc30); as de data B hoje (bsearch com 0x632040) a notícia da volta
 /// completa; as de data B já passada saem do começo da fila.
 pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
-    crate::comparison::branch("cpw_9 noticias de volta");
+    crate::comparison::branch("cpw_9 news back");
     let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_INJURY_UPDATE_PLAYER_FITNESS);
     for k in 0..0x10i32 {
         let n = read_i32(G_STAFF_COUNT);
@@ -1675,14 +1675,14 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
             let c = 0x2710i32.wrapping_sub(core::ptr::read_unaligned((slot + 6) as *const i16) as i32);
             // simplification: the original adds the whole ecx: the level in the low 16, the upper 16 of 10000 − condition
             let mut v = (c / 100).wrapping_add(((c as u32 & 0xffff_0000) | level as i16 as u16 as u32) as i32); // cpv8: o ritmo
-            crate::comparison::branch("cpv_8 ritmo");
+            crate::comparison::branch("cpv_8 pace");
             if read_i8(game + fixture::HOME_SIDE_MARK) == 0 {
-                crate::comparison::branch("cpv_8 metade");
+                crate::comparison::branch("cpv_8 half");
                 v = (v as i16 as i32) / 2; // cpv8: without the match mark, half
             } else if read_i8(pessoa + staff::AGE) as i32 > exe::utils_random(3) + 0x21 {
                 v = ((v as i16 as i32) as f64 * read_f64_at(rdata::F64_1_25)) as i32;
             } else if (read_i8(pessoa + staff::AGE) as i32) < 0x17 - exe::utils_random(5) {
-                crate::comparison::branch("cpv_8 jovem");
+                crate::comparison::branch("cpv_8 youngster");
                 v = v.wrapping_add(v); // cpv8: the young player counts double
             }
             if exe::date_operator_3e(G_GAME_START_DATE, read_i32(G_CURRENT_DATE) as u32, read_i32(G_CURRENT_DATE_LEAP) as u32) != 0 {
@@ -1708,7 +1708,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
                     }
                     let t = exe::injury_choose_injury_type(this, kind, severity, pessoa);
                     if (t as i8) >= 0 {
-                        crate::comparison::branch("cpv_8 batida vira lesao");
+                        crate::comparison::branch("cpv_8 collision becomes injury");
                         exe::injury_end_player_injury(this, pessoa, 0);
                         let j = if read_i32(game) == -2 { 0 } else { game };
                         new_injury(this, t as u32, 0, pessoa, j, 1, -1, 0, 0);
@@ -1807,7 +1807,7 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
         return;
     }
     if id >= read_i32(G_STAFF_COUNT) / 2 {
-        crate::comparison::branch("cpv_10 metade de cima");
+        crate::comparison::branch("cpv_10 top half");
     }
     let r = physical_record_of_id(this, id);
     let i = read_i32(r + physical_record::CURRENT_INJURY);
@@ -1815,7 +1815,7 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
         return;
     }
     if i == 0 {
-        crate::comparison::branch("cpv_10 entrada zero");
+        crate::comparison::branch("cpv_10 zero entry");
     }
     let e = (read_i32(this + injury_fields::INJURY_ENTRIES) as u32).wrapping_add((i as u32).wrapping_mul(0x30)) as usize;
     if *(e as *const u8) != 0x51 {
@@ -1830,7 +1830,7 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
             exe::injury_post_recovery_news(this, person, 1, *(e as *const u8) as u32, 0, 0);
         }
     }
-    crate::comparison::branch("cpv_10 fim da lesao");
+    crate::comparison::branch("cpv_10 end of injury");
     *(e as *mut u8) = 0xff; // cpv10: a entrada fica livre
     core::ptr::write_unaligned((physical_record_of_id(this, read_i32(person)) + 0xe) as *mut i32, -1); // cpv10: no current injury
 }
@@ -2027,7 +2027,7 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
     if !outbreak_takes_hold(kind, club_i) {
         return;
     }
-    crate::comparison::branch("cpp_8 surto novo");
+    crate::comparison::branch("cpp_8 new outbreak");
     let cap = read_i32(this + injury_fields::OUTBREAK_CAPACITY);
     if read_i32(this + injury_fields::OUTBREAK_COUNT) >= cap {
         let cap = cap.wrapping_add(30);
@@ -2110,7 +2110,7 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
             break; // the first outbreak after today
         }
         if is_after_outbreak(&five, e) {
-            crate::comparison::branch("cpp_8 surto antigo");
+            crate::comparison::branch("cpp_8 old outbreak");
             removidos += 1;
         } else {
             let kind = read_u8(e + 8);
@@ -2120,7 +2120,7 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
                 Some(friendly_random(3) as u8) // 0 a 2 doentes
             };
             if let Some(mut how_many) = how_many {
-                crate::comparison::branch("cpp_8 espalhar");
+                crate::comparison::branch("cpp_8 spread");
                 let club = injury_club_by_index(read_i32(read_usize(this + injury_fields::OUTBREAKS).wrapping_add(off) + 9));
                 if !injury_is_national_team(club) {
                     let mut t = 0;
@@ -2260,7 +2260,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
             }
             let player = read_usize(p + staff::PLAYER);
             if player != 0 {
-                crate::comparison::branch("cpp_9 forma inicial");
+                crate::comparison::branch("cpp_9 initial form");
                 let v = days - (read_u8(player + player_sheet::NATURAL_FITNESS) as i8 as i32) / 2 - (read_u8(p + staff::PROFESSIONALISM) as i8 as i32) / 4;
                 let v = v.clamp(1, 0x28);
                 let r = read_usize(this).wrapping_add((read_i32(p) as usize).wrapping_mul(31));
@@ -2334,7 +2334,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
                 *((r + physical_record::RECURRING_TYPE) as *mut u8) = t;
             }
             if friendly_random(100) == 0 { // 1 in 100 starts injured
-                crate::comparison::branch("cpp_9 lesao inicial");
+                crate::comparison::branch("cpp_9 initial injury");
                 // simplification: the original pushes stack dwords with only the low byte written (the rest is garbage); 0x62d140
                 // and 0x62d250 only read the byte: here they go clean
                 let category = friendly_random(0xc) as u8;
@@ -2366,7 +2366,7 @@ pub(crate) unsafe fn injury_youth_list_nation(club: usize) -> usize {
         return 0;
     }
     if read_u8(nation + nation::LEAGUE_SELECTED) != 0 {
-        crate::comparison::branch("cpp_9 nacao chave");
+        crate::comparison::branch("cpp_9 key nation");
         if !(read_i16(club + club::REPUTATION) <= 2 && read_usize(club + club::DIVISION) != 0) { // nation with +0x11c
             return 0;
         }
@@ -2424,7 +2424,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
     if s != 0 { // 1 in 20
         return RecurringInjuryOutcome::Nada;
     }
-    crate::comparison::branch("cpm_5 lesao recorrente");
+    crate::comparison::branch("cpm_5 recurring injury");
     *((record + physical_record::RECURRENCE_GRADE) as *mut u8) = s as u8;
     *((record + physical_record::RECURRING_TYPE) as *mut u8) = *injury;
     if *(G_STAFF_COUNT as *const i32) <= 0 {
@@ -2443,7 +2443,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
                 (melhor, escolhido, pessoa) = (rating as i8, r, p);
             }
             if melhor >= 0x5f { // strong enough: stop
-                crate::comparison::branch("cpm_5 recorrente forte");
+                crate::comparison::branch("cpm_5 strong recurring");
                 break;
             }
         }
@@ -2534,7 +2534,7 @@ pub(crate) unsafe extern "thiscall" fn reset_player_history(this: usize, person:
 /// e forma 10000 (+8, +0xa), desgaste 0 (+0xc), sem lesão (+0xe −1), sem recorrente (+0x12 0xff), histórico −1 (+0x14,
 /// +0x18), +0x1d 0xff. O bit 0 do +0xc do registro de 79 bytes ([0xae2d0c]) cai. Devolve o endereço desse byte.
 pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
-    crate::comparison::branch("cpm_5 reiniciar jogador");
+    crate::comparison::branch("cpm_5 reset player");
     if read_usize(this + injury_fields::MATCH_HIT_LIST) != 0 {
         let l = read_usize(this + injury_fields::MATCH_HIT_LIST);
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
@@ -2831,7 +2831,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
                 } else {
                     let (f, mc) = (read_i16(rec + 8) as i32, read_i16(rec + physical_record::CONDITION) as i32);
                     if mc.wrapping_mul(f) / 10000 < 8000 { // cpw8: form below 80% in pre-season
-                        crate::comparison::branch("cpw_8 sorteio da forma");
+                        crate::comparison::branch("cpw_8 form draw");
                         let r = friendly_random(2);
                         l38 = (r + l3c) / 2;
                         l3c -= l38;
@@ -2854,7 +2854,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     let n = natural as i32;
     let floor = ((n * 25 / 20 + 15) * 100) as i16 as i32;
     if l34 != 0 {
-        crate::comparison::branch("cpw_8 perda");
+        crate::comparison::branch("cpw_8 loss");
     }
     let mut x = f.wrapping_sub(66i32.wrapping_mul(l34)); // cpw8: a perda por dia parado
     if x < floor {
@@ -2871,7 +2871,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
         x = teto16;
     }
     if l38 != 0 {
-        crate::comparison::branch("cpw_8 recuperacao");
+        crate::comparison::branch("cpw_8 recovery");
     }
     x = x.wrapping_add(s.wrapping_mul(l38));
     if f > 0x267a {
@@ -3039,7 +3039,7 @@ pub(crate) unsafe extern "C" fn injury_compare_entry_dates(key: usize, item: usi
     if after(key + 8, read_usize(item + 8) as u32, read_usize(item + 0xc) as u32) != 0 {
         return 1;
     }
-    crate::comparison::branch("cps_9 data igual");
+    crate::comparison::branch("cps_9 same date");
     0 // cps9: the return of today found
 }
 

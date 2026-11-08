@@ -8,11 +8,11 @@
 MUTACOES = [
     ('cpr13_um_jogo_livre', 'if n as u16 != 0 {',
      'if n as u16 > 1 { // mutacao: um jogo nao ocupa',
-     'cpr_13 ocupado'),
+     'cpr_13 busy'),
     ('cpr13_sem_vespera', 'let r = menos_dias(data, p0, 1); // a véspera',
      'let r = menos_dias(data, p0, 0); // mutacao: sem a vespera',
-     'cpr_13 clube livre'),
+     'cpr_13 free club'),
     ('cpr13_copa_sem_o_clube', 'return 1; // está na copa',
      'return 0; // mutacao: nunca na copa',
-     'cpr_13 copa tem o clube'),
+     'cpr_13 cup has the club'),
 ]

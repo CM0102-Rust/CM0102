@@ -51,7 +51,7 @@ unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, s
             *s(0x19) = cpz7_b(jogo + 0x47);
             *s(0x1a) = cpz7_b(jogo + 0x48);
         } else {
-            crate::comparison::branch("cpz_7 placar do mandante");
+            crate::comparison::branch("cpz_7 home side score");
             *s(0x19) = cpz7_b(jogo + 0x43); // cpz7: os gols do mandante
             *s(0x1a) = cpz7_b(jogo + 0x44);
         }
@@ -61,7 +61,7 @@ unsafe extern "C" fn fill_match_record_from_fixture(jogo: usize, clube: usize, s
             *s(0x19) = cpz7_b(jogo + 0x48);
             *s(0x1a) = cpz7_b(jogo + 0x47);
         } else {
-            crate::comparison::branch("cpz_7 placar do visitante");
+            crate::comparison::branch("cpz_7 away side score");
             *s(0x19) = cpz7_b(jogo + 0x44);
             *s(0x1a) = cpz7_b(jogo + 0x43); // cpz7: os gols sofridos pelo visitante
         }

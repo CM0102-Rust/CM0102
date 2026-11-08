@@ -34,7 +34,7 @@
 # - jogo comparando (Inglaterra, sem o motor) até 2002-059: 0 divergências; com ENG ESP ITA FRA até 2001-304: 1
 #   DIVERGENCIA, de aviso_ao_rival_de_posicao (não é deste item);
 # - mutações (carreira Rust até 2002-06-01 com o motor): as três mudam a impressão (sem sorteio 009be8d94d295f13, um
-#   grupo só 0d4f1195a436d541, sem tirar do elenco 6a5a462035525e15); 'cqf_11 noticia do clube' 2048+ até 2002-06-01.
+#   grupo só 0d4f1195a436d541, sem tirar do elenco 6a5a462035525e15); 'cqf_11 club news' 2048+ até 2002-06-01.
 SAVE = False
 ROTINAS = [('cqf11_relatorio_da_selecao', 0x7706c0, [0x6a, 0xff, 0x68, 0xa6, 0xde, 0x95, 0x00]),
            ('cqf11_noticia_da_convocacao', 0x76e0b0, [0x6a, 0xff, 0x68, 0xfb, 0xdd, 0x95, 0x00]),

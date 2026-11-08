@@ -10,5 +10,5 @@ MUTACOES = [
     ('cqr7_mata_mata_duas_vezes',
      'f(this); // cqr7: monta o mata-mata',
      'f(this); f(this); // mutacao',
-     'cqr_7 mata-mata das copas italianas'),
+     'cqr_7 italian cups knockout'),
 ]

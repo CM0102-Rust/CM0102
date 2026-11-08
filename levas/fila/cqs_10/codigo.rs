@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn con_merc_cup_advance_stage(this: usize) {
     let f = f + 1;
     cqs10_pd(this + 0x30, f as usize);
     if f == 3 { // cqs10: as semifinais da Merconorte depois dos grupos
-        crate::comparison::branch("cqs_10 semifinais da merconorte");
+        crate::comparison::branch("cqs_10 merconorte semifinals");
         let semifinais: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x4c2330usize);
         semifinais(this);
     }

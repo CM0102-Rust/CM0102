@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             };
             // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
             let q = ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: the quantity divisor
-            crate::comparison::branch("cqf_7 nota do treinador");
+            crate::comparison::branch("cqf_7 coach rating");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
     }
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
         } else {
             1
         };
-        crate::comparison::branch("cqf_7 programa do elenco novo");
+        crate::comparison::branch("cqf_7 new squad schedule");
         let c = exe::training_schedule_get_training_load(human_training_schedule(this, manager, *e));
         exe::injury_set_training_load(read_usize(G_INJURY), p, c as u32);
     }
@@ -366,7 +366,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             };
             *(e as *mut i8) = slot;
             let v = exe::training_schedule_get_training_load(human_training_schedule(this, manager, slot));
-            crate::comparison::branch("cqd_8 programa do humano");
+            crate::comparison::branch("cqd_8 human schedule");
             exe::injury_set_training_load(read_usize(G_INJURY), p, v as u32);
         }
     }
@@ -380,7 +380,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
             && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf));
         if !ainda {
-            crate::comparison::branch("cqd_8 saiu do clube humano");
+            crate::comparison::branch("cqd_8 left the human club");
             *mark &= 0xdf;
             exe::injury_set_training_load(read_usize(G_INJURY), p, 0x32);
             let f = read_usize(p + staff::PLAYER);
@@ -431,7 +431,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             if weight > 0x64 {
                 if friendly_random(0xd2 - weight as i32) < 0x14 && v < ceiling { // cqd8: the rise random draw
                     if friendly_random((v as i32).abs() * 2 + 0xe) < 10 {
-                        crate::comparison::branch("cqd_8 progresso sobe");
+                        crate::comparison::branch("cqd_8 progress goes up");
                         d[k] = d[k].wrapping_add(1); // cqd8: o progresso sobe
                     }
                     continue;
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                 continue;
             }
             if friendly_random((v as i32).abs() * 2 + 0xe) < 10 {
-                crate::comparison::branch("cqd_8 progresso desce");
+                crate::comparison::branch("cqd_8 progress goes down");
                 d[k] = d[k].wrapping_sub(1); // cqd8: o progresso desce
             }
         }
@@ -481,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                         let a = read_i8(p + staff::PROFESSIONALISM);
                         if quer && a < 0xf && friendly_random(a as i32) < 10 && read_usize(G_INJURY) != 0
                             && exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 0 {
-                            crate::comparison::branch("cqd_8 reclama do treino de posicao");
+                            crate::comparison::branch("cqd_8 complains about position training");
                             reclamar(c, 0x8000, 0);
                             let m = (c + 0x44) as *mut i8;
                             let v = *m as i32 - 5;
@@ -509,7 +509,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     exe::training_manager_apply_training_progress(this, p, d.as_ptr());
     if acabou {
-        crate::comparison::branch("cqd_8 treino de posicao acabou");
+        crate::comparison::branch("cqd_8 position training ended");
         let n0 = read_i32(this + 0x6525);
         let mut i = 0i32;
         if n0 > 0 {
@@ -641,14 +641,14 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
     let mut d = [0i8; 8];
     let g = |a: usize| *(a as *const i8);
     if devolver != 0 {
-        crate::comparison::branch("cqd_9 devolver");
+        crate::comparison::branch("cqd_9 give back");
         d[0] = g(G_TRAINING_PROGRESS_SAVED_DELTA_0); // cqd9: returns category 0
         d[1] = g(G_TRAINING_PROGRESS_SAVED_DELTA_1);
         d[2] = g(G_TRAINING_PROGRESS_SAVED_DELTA_2);
         d[3] = g(G_TRAINING_PROGRESS_SAVED_DELTA_3);
         d[4] = g(G_TRAINING_PROGRESS_SAVED_DELTA_4); // cqd9: returns category 4
     } else {
-        crate::comparison::branch("cqd_9 tirar");
+        crate::comparison::branch("cqd_9 remove");
         *(G_TRAINING_PROGRESS_SAVED_DELTA_0 as *mut i8) = training_nibble(e, 0);
         *(G_TRAINING_PROGRESS_SAVED_DELTA_1 as *mut i8) = training_nibble(e, 1); // cqd9: guarda a categoria 1
         *(G_TRAINING_PROGRESS_SAVED_DELTA_2 as *mut i8) = training_nibble(e, 2);
@@ -789,7 +789,7 @@ pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8)
     *((this + 0x15) as *mut i8) = kind;
     match kind {
         1 => {
-            crate::comparison::branch("cpu_8 geral");
+            crate::comparison::branch("cpu_8 general");
             set_schedule_levels(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral
         }
         2 => set_schedule_levels(this, [0x32, 0xa, 0xa, 0xa, 0]),
@@ -797,7 +797,7 @@ pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8)
         4 => set_schedule_levels(this, [0xa, 0xa, 0xa, 0x32, 0]),
         5 => set_schedule_levels(this, [0xa, 0x32, 0xa, 0xa, 0]),
         6 => {
-            crate::comparison::branch("cpu_8 goleiros");
+            crate::comparison::branch("cpu_8 goalkeepers");
             set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: the goalkeeper training
         }
         0 | 7 => set_schedule_levels(this, [0; 5]),
@@ -838,7 +838,7 @@ pub(crate) unsafe fn human_schedule_slot(this: usize, person: usize, slot: usize
 /// 5, 6, 7, 7). No fim os nomes padrão (0x8b2230). Chamadas pelo endereço (0x8b4e50 e 0x8b3930 nesta leva).
 pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     exe::training_schedule_set_type(this, 0, 0);
-    crate::comparison::branch("cpu_8 programas padrao");
+    crate::comparison::branch("cpu_8 default schedules");
     exe::training_schedule_set_type(this + 0x9b, 1, 1); // cpu8: the general computer programme
     for k in 2..7i8 {
         exe::training_schedule_set_type(this + 0x9b * k as usize, k, k);
@@ -909,7 +909,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     }
     let t = read_usize(club + club::MANAGER);
     if t == 0 {
-        crate::comparison::branch("cpt_8 sem tecnico");
+        crate::comparison::branch("cpt_8 without manager");
         return 100; // cpt8: no manager
     }
     if read_i32(t) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
@@ -929,7 +929,7 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
         }
     }
     if n != 0 {
-        crate::comparison::branch("cpt_8 treinadores");
+        crate::comparison::branch("cpt_8 coaches");
         soma = ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: the average of the coaches
     }
     let r = ftol(soma as f64 * read_f64_at(rdata::F64_5_714285714));
@@ -1262,7 +1262,7 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
     let v = *day as i32;
     let rest = v % 7; // cpt10: the 7-day week
     if rest == 0 { // cpt10: o sétimo dia
-        crate::comparison::branch("cpt_10 semana");
+        crate::comparison::branch("cpt_10 week");
         let s = (this + 0x688d) as *mut u16;
         *s = (*s).wrapping_add(1); // cpt10: one more week
     }
@@ -1301,10 +1301,10 @@ pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
         *((sheet() + 5) as *mut u8) &= 0xdf;
         let goal = *((f + player_sheet::GOALKEEPER) as *const i8);
         if goal >= 0xf { // cpu9: goalkeeper from 15 up
-            crate::comparison::branch("cpu_9 goleiro");
+            crate::comparison::branch("cpu_9 goalkeeper");
             *(sheet() as *mut u8) = 6; // cpu9: the goalkeepers programme
         } else {
-            crate::comparison::branch("cpu_9 linha");
+            crate::comparison::branch("cpu_9 outfield");
             *(sheet() as *mut u8) = 1; // cpu9: o programa geral
         }
         i += 1;

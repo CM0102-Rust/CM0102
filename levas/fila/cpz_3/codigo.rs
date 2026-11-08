@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
         let s = cpz3_b(li + 0x37);
         if pior == um_depois {
             if s != 3 && s != 0xfe && s != 0xfc && s != 5 {
-                crate::comparison::branch("cpz_3 titulo");
+                crate::comparison::branch("cpz_3 title");
                 set_row_status(this, ii, 5, alto_linha); // cpz3: o título na pior posição = o primeiro + 1
             }
         } else {
@@ -237,7 +237,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                 }
             } else if f == 1 {
                 if s == 0xff {
-                    crate::comparison::branch("cpz_3 vaga no mata-mata");
+                    crate::comparison::branch("cpz_3 knockout slot");
                     set_row_status(this, ii, 1, alto_linha); // cpz3: a vaga no mata-mata (situação 1)
                 }
             } else {
@@ -245,7 +245,7 @@ unsafe extern "thiscall" fn update_positions_and_status(this: usize) {
                 if g == 3 {
                     let mut alto = alto_linha;
                     if !POSITIONS_STATUS_DRY_RUN {
-                        crate::comparison::branch("cpz_3 clausulas de rebaixamento");
+                        crate::comparison::branch("cpz_3 relegation clauses");
                         let clausulas: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x4cd030usize);
                         alto = clausulas(cpz3_d(0xae1050), cpz3_d(li), cpz3_d(this + 4)) & !0xff; // cpz3: as cláusulas de rebaixamento
                     }

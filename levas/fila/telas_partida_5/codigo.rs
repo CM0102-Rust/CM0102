@@ -57,7 +57,7 @@ unsafe fn panel_competition_name(c: usize, rodadas: usize) {
 /// com as linhas que cabem (0x5e5cd0, a altura da fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
 /// os três botões do alto (0x804030, 6 a 8) e o redesenho dos placares (0x724520).
 unsafe extern "C" fn draw_latest_scores_panel(topo: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel dos ultimos placares");
+    crate::comparison::branch("screens latest scores panel");
     type T9 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T11 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T12 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;

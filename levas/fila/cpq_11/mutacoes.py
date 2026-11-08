@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpq_sorteio_do_lado', '                    if casa_livre && sorteio(2) != 0 {',
      '                    if casa_livre && sorteio(2) == 0 { // mutacao: o lado ao contrario',
-     'cpq_11 sorteio mandante'),
+     'cpq_11 home side draw'),
     ('cpq_estadio_qualquer', '                    if sa == signed_byte_at && sa != 0 {',
      '                    if sa != 0 && signed_byte_at != 0 { // mutacao: qualquer estadio',
-     'cpq_11 estadio comparado'),
+     'cpq_11 stadium compared'),
     ('cpq_escala_rodadas', '.wrapping_div(n - 1); // a média por rodada',
      '.wrapping_div(n); // mutacao: rodadas em vez de rodadas - 1',
-     'cpq_11 escala pela rodada'),
+     'cpq_11 lineup by round'),
 ]

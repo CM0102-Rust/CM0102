@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: 
     let mut e = find_type3_decision(this, id, &limit, true);
     let pessoa = cpr10_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
     if e == 0 {
-        crate::comparison::branch("cpr_10 nova decisao");
+        crate::comparison::branch("cpr_10 new decision");
         let mut d = [0u8; 8];
         injury_date_add_days(0xae2c90, (random(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
         let acrescentar: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(0x4cd6d0usize);

@@ -50,7 +50,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
             *s(0x19) = read_u8(game + fixture::HOME_GOALS_EXTRA_TIME);
             *s(0x1a) = read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME);
         } else {
-            crate::comparison::branch("cpz_7 placar do mandante");
+            crate::comparison::branch("cpz_7 home side score");
             *s(0x19) = read_u8(game + fixture::HOME_GOALS); // cpz7: the home team goals
             *s(0x1a) = read_u8(game + fixture::AWAY_GOALS);
         }
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
             *s(0x19) = read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME);
             *s(0x1a) = read_u8(game + fixture::HOME_GOALS_EXTRA_TIME);
         } else {
-            crate::comparison::branch("cpz_7 placar do visitante");
+            crate::comparison::branch("cpz_7 away side score");
             *s(0x19) = read_u8(game + fixture::AWAY_GOALS);
             *s(0x1a) = read_u8(game + fixture::HOME_GOALS); // cpz7: the goals conceded by the away team
         }
@@ -149,7 +149,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = staff_records_manager_record(this, p);
         if r != 0 {
-            crate::comparison::branch("cpy_10 prêmio do técnico");
+            crate::comparison::branch("cpy_10 manager award");
             let a = (r + 0x9e) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
         }
@@ -176,13 +176,13 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
             let owner = contract_club_except_type5(p);
             let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p) {
-                crate::comparison::branch("cpy_10 renovação");
+                crate::comparison::branch("cpy_10 renewal");
                 offer_renewal(p);
             }
         }
     }
     if credito as u8 != 1 {
-        crate::comparison::branch("cpy_10 sem crédito");
+        crate::comparison::branch("cpy_10 without credit");
         return; // cpy10: só o creditado
     }
     if read_usize(k + 0x45) != 0 {
@@ -195,7 +195,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: usize, club: usize, prize: u
     if read_u8(p + staff::PROFESSIONALISM) as i8 <= 0xa {
         return;
     }
-    crate::comparison::branch("cpy_10 sorteio do agradecimento");
+    crate::comparison::branch("cpy_10 thanks draw");
     if random(v59 as i32) <= 5 {
         return;
     }

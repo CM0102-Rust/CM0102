@@ -2,7 +2,7 @@
 # - 0x7abac0 (PLAYER_REGEN::regenerate_as_youth_player, 5376 bytes, 1655 instruções, x87 transcrito em f64 na ordem da
 #   original): a pessoa aposentada da fila dos regens vira um jogador novo com a ficha da frente do banco de fichas:
 #   nação, segunda nação, nomes, idiomas, idade, habilidade, reputações, personalidade e o clube. Centenas de chamadas
-#   na carreira automática até 2002-06-01 (pela fila 0x7a65d0: "cpv_9 regen contratado", "cpw_10 regen da fila"). As
+#   na carreira automática até 2002-06-01 (pela fila 0x7a65d0: "cpv_9 regen signed", "cpw_10 queued regen"). As
 #   mutações estão nela. Item grande sozinho (brief cqe: rotina grande e passageiras).
 # - 0x56a090 (DISPUTE::remove_dispute, 100 bytes, dispute.cpp): passageira, chamada pela 0x7abac0 em todo regen jovem e
 #   pelo diário (0x5cf3b6...).

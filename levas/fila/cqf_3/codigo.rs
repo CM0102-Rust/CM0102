@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
         let fim = |c: usize| core::ptr::read_unaligned((c + 0x2f) as *const u16) as u32;
         if x > read_f64_at(0x968df8) || (atual != 0 && cqf3_b(atual + 0x4f) & 0xf0 == 0x60) {
             if fim(c) > ano as u32 + 1 {
-                crate::comparison::branch("cqf_3 fim no ano que vem");
+                crate::comparison::branch("cqf_3 ends next year");
                 cqf3_pw(c + 0x2f, ano.wrapping_add(1)); // cqf3: o fim no ano que vem
                 cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
             }
@@ -238,7 +238,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
             if !feito && total > limit {
                 let q = limit / semanas;
                 if (q as f64) < teto {
-                    crate::comparison::branch("cqf_3 teto pelo total");
+                    crate::comparison::branch("cqf_3 cap by total");
                     teto = q as f64; // cqf3: o teto pelo total
                 }
             }
@@ -265,7 +265,7 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
         return 0;
     }
     if w > teto {
-        crate::comparison::branch("cqf_3 acima do teto");
+        crate::comparison::branch("cqf_3 above the cap");
         let den = if read_f64_at(0x967890) > teto { read_f64_at(0x967890) } else { teto };
         let razao = w / den;
         cqf3_pd(c + 8, match_pl_ftol(cqf3_i(c + 8) as f64 * razao) as u32);

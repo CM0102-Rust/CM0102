@@ -44,7 +44,7 @@ unsafe fn build_brazil_cup_teams(this: usize) -> i32 {
         show_error_at(0x98a3bc, 0x143);
         return -1;
     }
-    crate::comparison::branch("cqo_12 times da copa do brasil");
+    crate::comparison::branch("cqo_12 copa do brasil teams");
     let mut i = 0i16;
     while i < cqo12_w(this + 0x3e) {
         let o = i as usize * 6;
@@ -99,7 +99,7 @@ unsafe extern "thiscall" fn compare_bra_cup_build_team_table(this: usize) -> i32
 /// substituições (+0x4a), o fundo de prêmios de 500 mil (+0x28) e a tabela das rodadas (a virtual +0x3c com a fase −1,
 /// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
 unsafe fn set_up_brazil_cup_rounds(this: usize) -> i32 {
-    crate::comparison::branch("cqo_12 regras da copa do brasil");
+    crate::comparison::branch("cqo_12 copa do brasil rules");
     *((this + 0x49) as *mut u8) = 7;
     *((this + 0x4a) as *mut u8) = 3; // cqo12: as substituições da Copa do Brasil
     core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x7a120);

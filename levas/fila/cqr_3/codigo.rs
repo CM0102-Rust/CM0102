@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
         show_error_at(0x987c20, 0x328);
         return 0;
     }
-    crate::comparison::branch("cqr_3 serie final");
+    crate::comparison::branch("cqr_3 final series");
     noticia(fase);
     core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
     1
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     if fase == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
-    crate::comparison::branch("cqr_3 grande final");
+    crate::comparison::branch("cqr_3 grand final");
     montar(fase, 0);
     soltar(lista);
 }

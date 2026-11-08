@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn add_config_loan(this: usize, p: usize, clube: usize,
         None => return,
     };
     if transfer_manager_date_before(p + 0x46, fim) {
-        crate::comparison::branch("cpx_4 contrato estendido");
+        crate::comparison::branch("cpx_4 contract extended");
         let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
         transfer_manager_assign_date(p + 0x46, fim); // cpx4: a data da pessoa até o fim
         transfer_manager_assign_date(contrato(cpx4_d(0xae1050), p) + 0x2d, fim); // cpx4: o fim do contrato até o fim do empréstimo
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn add_config_loan(this: usize, p: usize, clube: usize,
     let preencher: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x85e590usize);
     preencher(l, p, destino, fim, 0, 1, 1);
     transfer_manager_assign_date(l + 0x25, inicio);
-    crate::comparison::branch("cpx_4 emprestimo da configuracao");
+    crate::comparison::branch("cpx_4 loan from the settings");
     let assinar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4d01e0usize);
     assinar(cpx4_d(0xae1050), l); // cpx4: o contrato de empréstimo
     let guardar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x5563f0usize);
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn add_config_loan(this: usize, p: usize, clube: usize,
     }
     let precisa: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c7560usize);
     if precisa(this, p, clube, 0) != 0 {
-        crate::comparison::branch("cpx_4 permissao de trabalho");
+        crate::comparison::branch("cpx_4 work permit");
         let mais_dias: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);
         let mut t = [0u8; 8];
         let r = mais_dias(fim, t.as_mut_ptr(), 7);
@@ -186,7 +186,7 @@ unsafe extern "thiscall" fn post_contract_end_news(this: usize, p: usize, tipo: 
     let mut lista = [0u8; 0x10]; // a LLIST local (0xe bytes)
     let l = lista.as_mut_ptr() as usize;
     nova(l);
-    crate::comparison::branch("cpx_4 noticia do fim do contrato");
+    crate::comparison::branch("cpx_4 contract end news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xbb9, 0);
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn post_transfer_delay_request_news(this: usize, o: usi
     if n == 0 {
         return;
     }
-    crate::comparison::branch("cpx_4 noticia do adiamento");
+    crate::comparison::branch("cpx_4 postponement news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfab, 0);

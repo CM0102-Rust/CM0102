@@ -10,5 +10,5 @@ MUTACOES = [
      '0 // mutacao: recuperando como pronto'),
     ('cpr10_decisao_mais_tarde', 'injury_date_add_days(0xae2c90, (random(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias',
      'injury_date_add_days(0xae2c90, (random(5) + 2) as u32, &mut d); // mutacao: 2 a 6 dias',
-     'cpr_10 nova decisao'),
+     'cpr_10 new decision'),
 ]

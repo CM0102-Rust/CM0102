@@ -44,14 +44,14 @@ unsafe extern "thiscall" fn remove_or_restore_training_progress(this: usize, p: 
     let mut d = [0i8; 8];
     let g = |a: usize| *(a as *const i8);
     if devolver != 0 {
-        crate::comparison::branch("cqd_9 devolver");
+        crate::comparison::branch("cqd_9 give back");
         d[0] = g(0xde1f3f); // cqd9: devolve a categoria 0
         d[1] = g(0xde1f40);
         d[2] = g(0xde1f3d);
         d[3] = g(0xde1f3c);
         d[4] = g(0xde1f3e); // cqd9: devolve a categoria 4
     } else {
-        crate::comparison::branch("cqd_9 tirar");
+        crate::comparison::branch("cqd_9 remove");
         *(0xde1f3f as *mut i8) = training_nibble(e, 0);
         *(0xde1f40 as *mut i8) = training_nibble(e, 1); // cqd9: guarda a categoria 1
         *(0xde1f3d as *mut i8) = training_nibble(e, 2);

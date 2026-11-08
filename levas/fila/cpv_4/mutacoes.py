@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpv4_agendada_em_3', 'agendar(this, oferta, 2, 0); // cpv4: a oferta em 2 dias',
      'agendar(this, oferta, 3, 0); // mutacao: 3 dias',
-     'cpv_4 negociacao agendada'),
+     'cpv_4 negotiation scheduled'),
     ('cpv4_status_2', 'cpv4_pb(oferta + 0x2c, 1); // cpv4: a oferta em negociação',
      'cpv4_pb(oferta + 0x2c, 2); // mutacao: status 2',
-     'cpv_4 vaga nova'),
+     'cpv_4 new slot'),
     ('cpv4_boato_sem_sorteio', 'let s = sorteio(4) as i16 as i32; // cpv4: a variante do boato',
      'let s = 0i32; // mutacao: sem o sorteio',
-     'cpv_4 boato do tecnico'),
+     'cpv_4 manager rumour'),
 ]

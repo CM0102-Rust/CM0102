@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cqa11_mes_sem_mandante', '            cqa11_somar(a + 0xce, q); // cqa11: os pontos do mês do mandante',
      '            let _ = q; // mutacao: sem os pontos do mes do mandante',
-     'cqa_11 pontos do mes'),
+     'cqa_11 points of the month'),
     ('cqa11_vitoria_como_empate', '        ba = 900; // cqa11: o bônus da vitória do mandante',
      '        ba = 300; // mutacao: a vitoria do mandante vale como empate',
-     'cqa_11 vitoria do mandante'),
+     'cqa_11 home win'),
     ('cqa11_reputacao_do_proprio', '        let q = match_rating_for_manager(p, 0, &mut saida, fora, ',
      '        let q = match_rating_for_manager(p, 0, &mut saida, casa, ',
-     'cqa_11 nota do mandante'),
+     'cqa_11 home side rating'),
 ]

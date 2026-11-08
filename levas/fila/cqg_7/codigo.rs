@@ -50,7 +50,7 @@ unsafe fn mul_rdata_const(v: i16, k: usize) -> i16 {
 unsafe fn roll_current_ability(f: usize, m1: usize, m2: usize) {
     let pa = cqg7_w(f + 7) as f64;
     let r = cqg7_sortear(match_pl_ftol(pa * read_f64_at(m1)));
-    crate::comparison::branch("cqg_7 habilidade");
+    crate::comparison::branch("cqg_7 ability");
     cqg7_pw(f + 5, match_pl_ftol(r as f64 + pa * read_f64_at(m2)) as i16); // cqg7: a habilidade sorteada pela PA
 }
 
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         } else {
             (cqg7_sortear(7) as i8).wrapping_add(0x11)
         };
-        crate::comparison::branch("cqg_7 nacao pequena");
+        crate::comparison::branch("cqg_7 small nation");
         if idade > 0x14 {
             roll_current_ability(f, 0x96a5d8, 0x9689e0);
         } else if idade > 0x1a {
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         if cqg7_sortear(0xfa) != 0 {
             let r = cqg7_sortear(0x2ee) as i16;
             cqg7_pw(f + 9, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: a reputação +9 do regen
-            crate::comparison::branch("cqg_7 injury_word_0c do regen");
+            crate::comparison::branch("cqg_7 regen injury_word_0c");
             let r = cqg7_sortear(0x14) as i16;
             cqg7_pw(f + 0xd, r.wrapping_add(cqg7_w(f + 5).wrapping_mul(5)).wrapping_add(1));
         } else {
@@ -329,7 +329,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         let r = cqg7_sortear(0x32);
         cqg7_pw(f + 0xb, (r as i16).wrapping_add(cqg7_w(f + 9)));
         let s = cqg7_sortear(0x2710);
-        crate::comparison::branch("cqg_7 nacao grande");
+        crate::comparison::branch("cqg_7 big nation");
         if s == 0 {
             idade = (cqg7_sortear(4) as i8).wrapping_add(0xf);
             if idade == 0xf {
@@ -339,7 +339,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
             }
         } else if s < 0x1388 {
             idade = (cqg7_sortear(3) as i8).wrapping_add(0x10); // cqg7: a idade de 16 a 18
-            crate::comparison::branch("cqg_7 idade 16 a 18");
+            crate::comparison::branch("cqg_7 age 16 to 18");
             if idade < 0x12 {
                 cap_current_ability(f, 0x50, 0xfa);
             } else {
@@ -540,7 +540,7 @@ unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
         let contratar: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(0x7a6f10usize);
         let c = melhor(this, p);
         if c != 0 && contratar(p, c) != 0 {
-            crate::comparison::branch("cqg_7 melhor clube");
+            crate::comparison::branch("cqg_7 best club");
             let humano: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(0x7875e0usize);
             if humano(c) != 0 {
                 let noticia: unsafe extern "stdcall" fn(usize, usize) = core::mem::transmute(0x7a8ba0usize);
@@ -613,7 +613,7 @@ unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
             return;
         }
         if cqg7_i(no) == cqg7_i(p) {
-            crate::comparison::branch("cqg_7 saiu da contest");
+            crate::comparison::branch("cqg_7 left the contest");
             let tirar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x68d1f0usize);
             tirar(cqg7_d(this), no);
             return;

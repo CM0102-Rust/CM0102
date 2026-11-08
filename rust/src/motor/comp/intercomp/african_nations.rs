@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         return 0;
     }
     if year_of_today == year && day_of_today == day && read_usize(this + league::ACTIVE) == 0 {
-        crate::comparison::branch("cqs_13 dia do sorteio da copa africana");
+        crate::comparison::branch("cqs_13 african cup draw day");
         exe::africannations_draw_finalists(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
         predicted(this);
@@ -158,7 +158,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x380);
         return 0;
     }
-    crate::comparison::branch("cqs_13 sorteio da copa africana");
+    crate::comparison::branch("cqs_13 african cup draw");
     for j in 0..4usize {
         for p in 0..4usize {
             let mut r = exe::utils_random(4) as u8 as i8 as usize;
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqs_13 time do grupo");
+        crate::comparison::branch("cqs_13 group team");
         write_usize(teams + n * 4, read_usize(read_usize(this + 0xee) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: the team in the group slot
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
     let f = f + 1;
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, f);
     if f == 3 { // cqk12: the African Cup knockout after the groups
-        crate::comparison::branch("cqk_12 mata-mata da copa africana");
+        crate::comparison::branch("cqk_12 african cup knockout");
         exe::africannations_create_knockout_stage(this);
     }
 }
@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x1f1);
         return 0;
     }
-    crate::comparison::branch("cqk_12 grupo a da copa africana");
+    crate::comparison::branch("cqk_12 african cup group a");
     let mut i = 0i8;
     while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         let national_team = read_usize(read_usize(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: the national team in the row
@@ -385,10 +385,10 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
             european_cup_add_qualified_record(club, comp, 0, 0x78, 0x19);
         } else if d == 0xfe {
             if name == 0 {
-                crate::comparison::branch("cqj_10 africana fora nos grupos");
+                crate::comparison::branch("cqj_10 african out in groups");
                 european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x19); // cqj10: those knocked out in the African Cup groups
             } else {
-                crate::comparison::branch("cqj_10 copa america fora nos grupos");
+                crate::comparison::branch("cqj_10 copa america out in groups");
                 european_cup_add_failed_to_qualify_record(club, comp, 0x41c, 0x19); // cqj10: those knocked out in the Copa América groups
             }
         }
@@ -405,7 +405,7 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: usize, cl
                 let weight = scale_by_round(0x28, 0x64, read_i16(game + 0x34), 3);
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words
                 if name == 0 {
-                    crate::comparison::branch("cqj_10 africana fora no mata-mata");
+                    crate::comparison::branch("cqj_10 african out in knockout");
                     european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqj10: those knocked out in the African Cup knockout
                 } else {
                     european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usi
 /// desempates (1, 2, 3), dois classificados por grupo, seleções, 7 no banco e 3 substituições, a data em 5 do mês 9 do
 /// ano anterior ao da competição num dia da semana 5 [inferência: o sorteio] e +0xb8 = −1.
 pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_10 regras da copa africana");
+    crate::comparison::branch("cqk_10 african cup rules");
     let win = 3; // cqk10: the win in the African Cup groups
     goldcup_write_rule_fields(this, &AFRICAN_NATIONS_RULE_FIELDS, win);
     let day = 5; // cqk10: the day of the African Cup date

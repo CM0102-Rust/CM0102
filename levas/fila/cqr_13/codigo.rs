@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, hoje: usize, co
         return 0;
     }
     if ano_de_hoje == ano && dia_de_hoje == dia && cqr13_d(this + 0x45) == 0 && completo == 0 {
-        crate::comparison::branch("cqr_13 sorteio da copa america");
+        crate::comparison::branch("cqr_13 copa america draw");
         selecoes(this);
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x5c));
         previstas(this);
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -> u32 {
     }
     let mut i = 0i8;
     while (i as i16) < cqr13_w(this + 0x3e) {
-        crate::comparison::branch("cqr_13 linha do primeiro grupo");
+        crate::comparison::branch("cqr_13 first group row");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
@@ -172,7 +172,7 @@ unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g: i32) -> u
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqr_13 time do grupo");
+        crate::comparison::branch("cqr_13 group team");
         cqr13_pd(times + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: o time na vaga do grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqr13_d(cqr13_d(this) + 0x3c));

@@ -63,12 +63,12 @@ pub(crate) unsafe fn select_spanish_super_cup_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqm_12 dobradinha espanhola");
+        crate::comparison::branch("cqm_12 spanish double");
         if !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_SPANISH_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqm_12 clubes da supercopa da espanha");
+    crate::comparison::branch("cqm_12 spanish super cup clubs");
     finish_two_team_list(l)
 }
 
@@ -151,7 +151,7 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
         return (0, 0);
     }
     if read_usize(l) == read_usize(l + 6) {
-        crate::comparison::branch("cqm_12 dobradinha japonesa");
+        crate::comparison::branch("cqm_12 japanese double");
         if !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xf9) {
             return (0, 0);
         }
@@ -159,7 +159,7 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqm_12 clubes da supercopa do japao");
+    crate::comparison::branch("cqm_12 japanese super cup clubs");
     finish_two_team_list(l)
 }
 

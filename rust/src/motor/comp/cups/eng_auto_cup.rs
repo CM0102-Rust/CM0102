@@ -90,7 +90,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             let c = base + i as u16 as usize * club::SIZE;
             let before = read_usize(c + 0x5b);
             if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && before != 0 && read_usize(before) == read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
-                crate::comparison::branch("cqs_5 rebaixado para a conference");
+                crate::comparison::branch("cqs_5 relegated to the conference");
                 push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
                 found = c;
                 break;
@@ -189,7 +189,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     if k != read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
         return 0;
     }
-    crate::comparison::branch("cqs_5 chaves do trofeu da liga");
+    crate::comparison::branch("cqs_5 league trophy sections");
     exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), read_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: North and South by latitude
     let half = (read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32) / 2;
     exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), half as u32, 4, 0x4b0810);
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     if read_usize(read_usize(this + cup::STAGES)) == 0 {
         return show_error_at(0x9c4180, 0x300);
     }
-    crate::comparison::branch("cqs_5 fase das chaves do trofeu");
+    crate::comparison::branch("cqs_5 trophy sections stage");
     write_usize(this + cup::CURRENT_STAGE, 0);
 }
 
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let stage = stage + 1;
     write_usize(this + cup::CURRENT_STAGE, stage as usize);
     if stage == 1 {
-        crate::comparison::branch("cqs_5 final do trofeu");
+        crate::comparison::branch("cqs_5 trophy final");
         exe::engautocup_create_final_stage(this);
     }
 }
@@ -352,7 +352,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     if f == 0 {
         return show_error_at(0x9c4180, 0x35a);
     }
-    crate::comparison::branch("cqs_6 final do trofeu");
+    crate::comparison::branch("cqs_6 trophy final");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_DRAW_ROUND);
     sortear(f, 0); // cqs6: the draw of the final
     exe::crt_free(l);
@@ -407,7 +407,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let a = read_usize(v);
     let b = read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4);
-    crate::comparison::branch("cqs_6 classificacao do trofeu");
+    crate::comparison::branch("cqs_6 trophy standings");
     if read_i16(a + 0x80) > read_i16(b + 0x80) {
         position(read_usize(this + 8), a, 1);
         position(read_usize(this + 8), read_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 2);

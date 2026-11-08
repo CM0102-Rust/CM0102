@@ -274,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
                 show_error_at(0xa82880, 0x8b);
                 return 0;
             }
-            crate::comparison::branch("cqq_5 calendario da divisao de baixo espanhola");
+            crate::comparison::branch("cqq_5 spanish lower division calendar");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 set_rounds_around_christmas(t, year, &LOWER_ODD_YEAR_CHRISTMAS, 0xa82880);
@@ -329,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cqm_6 divisao de baixo nova");
+    crate::comparison::branch("cqm_6 new lower division");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_usize(this + league::STAGE_COUNT, 0);
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
             }
         });
     }
-    crate::comparison::branch("cqm_6 tabela da divisao de baixo");
+    crate::comparison::branch("cqm_6 lower division fixtures");
     let mut list = spanish_lower_candidates();
     let how_many = list.len() as u16 as u32;
     let missing = (read_i16(this + league::CLUB_COUNT) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
 /// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
 /// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 pub(crate) unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_4 regras da divisao de baixo");
+    crate::comparison::branch("cqk_4 lower division rules");
     spa_first_apply_league_rules(this, &lower_division_rules())
 }
 

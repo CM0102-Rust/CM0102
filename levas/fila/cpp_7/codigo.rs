@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn club_rejects_offer(this: usize, oferta: usize, clube
     if estado == 0x11 || estado == 0x12 {
         return;
     }
-    crate::comparison::branch("cpp_7 recusa");
+    crate::comparison::branch("cpp_7 refusal");
     *((oferta + 0x2e) as *mut u8) = cpp7_b(oferta + 0x2e).wrapping_add(1); // mais uma tentativa
     let agendar: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(0x8c6220usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn detach_offer_players(this: usize, oferta: usize) {
     let desfazer: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c47d0usize);
     let mut local = [0u32; 4]; // a LLIST (0xe bytes) da original
     lista_nova(local.as_mut_ptr() as usize);
-    crate::comparison::branch("cpp_7 soltar jogadores");
+    crate::comparison::branch("cpp_7 release players");
     tirar(this, cpp7_pessoa(cpp7_d(oferta + 0xc)), oferta, 0, 0); // o jogador da oferta
     let trocas = cpp7_d(oferta + 4);
     if trocas != 0 {
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn build_cash_offer_option(this: usize, clube: usize, j
     let p = novo(0x41);
     let oferta = if p != 0 { construir(p) } else { 0 };
     *saida = oferta;
-    crate::comparison::branch("cpp_7 oferta em dinheiro");
+    crate::comparison::branch("cpp_7 cash offer");
     iniciar(oferta, jogador, clube, valor); // o valor da oferta
     *atracao = 0x32;
     1

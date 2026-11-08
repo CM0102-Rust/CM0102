@@ -195,7 +195,7 @@ pub(crate) unsafe fn zipdir_c_strcat(target: *mut u8, source: *const u8) {
 /// + `zwrite` (0x932e10) + `zclose` (0x932b00). 1 no fim; 0 se nada casa. Arquivo que não abre ou
 /// item recusado: a caixa de erro (zipdir.cpp 797 / 805) e 0, sem fechar a busca (como a original).
 pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, default: usize, a4: u32, kind: u32) -> u32 {
-    crate::comparison::branch("save empacotar");
+    crate::comparison::branch("save pack");
     // the search (handle +0, name +0x10, filter +0x110) and the built path
     let mut found = [0u8; 0x114];
     let mut search = [0u8; 0x104];
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
 /// Sem memória para o índice, a caixa de erro (zipdir.cpp 642) escreve o nome "zipdir" por cima da
 /// resposta (a mesma casa da pilha) e a lista segue sem os nomes (memória da alocação).
 pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usize, default: usize) -> u32 {
-    crate::comparison::branch("save desempacotar");
+    crate::comparison::branch("save unpack");
     let mut z = 0usize;
     let mut reply = 0u32;
     let error = |nomes: usize, z: &mut usize| {
@@ -379,7 +379,7 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
         return b;
     }
     // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
-    crate::comparison::branch("save zread bloco");
+    crate::comparison::branch("save zread block");
     zf_write_i32(z, 0xa318d, (exe::crt_fread(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32));
     let b = *((z + 0x41705) as *const u8);
     zf_write_i32(z, 0xa3185, 1);
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
     let end = zf_read_i32(z, 8).wrapping_add(request);
     zf_write_i32(z, 8, end);
     if zf_read_i32(z, 0x19) != 4 {
-        crate::comparison::branch("save zread tipo 3");
+        crate::comparison::branch("save zread type 3");
         let q = request / size;
         zf_write_i32(z, 8, size.wrapping_mul(q).wrapping_sub(request).wrapping_add(end));
         return (exe::crt_fread((buf) as usize, (size) as u32, (q) as u32, zf_read_i32(z, 0) as usize) as i32);
@@ -484,7 +484,7 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
         return;
     }
     // simplification: the branch flags the block, not each call (zwrite runs millions of times in the save)
-    crate::comparison::branch("save zwrite bloco");
+    crate::comparison::branch("save zwrite block");
     exe::crt_fwrite(z + 0x72445, 1, (p) as u32, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
     *((z + 0x72445) as *mut u8) = b;
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
     zf_write_i32(z, item, zf_read_i32(z, item).wrapping_add(total));
     zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
     if zf_read_i32(z, 0x19) != 4 {
-        crate::comparison::branch("save zwrite tipo 3");
+        crate::comparison::branch("save zwrite type 3");
         return (exe::crt_fwrite((buf) as usize, (size) as u32, (how_many) as u32, zf_read_i32(z, 0) as usize) as i32);
     }
     let repetido = (z + 0x18) as *mut u8;
@@ -530,7 +530,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
                     continue;
                 }
                 // 0x7f copies: emit the pair and start over
-                crate::comparison::branch("save zwrite par 0x7f");
+                crate::comparison::branch("save zwrite pair 0x7f");
                 zf_put_byte(z, (n as u8).wrapping_add(0x80));
                 zf_put_byte(z, *repetido);
             } else if n <= 1 && c <= 0x80 {

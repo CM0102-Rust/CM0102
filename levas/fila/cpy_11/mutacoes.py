@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpy11_falta_nao_conta', '    increment_permit_counter(r, 6); // cpy11: a falta conta na permissão',
      '    let _ = r; // mutacao: a falta não conta',
-     'cpy_11 falta contada'),
+     'cpy_11 absence counted'),
     ('cpy11_jogo_nao_conta', '        increment_permit_counter(r, 4); // cpy11: o jogo conta na permissão',
      '        let _ = r; // mutacao: o jogo não conta',
-     'cpy_11 jogo contado'),
+     'cpy_11 match counted'),
     ('cpy11_premio_aos_3', '        if (jogos as i32 % 10 == 0 && jogos <= 0x32) || jogos == 1 { // cpy11: os jogos do prêmio',
      '        if (jogos as i32 % 10 == 3 && jogos <= 0x32) || jogos == 1 { // mutacao: os jogos do prêmio',
-     'cpy_11 premio pago'),
+     'cpy_11 bonus paid'),
 ]

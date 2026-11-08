@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn area_layout(area: usize) {
         // ponytail: a original grava o dono e o +0xb76 antes do erro; repetir é inofensivo (mesmos valores)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%)(area);
     }
-    crate::comparison::branch("telas organizar a area");
+    crate::comparison::branch("screens arrange the area");
     let dono = core::ptr::read_unaligned((area + 0x20e) as *const i16);
     if dono != -1 {
         *((area + 0xbe9) as *mut u32) = 0;
@@ -146,7 +146,7 @@ unsafe extern "thiscall" fn init(
     area: usize, areas: usize, itens: usize, indice: u32, x1: i32, y1: i32, x2: i32, y2: i32, colunas: u32,
     pesos_colunas: usize, linhas: u32, pesos_linhas: usize, marcas: u32, cor: u32, dono: u32,
 ) {
-    crate::comparison::branch("telas iniciar a area");
+    crate::comparison::branch("screens start the area");
     let linhas = cap_area_rows(linhas);
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
     let (mut colunas, mut pesos_colunas, mut linhas, mut pesos_linhas) = (colunas as u8, pesos_colunas, linhas as u8, pesos_linhas);
@@ -222,7 +222,7 @@ unsafe extern "thiscall" fn init(
 // igual no comparador, então a comparação segue valendo
 fn cap_area_rows(linhas: u32) -> u32 {
     if linhas & 0xff > 30 {
-        crate::comparison::branch("telas linhas da area travadas em 30");
+        crate::comparison::branch("screens area lines locked at 30");
         (linhas & !0xff) | 30
     } else {
         linhas
@@ -254,7 +254,7 @@ unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {
     if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(area, redesenhar);
     }
-    crate::comparison::branch("telas desenhar a area");
+    crate::comparison::branch("screens draw the area");
     let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x5e42b0usize);
     let guardar: unsafe extern "C" fn(i32, i32, i32, i32, usize) -> usize = core::mem::transmute(0x5e3dd0usize);
     let imagem = (area + 0x200) as *mut usize;
@@ -337,7 +337,7 @@ unsafe fn position_area_item(area: usize, item: usize, d: i32) {
 
 // ponytail: desenhar guarda e libera imagens (aloca) e escurece o fundo (desenhar duas vezes escurece
 // duas vezes): no modo comparação só a original roda; a cópia se prova no jogo do Lucas em modo Rust
-// (contador "telas desenhar a area" no ddraw.log)
+// (contador "screens draw the area" no ddraw.log)
 unsafe extern "thiscall" fn compare_draw(area: usize, redesenhar: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(%%I2%%)(area, redesenhar)
 }

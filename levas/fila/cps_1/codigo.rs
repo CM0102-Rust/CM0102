@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn handle_transfer_request(this: usize, contrato: usize
         let v = valor(this, pessoa, clube, 0, -1, 0);
         // o 1,5 é o double 0x968940
         if (v as f64) * 1.5 > a as f64 { // cps1: o valor passa do preço
-            crate::comparison::branch("cps_1 listado pelo clube");
+            crate::comparison::branch("cps_1 listed by club");
             let m = (contrato + 0x4e) as *mut u8;
             if *m & 2 != 0 {
                 *m &= 0xfd;
@@ -55,11 +55,11 @@ unsafe extern "thiscall" fn handle_transfer_request(this: usize, contrato: usize
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let r = sorteio(cps1_b(contrato + 0x44) as i8 as i32 + (cps1_b(pessoa + 0x59) as i8 as i32 + 5) * 20);
     if r < sorteio(0x32) { // cps1: o sorteio da queixa
-        crate::comparison::branch("cps_1 queixa do pedido");
+        crate::comparison::branch("cps_1 request complaint");
         let queixa: unsafe extern "thiscall" fn(usize, u32, usize) = core::mem::transmute(0x867700usize);
         queixa(contrato, 0x10000, 0);
     }
-    crate::comparison::branch("cps_1 pedido no clube do computador");
+    crate::comparison::branch("cps_1 request at computer club");
     moral(pessoa, 0xffff_fff4, 0); // cps1: a moral cai 12
     // relidos depois das chamadas, como na original (o `imul` de 8 bits fica com o byte baixo)
     let al = cps1_b(pessoa + 0x59).wrapping_mul(5).wrapping_add(0x38);

@@ -121,7 +121,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
             if lg == 0 || cqb4_d(cqb4_d(0xadadfc) + (cqb4_i(lg) as usize).wrapping_mul(4)) == 0 {
                 continue;
             }
-            crate::comparison::branch("cqb_4 clube planejado");
+            crate::comparison::branch("cqb_4 planned club");
             let mut b = (cqb4_sortear(3) as u8).wrapping_add(1); // cqb4: o acréscimo da faixa
             if b == 3 && cqb4_sortear(4) == 0 {
                 b = 2;
@@ -133,7 +133,7 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
                 // ponytail: a original empurra o dword do local da faixa (os bytes altos são sobra); a 0x5c4cb0 só lê o byte
                 let opp = adversario(this, cand, entradas, conta, band as u32, 0);
                 let marcado = if opp != 0 {
-                    crate::comparison::branch("cqb_4 adversario achado");
+                    crate::comparison::branch("cqb_4 opponent found");
                     if cqb4_c(cand + 5) > cqb4_c(opp + 5) { // cqb4: o de faixa maior em casa
                         planejar(this, cand, opp, cand)
                     } else {
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: 
         }
         k += 1;
     }
-    crate::comparison::branch("cqb_4 torneio acrescentado");
+    crate::comparison::branch("cqb_4 tournament added");
     for k in 0..4usize {
         core::ptr::write_unaligned((t + 0x15 + 4 * k) as *mut u32, cqb4_d(convidados + 4 * k) as u32);
         *((t + 0x25 + k) as *mut u8) = 1;

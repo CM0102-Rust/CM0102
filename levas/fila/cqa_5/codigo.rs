@@ -24,7 +24,7 @@ unsafe extern "thiscall" fn reject_loan_offer(this: usize, vaga: *mut usize, mar
         *((o + 0x2d) as *mut u8) = 1;
     }
     *((o + 0x2c) as *mut u8) = 2;
-    crate::comparison::branch("cqa_5 emprestimo recusado");
+    crate::comparison::branch("cqa_5 loan refused");
     let vendedor = contract_club_stored(cpx1_pessoa(cpx1_d(o + 0xc)));
     clear_offer_and_exchange_markers(this, o, vendedor);
     transfer_manager_post_offer_rejected_news(this, o, motivo);
@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
         }
     } else {
         if cqa5_d(o + 4) == 0 {
-            crate::comparison::branch("cqa_5 vendedor sem troca");
+            crate::comparison::branch("cqa_5 seller without exchange");
             return 1; // cqa5: o vendedor sem troca tem vaga
         }
         let t = cqa5_b(cpx1_pessoa(cqa5_d(o + 0xc)) + 0x3d);
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                 }
             }
         };
-        crate::comparison::branch("cqa_5 conta o elenco");
+        crate::comparison::branch("cqa_5 counts the squad");
         contar(clube, &mut n);
         if parceiro != 0 {
             contar(parceiro, &mut n);
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
             if n > 0x32 {
                 let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
                 if cqa5_d(clube) != cqa5_d(o + 8) || humano(clube, 1, 1, 0, 0) != 0 || cqa5_d(o + 4) != 0 {
-                    crate::comparison::branch("cqa_5 elenco cheio");
+                    crate::comparison::branch("cqa_5 squad full");
                     return fail_with_reason(clube, o, motivo, 4);
                 }
                 let contrato: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn check_squad_limits(this: usize, clube: usize, o: usi
                 if escolhido == 0 {
                     return fail_with_reason(clube, o, motivo, 4);
                 }
-                crate::comparison::branch("cqa_5 libera o mais barato");
+                crate::comparison::branch("cqa_5 releases the cheapest");
                 if SQUAD_LIMITS_DRY_RUN {
                     SQUAD_LIMITS_RELEASED_PLAYER = escolhido;
                 } else {

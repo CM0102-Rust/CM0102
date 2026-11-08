@@ -68,7 +68,7 @@ unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(pessoa: usize
 /// pessoa ou prêmio nulos, a caixa "Error" (linha 0x7ee). Senão o histórico da pessoa (tipo 0x32: o id do clube ou −1,
 /// o id do prêmio, `a` em 16 bits sem sinal e `b` como byte com sinal), no arquivo (0x58e340).
 unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pessoa: usize, clube: usize, premio: usize, a: u32, b: u32) {
-    crate::comparison::branch("cps_10 selecao do ano");
+    crate::comparison::branch("cps_10 team of the year");
     if pessoa == 0 || premio == 0 {
         show_error_at(0xa83b78, 0x7ee);
         return;
@@ -113,7 +113,7 @@ unsafe extern "C" fn staff_records_compare_clubs_by_manager_points(a: usize, b: 
     if rb == 0 {
         return -1;
     }
-    crate::comparison::branch("cps_10 pontos dos dois");
+    crate::comparison::branch("cps_10 points of both");
     cps10_i(rb + 0xba).wrapping_sub(cps10_i(ra + 0xba)) // cps10: mais pontos primeiro
 }
 

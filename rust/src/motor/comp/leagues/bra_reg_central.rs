@@ -61,7 +61,7 @@ pub(crate) unsafe fn catarinense_rules(o: usize) {
 /// devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_central_set_up_rules(this: usize) -> u32 {
     centro_oeste_rules(this);
-    crate::comparison::branch("cqi_8 regras do centro-oeste");
+    crate::comparison::branch("cqi_8 centro-oeste rules");
     create_main_schedule(this);
     1
 }
@@ -75,11 +75,11 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, club: usize, st: u8,
     let comp = read_usize(this + 4);
     if st == 6 {
         if fazer {
-            crate::comparison::branch("cqk_7 classificado do estadual");
+            crate::comparison::branch("cqk_7 state league qualified");
             bra_nat_first_add_qualified_record(club, comp, 0, 0x82, 0x32); // cqk7: the state championship qualifier
         }
     } else if st == 3 && fazer {
-        crate::comparison::branch("cqk_7 rebaixado do estadual");
+        crate::comparison::branch("cqk_7 state league relegated");
         bra_nat_first_add_relegation_record(club, comp); // cqk7: the club relegated from the state championship
     }
 }
@@ -98,7 +98,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
         if read_usize(read_usize(this + league::TABLE) + 0x3b * i as usize) == club {
             if st == 1 {
                 if fazer {
-                    crate::comparison::branch("cqk_7 campeao do estadual");
+                    crate::comparison::branch("cqk_7 state league champion");
                     add_champions_record(club, comp); // cqk7: the state champion record
                 }
                 let l = read_usize(this + league::TABLE) + 0x3b * i as usize;
@@ -111,7 +111,7 @@ pub(crate) unsafe fn record_state_knockout(this: usize, club: usize, st: u8, gam
                 if fazer {
                     // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
                     // 0x4bf850 and 0x86c000 only read the words: the words are passed.
-                    crate::comparison::branch("cqk_7 eliminado do estadual");
+                    crate::comparison::branch("cqk_7 state league eliminated");
                     let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds);
                     exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
                 }
@@ -177,7 +177,7 @@ pub(crate) unsafe fn nsl_end_of_stage(this: usize, club: usize, status: u32, sta
         // a temporada regular
         if st == 6 {
             if fazer {
-                crate::comparison::branch("cqk_7 nsl classificado");
+                crate::comparison::branch("cqk_7 nsl qualified");
                 bra_nat_first_add_qualified_record(club, comp, 0x435, 0, 0x28); // cqk7: the NSL qualifier
             }
             return (0, 0, 0);

@@ -25,7 +25,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
         return;
     }
     if id >= cpv10_d(0xae2364) / 2 {
-        crate::comparison::branch("cpv_10 metade de cima");
+        crate::comparison::branch("cpv_10 top half");
     }
     let r = physical_record_of_id(this, id);
     let i = cpv10_d(r + 0xe);
@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
         return;
     }
     if i == 0 {
-        crate::comparison::branch("cpv_10 entrada zero");
+        crate::comparison::branch("cpv_10 zero entry");
     }
     let e = (cpv10_d(this + 4) as u32).wrapping_add((i as u32).wrapping_mul(0x30)) as usize;
     if *(e as *const u8) != 0x51 {
@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn end_player_injury(this: usize, pessoa: usize, notici
             volta(this, pessoa, 1, *(e as *const u8) as u32, 0, 0);
         }
     }
-    crate::comparison::branch("cpv_10 fim da lesao");
+    crate::comparison::branch("cpv_10 end of injury");
     *(e as *mut u8) = 0xff; // cpv10: a entrada fica livre
     core::ptr::write_unaligned((physical_record_of_id(this, cpv10_d(pessoa)) + 0xe) as *mut i32, -1); // cpv10: sem lesão atual
 }

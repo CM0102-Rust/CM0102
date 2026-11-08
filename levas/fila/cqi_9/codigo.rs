@@ -72,7 +72,7 @@ fn cqi9_regioes(o: usize) -> [(usize, usize); 4] {
 /// devolve 1.
 unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     parana_rules(this);
-    crate::comparison::branch("cqi_9 regras do paranaense");
+    crate::comparison::branch("cqi_9 paranaense rules");
     cqi9_calendario(this);
     1
 }
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn compare_bra_reg_parana_set_up_rules(this: usize) -> 
 /// Pernambucano (0x968554); devolve 1.
 unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) -> u32 {
     pernambucano_rules(this);
-    crate::comparison::branch("cqi_9 regras do pernambucano");
+    crate::comparison::branch("cqi_9 pernambucano rules");
     cqi9_calendario(this);
     1
 }
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn compare_bra_reg_pern_set_up_rules(this: usize) -> u3
 /// Carioca (0x968608); devolve 1.
 unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     carioca_rules(this);
-    crate::comparison::branch("cqi_9 regras do carioca");
+    crate::comparison::branch("cqi_9 carioca rules");
     cqi9_calendario(this);
     1
 }

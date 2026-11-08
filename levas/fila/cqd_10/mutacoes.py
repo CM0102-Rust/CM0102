@@ -6,9 +6,9 @@
 # - O jogador aposentado fica no elenco (sem a 0x7aace0).
 MUTACOES = [
     ('cqd10_jovem_ate_35', '    if cqd10_b(p + 0x18) < 0x1e && cqd10_b(item + 0x18) != 8 // cqd10: o jovem não se aposenta',
-     '    if cqd10_b(p + 0x18) < 0x24 && cqd10_b(item + 0x18) != 8 // mutacao: o jovem não se aposenta', 'cqd_10 aposentadoria desfeita'),
+     '    if cqd10_b(p + 0x18) < 0x24 && cqd10_b(item + 0x18) != 8 // mutacao: o jovem não se aposenta', 'cqd_10 retirement undone'),
     ('cqd10_fica_com_o_contrato', '        call_on_global_manager(0x4d0b50, 0xae1050, p); // cqd10: tira o contrato',
-     '        // mutacao: tira o contrato', 'cqd_10 tira o contrato'),
+     '        // mutacao: tira o contrato', 'cqd_10 removes the contract'),
     ('cqd10_fica_no_elenco', '        elenco(p); // cqd10: sai do elenco',
-     '        let _ = elenco; // mutacao: sai do elenco', 'cqd_10 sai do elenco'),
+     '        let _ = elenco; // mutacao: sai do elenco', 'cqd_10 leaves the squad'),
 ]

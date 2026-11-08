@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
             return 1;
         }
         copiar(this + 0xa7, &mut t, hoje);
-        crate::comparison::branch("cpt_11 planejou a pré-temporada");
+        crate::comparison::branch("cpt_11 planned the pre-season");
         planejar(this); // cpt11: planejar
         let mut ha_um_ano = [0u8; 8];
         menos_semanas(0xae2c90, &mut ha_um_ano, 0x34);
@@ -171,7 +171,7 @@ unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize) {
             if is_national_team(clube) == 0 && cpt11_d(clube + 0x53) != 0 {
                 let r = v + n as usize * 0x16;
                 let rep = cpt11_w(clube + 0x80) as i16 as i32;
-                crate::comparison::branch("cpt_11 candidato da pré-temporada");
+                crate::comparison::branch("cpt_11 pre-season candidate");
                 let band = (rep / 500) as u8; // cpt11: a faixa
                 cpt11_pd(r, cpt11_d(clube));
                 *((r + 4) as *mut u8) = 0;
@@ -294,7 +294,7 @@ unsafe fn set_friendly_windows(ptrs: usize, n: i32, gravar: bool) -> Vec<(usize,
                     let m = novo(0xe);
                     cpt11_pd(c + 0x12, if m != 0 { lista_nova(m) } else { 0 });
                 }
-                crate::comparison::branch("cpt_11 janela gravada");
+                crate::comparison::branch("cpt_11 window recorded");
                 core::ptr::write_unaligned((c + 0xe) as *mut i16, ini);
                 core::ptr::write_unaligned((c + 0x10) as *mut i16, fim);
             }

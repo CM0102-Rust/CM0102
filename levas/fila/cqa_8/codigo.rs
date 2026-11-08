@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             if selecao(clube) == 0 && (cqa8_i(jogo) < 0 || amistoso(cqa8_d(0xae2c74), cqa8_d(jogo + 0x14)) == 0) {
                 let testa = k >= 11 || !(minutos > 0x1e || cqa8_b(vaga + 0x1f) != 0 || cqa8_b(vaga + 0x20) < 0x46);
                 let mal = testa && {
-                    crate::comparison::branch("cqa_8 testa a moral");
+                    crate::comparison::branch("cqa_8 tests the morale");
                     let m = cqa8_b(contrato + 0x44) as i32;
                     let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral
                     let v = r1 as f64 + (read_f64_at(0x968d68) - m as f64 * read_f64_at(0x968d70));
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
                 }
             }
             if venceu[lado] != 0 {
-                crate::comparison::branch("cqa_8 moral do vencedor");
+                crate::comparison::branch("cqa_8 winner morale");
                 let r = sorteio(0x15 - cqa8_b(pessoa + 0x57) as i32); // cqa8: o sorteio do vencedor
                 if r < 4 && contrato != 0 {
                     add_clamped_100(contrato + 0x44, 3);
@@ -257,7 +257,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             let c = read_f64_at(0x9689a0);
             // fcomp + C3: igual ou desordenado vai para a constante
             let nota = if !(x < c || x > c) { read_f64_at(0x968998) } else { core::ptr::read_unaligned((m + 0x10) as *const f64) / x };
-            crate::comparison::branch("cqa_8 evolui quem ficou de fora");
+            crate::comparison::branch("cqa_8 develops who was left out");
             evoluir(0, pessoa, clube, outro, jogo, (nota - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora
             let p = contrato as *mut u8;
             *p.add(0x3f) = 0;

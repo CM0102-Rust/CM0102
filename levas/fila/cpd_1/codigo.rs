@@ -112,7 +112,7 @@ unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
         if vencidas < conta(rec) {
             let mut k = vencidas;
             loop {
-                crate::comparison::branch("convocações descer as que ficam");
+                crate::comparison::branch("call-ups shift down the remaining");
                 let v = cpd1_d(rec);
                 let de = v.wrapping_add(9usize.wrapping_mul(k as i32 as usize));
                 let para = v.wrapping_add(9usize.wrapping_mul((k as i32 - vencidas as i32) as usize));
@@ -126,7 +126,7 @@ unsafe extern "thiscall" fn prune_club_call_up_records(this: usize) {
         let resto = conta(rec).wrapping_sub(vencidas);
         *((rec + 5) as *mut i8) = resto;
         if resto == 0 && cpd1_d(rec) != 0 {
-            crate::comparison::branch("convocações soltar o vetor");
+            crate::comparison::branch("call-ups free the array");
             free(cpd1_d(rec));
             *((rec + 4) as *mut u8) = 0;
             core::ptr::write_unaligned(rec as *mut usize, 0);

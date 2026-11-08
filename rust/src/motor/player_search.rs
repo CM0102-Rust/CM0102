@@ -245,7 +245,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
     let acompanhado = read_i32(this + player_search_fields::ASSIGNED_CLUB);
     if acompanhado > -1 && read_usize(this + 0x170) != 0 && (read_i32(game + fixture::HOME_CLUB_ID) == acompanhado || read_i32(game + fixture::AWAY_CLUB_ID) == acompanhado) {
         if !SCOUT_MATCH_DRY_RUN {
-            crate::comparison::branch("cqf_10 historico do clube");
+            crate::comparison::branch("cqf_10 club history");
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
             exe::player_search_record_scouted_club_match(read_usize(this + 0x170), game, result);
         }
@@ -322,7 +322,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             return 0;
         }
     }
-    crate::comparison::branch("cqf_10 relatorio");
+    crate::comparison::branch("cqf_10 report");
     // the start of the list goes to tomorrow (0x54c5b0 with 1, 0x417c10 writes at +0x1a5); the low byte of the copied date dword
     // becomes the counter of both sides and goes whole as the 7th argument of 0x7b62a0
     // 0x54c5b0: push 1; push &tmp; mov ecx, 0xae2c90 -> thiscall, ret 8; 0x417c10: push data; push &copia; lea ecx,
@@ -412,7 +412,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
                 }
                 2
             };
-            crate::comparison::branch("cqf_10 avaliar jogador");
+            crate::comparison::branch("cqf_10 evaluate player");
             let n = ((read_u8(current + 5) as i32 * 0x28 - 0x104).wrapping_mul(rating as i8 as i32)) / 2;
             exe::player_search_report_on_player(this, p, reg, n, mode, game, result, mark);
             if (read_u8(reg + 0x66) as i8) > -1 {
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
         return 0;
     }
     if read_usize(this + player_search_fields::RESULT_COUNT) == 0 {
-        crate::comparison::branch("cqa_6 busca vazia");
+        crate::comparison::branch("cqa_6 empty search");
         return 0; // cqa6: without results, it is not there
     }
     exe::fill_staff_name_ref(person, k);
@@ -460,10 +460,10 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
         return 0;
     }
     if read_u8(r + 0x20) & 1 != 0 { // cqa6: the removed one does not count
-        crate::comparison::branch("cqa_6 removido");
+        crate::comparison::branch("cqa_6 removed");
         return 0;
     }
-    crate::comparison::branch("cqa_6 achado");
+    crate::comparison::branch("cqa_6 found");
     1 // cqa6: achado
 }
 
@@ -583,7 +583,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
             }
         }
         let sum = if n < 8000 {
-            crate::comparison::branch("cpu_13 base pela reputação");
+            crate::comparison::branch("cpu_13 base by reputation");
             n.wrapping_mul(3).wrapping_add(ebx).wrapping_add(l.wrapping_add(rep.wrapping_mul(2)).wrapping_mul(4))
         } else {
             ebx.wrapping_add(rep.wrapping_mul(7)).wrapping_add(n.wrapping_add(l).wrapping_mul(4))
@@ -600,7 +600,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
     } else if esi > 5000 {
         ftol(esi as f64 * read_f64_at(rdata::F64_2_5) + read_f64_at(rdata::F64_7500))
     } else if esi > 3000 {
-        crate::comparison::branch("cpu_13 band de 3000 a 5000");
+        crate::comparison::branch("cpu_13 band from 3000 to 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: the middle band
     } else {
         ftol(esi as f64 * read_f64_at(rdata::F64_1_6) + read_f64_at(rdata::F64_5000))
@@ -646,7 +646,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                         edi = ftol(if x > y { x } else { y });
                     }
                     2 => {
-                        crate::comparison::branch("cpu_13 clube rico");
+                        crate::comparison::branch("cpu_13 rich club");
                         let (x, y) = (v * read_f64_at(rdata::F64_1_025), edi.wrapping_add(250) as f64); // cpu13: o rico;
                         edi = ftol(if x > y { x } else { y });
                     }
@@ -887,11 +887,11 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
         return 1;
     }
     if read_u8(nc + nation::ACTUAL_REGION) == read_u8(nation + nation::ACTUAL_REGION) {
-        crate::comparison::branch("cpn_7 mesma regiao");
+        crate::comparison::branch("cpn_7 same region");
         return 1; // the same region as the club’s nation
     }
     if exe::database_is_staff_foreign(person, nation, 1) == 0 {
-        crate::comparison::branch("cpn_7 nacao do olheiro");
+        crate::comparison::branch("cpn_7 scout nation");
         return 1; // the nation is not foreign for the scout
     }
     (exe::scout_manager_can_club_scout_nation(read_usize(G_SCOUT_MANAGER), nation, club) != 0) as u32

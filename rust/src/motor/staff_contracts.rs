@@ -102,7 +102,7 @@ pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usi
 /// põe 4 em +0x4e, zera a felicidade (+0x3f) e +0x3e; com o clube e a nação dele (+0x53), o nível do idioma da nação
 /// (+0x77) para a pessoa (0x7c6830 em [0xb74350], sem o contrato; no máximo 10) nos 4 bits baixos de +0x4f.
 pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usize) {
-    crate::comparison::branch("cpl_5 moral zerada");
+    crate::comparison::branch("cpl_5 morale zeroed");
     write_u8(this + contract::MORALE, 0);
     write_u8(this + contract::TRANSFER_STATUS, 0);
     write_usize(this + contract::GRIEVANCES, 0);
@@ -155,7 +155,7 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
         show_error_at(0xa8360c, 0xf5);
         return;
     }
-    crate::comparison::branch("cpl_5 contrato pelo atual");
+    crate::comparison::branch("cpl_5 contract by the current one");
     write_usize(this, read_usize(person));
     write_usize(this + contract::UNKNOWN, 0);
     write_usize(this + contract::CLUB, read_usize(club));
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     if read_u8(person + staff::AGE) as i8 <= 0x14 && read_i16(read_usize(person + staff::PLAYER) + 0xb) <= 0x109a {
         return;
     }
-    crate::comparison::branch("cpw_7 pedido de saida");
+    crate::comparison::branch("cpw_7 transfer request");
     if MISS_TRAINING_DRY_RUN {
         MISS_TRAINING_DECISION = 1;
         return;
@@ -471,10 +471,10 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     let days = years.wrapping_mul(365).wrapping_sub(read_i16(this + contract::DATE_STARTED) as i32).wrapping_add(read_i16(G_CURRENT_DATE) as i32).clamp(0, 500);
     let adapt = read_u8(person + staff::LOYALTY) as i8 as i32;
     if days < adapt.wrapping_mul(15).wrapping_add(100) {
-        crate::comparison::branch("cpw_1 contratado ha pouco");
+        crate::comparison::branch("cpw_1 recently signed");
         ratio = ratio + read_f32_at(rdata::F32_50) as f64 + adapt as f64 * read_f64_at(rdata::F64_7_5) - (days / 2) as f64; // cpw1: the discount of the newly signed;
     }
-    crate::comparison::branch("cpw_1 satisfacao avaliada");
+    crate::comparison::branch("cpw_1 satisfaction evaluated");
     if !(ratio >= read_f32_at(rdata::F32_50) as f64) { // cpw1: the dissatisfaction limit;
         return 1;
     }

@@ -12,8 +12,8 @@ MUTACOES = [
     ('cpo_diretoria_sem_sorteio',
      'let s = sorteio(4);\n    gravar(n, 3, s as u32);\n    gravar(n, 4, cpo5_d(clube) as u32);\n    let grau = if v < -750 && (',
      'let s = 0; // mutacao: sem o sorteio\n    gravar(n, 3, s as u32);\n    gravar(n, 4, cpo5_d(clube) as u32);\n    let grau = if v < -750 && (',
-     'cpo_5 diretoria noticia'),
+     'cpo_5 board news'),
     ('cpo_diretoria_variacao', 'let s = ((conf - 6000) / 20).wrapping_add(alvo as i32) as i16;',
      'let s = ((conf - 6000) / 10).wrapping_add(alvo as i32) as i16; // mutacao: /10',
-     'cpo_5 diretoria'),
+     'cpo_5 board'),
 ]

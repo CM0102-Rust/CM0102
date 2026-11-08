@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     let n = read_usize(this + league::STAGE_COUNT) as i32;
     let a = read_i16(this + league::YEAR);
     core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1));
-    crate::comparison::branch("cqs_4 virada da serie c");
+    crate::comparison::branch("cqs_4 serie c rollover");
     let v = if n > 0 { exe::crt_malloc((n * 4) as u32) } else { 0 };
     core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
     for k in 0..0x38usize {
         position(read_usize(this + 8), read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k), place_for_index(k) as u32);
     }
-    crate::comparison::branch("cqs_4 posicoes previstas");
+    crate::comparison::branch("cqs_4 expected positions");
 }
 
 #[allow(clippy::type_complexity)]
@@ -263,7 +263,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: usize, g:
     if read_usize(read_usize(this + league::STAGES) + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
-    crate::comparison::branch("cqs_3 grupo");
+    crate::comparison::branch("cqs_3 group");
     exe::crt_free(v);
     exe::crt_free(t);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, k);
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     if read_usize(read_usize(this + league::STAGES) + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
-    crate::comparison::branch("cqs_3 segunda fase");
+    crate::comparison::branch("cqs_3 second stage");
     exe::crt_free(t);
     exe::crt_free(list);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 7);
@@ -433,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         }
         exe::crt_free(t);
     }
-    crate::comparison::branch("cqs_3 terceira fase");
+    crate::comparison::branch("cqs_3 third stage");
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 9);
 }
 
@@ -489,7 +489,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
         i += 1;
         club = club.wrapping_add(0x245);
     }
-    crate::comparison::branch("cql_7 serie c sorteio");
+    crate::comparison::branch("cql_7 serie c draw");
     exe::comp_util_shuffle_pointer_array(read_usize(this + bra_nat_third::CLUB_LIST), (k as i8 as i32) as u32); // cql7: the random draw of the Serie C clubs
     for j in 0..7usize {
         exe::league_init_table_row(this, j as u32, read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + j * 4), 0, 0);
@@ -506,7 +506,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
 /// [pt] { 0x42de50 } (thiscall, bra_nat_third.cpp): `BraNatThird::set_up_rules`, as regras da Série C e o calendário.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_up_rules(this: usize) -> u32 {
     set_serie_c_rules(this);
-    crate::comparison::branch("cqi_7 regras da serie c");
+    crate::comparison::branch("cqi_7 serie c rules");
     create_main_schedule(this);
     1
 }
@@ -542,7 +542,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_club_progress(this: usi
         let (a, c) = (serie_c_progress_code(a, 1), serie_c_progress_code(c, 9));
         let b2 = serie_c_progress_code(b, 1);
         if b == 3 {
-            crate::comparison::branch("cqk_8 serie c segundo 3");
+            crate::comparison::branch("cqk_8 serie c second 3");
         }
         write_progress_codes(e, a, b2, c); // cqk8: the Serie C group codes
     } else {

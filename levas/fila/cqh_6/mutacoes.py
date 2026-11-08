@@ -1,4 +1,4 @@
-# Mutacoes (cqh_6), na lista dos clubes da competicao (0x48e1c0: o contador "cqh_6 clube na lista" passou de 128; o
+# Mutacoes (cqh_6), na lista dos clubes da competicao (0x48e1c0: o contador "cqh_6 club in the list" passou de 128; o
 # hash das partidas a pega) e nas outras duas:
 # - a lista com no maximo 16 clubes;
 # - a lista sem tirar os repetidos;
@@ -11,13 +11,13 @@ MUTACOES = [
     ('cqh6_lista_de_16',
      '&& n < 0xc8 { // cqh6: até 200 clubes',
      '&& n < 0x10 { // mutacao: ate 16 clubes',
-     'cqh_6 clube na lista'),
+     'cqh_6 club in the list'),
     ('cqh6_lista_com_repetidos',
      'if clube != 0 && !(0..n).any(|k| cqh6_d(v + k as usize * 4) == clube) && n < 0xc8 {',
      'if clube != 0 && n < 0xc8 { // mutacao: com os repetidos',
-     'cqh_6 clube na lista'),
+     'cqh_6 club in the list'),
     ('cqh6_sem_as_ligas_de_baixo',
      'i = cqh6_d(c + 0x20) as i32; // cqh6: a liga de baixo',
      'i = -1; // mutacao: sem as ligas de baixo',
-     'cqh_6 liga de baixo completa'),
+     'cqh_6 lower league complete'),
 ]

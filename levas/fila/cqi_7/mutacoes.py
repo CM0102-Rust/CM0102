@@ -7,9 +7,9 @@
 #   pontos com frequencia, e as vitorias e o saldo ordenam diferente.
 MUTACOES = [
     ('cqi7_vitoria_serie_a', 'cqi7_b(o, 0xc2, 3); // cqi7: os pontos por vitória da Série A',
-     'cqi7_b(o, 0xc2, 2); // mutacao: os pontos por vitória da Série A', 'cqi_7 regras da serie a'),
+     'cqi7_b(o, 0xc2, 2); // mutacao: os pontos por vitória da Série A', 'cqi_7 serie a rules'),
     ('cqi7_empate_serie_b', 'cqi7_b(o, 0xc3, 1); // cqi7: os pontos por empate da Série B',
-     'cqi7_b(o, 0xc3, 0); // mutacao: os pontos por empate da Série B', 'cqi_7 regras da serie b'),
+     'cqi7_b(o, 0xc3, 0); // mutacao: os pontos por empate da Série B', 'cqi_7 serie b rules'),
     ('cqi7_desempate_serie_c', 'cqi7_b(o, 0xc5, 1); // desempates: saldo, gols pró, gols fora',
-     'cqi7_b(o, 0xc5, 5); // mutacao: desempates', 'cqi_7 regras da serie c'),
+     'cqi7_b(o, 0xc5, 5); // mutacao: desempates', 'cqi_7 serie c rules'),
 ]

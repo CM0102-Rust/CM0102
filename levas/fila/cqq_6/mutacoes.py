@@ -7,9 +7,9 @@ MUTACOES = [
     ('cqq6_divisao_de_baixo_antes_da_cfa',
      '    let a = novo(0xee);\n    let ligas_cfa = if a != 0 { cfa(a, ano) } else { 0 };\n    let b = novo(0xee);\n    let ligas_baixo = if b != 0 { baixo(b, ano) } else { 0 };',
      '    let b = novo(0xee);\n    let ligas_baixo = if b != 0 { baixo(b, ano) } else { 0 };\n    let a = novo(0xee);\n    let ligas_cfa = if a != 0 { cfa(a, ano) } else { 0 };',
-     'cqq_6 primeira francesa nova'),
+     'cqq_6 new french first division'),
     ('cqq6_outra_disciplina',
      '    *((this + 0x50) as *mut u8) = 0xc; // cqq6: a disciplina da primeira francesa',
      '    *((this + 0x50) as *mut u8) = 9; // mutacao: outra disciplina',
-     'cqq_6 primeira francesa nova'),
+     'cqq_6 new french first division'),
 ]

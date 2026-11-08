@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_set_up_rules(thi
             *((this + 0xef) as *mut u8) = *((o + 0xee) as *const u8);
         }
     }
-    crate::comparison::branch("cqj_12 regras da america do sul");
+    crate::comparison::branch("cqj_12 south america rules");
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
     *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: the win in the South American qualifiers
     *((this + league::PROMOTED_COUNT) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: the direct places of South America

@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpp_listas_conta', 'conta = conta.wrapping_add(1); // mais um clube com ele na lista',
      'conta = conta.wrapping_add(2); // mutacao: conta dois',
-     'cpp_6 clube acrescentou'),
+     'cpp_6 club added'),
     ('cpp_a_venda', '*((c + 0x4f) as *mut u8) = (a & 0xf) | 0x70; // à venda',
      'let _ = a; // mutacao: sem o estado a venda',
-     'cpp_6 por a venda'),
+     'cpp_6 put up for sale'),
     ('cpp_premio', 'receber(f_antigo, valor as u32, (valor >> 31) as u32); // o clube antigo recebe',
      'let _ = (receber, f_antigo); // mutacao: o clube antigo nao recebe',
-     'cpp_6 premio por jogos'),
+     'cpp_6 appearances bonus'),
 ]

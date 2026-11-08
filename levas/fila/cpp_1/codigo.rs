@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize,
             let pessoa = (cpp1_d(0xae23bc) as usize).wrapping_add((id as usize).wrapping_mul(0x6e));
             core::ptr::write_unaligned(e as *mut i32, -1);
             if cpp1_b(e + 0xd) == 3 {
-                crate::comparison::branch("cpp_1 decidir ofertas");
+                crate::comparison::branch("cpp_1 decide offers");
                 resolver(this, pessoa); // a pessoa decide as ofertas
             }
         }
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn get_current_contract_offers(this: usize, clube: usiz
                         return 0;
                     }
                 }
-                crate::comparison::branch("cpp_1 oferta do clube");
+                crate::comparison::branch("cpp_1 club offer");
                 core::ptr::copy(item as *const u8, vetor.wrapping_add((n as i32 * 111) as usize) as *mut u8, 111);
                 n = n.wrapping_add(1);
             }

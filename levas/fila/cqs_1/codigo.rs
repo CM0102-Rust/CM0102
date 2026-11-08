@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 {
         }
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqs_1 tabela da mls");
+    crate::comparison::branch("cqs_1 mls fixtures");
     (n == cqs1_w(this + 0x3e)) as u32
 }
 

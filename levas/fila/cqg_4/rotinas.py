@@ -5,7 +5,7 @@
 #   o primeiro grupo livre da metade), a troca dos clubes da mesma nação no grupo, os pontos do coeficiente, o prêmio de
 #   1.800.000 e a notícia, as 8 fases (League_Stage) e os perdedores da terceira preliminar na Copa da UEFA. Roda uma
 #   vez na carreira automática até 2002-06-01 (fim de agosto de 2001), pela fase seguinte (0x5851d0, Rust: o contador
-#   "cpy_5 fase seguinte" das cadeias 261 a 268).
+#   "cpy_5 next stage" das cadeias 261 a 268).
 # - 0x586f60 (european_cup_compare_clubs_by_seed, 49 bytes): a comparação da qsort dos potes (a semente europeia +0x1df
 #   e a reputação): passageira (só pela qsort do sorteio).
 # Iguais no cm0102-1080.exe (as duas inteiras). Chamam originais não portadas: 0x945501 (calloc), 0x9452ca (free),

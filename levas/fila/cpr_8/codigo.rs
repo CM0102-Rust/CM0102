@@ -138,7 +138,7 @@ unsafe fn set_retirement_dates(pessoa: usize, saida: usize, fora: unsafe fn(usiz
     if k < 0 || k >= 0x23 {
         return fora(saida);
     }
-    crate::comparison::branch("cpr_8 datas pela nacao");
+    crate::comparison::branch("cpr_8 dates by nation");
     let ano = cpr8_u(0xae2c92);
     let a = (random(95) as u32).wrapping_add(cpr8_d(0xae2c90) as u32).wrapping_add(1) as u16;
     let (dia1, ano1) = if a as i16 > 0x16d { (random(60) as u16, ano.wrapping_add(1)) } else { (a, ano) };
@@ -225,7 +225,7 @@ unsafe extern "thiscall" fn player_regen_check_initial_retirement(_this: usize, 
             return 0; // cpr8: a habilidade alta segura o jogador
         }
         if hab < 0xa || v < 0x5dc {
-            crate::comparison::branch("cpr_8 inicio habilidade");
+            crate::comparison::branch("cpr_8 initial ability");
             break 'm 1;
         }
         if clube != 0 {
@@ -334,7 +334,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
             n != 0 && *((n + 0x11c) as *const u8) == 0
         };
         if sorteia {
-            crate::comparison::branch("cpr_8 fora do jogo");
+            crate::comparison::branch("cpr_8 out of the game");
             if random(3) == 0 {
                 break 'm 1; // cpr8: um em três se aposenta
             }
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, pessoa: 
 /// ([0xae2d0c]) e sem contrato (0x4cf5a0) com +0x49 é testada (0x7a79c0); quem se aposenta entra na lista
 /// (0x7a8510). No fim o qsort da lista ([this+4], conta +8, 26 bytes, 0x7ae2a0).
 unsafe extern "thiscall" fn build_initial_retirement_list(this: usize) {
-    crate::comparison::branch("cpr_8 lista inicial");
+    crate::comparison::branch("cpr_8 initial list");
     // ponytail: a original constrói as duas datas da entrada (0x54a110) e deixa o resto como estava na pilha; a
     // 0x7a79c0 grava tudo o que a 0x7a8510 copia antes de devolver 1 (a terceira data local nunca é lida: fica de fora)
     let mut e = [0u8; 0x1a];

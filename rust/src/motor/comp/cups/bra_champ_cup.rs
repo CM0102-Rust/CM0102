@@ -227,7 +227,7 @@ pub(crate) const ASIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
 /// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
 /// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_12 regras da copa dos campeoes");
+    crate::comparison::branch("cqi_12 champions cup rules");
     set_cup_league_rules(this, &CHAMPIONS_CUP_RULES, 1)
 }
 

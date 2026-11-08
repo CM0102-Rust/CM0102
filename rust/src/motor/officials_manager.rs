@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
             if group <= limit {
                 ficam += 1;
                 *m = 1;
-                crate::comparison::branch("cqg_9 arbitro mantido");
+                crate::comparison::branch("cqg_9 referee kept");
             } else {
                 *m = 0;
             }
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let v = b.wrapping_add((read_i16(b + officials_nation_block::COMP_COUNT) as isize * 0x10) as usize);
         write_u32(v + 0x1e, k as u32);
         let request = read_i16(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: the slot request
-        crate::comparison::branch("cqg_9 vaga de competicao");
+        crate::comparison::branch("cqg_9 competition slot");
         write_u32(v + 0x1a, request as u32);
         if read_i32(v + 0x1a) > read_i32(b + officials_nation_block::DEMAND) {
             write_u32(b + officials_nation_block::DEMAND, read_usize(v + 0x1a) as u32);
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let mut j = 0i32;
         while j < read_i16(b + officials_nation_block::COMP_COUNT) as i32 {
             let c = read_i16(b + officials_nation_block::COMP_COUNT) as i32;
-            crate::comparison::branch("cqg_9 parte da vaga");
+            crate::comparison::branch("cqg_9 part of the slot");
             write_u32(b + 0x16 + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT) / c) as u32); // cqg9: the share of each slot
             let c = read_i16(b + officials_nation_block::COMP_COUNT) as i32;
             write_u32(b + officials_nation_block::COMP_SLOTS + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT).wrapping_mul(j) / c).wrapping_add(read_i32(b + officials_nation_block::FIRST_REFEREE)) as u32);
@@ -315,7 +315,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparison::branch("cqh_7 ordem decrescente");
+    crate::comparison::branch("cqh_7 descending order");
     if ka == kb {
         return read_i32(b).wrapping_sub(read_i32(a)); // cqh7: the tie by the index
     }
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_as
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparison::branch("cqh_7 ordem crescente");
+    crate::comparison::branch("cqh_7 ascending order");
     if ka == kb {
         return read_i32(a).wrapping_sub(read_i32(b));
     }
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     }
                     let b = nation_officials_block(this, k);
                     let count = read_i32(b + officials_nation_block::REFEREE_COUNT) as f64;
-                    crate::comparison::branch("cpy_8 arbitro neutro");
+                    crate::comparison::branch("cpy_8 neutral referee");
                     (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
                     let nacao = if read_usize(comp + competition::NATION) != 0 {
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     }
                     match found {
                         Some(band) => {
-                            crate::comparison::branch("cpy_8 band da liga");
+                            crate::comparison::branch("cpy_8 league band");
                             band // cpy8: the league band
                         }
                         None => (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT)),
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
     let drawn = if n == 1 {
         ini
     } else {
-        crate::comparison::branch("cpy_8 arbitro sorteado");
+        crate::comparison::branch("cpy_8 drawn referee");
         ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: the random draw within the band
     };
     let ocupado = |k: i32| {
@@ -579,7 +579,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         if age <= 0x28 || (age <= 0x2d && random(3) != 0) {
             continue;
         }
-        crate::comparison::branch("cpy_8 arbitro renovado");
+        crate::comparison::branch("cpy_8 referee renewed");
         let nation = read_usize(sheet + player_sheet::WING_BACK);
         let n1 = exe::database_pick_first_name_for_nation(nation);
         core::ptr::write_unaligned((sheet + 4) as *mut usize, n1);
@@ -675,13 +675,13 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
     }
     let mut r = t.wrapping_add(before.wrapping_mul(0x2b) as usize);
     for _ in 0..count.max(0) {
-        crate::comparison::branch("cpy_9 arbitro novo");
+        crate::comparison::branch("cpy_9 new referee");
         generate_official(r, nation);
         r += 0x2b;
     }
     let n = read_i32(G_OFFICIAL_COUNT).wrapping_add(count);
     *(G_OFFICIAL_COUNT as *mut i32) = n;
-    crate::comparison::branch("cpy_9 ordenar");
+    crate::comparison::branch("cpy_9 sort");
     exe::crt_qsort(read_usize(G_OFFICIAL_TABLE), (n) as u32, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
 
@@ -754,7 +754,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
         }
         for o in [0x1eusize, 0x20] {
             if away(o) {
-                crate::comparison::branch("cpy_9 nota consertada");
+                crate::comparison::branch("cpy_9 rating fixed");
                 let nation = read_usize(e + official::NATION);
                 let v = if nation != 0 {
                     let s = random(0x50) as u8;
@@ -839,7 +839,7 @@ pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: us
     const FONTE: usize = 0xa6a22c;
     let arbitros = || *(G_OFFICIAL_COUNT as *const u32);
     let nations = || *(G_NATION_COUNT as *const u32);
-    crate::comparison::branch("cpx_7 gravar estatisticas dos arbitros");
+    crate::comparison::branch("cpx_7 save referee stats");
     if save == 0 {
         show_error_at(FONTE, 0x142);
         return 0;

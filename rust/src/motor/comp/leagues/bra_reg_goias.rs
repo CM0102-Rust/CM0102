@@ -269,7 +269,7 @@ pub(crate) unsafe fn j2_rules(o: usize) {
 /// calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -> u32 {
     goiano_rules(this);
-    crate::comparison::branch("cqj_7 regras do goiano");
+    crate::comparison::branch("cqj_7 goiano rules");
     create_main_schedule(this);
     1
 }

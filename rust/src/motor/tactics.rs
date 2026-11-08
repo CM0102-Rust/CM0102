@@ -21,35 +21,35 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, human);
     if k == -1 {
-        crate::comparison::branch("batedor sem linha");
+        crate::comparison::branch("taker without row");
         return 0;
     }
     let cell = (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;
     let v = *cell;
     if v > (*(G_STAFF_COUNT as *const i32)).wrapping_add(0x52d) {
-        crate::comparison::branch("batedor alem das pessoas");
+        crate::comparison::branch("taker beyond the people");
         *cell = -1;
         return 0;
     }
     if v <= -1 {
-        crate::comparison::branch("batedor vazio");
+        crate::comparison::branch("taker empty");
         return 0;
     }
     let person = (*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * staff::SIZE);
     if *((person + staff::PLAYER) as *const u32) == 0 {
-        crate::comparison::branch("batedor sem ficha");
+        crate::comparison::branch("taker without record");
         *cell = -1;
         return 0;
     }
     if *((person + staff::CLUB_JOB) as *const usize) == club {
-        crate::comparison::branch("batedor do clube");
+        crate::comparison::branch("taker of the club");
         return person;
     }
     if exe::database_is_national_team(club) != 0 || exe::nationalteams_is_national_or_all_star_team(*(G_NATIONAL_TEAMS as *const usize), club) != 0 {
-        crate::comparison::branch("batedor de fora do clube");
+        crate::comparison::branch("taker from outside the club");
         return person;
     }
-    crate::comparison::branch("batedor saiu do clube");
+    crate::comparison::branch("taker left the club");
     *cell = -1;
     0
 }
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     if volta == 0 {
         if usar != 0 {
             if let Some(s) = espaco() {
-                crate::comparison::branch("instructions guardadas");
+                crate::comparison::branch("instructions stored");
                 if *u(s, 0x38) == 0 {
                     *ocupados = (*ocupados).wrapping_add(1);
                 }
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
                 }
             }
         }
-        crate::comparison::branch("instructions apagadas");
+        crate::comparison::branch("instructions deleted");
         for i in 0..20 {
             *instrucao(i) = u32::MAX;
         }
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     if usar != 0 {
         if let Some(s) = espaco() {
             if *u(s, 0x38) != 0 && *u(s, 0x30) == club as u32 && *u(s, 0x34) == person {
-                crate::comparison::branch("instructions devolvidas");
+                crate::comparison::branch("instructions returned");
                 for i in 0..20 {
                     *instrucao(i) = *u(s, 0x3c + 4 * i);
                 }
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
         for e in 0..16 {
             let s = this + e * 0x5c;
             if *u(s, 0x38) != 0 && *u(s, 0x30) == club as u32 && *u(s, 0x34) == person {
-                crate::comparison::branch("instructions liberadas");
+                crate::comparison::branch("instructions released");
                 *u(s, 0x38) = 0;
                 *ocupados = (*ocupados).wrapping_sub(1);
             }
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize
     if k == -1 {
         return 0;
     }
-    crate::comparison::branch("linha tatica lida");
+    crate::comparison::branch("tactics line read");
     core::ptr::copy((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *const u8, target, 0x91);
     1
 }
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usiz
     if k == -1 || k >= *((this + tactics_fields::ROW_COUNT) as *const i32) {
         return 0;
     }
-    crate::comparison::branch("linha tatica gravada");
+    crate::comparison::branch("tactics line saved");
     core::ptr::copy(source, (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);
     1
 }
@@ -381,24 +381,24 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     narrate(call, 0x1ff8, c, other);
                 };
                 if random(word(0x1ea, other)) > random(0x61a8) {
-                    crate::comparison::branch("simulacao rapida expulsao");
+                    crate::comparison::branch("quick simulation sending off");
                     let c = choose_by_condition(m, other as i8, 4);
                     add(jog(other, c as i8), -0xfa);
                     send_off(c, call);
                 } else if random(word(0x1ea, other)) > random(0x6a4) {
-                    crate::comparison::branch("simulacao rapida give_yellow_card");
+                    crate::comparison::branch("quick simulation give_yellow_card");
                     let c = choose_by_condition(m, other as i8, 2);
                     let p = jog(other, c as i8);
                     add(p, -0x32);
                     more((p + match_player::YELLOW_CARDS) as *mut u8);
                     more((mo + engine::FOULS) as *mut u8);
                     if byte(p, match_player::YELLOW_CARDS) == 2 {
-                        crate::comparison::branch("simulacao rapida segundo give_yellow_card");
+                        crate::comparison::branch("quick simulation second give_yellow_card");
                         send_off(c, call);
                     }
                     if *((mo + engine::CARDS) as *const u8) > 4 {
                         // abandonment: 3 x 0 for the side whose turn it is
-                        crate::comparison::branch("simulacao rapida abandono");
+                        crate::comparison::branch("quick simulation abandonment");
                         end = true;
                         *b(0xf5bd + other * 0x36) = 0;
                         let g = b(0xf5bd + side * 0x36);
@@ -469,14 +469,14 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         split_e(m, side as i8, a as i16);
                     }
                     if us + 0x2d > random((7 - local_28 as i32 * 3) * word(0x1e6, other)) {
-                        crate::comparison::branch("simulacao rapida gol");
+                        crate::comparison::branch("quick simulation goal");
                         let c9 = choose_by_role_c(m, side as u32, local_28 as u32);
                         let p = jog(side, c9 as i8);
                         more((p + match_player::GOALS) as *mut u8);
                         add(p, 0x1db);
                         goleiros(other);
                         if local_28 != 0 {
-                            crate::comparison::branch("simulacao rapida gol de penalty");
+                            crate::comparison::branch("quick simulation penalty goal");
                             narrate(call, 0x1fcf, c9, side);
                             more((ml + 0xf5c1) as *mut u8);
                             more((p + match_player::PENALTIES_TAKEN) as *mut u8);
@@ -508,14 +508,14 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                             }
                         }
                         if decides {
-                            crate::comparison::branch("simulacao rapida gol de ouro");
+                            crate::comparison::branch("quick simulation golden goal");
                             *b(engine::GOLDEN_GOAL_SCORED) = 1;
                             break 'rodadas;
                         }
                     } else {
                         split_f(m, other as i8, 0xe1);
                         if local_28 != 0 {
-                            crate::comparison::branch("simulacao rapida penalty perdido");
+                            crate::comparison::branch("quick simulation penalty missed");
                             let c = choose_by_role_c(m, side as u32, local_28 as u32);
                             narrate(call, 0x1fce, c, side);
                             let p = jog(side, c as i8);
@@ -565,12 +565,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     break 'periodo false;
                 }
                 if w38 & 0x80 != 0 {
-                    crate::comparison::branch("simulacao rapida prorrogacao com gol de ouro");
+                    crate::comparison::branch("quick simulation extra time with golden goal");
                     decides = true;
                     continue 'periodo;
                 }
                 if w38 & 2 != 0 {
-                    crate::comparison::branch("simulacao rapida prorrogacao");
+                    crate::comparison::branch("quick simulation extra time");
                     continue 'periodo;
                 }
                 if aggregate && w38 & 4 == 0 && *pb(0x44) != *pb(0x4b) && w38 & 0x4000 == 0 {
@@ -595,7 +595,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         }
     };
     if penalties {
-        crate::comparison::branch("simulacao rapida penalties");
+        crate::comparison::branch("quick simulation penalties");
         random(5);
         random(5);
         *pb(0x49) = random(5) as i8;
@@ -619,7 +619,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         let (r0, r1) = (*((c1 + club::REPUTATION) as *const i16) as i32, *((read_usize((pt()) + 0x20) + 0x80) as *const i16) as i32);
         let s = if r0 > r1 { Some(0) } else if r0 + 0xfa < r1 { Some(1) } else { None };
         if let Some(s) = s {
-            crate::comparison::branch("simulacao rapida gol do mando");
+            crate::comparison::branch("quick simulation home goal");
             more(b(0xf5be + s * 0x36));
             let c = choose_by_role_c(m, s as u32, local_28 as u32);
             let p = jog(s, c as i8);
@@ -659,7 +659,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     7..=9 => 5,
                     _ => continue,
                 };
-                crate::comparison::branch("simulacao rapida lesao");
+                crate::comparison::branch("quick simulation injury");
                 call(FN_CM3_MATCH_ENGINE_INJURE_PLAYER, m, [kind, g as u32, p as u32, 0, 0]);
             }
         }
@@ -670,7 +670,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let p = jog(s, i);
             let q = (p + match_player::MATCH_RATING) as *mut i16;
             if *(pt() as *const i32) == -2 && i < 11 {
-                crate::comparison::branch("simulacao rapida nota do amistoso");
+                crate::comparison::branch("quick simulation friendly rating");
                 let club = if s != 0 { read_usize((pt()) + 0x20) } else { read_usize((pt()) + 0x1c) };
                 let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(rdata::F64_40)) * read_f64_at(rdata::F64_50);
                 let r = *((club + club::REPUTATION) as *const i16) as f64 * read_f64_at(rdata::F64_1_6) - read_f64_at(rdata::F64_6000);
@@ -684,11 +684,11 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     }
     for (a, x) in [(0xf5e2, 0xf5e4), (0xf618, 0xf61a)] {
         if *w(a) < 10 {
-            crate::comparison::branch("simulacao rapida contador reiniciado");
+            crate::comparison::branch("quick simulation counter reset");
             *w(a) = 0x14;
             *w(x) = (random(6) + 12) as i16;
         } else if *w(a) == *w(x) {
-            crate::comparison::branch("simulacao rapida contador igual");
+            crate::comparison::branch("quick simulation counter equal");
             let r = random(3);
             *w(x) = (*w(x)).wrapping_add((-1i32).wrapping_sub(r) as i16);
         }
@@ -881,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
         let l = tactic_stats_row(this, c);
         record(game, c, pr);
         let m = |o: usize| (l + o) as *mut i16;
-        crate::comparison::branch("cpz_5 linha da tatica");
+        crate::comparison::branch("cpz_5 tactic row");
         *m(2) = (*m(2)).wrapping_add(1);
         let (pro, contra) = (reg[0x19] as i8, reg[0x1a] as i8);
         if pro > contra {
@@ -1057,7 +1057,7 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
         for tipo in 0..5u32 {
             for lado in 0..2u32 {
                 if exe::tactics_get_set_piece_taker(this, club, (tipo) as i32, (lado) as i32, (team) as i32) == person {
-                    crate::comparison::branch("cpx_9 batedor tirado");
+                    crate::comparison::branch("cpx_9 taker removed");
                     exe::tactics_set_set_piece_taker(this, club, tipo, lado, 0, team);
                     found = 1;
                 }
@@ -1158,7 +1158,7 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: u
     if k == -1 {
         return 0;
     }
-    crate::comparison::branch("cpq_13 limpar vaga");
+    crate::comparison::branch("cpq_13 clear slot");
     core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // the place
     if *((this + tactics_fields::UNDO_COUNT) as *const u8) != 0 {
         for e in 0..16 {
@@ -1201,14 +1201,14 @@ pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: us
         core::ptr::write_unaligned(cell(e), read_u32(person) as i32);
         return 1;
     }
-    crate::comparison::branch("cpq_13 batedor limpo");
+    crate::comparison::branch("cpq_13 taker cleared");
     core::ptr::write_unaligned(cell(e), -1); // no taker
     if e < 1 {
         let mut j = e + 1;
         while j < 2 {
             let c = core::ptr::read_unaligned(cell(j));
             if c > -1 {
-                crate::comparison::branch("cpq_13 batedor sobe");
+                crate::comparison::branch("cpq_13 taker moves up");
                 core::ptr::write_unaligned(cell(e), c);
                 core::ptr::write_unaligned(cell(j), -1);
                 return 1;
@@ -1264,11 +1264,11 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
     let row = table_row(t, l);
     let home = (row + tactics_row::PLAYMAKER + 4 * which as usize) as *mut u32;
     if !person.is_null() {
-        crate::comparison::branch("vaga extra gravada");
+        crate::comparison::branch("extra slot saved");
         core::ptr::write_unaligned(home, *person);
         return 1;
     }
-    crate::comparison::branch("vaga extra apagada");
+    crate::comparison::branch("extra slot deleted");
     core::ptr::write_unaligned(home, u32::MAX);
     if which == 0 {
         let second = core::ptr::read_unaligned((row + tactics_row::SECOND_PLAYMAKER) as *const u32);
@@ -1303,7 +1303,7 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 {
         let manager = read_usize(G_HUMAN_MANAGER);
         if exe::human_manager_is_on_holiday(manager, read_usize(club + club::MANAGER)) == 0 || exe::human_manager_get_holiday_option(manager, 2, read_usize(club + club::MANAGER)) != 0 {
-            crate::comparison::branch("cpx_8 tatica do humano");
+            crate::comparison::branch("cpx_8 human tactic");
             exe::human_manager_select_tactic_slot(manager, (team) as i32, club, read_usize(club + club::MANAGER)); // cpx8: the slot by team
             return exe::human_manager_get_active_tactic(manager, read_usize(club + club::MANAGER));
         }
@@ -1312,10 +1312,10 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     let index = read_i16(read_usize(this + tactics_fields::ROWS).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
     let prontas = read_i32(this + tactics_fields::PRESET_TACTIC_COUNT);
     if index < prontas { // cpx8: tática pronta ou própria
-        crate::comparison::branch("cpx_8 tatica pronta");
+        crate::comparison::branch("cpx_8 preset tactic");
         read_usize(this + tactics_fields::PRESET_TACTICS).wrapping_add(index.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto
     } else {
-        crate::comparison::branch("cpx_8 tatica propria");
+        crate::comparison::branch("cpx_8 own tactic");
         read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
     }
 }

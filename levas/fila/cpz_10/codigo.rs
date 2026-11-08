@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
                 break;
             }
             if cpz10_u(p + 0xcb) == cpz10_u(cpz10_d(cpz10_d(clube + 0x69) + 0x38)) { // cpz10: o comentarista local
-                crate::comparison::branch("cpz_10 comentarista local");
+                crate::comparison::branch("cpz_10 local commentator");
                 ids[n] = cpz10_sw(p) as i16;
                 n += 1;
                 if n >= 20 {
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
             }
             if *((p + 0xca) as *const i8) == t {
                 let aceita = if nacao == -1 {
-                    crate::comparison::branch("cpz_10 comentarista de qualquer nacao");
+                    crate::comparison::branch("cpz_10 commentator of any nation");
                     true // cpz10: qualquer nação
                 } else {
                     cpz10_u(p + 0xcf) as i32 == nacao
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn pick_random_pundit(this: usize, clube: usize, tipo: 
         return -1;
     }
     let sortear: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
-    crate::comparison::branch("cpz_10 sorteio do comentarista");
+    crate::comparison::branch("cpz_10 commentator draw");
     let r = sortear(n as i32); // cpz10: o sorteio do comentarista
     ids[r as usize] as i32
 }
@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: usize, clube:
     if clube == 0 || cpz10_d(clube + 0x53) == 0 || cpz10_d(clube + 0xcf) == 0 || pessoa == 0 {
         return;
     }
-    crate::comparison::branch("cpz_10 noticia da queixa a federacao");
+    crate::comparison::branch("cpz_10 news of the complaint to the federation");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)

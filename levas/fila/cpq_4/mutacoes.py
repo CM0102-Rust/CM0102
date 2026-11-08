@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpq4_maior_compra_sem_valor', '                cpq4_pi(r + 0x18, valor);',
      '                // mutacao: a maior compra sem o valor',
-     'cpq_4 maior compra'),
+     'cpq_4 biggest purchase'),
     ('cpq4_compras_de_2_em_2', '            cpq4_pw(r + 0xa0, cpq4_w(r + 0xa0).wrapping_add(1));',
      '            cpq4_pw(r + 0xa0, cpq4_w(r + 0xa0).wrapping_add(2)); // mutacao: de 2 em 2',
-     'cpq_4 compra'),
+     'cpq_4 purchase'),
     ('cpq4_venda_sem_receita', '            staff_records_add_i64(r + 0xac, valor);\n            if cpq4_d(t + 4) != 0 {\n                cpq4_pw(r + 0xa0,',
      '            // mutacao: sem a receita\n            if cpq4_d(t + 4) != 0 {\n                cpq4_pw(r + 0xa0,',
-     'cpq_4 venda'),
+     'cpq_4 sale'),
 ]

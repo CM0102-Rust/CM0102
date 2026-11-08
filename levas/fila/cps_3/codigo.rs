@@ -77,16 +77,16 @@ unsafe extern "thiscall" fn process_free_transfer_queue(this: usize) {
                 if cps3_b(e + 4) == 0 {
                     let r = sorteio(cps3_b(p + 0x5b) as i8 as i32);
                     if r < sorteio(0x14) || gosta(p, clube) != 0 { // cps3: o sorteio do desafeto
-                        crate::comparison::branch("cps_3 desafeto do tecnico");
+                        crate::comparison::branch("cps_3 manager grudge");
                         desafeto(p, cps3_d(clube + 0xcf), 1);
                     }
                 }
-                crate::comparison::branch("cps_3 liberado");
+                crate::comparison::branch("cps_3 released");
                 registros(cps3_d(0xdd7f00), p); // cps3: os registros da liberação
                 cancelar(this, p);
                 let comp = cps3_d(e + 5); // cps3: a compensação ao clube
                 if comp != 0 {
-                    crate::comparison::branch("cps_3 compensacao");
+                    crate::comparison::branch("cps_3 compensation");
                 }
                 liberar(this, p, clube, cps3_b(e + 4) as i8 as i32, comp, 0);
             }

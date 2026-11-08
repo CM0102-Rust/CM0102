@@ -48,7 +48,7 @@ unsafe fn serie_a_staff_records(this: usize, clube: usize, situacao: u32, fase: 
         // a fase de pontos corridos
         if st == 6 {
             if fazer {
-                crate::comparison::branch("cqj_9 serie a classificado");
+                crate::comparison::branch("cqj_9 serie a qualified");
                 bra_nat_first_add_qualified_record(clube, comp, 0x41c, 0, 0x28);
             }
         } else if st == 3 && fazer {
@@ -63,7 +63,7 @@ unsafe fn serie_a_staff_records(this: usize, clube: usize, situacao: u32, fase: 
     if st == 1 {
         let l = bra_nat_first_find_club_row(this, clube);
         if fazer {
-            crate::comparison::branch("cqj_9 serie a campeao");
+            crate::comparison::branch("cqj_9 serie a champion");
             add_champions_record(clube, comp); // cqj9: o registro do campeão da Série A
             *((l + 0x37) as *mut u8) = 5;
         }
@@ -132,7 +132,7 @@ unsafe fn serie_c_staff_records(this: usize, clube: usize, situacao: u32, fase: 
             k += 1;
         }
         if achada != 0 && fazer {
-            crate::comparison::branch("cqj_9 serie c promovido");
+            crate::comparison::branch("cqj_9 serie c promoted");
             *((achada + 0x37) as *mut u8) = 0; // cqj9: o destino de quem sobe da Série C
         }
         return (0, achada, 0);
@@ -159,7 +159,7 @@ unsafe fn baiano_staff_records(this: usize, clube: usize, situacao: u32, fase: u
                 bra_nat_first_add_qualified_record(clube, comp, 0, 0x82, 0x32);
             }
         } else if st == 3 && fazer {
-            crate::comparison::branch("cqj_9 baiano rebaixado");
+            crate::comparison::branch("cqj_9 baiano relegated");
             bra_nat_first_add_relegation_record(clube, comp); // cqj9: o rebaixado do Baiano
         }
         return (0, 0, 0);

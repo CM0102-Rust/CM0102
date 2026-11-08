@@ -8,9 +8,9 @@
 # - Estaduais com o slot do Baiano (sete): o rebaixado nao ganha o registro de rebaixamento.
 MUTACOES = [
     ('cqj9_campeao_serie_a', 'add_champions_record(clube, comp); // cqj9: o registro do campeão da Série A',
-     '// mutacao: sem o registro do campeão da Série A', 'cqj_9 serie a campeao'),
+     '// mutacao: sem o registro do campeão da Série A', 'cqj_9 serie a champion'),
     ('cqj9_promovido_serie_c', '*((achada + 0x37) as *mut u8) = 0; // cqj9: o destino de quem sobe da Série C',
-     '*((achada + 0x37) as *mut u8) = 1; // mutacao: o destino de quem sobe da Série C', 'cqj_9 serie c promovido'),
+     '*((achada + 0x37) as *mut u8) = 1; // mutacao: o destino de quem sobe da Série C', 'cqj_9 serie c promoted'),
     ('cqj9_rebaixado_baiano', 'bra_nat_first_add_relegation_record(clube, comp); // cqj9: o rebaixado do Baiano',
-     '// mutacao: sem o registro do rebaixado do Baiano', 'cqj_9 baiano rebaixado'),
+     '// mutacao: sem o registro do rebaixado do Baiano', 'cqj_9 baiano relegated'),
 ]

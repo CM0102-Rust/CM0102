@@ -26,7 +26,7 @@ unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
     if vaga == 0 || entrada == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada);
     }
-    crate::comparison::branch("telas abrir os ultimos placares");
+    crate::comparison::branch("screens open the latest scores");
     let abrir: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(0x7fe4a0usize);
     if abrir(SCREEN_MANAGER, vaga, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
         return;
@@ -43,7 +43,7 @@ unsafe extern "C" fn open_latest_scores(vaga: u32, entrada: usize) {
 /// placares (0x723d20, de 0x50 a 0x217) e os botões de voltar e avançar (0x5edcc0, desligados quando o
 /// gerente não tem para onde ir).
 unsafe extern "C" fn build_latest_scores() {
-    crate::comparison::branch("telas montar os ultimos placares");
+    crate::comparison::branch("screens build the latest scores");
     let ler: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x7ff010usize);
     let entrada = ler(SCREEN_MANAGER, 0xe);
     let id = *(entrada as *const i32);
@@ -74,7 +74,7 @@ unsafe extern "C" fn build_latest_scores() {
 /// competição (0x725860) decide; sem decisão, −11 com [0xb6b7b0] ou redesenha com [0xb6b7a8]
 /// (0x802d00). Por fim a barra de menu (0x7615d0, senão 0x7643d0).
 unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond aos ultimos placares");
+    crate::comparison::branch("screens respond latest scores");
     let g = |a: usize| *(a as *const u32);
     if g(0xb77c84) == 0 {
         let m = g(0xb67a50) as usize;

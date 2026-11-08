@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cps4_percentual_0_9', 'cps4_por(o + 0x1b, offer_value_times(o, 0.8)); // cps4: o valor do write_percent_pair',
      'cps4_por(o + 0x1b, offer_value_times(o, 0.9)); // mutacao: 0,9',
-     'cps_4 write_percent_pair da venda'),
+     'cps_4 write_percent_pair of the sale'),
     ('cps4_selecao_0_9', 'cps4_por(o + 0x1b, offer_value_times(o, 0.8)); // cps4: o valor do prêmio na seleção',
      'cps4_por(o + 0x1b, offer_value_times(o, 0.9)); // mutacao: 0,9',
-     'cps_4 premio na selecao'),
+     'cps_4 national team bonus'),
     ('cps4_time_0_9', 'cps4_por(o + 0x1b, offer_value_times(o, 0.8)); // cps4: o valor do prêmio no time',
      'cps4_por(o + 0x1b, offer_value_times(o, 0.9)); // mutacao: 0,9',
-     'cps_4 premio no time'),
+     'cps_4 team bonus'),
 ]

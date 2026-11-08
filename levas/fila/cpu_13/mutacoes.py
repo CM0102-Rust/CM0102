@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpu13_base_15', 'esi = soma / 16; // cpu13: a base',
      'esi = soma / 15; // mutacao: / 15',
-     'cpu_13 base pela reputação'),
+     'cpu_13 base by reputation'),
     ('cpu13_faixa_do_meio', 'esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a band do meio',
      'esi.wrapping_mul(5).wrapping_sub(4900) // mutacao: 100 a mais',
-     'cpu_13 band de 3000 a 5000'),
+     'cpu_13 band from 3000 to 5000'),
     ('cpu13_rico', 'let (x, y) = (v * read_f64_at(0x968fa0), edi.wrapping_add(250) as f64); // cpu13: o rico',
      'let (x, y) = (v * (read_f64_at(0x968fa0) + 0.025), edi.wrapping_add(250) as f64); // mutacao: 1,05',
-     'cpu_13 clube rico'),
+     'cpu_13 rich club'),
 ]

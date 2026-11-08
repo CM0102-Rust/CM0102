@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpq7_sem_permissao', 'dar(this, pessoa, cpq7_d(clube + 0x53), ano, 0, 1); // a permissão nova',
      'let _ = (dar, ano); // mutacao: sem a permissao nova',
-     'cpq_7 permissao nova'),
+     'cpq_7 new permit'),
     ('cpq7_sem_luvas', 'luvas(fin, valor); // as luvas',
      'let _ = (luvas, fin, valor); // mutacao: sem luvas',
-     'cpq_7 luvas'),
+     'cpq_7 signing-on fee'),
     ('cpq7_fator', 'cpq7_d(oferta + 0x20), 1.0f64, 2) != 0 {',
      'cpq7_d(oferta + 0x20), 1.1f64, 2) != 0 { // mutacao: fator 1,1',
-     'cpq_7 contrato da oferta'),
+     'cpq_7 offer contract'),
 ]

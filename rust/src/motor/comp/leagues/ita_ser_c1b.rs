@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_c1b(this: usize, year: 
 /// [0x9cf578] e abaixo a C2/A ([0x9cf580]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c da
 /// nação [inferência]), senão −1.
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_6 regras da c1b");
+    crate::comparison::branch("cqi_6 c1b rules");
     ita_ser_a_apply_league_rules(this, &serie_c1b_rules(this))
 }
 

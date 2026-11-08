@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
                 }
             } else {
                 if enter_libertadores(cqj1_clube(cqj1_d(0x9d0274)), 2) {
-                    crate::comparison::branch("cqj_1 brasil fixo");
+                    crate::comparison::branch("cqj_1 brazil fixed");
                     n = 1; // cqj1: o Palmeiras
                 }
                 if enter_libertadores(cqj1_clube(cqj1_d(0x9d026c)), 2) {
@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubes: usiz
         while (n as i8) < *((e + 8) as *const i8) {
             let c = enesimo(this, clubes, conta, cqj1_d(e), 1, 1, 0);
             if c != 0 && cqj1_d(c + 0x1db) == u32::MAX {
-                crate::comparison::branch("cqj_1 cota da nacao");
+                crate::comparison::branch("cqj_1 nation quota");
                 enter_libertadores(c, 2); // cqj1: a vaga da cota
             }
             n = n.wrapping_add(1);
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this: usize, cl
         loop {
             let c = cqj1_d(p) as usize;
             if sem_vaga != 0 && c != 0 && cqj1_d(c + 0x1db) != u32::MAX {
-                crate::comparison::branch("cqj_1 ja com vaga");
+                crate::comparison::branch("cqj_1 already with a place");
                 p += 12; // cqj1: pula o clube que já tem vaga
             } else if sem_humano != 0 && c != 0 && humano(c, 0, 1, 0, 0) != 0 {
                 p += 12;

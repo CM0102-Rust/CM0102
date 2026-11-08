@@ -13,7 +13,7 @@ use super::*;
 /// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
 /// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
 pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
-    crate::comparison::branch("save limpar temporarios");
+    crate::comparison::branch("save clear temporaries");
     let global = 0xde279c as *mut u8;
     *global = 0;
     let variavel = exe::utils_get_folder_for_key(0x987da0);

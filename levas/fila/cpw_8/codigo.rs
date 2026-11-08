@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
                 } else {
                     let (f, mc) = (cpw8_w(rec + 8) as i32, cpw8_w(rec + 0xa) as i32);
                     if mc.wrapping_mul(f) / 10000 < 8000 { // cpw8: a forma abaixo de 80% na pré-temporada
-                        crate::comparison::branch("cpw_8 sorteio da forma");
+                        crate::comparison::branch("cpw_8 form draw");
                         let r = cpw8_sortear(2);
                         l38 = (r + l3c) / 2;
                         l3c -= l38;
@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
     let n = natural as i32;
     let piso = ((n * 25 / 20 + 15) * 100) as i16 as i32;
     if l34 != 0 {
-        crate::comparison::branch("cpw_8 perda");
+        crate::comparison::branch("cpw_8 loss");
     }
     let mut x = f.wrapping_sub(66i32.wrapping_mul(l34)); // cpw8: a perda por dia parado
     if x < piso {
@@ -244,7 +244,7 @@ unsafe extern "thiscall" fn update_player_fitness(this: usize, pessoa: usize) {
         x = teto16;
     }
     if l38 != 0 {
-        crate::comparison::branch("cpw_8 recuperacao");
+        crate::comparison::branch("cpw_8 recovery");
     }
     x = x.wrapping_add(s.wrapping_mul(l38));
     if f > 0x267a {
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn compare_update_player_fitness(this: usize, pessoa: u
         END_INJURY_DRY_RUN = false;
     });
     if END_INJURY_REACHED {
-        crate::comparison::branch("cpw_8 fim da lesao so na original");
+        crate::comparison::branch("cpw_8 end of injury only in the original");
         return;
     }
     SCOREBOARD.record(igual, || format!("update_player_fitness(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));

@@ -1,0 +1,853 @@
+cqd_10 aposentadoria desfeita	cqd_10 retirement undone
+cqd_10 dia do regen sorteado	cqd_10 regen day drawn
+cqd_10 jogador para o banco	cqd_10 player to the bench
+cqd_10 mudou de clube e fica	cqd_10 changed club and stays
+cqd_10 noticia da aposentadoria	cqd_10 retirement news
+cqd_10 noticia do jovem promovido	cqd_10 promoted youngster news
+cqd_10 refeito como nao jogador	cqd_10 redone as non-player
+cqd_10 sai do elenco	cqd_10 leaves the squad
+cqd_10 seguro da aposentadoria	cqd_10 retirement insurance
+cqd_10 tira o contrato	cqd_10 removes the contract
+cqd_10 vira tecnico	cqd_10 becomes coach
+cqd_11 falta tirada	cqd_11 absence removed
+cqd_11 noticia da falta	cqd_11 absence news
+cqd_11 registro da falta tirado	cqd_11 absence record removed
+cqd_11 relator tecnico	cqd_11 technical reporter
+cqd_13 contrato do destacado	cqd_13 standout player contract
+cqd_13 elenco do campeao da copa	cqd_13 cup winner squad
+cqd_13 injury_word_0c do campeao da copa	cqd_13 cup winner injury_word_0c
+cqd_13 injury_word_0c do campeao da liga	cqd_13 league winner injury_word_0c
+cqd_13 jogador destacado do campeao	cqd_13 champion standout player
+cqd_13 moral do elenco campeao da copa	cqd_13 cup winner squad morale
+cqd_2 clube chega	cqd_2 club arrives
+cqd_2 empréstimo	cqd_2 loan
+cqd_2 lance aceito	cqd_2 bid accepted
+cqd_2 troca cara	cqd_2 expensive swap
+cqd_5 jogo da tabela	cqd_5 fixture list match
+cqd_5 jogos para a tv	cqd_5 matches for tv
+cqd_5 ordem sorteada	cqd_5 order drawn
+cqd_6 amistoso descartado	cqd_6 friendly discarded
+cqd_6 jogo carregado	cqd_6 match loaded
+cqd_6 reservas de amanha	cqd_6 tomorrow reserves
+cqd_7 time na primeira rodada	cqd_7 team in the first round
+cqd_7 vaga na rodada seguinte	cqd_7 place in the next round
+cqd_8 programa do humano	cqd_8 human schedule
+cqd_8 progresso desce	cqd_8 progress goes down
+cqd_8 progresso sobe	cqd_8 progress goes up
+cqd_8 reclama do treino de posicao	cqd_8 complains about position training
+cqd_8 saiu do clube humano	cqd_8 left the human club
+cqd_8 treino de posicao acabou	cqd_8 position training ended
+cqd_9 devolver	cqd_9 give back
+cqd_9 tirar	cqd_9 remove
+cqe_1 aceita	cqe_1 accepts
+cqe_1 contraproposta	cqe_1 counter-offer
+cqe_1 preço pelo k	cqe_1 price by k
+cqe_2 interesse	cqe_2 interest
+cqe_2 jogador na troca	cqe_2 player in the swap
+cqe_2 nota da troca	cqe_2 swap rating
+cqe_2 opção montada	cqe_2 option built
+cqe_2 vaga com alvo	cqe_2 slot with target
+cqe_3 dobro pela liga	cqe_3 double by league
+cqe_3 sorteio do empréstimo	cqe_3 loan draw
+cqe_3 sorteio do lance	cqe_3 bid draw
+cqe_4 base de outro clube	cqe_4 youth from another club
+cqe_4 fator da injury_word_0c	cqe_4 injury_word_0c factor
+cqe_4 salario	cqe_4 wage
+cqe_5 cinco na temporada	cqe_5 five in the season
+cqe_5 dois ao mesmo tempo	cqe_5 two at the same time
+cqe_5 emprestimo contado	cqe_5 loan counted
+cqe_5 fora da janela	cqe_5 outside the window
+cqe_5 mesma divisao	cqe_5 same division
+cqe_6 escocia ate o fim da temporada	cqe_6 scotland until end of season
+cqe_6 escocia mesma divisao	cqe_6 scotland same division
+cqe_6 espanha fora da janela	cqe_6 spain outside the window
+cqe_6 espanha mesma divisao	cqe_6 spain same division
+cqe_6 inglaterra periodo da base	cqe_6 england youth period
+cqe_6 inglaterra tres meses	cqe_6 england three months
+cqe_6 irlanda cinco na temporada	cqe_6 ireland five in the season
+cqe_6 irlanda mesma divisao	cqe_6 ireland same division
+cqe_6 italia fora da janela	cqe_6 italy outside the window
+cqe_6 italia quatro emprestados	cqe_6 italy four loaned out
+cqf_1 aceitar empréstimo	cqf_1 accept loan
+cqf_1 agenda pelo prazo	cqf_1 schedule by deadline
+cqf_1 mesma vaga	cqf_1 same slot
+cqf_1 ofertas rivais ligadas	cqf_1 rival offers linked
+cqf_10 avaliar jogador	cqf_10 evaluate player
+cqf_10 historico do clube	cqf_10 club history
+cqf_10 relatorio	cqf_10 report
+cqf_11 noticia da convocacao	cqf_11 call-up news
+cqf_11 noticia do clube	cqf_11 club news
+cqf_12 busca do humano	cqf_12 human search
+cqf_12 pedido processado	cqf_12 request processed
+cqf_12 relatorio do pedido	cqf_12 request report
+cqf_2 empréstimo	cqf_2 loan
+cqf_2 empréstimo na hora	cqf_2 immediate loan
+cqf_2 empréstimo recusado	cqf_2 loan refused
+cqf_2 interessados no listado	cqf_2 interested in listed player
+cqf_2 notícia do listado	cqf_2 listed player news
+cqf_2 seguir a oferta	cqf_2 follow the offer
+cqf_3 acima do teto	cqf_3 above the cap
+cqf_3 fim no ano que vem	cqf_3 ends next year
+cqf_3 teto pelo total	cqf_3 cap by total
+cqf_4 dia do sorteio	cqf_4 draw day
+cqf_4 sorteio de 2002	cqf_4 2002 draw
+cqf_4 vaga no grupo	cqf_4 place in the group
+cqf_5 competição da nação	cqf_5 nation competition
+cqf_5 time do grupo	cqf_5 group team
+cqf_5 time do grupo um	cqf_5 group one team
+cqf_6 nação classificada	cqf_6 qualified nation
+cqf_6 sem cabeças de chave em 2002	cqf_6 no seeds in 2002
+cqf_6 tabela das rodadas	cqf_6 round fixtures
+cqf_7 nota do treinador	cqf_7 coach rating
+cqf_7 programa do elenco novo	cqf_7 new squad schedule
+cqf_8 temporada atual	cqf_8 current season
+cqf_8 temporada do historico	cqf_8 history season
+cqf_9 acerto pelas ferias	cqf_9 fitness by holidays
+cqf_9 felicidade pelas ferias	cqf_9 happiness by holidays
+cqf_9 lesao pelo nome	cqf_9 injury by name
+cqf_9 tratamento	cqf_9 treatment
+cqf_9 volta da lesao	cqf_9 return from injury
+cqg_1 empréstimo	cqg_1 loan
+cqg_1 fim em 4 semanas	cqg_1 ends in 4 weeks
+cqg_1 mesmo clube	cqg_1 same club
+cqg_1 vaga livre	cqg_1 free slot
+cqg_1 valor na pessoa	cqg_1 value on the person
+cqg_10 amistoso fora do calendario	cqg_10 friendly outside the calendar
+cqg_10 competicao do torneio desfeita	cqg_10 tournament competition undone
+cqg_10 jogo da selecao na vespera	cqg_10 national team match the day before
+cqg_10 noticia do amistoso cancelado	cqg_10 cancelled friendly news
+cqg_10 noticia do torneio cancelado	cqg_10 cancelled tournament news
+cqg_10 torneio cancelado	cqg_10 tournament cancelled
+cqg_10 vaga do amistoso livre	cqg_10 friendly slot free
+cqg_4 campeão	cqg_4 champion
+cqg_4 clube sorteado	cqg_4 club drawn
+cqg_4 metade sorteada	cqg_4 half drawn
+cqg_4 parceiro da mesma nação	cqg_4 partner from same nation
+cqg_4 posição na preliminar	cqg_4 position in the preliminary
+cqg_4 prêmio da fase de grupos	cqg_4 group stage prize
+cqg_4 troca pela nação	cqg_4 swap by nation
+cqg_6 grupo 0xa	cqg_6 group 0xa
+cqg_6 grupo escolhido	cqg_6 group chosen
+cqg_6 par do mesmo grupo	cqg_6 pair from same group
+cqg_6 prêmio da segunda fase	cqg_6 second stage prize
+cqg_6 sorteio de novo	cqg_6 redraw
+cqg_6 troca da ordem	cqg_6 order swap
+cqg_7 habilidade	cqg_7 ability
+cqg_7 idade 16 a 18	cqg_7 age 16 to 18
+cqg_7 injury_word_0c do regen	cqg_7 regen injury_word_0c
+cqg_7 melhor clube	cqg_7 best club
+cqg_7 nacao grande	cqg_7 big nation
+cqg_7 nacao pequena	cqg_7 small nation
+cqg_7 saiu da contest	cqg_7 left the contest
+cqg_8 instrucao 0x2000	cqg_8 instruction 0x2000
+cqg_8 instructions antigas	cqg_8 old instructions
+cqg_8 posicoes refeitas	cqg_8 positions redone
+cqg_9 arbitro mantido	cqg_9 referee kept
+cqg_9 parte da vaga	cqg_9 part of the slot
+cqg_9 vaga de competicao	cqg_9 competition slot
+cqh_4 expectativa do clube	cqh_4 club expectation
+cqh_4 tabela das rodadas	cqh_4 round fixtures
+cqh_4 técnico sai	cqh_4 manager leaves
+cqh_6 clube na lista	cqh_6 club in the list
+cqh_6 liga de baixo completa	cqh_6 lower league complete
+cqh_6 progresso na copa	cqh_6 cup progress
+cqh_7 ordem crescente	cqh_7 ascending order
+cqh_7 ordem decrescente	cqh_7 descending order
+cqh_8 categoria arquivada	cqh_8 archived category
+cqh_8 jogos pelo clube	cqh_8 matches by club
+cqh_8 no vazio	cqh_8 on empty
+cqh_9 jogador do clube pelo nome	cqh_9 club player by name
+cqh_9 pessoa pelo nome	cqh_9 person by name
+cqh_9 texto entre aspas	cqh_9 quoted text
+cqh_9 tipo da linha	cqh_9 line type
+cqi_1 intertoto da franca	cqi_1 france intertoto
+cqi_1 ja com vaga	cqi_1 already with a place
+cqi_1 soma dos coeficientes	cqi_1 coefficient sum
+cqi_10 caiu na uefa	cqi_10 dropped into uefa
+cqi_10 caiu no intertoto	cqi_10 dropped into intertoto
+cqi_10 vencedor do intertoto	cqi_10 intertoto winner
+cqi_10 vencedor na uefa	cqi_10 winner in uefa
+cqi_11 campeao da mls	cqi_11 mls champion
+cqi_11 classificados	cqi_11 qualified
+cqi_11 dia da selecao	cqi_11 national team day
+cqi_12 regras da copa da italia	cqi_12 italy cup rules
+cqi_12 regras da copa da serie c	cqi_12 serie c cup rules
+cqi_12 regras da copa dos campeoes	cqi_12 champions cup rules
+cqi_2 clube na intertoto	cqi_2 club in intertoto
+cqi_2 duas nos grupos	cqi_2 two in the groups
+cqi_2 fase cheia	cqi_2 full stage
+cqi_2 nivel da divisao	cqi_2 division level
+cqi_3 fair play	cqi_3 fair play
+cqi_3 tres na primeira fase	cqi_3 three in the first stage
+cqi_3 virada da classificacao	cqi_3 qualification rollover
+cqi_3 voluntario ingles	cqi_3 english volunteer
+cqi_4 regras da first	cqi_4 first division rules
+cqi_4 regras da premier	cqi_4 premier rules
+cqi_4 regras da second	cqi_4 second division rules
+cqi_4 regras da third	cqi_4 third division rules
+cqi_5 tabela cheia	cqi_5 full table
+cqi_6 regras da c1a	cqi_6 c1a rules
+cqi_6 regras da c1b	cqi_6 c1b rules
+cqi_6 regras da serie a	cqi_6 serie a rules
+cqi_6 regras da serie b	cqi_6 serie b rules
+cqi_7 regras da serie a	cqi_7 serie a rules
+cqi_7 regras da serie b	cqi_7 serie b rules
+cqi_7 regras da serie c	cqi_7 serie c rules
+cqi_8 regras do catarinense	cqi_8 catarinense rules
+cqi_8 regras do centro-oeste	cqi_8 centro-oeste rules
+cqi_8 regras do gaucho	cqi_8 gaucho rules
+cqi_9 regras do carioca	cqi_9 carioca rules
+cqi_9 regras do paranaense	cqi_9 paranaense rules
+cqi_9 regras do pernambucano	cqi_9 pernambucano rules
+cqj_1 brasil fixo	cqj_1 brazil fixed
+cqj_1 cota da nacao	cqj_1 nation quota
+cqj_1 ja com vaga	cqj_1 already with a place
+cqj_10 africana fora no mata-mata	cqj_10 african out in knockout
+cqj_10 africana fora nos grupos	cqj_10 african out in groups
+cqj_10 copa america fora nos grupos	cqj_10 copa america out in groups
+cqj_10 oceania na copa do mundo	cqj_10 oceania in the world cup
+cqj_11 regras da libertadores	cqj_11 libertadores rules
+cqj_11 regras da merconorte	cqj_11 merconorte rules
+cqj_11 regras da oceania	cqj_11 oceania rules
+cqj_12 regras da america do sul	cqj_12 south america rules
+cqj_12 regras da asia	cqj_12 asia rules
+cqj_12 regras da europa	cqj_12 europe rules
+cqj_2 clube mexicano	cqj_2 mexican club
+cqj_2 nivel da divisao	cqj_2 division level
+cqj_2 tira a vaga	cqj_2 removes the place
+cqj_2 virada do ano	cqj_2 year rollover
+cqj_3 edicao seguinte	cqj_3 next edition
+cqj_3 sede padrao	cqj_3 default host
+cqj_3 sede sorteada	cqj_3 host drawn
+cqj_3 votacao aberta	cqj_3 voting open
+cqj_4 tabela da serie a	cqj_4 serie a fixtures
+cqj_5 regras da primeira	cqj_5 first division rules
+cqj_5 regras da segunda	cqj_5 second division rules
+cqj_5 regras do national	cqj_5 national rules
+cqj_6 tabela da primeira	cqj_6 first division fixtures
+cqj_6 tabela da segunda	cqj_6 second division fixtures
+cqj_7 regras da j1	cqj_7 j1 rules
+cqj_7 regras da j2	cqj_7 j2 rules
+cqj_7 regras do goiano	cqj_7 goiano rules
+cqj_8 historico do estadual	cqj_8 state league history
+cqj_8 historico do primeiro estagio	cqj_8 first stage history
+cqj_8 regras da mls	cqj_8 mls rules
+cqj_8 regras da nsl	cqj_8 nsl rules
+cqj_9 baiano rebaixado	cqj_9 baiano relegated
+cqj_9 serie a campeao	cqj_9 serie a champion
+cqj_9 serie a classificado	cqj_9 serie a qualified
+cqj_9 serie c promovido	cqj_9 serie c promoted
+cqk_1 australia	cqk_1 australia
+cqk_1 eua	cqk_1 usa
+cqk_1 inglaterra	cqk_1 england
+cqk_10 regras da copa africana	cqk_10 african cup rules
+cqk_10 regras da copa america	cqk_10 copa america rules
+cqk_10 regras da oceania	cqk_10 oceania rules
+cqk_11 campeao da libertadores	cqk_11 libertadores champion
+cqk_11 classificados da libertadores	cqk_11 libertadores qualified
+cqk_11 mata-mata da libertadores	cqk_11 libertadores knockout
+cqk_12 grupo a da copa africana	cqk_12 african cup group a
+cqk_12 mata-mata da copa africana	cqk_12 african cup knockout
+cqk_2 espanha	cqk_2 spain
+cqk_2 franca	cqk_2 france
+cqk_2 italia	cqk_2 italy
+cqk_3 alemanha	cqk_3 germany
+cqk_3 brasil	cqk_3 brazil
+cqk_3 escocia	cqk_3 scotland
+cqk_4 regras da divisao de baixo	cqk_4 lower division rules
+cqk_4 regras da primera	cqk_4 primera rules
+cqk_4 regras da segunda	cqk_4 segunda rules
+cqk_5 rebaixamento na c2a	cqk_5 relegation in c2a
+cqk_5 tabela da primera	cqk_5 primera fixtures
+cqk_5 vaga no play-off da c2a	cqk_5 c2a play-off place
+cqk_6 band do play-out	cqk_6 play-out band
+cqk_6 tabela francesa de baixo	cqk_6 french lower fixtures
+cqk_7 campeao do estadual	cqk_7 state league champion
+cqk_7 classificado do estadual	cqk_7 state league qualified
+cqk_7 eliminado do estadual	cqk_7 state league eliminated
+cqk_7 nsl classificado	cqk_7 nsl qualified
+cqk_7 rebaixado do estadual	cqk_7 state league relegated
+cqk_8 mineiro como vem	cqk_8 mineiro as it comes
+cqk_8 mineiro terceiro abaixo de 3	cqk_8 mineiro third below 3
+cqk_8 mls segundo	cqk_8 mls second
+cqk_8 serie c segundo 3	cqk_8 serie c second 3
+cqk_9 conferencia 0x413	cqk_9 conference 0x413
+cqk_9 mls classificado	cqk_9 mls qualified
+cqk_9 mls segunda conferencia	cqk_9 mls second conference
+cql_1 grava no contrato	cql_1 writes into contract
+cql_1 numero do contrato	cql_1 contract number
+cql_1 usa numeros	cql_1 uses numbers
+cql_2 escala	cql_2 picks the team
+cql_2 numero da posicao	cql_2 position number
+cql_2 perde o numero	cql_2 loses the number
+cql_2 regrava negativo	cql_2 rewrites negative
+cql_3 inscreve depois	cql_3 registers later
+cql_3 inscreve na etapa 1	cql_3 registers in stage 1
+cql_3 numera a liga	cql_3 numbers the league
+cql_3 numero do banco	cql_3 bench number
+cql_4 fim da serie a	cql_4 serie a end
+cql_4 fim da serie b	cql_4 serie b end
+cql_4 resultado do desempate	cql_4 tiebreak result
+cql_5 fases do fim da liga	cql_5 league end stages
+cql_6 divisao inglesa nova	cql_6 new english division
+cql_7 serie c sorteio	cql_7 serie c draw
+cqm_1 croacia	cqm_1 croatia
+cqm_1 holanda	cqm_1 netherlands
+cqm_1 irlanda	cqm_1 ireland
+cqm_10 caiu da premier	cqm_10 relegated from premier
+cqm_10 clube nas copas europeias	cqm_10 club in european cups
+cqm_10 clubes da supercopa inglesa	cqm_10 english super cup clubs
+cqm_10 dobradinha inglesa	cqm_10 english double
+cqm_10 inscritos da copa da liga	cqm_10 league cup entrants
+cqm_10 segunda chave do trofeu da liga	cqm_10 league trophy second section
+cqm_11 clubes da supercopa francesa	cqm_11 french super cup clubs
+cqm_11 dobradinha francesa	cqm_11 french double
+cqm_11 inscritos da copa da franca	cqm_11 french cup entrants
+cqm_11 inscritos da copa da liga francesa	cqm_11 french league cup entrants
+cqm_12 clubes da supercopa da espanha	cqm_12 spanish super cup clubs
+cqm_12 clubes da supercopa do japao	cqm_12 japanese super cup clubs
+cqm_12 dobradinha espanhola	cqm_12 spanish double
+cqm_12 dobradinha japonesa	cqm_12 japanese double
+cqm_12 tabela do jogo das estrelas	cqm_12 all-star game fixture
+cqm_2 irlanda_do_norte	cqm_2 northern_ireland
+cqm_2 noruega	cqm_2 norway
+cqm_2 pais_de_gales	cqm_2 wales
+cqm_3 finlandia	cqm_3 finland
+cqm_3 polonia	cqm_3 poland
+cqm_3 turquia	cqm_3 turkey
+cqm_4 divisao italiana nova	cqm_4 new italian division
+cqm_5 divisao de baixo espanhola	cqm_5 spanish lower division
+cqm_5 divisao nova	cqm_5 new division
+cqm_6 divisao de baixo nova	cqm_6 new lower division
+cqm_6 tabela da divisao de baixo	cqm_6 lower division fixtures
+cqm_6 tabela da segunda	cqm_6 second division fixtures
+cqm_6 time b na segunda	cqm_6 b team in the second division
+cqm_9 nsl cheia	cqm_9 nsl full
+cqn_1 argentina	cqn_1 argentina
+cqn_1 coreia	cqn_1 korea
+cqn_1 portugal	cqn_1 portugal
+cqn_10 convocacao do jogo das estrelas	cqn_10 all-star game call-up
+cqn_10 inscricoes da copa da inglaterra	cqn_10 fa cup entries
+cqn_10 virada da copa da liga	cqn_10 league cup rollover
+cqn_12 classe da j1 na copa do imperador	cqn_12 j1 class in emperor cup
+cqn_12 inscritos da copa do imperador	cqn_12 emperor cup entrants
+cqn_12 inscritos da copa dos eua	cqn_12 us cup entrants
+cqn_12 semente da j1	cqn_12 j1 seed
+cqn_2 belgica	cqn_2 belgium
+cqn_2 grecia	cqn_2 greece
+cqn_2 russia	cqn_2 russia
+cqn_3 entra na lista	cqn_3 enters the list
+cqn_3 estadio pequeno	cqn_3 small stadium
+cqn_3 inscreve o clube	cqn_3 registers the club
+cqn_4 destrutor da cfa	cqn_4 cfa destructor
+cqn_4 destrutor da divisao de baixo	cqn_4 lower division destructor
+cqn_4 liga de fundo francesa	cqn_4 french bottom league
+cqn_5 calendario fixo	cqn_5 fixed calendar
+cqn_6 calendario fixo	cqn_6 fixed calendar
+cqo_1 estadio do mandante	cqo_1 home team stadium
+cqo_1 estadio nacional	cqo_1 national stadium
+cqo_1 neutro pela nota	cqo_1 neutral by rating
+cqo_1 rodizio	cqo_1 rotation
+cqo_1 uma sede	cqo_1 single host
+cqo_11 clubes da supercopa da italia	cqo_11 italian super cup clubs
+cqo_11 completar com a c1	cqo_11 fill with c1
+cqo_11 dezenas da copa da serie c	cqo_11 serie c cup tens
+cqo_11 dobradinha italiana	cqo_11 italian double
+cqo_11 potes da copa da italia	cqo_11 italy cup pots
+cqo_11 vagas do fim da copa da serie c	cqo_11 serie c cup final places
+cqo_12 regras da copa do brasil	cqo_12 copa do brasil rules
+cqo_12 times da copa do brasil	cqo_12 copa do brasil teams
+cqo_13 convidados da mercosul	cqo_13 mercosul guests
+cqo_2 classico	cqo_2 derby
+cqo_2 posicao de cima	cqo_2 top position
+cqo_3 noticia das sedes	cqo_3 hosts news
+cqo_3 sem o arquivo	cqo_3 without the file
+cqo_3 sorteio do dia	cqo_3 day draw
+cqo_5 calendario da c1	cqo_5 c1 calendar
+cqo_5 play-offs da c1	cqo_5 c1 play-offs
+cqo_6 calendario da primeira francesa	cqo_6 french first division calendar
+cqo_6 jogo-desempate italiano	cqo_6 italian tiebreak match
+cqo_7 final	cqo_7 final
+cqo_7 historico da final	cqo_7 final history
+cqo_7 mesmo campeao	cqo_7 same champion
+cqo_7 premios	cqo_7 prizes
+cqo_8 final	cqo_8 final
+cqo_8 historico da final	cqo_8 final history
+cqo_8 mesmo campeao	cqo_8 same champion
+cqo_8 premios	cqo_8 prizes
+cqo_9 final	cqo_9 final
+cqo_9 historico da final	cqo_9 final history
+cqo_9 mesmo campeao	cqo_9 same champion
+cqo_9 premios	cqo_9 prizes
+cqp_1 cadeia	cqp_1 tv network
+cqp_1 noticia da tv	cqp_1 tv news
+cqp_1 noticia do premio	cqp_1 prize news
+cqp_13 tabela da concacaf	cqp_13 concacaf fixtures
+cqp_4 calendario da segunda inglesa	cqp_4 english second division calendar
+cqp_4 calendario da terceira inglesa	cqp_4 english third division calendar
+cqp_4 play-offs da segunda inglesa	cqp_4 english second division play-offs
+cqp_4 play-offs da terceira inglesa	cqp_4 english third division play-offs
+cqp_5 calendario da premiership	cqp_5 premiership calendar
+cqp_5 calendario da primeira inglesa	cqp_5 english first division calendar
+cqp_5 play-offs da primeira inglesa	cqp_5 english first division play-offs
+cqp_6 calendario da primera	cqp_6 primera calendar
+cqq_10 inscritos da intertoto	cqq_10 intertoto entrants
+cqq_10 lista da intertoto	cqq_10 intertoto list
+cqq_10 preliminar da uefa	cqq_10 uefa preliminary
+cqq_10 tabela da uefa	cqq_10 uefa fixtures
+cqq_11 clubes da supercopa asiatica	cqq_11 asian super cup clubs
+cqq_11 clubes da supercopa europeia	cqq_11 european super cup clubs
+cqq_11 dobradinha asiatica	cqq_11 asian double
+cqq_11 vagas da supercopa c1	cqq_11 c1 super cup places
+cqq_4 calendario da segunda espanhola	cqq_4 spanish second division calendar
+cqq_5 calendario da divisao de baixo espanhola	cqq_5 spanish lower division calendar
+cqq_6 primeira francesa nova	cqq_6 new french first division
+cqq_8 acesso e rebaixamento	cqq_8 promotion and relegation
+cqq_8 virada da serie b	cqq_8 serie b rollover
+cqq_8 virada do paulista	cqq_8 paulista rollover
+cqq_9 final	cqq_9 final
+cqq_9 virada da j1	cqq_9 j1 rollover
+cqr_10 linha do primeiro grupo	cqr_10 first group row
+cqr_10 sorteio da libertadores	cqr_10 libertadores draw
+cqr_10 time do grupo	cqr_10 group team
+cqr_11 linha do primeiro grupo	cqr_11 first group row
+cqr_11 sorteio da mercosul	cqr_11 mercosul draw
+cqr_11 time do grupo	cqr_11 group team
+cqr_12 linha do primeiro grupo	cqr_12 first group row
+cqr_12 sorteio da merconorte	cqr_12 merconorte draw
+cqr_12 time do grupo	cqr_12 group team
+cqr_13 linha do primeiro grupo	cqr_13 first group row
+cqr_13 sorteio da copa america	cqr_13 copa america draw
+cqr_13 time do grupo	cqr_13 group team
+cqr_3 grande final	cqr_3 grand final
+cqr_3 serie final	cqr_3 final series
+cqr_4 final	cqr_4 final
+cqr_4 play-off	cqr_4 play-off
+cqr_6 estadio do jogo das estrelas	cqr_6 all-star game stadium
+cqr_7 mata-mata das copas italianas	cqr_7 italian cups knockout
+cqr_9 mata-mata da copa da italia	cqr_9 italy cup knockout
+cqr_9 mata-mata da copa da serie c	cqr_9 serie c cup knockout
+cqs_1 tabela da mls	cqs_1 mls fixtures
+cqs_10 semifinais da merconorte	cqs_10 merconorte semifinals
+cqs_11 campeao da liga americana	cqs_11 american league champion
+cqs_11 convidados da merconorte	cqs_11 merconorte guests
+cqs_12 previstas da copa america	cqs_12 copa america expected
+cqs_12 selecoes de 2001	cqs_12 2001 national teams
+cqs_12 temporada nova da copa america	cqs_12 copa america new season
+cqs_13 dia do sorteio da copa africana	cqs_13 african cup draw day
+cqs_13 sorteio da copa africana	cqs_13 african cup draw
+cqs_13 time do grupo	cqs_13 group team
+cqs_2 clubes da mls	cqs_2 mls clubs
+cqs_2 posicoes previstas	cqs_2 expected positions
+cqs_2 virada da mls	cqs_2 mls rollover
+cqs_3 grupo	cqs_3 group
+cqs_3 segunda fase	cqs_3 second stage
+cqs_3 terceira fase	cqs_3 third stage
+cqs_4 final	cqs_4 final
+cqs_4 posicoes previstas	cqs_4 expected positions
+cqs_4 virada da serie c	cqs_4 serie c rollover
+cqs_5 chaves do trofeu da liga	cqs_5 league trophy sections
+cqs_5 fase das chaves do trofeu	cqs_5 trophy sections stage
+cqs_5 final do trofeu	cqs_5 trophy final
+cqs_5 rebaixado para a conference	cqs_5 relegated to the conference
+cqs_6 classificacao do trofeu	cqs_6 trophy standings
+cqs_6 final do trofeu	cqs_6 trophy final
+cqs_7 fase de copa	cqs_7 cup stage
+cqs_7 fim da fase de copa	cqs_7 end of cup stage
+cqs_8 grupo 1 da eurocopa	cqs_8 euro group 1
+cqs_8 regras da eurocopa	cqs_8 euro rules
+cqs_9 clube completando a uefa	cqs_9 club filling uefa
+cqs_9 inscritos da uefa	cqs_9 uefa entrants
+cqt_10 linha do grupo a	cqt_10 group a row
+cqt_10 sorteio da oceania	cqt_10 oceania draw
+cqt_10 time do grupo b	cqt_10 group b team
+cqt_11 clubes da oceania	cqt_11 oceania clubs
+cqt_11 cruzamentos da oceania	cqt_11 oceania pairings
+cqt_11 semifinais da oceania	cqt_11 oceania semifinals
+cqt_12 cruzamentos da asia	cqt_12 asia pairings
+cqt_12 dois grupos da asia	cqt_12 two asia groups
+cqt_12 grupos da asia	cqt_12 asia groups
+cqt_13 finais da recopa asiatica	cqt_13 asian cup winners cup finals
+cqt_13 finalistas da recopa asiatica	cqt_13 asian cup winners cup finalists
+cqt_13 quartas da copa africana	cqt_13 african cup quarterfinals
+cqt_4 publico de quem caiu	cqt_4 attendance of relegated
+cqt_4 publico de quem subiu	cqt_4 attendance of promoted
+cqt_4 publico do meio da tabela	cqt_4 attendance of mid-table
+cqt_5 copa do rei refeita	cqt_5 copa del rey redone
+criação cortar a tabela de clubes	creation trim the club table
+criação podar o histórico de competições	creation prune the competition history
+dado do humano gravado	human data saved
+data na barra	date in the bar
+desfecho corner	outcome corner
+desfecho defesa	outcome save
+desfecho defesa dificil	outcome hard save
+desfecho defesa media	outcome medium save
+desfecho destaque do goleiro	outcome goalkeeper highlight
+desfecho empate tardio	outcome late equaliser
+desfecho gol	outcome goal
+desfecho gol de ouro	outcome golden goal
+desfecho gol nos penalties	outcome penalty shootout goal
+desfecho goleiro defende	outcome goalkeeper saves
+desfecho linha de fundo	outcome byline
+desfecho para fora	outcome wide
+desfecho tiro de meta	outcome goal kick
+destaque marca 21b5	highlight mark 21b5
+dia partida iniciada	day match started
+dia segunda volta	day second leg
+dia sem mais partidas	day no more matches
+doador de qualquer nação	donor from any nation
+estatisticas desmontar	statistics tear down
+estatisticas gravar registro	statistics write record
+estatisticas ler registro	statistics read record
+estatisticas montar	statistics build
+estatisticas registrar partida	statistics record match
+eventos 0x0a	events 0x0a
+eventos 0x0a noticia	events 0x0a news
+eventos 0x0b	events 0x0b
+eventos 0x13 marca	events 0x13 mark
+eventos 0x13 noticia	events 0x13 news
+eventos 0x13 sem marca	events 0x13 no mark
+eventos 0x1e	events 0x1e
+eventos 0x1e sem tecnico	events 0x1e no manager
+eventos 0x1e tecnico	events 0x1e manager
+eventos 0x82	events 0x82
+eventos arquivo com espaco	events file with space
+eventos arquivo novo	events new file
+eventos lidos	events read
+eventos outros	events others
+fechar com competicao	close with competition
+fechar historia	close story
+fechar jogo de fora	close away match
+fechar metodo da competicao	close competition method
+fechar rodada do humano	close human round
+fill_vacated_staff_job sem entrar no clube	fill_vacated_staff_job without joining the club
+fill_vacated_staff_job sem ninguem	fill_vacated_staff_job nobody
+histórico de competições crescer	competition history grow
+humano em rede recomeca	networked human restarts
+humano manda no clube	human runs the club
+instructions apagadas	instructions deleted
+instructions devolvidas	instructions returned
+instructions guardadas	instructions stored
+instructions liberadas	instructions released
+interesse dois humanos com clube	interest two humans with club
+interesse humano na competicao	interest human in the competition
+interesse partida marcada	interest match scheduled
+interesse pela 6b61e0	interest via 6b61e0
+jogadores marca 0x20	players mark 0x20
+jogadores noticia 0x11	players news 0x11
+jogadores noticia 0x34	players news 0x34
+jogadores tecnico	players manager
+laco abandono	loop abandonment
+laco batedor se aproxima	loop taker approaches
+laco contest marcada	loop contest scheduled
+laco entra na lista	loop enters the list
+laco fim para os penalties	loop end for penalties
+laco lance descartado	loop move discarded
+laco penalties decididos	loop penalties decided
+laco penalties decididos sem resumo	loop penalties decided without summary
+laco pick_restart_taker da bola parada	loop set piece pick_restart_taker
+lesao agravada	injury worsened
+lesao grave	injury serious
+lesao lista nova	injury new list
+lesao mais grave	injury more serious
+lesao para 3 e sai	injury to 3 and leaves
+lesao para 5	injury to 5
+lesao registrada	injury recorded
+lesao sem folego	injury out of breath
+liga completa: fases	league complete: stages
+liga completa: fim da liga	league complete: end of league
+liga direitos de tv	league tv rights
+liga honras da temporada	league season honours
+liga liberar tabela	league free table
+linha tatica gravada	tactics line saved
+linha tatica lida	tactics line read
+linhas do humano refeitas	human lines redone
+match_wrap_up	match_wrap_up
+match_wrap_up evento do dia	match_wrap_up day event
+match_wrap_up evento do jogador	match_wrap_up player event
+match_wrap_up evento tipo 6	match_wrap_up type 6 event
+match_wrap_up insatisfeito	match_wrap_up unhappy
+match_wrap_up pede para sair	match_wrap_up asks to leave
+match_wrap_up proposta aceita	match_wrap_up offer accepted
+media_queue_player_apology_news	media_queue_player_apology_news
+montagem avisada	setup notified
+montagem competicao nova	setup new competition
+montagem decidida antes	setup decided before
+montagem grupo novo	setup new group
+move_club_to_division	move_club_to_division
+movimento 0x11 modo 4	movement 0x11 mode 4
+movimento aproximacao narrada	movement narrated approach
+movimento bola espirra	movement ball breaks loose
+movimento bola fora	movement ball out
+movimento com a bola	movement with the ball
+movimento cresce	movement grows
+movimento defesa	movement save
+movimento desafiante bonus	movement challenger bonus
+movimento desafiante vence	movement challenger wins
+movimento domina a bola livre	movement controls the loose ball
+movimento evento 0x82	movement event 0x82
+movimento expulsao	movement sending off
+movimento falta punida	movement foul punished
+movimento falta so registra	movement foul only recorded
+movimento media de acertos	movement success average
+movimento narra falta na area	movement narrates foul in the box
+movimento narra o marcado	movement narrates the marker
+movimento passa	movement passes
+movimento penalty	movement penalty
+movimento perde a bola	movement loses the ball
+movimento perde na area	movement loses in the box
+movimento rouba a bola livre	movement steals the loose ball
+movimento so vira	movement only turns
+narracao no painel	commentary on the panel
+narracao nome curto	commentary short name
+narracao nome forma longa	commentary long form name
+narracao proximo evento	commentary next event
+narracao texto em partes	commentary text in parts
+national_teams_post_player_withdrawn_news	national_teams_post_player_withdrawn_news
+national_teams_post_replacement_needed_news	national_teams_post_replacement_needed_news
+nota do arbitro amistoso	referee rating friendly
+nota do arbitro maxima	referee rating maximum
+nota do arbitro minima	referee rating minimum
+numero da competicao	competition number
+partida em rede confirmada	network match confirmed
+partida sem humano	match without human
+passe aproximacao narrada	pass narrated approach
+passe bola espirra	pass ball breaks loose
+passe contest de penalties	pass penalty shootout contest
+passe desarmado	pass tackled
+passe desarme do goleiro	pass goalkeeper tackle
+passe desarme narrado na area	pass tackle narrated in the box
+passe em transito sai	pass in transit goes out
+passe evento 0x82	pass event 0x82
+passe expulsao	pass sending off
+passe falta punida	pass foul punished
+passe falta so registra	pass foul only recorded
+passe impreciso	pass inaccurate
+passe media de acertos	pass success average
+passe penalty	pass penalty
+passe sem folego	pass out of breath
+passe tracado sai	pass traced goes out
+passe vira shot	pass becomes shot
+placar com competicao	score with competition
+placar na barra	score in the bar
+play bola do proprio lado	play ball on own side
+play cabecada	play header
+play falta punida	play foul punished
+play falta registrada	play foul recorded
+play forte	play strong
+play goleiro	play goalkeeper
+play meia-lua	play arc
+play nota muito baixa	play very low rating
+play penalty	play penalty
+play perdeu	play lost
+play venceu	play won
+player_regen_post_retirement_announcement_news	player_regen_post_retirement_announcement_news
+post_financial_trouble_news	post_financial_trouble_news
+prejogo fim de contrato	prematch end of contract
+prejogo forma em alta	prematch form up
+prejogo forma em baixa	prematch form down
+prejogo insatisfeito	prematch unhappy
+prejogo insatisfeito pela posicao	prematch unhappy with position
+prejogo interesse	prematch interest
+process_match	process_match
+rede	network
+rede partida com humanos	network match with humans
+registro do observador	scout record
+reinicio acrescimo	restart stoppage time
+reinicio acrescimo narrado	restart stoppage time narrated
+reinicio canto da goal_crowd_reaction	restart goal_crowd_reaction chant
+reinicio sem folego	restart out of breath
+reinicio stance 1	restart stance 1
+reinicio stance 2	restart stance 2
+reinicio stance 3	restart stance 3
+reinicio stance 4	restart stance 4
+reinicio stance 5	restart stance 5
+reinicio substituicao da IA	restart AI substitution
+reservas cheias entra pela nota	reserves full enters by rating
+reservas segunda nacionalidade	reserves second nationality
+respond bola do proprio lado	respond ball on own side
+respond dominou	respond controlled
+respond falta punida	respond foul punished
+respond falta registrada	respond foul recorded
+respond goleiro na area	respond goalkeeper in the box
+respond goleiro perdeu	respond goalkeeper lost
+respond media de acertos	respond success average
+respond nota muito baixa	respond very low rating
+respond penalty	respond penalty
+respond perdeu	respond lost
+respond tipo 5	respond type 5
+save carregar banco	save load database
+save carregar jogo	save load game
+save carregar regras fifa	save load fifa rules
+save criar jogo pela configuracao	save create game from configuration
+save desempacotar	save unpack
+save empacotar	save pack
+save filtro do inicio rapido	save quick start filter
+save gravar banco	save write database
+save gravar jogo	save write game
+save gravar regras fifa	save write fifa rules
+save liberar dados do jogo	save free game data
+save limpar temporarios	save clear temporaries
+save versao do jogo salvo	save saved game version
+save zclose	save zclose
+save zread bloco	save zread block
+save zread tipo 3	save zread type 3
+save zwrite bloco	save zwrite block
+save zwrite par 0x7f	save zwrite pair 0x7f
+save zwrite tipo 3	save zwrite type 3
+seleção a competição seguinte	national team the next competition
+seleção continente a seguinte vira a atual	national team continent next becomes current
+sem humano 7f9720	no human 7f9720
+sem humano clube humano em campo	no human human club on the pitch
+sem humano clube ligado	no human linked club
+sem humano competicao direta	no human direct competition
+sem humano pela injury_word_0c	no human by injury_word_0c
+sem humano selecao de humano	no human human national team
+sem humano selecao marcada	no human national team marked
+sem humano tecnico da nacao	no human nation manager
+send_to_all_managers	send_to_all_managers
+send_to_comp_region	send_to_comp_region
+send_to_continent_managers	send_to_continent_managers
+send_to_division_managers	send_to_division_managers
+send_to_nation_club_managers	send_to_nation_club_managers
+send_to_nation_managers	send_to_nation_managers
+shot 0x3b	shot 0x3b
+shot 0xc de longe	shot 0xc from distance
+shot 716c90	shot 716c90
+shot a gol corner	shot on target corner
+shot a gol defesa	shot on target save
+shot a gol defesa dificil	shot on target hard save
+shot a gol defesa media	shot on target medium save
+shot a gol destaque do goleiro	shot on target goalkeeper highlight
+shot a gol empate tardio	shot on target late equaliser
+shot a gol gol	shot on target goal
+shot a gol gol de ouro	shot on target golden goal
+shot a gol hat-trick	shot on target hat-trick
+shot a gol linha de fundo	shot on target byline
+shot a gol marca	shot on target mark
+shot a gol nos penalties	shot on target penalty shootout
+shot a gol para fora	shot on target wide
+shot a gol tiro de meta	shot on target goal kick
+shot assistencia	shot assist
+shot bloqueado	shot blocked
+shot bloqueado para corner	shot blocked for corner
+shot bola espirra	shot ball breaks loose
+shot cabecada	shot header
+shot chutador punido	shot shooter punished
+shot chutador registrado	shot shooter recorded
+shot companheiro livre	shot teammate free
+shot cresce	shot grows
+shot de cabeca com desafiante	shot header with challenger
+shot de longe	shot from distance
+shot defesa do goleiro	shot goalkeeper save
+shot desafiante ganha	shot challenger wins
+shot desafiante ganha de cabeca	shot challenger wins in the air
+shot desafiante narra falta na area	shot challenger narrates foul in the box
+shot desafiante punido	shot challenger punished
+shot desafiante registrado	shot challenger recorded
+shot desarmado	shot tackled
+shot desarme do goleiro	shot goalkeeper tackle
+shot desarme narrado na area	shot tackle narrated in the box
+shot empate no fim	shot equaliser at the end
+shot expulsao	shot sending off
+shot expulsao do chutador	shot shooter sent off
+shot falta na cobranca	shot foul on the kick
+shot falta punida	shot foul punished
+shot falta registrada	shot foul recorded
+shot falta so registra	shot foul only recorded
+shot fraco para fora	shot weak and wide
+shot gol	shot goal
+shot gol anulado	shot goal disallowed
+shot gol do Shearer	shot Shearer goal
+shot gol valido	shot valid goal
+shot goleiro adiantado	shot goalkeeper off his line
+shot impedimento	shot offside
+shot impedimento registrado	shot offside recorded
+shot marca do artilheiro	shot top scorer mark
+shot media de acertos	shot success average
+shot na trave	shot hits the post
+shot narra de longe	shot narrates from distance
+shot para fora	shot wide
+shot passa pelo desafiante	shot gets past the challenger
+shot penalty	shot penalty
+shot penalty do chutador	shot shooter penalty
+shot segue	shot continues
+shot sem desafiante	shot no challenger
+shot tres gols	shot three goals
+shot vantagem do chutador	shot shooter advantage
+simulacao rapida abandono	quick simulation abandonment
+simulacao rapida contador igual	quick simulation counter equal
+simulacao rapida contador reiniciado	quick simulation counter reset
+simulacao rapida expulsao	quick simulation sending off
+simulacao rapida give_yellow_card	quick simulation give_yellow_card
+simulacao rapida gol	quick simulation goal
+simulacao rapida gol de ouro	quick simulation golden goal
+simulacao rapida gol de penalty	quick simulation penalty goal
+simulacao rapida gol do mando	quick simulation home goal
+simulacao rapida lesao	quick simulation injury
+simulacao rapida nota do amistoso	quick simulation friendly rating
+simulacao rapida penalties	quick simulation penalties
+simulacao rapida penalty perdido	quick simulation penalty missed
+simulacao rapida prorrogacao	quick simulation extra time
+simulacao rapida prorrogacao com gol de ouro	quick simulation extra time with golden goal
+simulacao rapida segundo give_yellow_card	quick simulation second give_yellow_card
+sons dos eventos	event sounds
+step_towards em rede	step_towards in network
+sub-21 dispensar acima da idade	under-21 release over age
+substituto convocado	replacement called up
+substituto sai do outro elenco	replacement leaves the other squad
+tackle 716c90	tackle 716c90
+tackle bola espirra	tackle ball breaks loose
+tackle contest limpa	tackle clean contest
+tackle cresce	tackle grows
+tackle defesa	tackle save
+tackle falta punida	tackle foul punished
+tackle media de acertos	tackle success average
+tackle narra falta na area	tackle narrates foul in the box
+tackle passa na limpa	tackle clean pass
+tackle sem desafiante	tackle no challenger
+tackle so registra	tackle only records
+telas abrir a escalacao	screens open the line-up
+telas abrir a espera	screens open the wait
+telas abrir a partida	screens open the match
+telas abrir os detalhes	screens open the details
+telas abrir os jogos do dia	screens open the day matches
+telas abrir os ultimos placares	screens open the latest scores
+telas conferencia da escalacao	screens line-up check
+telas cria a copia do estado da partida	screens create the match state copy
+telas desenhar a area	screens draw the area
+telas espera dos outros jogadores	screens wait for other players
+telas estatisticas carregar	screens statistics load
+telas estatisticas salvar	screens statistics save
+telas fechar a partida	screens close the match
+telas fechar os detalhes	screens close the details
+telas iniciar a area	screens start the area
+telas largar a partida assistida	screens leave the watched match
+telas linhas da area travadas em 30	screens area lines locked at 30
+telas montar a partida	screens build the match
+telas montar os detalhes	screens build the details
+telas montar os jogos do dia	screens build the day matches
+telas montar os ultimos placares	screens build the latest scores
+telas organizar a area	screens arrange the area
+telas painel das estatisticas da partida	screens match statistics panel
+telas painel das estatisticas do time	screens team statistics panel
+telas painel das notas dos jogadores	screens player ratings panel
+telas painel das zonas de acao	screens action zones panel
+telas painel do relatorio da partida	screens match report panel
+telas painel do relatorio da partida (montar)	screens match report panel (build)
+telas painel dos ultimos placares	screens latest scores panel
+telas respond a escalacao	screens respond line-up
+telas respond a partida	screens respond match
+telas respond ao continuar	screens respond on continue
+telas respond ao painel dos placares	screens respond scores panel
+telas respond aos detalhes	screens respond details
+telas respond aos jogos do dia	screens respond day matches
+telas respond aos ultimos placares	screens respond latest scores
+telas respond as estatisticas do time	screens respond team statistics
+telas rotulo do controle	screens control label
+telas visao geral com o narrador	screens overview with the commentator
+texto do evento	event text
+update_board_after_fixture	update_board_after_fixture
+vaga extra apagada	extra slot deleted
+vaga extra gravada	extra slot saved
+write_deadline_news_text	write_deadline_news_text

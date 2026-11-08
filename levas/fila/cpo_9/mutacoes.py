@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpo_lista_pela_pessoa', 'insert_sorted_pair(this, 0, 0x10, pessoa, clube, 0x757ea0); // o vetor pela pessoa',
      '// mutacao: sem o vetor pela pessoa',
-     'cpo_9 nova entrada'),
-    ('cpo_prever_negocia', 'crate::comparison::branch("cpo_9 negocia");\n    1\n}',
-     'crate::comparison::branch("cpo_9 negocia");\n    2 // mutacao: recusa\n}',
-     'cpo_9 negocia'),
+     'cpo_9 new entry'),
+    ('cpo_prever_negocia', 'crate::comparison::branch("cpo_9 negotiates");\n    1\n}',
+     'crate::comparison::branch("cpo_9 negotiates");\n    2 // mutacao: recusa\n}',
+     'cpo_9 negotiates'),
     ('cpo_periodo_recua', 'let m = (*mes).wrapping_sub(1);',
      'let m = (*mes).wrapping_sub(2); // mutacao: dois meses',
-     'cpo_9 recua o mes'),
+     'cpo_9 steps back the month'),
 ]

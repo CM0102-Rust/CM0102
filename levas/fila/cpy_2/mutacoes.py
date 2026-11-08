@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpy2_vaga_sem_refazer', '                preencher(this, v, clube, pessoa); // cpy2: a vaga é preenchida de novo',
      '                let _ = preencher; // mutacao: a vaga fica vazia',
-     'cpy_2 vaga refeita'),
+     'cpy_2 slot redone'),
     ('cpy2_sem_descontar_lista', '            *r = (*r & 0xf0) | ((*r).wrapping_sub(1) & 0xf); // cpy2: uma lista a menos na conta da pessoa',
      '            let _ = r; // mutacao: a conta de listas da pessoa nao cai',
-     'cpy_2 contagem da lista'),
+     'cpy_2 list count'),
     ('cpy2_bloqueio_de_120_dias', '                block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0xe); // cpy2: o bloqueio de 14 dias',
      '                block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0x78); // mutacao: 120 dias',
-     'cpy_2 bloqueio de 14 dias'),
+     'cpy_2 14-day block'),
 ]

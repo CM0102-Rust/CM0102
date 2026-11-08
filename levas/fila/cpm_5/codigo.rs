@@ -42,7 +42,7 @@ unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) 
     if s != 0 { // 1 em 20
         return RecurringInjuryOutcome::Nada;
     }
-    crate::comparison::branch("cpm_5 lesao recorrente");
+    crate::comparison::branch("cpm_5 recurring injury");
     *((registro + 0x13) as *mut u8) = s as u8;
     *((registro + 0x12) as *mut u8) = *lesao;
     if *(0xae2364 as *const i32) <= 0 {
@@ -61,7 +61,7 @@ unsafe fn plan_recurring_injury(this: usize, registro: usize, lesao: *const u8) 
                 (melhor, escolhido, pessoa) = (nota as i8, r, p);
             }
             if melhor >= 0x5f { // forte o bastante: para
-                crate::comparison::branch("cpm_5 recorrente forte");
+                crate::comparison::branch("cpm_5 strong recurring");
                 break;
             }
         }
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn reset_player_history(this: usize, pessoa: usize) -> 
 /// e forma 10000 (+8, +0xa), desgaste 0 (+0xc), sem lesão (+0xe −1), sem recorrente (+0x12 0xff), histórico −1 (+0x14,
 /// +0x18), +0x1d 0xff. O bit 0 do +0xc do registro de 79 bytes ([0xae2d0c]) cai. Devolve o endereço desse byte.
 unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
-    crate::comparison::branch("cpm_5 reiniciar jogador");
+    crate::comparison::branch("cpm_5 reset player");
     if cpm5_d(this + 0x28) != 0 {
         let l = cpm5_d(this + 0x28);
         core::ptr::write_unaligned((l + 0xa) as *mut usize, cpm5_d(l + 2));

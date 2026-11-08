@@ -15,5 +15,5 @@ MUTACOES = [
     ('cqp13_concacaf_dia_21',
      'cql10r((1, 7, 0, 5), (0x1c, 8, 0, 3, 2, 0), 0xa, (0, 3, 0), 8, (8, 4, 8, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // cqp13: as quartas da CONCACAF',
      'cql10r((1, 7, 0, 5), (0x15, 8, 0, 3, 2, 0), 0xa, (0, 3, 0), 8, (8, 4, 8, 0), (0, 0, 0), (0, 0xffff_ffff, 0)), // mutacao: 21/8',
-     'cqp_13 tabela da concacaf'),
+     'cqp_13 concacaf fixtures'),
 ]

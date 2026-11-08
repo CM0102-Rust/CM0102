@@ -25,7 +25,7 @@ unsafe fn colour_word(a: usize) -> usize {
 /// próprios de cada página), a tabela dos valores, o lado `lado` no parâmetro 0x1b, -1 no 0x1a e o
 /// preenchimento (0x721cd0).
 unsafe extern "C" fn draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das estatisticas do time");
+    crate::comparison::branch("screens team statistics panel");
     let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
     let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
     let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
@@ -121,7 +121,7 @@ unsafe extern "C" fn draw_team_stats_panel(lado: u32, topo: *mut i32, base: *mut
 /// (0x8040a0, item 0x7dc ou 0x7d7 pelo saldo de [dados] ou [dados+4]) quando a pessoa vale (0x53e990),
 /// senão texto; vazio (0xfb em +0x1d) sem nome; e as três células da nota. No fim, 0x723350.
 unsafe extern "C" fn draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das notas dos jogadores");
+    crate::comparison::branch("screens player ratings panel");
     let celula: ListCellFn = core::mem::transmute(0x8040a0usize);
     let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
     let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
@@ -221,7 +221,7 @@ const MATCH_STATS_LABELS: [(usize, usize); 13] = [
 /// tabela de 3 colunas (1, 5, 1) e 13 linhas, cada uma com as células dos dois times (colunas 0 e 2;
 /// o item da primeira no parâmetro 9) e o rótulo no meio; depois os valores (0x71e750).
 unsafe extern "C" fn draw_match_stats_panel(topo: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das estatisticas da partida");
+    crate::comparison::branch("screens match statistics panel");
     let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
     let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);

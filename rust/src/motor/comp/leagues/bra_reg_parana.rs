@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     let b = half_champion(this, 1);
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
-        crate::comparison::branch("cqo_8 mesmo campeao");
+        crate::comparison::branch("cqo_8 same champion");
         core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
         core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
@@ -142,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
         let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
-        crate::comparison::branch("cqo_8 historico da final");
+        crate::comparison::branch("cqo_8 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         news(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_8 premios");
+    crate::comparison::branch("cqo_8 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -225,7 +225,7 @@ pub(crate) unsafe fn carioca_rules(o: usize) {
 /// devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     parana_rules(this);
-    crate::comparison::branch("cqi_9 regras do paranaense");
+    crate::comparison::branch("cqi_9 paranaense rules");
     create_main_schedule(this);
     1
 }

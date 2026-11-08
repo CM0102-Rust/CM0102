@@ -1,7 +1,7 @@
 # A pessoa liberada sem custo, as ferias do tecnico humano e a noticia da permissao para discutir o contrato
 # (transfer_manager.cpp, human_manager.cpp).
-# - 0x8c1af0 (free_transfer_staff, 7 chamadas ate 2002-06-01 na cobertura de 17/10; "cps_3 liberado" e
-#   "cps_3 compensacao" 8 na base): a transferencia passada, a compensacao paga ao clube, as listas de observacao, as
+# - 0x8c1af0 (free_transfer_staff, 7 chamadas ate 2002-06-01 na cobertura de 17/10; "cps_3 released" e
+#   "cps_3 compensation" 8 na base): a transferencia passada, a compensacao paga ao clube, as listas de observacao, as
 #   escalacoes e o elenco do clube atual, as ofertas e o contrato, as clausulas e a permissao de trabalho.
 # - 0x5fd2f0 (set_on_holiday, 1 chamada: a carreira automatica de ferias): a marca de ferias e a conta dos humanos.
 # - 0x8d7cd0 (post_contract_talks_news, 7 chamadas): a noticia 0xfac.

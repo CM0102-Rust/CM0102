@@ -45,7 +45,7 @@ unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, hoje: u
         return 0;
     }
     if ano_de_hoje == ano && dia_de_hoje == dia && cqs13_d(this + 0x45) == 0 {
-        crate::comparison::branch("cqs_13 dia do sorteio da copa africana");
+        crate::comparison::branch("cqs_13 african cup draw day");
         sortear(this);
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqs13_d(cqs13_d(this) + 0x5c));
         previstas(this);
@@ -158,7 +158,7 @@ unsafe fn draw_african_nations_finalists(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x380);
         return 0;
     }
-    crate::comparison::branch("cqs_13 sorteio da copa africana");
+    crate::comparison::branch("cqs_13 african cup draw");
     for j in 0..4usize {
         for p in 0..4usize {
             let mut r = sorteio(4) as u8 as i8 as usize;
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqs_13 time do grupo");
+        crate::comparison::branch("cqs_13 group team");
         cqs13_pd(times + n * 4, cqs13_d(cqs13_d(this + 0xee) + ((g as usize + 1) * 4 + n) * 4)); // cqs13: o time na vaga do grupo
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqs13_d(cqs13_d(this) + 0x3c));

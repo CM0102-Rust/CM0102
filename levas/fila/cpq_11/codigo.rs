@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn randomize_round_teams(copa: usize, rodada: u32) {
                 let casa_livre = casa == -2;
                 if fora == -2 {
                     if casa_livre && sorteio(2) != 0 {
-                        crate::comparison::branch("cpq_11 sorteio mandante");
+                        crate::comparison::branch("cpq_11 home side draw");
                         break true;
                     }
                     break false;
@@ -234,7 +234,7 @@ unsafe extern "thiscall" fn separate_shared_stadium_ties(copa: usize, rodada: u3
                 let a = if lado == 0 { casa_i } else { cpq11_w(fi + 2) };
                 let b = cpq11_w(fj + lado);
                 if a != -1 && b != -1 {
-                    crate::comparison::branch("cpq_11 estadio comparado");
+                    crate::comparison::branch("cpq_11 stadium compared");
                     let (sa, signed_byte_at) = (estadio(a), estadio(b));
                     if sa == signed_byte_at && sa != 0 {
                         dividem = true;
@@ -300,7 +300,7 @@ unsafe extern "C" fn comp_util_scale_by_round(baixo: u32, alto: u32, rodada: u32
         return original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(%%I2%%)(baixo, alto, rodada, rodadas);
     }
     if rodadas as u16 != 1 {
-        crate::comparison::branch("cpq_11 escala pela rodada");
+        crate::comparison::branch("cpq_11 lineup by round");
     }
     eax
 }

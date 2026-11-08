@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpv6_divida_sem_sorteio', '    let r = cpv6_sortear(7000); // cpv6: o sorteio da dívida',
      '    let r = 3500i32; // mutacao: sem o sorteio',
-     'cpv_6 sorteio da divida'),
+     'cpv_6 debt draw'),
     ('cpv6_filtro_da_injecao', '    if cpv6_w(clube + 0x80) < 0x128e { // cpv6: o filtro da injeção',
      '    if cpv6_w(clube + 0x80) < 0x1d4c { // mutacao: o filtro em 7500',
-     'cpv_6 injecao avaliada'),
+     'cpv_6 injection evaluated'),
     ('cpv6_sem_impulso', '            let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na band 0',
      '            let ok = false; // mutacao: sem o impulso',
-     'cpv_6 impulso na band 0'),
+     'cpv_6 boost in band 0'),
 ]

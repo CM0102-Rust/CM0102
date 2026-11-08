@@ -5,9 +5,9 @@
 # - Os seis primeiros clubes fixos vao para a conferencia 0x414 no Jogo das Estrelas (os escolhidos mudam).
 MUTACOES = [
     ('cqk9_sem_registro_classificado_mls', 'cqk9_classificou(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS',
-     '// mutacao: sem o registro do classificado da MLS', 'cqk_9 mls classificado'),
+     '// mutacao: sem o registro do classificado da MLS', 'cqk_9 mls qualified'),
     ('cqk9_sem_segunda_conferencia', 'f1(e1, jogo, estat); // cqk9: o jogo na tabela da segunda conferência',
-     'let _ = (e1, f1); // mutacao: o jogo na tabela da segunda conferência', 'cqk_9 mls segunda conferencia'),
+     'let _ = (e1, f1); // mutacao: o jogo na tabela da segunda conferência', 'cqk_9 mls second conference'),
     ('cqk9_conferencia_trocada', 'return 0x413; // cqk9: a primeira conferência',
-     'return 0x414; // mutacao: a primeira conferência', 'cqk_9 conferencia 0x413'),
+     'return 0x414; // mutacao: a primeira conferência', 'cqk_9 conference 0x413'),
 ]

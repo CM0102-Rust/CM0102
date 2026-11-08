@@ -33,7 +33,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
                 || (*(segundo as *const u8) != 0 && cqh9_d(p + 8) != 0 && cqh9_strncmp(cqh9_d(p + 8), segundo, 0x1a) != 0) // cqh9: o segundo nome
                 || (*(comum as *const u8) != 0 && cqh9_d(p + 0xc) != 0 && cqh9_strncmp(cqh9_d(p + 0xc), comum, 0x1a) != 0);
             if !falha {
-                crate::comparison::branch("cqh_9 pessoa pelo nome");
+                crate::comparison::branch("cqh_9 person by name");
                 return p;
             }
             p += 0x6e;
@@ -57,7 +57,7 @@ unsafe extern "C" fn player_setup_find_staff(primeiro: usize, comum: usize, segu
         for k in 0..0x32usize {
             let q = cqh9_d(c + 0xd7 + 4 * k);
             if q != 0 && name_matches(q, 4, primeiro) && name_matches(q, 8, segundo) && name_matches(q, 0xc, comum) {
-                crate::comparison::branch("cqh_9 jogador do clube pelo nome");
+                crate::comparison::branch("cqh_9 club player by name");
                 return q; // cqh9: o do elenco pelo nome
             }
         }
@@ -106,7 +106,7 @@ unsafe extern "C" fn player_setup_read_quoted_token(origem: usize, destino: usiz
             break;
         }
         if aberto {
-            crate::comparison::branch("cqh_9 texto entre aspas");
+            crate::comparison::branch("cqh_9 quoted text");
             *((destino + n) as *mut u8) = c; // cqh9: o caractere do texto
             n += 1;
         }
@@ -152,7 +152,7 @@ const PLAYER_SETUP_LINE_TYPES: [(usize, u32); 14] = [
 unsafe extern "C" fn player_setup_type_from_name(nome: usize) -> u32 {
     for &(texto, bit) in PLAYER_SETUP_LINE_TYPES.iter() {
         if cqh9_strncmp(nome, texto, 100) == 0 {
-            crate::comparison::branch("cqh_9 tipo da linha");
+            crate::comparison::branch("cqh_9 line type");
             return bit;
         }
     }

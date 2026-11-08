@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     if MEDIA_REACTION_STOPPED {
-        crate::comparison::branch("cqa_13 reacoes so na original");
+        crate::comparison::branch("cqa_13 reactions only in the original");
         return o(this, p, new, old, flag);
     }
     o(this, p, new, old, flag);

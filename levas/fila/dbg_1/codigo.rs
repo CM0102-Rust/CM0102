@@ -5,7 +5,7 @@
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar continentes");
+    crate::comparison::branch("database write continents");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 198, n, stream)
@@ -27,7 +27,7 @@ unsafe extern "C" fn compare_db_files_write_continents(stream: usize, use_zip: i
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar nações");
+    crate::comparison::branch("database write nations");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 290, n, stream)
@@ -49,7 +49,7 @@ unsafe extern "C" fn compare_db_files_write_nations(stream: usize, use_zip: i32,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar cidades");
+    crate::comparison::branch("database write cities");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 56, n, stream)

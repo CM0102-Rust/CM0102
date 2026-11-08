@@ -15,6 +15,6 @@ MUTACOES = [
     ('cqq9_virada_dois_anos',
      'a.wrapping_add(1)); // cqq9: o ano seguinte da J1',
      'a.wrapping_add(2)); // mutacao: dois anos adiante',
-     'cqq_9 virada da j1'),
+     'cqq_9 j1 rollover'),
 ]
 # Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01, base com os 9 itens): as tres ACUSADAS (a final em 2001-328, separam em 2001-335; a virada em 2002-024, separa em 2002-054).

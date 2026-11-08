@@ -51,7 +51,7 @@ const PLAYER_V1_FIELDS: [(usize, u32, usize); 5] = [(0, 4, 1), (4, 1, 1), (5, 2,
 /// Chamado por `db_files_read_clubs` 0x54db50 com a versão da entrada igual a 1; a base de fábrica e o save
 /// são versão 2. Sem SEH e sem variável local lida sem valor.
 unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco ler clubes v1");
+    crate::comparison::branch("database read clubs v1");
     convert_v1_records(stream, use_zip, registros, n, 581, &CLUB_V1_LAYOUT, |b| (b.max(1) as u16).wrapping_mul(500))
 }
 
@@ -59,7 +59,7 @@ unsafe extern "C" fn db_files_read_clubs_v1(stream: usize, use_zip: i32, registr
 /// comunidade troca os nomes: é a tabela id 9, a dos não jogadores, 68 bytes): campo a campo
 /// (`NON_PLAYER_V1_LAYOUT`); as reputações lidas em bytes, sem conta. Chamado por 0x54e880 com a versão 1.
 unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco ler não jogadores v1");
+    crate::comparison::branch("database read non-players v1");
     convert_v1_records(stream, use_zip, registros, n, 68, &NON_PLAYER_V1_LAYOUT, |b| b as u16)
 }
 
@@ -67,7 +67,7 @@ unsafe extern "C" fn db_files_read_players_v1(stream: usize, use_zip: i32, regis
 /// troca os nomes: é a tabela id 10, a dos jogadores, 70 bytes): campo a campo (`PLAYER_V1_FIELDS`); as reputações
 /// lidas em bytes, sem conta. Chamado por 0x54f030 com a versão 1.
 unsafe extern "C" fn db_files_read_non_players_v1(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco ler jogadores v1");
+    crate::comparison::branch("database read players v1");
     convert_v1_records(stream, use_zip, registros, n, 70, &PLAYER_V1_FIELDS, |b| b as u16)
 }
 

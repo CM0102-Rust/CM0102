@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_lower(this: usize, year: u3
 ///
 /// [pt] { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
 pub(crate) unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
-    crate::comparison::branch("cqn_4 destrutor da divisao de baixo");
+    crate::comparison::branch("cqn_4 lower division destructor");
     destroy_group_league(this, 0x96ab78)
 }
 

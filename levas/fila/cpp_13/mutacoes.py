@@ -9,5 +9,5 @@ MUTACOES = [
      'entry_level(b) - entry_level(a); // mutacao: o maior primeiro'),
     ('cpp_teto_da_divisao', '*p = valor; // o teto novo',
      '// mutacao: o teto fica',
-     'cpp_13 teto da divisao'),
+     'cpp_13 division ceiling'),
 ]

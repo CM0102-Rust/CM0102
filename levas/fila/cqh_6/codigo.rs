@@ -32,7 +32,7 @@ unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
         if completa(c) == 0 {
             return 0;
         }
-        crate::comparison::branch("cqh_6 liga de baixo completa");
+        crate::comparison::branch("cqh_6 lower league complete");
         i = cqh6_d(c + 0x20) as i32; // cqh6: a liga de baixo
     }
     1
@@ -66,7 +66,7 @@ unsafe extern "thiscall" fn comp_collect_club_list(this: usize, lista: *mut usiz
         while i < cqh6_w(f + 0x3e) {
             let clube = if liga { cqh6_d(cqh6_d(f + 0xb1) + i as usize * 0x3b) } else { cqh6_d(cqh6_d(f + 0xa7) + i as usize * 6) };
             if clube != 0 && !(0..n).any(|k| cqh6_d(v + k as usize * 4) == clube) && n < 0xc8 { // cqh6: até 200 clubes
-                crate::comparison::branch("cqh_6 clube na lista");
+                crate::comparison::branch("cqh_6 club in the list");
                 core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, clube as u32); // cqh6: o clube na lista
                 n += 1;
             }
@@ -122,7 +122,7 @@ unsafe extern "thiscall" fn find_club_progress(this: usize, clube: usize, fase_i
                     let t = cqh6_d(s + 0xa7) + k as usize * 6;
                     if cqh6_d(t) == clube {
                         *fase_id = cqh6_w(s + 0x3a);
-                        crate::comparison::branch("cqh_6 progresso na copa");
+                        crate::comparison::branch("cqh_6 cup progress");
                         *situacao = cqh6_b(t + 5); // cqh6: a situação do time
                         time = k;
                     }

@@ -252,7 +252,7 @@ unsafe extern "C" fn load_game_data(caminho: *const u8) -> u32 {
     let regras_fifa: unsafe extern "C" fn(*const u8) = core::mem::transmute(0x839760usize);
     let ligar_regras: unsafe extern "C" fn(u32) = core::mem::transmute(0x58a890usize);
     let existe: unsafe extern "C" fn(usize) -> i32 = core::mem::transmute(0x90c120usize);
-    crate::comparison::branch("save carregar jogo");
+    crate::comparison::branch("save load game");
     let u = |a: usize| *(a as *const u32);
     let sem_memoria = |minimo: i32| u(0x9cd1fc) != 0 && memoria() < minimo;
     // as duas datas locais da original (a 2ª não é usada); o destrutor delas é vazio

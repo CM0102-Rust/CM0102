@@ -17,7 +17,7 @@ unsafe fn cpm3_sorteio(n: i32) -> i32 {
 /// do estádio (+0x69), a obra do estádio (0x599e00 nas finanças 0x5a0590 de [0xae2a38], lugares +0xe4 e +0xe2); e,
 /// com a competição carregada, a situação +0x64 = 3 passa a 2.
 unsafe extern "thiscall" fn move_club_to_division(_this: usize, clube: usize, divisao: usize, vaga: u32) {
-    crate::comparison::branch("cpm_3 mudar de divisao");
+    crate::comparison::branch("cpm_3 change division");
     let usa_numeros: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x85add0usize);
     let limpar_clausulas: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x4cd120usize);
     let antes = usa_numeros(cpm3_d(0xdd7ef0), clube, 0);
@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn move_club_to_division(_this: usize, clube: usize, di
         if comp != 0 && cpm3_d(clube + 0x69) != 0 && *((comp + 0x43) as *const u8) == 2 {
             let lugares = core::ptr::read_unaligned((comp + 0xe2) as *const i16);
             if lugares != -1 {
-                crate::comparison::branch("cpm_3 estadio da divisao");
+                crate::comparison::branch("cpm_3 division stadium");
                 let capacidade = core::ptr::read_unaligned((comp + 0xe4) as *const i16);
                 let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
                 let obra: unsafe extern "thiscall" fn(usize, i32, i32, usize, u32) -> u32 = core::mem::transmute(0x599e00usize);
@@ -77,7 +77,7 @@ unsafe extern "C" fn comp_util_shuffle_pointer_array(itens: usize, n: u32) {
     if 3 * n <= 0 {
         return;
     }
-    crate::comparison::branch("cpm_3 embaralhar ponteiros");
+    crate::comparison::branch("cpm_3 shuffle pointers");
     let mut k = 0i16;
     loop {
         swap_random_pair(itens, n);
@@ -109,7 +109,7 @@ unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubes: usize, n: u32,
     if m <= 0 {
         return;
     }
-    crate::comparison::branch("cpm_3 embaralhar os melhores");
+    crate::comparison::branch("cpm_3 shuffle the best");
     for _ in 0..m as i32 { // m trocas
         swap_random_pair(clubes, m as i32);
     }

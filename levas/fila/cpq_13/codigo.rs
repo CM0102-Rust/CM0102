@@ -28,7 +28,7 @@ unsafe extern "thiscall" fn clear_selection_slot(this: usize, clube: usize, vaga
     if k == -1 {
         return 0;
     }
-    crate::comparison::branch("cpq_13 limpar vaga");
+    crate::comparison::branch("cpq_13 clear slot");
     core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // a vaga
     if *((this + 0x5f0) as *const u8) != 0 {
         for e in 0..16 {
@@ -79,14 +79,14 @@ unsafe extern "thiscall" fn set_set_piece_taker(this: usize, clube: usize, papel
         core::ptr::write_unaligned(celula(e), cpq13_d(pessoa) as i32);
         return 1;
     }
-    crate::comparison::branch("cpq_13 batedor limpo");
+    crate::comparison::branch("cpq_13 taker cleared");
     core::ptr::write_unaligned(celula(e), -1); // sem batedor
     if e < 1 {
         let mut j = e + 1;
         while j < 2 {
             let c = core::ptr::read_unaligned(celula(j));
             if c > -1 {
-                crate::comparison::branch("cpq_13 batedor sobe");
+                crate::comparison::branch("cpq_13 taker moves up");
                 core::ptr::write_unaligned(celula(e), c);
                 core::ptr::write_unaligned(celula(j), -1);
                 return 1;

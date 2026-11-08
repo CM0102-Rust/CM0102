@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn construct_fra_first(this: usize, ano: u32, registro:
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cqq_6 primeira francesa nova");
+    crate::comparison::branch("cqq_6 new french first division");
     let n = || (cqq6_d(0xae235c) as i32).wrapping_sub((cqq6_d(0xae2350) as i32).wrapping_mul(2));
     if n() > 0 {
         let mut p = cqq6_d(0xae23b4) + 0x57;

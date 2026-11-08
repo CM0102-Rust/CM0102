@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn trigger_relegation_clauses(this: usize, clube: usize
             let p = cpk3_d(c + 0xd7 + k * 4);
             let contrato = contract_with_relegation_clause(this, c, p);
             if contrato != 0 {
-                crate::comparison::branch("cpk_3 clausula de rebaixamento");
+                crate::comparison::branch("cpk_3 relegation clause");
                 *((contrato + 0x1f) as *mut u8) = 2; // a cláusula acionada
                 noticia(cpk3_d(0xde1f54), p, liga, 3, contrato);
             }
@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn remove_contract_offer(this: usize, pessoa: *const u3
     if e == 0 {
         return;
     }
-    crate::comparison::branch("cpk_3 tirar oferta de contrato");
+    crate::comparison::branch("cpk_3 remove contract offer");
     let reserva = cpk3_d(e + 0x63);
     if reserva as i32 != -1 {
         let devolver: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x7a81a0usize);
@@ -128,7 +128,7 @@ unsafe extern "thiscall" fn is_player_suspended(this: usize, jogador: usize, com
     if b == 0 || julgar(b, jogador, 0, extra, partida) == 0 { // sem a suspensão da competição
         return 0;
     }
-    crate::comparison::branch("cpk_3 suspenso pela competicao");
+    crate::comparison::branch("cpk_3 suspended by the competition");
     let clube = cpk3_d(jogador + 0x39);
     if clube != 0 {
         let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);

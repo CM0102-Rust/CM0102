@@ -10,5 +10,5 @@ MUTACOES = [
      's.wrapping_add(1) // mutacao: um gol a mais'),
     ('cps10_menos_pontos_primeiro', 'cps10_i(rb + 0xba).wrapping_sub(cps10_i(ra + 0xba)) // cps10: mais pontos primeiro',
      'cps10_i(ra + 0xba).wrapping_sub(cps10_i(rb + 0xba)) // mutacao: menos pontos primeiro',
-     'cps_10 pontos dos dois'),
+     'cps_10 points of both'),
 ]

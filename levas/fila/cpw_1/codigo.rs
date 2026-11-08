@@ -71,10 +71,10 @@ unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pessoa: usize
     let dias = anos.wrapping_mul(365).wrapping_sub(cpw1_w(this + 0x25) as i32).wrapping_add(cpw1_w(0xae2c90) as i32).clamp(0, 500);
     let adapt = cpw1_b(pessoa + 0x59) as i8 as i32;
     if dias < adapt.wrapping_mul(15).wrapping_add(100) {
-        crate::comparison::branch("cpw_1 contratado ha pouco");
+        crate::comparison::branch("cpw_1 recently signed");
         razao = razao + read_f32_at(0x969560) as f64 + adapt as f64 * read_f64_at(0x968eb0) - (dias / 2) as f64; // cpw1: o desconto do recém-contratado
     }
-    crate::comparison::branch("cpw_1 satisfacao avaliada");
+    crate::comparison::branch("cpw_1 satisfaction evaluated");
     if !(razao >= read_f32_at(0x969560) as f64) { // cpw1: o limite da insatisfação
         return 1;
     }
@@ -134,7 +134,7 @@ unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: 
     if in_list(tm, p) != 0 || ofertas(tm, p, 0, 0) != 0 || trocas(tm, p, 0) != 0 {
         return;
     }
-    crate::comparison::branch("cpw_1 noticia do contrato novo");
+    crate::comparison::branch("cpw_1 new contract news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbc2, 0);
@@ -168,7 +168,7 @@ unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, co
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparison::branch("cpw_1 pedido retirado");
+    crate::comparison::branch("cpw_1 request withdrawn");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbc0, 0);

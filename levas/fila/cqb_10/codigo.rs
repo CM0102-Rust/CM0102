@@ -39,7 +39,7 @@ unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> 
     if no == 0 {
         return 0;
     }
-    crate::comparison::branch("cqb_10 tirado");
+    crate::comparison::branch("cqb_10 removed");
     let (prox, ant) = (cqb10_d(no + 6), cqb10_d(no + 0xa));
     if no == cqb10_d(this + 2) {
         cqb10_por(this + 2, prox);
@@ -47,7 +47,7 @@ unsafe extern "thiscall" fn manager_manager_remove(this: usize, dado: usize) -> 
         cqb10_por(ant + 6, prox);
     }
     if no == cqb10_d(this + 6) {
-        crate::comparison::branch("cqb_10 cauda");
+        crate::comparison::branch("cqb_10 tail");
         cqb10_por(this + 6, ant); // cqb10: a cauda volta ao anterior
     } else {
         cqb10_por(prox + 0xa, ant);

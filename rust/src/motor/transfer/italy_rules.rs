@@ -15,7 +15,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
     if exe::transfer_window_contains_date(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && exe::transfer_window_contains_date(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
-        crate::comparison::branch("cqe_6 italia fora da janela");
+        crate::comparison::branch("cqe_6 italy outside the window");
         return refuse_outside_window(this, msg, reason);
     }
     let comp = read_usize(club + club::DIVISION);
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
         }
     }
     if n >= 4 {
-        crate::comparison::branch("cqe_6 italia quatro emprestados");
+        crate::comparison::branch("cqe_6 italy four loaned out");
         if msg != 0 {
             let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
             let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
@@ -61,6 +61,6 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
 /// [pt] { 0x6613f0 } (thiscall, ret 0, italy_rules.cpp, `ITALY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Itália (regra 14), depois da base e da vtable): as
 /// 3 janelas de transferência de `ITALY_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn italy_rules_init_transfer_windows(this: usize) {
-    crate::comparison::branch("cqk_2 italia");
+    crate::comparison::branch("cqk_2 italy");
     set_transfer_windows(this, 3, &ITALY_TRANSFER_WINDOWS, 0x9ea9a4, 0x52);
 }

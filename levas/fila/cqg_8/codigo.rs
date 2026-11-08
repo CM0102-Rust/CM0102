@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
             cqg8_pd(this + 0x188b + 8 * k, *x);
             cqg8_pd(this + 0x188b + 8 * k + 4, 0xa); // cqg8: a instrução padrão das versões antigas
         }
-        crate::comparison::branch("cqg_8 instructions antigas");
+        crate::comparison::branch("cqg_8 old instructions");
     } else if crt_fread_one(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
             let troca64: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x43f350usize);
@@ -196,7 +196,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     if v & 0x4000 == 0 {
         v |= 0x2000; // cqg8: a instrução 0x2000 sem a 0x4000
         cqg8_pd(time, v);
-        crate::comparison::branch("cqg_8 instrucao 0x2000");
+        crate::comparison::branch("cqg_8 instruction 0x2000");
     }
     if id < 0x98ec5d {
         cqg8_pd(time, cqg8_d(time) | 0x20000);
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn load_from_disk(this: usize, caminho: usize, quieto: 
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
         guardada(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0
-        crate::comparison::branch("cqg_8 posicoes refeitas");
+        crate::comparison::branch("cqg_8 positions redone");
         refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa
     }
     let separar: unsafe extern "C" fn(usize, usize, usize, usize, usize) = core::mem::transmute(0x944cffusize);

@@ -48,7 +48,7 @@ unsafe extern "thiscall" fn board_named_players_after_match(this: usize, jogo: u
     if t == 0 || cqa10_d(t + 0x69) == 0 || selecao(clube) != 0 {
         return 0;
     }
-    crate::comparison::branch("cqa_10 a diretoria sorteia");
+    crate::comparison::branch("cqa_10 the board draws");
     let r1 = sorteio(cqa10_b(cqa10_d(t + 0x69) + 0x16) as i32); // cqa10: o sorteio pela ficha do técnico
     let r2 = sorteio(10); // cqa10: o sorteio da diretoria
     if r1 < r2 {
@@ -130,10 +130,10 @@ unsafe extern "thiscall" fn board_named_players_after_match(this: usize, jogo: u
     let x = cqa10_b(cqa10_d(clube + 0xbf) + 0x57) as i16;
     let conf = (cqa10_diretoria(this, clube) + 6) as *mut i16;
     if da != 0 {
-        crate::comparison::branch("cqa_10 diretoria elogia");
+        crate::comparison::branch("cqa_10 board praises");
         core::ptr::write_unaligned(conf, core::ptr::read_unaligned(conf).wrapping_add(x.wrapping_mul(10))); // cqa10: a confiança pelos preferidos
     } else if d9 != 0 {
-        crate::comparison::branch("cqa_10 diretoria culpa");
+        crate::comparison::branch("cqa_10 board blames");
         core::ptr::write_unaligned(conf, core::ptr::read_unaligned(conf).wrapping_sub(x.wrapping_mul(10))); // cqa10: a confiança pelos rejeitados
     }
     (d9 as u8).wrapping_add(da as u8)
@@ -221,7 +221,7 @@ unsafe extern "stdcall" fn build_board_player_performance_text(ids: *const i32, 
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let mut buf = [0u8; 0xc8];
     let b = buf.as_mut_ptr() as usize;
-    crate::comparison::branch("cqa_10 texto da diretoria");
+    crate::comparison::branch("cqa_10 board text");
     if vitoria as u8 != 0 {
         if i0 != -1 {
             nome(cqa10_pessoa(i0), b, 0xc8, 1);

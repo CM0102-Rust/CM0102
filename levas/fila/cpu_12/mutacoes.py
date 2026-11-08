@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu12_semente', 'semear((cpu12_w(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)) as u32); // cpu12: a semente',
      'semear((cpu12_w(this + 0x40) as i32).wrapping_add(*(0xdd7120 as *const i32)).wrapping_add(1) as u32); // mutacao: semente + 1',
-     'cpu_12 ordem sorteada'),
+     'cpu_12 drawn order'),
     ('cpu12_sem_troca', 'core::ptr::copy(tmp.as_ptr(), (tab() + b * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE); // cpu12: a troca',
      'core::ptr::copy(tmp.as_ptr(), (tab() + a * CUP_LEAGUE_TABLE_ROW_SIZE) as *mut u8, CUP_LEAGUE_TABLE_ROW_SIZE); // mutacao: sem troca',
-     'cpu_12 ordem sorteada'),
+     'cpu_12 drawn order'),
     ('cpu12_ultima_vaga', 'if let Some(j) = (0..n().max(0) as usize).find(|&j| *posto.add(j) == 0) { // cpu12: a primeira vaga livre',
      'if let Some(j) = (0..n().max(0) as usize).rev().find(|&j| *posto.add(j) == 0) { // mutacao: a ultima',
-     'cpu_12 clube na vaga livre'),
+     'cpu_12 club in the free slot'),
 ]

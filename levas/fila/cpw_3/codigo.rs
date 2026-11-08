@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     // id); a cópia reproduz o dword.
     let situacao = (cpw3_d(0xae23b4).wrapping_add(cpw3_d(c + 4)) as u32 & !0xff) | ((cpw3_b(entrada + 0x24) >> 1) & 0xf) as u32;
     let f1 = staff_interest_in_club(cpw3_d(cpw3_d(0xde1f54) + 0x856), jogador, clube, 0, 1, situacao);
-    crate::comparison::branch("cpw_3 interesse no emprestimo");
+    crate::comparison::branch("cpw_3 loan interest");
     if !(f1 >= read_f64_at(0x968e38)) { // cpw3: o interesse mínimo
         return -1;
     }
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     }
     let f2 = staff_interest_in_club(this, jogador, clube, 0, 0, 1);
     let mut meses = ate_fim as u8;
-    crate::comparison::branch("cpw_3 conta do inicio");
+    crate::comparison::branch("cpw_3 count from the start");
     if f2 >= read_f64_at(0x9690a8) { // cpw3: o interesse para contar do início
         let n = cpw3_d(cpw3_d(clube + 0x53));
         if n != cpw3_d(0x9cf488) && n != cpw3_d(0x9cf434) && n != cpw3_d(0x9cf360) {
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, jogador: usiz
     if contract_manager_date_is_before(r, janela) {
         return -1;
     }
-    crate::comparison::branch("cpw_3 tres semanas");
+    crate::comparison::branch("cpw_3 three weeks");
     let r = mais_semanas(0xae2c90, &mut t, 3); // cpw3: as 3 semanas a partir de hoje
     if contract_manager_date_is_before(v, r) {
         return -1;
@@ -229,7 +229,7 @@ unsafe extern "thiscall" fn post_contract_expiry_news(this: usize, contrato: usi
     if avisar == 0 {
         return;
     }
-    crate::comparison::branch("cpw_3 avisar interessados");
+    crate::comparison::branch("cpw_3 notify interested parties");
     let lista_nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
     let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
     let proximo: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d1b0usize);
@@ -269,7 +269,7 @@ unsafe extern "thiscall" fn post_bosman_departure_news(this: usize, contrato: us
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparison::branch("cpw_3 saida pela lei bosman");
+    crate::comparison::branch("cpw_3 departure under the Bosman ruling");
     let mut local = [0u32; 0x38];
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xbbe, 0);

@@ -1,6 +1,6 @@
 # As reacoes dos elencos a transferencia (media.cpp):
 # - 0x758200 (Media::process_transfer_squad_reactions): no fim de cada transferencia (TRANSFER_MANAGER::move_player_to_club
-#   0x8c9720, chamada incondicional em 0x8ca879; "cpx_3 noticia da transferencia concluida" 64 na base), para jogadores
+#   0x8c9720, chamada incondicional em 0x8ca879; "cpx_3 transfer completed news" 64 na base), para jogadores
 #   de 19 anos ou mais com reputacao 4250: as marcas e queixas dos contratos dos dois elencos (que levam a pedidos de
 #   transferencia), a moral, e a torcida do novo clube (+8 da linha em [[0xb67a44]], no banco).
 # - 0x75b6e0 (Media::queue_signing_celebration_story) e 0x75cfc0 (Media::queue_sale_unrest_story): as noticias, so por

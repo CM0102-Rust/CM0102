@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpp_emprestimo_sem_vaga', 'add_staff_to_club(novo, pessoa, 0xb, 0xae2c90, 1, 0); // o jogador no clube novo',
      'add_staff_to_club(novo, pessoa, 0, 0xae2c90, 1, 0); // mutacao: sem a vaga de jogador',
-     'cpp_2 assinar emprestimo'),
+     'cpp_2 sign loan'),
     ('cpp_fim_sem_volta', 'cpp2_por(pessoa + 0x39, volta as u32); // a pessoa volta ao dono',
      'let _ = volta; // mutacao: a pessoa nao volta ao dono',
-     'cpp_2 encerrar emprestimo'),
+     'cpp_2 end loan'),
     ('cpp_troca_marca', 'set_squad_flags(pessoa, l as u32); // 1 principal, 2 reserva',
      'set_squad_flags(pessoa, 3 - l as u32); // mutacao: a marca trocada',
-     'cpp_2 trocar no clube'),
+     'cpp_2 change at the club'),
 ]

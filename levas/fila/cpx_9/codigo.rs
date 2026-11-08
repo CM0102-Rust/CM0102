@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn remove_player_from_selection(this: usize, clube: usi
         for tipo in 0..5u32 {
             for lado in 0..2u32 {
                 if batedor(this, clube, tipo, lado, time) == pessoa {
-                    crate::comparison::branch("cpx_9 batedor tirado");
+                    crate::comparison::branch("cpx_9 taker removed");
                     marcar(this, clube, tipo, lado, 0, time);
                     achou = 1;
                 }

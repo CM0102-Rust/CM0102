@@ -47,11 +47,11 @@ unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube: usize, pos
             continue;
         }
         if (cpy1_d(v + 0x17) as i32) <= -1 {
-            crate::comparison::branch("cpy_1 alvo sem lance");
+            crate::comparison::branch("cpy_1 target without bid");
             continue; // cpy1: alvo sem lance não conta
         }
         if posicao as u8 != 0xff && cpy1_b(v) != posicao as u8 {
-            crate::comparison::branch("cpy_1 outra posicao");
+            crate::comparison::branch("cpy_1 other position");
             continue; // cpy1: lance de outra posição não conta
         }
         if cpy1_b(entrada + 4) == 2 && humano(clube, 1, 1, 0, 0) != 0 {
@@ -65,14 +65,14 @@ unsafe extern "thiscall" fn count_slots_with_bids(this: usize, clube: usize, pos
             if velho {
                 let alvo = cpy1_d(0xae23bc).wrapping_add(cpy1_d(v + 0xf).wrapping_mul(0x6e));
                 if ofertas(cpy1_d(0xde1f54), alvo, 0, 0) == 0 {
-                    crate::comparison::branch("cpy_1 lance vencido");
+                    crate::comparison::branch("cpy_1 bid expired");
                     *((v + 0xf) as *mut i32) = -1; // cpy1: a vaga perde o alvo
                     *((v + 0x17) as *mut i32) = -1;
                     continue;
                 }
             }
         }
-        crate::comparison::branch("cpy_1 vaga com lance");
+        crate::comparison::branch("cpy_1 slot with bid");
         n = n.wrapping_add(1); // cpy1: conta a vaga com lance
     }
     n

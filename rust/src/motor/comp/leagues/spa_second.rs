@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
                 show_error_at(0xa828bc, 0xa9);
                 return 0;
             }
-            crate::comparison::branch("cqq_4 calendario da segunda espanhola");
+            crate::comparison::branch("cqq_4 spanish second division calendar");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 spa_second_set_league_rounds(t, year, 0, &SEGUNDA_ODD_ALL_ROUNDS);
@@ -265,7 +265,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u
 /// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
 /// da nação [inferência]), senão −1; +0x52 = 2.
 pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_4 regras da segunda");
+    crate::comparison::branch("cqk_4 segunda rules");
     spa_first_apply_league_rules(this, &segunda_rules(this))
 }
 
@@ -303,7 +303,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
         if spa_lower_is_in_comp(c, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             exe::league_init_table_row(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
-                crate::comparison::branch("cqm_6 time b na segunda");
+                crate::comparison::branch("cqm_6 b team in the second division");
                 *((read_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
         }
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqm_6 tabela da segunda");
+    crate::comparison::branch("cqm_6 second division fixtures");
     if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }

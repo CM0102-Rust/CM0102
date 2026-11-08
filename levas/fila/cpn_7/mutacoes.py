@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpn_busca_mesma_regiao', 'return 1; // a mesma região da nação do clube',
      'return 0; // mutacao: a mesma regiao nao cobre',
-     'cpn_7 mesma regiao'),
+     'cpn_7 same region'),
     ('cpn_busca_nacao_do_olheiro', 'return 1; // a nação não é estrangeira para o olheiro',
      'return 0; // mutacao: a nacao do olheiro nao cobre',
-     'cpn_7 nacao do olheiro'),
+     'cpn_7 scout nation'),
     ('cpn_amistoso_lista', 'tirar(cpn7_d(this + 0x34c8), jogo) // tira o jogo da lista dos amistosos',
      '1 // mutacao: o jogo fica na lista',
-     'cpn_7 tirar o amistoso'),
+     'cpn_7 remove the friendly'),
 ]

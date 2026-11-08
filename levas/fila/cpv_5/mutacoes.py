@@ -9,8 +9,8 @@ MUTACOES = [
      'cpv_5 merchandising'),
     ('cpv5_loja_sem_sorteio', '    let r2 = cpv5_sortear(rep); // cpv5: o segundo sorteio da loja',
      '    let r2 = rep / 2; // mutacao: sem o sorteio',
-     'cpv_5 ingressos vendidos'),
+     'cpv_5 tickets sold'),
     ('cpv5_receita_invertida', '    if aplicar != 0 { // cpv5: a receita dos ingressos',
      '    if aplicar == 0 { // mutacao: a receita invertida',
-     'cpv_5 ingressos vendidos'),
+     'cpv_5 tickets sold'),
 ]

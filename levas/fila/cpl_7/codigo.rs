@@ -41,10 +41,10 @@ unsafe extern "thiscall" fn add_transfer_interest(this: usize, jogador: usize, c
     padrao(data.as_mut_ptr() as usize);
     let chave = interest_key(jogador, clube);
     if has_interest(this, &chave) {
-        crate::comparison::branch("cpl_7 interesse repetido");
+        crate::comparison::branch("cpl_7 repeated interest");
         return; // o interesse já está
     }
-    crate::comparison::branch("cpl_7 interesse novo");
+    crate::comparison::branch("cpl_7 new interest");
     if cpl7_d(this + 0xc) == 0 {
         let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
         let p = alocar(0x1f4);

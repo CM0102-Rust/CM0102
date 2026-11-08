@@ -3,8 +3,8 @@
 #   Liga dos Campeoes 0x584ae0 e as copas das nacoes): a reputacao do vice (+0x80, no banco) sobe.
 # - 0x86b710 (Staff_Records::add_cup_third_place_record): pelas copas com disputa de terceiro (selecoes, mundiais): pode
 #   nao rodar ate 2002-06-01 (passageira).
-# - 0x869aa0 (Staff_Records::record_manager_job_change): pela saida do tecnico 0x69b790 ("cpq_1 tirar o tecnico" 16) e
-#   pelo tecnico novo 0x694c80 ("cpp_3 abrir passagem" 128).
+# - 0x869aa0 (Staff_Records::record_manager_job_change): pela saida do tecnico 0x69b790 ("cpq_1 remove the manager" 16) e
+#   pelo tecnico novo 0x694c80 ("cpp_3 open spell" 128).
 # Convencoes conferidas nos pontos de chamada da original (licao da 258a):
 #   0x53d980 pessoa_e_estrangeira: cdecl (add esp, 0xc em 0x86b1eb e 0x86b846), 3 args (push 1, push nacao +0x53, push
 #   tecnico). 0x945640 _ftol: x87, pelo ftol (fild do produto em 32 bits, fmul qword [0x96ff88]). 0x76d940

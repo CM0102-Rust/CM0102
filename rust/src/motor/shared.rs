@@ -126,7 +126,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, 
         if random(attack as i16 as i32 + 100) != 0 {
             return 0;
         }
-        crate::comparison::branch("play bola do proprio lado");
+        crate::comparison::branch("play ball on own side");
         narrate(call, 0x1f5e, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         let r = random(byte(m, engine::BALL_ROLL) as i32);
@@ -153,18 +153,18 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, 
         if random(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
             choose()
         } else {
-            crate::comparison::branch("play cabecada");
+            crate::comparison::branch("play header");
             ((*w(j, 0x164)).wrapping_shl(1), 0x25)
         }
     };
     if strong != 0 {
-        crate::comparison::branch("play forte");
+        crate::comparison::branch("play strong");
         valor = ftol(valor as f64 * 0.85) as i16;
     }
     let v = random(valor as i32);
     let rating = (v - strength as i32 / 3 - attack) as i16;
     if rating < -100 {
-        crate::comparison::branch("play nota muito baixa");
+        crate::comparison::branch("play very low rating");
         *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(random(2) as u8);
         return 0;
     }
@@ -176,11 +176,11 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, 
     let mut t = exe::cm3_match_engine_referee_check_foul(m, j, lance as u16, &mut cartao, &mut grav);
     if t != 0 {
         if random(5) == 0 && !foul_strong {
-            crate::comparison::branch("play falta registrada");
+            crate::comparison::branch("play foul recorded");
             exe::cm3_match_engine_set_pending_foul(m, lance as u16, j as u32, 0, 0, t, *b(j, match_player::CELL_X), *b(j, match_player::CELL_Y), cartao, grav);
         } else {
             // the foul with a punishment
-            crate::comparison::branch("play falta punida");
+            crate::comparison::branch("play foul punished");
             let mut weight = 0f32;
             exe::cm3_match_engine_referee_decide_booking(m, j, &mut t, cartao as i8, grav as i8, foul_strong as u8, &mut weight);
             narrate(call, 0x1fe8, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
@@ -281,7 +281,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, 
     let half_lua = byte(j, match_player::CELL_X) == 4 && (byte(j, match_player::CELL_Y) == 0 || byte(j, match_player::CELL_Y) == 11);
     if rating >= 400 {
         // venceu
-        crate::comparison::branch("play venceu");
+        crate::comparison::branch("play won");
         *w(j, match_player::MATCH_RATING) = (*w(j, match_player::MATCH_RATING)).wrapping_add(0x1e);
         *b(j, match_player::BALLS_CONTESTED) = (*b(j, match_player::BALLS_CONTESTED)).wrapping_add(1);
         *b(j, match_player::BUSY) = (*b(j, match_player::BUSY)).wrapping_add(1);
@@ -299,15 +299,15 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, 
         return 1;
     }
     if exe::cm3_match_engine_get_goalkeeper(m, byte(j, match_player::SIDE)) == j {
-        crate::comparison::branch("play goleiro");
+        crate::comparison::branch("play goalkeeper");
         narrate(call, 0x1fe7, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
     } else if half_lua && rating > 200 {
-        crate::comparison::branch("play meia-lua");
+        crate::comparison::branch("play arc");
         narrate(call, 0x1ffd, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX);
         *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *const i32)).wrapping_sub(300);
         espirra(call, random(3), 0);
     } else {
-        crate::comparison::branch("play perdeu");
+        crate::comparison::branch("play lost");
         if strong != 0 {
             narrar7(call, 0x21d8, (read_u8(j + match_player::COMMENTARY_ID) as u32), (read_u8(j + match_player::SIDE) as u32), u32::MAX, style);
         } else if style == 5 {
@@ -431,7 +431,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                         && average() + 0.2 > nota11
                         && average() - 0.2 < nota11
                     {
-                        crate::comparison::branch("jogadores noticia 0x11");
+                        crate::comparison::branch("players news 0x11");
                         news(g(G_MEDIA), p, club, 0x11, partida, 0);
                     }
                 }
@@ -443,7 +443,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     let nota11 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 0x11);
                     let r = random(9);
                     if r as f64 * 0.1 + m + 0.5 < nota11 {
-                        crate::comparison::branch("jogadores noticia 0x34");
+                        crate::comparison::branch("players news 0x34");
                         news_34(g(G_MEDIA), p, club, 0x34, partida);
                         ja_34 = true;
                     }
@@ -472,7 +472,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 {
                     let c = contract(g(G_CONTRACT_MANAGER), p, club);
                     if c != 0 && exe::staff_contract_get_flags(c) & 0x20 == 0 {
-                        crate::comparison::branch("jogadores marca 0x20");
+                        crate::comparison::branch("players mark 0x20");
                         por_20(c, 0x20);
                     }
                 }
@@ -481,7 +481,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
         // the manager and the assistants
         let id = read(ts + 0x184);
         if id > -1 {
-            crate::comparison::branch("jogadores tecnico");
+            crate::comparison::branch("players manager");
             let manager = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
             let (mut da, mut db, mut dc) = (0i16, 0i16, 0i16);
             if manager != 0 && g(manager + staff::NON_PLAYER) != 0 {

@@ -8,5 +8,5 @@ MUTACOES = [
     ('cqn5_lista_nunca_cai',
      'if cqn5_d(f + 8) == 0xffff_ffff || cqn5_d(f + 0xc) == 0xffff_ffff { // cqn5: um clube sem achar derruba a lista',
      'if false { // mutacao: a lista nunca cai',
-     'cqn_5 calendario fixo'),
+     'cqn_5 fixed calendar'),
 ]

@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
     if list == 0 {
         return show_error_at(0x9870f8, 0x311);
     }
-    crate::comparison::branch("cqt_13 quartas da copa africana");
+    crate::comparison::branch("cqt_13 african cup quarterfinals");
     for (k, &(g, p)) in AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().enumerate() {
         write_usize(list + k * 4, group_table_club(this, g, p));
     }
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize
     let f = f + 1;
     write_usize(this + cup::CURRENT_STAGE, f as usize);
     if f == 1 {
-        crate::comparison::branch("cqt_13 finais da recopa asiatica");
+        crate::comparison::branch("cqt_13 asian cup winners cup finals");
         exe::asiacupwinner_create_finals_stage(this);
     }
 }
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     if list == 0 {
         return show_error_at(0x987b60, 0x34b);
     }
-    crate::comparison::branch("cqt_13 finalistas da recopa asiatica");
+    crate::comparison::branch("cqt_13 asian cup winners cup finalists");
     // simplification: with fewer than 4 alive the original leaves in the slots what malloc gave; the copy writes 0 (in this career there are 4)
     for (k, &c) in asian_cup_winners_finalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);

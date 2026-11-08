@@ -227,7 +227,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
                 if natural_position_mask(p) == natural_position_mask(q) && (rp > 0x128e || rp as i32 - 0x5dc > current_reputation(q) as i32) {
                     let c = cqa13_contrato(q, novo);
                     if c != 0 {
-                        crate::comparison::branch("cqa_13 historia da midia");
+                        crate::comparison::branch("cqa_13 media story");
                         mudou = true;
                         if tipo == 1 {
                             if apply_event_flags_or_stop(c, 0x8000000, 0) || apply_event_flags_or_stop(c, 0x80000000, p) {
@@ -289,7 +289,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             }
         }
         if media_contract_flags(c) & 0x400 != 0 && forca >= limit {
-            crate::comparison::branch("cqa_13 elenco forte");
+            crate::comparison::branch("cqa_13 strong squad");
             clear_contract_flags(c, 0x400);
         }
         if mesma > 2 && media_contract_flags(c) & 0x400 == 0 && current_reputation(m) > 0x109a && natural_position_mask(p) == natural_position_mask(m) {
@@ -313,7 +313,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             if rp > 0x1482 || rp as i32 - 0x4e2 > cqa13_w(novo + 0x80) as i32 {
                 mudou = true;
                 if forca > 0x28 || cqa13_sortear(cqa13_c(m + 0x5a)) != 0 {
-                    crate::comparison::branch("cqa_13 queixa limpa");
+                    crate::comparison::branch("cqa_13 complaint cleared");
                     if clear_grievances_or_stop(c, 0x20000000) { // cqa13: chega alguém maior
                         return;
                     }
@@ -328,7 +328,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             let linha = cqa13_d(cqa13_d(0xb67a44)).wrapping_add((cqa13_i(novo) as u32).wrapping_mul(0x49) as usize);
             let x = cqa13_w(linha + 8).wrapping_add(0x1f4); // cqa13: a torcida comemora
             let x = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
-            crate::comparison::branch("cqa_13 goal_crowd_reaction comemora");
+            crate::comparison::branch("cqa_13 goal_crowd_reaction celebrates");
             core::ptr::write_unaligned((linha + 8) as *mut i16, x);
             if signing_celebration_or_stop(this, p, novo, 1, 0) {
                 return;
@@ -418,7 +418,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
             if rp > 0x1e46 || rp > cqa13_w(novo + 0x80).wrapping_sub(0x2ee) {
                 queixa = 0x20000000;
             } else {
-                crate::comparison::branch("cqa_13 moral cai");
+                crate::comparison::branch("cqa_13 morale drops");
                 let x = cqa13_c(c + 0x44) - 0x19; // cqa13: a moral do companheiro cai
                 *((c + 0x44) as *mut i8) = if x > 100 { 100 } else if x < -100 { -100 } else { x as i8 };
             }
@@ -531,7 +531,7 @@ unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(this: usize
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     antes.write_back();
     if MEDIA_REACTION_STOPPED {
-        crate::comparison::branch("cqa_13 reacoes so na original");
+        crate::comparison::branch("cqa_13 reactions only in the original");
         return o(this, p, novo, velho, flag);
     }
     o(this, p, novo, velho, flag);
@@ -560,7 +560,7 @@ unsafe extern "thiscall" fn queue_signing_celebration_story(this: usize, p: usiz
     if porta_voz == 0 && tipo as u8 == 2 {
         return;
     }
-    crate::comparison::branch("cqa_13 noticia da comemoracao");
+    crate::comparison::branch("cqa_13 celebration news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
@@ -626,7 +626,7 @@ unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, velho: usize, 
     if comp == 0 || cqa13_d(comp + 0x61) == 0 || p == 0 || cqa13_d(p + 0x61) == 0 {
         return;
     }
-    crate::comparison::branch("cqa_13 noticia do desassossego");
+    crate::comparison::branch("cqa_13 unsettling news");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);

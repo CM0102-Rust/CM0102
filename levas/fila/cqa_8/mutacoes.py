@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cqa8_vencedor_sem_sorteio', '                let r = sorteio(0x15 - cqa8_b(pessoa + 0x57) as i32); // cqa8: o sorteio do vencedor',
      '                let r = 4; // mutacao: sem o sorteio do vencedor',
-     'cqa_8 moral do vencedor'),
+     'cqa_8 winner morale'),
     ('cqa8_moral_sem_sorteio', '                    let r1 = sorteio(0x1e); // cqa8: o primeiro sorteio da moral',
      '                    let r1 = 15; // mutacao: sem o primeiro sorteio da moral',
-     'cqa_8 testa a moral'),
+     'cqa_8 tests the morale'),
     ('cqa8_fora_sem_evoluir', '            evoluir(0, pessoa, clube, outro, jogo, (nota - read_f64_at(0x967888)) as f32, 0, 0); // cqa8: a evolução de quem ficou de fora',
      '            let _ = (evoluir, nota); // mutacao: quem ficou de fora não evolui',
-     'cqa_8 evolui quem ficou de fora'),
+     'cqa_8 develops who was left out'),
 ]

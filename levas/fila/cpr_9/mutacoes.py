@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpr9_sem_desempregado', '} else if desempregado(p, e.as_mut_ptr()) != 0 {',
      '} else if false && desempregado(p, e.as_mut_ptr()) != 0 { // mutacao: sem o desempregado',
-     'cpr_9 desempregado'),
+     'cpr_9 unemployed'),
     ('cpr9_treinador_fica', 'limpar(0x19f, 5); // cpr9: as vagas de treinador',
      '// mutacao: as vagas de treinador ficam',
-     'cpr_9 treinador'),
+     'cpr_9 coach'),
     ('cpr9_vaga_nao_abre', 'abrir(cpr9_d(0xb67a44), c, pessoa); // cpr9: a vaga do técnico abre',
      'let _ = abrir; // mutacao: a vaga nao abre',
-     'cpr_9 tecnico'),
+     'cpr_9 manager'),
 ]

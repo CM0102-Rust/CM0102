@@ -16,7 +16,7 @@ unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     while i < cql3_d(0xadadf8) as i32 {
         let c = cql3_d(cql3_d(0xadadfc) as usize + 4 * i as usize) as usize;
         if c != 0 && divisao(cql3_d(cql3_d(c + 4) as usize) as i32) != 0 && *((c + 0x52) as *const u8) & 2 != 0 {
-            crate::comparison::branch("cql_3 numera a liga");
+            crate::comparison::branch("cql_3 numbers the league");
             cada(c); // cql3: numera a liga
         }
         i += 1;
@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, liga: usize
                 }
                 let b = *((f + 4) as *const i8);
                 let k = if b < 0 { 0 } else if b > 0x32 { 0x32 } else { b as i32 };
-                crate::comparison::branch("cql_3 numero do banco");
+                crate::comparison::branch("cql_3 bench number");
                 gravar(this, p, c, k as u32); // cql3: o número do banco
             }
         }
@@ -240,13 +240,13 @@ unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usiz
         if p != 0 {
             let v = if marca != 0 { 1 } else { 2 };
             if etapa == 1 {
-                crate::comparison::branch("cql_3 inscreve na etapa 1");
+                crate::comparison::branch("cql_3 registers in stage 1");
                 *m6d(p) = v; // cql3: inscreve
                 conta = conta.wrapping_add(1);
             } else {
                 let a = *m6d(p);
                 if a != 2 && a & 8 == 0 && (conta as i32) < total {
-                    crate::comparison::branch("cql_3 inscreve depois");
+                    crate::comparison::branch("cql_3 registers later");
                     *m6d(p) = v; // cql3: inscreve depois
                     conta = conta.wrapping_add(1);
                 }

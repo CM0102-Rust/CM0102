@@ -29,7 +29,7 @@ unsafe fn regen_out_of_memory(linha: u32) -> ! {
 /// jogadores livres (conta +0x40 = capacidade +0x44 − 1), não por esta lista: fiel. Cresce 250 (realloc 0x945667;
 /// sem memória, caixa 0x9c4 e fim).
 unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, id: u32, nacao: u32, segunda: u32) {
-    crate::comparison::branch("cpk_2 reserva de tecnico");
+    crate::comparison::branch("cpk_2 manager reservation");
     if cpk2_d(this + 0x40) == cpk2_d(this + 0x44).wrapping_sub(1) {
         let p = crt_realloc(cpk2_d(this + 0x1c), cpk2_d(this + 0x24).wrapping_add(250) << 4);
         cpk2_por(this + 0x1c, p);
@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, id: u32, na
 /// (byte), +8, +0xa, +0x10, +0x12 (palavras) e +0x19 (byte) do registro, nessa ordem (+0xc..+0x10 e +0x14..+0x18
 /// ficam como estão). Conta = capacidade − 1: cresce 250 (realloc 0x945667; sem memória, caixa 0xa53 e fim).
 unsafe extern "thiscall" fn add_retirement(this: usize, r: usize) {
-    crate::comparison::branch("cpk_2 aposentadoria");
+    crate::comparison::branch("cpk_2 retirement");
     let cap = cpk2_d(this + 0xc);
     if cpk2_d(this + 8) == cap.wrapping_sub(1) {
         let p = crt_realloc(cpk2_d(this + 4), cap.wrapping_add(250).wrapping_mul(26));
@@ -86,7 +86,7 @@ unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entrada: usize) {
     if id < 0 || id > *(0xae2364 as *const i32) {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I2%%)(this, entrada);
     }
-    crate::comparison::branch("cpk_2 vaga para o regen");
+    crate::comparison::branch("cpk_2 slot for the regen");
     let pessoa = cpk2_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
     let cap = cpk2_d(this + 0x18);
     if cpk2_d(this + 0x14) == cap.wrapping_sub(1) {

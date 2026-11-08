@@ -40,7 +40,7 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
     let t9a06: unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8 = core::mem::transmute(0x5fd6b0usize);
     if p != 0 {
         if aposentado(p, principal(cpv12_d(p + 0x1a))) != 0 { // cpv12: aposentado
-            crate::comparison::branch("cpv_12 aposentado");
+            crate::comparison::branch("cpv_12 retired");
             if msg != 0 {
                 let mut nome = [0u8; 0x12c];
                 nome_do_jogador(p, nome.as_mut_ptr(), 0x12c, 1);
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
         return 1;
     }
     if cpv12_b(e + 0x44) == 0 {
-        crate::comparison::branch("cpv_12 sem janela");
+        crate::comparison::branch("cpv_12 without window");
         return 1; // cpv12: sem janela
     }
     let hoje = cpv12_d(0xae2c90) as u32;
@@ -124,11 +124,11 @@ unsafe extern "thiscall" fn national_teams_can_change_squad(this: usize, nacao: 
     let d = cpv12_d(e + 0x3a) as u32;
     let (a, dd) = ((d >> 16) as u16, d as u16 as i16);
     if a < ano || (a == ano && dd < dia) {
-        crate::comparison::branch("cpv_12 data passada");
+        crate::comparison::branch("cpv_12 past date");
         return 1; // cpv12: data passada
     }
     if a == ano && dd as u16 == dia as u16 {
-        crate::comparison::branch("cpv_12 jogo hoje");
+        crate::comparison::branch("cpv_12 match today");
         let nova: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x68d020usize);
         let destruir: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x68d040usize);
         let buscar: unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, u32, i32, i32, i32, u32, i32, u32, u32, u32, u32, usize, u32, i32, u32, u32) -> u16 =

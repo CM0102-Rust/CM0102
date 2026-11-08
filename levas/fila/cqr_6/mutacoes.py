@@ -9,9 +9,9 @@ MUTACOES = [
     ('cqr6_estadio_sem_sorteio',
      'let mut k = random(6) as u8; // cqr6: o estádio sorteado entre 6',
      'let mut k = { let _ = sortear; 0u8 }; // mutacao: sem sorteio',
-     'cqr_6 estadio do jogo das estrelas'),
+     'cqr_6 all-star game stadium'),
     ('cqr6_mandante_trocado',
      'let conferencia = if cqr6_w(this + 0x40) % 2 != 0 {',
      'let conferencia = if cqr6_w(this + 0x40) % 2 == 0 { // mutacao',
-     'cqr_6 estadio do jogo das estrelas'),
+     'cqr_6 all-star game stadium'),
 ]

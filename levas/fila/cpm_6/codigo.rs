@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
     if (cpm6_d(s + 0x36b) as i32) < cpm6_d(t + 0x36b) as i32 {
         let minimo = (cpm6_w(vendedor + 0x80) as i32 + 500).wrapping_mul(1000);
         if cpm6_d(t + 0x36b) as i32 >= minimo && ano != cpm6_w(s + 0x36f) && !is_record_news_queued(this, cpm6_d(vendedor), 0x1f) {
-            crate::comparison::branch("cpm_6 noticia de recorde recebido");
+            crate::comparison::branch("cpm_6 record fee received news");
             noticia(this, cpm6_d(vendedor) as u32, 0x1f); // recorde de valor recebido
         }
         cpm6_por(s + 0x36b, cpm6_d(t + 0x36b));
@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn add_transfer_totals(this: usize, valor: i32, comprad
         let minimo = (cpm6_w(comprador + 0x80) as i32 + 500).wrapping_mul(1000);
         // a original confere o mínimo com o recorde antigo (o ecx que ainda tem o de sempre)
         if cpm6_d(s + 0x365) as i32 >= minimo && !is_record_news_queued(this, cpm6_d(comprador), 0x1e) {
-            crate::comparison::branch("cpm_6 noticia de recorde pago");
+            crate::comparison::branch("cpm_6 record fee paid news");
             noticia(this, cpm6_d(comprador) as u32, 0x1e); // recorde de valor pago
         }
         cpm6_por(s + 0x365, cpm6_d(t + 0x365));
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn update_season_rating_record(this: usize, clube: usiz
         let media = estatistica(reg, 0x11, 6.5);
         // fcomp com o −1.0 (double) e fcom com o float guardado: passa só com a média maior
         if *nota as f64 == read_f64_at(0x968948) || media > *nota as f64 {
-            crate::comparison::branch("cpm_6 recorde de nota da temporada");
+            crate::comparison::branch("cpm_6 season rating record");
             *nota = media as f32;
             *((r + 0x20d) as *mut u8) = jogou;
             referencia(p, r + 0x1f5);

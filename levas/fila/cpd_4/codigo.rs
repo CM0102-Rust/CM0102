@@ -49,7 +49,7 @@ unsafe fn add_to_reserves(this: usize, p: usize, rec: usize, sub: u32) {
             core::ptr::write_unaligned((c + 0xf) as *mut i16, nota); // a menor nota
         }
     } else if nota > cpd4_w(c + 0xf) {
-        crate::comparison::branch("reservas cheias entra pela nota");
+        crate::comparison::branch("reserves full enters by rating");
         let ini = reserve_level_start(rec, o, nivel);
         let ultimo = (cpd4_b(c + 0xe) as i32).wrapping_add(ini).wrapping_sub(2);
         let mut pos = ini;
@@ -114,7 +114,7 @@ unsafe extern "thiscall" fn build_selection_pools(this: usize) {
                     if n2 == 0 || cpd4_b(p + 0x22) != 0 || n2 == cpd4_d(p + 0x1a) || *(n2 as *const i32) == *(0x9cf434 as *const i32) {
                         continue;
                     }
-                    crate::comparison::branch("reservas segunda nacionalidade");
+                    crate::comparison::branch("reserves second nationality");
                     *(n2 as *const i32)
                 };
                 let rec = cpd4_d(this + 4).wrapping_add(id.wrapping_mul(0x6e) as usize);

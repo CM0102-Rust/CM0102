@@ -1,8 +1,8 @@
 # Os registros dos tecnicos (staff_records.cpp):
-# - 0x868830 (Staff_Records::record_match_result): pelo fechamento da partida do dia 0x6b5f00 ("fechar historia" 2048
+# - 0x868830 (Staff_Records::record_match_result): pelo fechamento da partida do dia 0x6b5f00 ("close story" 2048
 #   na base da 261a), a cada jogo; os pontos do mes (+0xce) sao lidos pelo tecnico do mes 0x86f950 e os da temporada
 #   (+0xba) pelos candidatos a tecnico do ano (0x870220).
-# - 0x86a070 (Staff_Records::add_league_finish_records): pela liga completa 0x689ad0 ("liga completa: fim da liga" 16).
+# - 0x86a070 (Staff_Records::add_league_finish_records): pela liga completa 0x689ad0 ("league complete: end of league" 16).
 # - 0x86dc30 (Staff_Records::add_supporters_player_of_year_record): pelo fim da temporada dos recordes 0x447880 (pode nao
 #   rodar ate 2002-06-01: passageira).
 # Convencoes conferidas nos pontos de chamada da original (licao da 258a):

@@ -95,7 +95,7 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
         let so = if sa != 0 && fo != 0 { cqa2_d(fo + 0x38) } else { 0 };
         if sa != 0 && so != 0 {
             if contar {
-                crate::comparison::branch("cqa_2 distancia do amistoso");
+                crate::comparison::branch("cqa_2 friendly distance");
             }
             let dx = read_f64_at(sa + 0x2b) - read_f64_at(so + 0x2b);
             let dy = read_f64_at(sa + 0x23) - read_f64_at(so + 0x23);
@@ -106,7 +106,7 @@ unsafe fn friendly_reply(m: usize, contar: bool) -> u8 {
     }
     let (ro, ra) = (cqa2_w(o + 0x80) as i32, cqa2_w(a + 0x80) as i32);
     if contar {
-        crate::comparison::branch("cqa_2 decisao do amistoso");
+        crate::comparison::branch("cqa_2 friendly decision");
     }
     // fcompp/test ah, 1: o C0 vale para "menor" e para "sem ordem" (NaN): os >= abaixo dão o mesmo caminho
     let aceita = ra as f64 >= ro as f64 / f || f * read_f64_at(0x96a690) >= ro.wrapping_sub(ra) as f64; // cqa2: aceita pela reputação
@@ -139,7 +139,7 @@ unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: usize, forcar
     }
     let s = cqa2_b(m + 0x18);
     if s == 3 {
-        crate::comparison::branch("cqa_2 amistoso aceito");
+        crate::comparison::branch("cqa_2 friendly accepted");
         let mut p = [0u8; 0x50];
         let pp = p.as_mut_ptr() as usize;
         let comp = cqa2_d(this + 4);
@@ -282,7 +282,7 @@ unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usize) {
     if o == 0 || cqa2_b(m + 0x18) != 1 || !club_has_human_manager(o) {
         return;
     }
-    crate::comparison::branch("cqa_2 pedido ao humano");
+    crate::comparison::branch("cqa_2 request to the human");
     *((m + 0x18) as *mut u8) = 2;
     if !club_has_human_manager(cqa2_d(m + 0x10)) && !club_has_human_manager(cqa2_d(m + 0x14)) {
         return;

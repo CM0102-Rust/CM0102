@@ -15,11 +15,11 @@ unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     let r = rep as i32;
     let saldo = core::ptr::read_unaligned(this as *const i64);
     if saldo > r.wrapping_mul(2500).wrapping_add(5_000_000) as i64 {
-        crate::comparison::branch("cpu_7 rica");
+        crate::comparison::branch("cpu_7 rich");
         return 2; // cpu7: a faixa rica
     }
     if saldo > r.wrapping_mul(1000).wrapping_add(3_500_000) as i64 {
-        crate::comparison::branch("cpu_7 confortavel");
+        crate::comparison::branch("cpu_7 comfortable");
         return 1; // cpu7: a faixa confortável
     }
     if saldo < (-2_500_000i32).wrapping_sub(r.wrapping_mul(1500)) as i64 {
@@ -27,7 +27,7 @@ unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     }
     let devendo = if rep < 0x1388 { r.wrapping_mul(-250) } else { (0xea6 - r).wrapping_mul(1000) };
     if saldo < devendo as i64 {
-        crate::comparison::branch("cpu_7 devendo");
+        crate::comparison::branch("cpu_7 in debt");
         return 0xff; // cpu7: a faixa devendo
     }
     0

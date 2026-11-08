@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpo_montar_vaga', 'if serve(p, vaga) == 0 {',
      'if serve(p, vaga ^ 1) == 0 { // mutacao: a vaga vizinha',
-     'cpo_8 montar listas'),
+     'cpo_8 build lists'),
     ('cpo_ordenar_faixa', 'if k != 0 && band(k) == 0 {',
      'if k != 0 { // mutacao: sem a band do vencimento',
-     'cpo_8 band do contrato'),
+     'cpo_8 contract band'),
     ('cpo_interessados_valor', '&& valor > cpo8_i(jogador + 0x52) {',
      '&& valor <= cpo8_i(jogador + 0x52) { // mutacao: invertida',
-     'cpo_8 clube interessado'),
+     'cpo_8 interested club'),
 ]

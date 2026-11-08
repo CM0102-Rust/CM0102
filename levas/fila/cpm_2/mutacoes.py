@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpm_confronto_adversario', 'cpm2_por(p + 14 * k, cpm2_d(tab + j as usize * TABLE_ROW_SIZE)); // o clube adversário',
      'cpm2_por(p + 14 * k, cpm2_d(tab + a as usize * TABLE_ROW_SIZE)); // mutacao: o proprio clube',
-     'cpm_2 confrontos diretos'),
+     'cpm_2 head to head'),
     ('cpm_vetor_conta', '*n = cpm2_w(this + 0x3e); // a conta',
      '*n = cpm2_w(this + 0x3e) - 1; // mutacao: sem o ultimo',
-     'cpm_2 vetor dos clubes'),
+     'cpm_2 clubs array'),
     ('cpm_posicao_final', '*((c + 0x5f) as *mut u8) = (i as u8).wrapping_add(1); // a posição final',
      '*((c + 0x5f) as *mut u8) = (i as u8).wrapping_add(2); // mutacao: uma abaixo',
-     'cpm_2 posicao final'),
+     'cpm_2 final position'),
 ]

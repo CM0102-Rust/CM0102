@@ -291,7 +291,7 @@ unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, fase: u32, ro
                 show_error_at(0xa82844, 0xb0);
                 return 0;
             }
-            crate::comparison::branch("cqp_6 calendario da primera");
+            crate::comparison::branch("cqp_6 primera calendar");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
                 write_rounds_winter_break(t, ano, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);

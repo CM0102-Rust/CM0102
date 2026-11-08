@@ -175,7 +175,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                     None
                 };
                 if let Some(a) = lado {
-                    crate::comparison::branch("cqd_7 vaga na rodada seguinte");
+                    crate::comparison::branch("cqd_7 place in the next round");
                     cqd7_pw(v + if a { 0xa } else { 0xc }, p as u16);
                     cqd7_pw(v + if a { 0xe } else { 0x10 }, r as u16);
                     cqd7_pw(c + 6, s as u16);
@@ -287,7 +287,7 @@ unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                         None
                     };
                     if let Some(o) = lado {
-                        crate::comparison::branch("cqd_7 time na primeira rodada");
+                        crate::comparison::branch("cqd_7 team in the first round");
                         cqd7_pw(c + o, (cqd7_w(comp_cup_round(this, r) + 0x1e) as u16).wrapping_add(q as u16));
                         break;
                     }

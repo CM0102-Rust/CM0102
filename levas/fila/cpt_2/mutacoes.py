@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpt2_ano_seguinte', 'core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: o ano do jogo',
      'core::ptr::write_unaligned((p + 3) as *mut u16, ano.wrapping_add(1)); // mutacao: o ano seguinte',
-     'cpt_2 resultado'),
+     'cpt_2 result'),
     ('cpt2_mes_seguinte', '*((p + 2) as *mut u8) = mes; // cpt2: o mes do jogo',
      '*((p + 2) as *mut u8) = mes.wrapping_add(1); // mutacao: o mes seguinte',
-     'cpt_2 resultado'),
+     'cpt_2 result'),
     ('cpt2_sem_somar_a_conta', '*((e + 0xa) as *mut i16) = c.wrapping_add(1); // cpt2: mais um resultado',
      '*((e + 0xa) as *mut i16) = c; // mutacao: a conta nao sobe',
-     'cpt_2 resultado'),
+     'cpt_2 result'),
 ]

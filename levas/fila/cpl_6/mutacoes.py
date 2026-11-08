@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpl_registrar_conta', 'cpl6_por(this + 8, n); // mais uma história',
      'cpl6_por(this + 8, n.wrapping_sub(1)); // mutacao: a conta nao sobe',
-     'cpl_6 registrar historia'),
+     'cpl_6 record story'),
     ('cpl_expirar_sorteio', 'let s = sorteio(0x28); // o sorteio da história do time',
      'let s = 0; let _ = sorteio; // mutacao: sem o sorteio',
-     'cpl_6 expirar historia do time'),
+     'cpl_6 expire team story'),
     ('cpl_historia_do_time', 'return 1; // a história do time já contada',
      'return 0; // mutacao: nunca contada',
-     'cpl_6 historia do time ja contada'),
+     'cpl_6 team story already told'),
 ]

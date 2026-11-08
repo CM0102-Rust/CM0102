@@ -20,7 +20,7 @@ unsafe extern "thiscall" fn african_nations_advance_stage(this: usize) {
     let f = f + 1;
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
     if f == 3 { // cqk12: o mata-mata da Copa Africana depois dos grupos
-        crate::comparison::branch("cqk_12 mata-mata da copa africana");
+        crate::comparison::branch("cqk_12 african cup knockout");
         let mata: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x402090usize);
         mata(this);
     }
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
         show_error_at(0x9870f8, 0x1f1);
         return 0;
     }
-    crate::comparison::branch("cqk_12 grupo a da copa africana");
+    crate::comparison::branch("cqk_12 african cup group a");
     let mut i = 0i8;
     while (i as i16) < cqk12_w(this + 0x3e) {
         let selecao = cqk12_d(cqk12_d(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: a seleção da linha

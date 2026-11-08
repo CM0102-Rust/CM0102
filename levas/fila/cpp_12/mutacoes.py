@@ -6,10 +6,10 @@
 MUTACOES = [
     ('cpp_limite_convocados', 'soma > 2 // mais de dois convocados',
      'soma > 0 // mutacao: qualquer convocado barra',
-     'cpp_12 convocado na janela'),
+     'cpp_12 called up in the window'),
     ('cpp_visitante_convocado', 'return 0; // o visitante com convocados demais',
      '// mutacao: o visitante nao barra',
-     'cpp_12 visitante convocado'),
+     'cpp_12 away side called up'),
     ('cpp_ordem_das_convocacoes', 'r // a convocação mais cedo primeiro',
      '-r // mutacao: a mais tarde primeiro'),
 ]

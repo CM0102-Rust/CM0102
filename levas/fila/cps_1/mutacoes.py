@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cps1_fator_do_valor', 'if (v as f64) * 1.5 > a as f64 { // cps1: o valor passa do preço',
      'if (v as f64) * 1.2 > a as f64 { // mutacao: fator 1,2',
-     'cps_1 listado pelo clube'),
+     'cps_1 listed by club'),
     ('cps1_moral_6', 'moral(pessoa, 0xffff_fff4, 0); // cps1: a moral cai 12',
      'moral(pessoa, 0xffff_fffa, 0); // mutacao: cai 6',
-     'cps_1 pedido no clube do computador'),
+     'cps_1 request at computer club'),
     ('cps1_queixa_25', 'if r < sorteio(0x32) { // cps1: o sorteio da queixa',
      'if r < sorteio(0x19) { // mutacao: contra 25',
-     'cps_1 pedido no clube do computador'),
+     'cps_1 request at computer club'),
 ]

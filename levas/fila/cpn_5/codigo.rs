@@ -28,7 +28,7 @@ unsafe fn club_has_vacancy(this: usize, clube: usize) -> Option<bool> {
             return None;
         }
         if cpn5_d(v + 0xe) == cpn5_d(clube) {
-            crate::comparison::branch("cpn_5 clube com vaga aberta");
+            crate::comparison::branch("cpn_5 club with open vacancy");
             return Some(true);
         }
         j += 1;
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn best_manager_candidate_score(this: usize, clube: usi
                 break 'f true;
             }
             if atual == p {
-                crate::comparison::branch("cpn_5 o tecnico atual fica de fora");
+                crate::comparison::branch("cpn_5 the current manager is left out");
                 break 'f true; // o atual fica de fora
             }
             if cpn5_b(reg79 + 0xb) & 0x30 != 0 || emprestimo(cpn5_d(0xae1050), p) != 0 || candidato(this, p) != 0 {
@@ -179,7 +179,7 @@ unsafe fn vacancy_schedule_plan(this: usize, dias: u8, fatias: u8) -> ([u8; 8], 
 /// do plano (`vacancy_schedule_plan`) e o +0x20 dela (4 bytes) entra no balde (0x68d0d0, que aloca); devolve o que a 0x68d0d0
 /// devolve. Sem SEH, sem sorteio.
 unsafe extern "thiscall" fn schedule_offer(this: usize, oferta: usize, dias: u32, fatias: u32) -> u32 {
-    crate::comparison::branch("cpn_5 agendar oferta");
+    crate::comparison::branch("cpn_5 schedule offer");
     if cpn5_w(this + 0x84f) == 0 {
         let copiar: unsafe extern "thiscall" fn(usize, *mut u8, usize) -> usize = core::mem::transmute(0x417c10usize);
         let mut tmp = [0u8; 8];

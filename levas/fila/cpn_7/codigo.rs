@@ -61,12 +61,12 @@ unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: usize) -> u3
         return 1;
     }
     if cpn7_b(nc + 0x76) == cpn7_b(nacao + 0x76) {
-        crate::comparison::branch("cpn_7 mesma regiao");
+        crate::comparison::branch("cpn_7 same region");
         return 1; // a mesma região da nação do clube
     }
     let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
     if estrangeira(pessoa, nacao, 1) == 0 {
-        crate::comparison::branch("cpn_7 nacao do olheiro");
+        crate::comparison::branch("cpn_7 scout nation");
         return 1; // a nação não é estrangeira para o olheiro
     }
     let cobrem: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7f9190usize);
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn remove_friendly_match(this: usize, jogo: usize, limp
             *((v + 0x18) as *mut u8) = 0;
         }
     }
-    crate::comparison::branch("cpn_7 tirar o amistoso");
+    crate::comparison::branch("cpn_7 remove the friendly");
     tirar(cpn7_d(this + 0x34c8), jogo) // tira o jogo da lista dos amistosos
 }
 

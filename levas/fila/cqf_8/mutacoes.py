@@ -8,9 +8,9 @@
 # - A temporada atual sai sem clube (−1).
 MUTACOES = [
     ('cqf8_grupo_sem_clube', 'let clube_no = cqf8_d(no + 2) as u32; // cqf8: o clube do grupo do nó',
-     'let clube_no = 0xffff_ffffu32; // mutacao: o clube do grupo do nó', 'cqf_8 temporada do historico'),
+     'let clube_no = 0xffff_ffffu32; // mutacao: o clube do grupo do nó', 'cqf_8 history season'),
     ('cqf8_grupo_dois_anos_antes', 'let ano_no = cqf8_w(no); // cqf8: o ano do grupo do nó',
-     'let ano_no = cqf8_w(no).wrapping_sub(2); // mutacao: o ano do grupo do nó', 'cqf_8 temporada do historico'),
+     'let ano_no = cqf8_w(no).wrapping_sub(2); // mutacao: o ano do grupo do nó', 'cqf_8 history season'),
     ('cqf8_atual_sem_clube', 'let id = if clube == 0 { 0xffff_ffff } else { cqf8_d(clube) as u32 }; // cqf8: o clube da temporada atual',
-     'let id = if clube == 0 { 0xffff_ffff } else { 0xffff_ffffu32 }; // mutacao: o clube da temporada atual', 'cqf_8 temporada atual'),
+     'let id = if clube == 0 { 0xffff_ffff } else { 0xffff_ffffu32 }; // mutacao: o clube da temporada atual', 'cqf_8 current season'),
 ]

@@ -60,7 +60,7 @@ unsafe extern "stdcall" fn compare_player_stats_get_career_goals(pessoa: usize) 
 /// de `de`); depois, na mesma entrada, o da pessoa (tipo 0x6a: o clube e o id de `de`), no arquivo (0x58e340). O clube
 /// é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
 unsafe extern "thiscall" fn add_loan_records(this: usize, pessoa: usize, de: usize, clube: usize) {
-    crate::comparison::branch("cps_9 emprestimo");
+    crate::comparison::branch("cps_9 loan");
     let mut e = history_entry();
     if clube != 0 && cps9_d(clube + 0xcf) != 0 {
         let tecnico = cps9_d(clube + 0xcf);
@@ -100,7 +100,7 @@ unsafe extern "C" fn injury_compare_entry_dates(chave: usize, item: usize) -> i3
     if depois(chave + 8, cps9_d(item + 8) as u32, cps9_d(item + 0xc) as u32) != 0 {
         return 1;
     }
-    crate::comparison::branch("cps_9 data igual");
+    crate::comparison::branch("cps_9 same date");
     0 // cps9: a volta de hoje achada
 }
 

@@ -33,7 +33,7 @@ unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, partida: usize
         0 | 1 => 4,
         3..=7 => 2,
         _ => {
-            crate::comparison::branch("cpk_4 escopo da nacao");
+            crate::comparison::branch("cpk_4 nation scope");
             1 // a nação da competição
         }
     };
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn get_ineligibility_code(this: usize, jogador: usize, 
             cpk4_d(r + 0xa) == nacao && *((r + 0x12) as *const u8) == tipo // a regra da nação
         };
         if casa {
-            crate::comparison::branch("cpk_4 regra da partida");
+            crate::comparison::branch("cpk_4 match rule");
             let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(cpk4_d(cpk4_d(r) + 0x18));
             return respond(r, jogador, partida);
         }
@@ -94,7 +94,7 @@ unsafe extern "thiscall" fn find_scheduled_friendly_slot(this: usize, dia: u32, 
             for i in 0..(*((e + 8) as *const i8)).max(0) as usize {
                 let v = e + 25 * i + 9;
                 if *((v + 2) as *const u16) == ano && *(v as *const u16) == dia && cpk4_d(v + 0x10) == adversario {
-                    crate::comparison::branch("cpk_4 vaga do amistoso");
+                    crate::comparison::branch("cpk_4 friendly slot");
                     return e + 25 * i + 9; // a vaga i
                 }
             }

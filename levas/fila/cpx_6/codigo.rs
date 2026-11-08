@@ -33,7 +33,7 @@ unsafe fn uefa_seeding_crt_fclose(f: usize) {
 /// (como a original).
 unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;
-    crate::comparison::branch("cpx_6 gravar sementes da uefa");
+    crate::comparison::branch("cpx_6 save UEFA seeds");
     let f = open_temp_file_for_write(0xaa1a50);
     if f == 0 {
         show_error_at(FONTE, 0x64f);
@@ -78,7 +78,7 @@ unsafe extern "thiscall" fn compare_uefa_seeding_save_to_temp_file(this: usize) 
 /// +0x71 (u32). Erro: a caixa "Error" (conmebol_seeding.cpp 0x2ee, 0x2f6, 0x2ff, 0x307, 0x30f), sem fechar o arquivo.
 unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0x9a7ed8;
-    crate::comparison::branch("cpx_6 gravar sementes da conmebol");
+    crate::comparison::branch("cpx_6 save CONMEBOL seeds");
     let f = open_temp_file_for_write(0x9a7f10);
     if f == 0 {
         show_error_at(FONTE, 0x2ee);
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn compare_conmebol_seeding_save_to_temp_file(this: usi
 /// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
 /// "Error" (host_country.cpp 0x475).
 unsafe extern "thiscall" fn save_temp_file(this: usize) {
-    crate::comparison::branch("cpx_6 gravar paises anfitrioes");
+    crate::comparison::branch("cpx_6 save host countries");
     let f = open_temp_file_for_write(0x9cf10c);
     if f == 0 {
         show_error_at(0x9cf0d8, 0x475);

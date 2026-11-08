@@ -41,7 +41,7 @@ unsafe fn cap_professional_status(clube: usize, valor: i8, baixar: u32) {
     let p = (clube + 0x64) as *mut i8;
     let muda = if baixar != 0 { *p > valor } else { *p < valor };
     if muda {
-        crate::comparison::branch("cpp_13 teto da divisao");
+        crate::comparison::branch("cpp_13 division ceiling");
         *p = valor; // o teto novo
     }
 }

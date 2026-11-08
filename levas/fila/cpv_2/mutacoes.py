@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpv2_volta_em_5', 'agendar(this, o, 0xa, 0); // cpv2: de volta em 10 dias',
      'agendar(this, o, 5, 0); // mutacao: 5 dias',
-     'cpv_2 recusa do jogador'),
+     'cpv_2 player refusal'),
     ('cpv2_sem_reputacao', 'let soma = match_pl_ftol(dif * k) as i16; // cpv2: a reputação sobe',
      'let soma = (match_pl_ftol(dif * k) as i16) & 0; // mutacao: nao sobe',
-     'cpv_2 injury_word_0c do jogador'),
+     'cpv_2 player injury_word_0c'),
     ('cpv2_tipo_trocado', 'anotar(cpv2_d(this + 0x856), pessoa, comprador, 1, (cpv2_b(o + 0x11) != 0xb) as u32); // cpv2: a recusa na lista',
      'anotar(cpv2_d(this + 0x856), pessoa, comprador, 1, (cpv2_b(o + 0x11) == 0xb) as u32); // mutacao: o outro tipo',
-     'cpv_2 recusa anotada na lista'),
+     'cpv_2 refusal noted in the list'),
 ]

@@ -169,7 +169,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
         if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), cpz8_u(clube), lp) as u16 != 0 {
             copy_first_fixture(lp, &mut f1, &mut f2);
             if !fix_man_is_friendly_comp(cpz8_u(f1.as_ptr() as usize + 0x14)) {
-                crate::comparison::branch("cpz_8 jogo dois dias antes");
+                crate::comparison::branch("cpz_8 match two days before");
                 if f2[0x43] == 0xff { // cpz8: o jogo de dois dias antes sem a marca
                     let mut v = [0u8; 8];
                     let r = date_sub_days(d.as_ptr() as usize, v.as_mut_ptr(), 1); // cpz8: um dia antes
@@ -177,7 +177,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
                     f2[0x2a..0x2c].copy_from_slice(&d[0..2]);
                     f2[0x28..0x2a].copy_from_slice(&d[2..4]);
                     if !new_date_has_clash(this, f2.as_mut_ptr(), f1.as_ptr()) {
-                        crate::comparison::branch("cpz_8 jogo antecipado");
+                        crate::comparison::branch("cpz_8 match brought forward");
                         fix_man_remove_fixture(this, f1.as_ptr() as usize);
                         fix_man_add_fixture(this, f2.as_mut_ptr() as usize, 0);
                         fix_man_queue_fixture_moved_news(this, f2.as_mut_ptr() as usize, jogo, 0);
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, jogo: usize) 
         f2[0x2a..0x2c].copy_from_slice(&d[0..2]);
         f2[0x28..0x2a].copy_from_slice(&d[2..4]);
         if !new_date_has_clash(this, f2.as_mut_ptr(), f1.as_ptr()) {
-            crate::comparison::branch("cpz_8 jogo adiado");
+            crate::comparison::branch("cpz_8 match postponed");
             fix_man_remove_fixture(this, f1.as_ptr() as usize);
             fix_man_add_fixture(this, f2.as_mut_ptr() as usize, 0);
             fix_man_queue_fixture_moved_news(this, f2.as_mut_ptr() as usize, jogo, 0);
@@ -243,7 +243,7 @@ unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: usize, club
         let mut velha = [0u8; 8];
         date_from_day_year_ptr(velha.as_mut_ptr(), cpz8_w(p + 0x2a) as u32, cpz8_w(p + 0x28) as u32);
         if fix_man_remove_fixture(this, p) != 0 {
-            crate::comparison::branch("cpz_8 jogo remarcado pela selecao");
+            crate::comparison::branch("cpz_8 match rescheduled by national team");
             gravar(this, p);
             fix_man_add_fixture(this, p, 1);
             fix_man_queue_fixture_moved_news(this, p, 0, velha.as_ptr() as usize);
@@ -311,7 +311,7 @@ unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, caus
             return;
         }
     }
-    crate::comparison::branch("cpz_8 noticia do jogo remarcado");
+    crate::comparison::branch("cpz_8 rescheduled match news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 1, 0);

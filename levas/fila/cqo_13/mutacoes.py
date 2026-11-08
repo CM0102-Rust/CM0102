@@ -15,5 +15,5 @@ MUTACOES = [
     ('cqo13_convidados_embaralhados_como_19',
      'embaralhar(cqo13_d(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados',
      'embaralhar(cqo13_d(this + 0xee), 19); // mutacao: 19',
-     'cqo_13 convidados da mercosul'),
+     'cqo_13 mercosul guests'),
 ]

@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpv11_limite_28', 'if dias < 0xe { // cpv11: o limit de dias',
      'if dias < 0x1c { // mutacao: limit de 28 dias',
-     'cpv_11 lesão de 14 a 27 dias'),
+     'cpv_11 injury of 14 to 27 days'),
     ('cpv11_tipo_sub21', '(cpv11_b(p + 0x5e) >> 3) & 1 // cpv11: o tipo pelas marcas',
      '2 // mutacao: o sub-21',
-     'cpv_11 tipo pelas marcas'),
+     'cpv_11 type by flags'),
     ('cpv11_sem_substituto', 'substituto(this, nacao, tipo as u32, nivel, p); // cpv11: o substituto',
      'let _ = (substituto, nivel); // mutacao: sem substituto',
-     'cpv_11 substituto'),
+     'cpv_11 replacement'),
 ]

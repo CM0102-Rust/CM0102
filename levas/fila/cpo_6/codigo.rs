@@ -229,12 +229,12 @@ unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, tecnico: usize
             if x <= y { 3 } else { 1 }
         }
         0 | 0xd | 0x11 | 0x52 | 0x23 | 0xe | 2 | 0x21 | 0x22 | 9 | 0xc => {
-            crate::comparison::branch("cpo_6 tipos comuns");
+            crate::comparison::branch("cpo_6 common types");
             let t = contract_squad_status(contrato);
             if t == 0x30 || t == 0x10 || t == 0x20 {
                 let e = entrada(cpo6_d(cpo6_d(0xde1f54) + 0x856), clube, jogador, 0, 0);
                 if e != 0 && cpo6_d(e + 0xf) == cpo6_d(jogador) && nota > -10 {
-                    crate::comparison::branch("cpo_6 sorteio descartado");
+                    crate::comparison::branch("cpo_6 draw discarded");
                     sorteio(cpo6_c(tecnico + 0x59)); // o original descarta o resultado
                 }
             }
@@ -483,7 +483,7 @@ unsafe extern "thiscall" fn mark_item_read(this: usize, tecnico: usize, id: u32,
         if cpo6_d(v + 0xd6) as u32 == id && cpo6_d(v + 0xda) == 0 {
             let mut tratador = 0u32;
             if botao(v, tecnico, 0xde1f64, 0x7d0, &mut tratador) != 2 {
-                crate::comparison::branch("cpo_6 noticia lida");
+                crate::comparison::branch("cpo_6 news read");
                 core::ptr::write_unaligned((v + 0xda) as *mut u32, 1);
                 core::ptr::write_unaligned((e + 8) as *mut i32, cpo6_i(e + 8) - 1);
                 break;

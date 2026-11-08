@@ -32,9 +32,9 @@ unsafe extern "stdcall" fn collect_conmebol_clubs(saida: *mut usize) -> u32 {
                 let cont = if mexico { 0 } else { cqj2_d(nacao + 0x71) as usize };
                 if mexico || (cont != 0 && cqj2_d(cont) == cqj2_d(0x9cfa1c)) {
                     if mexico {
-                        crate::comparison::branch("cqj_2 clube mexicano");
+                        crate::comparison::branch("cqj_2 mexican club");
                     }
-                    crate::comparison::branch("cqj_2 tira a vaga");
+                    crate::comparison::branch("cqj_2 removes the place");
                     *((c + 0x1db) as *mut u32) = u32::MAX; // cqj2: sem vaga continental
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
                     core::ptr::write_unaligned(r as *mut u32, c as u32);
@@ -42,7 +42,7 @@ unsafe extern "stdcall" fn collect_conmebol_clubs(saida: *mut usize) -> u32 {
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + 0x80) as *const i16) as i32 / 500) as u8;
                     let divisao = cqj2_d(c + 0x5b) as usize;
                     if divisao != 0 {
-                        crate::comparison::branch("cqj_2 nivel da divisao");
+                        crate::comparison::branch("cqj_2 division level");
                         core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((divisao + 0x69) as *const u16)); // cqj2: o nível da divisão
                         *((r + 0xb) as *mut u8) = *((c + 0x5f) as *const u8);
                         let comp = cqj2_d(cqj2_d(c + 0x5b) as usize + 0x5d) as usize;
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn update_for_new_season(this: usize, pular: u32) {
     if ano == core::ptr::read_unaligned((this + 0x6f) as *const u16) {
         return;
     }
-    crate::comparison::branch("cqj_2 virada do ano");
+    crate::comparison::branch("cqj_2 year rollover");
     core::ptr::write_unaligned((this + 0x6f) as *mut u16, ano);
     let juntar: unsafe extern "stdcall" fn(*mut usize) -> u32 = core::mem::transmute(0x4c6280usize);
     let vagas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4c6430usize);

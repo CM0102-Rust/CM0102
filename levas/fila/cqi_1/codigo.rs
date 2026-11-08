@@ -42,7 +42,7 @@ unsafe extern "thiscall" fn roll_coefficients(this: usize) {
                 core::ptr::write_unaligned((p + 0x108) as *mut u64, 0);
             }
         }
-        crate::comparison::branch("cqi_1 soma dos coeficientes");
+        crate::comparison::branch("cqi_1 coefficient sum");
         let soma = cqi1_f(p + 0x100) + cqi1_f(p + 0xf8) + cqi1_f(p + 0xf0) + cqi1_f(p + 0xe8) + cqi1_f(p + 0xe0); // cqi1: as 5 temporadas
         core::ptr::write_unaligned((e + 8) as *mut f32, soma as f32);
         *((e + 0x11) as *mut u8) = 0;
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn set_place_counts(this: usize) {
         } else if id == g(0x9cf45c) {
             1
         } else if id == g(0x9cf300) && ano == 0x7d1 {
-            crate::comparison::branch("cqi_1 intertoto da franca");
+            crate::comparison::branch("cqi_1 france intertoto");
             4 // cqi1: a França na Intertoto em 2001
         } else if id == g(0x9cf314) && ano == 0x7d1 {
             3
@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_this: usize, 
         loop {
             let c = cqi1_d(p) as usize;
             if sem_vaga != 0 && c != 0 && cqi1_d(c + 0x1db) != u32::MAX {
-                crate::comparison::branch("cqi_1 ja com vaga");
+                crate::comparison::branch("cqi_1 already with a place");
                 p += 12; // cqi1: pula o clube que já tem vaga
             } else if sem_humano != 0 && c != 0 && humano(c, 0, 1, 0, 0) != 0 {
                 p += 12;

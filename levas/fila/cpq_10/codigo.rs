@@ -71,7 +71,7 @@ unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria:
         while i < n {
             let r = cpq10_d(this + 4).wrapping_add((i as usize) << 5);
             if core::ptr::read_unaligned((r + 0xe) as *const u16) == 0xffff {
-                crate::comparison::branch("cpq_10 registro solto");
+                crate::comparison::branch("cpq_10 record freed");
                 core::ptr::write_bytes(r as *mut u8, 0, 0x20);
                 cpq10_por(vaga, i as usize);
                 cpq10_por(this + 0x38, cpq10_d(this + 0x38).wrapping_sub(1));
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn create_stats(this: usize, jogador: usize, categoria:
             return 0;
         }
     }
-    crate::comparison::branch("cpq_10 registro novo");
+    crate::comparison::branch("cpq_10 new record");
     cpq10_por(vaga, cpq10_d(this + 0xc)); // o índice novo
     cpq10_por(this + 0xc, cpq10_d(this + 0xc).wrapping_add(1));
     let r = cpq10_d(this + 4).wrapping_add(cpq10_d(vaga) << 5);
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn is_retirement_pending(this: usize, pessoa: usize) ->
     let mut i = 0i32;
     while i < n {
         if cpq10_d(cpq10_d(this + 4) + 0x1a * i as usize) == id {
-            crate::comparison::branch("cpq_10 aposentadoria marcada");
+            crate::comparison::branch("cpq_10 retirement scheduled");
             return 1; // está na lista
         }
         i += 1;

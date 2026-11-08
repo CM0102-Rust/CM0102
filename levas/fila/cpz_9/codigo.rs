@@ -104,14 +104,14 @@ unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador: usize, clu
     if np == 0 {
         return;
     }
-    crate::comparison::branch("cpz_9 multa avaliada");
+    crate::comparison::branch("cpz_9 fine evaluated");
     let a = cpz9_sortear(cpz9_sb(np + 0x14));
     let b = cpz9_sortear(10); // cpz9: o sorteio da multa
     if a <= b {
         return;
     }
     let np = cpz9_d(cpz9_d(clube + 0xcf) + 0x69);
-    crate::comparison::branch("cpz_9 multa pela forma");
+    crate::comparison::branch("cpz_9 fine by form");
     let nota: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(0x544410usize);
     // ponytail: a original empurra ecx com o byte +0x19 só no cl (os altos são sobra); a 0x544410 só lê o byte
     let c =cpz9_sortear(nota(np, *((np + 0x19) as *const u8) as u32) as i32);
@@ -172,7 +172,7 @@ unsafe extern "stdcall" fn post_fine_reaction_news(jogador: usize, motivo: u32, 
     if atual != 0 && !cpz9_clube_humano(atual) {
         return;
     }
-    crate::comparison::branch("cpz_9 noticia da reacao a multa");
+    crate::comparison::branch("cpz_9 news of the reaction to the fine");
     if FINE_NEWS_DRY_RUN {
         FINE_NEWS_WOULD_BUILD = true;
         return;
@@ -233,7 +233,7 @@ unsafe extern "stdcall" fn post_coach_fine_feedback_news(jogador: usize, treinad
     if treinador == 0 || cpz9_d(treinador + 0x61) == 0 || cpz9_d(treinador + 0x1a) == 0 {
         return;
     }
-    crate::comparison::branch("cpz_9 noticia do retorno do treinador");
+    crate::comparison::branch("cpz_9 news of the coach return");
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)

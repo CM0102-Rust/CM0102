@@ -9,8 +9,8 @@ MUTACOES = [
      'return (t as u32 & 0xffff_0000) | 110; // mutacao: tecnico do computador 110'),
     ('cpt8_sem_tecnico_110', 'return 100; // cpt8: sem técnico',
      'return 110; // mutacao: sem tecnico 110',
-     'cpt_8 sem tecnico'),
+     'cpt_8 without manager'),
     ('cpt8_media_sem_divisor', 'soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores',
      'soma = match_pl_ftol(soma as f64 / 0.5) as i16; // mutacao: a media sem o divisor',
-     'cpt_8 treinadores'),
+     'cpt_8 coaches'),
 ]

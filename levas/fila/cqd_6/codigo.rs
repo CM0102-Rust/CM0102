@@ -63,7 +63,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
         reservas(cqd6_d(0xb74434), pa);
         if dia == 3 {
             mais(0xae2c90, pb, 1);
-            crate::comparison::branch("cqd_6 reservas de amanha");
+            crate::comparison::branch("cqd_6 tomorrow reserves");
             reservas(cqd6_d(0xb74434), pb); // cqd6: as reservas de amanhã
         }
     }
@@ -107,7 +107,7 @@ unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                         }
                         if !fix_man_is_human_club(cqd6_d(f + 0x1c)) && !fix_man_is_human_club(cqd6_d(f + 0x20)) {
                             anterior(lista);
-                            crate::comparison::branch("cqd_6 amistoso descartado");
+                            crate::comparison::branch("cqd_6 friendly discarded");
                             tirar(lista, no); // cqd6: o amistoso de ontem sai da lista
                         } else {
                             anterior(lista);
@@ -275,7 +275,7 @@ unsafe extern "thiscall" fn load_fixtures(this: usize) {
         let k = nacao(comp, j) as i8;
         let dia = cqd6_w(j + 0x2a) as u16 as usize; // cqd6: o dia do jogo carregado
         let lista = cqd6_d(cqd6_d(this + (dia * 3 + cqd6_b(j + 0x3f) as usize) * 4) + k as isize as usize * 4);
-        crate::comparison::branch("cqd_6 jogo carregado");
+        crate::comparison::branch("cqd_6 match loaded");
         if acrescentar(lista, j, 0x4f) == 0 {
             fatal_error_at(0x9cc208, 0x785);
         }

@@ -69,7 +69,7 @@ unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, por
             None => return 0,
         }
     };
-    crate::comparison::branch("cpu_10 punicao");
+    crate::comparison::branch("cpu_10 punishment");
     *(r as *mut u8) = jogos; // cpu10: os jogos da suspensão
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
@@ -102,7 +102,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     let guardada: unsafe extern "thiscall" fn(usize, i32, i8) -> usize = core::mem::transmute(0x55cb60usize);
     let gravar: unsafe extern "thiscall" fn(usize, i32, i8, u8, u32) = core::mem::transmute(0x55cb20usize);
     let soltar: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x556d00usize);
-    crate::comparison::branch("cpu_10 nova temporada");
+    crate::comparison::branch("cpu_10 new season");
     let mut e = cpu10_d(this + 0xb);
     let mut i = 0i32;
     while i < cpu10_i(this + 0x13) {
@@ -116,7 +116,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
                 let anos = if cpu10_i(this + 0x17) == -1 && cpu10_i(this + 0x1b) == -1 { 4 } else { 2 };
                 let ano = *((ban + 6) as *const u16) as i32;
                 if *(0xae2c92 as *const u16) as i32 - ano >= anos {
-                    crate::comparison::branch("cpu_10 suspensao velha");
+                    crate::comparison::branch("cpu_10 old suspension");
                     // ponytail: a original empurra o índice com os 16 bits altos do edx de antes; a 0x556d00 lê só a palavra.
                     soltar(cpu10_d(0xae28f0), id as u32, s as u16 as u32);
                     true
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
 }
 
 /// Comparador: a original solta suspensões e realoca (não pode rodar duas vezes): só ela roda.
-// ponytail: a cópia leva o contador "cpu_10 nova temporada" para provar no modo Rust; a compactação (comparada) confere o fim.
+// ponytail: a cópia leva o contador "cpu_10 new season" para provar no modo Rust; a compactação (comparada) confere o fim.
 unsafe extern "thiscall" fn compare_ruling_body_start_new_season(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%)(this);
 }

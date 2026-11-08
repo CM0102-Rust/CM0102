@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, fase: u32, ro
         show_error_at(0xad5888, 0xcc);
         return 0;
     }
-    crate::comparison::branch("cqf_6 tabela das rodadas");
+    crate::comparison::branch("cqf_6 round fixtures");
     // o ano vai com lixo nos bytes altos na original (o cx do ano sobre o ecx de antes); a 0x68a160 só usa os 16 bits
     // de baixo (a 0x549f70 lê o ano como word e a palavra +2 guarda ano − base): a cópia passa o ano limpo
     let ano = cqf6_w(this + 0x40) as u16 as u32;
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn add_qualified_team(this: usize, clube: usize) {
         show_error_at(0xad5888, 0x456);
         return;
     }
-    crate::comparison::branch("cqf_6 nação classificada");
+    crate::comparison::branch("cqf_6 qualified nation");
     let e = cqf6_d(this + 0x14).wrapping_add((n as i32 * 6) as usize);
     cqf6_pb(e + 4, 6);
     cqf6_pd(cqf6_d(this + 0x14).wrapping_add((cqf6_w(this + 0x36) as i32 * 6) as usize), clube);
@@ -165,7 +165,7 @@ unsafe extern "thiscall" fn compare_add_qualified_team(this: usize, clube: usize
 /// ordenadas pelo pote (0x92f660).
 unsafe extern "thiscall" fn seed_teams(this: usize) {
     if cqf6_w(this + 0x40) == 0x7d2 {
-        crate::comparison::branch("cqf_6 sem cabeças de chave em 2002");
+        crate::comparison::branch("cqf_6 no seeds in 2002");
         return;
     }
     let principal: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b3d0usize);

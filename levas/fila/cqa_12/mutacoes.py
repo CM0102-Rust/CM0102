@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cqa12_vice_sem_reputacao', '        cqa12_pw(clube + 0x80, v); // cqa12: a reputação do colocado',
      '        let _ = v; // mutacao: a injury_word_0c do colocado nao sobe',
-     'cqa_12 injury_word_0c do vice'),
+     'cqa_12 runner-up injury_word_0c'),
     ('cqa12_teto_de_100', '        let soma = if falta > teto { teto } else { falta }; // cqa12: o teto da subida',
      '        let soma = if falta > 100 { 100 } else { falta }; let _ = teto; // mutacao: teto de 100',
-     'cqa_12 injury_word_0c do vice'),
+     'cqa_12 runner-up injury_word_0c'),
     ('cqa12_limiar_pela_metade', '    let alvo = (peso as i32).wrapping_mul(limiar); // cqa12: o limiar da reputação',
      '    let alvo = (peso as i32).wrapping_mul(limiar / 2); // mutacao: o limiar pela metade',
-     'cqa_12 injury_word_0c do vice'),
+     'cqa_12 runner-up injury_word_0c'),
 ]

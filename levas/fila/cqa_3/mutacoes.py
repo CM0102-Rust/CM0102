@@ -4,18 +4,18 @@
 # setembro a maio): trocar o sorteio muda os confrontos e o consumo do sorteio, e com eles os jogos, a renda e os
 # premios das rodadas, que a carreira le. A do adiamento muda a data do sorteio quando um confronto anterior ainda nao
 # tem vencedor (o replay da FA Cup): PODE ESCAPAR se nenhuma rodada da carreira chegar a data do sorteio com um time em
-# aberto (o contador "cqa_3 sorteio adiado" mostra). Os contadores ficam colados em cada chamada, depois das condicoes.
+# aberto (o contador "cqa_3 draw postponed" mostra). Os contadores ficam colados em cada chamada, depois das condicoes.
 MUTACOES = [
     ('cqa3_semente_vira_livre',
      'sorteio(0x51d2d0); // cqa3: pela semente',
      'sorteio(0x51e220); // mutacao: o sorteio livre no lugar do da semente',
-     'cqa_3 sorteio pela semente'),
+     'cqa_3 seeded draw'),
     ('cqa3_livre_vira_semente',
      'sorteio(0x51e220); // cqa3: o sorteio livre',
      'sorteio(0x51d2d0); // mutacao: o sorteio pela semente no lugar do livre',
-     'cqa_3 sorteio livre'),
+     'cqa_3 open draw'),
     ('cqa3_sorteio_adiado_dois_dias',
      'let r = mais(&mut a, &mut b, 1); // cqa3: o sorteio adiado',
      'let r = mais(&mut a, &mut b, 2); // mutacao: o sorteio adiado 2 dias',
-     'cqa_3 sorteio adiado'),
+     'cqa_3 draw postponed'),
 ]

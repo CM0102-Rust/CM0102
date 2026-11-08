@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpo_pontos_do_mes', 'cpo3_por(e + 0xce, 0); // os pontos do mês',
      '// mutacao: os pontos do mes acumulam',
-     'cpo_3 virada do mes'),
+     'cpo_3 month rollover'),
     ('cpo_tecnico_recente', 'if recente {',
      'if false { // mutacao: sem a regra das duas semanas',
-     'cpo_3 tecnico recente'),
+     'cpo_3 recent manager'),
     ('cpo_melhor_do_mes', 'if pontos > melhor_pontos { // o melhor do mês',
      'if pontos >= melhor_pontos { // mutacao: o empate troca',
-     'cpo_3 melhor do mes'),
+     'cpo_3 best of the month'),
 ]

@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize, entrada: 
                 let l = linha(clube) as i8 as i32;
                 if (0xb63d60 + l * 72) as usize == entrada {
                     if !ativa && cqc1_w(clube + 0x80) < 0x1770 {
-                        crate::comparison::branch("cqc_1 nacao inativa abaixo de 6000");
+                        crate::comparison::branch("cqc_1 inactive nation below 6000");
                     }
                     do_clube(this, clube);
                     let f = cqc1_d(this).wrapping_add(desloc);
@@ -314,7 +314,7 @@ unsafe extern "thiscall" fn season_end_club_update(this: usize, clube: usize) {
             let v = v as i16 as i32;
             cqc1_somar(est + 0x3c, v);
             cqc1_somar(cqc1_d(clube + 0x69) + 0x40, v);
-            crate::comparison::branch("cqc_1 lugares sentados");
+            crate::comparison::branch("cqc_1 seats");
             charge_expense(fin, 0x8c, 0x12c, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
             post_works_news(this, clube, v, 3);
             break 'obras;
@@ -446,7 +446,7 @@ unsafe fn pay_dividend(this: usize, clube: usize, fin: usize) {
         if s > sv.wrapping_mul(6000) as i64 {
             let r = cqc1_sortear(0x1f5);
             if cqc1_w(clube + 0x80) < 0xfa0 {
-                crate::comparison::branch("cqc_1 dividendo do pequeno pelo presidente");
+                crate::comparison::branch("cqc_1 small club dividend by chairman");
                 v = r.wrapping_add(0x3e8).wrapping_mul(rep); // cqc1: o dividendo do pequeno pelo presidente
             } else {
                 v = r.wrapping_add(0x5dc).wrapping_mul(rep);
@@ -457,7 +457,7 @@ unsafe fn pay_dividend(this: usize, clube: usize, fin: usize) {
             return;
         }
     }
-    crate::comparison::branch("cqc_1 dividendo");
+    crate::comparison::branch("cqc_1 dividend");
     cqc1_somar(fin + 0x94, v);
     cqc1_somar(fin + 0x134, v);
     core::ptr::write_unaligned(fin as *mut i64, cqc1_saldo(fin).wrapping_sub(v as i64)); // cqc1: o dividendo sai do saldo

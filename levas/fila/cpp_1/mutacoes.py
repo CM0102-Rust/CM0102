@@ -8,8 +8,8 @@ MUTACOES = [
      '        return 1; // mutacao: antes vale depois'),
     ('cpp_decidir_ofertas', '            if cpp1_b(e + 0xd) == 3 {',
      '            if cpp1_b(e + 0xd) == 4 { // mutacao: o tipo 3 nao decide',
-     'cpp_1 decidir ofertas'),
+     'cpp_1 decide offers'),
     ('cpp_ofertas_do_clube', '    core::ptr::write_unaligned(saida as *mut u32, vetor as u32);\n    n as u8',
      '    core::ptr::write_unaligned(saida as *mut u32, vetor as u32);\n    (n as u8).saturating_sub(1) // mutacao: uma oferta a menos',
-     'cpp_1 oferta do clube'),
+     'cpp_1 club offer'),
 ]

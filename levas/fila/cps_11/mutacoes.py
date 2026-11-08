@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cps11_nao_acha', 'return item; // cps11: a cópia guardada',
      'return 0; // mutacao: nao acha',
-     'cps_11 achou o jogo guardado'),
+     'cps_11 found the stored match'),
     ('cps11_nao_guarda', 'if copiar(l, f, 0x4f) == 0 { // cps11: guardar',
      'if false { // mutacao: nao guarda',
-     'cps_11 jogo guardado'),
+     'cps_11 stored match'),
     ('cps11_nao_tira', 'let r = tirar(fixture_list_in_block(b, f), f); // cps11: tirar',
      'let r = 0u32; // mutacao: nao tira',
-     'cps_11 jogo tirado'),
+     'cps_11 match removed'),
 ]

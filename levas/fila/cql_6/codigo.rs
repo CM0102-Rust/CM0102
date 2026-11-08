@@ -57,7 +57,7 @@ unsafe fn construct_english_division(this: usize, ano: u32, registro: usize, p: 
     if carregar(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cql_6 divisao inglesa nova");
+    crate::comparison::branch("cql_6 new english division");
     *((this + 0x44) as *mut u8) = 0xff;
     cql6_pd(this + 0x30, 0xffff_ffff);
     cql6_pd(this + 0x2c, p.fases as usize);

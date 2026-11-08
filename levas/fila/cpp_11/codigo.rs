@@ -19,7 +19,7 @@ unsafe extern "thiscall" fn is_banned_nation_pair(this: usize, a: i32, b: i32) -
         let p = cpp11_d(this + 0x3502).wrapping_add(k as isize as usize * 8);
         let (x, y) = (cpp11_i(p), cpp11_i(p + 4));
         if (x == a && (y == b || y == -1)) || (x == -1 && y == b) {
-            crate::comparison::branch("cpp_11 par proibido");
+            crate::comparison::branch("cpp_11 forbidden pair");
             return 1; // o par proibido
         }
         k = k.wrapping_add(1);

@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpt11_sem_plano', 'planejar(this); // cpt11: planejar',
      '// mutacao: nao planeja',
-     'cpt_11 planejou a pré-temporada'),
+     'cpt_11 planned the pre-season'),
     ('cpt11_faixa_250', 'let band = (rep / 500) as u8; // cpt11: a band',
      'let band = (rep / 250) as u8; // mutacao: band pela metade',
-     'cpt_11 candidato da pré-temporada'),
+     'cpt_11 pre-season candidate'),
     ('cpt11_janela_curta', 'let mut ini = fim.wrapping_sub(18); // cpt11: o início da janela',
      'let mut ini = fim.wrapping_sub(11); // mutacao: janela curta',
-     'cpt_11 janela gravada'),
+     'cpt_11 window recorded'),
 ]

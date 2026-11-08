@@ -46,7 +46,7 @@ unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, hoje
         return 0;
     }
     if ano_de_hoje == ano && dia_de_hoje == dia && cqt10_d(this + 0x45) == 0 && completo == 0 {
-        crate::comparison::branch("cqt_10 sorteio da oceania");
+        crate::comparison::branch("cqt_10 oceania draw");
         clubes(this);
         let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x5c));
         previstas(this);
@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 {
     }
     let mut i = 0i8;
     while (i as i16) < cqt10_w(this + 0x3e) {
-        crate::comparison::branch("cqt_10 linha do grupo a");
+        crate::comparison::branch("cqt_10 group a row");
         // ponytail: o índice vai num dword cujos 3 bytes altos são sobra de pilha; a 0x687430 lê só o byte (char)
         linha(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: a linha i do grupo A
         i = i.wrapping_add(1);
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 {
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqt_10 time do grupo b");
+        crate::comparison::branch("cqt_10 group b team");
         cqt10_pd(times + n * 4, selected_club(this, 4 + n)); // cqt10: o time na vaga do grupo B
     }
     let rodadas_da_copa: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(cqt10_d(cqt10_d(this) + 0x3c));

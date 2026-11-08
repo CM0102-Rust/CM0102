@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpu5_sem_rolagem_das_financas', '            if cpu5_sortear(n) == 0 { // cpu5: a rolagem das finanças',
      '            if n < 0 { // mutacao: sem o sorteio',
-     'cpu_5 rolagem das financas'),
+     'cpu_5 finances rollover'),
     ('cpu5_fatia_errada', '    if cpu5_b(jogo + 0x3f) == 2 { // cpu5: a fatia da noite',
      '    if cpu5_b(jogo + 0x3f) != 2 { // mutacao: a fatia errada',
-     'cpu_5 rolagem das financas'),
+     'cpu_5 finances rollover'),
     ('cpu5_chuva_sem_sorteio', '            if cpu5_sortear(n) != 0 { // cpu5: o sorteio da chuva forte',
      '            if n != 0 { // mutacao: sem o sorteio',
-     'cpu_5 chuva forte'),
+     'cpu_5 heavy rain'),
 ]

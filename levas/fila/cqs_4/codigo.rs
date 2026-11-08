@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
     let n = cqs4_d(this + 0x2c) as i32;
     let a = cqs4_w(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(1));
-    crate::comparison::branch("cqs_4 virada da serie c");
+    crate::comparison::branch("cqs_4 serie c rollover");
     let v = if n > 0 { alocar((n * 4) as u32) } else { 0 };
     core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs4_d(cqs4_d(this) + 0x8c));
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(this: usize) {
     for k in 0..0x38usize {
         posicao(cqs4_d(this + 8), cqs4_d(cqs4_d(this + 0xee) + 4 * k), place_for_index(k) as u32);
     }
-    crate::comparison::branch("cqs_4 posicoes previstas");
+    crate::comparison::branch("cqs_4 expected positions");
 }
 
 /// O comparador da final: só a original (aloca a tabela e a fase e sorteia a rodada), com o plano feito antes: os

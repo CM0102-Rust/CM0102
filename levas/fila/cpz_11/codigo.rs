@@ -82,7 +82,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         }
     }
     if comissao != 0 {
-        crate::comparison::branch("cpz_11 folha do pessoal");
+        crate::comparison::branch("cpz_11 staff payroll");
         cpz11_por(this + 0xc, cpz11_i(this + 0xc).wrapping_add(comissao)); // cpz11: o pessoal na folha
     }
     let tipo1 = cpz11_b(clube + 0x64) == 1;
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     } else {
         0x96a5c0
     };
-    crate::comparison::branch("cpz_11 folha pela injury_word_0c");
+    crate::comparison::branch("cpz_11 payroll by injury_word_0c");
     let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha
     cpz11_por(this + 0xc, folha);
     let t = teto(this, 0, -1);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, clube
     }
     let r = dias_ate(e + 0x2a, cpz11_d(0xae2c90) as u32, cpz11_d(0xae2c94) as u32);
     if r > 0 {
-        crate::comparison::branch("cpz_11 dias ate a temporada");
+        crate::comparison::branch("cpz_11 days until the season");
         return r; // cpz11: os dias até a temporada
     }
     0

@@ -17,7 +17,7 @@ unsafe extern "thiscall" fn add_prize_money(this: usize, valor: i32) {
     cpz13_somar32(this + 0x148, valor);
     cpz13_somar32(this + 0xa8, valor);
     if valor != 0 {
-        crate::comparison::branch("cpz_13 premio recebido"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_13 prize received"); // só valor diferente de zero muda o saldo
     }
     add_to_balance(this, valor as i64); // cpz13: o prêmio entra no saldo
 }
@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn add_tv_revenue(this: usize, valor: i32) {
     cpz13_somar32(this + 0x158, valor);
     cpz13_somar32(this + 0xb8, valor);
     if valor != 0 {
-        crate::comparison::branch("cpz_13 tv recebida"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_13 TV money received"); // só valor diferente de zero muda o saldo
     }
     add_to_balance(this, valor as i64); // cpz13: a TV entra no saldo
 }
@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn pay_wages(this: usize, valor: i32) {
     cpz13_somar32(this + 0x130, valor);
     cpz13_somar32(this + 0x90, valor);
     if valor != 0 {
-        crate::comparison::branch("cpz_13 salario pago"); // só valor diferente de zero muda o saldo
+        crate::comparison::branch("cpz_13 wages paid"); // só valor diferente de zero muda o saldo
     }
     add_to_balance(this, (valor as i64).wrapping_neg()); // cpz13: o salário sai do saldo
 }

@@ -295,7 +295,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                     somar(v);
                 }
                 raise_attendance_floor(c, league_comp_reputation(cima), f);
-                crate::comparison::branch("cqt_4 publico de quem subiu");
+                crate::comparison::branch("cqt_4 attendance of promoted");
             }
         } else if *((liga + 0xbf) as *const i8) != 0 && pos as i32 <= *((liga + 0xbf) as *const i8) as i32 {
             let a = (prevista as i16).wrapping_sub(pos as i16);
@@ -341,7 +341,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                 let rb = league_comp_reputation(baixo);
                 let lim = if rb > 7 { match_pl_ftol(rb.wrapping_mul(3000) as f64 * f) } else { match_pl_ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
-                crate::comparison::branch("cqt_4 publico de quem caiu");
+                crate::comparison::branch("cqt_4 attendance of relegated");
             }
         } else {
             let r16 = cqt4_w(cqt4_d(liga + 4) + 0x69);
@@ -360,7 +360,7 @@ unsafe extern "C" fn cqt4_atualizar_media_de_publico(liga: usize) {
                 let val = (cqt4_i(e + 6) / jogos as i32).wrapping_add(cqt4_i(c + 0x73).wrapping_mul(4));
                 cqt4_pi(c + 0x73, match_pl_ftol(val as f64 * 0.2)); // cqt4: a mistura com o público real
             }
-            crate::comparison::branch("cqt_4 publico do meio da tabela");
+            crate::comparison::branch("cqt_4 attendance of mid-table");
             raise_attendance_floor(c, league_comp_reputation(liga), f);
             let r = league_comp_reputation(liga);
             let teto = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };

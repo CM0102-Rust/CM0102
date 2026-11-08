@@ -5,8 +5,8 @@
 # - 0x599890 (Finance::pay_players_bought, 64 bits): pelo pagamento da transferencia (0x8ca8a0) e pelas parcelas.
 # - 0x5998e0 (Finance::pay_sign_on_fee): pela oferta de contrato aceita (0x8c38b0) e pela mudanca do jogador de clube
 #   (TRANSFER_MANAGER::move_player_to_club 0x8c9720).
-# As transferencias rodam na carreira automatica ("cpp_10 transferencia grande" 8, a noticia da transferencia
-# finalizada da 261a, "cps_3 compensacao" 8 na base).
+# As transferencias rodam na carreira automatica ("cpp_10 big transfer" 8, a noticia da transferencia
+# finalizada da 261a, "cps_3 compensation" 8 na base).
 # Convencoes conferidas nos pontos de chamada da original (licao da 258a):
 #   0x599800: thiscall (mov ecx, [esp + 0x14] e test ecx antes do call em 0x8ca998; mov ecx, edi em 0x8caf87), 2 dwords
 #   (push alto, push baixo: o __int64 do mapa), ret 8. 0x599890: thiscall (mov ecx, [esp + 0x34] em 0x8ca97d; mov ecx,

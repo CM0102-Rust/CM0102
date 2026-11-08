@@ -50,7 +50,7 @@ unsafe fn build_gold_cup_team_list(this: usize) -> u32 {
     }
     let ano = cqs12_w(this + 0x40) as u16;
     if ano == 0x7d1 {
-        crate::comparison::branch("cqs_12 selecoes de 2001");
+        crate::comparison::branch("cqs_12 2001 national teams");
         for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
             cqs12_pd(cqs12_d(this + 0xee) + k * 4, national_team_of_nation_id(cqs12_d(g)));
         }
@@ -152,7 +152,7 @@ unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usize) {
     let n = cqs12_d(this + 0xf2) << 2;
     core::ptr::copy_nonoverlapping(cqs12_d(this + 0xee) as *const u8, v as *mut u8, n);
     ordenar(v, cqs12_d(this + 0xf2) as u32, 4, 0x4b07d0);
-    crate::comparison::branch("cqs_12 previstas da copa america");
+    crate::comparison::branch("cqs_12 copa america expected");
     for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         posicao(cqs12_d(this + 8), cqs12_d(v + k * 4), p);
     }
@@ -212,7 +212,7 @@ unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
             }
         }
     }
-    crate::comparison::branch("cqs_12 temporada nova da copa america");
+    crate::comparison::branch("cqs_12 copa america new season");
     core::ptr::write_unaligned((this + 0x40) as *mut i16, cqs12_w(this + 0x40).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
     cqs12_pd(this + 0x45, 0);
     cqs12_pd(this + 0x30, usize::MAX);

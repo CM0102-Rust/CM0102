@@ -40,11 +40,11 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
                 promotion(eng_second_staff_records(), club, comp, 0x64);
             }
             1 => {
-                crate::comparison::branch("cqk_5 vaga no play-off da c2a");
+                crate::comparison::branch("cqk_5 c2a play-off place");
                 exe::staff_records_add_qualified_for_round_record(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x28);
             }
             3 => {
-                crate::comparison::branch("cqk_5 rebaixamento na c2a");
+                crate::comparison::branch("cqk_5 relegation in c2a");
                 let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
                 cair(eng_second_staff_records(), club, comp); // cqk5: relegation by the C2/A table
             }

@@ -182,7 +182,7 @@ unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: usize, data: 
                         }
                         let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5abc30usize);
                         tirar(cqc7_d(0xae2a58), r);
-                        crate::comparison::branch("cqc_7 jogo levado a data");
+                        crate::comparison::branch("cqc_7 match moved to the date");
                         cqc7_pw(r + 0x2a, cqc7_w(pt) as u16); // cqc7: o dia marcado
                         cqc7_pw(r + 0x28, cqc7_w(pt + 2) as u16);
                         let v = cup_round_entry(this, rodada) + j;
@@ -318,7 +318,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
                     return;
                 }
             }
-            crate::comparison::branch("cqc_7 sai da troca da oferta");
+            crate::comparison::branch("cqc_7 leaves the offer exchange");
             cqc7_pd(oferta + 0x1b, v);
             seguir(this, oferta);
         }
@@ -349,7 +349,7 @@ unsafe extern "thiscall" fn remove_exchange_player(this: usize, pessoa: usize, o
                         free_empty_offer_list(o);
                     }
                     if achou {
-                        crate::comparison::branch("cqc_7 sai da troca das outras");
+                        crate::comparison::branch("cqc_7 leaves the other exchanges");
                         let v = cqc7_d(pessoa + 0x52).wrapping_add(cqc7_d(o + 0x1b));
                         noticia(this, o, pessoa, v, 0);
                         cqc7_pd(o + 0x1b, v);
@@ -408,7 +408,7 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
     let (precisa, proposta, concedida) = check_work_permit(this, alvo, comprador);
     if precisa {
         if proposta != 0 && !concedida {
-            crate::comparison::branch("cqc_7 permissao recusada");
+            crate::comparison::branch("cqc_7 permit refused");
             let desfeita: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(0x8de790usize);
             let fechar: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x8c6db0usize);
             let desmarcar: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x84aeb0usize);
@@ -445,7 +445,7 @@ unsafe extern "thiscall" fn check_offer_work_permits(this: usize, oferta: usize,
             let (precisa, proposta, concedida) = check_work_permit(this, x, dono);
             if precisa {
                 if proposta != 0 && !concedida {
-                    crate::comparison::branch("cqc_7 troca recusada pela permissao");
+                    crate::comparison::branch("cqc_7 exchange refused by the permit");
                     let v = cqc7_d(x + 0x52).wrapping_add(cqc7_d(oferta + 0x1b));
                     let recusada: unsafe extern "thiscall" fn(usize, usize, usize, usize) = core::mem::transmute(0x8e35a0usize);
                     let tirar: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x68d1f0usize);

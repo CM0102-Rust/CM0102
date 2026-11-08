@@ -36,7 +36,7 @@ unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize
         if !cargo.is_null() {
             *cargo = cpn6_b(e);
         }
-        crate::comparison::branch("cpn_6 estatuto pela lista");
+        crate::comparison::branch("cpn_6 status by list");
         return (cpn6_b(e + 0x24) >> 1) & 0xf; // os bits 1..4 da entrada
     }
     if !cargo.is_null() {
@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pessoa: usize
     if k == 0 {
         return 7;
     }
-    crate::comparison::branch("cpn_6 estatuto pelo contrato");
+    crate::comparison::branch("cpn_6 status by contract");
     cpn6_b(k + 0x4f) >> 4 // o nibble alto do contrato
 }
 
@@ -147,7 +147,7 @@ unsafe extern "thiscall" fn shortlist_manager_release_club_slot_targets(this: us
         }
         // setne al sobre o endereço da vaga: os 24 bits altos são os dele
         let tipo = ((s & !0xff) | (cpn6_b(s) != 0xb) as usize) as u32;
-        crate::comparison::branch("cpn_6 alvo fora do clube");
+        crate::comparison::branch("cpn_6 target outside the club");
         atualizar(this, p, clube, 3, tipo);
     }
 }

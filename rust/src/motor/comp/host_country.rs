@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     while k < n {
         let o = (k as i32 * 0x22) as usize;
         let p = read_usize(this) + o + 0x1f;
-        crate::comparison::branch("cqo_3 sorteio do dia");
+        crate::comparison::branch("cqo_3 day draw");
         let r = sortear(0x46); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_usize(this) + o;
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
     let given: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let continent: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_CONTINENT_MANAGERS);
     let all: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-    crate::comparison::branch("cqo_3 noticia das sedes");
+    crate::comparison::branch("cqo_3 hosts news");
     write_u32(list + 0xa, read_usize(list + 2) as u32);
     let mut it = exe::llist_get_next(list);
     while it != 0 {
@@ -245,7 +245,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
 pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
-        crate::comparison::branch("cqo_3 sem o arquivo");
+        crate::comparison::branch("cqo_3 without the file");
         return 0;
     }
     if exe::crt_fread(this + 4, 2, 1, f) != 1 {
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
                     return host_pair(e, k, a, b) as u32;
                 }
                 if k == -3 || k == -1 || default != 0 {
-                    crate::comparison::branch("cqj_3 sede padrao");
+                    crate::comparison::branch("cqj_3 default host");
                     return host_pair(e, -1, a, b) as u32; // cqj3: the default venue
                 }
             }
@@ -431,7 +431,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
                 *k = 0xff; // cqj3: voting opens
             }
             if *k == 0xff {
-                crate::comparison::branch("cqj_3 votacao aberta");
+                crate::comparison::branch("cqj_3 voting open");
                 por(l, &p, 4);
             }
             p += 0x22;
@@ -443,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             por(l, &p, 4);
             let k = (p + 0x1e) as *mut u8;
             if *k == 0xff || *k == 0xfe {
-                crate::comparison::branch("cqj_3 sede sorteada");
+                crate::comparison::branch("cqj_3 host drawn");
                 *k = exe::utils_random(3) as u8; // cqj3: a candidatura vencedora
             }
             p += 0x22;
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             let e = (read_u32(this) as usize).wrapping_add(i as i32 as usize * 0x22);
             let ae = read_u16(e + 4);
             if ae < year && ae != 0 {
-                crate::comparison::branch("cqj_3 edicao seguinte");
+                crate::comparison::branch("cqj_3 next edition");
                 core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16)); // cqj3: o intervalo
                 if *((e + 0x1e) as *const u8) != 0xfd {
                     *((e + 0x1e) as *mut u8) = 0xfe;
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
 /// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
 /// "Error" (host_country.cpp 0x475).
 pub(crate) unsafe extern "thiscall" fn save_temp_file(this: usize) {
-    crate::comparison::branch("cpx_6 gravar paises anfitrioes");
+    crate::comparison::branch("cpx_6 save host countries");
     let f = open_temp_file_for_write(0x9cf10c);
     if f == 0 {
         show_error_at(0x9cf0d8, 0x475);

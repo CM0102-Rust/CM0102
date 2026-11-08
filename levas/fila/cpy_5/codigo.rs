@@ -55,7 +55,7 @@ unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 }
                 2 => {
                     if o2 < 0x6c {
-                        crate::comparison::branch("cpy_5 entrada da banda 2");
+                        crate::comparison::branch("cpy_5 band 2 entry");
                         european_cup_write_entrant(t + 0x60 + o2, c, 8); // cpy5: a banda 2 entra na rodada 8
                         n2 += 1;
                         o2 += 6;
@@ -63,7 +63,7 @@ unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 }
                 3 => {
                     if o3 < 0x72 {
-                        crate::comparison::branch("cpy_5 entrada da banda 3");
+                        crate::comparison::branch("cpy_5 band 3 entry");
                         european_cup_write_entrant(t + 0xcc + o3, c, 0xd); // cpy5: a banda 3 entra na rodada 0xd
                         n3 += 1;
                         o3 += 6;
@@ -71,7 +71,7 @@ unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 }
                 4 => {
                     if o4 < 0x6c {
-                        crate::comparison::branch("cpy_5 entrada da banda 4");
+                        crate::comparison::branch("cpy_5 band 4 entry");
                         european_cup_write_entrant(t + 0x13e + o4, c, 0); // cpy5: a banda 4 entra na rodada 0
                         n4 += 1;
                         o4 += 6;
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
     }
     let f = f.wrapping_add(1);
     core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
-    crate::comparison::branch("cpy_5 fase seguinte");
+    crate::comparison::branch("cpy_5 next stage");
     match f {
         0 => {
             let sortear: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x585290usize);

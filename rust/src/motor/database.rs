@@ -97,7 +97,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                 break;
             }
             let kind = read_i16(e + match_incident::KIND);
-            crate::comparison::branch("match_wrap_up evento do dia");
+            crate::comparison::branch("match_wrap_up day event");
             let mark = |value: u8, who: u32| {
                 *((e + match_incident::OUTCOME) as *mut u8) = value;
                 core::ptr::write_unaligned((e + match_incident::RESPONDER_ID) as *mut u32, who);
@@ -117,7 +117,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                         let x = read_usize(t + staff::NON_PLAYER);
                         let r1 = random((exe::non_player_attribute_rating(x, (byte(x, 0x17) as u8 as u32) as i8) as i8) as i32);
                         if r1 > random(0x14) && byte(x, 0x14) > 5 {
-                            crate::comparison::branch("match_wrap_up proposta aceita");
+                            crate::comparison::branch("match_wrap_up offer accepted");
                             mark(1, *(t as *const u32));
                             event(call, e);
                         } else {
@@ -137,7 +137,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     if ok && t != 0 && read_usize(t + staff::NON_PLAYER) != 0 {
                         let x = read_usize(t + staff::NON_PLAYER);
                         if random((exe::non_player_attribute_rating(x, (byte(x, 0x17) as u8 as u32) as i8) as i8) as i32) > 5 && byte(x, 0x14) > 5 {
-                            crate::comparison::branch("match_wrap_up proposta aceita");
+                            crate::comparison::branch("match_wrap_up offer accepted");
                             mark(1, *(t as *const u32));
                             event(call, e);
                         } else {
@@ -160,13 +160,13 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     if let Some((k, side)) = found {
                         let p = m + engine::PLAYERS + (k + side * 20) * 0x1be;
                         let vale = if kind == 6 {
-                            crate::comparison::branch("match_wrap_up evento tipo 6");
+                            crate::comparison::branch("match_wrap_up type 6 event");
                             byte(p, match_player::YELLOW_CARDS) == 2 || byte(p, match_player::RED_CARDS) != 0
                         } else {
                             byte(p, match_player::MATCH_GRADE) < 7 && random(byte(p, match_player::MATCH_FORM) as i32) == 0
                         };
                         if vale {
-                            crate::comparison::branch("match_wrap_up evento do jogador");
+                            crate::comparison::branch("match_wrap_up player event");
                             mark(0, u32::MAX);
                             event(call, e);
                         }
@@ -213,7 +213,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                                     if b5b < 6 && byte(person, staff::AMBITION) > 10 {
                                         let r6 = random(byte(person, staff::AMBITION) as i32);
                                         if random(b5b as i32) < r6 {
-                                            crate::comparison::branch("match_wrap_up pede para sair");
+                                            crate::comparison::branch("match_wrap_up asks to leave");
                                             let mut ev = [0u8; 0x19];
                                             ev[..4].copy_from_slice(&(*(person as *const u32)).to_le_bytes());
                                             ev[4..8].copy_from_slice(&(*(meu as *const u32)).to_le_bytes());
@@ -247,7 +247,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                     if b < 6 && c < 10 {
                         let r1 = random((a * b as i32 * c as i32 + 0x14) * 100);
                         if r1 < random(x + 0x32) {
-                            crate::comparison::branch("match_wrap_up insatisfeito");
+                            crate::comparison::branch("match_wrap_up unhappy");
                             let mut ev = [0u8; 0x19];
                             ev[..4].copy_from_slice(&(*(person as *const u32)).to_le_bytes());
                             ev[4..8].copy_from_slice(&(*(meu as *const u32)).to_le_bytes());
@@ -5939,7 +5939,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     if *(G_NATION_TABLE as *const usize) == 0 {
         return original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_TRIM_CLUB_TABLE)(size);
     }
-    crate::comparison::branch("criação cortar a tabela de clubes");
+    crate::comparison::branch("creation trim the club table");
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let gi = |a: usize| read_i32(a);
     let rd = |a: usize| read_usize(a);
@@ -6137,7 +6137,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
 /// (linhas − [0xae2384]) × 26; qsort (0x945333) com 0x540780.
 pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
     let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
-    crate::comparison::branch("criação podar o histórico de competições");
+    crate::comparison::branch("creation prune the competition history");
     let mut k = 0usize;
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COMP_HISTORY_COUNT) {
@@ -6452,7 +6452,7 @@ pub(crate) unsafe extern "C" fn database_free_staff_history_table() {
     if table == 0 {
         return;
     }
-    crate::comparison::branch("banco liberar histórico de pessoas");
+    crate::comparison::branch("database free people history");
     free_database_table(table);
     *(G_STAFF_HISTORY_TABLE as *mut usize) = 0;
     *(G_STAFF_HISTORY_COUNT as *mut u32) = 0;
@@ -6471,7 +6471,7 @@ pub(crate) unsafe extern "C" fn database_free_staff_comp_history_table() {
     if table == 0 {
         return;
     }
-    crate::comparison::branch("banco liberar histórico de prêmios");
+    crate::comparison::branch("database free award history");
     free_database_table(table);
     *(G_STAFF_COMP_HISTORY_TABLE as *mut usize) = 0;
     *(G_STAFF_COMP_HISTORY_COUNT as *mut u32) = 0;
@@ -6494,7 +6494,7 @@ pub(crate) unsafe extern "C" fn database_free_staff_comp_history_table() {
 /// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. TapeCall por
 /// comp_util_add_history_record (0x4afd2c), no fim de competição. Sem quadro de pilha.
 pub(crate) unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
-    crate::comparison::branch("banco crescer histórico de competições");
+    crate::comparison::branch("database grow competition history");
     let total = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).wrapping_add(n);
     let new = exe::crt_realloc(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), (total as u32).wrapping_mul(26));
     if new == 0 {
@@ -9273,7 +9273,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute(person: usize, attrib
 /// locais sem valor (lixo de ponteiro, a partir de +0x5cb); chamado desta cópia ele roda na pilha
 /// particular e o lixo gravado muda (prova do save da 219a). Voltou com o critério novo.
 pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, kind: u32) -> u32 {
-    crate::comparison::branch("save gravar banco");
+    crate::comparison::branch("save write database");
     exe::save_database(save, 1, a4, kind)
 }
 
@@ -9287,7 +9287,7 @@ pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, kin
 /// do `load_game_data`: `load_database(save, compartilhado, 1)` (0x528540, do contêiner), devolvendo
 /// a resposta dela (1 = certo).
 pub(crate) unsafe extern "C" fn load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
-    crate::comparison::branch("save carregar banco");
+    crate::comparison::branch("save load database");
     exe::load_database(save, compartilhado, 1)
 }
 

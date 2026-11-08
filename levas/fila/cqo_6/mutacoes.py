@@ -12,5 +12,5 @@ MUTACOES = [
     ('cqo6_francesa_primeira_rodada_em_outro_dia',
      'const FRENCH_FIRST_DIVISION_ROUNDS: [(bool, ItaSerALeagueRound); 38] = [\n    (false, (31, 6, 0, 5,',
      'const FRENCH_FIRST_DIVISION_ROUNDS: [(bool, ItaSerALeagueRound); 38] = [\n    (false, (31, 6, 0, 2,',
-     'cqo_6 calendario da primeira francesa'),
+     'cqo_6 french first division calendar'),
 ]

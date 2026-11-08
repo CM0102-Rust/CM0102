@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
     }
     let t = cpt8_d(clube + 0xcf);
     if t == 0 {
-        crate::comparison::branch("cpt_8 sem tecnico");
+        crate::comparison::branch("cpt_8 without manager");
         return 100; // cpt8: sem técnico
     }
     if cpt8_i(t) < cpt8_i(0xae2364).wrapping_sub(0x10) {
@@ -50,7 +50,7 @@ unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categ
         }
     }
     if n != 0 {
-        crate::comparison::branch("cpt_8 treinadores");
+        crate::comparison::branch("cpt_8 coaches");
         soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: a média dos treinadores
     }
     let r = match_pl_ftol(soma as f64 * read_f64_at(0x970400));

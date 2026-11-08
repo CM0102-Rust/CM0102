@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn add_shortlist_entry(this: usize, pessoa: usize, club
             return;
         }
     }
-    crate::comparison::branch("cpo_9 nova entrada");
+    crate::comparison::branch("cpo_9 new entry");
     if cpo9_i(this + 8) == cpo9_i(this + 0x10) {
         let v = realocar(cpo9_d(this), (cpo9_i(this + 8) as u32).wrapping_mul(8).wrapping_add(0x320));
         cpo9_w(this, v as u32);
@@ -166,7 +166,7 @@ unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_response(vende
     if preco as f64 * read_f64_at(0x96f9c0) > oferta as f64 {
         return 2;
     }
-    crate::comparison::branch("cpo_9 negocia");
+    crate::comparison::branch("cpo_9 negotiates");
     1
 }
 
@@ -224,7 +224,7 @@ unsafe extern "thiscall" fn transfer_manager_get_loan_period(this: usize, clube:
         if !is_after_contract_end(cpo9_h(d), cpo9_h(d + 2) as u16, c) {
             return;
         }
-        crate::comparison::branch("cpo_9 recua o mes");
+        crate::comparison::branch("cpo_9 steps back the month");
         let m = (*mes).wrapping_sub(1);
         *mes = m;
         if m < 0 {

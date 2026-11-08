@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpo_tirar_o_tecnico', 'cpo4_por(c + 0xcf, 0); // o técnico do clube',
      '// mutacao: o tecnico fica no clube',
-     'cpo_4 tirar o tecnico'),
+     'cpo_4 remove the manager'),
     ('cpo_tirar_do_elenco', 'cpo4_por(v, 0); // a vaga do elenco',
      '// mutacao: o jogador fica no elenco',
-     'cpo_4 tirar do elenco'),
+     'cpo_4 remove from squad'),
     ('cpo_abrir_a_vaga', 'vaga(this, clube, tecnico); // a vaga do clube',
      'let _ = (vaga, tecnico); // mutacao: sem a vaga',
-     'cpo_4 abrir a vaga'),
+     'cpo_4 open the slot'),
 ]

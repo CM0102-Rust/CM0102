@@ -103,7 +103,7 @@ unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     }
     let semana: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x54a3f0usize);
     if semana(0xae2c90) as i16 != 6 && semana(0xae2c90) as i16 != 5 { // cpw9: sábado e domingo sem treino
-        crate::comparison::branch("cpw_9 dia de treino");
+        crate::comparison::branch("cpw_9 training day");
         roll_training_injuries(this);
     }
     if INJURY_DAILY_DRY_RUN {
@@ -166,7 +166,7 @@ unsafe fn roll_training_injuries(this: usize) {
                 if r > lim {
                     break 'proximo;
                 }
-                crate::comparison::branch("cpw_9 risco sem recorrencia");
+                crate::comparison::branch("cpw_9 risk without recurrence");
             }
             if cpw9_sortear(3) != 0 {
                 break 'proximo;
@@ -304,7 +304,7 @@ unsafe extern "thiscall" fn compare_injury_daily_update(this: usize) {
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     antes.write_back();
     if INJURY_DAILY_STOPPED {
-        crate::comparison::branch("cpw_9 lesao nova so na original");
+        crate::comparison::branch("cpw_9 new injury only in the original");
         return o(this);
     }
     *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = Some((reg, mr));
@@ -322,7 +322,7 @@ unsafe extern "thiscall" fn compare_injury_daily_update(this: usize) {
 /// 0x456740) dão a notícia com os dias entre B e A (0x54cc30); as de data B hoje (bsearch com 0x632040) a notícia da volta
 /// completa; as de data B já passada saem do começo da fila.
 unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
-    crate::comparison::branch("cpw_9 noticias de volta");
+    crate::comparison::branch("cpw_9 news back");
     let volta: unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) = core::mem::transmute(0x630ee0usize);
     let fisico: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x62c680usize);
     let mais: unsafe extern "thiscall" fn(usize, *mut u8, u32) -> usize = core::mem::transmute(0x54c5b0usize);

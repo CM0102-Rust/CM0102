@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         core::ptr::copy_nonoverlapping(0xae2c90 as *const u8, hoje.as_mut_ptr(), 8);
         let mut fim = [0u8; 8];
         let p = mais(r + 8, fim.as_mut_ptr(), 0x1f); // cqc10: o interesse vale 31 dias
-        crate::comparison::branch("cqc_10 interesse");
+        crate::comparison::branch("cqc_10 interest");
         let (hd, ha) = (i16::from_le_bytes([hoje[0], hoje[1]]), u16::from_le_bytes([hoje[2], hoje[3]]));
         let vencido = ha > cqc10_w(p + 2) as u16 || (ha == cqc10_w(p + 2) as u16 && hd > cqc10_w(p));
         if vencido || tec_dono == 0 || cqc10_d(pessoa + 0x61) == 0 {
@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             continue;
         }
         if cqc10_u(r + 0x10) == 0 && {
-            crate::comparison::branch("cqc_10 sorteio do boato");
+            crate::comparison::branch("cqc_10 rumour draw");
             cqc10_sortear(0x19) == 0 // cqc10: o sorteio do boato
         } {
             // os clubes interessados no jogador
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 i += 1;
                 continue;
             }
-            crate::comparison::branch("cqc_10 boato");
+            crate::comparison::branch("cqc_10 rumour");
             let mut noticia = [0u32; 0x3a]; // a notícia local
             let n = noticia.as_mut_ptr() as usize;
             construir(n, 0xfbc, 0);
@@ -160,7 +160,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             let mut pede = false;
             let mut sai = false;
             if cqc10_b(pessoa + 0x5b) < 0xf && cqc10_b(pessoa + 0x59) < 0xf {
-                crate::comparison::branch("cqc_10 pedido de transferencia");
+                crate::comparison::branch("cqc_10 transfer request");
                 let rr = cqc10_sortear(0x30d4); // cqc10: o sorteio da reputação para o pedido
                 if (cqc10_w(cqc10_d(pessoa + 0x61) + 0xd) as i32) > rr {
                     let lim = cqc10_b(pessoa + 0x59) as i32 as f64 * 12.5 + 500.0;
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 let feliz = cqc10_b(vinc + 0x3d) as i32;
                 let s = cqc10_sortear(0x32);
                 if feliz > s + 0x28 && cqc10_sortear(0x1e) == 0 {
-                    crate::comparison::branch("cqc_10 nao vende");
+                    crate::comparison::branch("cqc_10 will not sell");
                     let nao_vende: unsafe extern "C" fn(usize, usize, usize, usize) = core::mem::transmute(0x587600usize);
                     nao_vende(pessoa, dono, cqc10_d(dono + 0xbf), 0);
                     let mut j = 0i32;
@@ -306,7 +306,7 @@ unsafe extern "C" fn news_create_not_for_sale_story(jogador: usize, clube: usize
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let mut dest = [0usize; 30];
     let nd: u8 = if cqc10_d(0xde1f54) != 0 { player_news_recipients(jogador, 0xd8, dest.as_mut_ptr(), 0x1e) } else { 0 };
-    crate::comparison::branch("cqc_10 noticia nao vende");
+    crate::comparison::branch("cqc_10 will not sell news");
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0xfbe, 0);
@@ -360,7 +360,7 @@ unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, clube: usize
     let veiculo: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x757f30usize);
     let comentarista: unsafe extern "thiscall" fn(usize, usize, u32, i32) -> i32 = core::mem::transmute(0x7dab90usize);
     let ate: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
-    crate::comparison::branch("cqc_10 noticia do titulo");
+    crate::comparison::branch("cqc_10 title news");
     let mut noticia = [0u32; 0x3a];
     let n = noticia.as_mut_ptr() as usize;
     construir(n, 0x2e, 0);

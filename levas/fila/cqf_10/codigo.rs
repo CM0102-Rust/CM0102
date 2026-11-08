@@ -255,7 +255,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
     let acompanhado = cqf10_i(this + 0x190);
     if acompanhado > -1 && cqf10_d(this + 0x170) != 0 && (cqf10_i(jogo + 0xc) == acompanhado || cqf10_i(jogo + 0x10) == acompanhado) {
         if !SCOUT_MATCH_DRY_RUN {
-            crate::comparison::branch("cqf_10 historico do clube");
+            crate::comparison::branch("cqf_10 club history");
             let historico: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x7bd310usize);
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
             historico(cqf10_d(this + 0x170), jogo, resultado);
@@ -336,7 +336,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
             return 0;
         }
     }
-    crate::comparison::branch("cqf_10 relatorio");
+    crate::comparison::branch("cqf_10 report");
     // o começo da lista vai a amanhã (0x54c5b0 com 1, 0x417c10 grava em +0x1a5); o byte baixo do dword da data copiada
     // vira o contador dos dois lados e vai inteiro como 7º argumento da 0x7b62a0
     let mais: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x54c5b0usize);
@@ -434,7 +434,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
                 }
                 2
             };
-            crate::comparison::branch("cqf_10 avaliar jogador");
+            crate::comparison::branch("cqf_10 evaluate player");
             let n = ((cqf10_b(atual + 5) as i32 * 0x28 - 0x104).wrapping_mul(nota as i8 as i32)) / 2;
             relatorio(this, p, reg, n, modo, jogo, resultado, marca);
             if (cqf10_b(reg + 0x66) as i8) > -1 {

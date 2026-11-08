@@ -3,9 +3,9 @@ MUTACOES = [
     ('cqq5_baixo_impar_primeira_rodada_em_outro_dia',
      'const LOWER_ODD_EARLY_ROUNDS: [SpaLowerLeagueRound; 20] = [\n    (16, 7, 0, 6,',
      'const LOWER_ODD_EARLY_ROUNDS: [SpaLowerLeagueRound; 20] = [\n    (16, 7, 0, 2,',
-     'cqq_5 calendario da divisao de baixo espanhola'),
+     'cqq_5 spanish lower division calendar'),
     ('cqq5_baixo_impar_natal_deslocado',
      'const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_ODD_EARLY_ROUNDS, referencia: 19, ajuste: 17,',
      'const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerChristmasSchedule { comeco: &LOWER_ODD_EARLY_ROUNDS, referencia: 19, ajuste: 18,',
-     'cqq_5 calendario da divisao de baixo espanhola'),
+     'cqq_5 spanish lower division calendar'),
 ]

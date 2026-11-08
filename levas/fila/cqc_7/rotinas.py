@@ -2,7 +2,7 @@
 # oferta (Cup.cpp, transfer_manager.cpp):
 # - 0x51ebe0 (Cup::move_round_fixtures_to_set_dates, ~1,8 KB, quadro SEH sem destrutor no caminho normal): nas rodadas
 #   com datas marcadas (bit 0x100 em +0xd), leva cada jogo da rodada ao dia da semana e à fatia da vaga dele (sai e
-#   volta ao calendário), pela montagem da rodada 0x51c800 (montar_rodada_da_copa, em Rust; "cps_13 jogos da rodada"
+#   volta ao calendário), pela montagem da rodada 0x51c800 (montar_rodada_da_copa, em Rust; "cps_13 round matches"
 #   na base): 68 chamadas na carreira automática até 2002-06-01 (docs/cobertura_simulacao.txt, 17/10).
 # - 0x8c41c0 (TRANSFER_MANAGER::remove_exchange_player, 798 bytes, quadro SEH sem destrutor no caminho normal): tira o
 #   jogador da lista de troca de uma oferta (ou das outras), soma o valor dele ao preço e a oferta segue; pela oferta

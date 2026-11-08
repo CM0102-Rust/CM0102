@@ -193,7 +193,7 @@ unsafe extern "thiscall" fn send_club_international_report_news(this: usize, clu
                 pr(cqf11_d(cqf11_d(p + 0xc) + 0x33) as u32);
             }
             pr(0x420e9);
-            crate::comparison::branch("cqf_11 noticia do clube");
+            crate::comparison::branch("cqf_11 club news");
             let k_sorteio = idx;
             idx = idx.wrapping_add(1);
             let r = random_or_tape(2); // cqf11: o sorteio da notícia
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn national_teams_post_call_up_news(this: usize, seleca
                 continue;
             }
         }
-        crate::comparison::branch("cqf_11 noticia da convocacao");
+        crate::comparison::branch("cqf_11 call-up news");
         construir(nt, 0x1d, 0);
         gravar(nt, 0, cqf11_d(selecao) as u32);
         gravar(nt, 1, cqf11_d(clube) as u32);

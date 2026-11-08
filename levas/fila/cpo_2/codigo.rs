@@ -30,7 +30,7 @@ unsafe extern "thiscall" fn remove_contract(this: usize, pessoa: usize) {
     let id_clube = cpo2_d(e + 4);
     cpo2_por(e, usize::MAX);
     let clube = cpo2_d(0xae23b4).wrapping_add(id_clube.wrapping_mul(0x245));
-    crate::comparison::branch("cpo_2 tirar contrato");
+    crate::comparison::branch("cpo_2 remove contract");
     cpo2_por(main_contract_slot(pessoa), usize::MAX); // a pessoa fica sem contrato
     let get_club_finance: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
     let f = get_club_finance(cpo2_d(0xae2a38), clube);
@@ -70,7 +70,7 @@ unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usize) -> u32 
                         if *((q + 0x2c) as *const u8) == 0xf {
                             *((q + 0x2c) as *mut u8) = 8;
                         }
-                        crate::comparison::branch("cpo_2 reenviar oferta");
+                        crate::comparison::branch("cpo_2 resend offer");
                         reenviar(this, item, t, cpo2_d(item + 0x5d), (q as u32 & 0xffff_ff00) | byte, 1, 1, 0); // com a transferência
                     }
                 }

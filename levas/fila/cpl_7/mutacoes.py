@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpl_interesse_conta', 'cpl7_por(this + 0x14, n); // mais um interesse',
      'cpl7_por(this + 0x14, n.wrapping_sub(1)); // mutacao: a conta nao sobe',
-     'cpl_7 interesse novo'),
+     'cpl_7 new interest'),
     ('cpl_interesse_repetido', 'return; // o interesse já está',
      '// mutacao: o repetido entra',
-     'cpl_7 interesse repetido'),
+     'cpl_7 repeated interest'),
     ('cpl_interesse_boato', '*((item() + 0x10) as *mut u8) = 0; // o boato ainda não saiu',
      '*((item() + 0x10) as *mut u8) = 1; // mutacao: o boato ja saiu',
-     'cpl_7 interesse novo'),
+     'cpl_7 new interest'),
 ]

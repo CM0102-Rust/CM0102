@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, tipo:
     if !outbreak_takes_hold(tipo, clube_i) {
         return;
     }
-    crate::comparison::branch("cpp_8 surto novo");
+    crate::comparison::branch("cpp_8 new outbreak");
     let cap = cpp8_i(this + 0x20);
     if cpp8_i(this + 0x24) >= cap {
         let cap = cap.wrapping_add(30);
@@ -131,7 +131,7 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
             break; // o primeiro surto depois de hoje
         }
         if is_after_outbreak(&cinco, e) {
-            crate::comparison::branch("cpp_8 surto antigo");
+            crate::comparison::branch("cpp_8 old outbreak");
             removidos += 1;
         } else {
             let tipo = cpp8_b(e + 8);
@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
                 Some(cpp8_sorteio(3) as u8) // 0 a 2 doentes
             };
             if let Some(mut quantos) = quantos {
-                crate::comparison::branch("cpp_8 espalhar");
+                crate::comparison::branch("cpp_8 spread");
                 let clube = injury_club_by_index(cpp8_i(cpp8_d(this + 0x1c).wrapping_add(off) + 9));
                 if !injury_is_national_team(clube) {
                     let mut t = 0;

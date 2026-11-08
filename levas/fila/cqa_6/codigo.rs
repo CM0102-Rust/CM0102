@@ -26,7 +26,7 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
         return 0;
     }
     if cqa6_d(this + 0x1f6) == 0 {
-        crate::comparison::branch("cqa_6 busca vazia");
+        crate::comparison::branch("cqa_6 empty search");
         return 0; // cqa6: sem resultados, não está
     }
     let referencia: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x7e4920usize);
@@ -37,10 +37,10 @@ unsafe extern "thiscall" fn contains_player(this: usize, pessoa: usize) -> u32 {
         return 0;
     }
     if cqa6_b(r + 0x20) & 1 != 0 { // cqa6: a removida não conta
-        crate::comparison::branch("cqa_6 removido");
+        crate::comparison::branch("cqa_6 removed");
         return 0;
     }
-    crate::comparison::branch("cqa_6 achado");
+    crate::comparison::branch("cqa_6 found");
     1 // cqa6: achado
 }
 
@@ -100,7 +100,7 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
                 continue;
             }
         }
-        crate::comparison::branch("cqa_6 lista sem olheiro");
+        crate::comparison::branch("cqa_6 list without scout");
         set_search_scout(l, 0);
     }
     if clube != 0 {
@@ -127,7 +127,7 @@ unsafe extern "thiscall" fn sync_scout_lists(this: usize, tecnico: usize) -> u32
                 }
             }
             if !tem && livre > -1 {
-                crate::comparison::branch("cqa_6 olheiro na lista livre");
+                crate::comparison::branch("cqa_6 scout in the free list");
                 set_search_scout(get_search(this, livre as u8, m), s);
             }
         }

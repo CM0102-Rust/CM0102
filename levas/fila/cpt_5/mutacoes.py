@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpt5_duas_medidas', '        for k in 0..3usize { // cpt5: as três medidas',
      '        for k in 0..2usize { // mutacao: duas medidas',
-     'cpt_5 tempo do dia'),
+     'cpt_5 weather of the day'),
     ('cpt5_vento_mais_vezes', '        if cpt5_sortear(10) == 0 { // cpt5: um em dez muda o vento',
      '        if cpt5_sortear(10) <= 1 { // mutacao: dois em dez',
-     'cpt_5 tempo do dia'),
+     'cpt_5 weather of the day'),
     ('cpt5_vento_sem_sorteio', '            let r = cpt5_sortear(3); // cpt5: o vento novo',
      '            let r = 1; // mutacao: sem o sorteio',
-     'cpt_5 vento novo'),
+     'cpt_5 new wind'),
 ]

@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
                 if forte(pres, ficha) && cqb2_c(pres + 0x57) > 0xf && cqb2_c(ficha + 0x20) > 0xf {
                     read_f64_at(0x96a740)
                 } else {
-                    crate::comparison::branch("cqb_2 divisor da band 0 baixa");
+                    crate::comparison::branch("cqb_2 low band 0 divisor");
                     read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
@@ -87,7 +87,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
     let ficha = if pres != 0 { cqb2_d(pres + 0x69) } else { 0 };
     let valor;
     if pres != 0 && ficha != 0 {
-        crate::comparison::branch("cqb_2 com a ficha");
+        crate::comparison::branch("cqb_2 with the record");
         let r1 = cpv6_sortear(match_pl_ftol(read_f64_at(0x968dd8) / div)); // cqb2: o sorteio com a ficha
         let r2 = cpv6_sortear(cqb2_c(ficha + 0xf) as i32);
         if r2 <= r1 {
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
         }
         valor = v;
     } else {
-        crate::comparison::branch("cqb_2 sem a ficha");
+        crate::comparison::branch("cqb_2 without the record");
         let r = cpv6_sortear(match_pl_ftol(read_f64_at(0x96a728) / div)); // cqb2: o sorteio sem a ficha
         if rep as i32 <= r {
             return 0;
@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn try_board_takeover(this: usize, clube: usize, fin: u
     if r as f64 >= fator {
         return 0;
     }
-    crate::comparison::branch("cqb_2 troca do presidente");
+    crate::comparison::branch("cqb_2 chairman change");
     let (lo, _) = balance_halves(fin);
     let mut v = (cpv6_w(clube + 0x80) as i32).wrapping_add(1000).wrapping_mul(1000).wrapping_sub(lo as i32);
     if v > 0x2625a00 {

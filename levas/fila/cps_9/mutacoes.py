@@ -10,5 +10,5 @@ MUTACOES = [
      'let mut i = 6i32; // mutacao: sem o primeiro grupo'),
     ('cps9_volta_nao_achada', '0 // cps9: a volta de hoje achada',
      '-1 // mutacao: a volta de hoje nao e achada',
-     'cps_9 data igual'),
+     'cps_9 same date'),
 ]

@@ -69,7 +69,7 @@ pub(crate) unsafe fn construct_english_division(this: usize, year: u32, registro
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cql_6 divisao inglesa nova");
+    crate::comparison::branch("cql_6 new english division");
     *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
     write_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
     write_usize(this + league::STAGE_COUNT, p.extra_stages as usize);
@@ -224,7 +224,7 @@ pub(crate) fn english_common_rules() -> Vec<(usize, u8, u32)> {
 /// (as palavras copiadas em cada partida), ninguém sobe (+0xbe = 0, +0xbf = 0, +0xc0 = 0), 3 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
 pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_4 regras da premier");
+    crate::comparison::branch("cqi_4 premier rules");
     eng_prm_apply_league_rules(this, &premier_rules())
 }
 
@@ -368,7 +368,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: usize, n: i16, file: usize,
     if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
-    crate::comparison::branch("cqi_5 tabela cheia");
+    crate::comparison::branch("cqi_5 full table");
     let f = exe::league_calc_prize_fund(this, quota);
     core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
     *((this + league::PRIZE_MODE) as *mut u8) = 1;
@@ -447,7 +447,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 calendario da premiership");
+            crate::comparison::branch("cqp_5 premiership calendar");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, year, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t

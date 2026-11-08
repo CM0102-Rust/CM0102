@@ -89,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
         show_error_at(0x987c20, 0x328);
         return 0;
     }
-    crate::comparison::branch("cqr_3 serie final");
+    crate::comparison::branch("cqr_3 final series");
     exe::league_send_group_draw_news(stage);
     core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
     1
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     if stage == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
-    crate::comparison::branch("cqr_3 grande final");
+    crate::comparison::branch("cqr_3 grand final");
     build(stage, 0);
     exe::crt_free(list);
 }
@@ -212,7 +212,7 @@ pub(crate) unsafe fn set_mls_rules(o: usize) {
 /// a marca; o ponteiro vai para +0xba); devolve 1.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 {
     set_nsl_rules(this);
-    crate::comparison::branch("cqj_8 regras da nsl");
+    crate::comparison::branch("cqj_8 nsl rules");
     let vt = *(this as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
     let r = f(this, -1, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
@@ -277,7 +277,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
         show_error_at(0x987c20, 0x252);
         return 0;
     }
-    crate::comparison::branch("cqm_9 nsl cheia");
+    crate::comparison::branch("cqm_9 nsl full");
     1
 }
 

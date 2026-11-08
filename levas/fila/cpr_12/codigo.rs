@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize, ano: u32, 
                 show_error_at(0x9cc208, 0x634);
                 return total & 0xffff;
             }
-            crate::comparison::branch("cpr_12 jogo da rodada");
+            crate::comparison::branch("cpr_12 round match");
             total = total.wrapping_add(1);
         }
         f = fix_man_list_next(l);

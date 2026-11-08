@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
             let e = |a: usize| n == cpv7_i(a);
             if e(0x9cf2e4) || e(0x9cf360) || e(0x9cf488) {
                 if cpv7_w(clube + 0x80) > 0x1c52 {
-                    crate::comparison::branch("cpv_7 clube grande");
+                    crate::comparison::branch("cpv_7 big club");
                     w = match_pl_ftol(w as f64 * read_f64_at(0x9689b8)); // cpv7: o clube grande da Inglaterra, Itália e Espanha
                 }
             } else if e(0x9cf36c) {
@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
         }
         let liga = cpv7_d(clube + 0x57);
         if liga != 0 {
-            crate::comparison::branch("cpv_7 peso da liga");
+            crate::comparison::branch("cpv_7 league weight");
             w = match_pl_ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
         }
     }
@@ -135,7 +135,7 @@ unsafe extern "thiscall" fn pay_bonuses(this: usize, valor: i32) {
     for o in [0x138usize, 0x98] {
         core::ptr::write_unaligned((this + o) as *mut i32, cpv7_i(this + o).wrapping_add(valor));
     }
-    crate::comparison::branch("cpv_7 bonus pagos");
+    crate::comparison::branch("cpv_7 bonuses paid");
     let s = core::ptr::read_unaligned(this as *const i64);
     core::ptr::write_unaligned(this as *mut i64, s.wrapping_sub(valor as i64)); // cpv7: o bônus sai do saldo
 }

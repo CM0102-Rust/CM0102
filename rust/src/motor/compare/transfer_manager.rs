@@ -1301,7 +1301,7 @@ pub(crate) unsafe extern "thiscall" fn compare_write_deadline_news_text(this: us
 pub(crate) unsafe extern "thiscall" fn compare_can_end_loan(this: usize, club: usize, player: usize, a: u32, b: u32, c: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> u32>(IDX_CAN_END_LOAN)(this, club, player, a, b, c);
     if loan_transfer_rules(this, club, player).is_some() {
-        crate::comparison::branch("can_end_loan pelas regras");
+        crate::comparison::branch("can_end_loan by the rules");
         return r;
     }
     SCOREBOARD.record(r == 1, || format!("can_end_loan({:x}, {:x}) original={} rust=1", club, player, r));
@@ -1598,13 +1598,13 @@ pub(crate) unsafe extern "stdcall" fn compare_fill_vacated_staff_job(club: usize
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32)>(IDX_FILL_VACATED_STAFF_JOB);
     let escolhida = if club != 0 { job_sought_by_slot(job).and_then(|c| first_unemployed_staff(club, c as u8)) } else { None };
     let Some(p) = escolhida else {
-        crate::comparison::branch("fill_vacated_staff_job sem ninguem");
+        crate::comparison::branch("fill_vacated_staff_job nobody");
         return o(club, job);
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(club, 0x245), (p, 0x6e)], || o(club, job),
         || fill_vacated_staff_job(club, job));
     if read_usize(p + staff::CLUB_JOB) != club {
-        crate::comparison::branch("fill_vacated_staff_job sem entrar no clube");
+        crate::comparison::branch("fill_vacated_staff_job without joining the club");
     }
     SCOREBOARD.record(igual, || format!("fill_vacated_staff_job({:x}, {}) pessoa {:x} {:x?} x {:x?}", club, job as u8, p, mo, mr));
 }

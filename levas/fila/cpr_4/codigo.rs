@@ -59,10 +59,10 @@ unsafe extern "thiscall" fn get_open_offers_for_club_players(this: usize, clube:
         i += 1;
     }
     if desfeita {
-        crate::comparison::branch("cpr_4 oferta desfeita");
+        crate::comparison::branch("cpr_4 offer undone");
     }
     if emprestado {
-        crate::comparison::branch("cpr_4 jogador emprestado");
+        crate::comparison::branch("cpr_4 loaned player");
     }
     n
 }
@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, pessoa: usiz
         cpr4_por(l + 0xa, cpr4_d(l + 2));
         let mut e = proximo(l);
         while e != 0 {
-            crate::comparison::branch("cpr_4 desfazer oferta");
+            crate::comparison::branch("cpr_4 undo offer");
             let o = cpr4_d(cpr4_d(this).wrapping_add(cpr4_d(e).wrapping_mul(4)));
             if cpr4_b(o + 0x2c) == 0x13 {
                 tirar_futura(this, o);
@@ -123,7 +123,7 @@ unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, pessoa: usiz
 /// conta +0x888); cheio, cresce de 50 em 50 (sem memória: caixa 0x2553 e nada). Reordena (qsort 0x945333 com 0x8e54d0,
 /// a ordem da busca 0x8cb0f0).
 unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, registro: usize) {
-    crate::comparison::branch("cpr_4 write_percent_pair da proxima venda");
+    crate::comparison::branch("cpr_4 write_percent_pair of the next sale");
     if !grow_record_vector(this, 0x880, 4, 50, 0xd, 0x2553, 0xa8eb50) {
         return;
     }

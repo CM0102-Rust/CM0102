@@ -35,7 +35,7 @@
 # Passageira vinda da cqg_5 (02/11):
 # - 0x4b01d0 (comp_util_get_parent_stage_id, 261 bytes, cdecl): o grupo de uma fase pelo id (as faixas fixas da
 #   original), pela primeira fase do grupo e pela fase atual (0x48d2b0, 0x48cec0, Rust: push id; add esp, 4 -> cdecl).
-#   Comparador pela devolução. Não rodou na carreira automática até 2002-06-01 (o contador "cqg_6 grupo 0xa").
+#   Comparador pela devolução. Não rodou na carreira automática até 2002-06-01 (o contador "cqg_6 group 0xa").
 SAVE = False
 ROTINAS = [('campeoes_sortear_segunda_fase', 0x585ab0, [0x6a, 0xff, 0x68, 0xfe, 0x8a, 0x95, 0x00]),
            ('campeoes_ordem_da_segunda_fase', 0x5871e0, [0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08]),

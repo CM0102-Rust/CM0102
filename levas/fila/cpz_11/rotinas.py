@@ -6,7 +6,7 @@
 # - 0x59cf50 (FinanceTable::refresh_all_wage_bills): so pela criacao do jogo (0x828110), uma vez.
 # - 0x59b4c0 (finance_get_days_to_season_start): pelo passe diario das financas, semanal por clube (depois do
 #   merchandising 0x59b7e0, "cpv_5 merchandising" 16384 na base); devolvendo > 0, os ingressos da temporada
-#   (0x599a20, "cpv_5 ingressos vendidos" 512); 0, zera +0x18 e +0x164.
+#   (0x599a20, "cpv_5 tickets sold" 512); 0, zera +0x18 e +0x164.
 # Convencoes conferidas nos pontos de chamada da original (licao da 258a):
 #   0x4cf5f0 contrato_com_clube: thiscall (mov ecx, [0xae1050] em 0x5983c4), 2 args (push ebp = clube, push eax = pessoa).
 #   0x864550 salario padrao (STAFF_CONTRACT::default_staff_contract): a original poe ecx = edi (o contrato, 0x5983ec) e

@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpq5_amanha', 'copia(saida, &mut t, hoje); // tipo 0: hoje',
      'mais(hoje, saida, 1); // mutacao: amanha',
-     'cpq_5 conclusao imediata'),
+     'cpq_5 immediate completion'),
     ('cpq5_dia_depois', 'copia(&mut dia, &mut t, &inicio); // o primeiro dia testado é o início',
      'mais(&inicio, &mut dia, 1); // mutacao: um dia depois',
-     'cpq_5 dia permitido'),
+     'cpq_5 allowed day'),
     ('cpq5_julho', 'dma(&mut a, 1, 6, ano(), 0xffff_ffff); // 1º de julho',
      'dma(&mut a, 2, 6, ano(), 0xffff_ffff); // mutacao: 2 de julho',
-     'cpq_5 janela de julho'),
+     'cpq_5 July window'),
 ]

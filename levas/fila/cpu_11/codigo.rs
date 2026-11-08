@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u3
     let mascara: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x5b59a0usize);
     let su = s as usize;
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
-    crate::comparison::branch("cpu_11 coordenada gravada");
+    crate::comparison::branch("cpu_11 coordinate recorded");
     core::ptr::write_unaligned(cel as *mut u32, coord); // cpu11: a coordenada
     // a saída da 0x5b7e60 é o próprio argumento coord na original (uma vaga só, para a função inteira)
     let mut saida: [i16; 2] = [cx, cy];
@@ -59,14 +59,14 @@ unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u3
                 }
             }
             if pos & 2 != 0 {
-                crate::comparison::branch("cpu_11 distância dobrada");
+                crate::comparison::branch("cpu_11 distance doubled");
                 dist = dist.wrapping_add(dist); // cpu11: o dobro
             }
             if dist <= melhor[p] { // cpu11: o empate entra na lista
                 if dist < melhor[p] {
                     conta[p] = 0;
                 } else {
-                    crate::comparison::branch("cpu_11 empate na lista");
+                    crate::comparison::branch("cpu_11 tie in the list");
                 }
                 melhor[p] = dist;
                 cand[(conta[p] as i32 + p as i32 * 11) as usize] = pos;

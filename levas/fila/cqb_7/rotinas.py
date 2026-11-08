@@ -1,7 +1,7 @@
 # A permissão de trabalho concedida, o estatuto pelo motivo da recusa e a vaga da negociação (transfer_manager.cpp):
 # TRANSFER_MANAGER::is_work_permit_granted (0x8c7950, ~1,2 KB: pela permissão na lista de observação 0x84b180 e pela
 # oferta de contrato aceita 0x8c38b0, já em Rust, e pelas permissões da oferta 0x8c7690, original, a cada oferta que
-# vence; "cpl_3 permissao de trabalho" 64 e "cpr_1 permissao achada" 131072 na base da 261ª),
+# vence; "cpl_3 work permit" 64 e "cpr_1 permit found" 131072 na base da 261ª),
 # transfer_manager_get_squad_status_for_reason (0x8c5800, só da tela da oferta: passageira) e
 # TRANSFER_MANAGER::get_negotiation_slot (0x8c6200, da resposta automática às notícias e das telas: passageira).
 # Iguais no cm0102-1080.exe; sem SEH. A 0x8c7950 tem x87 só para a máscara do histórico (fld qword [0x968950] = 2,0,

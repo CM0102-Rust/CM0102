@@ -7,9 +7,9 @@
 #   Campeoes, que procura os campeoes, mudam).
 MUTACOES = [
     ('cqj8_vitoria_nsl', 'cqj8_b(o, 0xc2, 3); // cqj8: os pontos por vitória da NSL',
-     'cqj8_b(o, 0xc2, 2); // mutacao: os pontos por vitória da NSL', 'cqj_8 regras da nsl'),
+     'cqj8_b(o, 0xc2, 2); // mutacao: os pontos por vitória da NSL', 'cqj_8 nsl rules'),
     ('cqj8_empate_mls', 'cqj8_b(o, 0xc3, 1); // cqj8: os pontos por empate da MLS',
-     'cqj8_b(o, 0xc3, 0); // mutacao: os pontos por empate da MLS', 'cqj_8 regras da mls'),
+     'cqj8_b(o, 0xc3, 0); // mutacao: os pontos por empate da MLS', 'cqj_8 mls rules'),
     ('cqj8_sem_historico_estadual', 'record_first_stage_honours(this); // cqj8: o histórico do estadual',
-     '// mutacao: sem o histórico do estadual', 'cqj_8 historico do estadual'),
+     '// mutacao: sem o histórico do estadual', 'cqj_8 state league history'),
 ]

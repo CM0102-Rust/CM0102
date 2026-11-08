@@ -54,7 +54,7 @@ unsafe extern "thiscall" fn player_regen_pick_staff_for_non_player_data(this: us
     if escolhida != 0 {
         return escolhida;
     }
-    crate::comparison::branch("doador de qualquer nação");
+    crate::comparison::branch("donor from any nation");
     melhor = -15000;
     let base = cpg2_d(0xae23bc); // relida, como na original
     i = 0;

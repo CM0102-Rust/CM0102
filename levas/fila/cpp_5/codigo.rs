@@ -62,7 +62,7 @@ unsafe extern "stdcall" fn shortlist_set_up_formation_slots(entrada: usize) {
     }
     let f = *((entrada + 7) as *const i8) as i32;
     let linha = if (1..=9).contains(&f) { f as usize } else { 0 };
-    crate::comparison::branch("cpp_5 vagas da formacao");
+    crate::comparison::branch("cpp_5 formation slots");
     let v = cpp5_d(entrada);
     cpp5_w(v + 1, 1); // o goleiro
     for k in 1..25usize {
@@ -79,7 +79,7 @@ unsafe extern "thiscall" fn update_club_shortlist(this: usize, clube: usize) {
     let verba: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x83b6e0usize);
     soltar(this, clube, shortlist_club_entry(this, clube));
     avaliar(this, shortlist_club_entry(this, clube), clube, 1, 0);
-    crate::comparison::branch("cpp_5 refazer lista");
+    crate::comparison::branch("cpp_5 redo list");
     verba(this, clube); // a verba de transferências
 }
 
@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: usize, jogad
             let item = proximo(lista);
             if item != 0 {
                 let e = cpp5_d(this + 0xdc).wrapping_add(cpp5_d(item + 4).wrapping_mul(9));
-                crate::comparison::branch("cpp_5 suspender clube");
+                crate::comparison::branch("cpp_5 suspend club");
                 *((e + 8) as *mut u8) = 0x64; // o clube suspende o jogador
                 if limpar != 0 {
                     for k in 0..0x28usize {

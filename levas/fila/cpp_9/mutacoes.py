@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpp9_forma_inicial', 'core::ptr::write_unaligned((r + 8) as *mut u16, (10000 - v * 75) as u16); // a forma inicial',
      'core::ptr::write_unaligned((r + 8) as *mut u16, (10000 - v * 74) as u16); // mutacao: 74',
-     'cpp_9 forma inicial'),
+     'cpp_9 initial form'),
     ('cpp9_lesao_inicial', 'if cpp9_sorteio(100) == 0 { // 1 em 100 começa lesionado',
      'if cpp9_sorteio(99) == 0 { // mutacao: 1 em 99',
-     'cpp_9 lesao inicial'),
+     'cpp_9 initial injury'),
     ('cpp9_nacao_chave', 'if !(cpp9_w(clube + 0x80) <= 2 && cpp9_d(clube + 0x57) != 0) { // nação com +0x11c',
      'if !(cpp9_w(clube + 0x80) <= 0x7fff && cpp9_d(clube + 0x57) != 0) { // mutacao: todos os clubes com divisao',
-     'cpp_9 nacao chave'),
+     'cpp_9 key nation'),
 ]

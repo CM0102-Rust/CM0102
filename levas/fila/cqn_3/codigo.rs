@@ -58,7 +58,7 @@ unsafe extern "thiscall" fn process_euro_registration(this: usize, etapa: u32) {
             if humano(cqn3_d(0xb7431c) as usize, c) != 0 {
                 noticia(this, c, id, etapa);
             } else {
-                crate::comparison::branch("cqn_3 inscreve o clube");
+                crate::comparison::branch("cqn_3 registers the club");
                 inscrever(cqn3_d(0xdd7ef0) as usize, c, etapa, 0); // cqn3: inscreve o clube
             }
         });
@@ -214,7 +214,7 @@ unsafe extern "thiscall" fn build_venue_list(this: usize) {
             continue;
         }
         if *((nacao + 0x11c) as *const u8) != 0 && (cqn3_d(e + 0x3c) as i32) < 0x1388 { // cqn3: menos de 5000 lugares
-            crate::comparison::branch("cqn_3 estadio pequeno");
+            crate::comparison::branch("cqn_3 small stadium");
             continue; // cqn3: o estádio pequeno fica de fora
         }
         if *lista == 0 {
@@ -236,7 +236,7 @@ unsafe extern "thiscall" fn build_venue_list(this: usize) {
         *(r as *mut u32) = cqn3_d(nacao);
         *((r + 4) as *mut u32) = cqn3_d(cqn3_d(nacao + 0x71) as usize);
         *((r + 0xc) as *mut usize) = e;
-        crate::comparison::branch("cqn_3 entra na lista");
+        crate::comparison::branch("cqn_3 enters the list");
         *((r + 8) as *mut u32) = (cqn3_d(nacao + 0x80) as usize == e) as u32; // cqn3: o estádio nacional
         *conta += 1;
     }

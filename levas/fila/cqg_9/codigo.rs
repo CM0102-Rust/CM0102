@@ -95,7 +95,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
             if grupo <= limit {
                 ficam += 1;
                 *m = 1;
-                crate::comparison::branch("cqg_9 arbitro mantido");
+                crate::comparison::branch("cqg_9 referee kept");
             } else {
                 *m = 0;
             }
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let v = b.wrapping_add((cqg9_w(b + 0x10) as isize * 0x10) as usize);
         cqg9_pd(v + 0x1e, k as u32);
         let pedido = cqg9_w(cqg9_d(cqg9_d(0xadadfc) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: o pedido da vaga
-        crate::comparison::branch("cqg_9 vaga de competicao");
+        crate::comparison::branch("cqg_9 competition slot");
         cqg9_pd(v + 0x1a, pedido as u32);
         if cqg9_i(v + 0x1a) > cqg9_i(b + 0xc) {
             cqg9_pd(b + 0xc, cqg9_d(v + 0x1a) as u32);
@@ -206,7 +206,7 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let mut j = 0i32;
         while j < cqg9_w(b + 0x10) as i32 {
             let c = cqg9_w(b + 0x10) as i32;
-            crate::comparison::branch("cqg_9 parte da vaga");
+            crate::comparison::branch("cqg_9 part of the slot");
             cqg9_pd(b + 0x16 + 16 * j as usize, (cqg9_i(b + 4) / c) as u32); // cqg9: a parte de cada vaga
             let c = cqg9_w(b + 0x10) as i32;
             cqg9_pd(b + 0x12 + 16 * j as usize, (cqg9_i(b + 4).wrapping_mul(j) / c).wrapping_add(cqg9_i(b + 8)) as u32);

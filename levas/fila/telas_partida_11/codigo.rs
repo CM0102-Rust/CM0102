@@ -6,7 +6,7 @@
 /// aloca (0x944cf1), constrói os dois blocos (0x9463af com 0x453c30) e grava no parâmetro 0x1d.
 unsafe fn save_match_snapshot(mut copia: usize, estado: usize) {
     if copia == 0 {
-        crate::comparison::branch("telas cria a copia do estado da partida");
+        crate::comparison::branch("screens create the match state copy");
         let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
         let vetor: unsafe extern "stdcall" fn(usize, u32, u32, usize, usize) = core::mem::transmute(0x9463afusize);
         copia = novo(0xd7a);

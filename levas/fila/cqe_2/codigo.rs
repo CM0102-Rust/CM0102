@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
     let nova = if m != 0 { nova_oferta(m) } else { 0 };
     *saida = nova;
     preparar(nova, alvo, comprador, valor);
-    crate::comparison::branch("cqe_2 opção montada");
+    crate::comparison::branch("cqe_2 option built");
     *atracao = 0x32; // cqe2: a atração da opção
     cqe2_pd(nova + 0x1b, valor as u32 as usize); // cqe2: o preço da opção
     let mut teto = match_pl_ftol(valor as f64 * read_f64_at(0x9689c0));
@@ -151,7 +151,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                 if cqe2_d(p + 0x39) == vendedor {
                     break 'vaga;
                 }
-                crate::comparison::branch("cqe_2 vaga com alvo");
+                crate::comparison::branch("cqe_2 slot with target");
                 p
             };
             let cc = contrato_com(cqe2_d(0xae1050), cand, contract_club_any_type(cand));
@@ -221,7 +221,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     if !(r >= read_f64_at(0x968e58)) { // cqe2: o interesse abaixo de 3,15
                         break 'jogador;
                     }
-                    crate::comparison::branch("cqe_2 interesse");
+                    crate::comparison::branch("cqe_2 interest");
                     if estatuto == 5 {
                         ebp = marcas;
                     } else {
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     if !(nx as f64 / base as f64 > read_f64_at(0x9689d8)) { // cqe2: a nota até 0,9 da base
                         break 'jogador;
                     }
-                    crate::comparison::branch("cqe_2 nota da troca");
+                    crate::comparison::branch("cqe_2 swap rating");
                     let a = if nx > base { (*atracao).wrapping_add(20) } else { (*atracao).wrapping_add(5) };
                     *atracao = if a < 0 { 0 } else if a > 100 { 100 } else { a };
                     if cqe2_d(nova + 4) == 0 {
@@ -262,7 +262,7 @@ unsafe extern "thiscall" fn make_exchange_option(this: usize, comprador: usize, 
                     let entrada = cqe2_d(reg).wrapping_add((i as i32 * 0x25) as usize);
                     let mut fora: i32 = 0;
                     let v = valor_jogador(cqe2_d(cqe2_d(0xde1f54) + 0x856), vendedor, x, entrada, &mut fora, -1, 1);
-                    crate::comparison::branch("cqe_2 jogador na troca");
+                    crate::comparison::branch("cqe_2 player in the swap");
                     teto = teto.wrapping_sub(v);
                     let r = (cqe2_d(nova + 0x1b) as i32).wrapping_sub(v); // cqe2: o valor dele sai do preço
                     cqe2_pd(nova + 0x1b, if r < 0 { 0 } else { r as u32 as usize });

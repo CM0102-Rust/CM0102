@@ -196,7 +196,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     if *(0xae23a8 as *const usize) == 0 {
         return original_fn::<unsafe extern "C" fn(u32)>(%%I1%%)(tamanho);
     }
-    crate::comparison::branch("criação cortar a tabela de clubes");
+    crate::comparison::branch("creation trim the club table");
     let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
     let livre: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
@@ -394,7 +394,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
 unsafe extern "C" fn database_prune_comp_history_table() {
     let realocar: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x945667usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    crate::comparison::branch("criação podar o histórico de competições");
+    crate::comparison::branch("creation prune the competition history");
     let mut k = 0usize;
     let mut i = 0i32;
     while i < gi_dbn1(0xae237c) {

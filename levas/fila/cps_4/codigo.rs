@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize
     // a reputação da ficha (+0xb) / 500, com o sinal (a multiplicação mágica da original)
     let fama = || (cps4_w(cps4_d(jogador + 0x61) + 0xb) as i16 as i32) / 500;
     if rep < 0xf && fama() - (rep as i32) > 2 {
-        crate::comparison::branch("cps_4 write_percent_pair da venda");
+        crate::comparison::branch("cps_4 write_percent_pair of the sale");
         let o = *saida;
         cps4_por(o + 0x1b, offer_value_times(o, 0.8)); // cps4: o valor do percentual
         *((*saida + 0x3f) as *mut u8) = 0x14;
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize
     }
     let nacao = cps4_d(jogador + 0x1a);
     if nacao != 0 && cps4_w(nacao + 0x8e) as i16 > 0x1388 && cps4_b(jogador + 0x22) == 0 {
-        crate::comparison::branch("cps_4 premio na selecao");
+        crate::comparison::branch("cps_4 national team bonus");
         let o = *saida;
         cps4_por(o + 0x3a, offer_value_times(o, 0.3));
         *((*saida + 0x3e) as *mut u8) = 0xa;
@@ -83,7 +83,7 @@ unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, clube: usize
         return 1;
     }
     if fama() - (rep as i32) < -3 {
-        crate::comparison::branch("cps_4 premio no time");
+        crate::comparison::branch("cps_4 team bonus");
         let o = *saida;
         cps4_por(o + 0x35, offer_value_times(o, 0.3));
         *((*saida + 0x39) as *mut u8) = 0x14;

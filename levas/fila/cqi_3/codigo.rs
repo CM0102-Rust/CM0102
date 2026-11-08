@@ -84,7 +84,7 @@ unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubes: usize, c
     let mut r = 0i8;
     while r < n8() {
         let (f1, f2): (u8, u8) = if r < 6 {
-            crate::comparison::branch("cqi_3 tres na primeira fase");
+            crate::comparison::branch("cqi_3 three in the first stage");
             (3, 0) // cqi3: 1ª a 6ª nação
         } else if r < 8 {
             (4, 0)
@@ -273,7 +273,7 @@ unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
     if liga == 0 {
         return 0;
     }
-    crate::comparison::branch("cqi_3 voluntario ingles");
+    crate::comparison::branch("cqi_3 english volunteer");
     let sorteio: unsafe extern "C" fn(i32) -> i32 = core::mem::transmute(0x90cfc0usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
@@ -367,7 +367,7 @@ unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         if ano == cqi3_w(this + 0x439) {
             return;
         }
-        crate::comparison::branch("cqi_3 virada da classificacao");
+        crate::comparison::branch("cqi_3 qualification rollover");
         core::ptr::write_unaligned((this + 0x439) as *mut i16, ano);
         let coeficientes: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x903b50usize);
         let vagas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x903cc0usize);

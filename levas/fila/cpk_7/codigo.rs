@@ -72,7 +72,7 @@ unsafe extern "thiscall" fn rewind_staff_history(this: usize, pessoa: usize) {
     if pessoa == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(%%I1%%)(this, pessoa); // caixa fatal: só a original
     }
-    crate::comparison::branch("cpk_7 recomecar historico");
+    crate::comparison::branch("cpk_7 restart history");
     let par = cpk7_d(this + 0xc).wrapping_add(cpk7_d(pessoa).wrapping_mul(8));
     let sem_ultimo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x58f110usize);
     sem_ultimo(cpk7_d(this), par, par + 4); // o último deslocamento
@@ -113,9 +113,9 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
     // logo na primeira: zero aqui)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
     if cpk7_w(geral) == cpk7_w(extra_da_casa) {
-        crate::comparison::branch("cpk_7 formacao mesma posicao");
+        crate::comparison::branch("cpk_7 formation same position");
     } else {
-        crate::comparison::branch("cpk_7 formacao posicao extra");
+        crate::comparison::branch("cpk_7 formation extra position");
     }
     for band in 0..3usize {
         for altura in 0..4usize {

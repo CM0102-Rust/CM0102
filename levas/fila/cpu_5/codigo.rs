@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
             } else {
                 5000
             };
-            crate::comparison::branch("cpu_5 rolagem das financas");
+            crate::comparison::branch("cpu_5 finances rollover");
             if cpu5_sortear(n) == 0 { // cpu5: a rolagem das finanças
                 return 0x12;
             }
@@ -118,7 +118,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
             } else {
                 0xa
             };
-            crate::comparison::branch("cpu_5 chuva forte");
+            crate::comparison::branch("cpu_5 heavy rain");
             if cpu5_sortear(n) != 0 { // cpu5: o sorteio da chuva forte
                 0
             } else {

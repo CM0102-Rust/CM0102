@@ -31,7 +31,7 @@ unsafe fn show_panel_empty_message(topo: *mut i32, base: *mut i32, texto_id: usi
 /// dois clubes (0x53b640) e a linha do meio, o painel de baixo igual, o retângulo nos parâmetros 0x16 a
 /// 0x19, `*base` no 0xc e os valores (0x720320).
 unsafe extern "C" fn draw_action_zones_panel(topo: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das zonas de acao");
+    crate::comparison::branch("screens action zones panel");
     let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
     let txt: ManagerTextFn = core::mem::transmute(0x803fd0usize);
     let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);
@@ -165,7 +165,7 @@ unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
         dados = get_screen_param(0x20);
         partida = get_screen_param(0x1f);
         if *((dados + 0x4c) as *const u8) != 0 {
-            crate::comparison::branch("telas painel do relatorio da partida");
+            crate::comparison::branch("screens match report panel");
             return show_panel_empty_message(topo, base, SEM_RELATORIO);
         }
         if get_screen_param(0x2d) == 0 {
@@ -175,7 +175,7 @@ unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
                 // ponytail: sem memória a original mostra o erro (e tenta alocar de novo, sem efeito)
                 return o(topo, base);
             }
-            crate::comparison::branch("telas painel do relatorio da partida (montar)");
+            crate::comparison::branch("screens match report panel (build)");
             // ponytail: o quadro SEH da original só libera a memória se o construtor lançar exceção, o que ele não faz
             let construir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(0x6d5bf0usize);
             let r = construir(memoria, 0);
@@ -202,7 +202,7 @@ unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
     if relatorio == 0 {
         return o(topo, base);
     }
-    crate::comparison::branch("telas painel do relatorio da partida");
+    crate::comparison::branch("screens match report panel");
 
     let lances = |r: usize| *((r + 6) as *const i16);
     let mut colunas: [u8; 2] = [1, 5];
@@ -304,7 +304,7 @@ unsafe extern "C" fn draw_match_report_panel(topo: *mut i32, base: *mut i32) {
 /// (0x49db00), os botões de voltar e avançar, a rolagem até a partida do humano (parâmetro 4) ou à do
 /// parâmetro 2 e a marca de vista do humano da vez no grupo (+0x14 + 4h).
 unsafe extern "C" fn build_day_fixtures_screen() {
-    crate::comparison::branch("telas montar os jogos do dia");
+    crate::comparison::branch("screens build the day matches");
     let caixa: ManagerBoxFn = core::mem::transmute(0x804030usize);
     let texto_da_celula: ListCellTextFn = core::mem::transmute(0x804100usize);
     let lista: DisplayListFn = core::mem::transmute(0x55fba0usize);

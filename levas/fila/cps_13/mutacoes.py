@@ -6,10 +6,10 @@
 MUTACOES = [
     ('cps13_sorteio_atrasado', 'if ano > hano || (ano == hano && dia as i16 > hdia as i16) { // cps13: a data do sorteio',
      'if ano > hano || (ano == hano && dia as i16 >= hdia as i16) { // mutacao: um dia depois',
-     'cps_13 sorteio da rodada'),
+     'cps_13 round draw'),
     ('cps13_montagem_atrasada', 'if (ano, dia) != (hano, hdia) { // cps13: a data da montagem',
      'if (ano, dia) != (hano, hdia.wrapping_sub(1)) { // mutacao: um dia depois',
-     'cps_13 montagem da rodada'),
+     'cps_13 round setup'),
     ('cps13_doenca_invertida', 'if cps13_b(nacao + 0x7e) != 3 { // cps13: só o terceiro mundo',
      'if cps13_b(nacao + 0x7e) == 3 { // mutacao: menos o terceiro mundo'),
 ]

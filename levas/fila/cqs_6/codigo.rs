@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     if f == 0 {
         return show_error_at(0x9c4180, 0x35a);
     }
-    crate::comparison::branch("cqs_6 final do trofeu");
+    crate::comparison::branch("cqs_6 trophy final");
     let sortear: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x51c410usize);
     sortear(f, 0); // cqs6: o sorteio da final
     soltar(l);
@@ -110,7 +110,7 @@ unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     let posicao: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x4a2540usize);
     let a = cqs6_d(v);
     let b = cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4);
-    crate::comparison::branch("cqs_6 classificacao do trofeu");
+    crate::comparison::branch("cqs_6 trophy standings");
     if cqs6_w(a + 0x80) > cqs6_w(b + 0x80) {
         posicao(cqs6_d(this + 8), a, 1);
         posicao(cqs6_d(this + 8), cqs6_d(v + cqs6_w(this + 0x3e) as i32 as usize * 4), 2);

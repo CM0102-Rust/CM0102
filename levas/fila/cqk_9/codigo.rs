@@ -34,7 +34,7 @@ unsafe fn mls_stage_outcome(this: usize, clube: usize, situacao: u32, fase: u32,
         // a temporada (-1) e as duas primeiras rodadas dos play-offs
         if st == 6 {
             if fazer {
-                crate::comparison::branch("cqk_9 mls classificado");
+                crate::comparison::branch("cqk_9 mls qualified");
                 cqk9_classificou(clube, comp, 0xa0, 0x78, 0x28); // cqk9: o classificado da MLS
             }
             return 0;
@@ -120,7 +120,7 @@ unsafe extern "thiscall" fn usa_mls_add_result(this: usize, jogo: usize, estat: 
     f0(e0, jogo, estat);
     *((jogo + 0x42) as *mut u8) = 1;
     let (e1, f1) = estagio(1);
-    crate::comparison::branch("cqk_9 mls segunda conferencia");
+    crate::comparison::branch("cqk_9 mls second conference");
     f1(e1, jogo, estat); // cqk9: o jogo na tabela da segunda conferência
     *((this + 8) as *mut u32) = guardado as u32;
     1
@@ -152,7 +152,7 @@ unsafe extern "C" fn usa_mls_get_club_all_star_conference(clube: usize) -> u16 {
     const LESTE: [usize; 6] = [0x9d0390, 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380];
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
     if LESTE.iter().any(|&k| cqk9_d(k) == id) {
-        crate::comparison::branch("cqk_9 conferencia 0x413");
+        crate::comparison::branch("cqk_9 conference 0x413");
         return 0x413; // cqk9: a primeira conferência
     }
     if OESTE.iter().any(|&k| cqk9_d(k) == id) {

@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
         let mut faltou = !remove_sorted_pair(this, &chave, 0x757ea0);
         faltou |= !remove_sorted_pair(this + 4, &chave, 0x844740);
         if humano(clube, 0, 1, 0, 0) == 0 && !faltou {
-            crate::comparison::branch("cpy_2 contagem da lista");
+            crate::comparison::branch("cpy_2 list count");
             let r = (cpy2_d(0xae2d0c).wrapping_add(id.wrapping_mul(0x4f)) + 0xb) as *mut u8;
             *r = (*r & 0xf0) | ((*r).wrapping_sub(1) & 0xf); // cpy2: uma lista a menos na conta da pessoa
         }
@@ -153,12 +153,12 @@ unsafe extern "thiscall" fn update_staff_status(this: usize, pessoa: usize, club
                     cpy2_pd(v + 0x13, 0xffff_ffff);
                 }
                 *((v + 0x24) as *mut u8) &= 0xfe;
-                crate::comparison::branch("cpy_2 vaga refeita");
+                crate::comparison::branch("cpy_2 slot redone");
                 preencher(this, v, clube, pessoa); // cpy2: a vaga é preenchida de novo
             }
             2 => block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0x78),
             5 => {
-                crate::comparison::branch("cpy_2 bloqueio de 14 dias");
+                crate::comparison::branch("cpy_2 14-day block");
                 block_slot_for_person(v, entrada, pessoa, contrato, 0x54c5b0, 0xe); // cpy2: o bloqueio de 14 dias
             }
             3 => {

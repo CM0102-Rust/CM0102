@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpk_escopo_nacao', '1 // a nação da competição',
      '2 // mutacao: o tipo 2',
-     'cpk_4 escopo da nacao'),
+     'cpk_4 nation scope'),
     ('cpk_regra_nacao', 'cpk4_d(r + 0xa) == nacao && *((r + 0x12) as *const u8) == tipo // a regra da nação',
      'cpk4_d(r + 0xa) != nacao && *((r + 0x12) as *const u8) == tipo // mutacao: outra nacao',
-     'cpk_4 regra da partida'),
+     'cpk_4 match rule'),
     ('cpk_amistoso_vaga', 'return e + 25 * i + 9; // a vaga i',
      'return e + 9; // mutacao: a primeira vaga',
-     'cpk_4 vaga do amistoso'),
+     'cpk_4 friendly slot'),
 ]

@@ -44,7 +44,7 @@ unsafe extern "C" fn comp_util_get_fixture_venue_side(clube: usize, jogo: usize)
     if campo == cpq12_d(outro + 0x69) {
         return if clube != casa { 2 } else { 1 }; // o mesmo estádio dos dois
     }
-    crate::comparison::branch("cpq_12 em casa");
+    crate::comparison::branch("cpq_12 at home");
     1 // o estádio do clube
 }
 
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn has_scout_request(this: usize, jogador: usize, clube
         buscar(chave.as_ptr(), lista, cpq12_d(this + 0x64), 0x11, 0x7fc270)
     };
     if achado == 0 {
-        crate::comparison::branch("cpq_12 sem pedido");
+        crate::comparison::branch("cpq_12 without request");
         return 0; // sem pedido
     }
     if *((achado + 0x10) as *const i8) >= 3 {

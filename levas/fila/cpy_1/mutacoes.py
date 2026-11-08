@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: alvo sem lance não conta',
      '            // mutacao: o alvo sem lance conta',
-     'cpy_1 alvo sem lance'),
+     'cpy_1 target without bid'),
     ('cpy1_conta_outra_posicao', '            continue; // cpy1: lance de outra posição não conta',
      '            // mutacao: o lance de outra posicao conta',
-     'cpy_1 outra posicao'),
+     'cpy_1 other position'),
     ('cpy1_conta_em_dobro', '        n = n.wrapping_add(1); // cpy1: conta a vaga com lance',
      '        n = n.wrapping_add(2); // mutacao: cada vaga conta duas',
-     'cpy_1 vaga com lance'),
+     'cpy_1 slot with bid'),
 ]

@@ -5,7 +5,7 @@
 # rodadas do grupo 1 so pesa nos jogos de setembro de 2002 em diante. Antes dela, a situacao ate 16 tambem escapou (a
 # situacao nao muda o sorteio nem nada ate junho).
 MUTACOES = [
-    ('cqs8_sorteio_duas_semanas_depois', 'construir(&mut data, 0xa, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio', 'construir(&mut data, 0x18, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // mutacao: 24 de março', 'cqs_8 regras da eurocopa'),
-    ('cqs8_um_turno', 'core::ptr::write_unaligned((this + 0x3c) as *mut i16, 2); // cqs8: dois turnos', 'core::ptr::write_unaligned((this + 0x3c) as *mut i16, 1); // mutacao', 'cqs_8 regras da eurocopa'),
-    ('cqs8_grupo_um_com_rodada_a_mais', 'core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(cqs8_w(this + 0x3c))); // cqs8: as rodadas do grupo 1', 'core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_mul(cqs8_w(this + 0x3c))); // mutacao', 'cqs_8 grupo 1 da eurocopa'),
+    ('cqs8_sorteio_duas_semanas_depois', 'construir(&mut data, 0xa, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio', 'construir(&mut data, 0x18, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // mutacao: 24 de março', 'cqs_8 euro rules'),
+    ('cqs8_um_turno', 'core::ptr::write_unaligned((this + 0x3c) as *mut i16, 2); // cqs8: dois turnos', 'core::ptr::write_unaligned((this + 0x3c) as *mut i16, 1); // mutacao', 'cqs_8 euro rules'),
+    ('cqs8_grupo_um_com_rodada_a_mais', 'core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(cqs8_w(this + 0x3c))); // cqs8: as rodadas do grupo 1', 'core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_mul(cqs8_w(this + 0x3c))); // mutacao', 'cqs_8 euro group 1'),
 ]

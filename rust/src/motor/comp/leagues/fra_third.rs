@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn fra_third_create_schedule(this: usize, st
 /// pontos; sobem 4 em 2001 e 3 depois (+0xbe), caem 4 (+0xc1); a segunda acima ([0x9cf5d0]), nenhuma abaixo (+0x20
 /// = −1), +0xa7 (os jogos da temporada) = −1 (recalculado pela 0x687430) e 3 reservas (+0x49).
 pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_5 regras do national");
+    crate::comparison::branch("cqj_5 national rules");
     fra_first_apply_league_rules(this, &national_division_rules(this))
 }
 

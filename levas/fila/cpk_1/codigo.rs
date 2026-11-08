@@ -31,7 +31,7 @@ unsafe extern "thiscall" fn get_all_time_record(this: usize, clube: usize, criar
     }
     let e = club_records_entry(this, clube);
     if cpk1_d(e) as i32 == -1 && criar != 0 {
-        crate::comparison::branch("cpk_1 recordes de sempre novos");
+        crate::comparison::branch("cpk_1 new all-time records");
         if cpk1_d(this + 0xc) == cpk1_d(this + 8) {
             let cap = cpk1_d(this + 8).wrapping_add(50);
             cpk1_por(this + 8, cap);
@@ -64,7 +64,7 @@ unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: 
     }
     let e = club_records_entry(this, clube) + 4;
     if cpk1_d(e) as i32 == -1 && criar != 0 {
-        crate::comparison::branch("cpk_1 recordes da temporada novos");
+        crate::comparison::branch("cpk_1 new season records");
         if cpk1_d(this + 0x18) == cpk1_d(this + 0x14) {
             let cap = cpk1_d(this + 0x14).wrapping_add(50);
             cpk1_por(this + 0x14, cap);
@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn get_season_record(this: usize, clube: usize, criar: 
 /// lidas pela 0x448e30. Cheio (conta +0x2c = capacidade +0x28): cresce de 5 em 5 (realloc 0x945667); sem memória,
 /// caixa 0x174f e devolve 0 (o jogo segue, sem o vetor). Devolve 1.
 unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, tipo: u32) -> u32 {
-    crate::comparison::branch("cpk_1 noticia de recorde");
+    crate::comparison::branch("cpk_1 record news");
     if cpk1_d(this + 0x2c) == cpk1_d(this + 0x28) {
         let cap = cpk1_d(this + 0x28).wrapping_add(5);
         cpk1_por(this + 0x28, cap);

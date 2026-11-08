@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
     let do_contrato = if c == 0 { 0 } else { cpx2_clube(cpx2_d(c + 4)) };
     let comprador = cpx2_clube(cpx2_d(o + 8));
     let r = random(0x1676);
-    crate::comparison::branch("cpx_2 sorteio do desassossego");
+    crate::comparison::branch("cpx_2 unsettling draw");
     if (cpx2_w(comprador + 0x80) as i32) > r.wrapping_add(0x109a) { // cpx2: o sorteio do desassossego
         *((o + 0x2d) as *mut u8) = 1;
     }
@@ -89,10 +89,10 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
         return;
     }
     if cpx2_b(c2 + 0x4e) & 8 != 0 {
-        crate::comparison::branch("cpx_2 listado");
+        crate::comparison::branch("cpx_2 listed");
         n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado
     }
-    crate::comparison::branch("cpx_2 interesse avaliado");
+    crate::comparison::branch("cpx_2 interest evaluated");
     if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo
         return;
     }
@@ -119,7 +119,7 @@ unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o: usize) {
         UNSETTLE_PLAYER_REACHED = true;
         return;
     }
-    crate::comparison::branch("cpx_2 desassossegado");
+    crate::comparison::branch("cpx_2 unsettled");
     let queixa: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(0x867700usize);
     queixa(c2, 0x80, 0);
     let idade = cpx2_sb(p + 0x18);
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn post_offer_collapsed_news(this: usize, o: usize, clu
     if do_contrato != 0 && cpx2_b(cpx2_contrato_de(p) + 0x35) & 0x3f == 5 {
         do_contrato = 0;
     }
-    crate::comparison::branch("cpx_2 noticia da oferta desfeita");
+    crate::comparison::branch("cpx_2 offer undone news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfb0, 0);
@@ -233,7 +233,7 @@ unsafe extern "thiscall" fn post_appearance_money_news(this: usize, clausula: us
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparison::branch("cpx_2 noticia do premio por jogos");
+    crate::comparison::branch("cpx_2 appearances bonus news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa6, 0);

@@ -55,7 +55,7 @@ unsafe extern "thiscall" fn club_has_offer_for_player(this: usize, pessoa: usize
             return 0;
         }
         if cpl1_d(offer_at(this, cpl1_d(no)) + 8) == cpl1_d(clube) { // a oferta é do clube
-            crate::comparison::branch("cpl_1 clube tem oferta");
+            crate::comparison::branch("cpl_1 club has offer");
             return 1;
         }
     })
@@ -75,7 +75,7 @@ unsafe extern "thiscall" fn find_club_offer_for_player(this: usize, pessoa: usiz
         }
         let o = offer_at(this, cpl1_d(no));
         if cpl1_d(o + 8) == cpl1_d(clube) { // a oferta do clube
-            crate::comparison::branch("cpl_1 oferta do clube");
+            crate::comparison::branch("cpl_1 club offer");
             return o;
         }
     })
@@ -98,7 +98,7 @@ unsafe extern "thiscall" fn player_has_pending_offer(this: usize, pessoa: usize)
         let k = cpl1_d(no) as i32;
         let o = if k < cpl1_d(this + 4) as i32 { offer_at(this, k as usize) } else { cpl1_d(cpl1_d(this)) };
         if matches!(*((o + 0x2c) as *const u8), 0 | 1 | 5 | 6) { // a situação pendente
-            crate::comparison::branch("cpl_1 oferta pendente");
+            crate::comparison::branch("cpl_1 pending offer");
             return 1;
         }
     })

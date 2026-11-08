@@ -255,7 +255,7 @@ unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, fase: u32, r
                 show_error_at(0xa828bc, 0xa9);
                 return 0;
             }
-            crate::comparison::branch("cqq_4 calendario da segunda espanhola");
+            crate::comparison::branch("cqq_4 spanish second division calendar");
             let ano = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
             if (ano as i16) % 2 != 0 {
                 spa_second_set_league_rounds(t, ano, 0, &SEGUNDA_ODD_ALL_ROUNDS);

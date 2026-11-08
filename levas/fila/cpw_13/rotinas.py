@@ -2,7 +2,7 @@
 # (0x7771c0, 684 chamadas na cobertura de 17/10: a cada convocação para um jogo de seleção), a importância do jogo
 # pela fase (0x48e190, virtual da competição, passageira) e a fase da competição (0x48d200, passageira). Os registros
 # que a 0x7771c0 grava são os que a 0x776fc0 (já em Rust) lê para não marcar jogo de clube com mais de dois convocados
-# perto da data (o "cpp_12 convocado na janela" conta 64 na base da 257ª). A 0x7771c0 chama rotinas já em Rust (datas,
+# perto da data (o "cpp_12 called up in the window" conta 64 na base da 257ª). A 0x7771c0 chama rotinas já em Rust (datas,
 # 0x5409b0, os qsort com 0x778ef0 e 0x778e90) e o realloc da CRT (0x945667); quadro SEH só do estado. Iguais no
 # cm0102-1080.exe.
 # Comparadores: a 0x7771c0 lado a lado (elenco do time, registros e vetores dos clubes do elenco) quando nenhum vetor

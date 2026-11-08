@@ -86,7 +86,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
                 let c = base + j as u16 as usize * club::SIZE;
                 let nation = read_usize(c + 0x53);
                 if nation != 0 && *((nation + 0x11c) as *const u8) == 0 && read_i16(nation + 0x8e) < 0x7d0 && read_usize(c + 0x1db) as i32 == -1 {
-                    crate::comparison::branch("cqs_9 clube completando a uefa");
+                    crate::comparison::branch("cqs_9 club filling uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
                     write_usize(read_usize(this + cup::TEAM_TABLE) + e, c);
@@ -110,7 +110,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: usize) -> i32 {
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
     }
-    crate::comparison::branch("cqs_9 inscritos da uefa");
+    crate::comparison::branch("cqs_9 uefa entrants");
     core::ptr::write_unaligned((this + cup::ENTRANT_COUNT) as *mut i16, 0);
     let n = k.wrapping_add(0x1b);
     core::ptr::write_unaligned((this + cup::ENTRANT_CAPACITY) as *mut i16, n);
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
         show_error_at(0xaa19e0, 0xe0);
         return 0;
     }
-    crate::comparison::branch("cqq_10 tabela da uefa");
+    crate::comparison::branch("cqq_10 uefa fixtures");
     let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     let (tab, n) = uefa_cup_rounds(*((this + uefa_cup::PRELIMINARY_CLUB_COUNT) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
     let d = outcome as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
-            crate::comparison::branch("cqi_10 caiu na uefa");
+            crate::comparison::branch("cqi_10 dropped into uefa");
         }
         core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
     }

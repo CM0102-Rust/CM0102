@@ -93,7 +93,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
     ordenar(l.mls.as_mut_ptr() as usize, l.n[3], 1);
     let t = |k: usize| cqi11_d(this + 0xa7).wrapping_add(k * 6);
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
-    crate::comparison::branch("cqi_11 classificados");
+    crate::comparison::branch("cqi_11 qualified");
     pd(t(2), l.mex[0]);
     pd(t(3), l.mex[1]); // cqi11: o segundo mexicano
     pd(t(4), l.centro[0]);
@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32
         pd(t(0), l.mls[0]);
         pd(t(1), l.mls[1]);
     } else {
-        crate::comparison::branch("cqi_11 campeao da mls");
+        crate::comparison::branch("cqi_11 mls champion");
         let mls = club_comp_record(cqi11_d(0x9cf590));
         pd(t(0), colocado(mls, 0));
         pd(t(1), colocado(cqi11_d(outro + 4), 0));
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, hoje: usize, 
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
-        crate::comparison::branch("cqi_11 dia da selecao");
+        crate::comparison::branch("cqi_11 national team day");
         let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(cqi11_d(cqi11_d(this) + 0x5c));
         prever(this);
     }

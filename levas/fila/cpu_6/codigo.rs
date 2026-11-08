@@ -108,13 +108,13 @@ unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usi
         *s = if a < lim(0x20) {
             0
         } else if a < lim(0x21) {
-            crate::comparison::branch("cpu_6 vento fraco");
+            crate::comparison::branch("cpu_6 light wind");
             1 // cpu6: o vento fraco
         } else if a < lim(0x22) {
-            crate::comparison::branch("cpu_6 vento moderado");
+            crate::comparison::branch("cpu_6 moderate wind");
             2 // cpu6: o vento moderado
         } else if a < lim(0x23) {
-            crate::comparison::branch("cpu_6 vento forte");
+            crate::comparison::branch("cpu_6 strong wind");
             3 // cpu6: o vento forte
         } else if a >= lim(0x24) {
             0

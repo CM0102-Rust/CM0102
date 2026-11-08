@@ -52,7 +52,7 @@ unsafe extern "thiscall" fn auto_respond_all(this: usize, tecnico: usize, clube:
         if cpn2_d(vaga + 0xd6) == 0 {
             return 1;
         }
-        crate::comparison::branch("cpn_2 respond todas");
+        crate::comparison::branch("cpn_2 respond all");
         respond(vaga, tecnico, clube); // a resposta automática
         k -= 1;
         if k == cpn2_i(e + 4) - 1 {
@@ -125,7 +125,7 @@ unsafe extern "thiscall" fn set_slot_string(this: usize, campo: u32, texto: *con
         }
         let quartos = ((n + 1 + 3) & !3) / 4; // o tamanho com o zero, em campos de 4 bytes
         let mut p = (quartos as u8).wrapping_add(campo as u8);
-        crate::comparison::branch("cpn_2 proximo campo do texto");
+        crate::comparison::branch("cpn_2 next text field");
         if p as i8 > 0x32 {
             p = 0x32;
         }

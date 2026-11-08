@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this;
     }
-    crate::comparison::branch("cqq_6 primeira francesa nova");
+    crate::comparison::branch("cqq_6 new french first division");
     let n = || (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     if n() > 0 {
         let mut p = read_usize(G_CLUB_TABLE) + 0x57;
@@ -189,7 +189,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: usize, table: &[(u8, u8, u
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
         exe::fixed_fixture_set_by_club_names(read_usize(this + league::FIXED_FIXTURES) + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn6: each fixed match
     }
-    crate::comparison::branch("cqn_6 calendario fixo");
+    crate::comparison::branch("cqn_6 fixed calendar");
     let n = league_match_count(this);
     if n <= 0 {
         return;
@@ -922,7 +922,7 @@ pub(crate) fn common_rules() -> Vec<(usize, u8, u32)> {
 /// turnos, 3 pontos, +0xab e +0xdb = 0, ninguém sobe (+0xbe = 0), caem 2 em 2001 e 3 depois (+0xc1), 5 reservas
 /// (+0x49), nenhuma liga acima (+0x1c = −1), +0x52 = 2 [sem nome] e a segunda abaixo (+0x20 = [0x9cf5d0]).
 pub(crate) unsafe extern "thiscall" fn fra_first_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_5 regras da primeira");
+    crate::comparison::branch("cqj_5 first division rules");
     fra_first_apply_league_rules(this, &fra_first_first_division_rules(this))
 }
 
@@ -1041,7 +1041,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u3
     if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION) != Some(true) {
         return 0;
     }
-    crate::comparison::branch("cqj_6 tabela da primeira");
+    crate::comparison::branch("cqj_6 first division fixtures");
     set_prize_fund(this, 0x30d40);
     eng_prm_pay_tv_rights(this, 0x5b8d80, 0); // cqj6: the first division TV money
     1
@@ -1119,7 +1119,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
         show_error_at(0x9ccb5c, 0xd1);
         return 0;
     }
-    crate::comparison::branch("cqo_6 calendario da primeira francesa");
+    crate::comparison::branch("cqo_6 french first division calendar");
     let mut i: i16 = 0;
     for (so_38, r) in FRENCH_FIRST_DIVISION_ROUNDS.iter() {
         if *so_38 && n != 0x26 {

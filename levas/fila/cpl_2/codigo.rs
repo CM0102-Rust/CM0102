@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn check_board_veto(_this: usize, oferta: usize, compra
     };
     if resposta & 0x2000 != 0 {
         dar(0x24);
-        crate::comparison::branch("cpl_2 veto da diretoria valores");
+        crate::comparison::branch("cpl_2 board veto values");
         for k in [0xb, 9, 0xd] {
             let p = (cpl2_d(jogador + 0x61) + k) as *mut i16;
             core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%

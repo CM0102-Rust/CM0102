@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpx2_sorteio_2000', '    if (cpx2_w(comprador + 0x80) as i32) > r.wrapping_add(0x109a) { // cpx2: o sorteio do desassossego',
      '    if (cpx2_w(comprador + 0x80) as i32) > r.wrapping_add(2000) { // mutacao: o limit em 2000',
-     'cpx_2 sorteio do desassossego'),
+     'cpx_2 unsettling draw'),
     ('cpx2_interesse_4_5', '    if !(x >= read_f64_at(0x96d298)) { // cpx2: o interesse mínimo',
      '    if !(x >= 4.5) { // mutacao: o interesse minimo em 4,5',
-     'cpx_2 interesse avaliado'),
+     'cpx_2 interest evaluated'),
     ('cpx2_sem_desconto_do_listado', '        n = n.wrapping_add((-2000i32).wrapping_sub(random(0x1770)) as i16); // cpx2: o desconto do listado',
      '        // mutacao: sem o desconto do listado',
-     'cpx_2 listado'),
+     'cpx_2 listed'),
 ]

@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cps8_sem_pedidos_observa', 'return 0; // cps8: sem pedidos de observação',
      'return 1; // mutacao: sem pedidos, com observado',
-     'cps_8 sem pedidos'),
+     'cps_8 no requests'),
     ('cps8_competicao_negativa_observa', 'return 0; // cps8: competição negativa',
      'return 1; // mutacao: competicao negativa, com observado',
-     'cps_8 competicao negativa'),
+     'cps_8 negative competition'),
     ('cps8_sempre_na_lista', 'return r; // cps8: a resposta da lista do olheiro',
      'let _ = r; return 1; // mutacao: sempre na lista',
-     'cps_8 lista do olheiro'),
+     'cps_8 scout list'),
 ]

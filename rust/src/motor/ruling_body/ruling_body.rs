@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
             None => return 0,
         }
     };
-    crate::comparison::branch("cpu_10 punicao");
+    crate::comparison::branch("cpu_10 punishment");
     *(r as *mut u8) = jogos; // cpu10: the suspension matches
     *((r + 1) as *mut u8) = 0;
     *((r + 2) as *mut u16) = dias;
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 /// órgão (0x55cb60 pela vaga +4) com o mesmo +5 fica com −1 em +6; sem ela, grava a vaga (0x55cb20, tipo +5, −1); o id
 /// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
 pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
-    crate::comparison::branch("cpu_10 nova temporada");
+    crate::comparison::branch("cpu_10 new season");
     let mut e = read_usize(this + 0xb);
     let mut i = 0i32;
     while i < read_i32(this + 0x13) {
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 let years = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
                 let year = *((ban + 6) as *const u16) as i32;
                 if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - year >= years {
-                    crate::comparison::branch("cpu_10 suspensao velha");
+                    crate::comparison::branch("cpu_10 old suspension");
                     // simplification: the original pushes the index with the high 16 bits of the previous edx; 0x556d00 reads only the word.
                     exe::discipline_release_ban(read_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
                     true

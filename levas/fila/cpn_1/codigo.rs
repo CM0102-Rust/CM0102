@@ -29,7 +29,7 @@ unsafe extern "thiscall" fn send_by_scope(this: usize, noticia: usize, clube: us
     let dois: unsafe extern "thiscall" fn(usize, usize, usize) -> u32;
     let alvo = match alcance as u8 as i8 {
         0 => {
-            crate::comparison::branch("cpn_1 alcance do clube");
+            crate::comparison::branch("cpn_1 club reach");
             dois = core::mem::transmute(0x7861e0usize);
             clube // o técnico do clube
         }
@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn send_to_club_manager(this: usize, noticia: usize, cl
     if cpn1_i(tecnico) < cpn1_i(0xae2364).wrapping_sub(0x10) { // a máquina
         return 0;
     }
-    crate::comparison::branch("cpn_1 noticia ao tecnico humano");
+    crate::comparison::branch("cpn_1 news to the human manager");
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x785d40usize);
     entregar(this, noticia, tecnico, 0)
 }
@@ -157,7 +157,7 @@ unsafe extern "thiscall" fn deliver_to_manager(this: usize, noticia: usize, tecn
     let ferias: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x5fd210usize);
     if *(0xdd6bec as *const i16) != 0 || ferias(cpn1_d(0xb63c98), tecnico) != 0 {
         let respond: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x784100usize);
-        crate::comparison::branch("cpn_1 resposta automatica");
+        crate::comparison::branch("cpn_1 automatic reply");
         respond(vaga(atual), tecnico, cpn1_d(tecnico + 0x39)); // o clube
         let selecao = cpn1_d(tecnico + 0x24);
         if selecao != 0 {

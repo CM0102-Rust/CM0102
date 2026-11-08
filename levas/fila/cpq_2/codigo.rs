@@ -44,7 +44,7 @@ unsafe fn record_national_departure(this: usize, selecao: usize, motivo: u8) {
 
 /// A federação pensa em demitir (0x69aba0 sem conferir o ultimato).
 unsafe fn consider_sacking(this: usize, selecao: usize) {
-    crate::comparison::branch("cpq_2 a federacao pensa");
+    crate::comparison::branch("cpq_2 the federation considers");
     let pensar: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x69aba0usize);
     pensar(this, selecao, 0);
 }
@@ -73,7 +73,7 @@ unsafe extern "thiscall" fn review_national_team_performance(this: usize, comp: 
     let o = objeto();
     let nota_de: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(cpq2_d(cpq2_d(o) + 0x74));
     let nota = nota_de(o, selecao) as u8 as i8;
-    crate::comparison::branch("cpq_2 selecao avaliada");
+    crate::comparison::branch("cpq_2 national team evaluated");
     let avaliar: unsafe extern "thiscall" fn(usize, usize, usize, i32) = core::mem::transmute(0x6a5a60usize);
     let c = cpq2_linha(this, selecao) + 6;
     let injury_word_0c = || cpq2_w(selecao + 0x80);

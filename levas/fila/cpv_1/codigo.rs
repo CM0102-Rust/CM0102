@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
             while x != 0 {
                 let outra = cpv1_d(cpv1_d(this) + cpv1_d(x) * 4);
                 if outra != 0 && cpv1_d(x) != cpv1_d(oferta + 0x20) {
-                    crate::comparison::branch("cpv_1 ofertas rivais canceladas");
+                    crate::comparison::branch("cpv_1 rival offers cancelled");
                     cpv1_pb(outra + 0x2c, 0xf);
                     cpv1_pb(cpv1_d(cpv1_d(this) + cpv1_d(x) * 4) + 0x2e, 3);
                     agendar(this, cpv1_d(cpv1_d(this) + cpv1_d(x) * 4), 0x14, 0); // cpv1: as rivais em 20 dias
@@ -142,7 +142,7 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
             noticia_da_espera(this, oferta);
             cpv1_pb(oferta + 0x2c, 0xa);
             let r = sorteio(7);
-            crate::comparison::branch("cpv_1 permissao de trabalho");
+            crate::comparison::branch("cpv_1 work permit");
             // a original soma 0x12 só no byte baixo do eax do sorteio (0..6: em cima, zero)
             let dias = (r as u32 & !0xff) | (r as u8).wrapping_add(0x12) as u32; // cpv1: a espera da permissao
             agendar(this, oferta, dias, 0);
@@ -179,7 +179,7 @@ unsafe extern "thiscall" fn advance_offer_to_club_approval(this: usize, oferta: 
     if restricoes(this, vaga, vendedor, &mut motivo, 1) as u8 == 1 {
         return recusar(this, vaga, vendedor, 0);
     }
-    crate::comparison::branch("cpv_1 confirmada pelo vendedor");
+    crate::comparison::branch("cpv_1 confirmed by the seller");
     confirmar(this, vaga, vendedor); // cpv1: o vendedor confirma
 }
 
@@ -192,7 +192,7 @@ unsafe extern "thiscall" fn post_offer_accepted_news(this: usize, oferta: usize)
     let construir: unsafe extern "thiscall" fn(usize, u32, u32) -> usize = core::mem::transmute(0x77bbe0usize);
     let gravar: unsafe extern "thiscall" fn(usize, i8, u32) -> u32 = core::mem::transmute(0x785790usize);
     let entregar: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(0x7861e0usize);
-    crate::comparison::branch("cpv_1 noticia da oferta aceita");
+    crate::comparison::branch("cpv_1 offer accepted news");
     let p = cpv1_pessoa(cpv1_d(oferta + 0xc));
     let dono = club_of_contract_filtered(transfer_manager_main_contract_stored(p), true);
     let mut clubes = [0usize; 30];
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn post_loan_offer_news(this: usize, oferta: usize, ter
     if q == 0 {
         return;
     }
-    crate::comparison::branch("cpv_1 noticia do emprestimo");
+    crate::comparison::branch("cpv_1 loan news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     construir(n, 0xfb5, 0);

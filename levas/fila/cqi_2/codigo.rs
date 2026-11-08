@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn collect_european_clubs(this: usize, saida: *mut usiz
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + 0x80) as *const i16) as i32 / 500) as u8;
                     let linha = cqi2_d(c + 0x5b) as usize;
                     if linha != 0 {
-                        crate::comparison::branch("cqi_2 nivel da divisao");
+                        crate::comparison::branch("cqi_2 division level");
                         core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((linha + 0x69) as *const u16)); // cqi2: o nível da divisão
                         *((r + 0xb) as *mut u8) = cqi2_b(c + 0x5f);
                         let comp = cqi2_d(cqi2_d(c + 0x5b) as usize + 0x5d) as usize;
@@ -163,7 +163,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
     let mut r = 0i8;
     while r < *((this + 0x438) as *const i8) {
         let (band, ultima): ([u8; 4], u8) = if r < 3 {
-            crate::comparison::branch("cqi_2 duas nos grupos");
+            crate::comparison::branch("cqi_2 two in the groups");
             ([0, 2, 2, 0], 0) // cqi2: 1ª a 3ª nação
         } else if r < 6 {
             ([0, 2, 1, 0], 0)
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
                     if cap[f] != 0 {
                         break;
                     }
-                    crate::comparison::branch("cqi_2 fase cheia");
+                    crate::comparison::branch("cqi_2 full stage");
                     if f + 1 < 5 {
                         vagas[f + 1] = vagas[f + 1].wrapping_add(1); // cqi2: a vaga passa para a fase seguinte
                     }
@@ -271,7 +271,7 @@ unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubes: usize, 
                 }
                 let c = enesimo(this, clubes, conta, cqi2_d(e), 1, 1, 0);
                 if assign_comp_place(this, c, it, (j as u8).wrapping_add(fase), i as i8 as i32) {
-                    crate::comparison::branch("cqi_2 clube na intertoto");
+                    crate::comparison::branch("cqi_2 club in intertoto");
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
                 j += 1;

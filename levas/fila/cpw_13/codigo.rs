@@ -34,7 +34,7 @@ unsafe fn add_club_callups(this: usize, c: usize, conta: u8, d: *mut u8) -> bool
     while k < quantas {
         let e = cpw13_d(rec).wrapping_add(9 * k as i32 as usize);
         if core::ptr::read_unaligned((e + 2) as *const u16) == ano && core::ptr::read_unaligned(e as *const u16) == dia {
-            crate::comparison::branch("cpw_13 soma na data");
+            crate::comparison::branch("cpw_13 sum at the date");
             *((e + 8) as *mut u8) = (*((e + 8) as *const u8)).wrapping_add(conta); // cpw13: soma na data
             return true;
         }
@@ -57,7 +57,7 @@ unsafe fn add_club_callups(this: usize, c: usize, conta: u8, d: *mut u8) -> bool
     let e = cpw13_d(rec).wrapping_add(9 * q as usize);
     let mut t = [0u8; 8];
     copia(e, t.as_mut_ptr(), d);
-    crate::comparison::branch("cpw_13 registro novo");
+    crate::comparison::branch("cpw_13 new record");
     *((e + 8) as *mut u8) = conta; // cpw13: a conta do registro novo
     let q = (*((rec + 5) as *const i8)).wrapping_add(1);
     *((rec + 5) as *mut i8) = q;
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn record_club_call_ups(this: usize, time: usize, b: u3
         conta = 1;
     }
     if anterior != 0 && club_callup_record(this, anterior).is_some() {
-        crate::comparison::branch("cpw_13 último clube sem registro"); // cpw13: o último clube fica sem registro
+        crate::comparison::branch("cpw_13 last club without record"); // cpw13: o último clube fica sem registro
     }
 }
 

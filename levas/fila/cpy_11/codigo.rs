@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                         // a 0x8cb340 e a notícia só leem o byte: vai limpo
                         if (jogos as i32 % 10 == 0 && jogos <= 0x32) || jogos == 1 { // cpy11: os jogos do prêmio
                             if pay_appearance_money_unless_dry_run(this, p, jogos as i32, tipo as u32) != 0 {
-                                crate::comparison::branch("cpy_11 premio pago");
+                                crate::comparison::branch("cpy_11 bonus paid");
                                 if tipo == 5 {
                                     tirar_selecao(this, p);
                                 } else {
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                     }
                     if contando && cpy11_b(staff_flags_record(this, p)) & 0x20 != 0 {
                         let r = transfer_manager_find_work_permit(this, p);
-                        crate::comparison::branch("cpy_11 jogo contado");
+                        crate::comparison::branch("cpy_11 match counted");
                         increment_permit_counter(r, 4); // cpy11: o jogo conta na permissão
                         let mut i: i8 = 0;
                         while i < n {
@@ -189,7 +189,7 @@ unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, j
                     }
                 }
                 let r = transfer_manager_find_work_permit(this, p);
-                crate::comparison::branch("cpy_11 falta contada");
+                crate::comparison::branch("cpy_11 absence counted");
                 increment_permit_counter(r, 6); // cpy11: a falta conta na permissão
             }
         }
@@ -230,7 +230,7 @@ unsafe extern "thiscall" fn compare_update_appearance_clauses_after_match(this: 
 /// (capacidade +0x89c, conta +0x8a0); cheio, cresce de 50 em 50 (sem memória: caixa 0x25af e nada). Reordena pela pessoa
 /// (qsort 0x945333 com 0x8b4e00). A gêmea do time principal é a 0x8cac40.
 unsafe extern "thiscall" fn add_international_team_appearance_money(this: usize, registro: usize) {
-    crate::comparison::branch("cpy_11 premio na selecao guardado");
+    crate::comparison::branch("cpy_11 national team bonus stored");
     if !grow_record_vector(this, 0x898, 4, 50, 0xd, 0x25af, 0xa8ebe0) {
         return;
     }
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn post_transfer_finalised_news(this: usize, o: usize) 
     if vendedor != 0 && cpy11_b(contrato(cpy11_d(0xae1050), p) + 0x35) & 0x3f == 5 {
         vendedor = 0;
     }
-    crate::comparison::branch("cpy_11 noticia da transferencia finalizada");
+    crate::comparison::branch("cpy_11 transfer finalised news");
     let mut local = [0u32; 0x38]; // a notícia local (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     construir(nt, 0xfa5, 0);

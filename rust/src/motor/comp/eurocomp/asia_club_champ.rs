@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize
     let f = f + 1;
     write_usize(this + cup::CURRENT_STAGE, f as usize);
     if f == 1 {
-        crate::comparison::branch("cqt_12 grupos da asia");
+        crate::comparison::branch("cqt_12 asia groups");
         exe::asiaclubchamp_create_group_stages(this);
     } else if f == 3 {
         exe::asiaclubchamp_create_semi_final_stage(this);
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
         return show_error_at(0x987a40, 0x39e);
     }
     exe::league_send_group_draw_news(f);
-    crate::comparison::branch("cqt_12 dois grupos da asia");
+    crate::comparison::branch("cqt_12 two asia groups");
     let group_2 = [v[4], v[5], v[6], v[7]]; // cqt12: o grupo 2
     let f = create_asia_group(this, 2, group_2.as_ptr(), 1);
     if f == 0 {
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
     if list == 0 {
         return show_error_at(0x987a40, 0x3d1);
     }
-    crate::comparison::branch("cqt_12 cruzamentos da asia");
+    crate::comparison::branch("cqt_12 asia pairings");
     for (k, &c) in asia_semi_finalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }

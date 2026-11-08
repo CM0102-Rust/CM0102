@@ -47,7 +47,7 @@ unsafe fn fixture_winner_side(this: usize, f: usize) -> Option<u32> {
     if fl & 2 != 0 {
         let (a1, a2) = (cpm1_b(f + 0x47), cpm1_b(f + 0x48));
         if a1 > a2 {
-            crate::comparison::branch("cpm_1 jogo na prorrogacao");
+            crate::comparison::branch("cpm_1 match in extra time");
             let c = cpm1_b(f + 0x3d);
             if c == 1 {
                 cpm1_por(f + 0x3d, 2);
@@ -239,7 +239,7 @@ unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
     if tot1 < tot2 {
         return Some(1);
     }
-    crate::comparison::branch("cpm_1 confronto empatado no agregado");
+    crate::comparison::branch("cpm_1 tie level on aggregate");
     if fl & 0x800 != 0 {
         cpm1_por(j + 0x3d, 8);
         return Some(1);
@@ -315,7 +315,7 @@ unsafe extern "thiscall" fn decide_tie_winner(this: usize, confronto: usize, jog
 /// { 0x51ebc0 } (cdecl, Cup.cpp): `cup_compare_draw_entries_by_seed(a, b)`: a comparação do qsort das entradas de 7
 /// bytes do sorteio (0x51d2d0 e 0x51d9f0): o cabeça de chave (byte com sinal +6) de `b` menos o de `a` (maior primeiro).
 unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
-    crate::comparison::branch("cpm_1 ordem dos cabecas de chave");
+    crate::comparison::branch("cpm_1 seeding order");
     cpm1_b(b + 6) as i32 - cpm1_b(a + 6) as i32 // o maior primeiro
 }
 

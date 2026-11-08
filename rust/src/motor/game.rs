@@ -25,9 +25,9 @@ pub(crate) unsafe fn current_month() -> i32 {
 /// [pt] Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
 /// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
 pub(crate) unsafe fn roll_coefficient_year(na: usize, h: &mut [f64; 6], mark: &mut u8) {
-    crate::comparison::branch("cpt_6 dezembro");
+    crate::comparison::branch("cpt_6 December");
     if (*mark as i8) < 0xc {
-        crate::comparison::branch("cpt_6 bonus de dezembro");
+        crate::comparison::branch("cpt_6 December bonus");
         h[5] = read_i16(na + nation::REPUTATION) as i32 as f64 * read_f64_at(rdata::F64_0_05) * (0xc - *mark as i8 as i32) as f64 * read_f64_at(rdata::F64_3) + h[5]; // cpt6: the December bonus;
     }
     h[0] = h[1];
@@ -212,7 +212,7 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
     if ((read_i16(G_CURRENT_DATE) as i32) % 0xe).wrapping_add(read_usize(p) as i32) != 0 {
         return;
     }
-    crate::comparison::branch("cps_5 atrito com o tecnico");
+    crate::comparison::branch("cps_5 friction with the manager");
     let (tipo, marca) = if q == read_usize(club + club::MANAGER) {
         (0, 0x2000)
     } else if q == read_usize(club + club::ASSISTANT_MANAGER) {
@@ -325,7 +325,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
         return;
     }
     let mut e = read_i8_as_i32(p + staff::PROFESSIONALISM) + (read_i8_as_i32(p + staff::PRESSURE) + read_i8_as_i32(p + staff::LOYALTY)) + (read_i8_as_i32(p + staff::SPORTSMANSHIP) + read_i8_as_i32(p + staff::AGE));
-    crate::comparison::branch("cps_5 tecnico sorteado");
+    crate::comparison::branch("cps_5 drawn manager");
     if friendly_random(read_i8_as_i32(p + staff::LOYALTY)) == 0 { // cps5: the first discount
         e -= 3;
     }
@@ -444,7 +444,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 let c = game_contract_for_club(p, club);
                 let m = if c == 0 { 0 } else { read_i8_as_i32(c + 0x44) };
                 let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
-                crate::comparison::branch("cps_5 moral sorteado");
+                crate::comparison::branch("cps_5 drawn morale");
                 let r1 = friendly_random(soma.wrapping_mul(2) / (l + lideranca));
                 let r2 = friendly_random(m / 12); // cps5: the morale part
                 let s = (r1 as u8).wrapping_add(r2 as u8) as i8;
@@ -456,7 +456,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 } else if s > 0 {
                     let e = friendly_random(s as i32);
                     if e > friendly_random(5) {
-                        crate::comparison::branch("cps_5 moral sobe");
+                        crate::comparison::branch("cps_5 morale rises");
                         morale(p, 1, 1); // cps5: sobe o moral
                     }
                 }
@@ -510,7 +510,7 @@ pub(crate) unsafe fn days_since_staff_date(p: usize) -> i32 {
 pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
-    crate::comparison::branch("cps_6 faltas do dia");
+    crate::comparison::branch("cps_6 absences of the day");
     let r = friendly_random(n - q - 1); // cps6: the first person
     let mut current = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
     for _ in 0..q {
@@ -564,7 +564,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             } else if days_since_staff_date(p) < 0xb4 {
                 s = s.wrapping_add(0x19);
             }
-            crate::comparison::branch("cps_6 falta pela soma");
+            crate::comparison::branch("cps_6 absence by sum");
             if friendly_random(s as i8 as i32) == 0 { // cps6: the random draw of the sum
                 and_foul = true;
             }
@@ -591,7 +591,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             }
         }
         if and_foul {
-            crate::comparison::branch("cps_6 falta ao treino");
+            crate::comparison::branch("cps_6 missed training");
             exe::awol_miss_training(read_usize(G_AWOL), p); // cps6: a falta
         }
     }
@@ -622,7 +622,7 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
         i += 1;
     }
     if m != 0 {
-        crate::comparison::branch("cps_6 competicoes do dia");
+        crate::comparison::branch("cps_6 competitions of the day");
         exe::fixture_manager_daily_update(read_usize(G_FIXTURE_MANAGER));
     }
 }

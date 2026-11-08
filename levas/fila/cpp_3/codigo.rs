@@ -90,7 +90,7 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
     };
     let mut q = ((atual as f64 / divisor) * read_f32_at(0x96d1a4) as f64) as f32; // fstp dword
     if q as f64 > read_f64_at(0x96d1b0) {
-        crate::comparison::branch("cpp_3 base no teto");
+        crate::comparison::branch("cpp_3 base at the ceiling");
         q = 10000.0;
     } else if !(q as f64 >= read_f32_at(0x96d1ac) as f64) {
         q = 6500.0;
@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
         return 0;
     }
     let em_temporada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547770usize);
-    crate::comparison::branch("cpp_3 motivo da saida");
+    crate::comparison::branch("cpp_3 reason for leaving");
     let temporada = em_temporada(clube, 0xae2c90);
     let (mut tipo, mut tamanho) = (0u8, 0u8);
     let sequencia: unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8) = core::mem::transmute(0x690c30usize);
@@ -249,7 +249,7 @@ unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32) -> u8 {
     }
     let e = board_row_by_id(this, id);
     if cpp3_w(e + 0x12) < -750 && tipo != 1 && random(3) == 0 {
-        crate::comparison::branch("cpp_3 motivo 2");
+        crate::comparison::branch("cpp_3 reason 2");
         return 2;
     }
     if temporada != 0 && cpp3_b(e + 2) & 8 != 0 {
@@ -351,7 +351,7 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
             if criar == 0 {
                 return 0;
             }
-            crate::comparison::branch("cpp_3 criar registro");
+            crate::comparison::branch("cpp_3 create record");
             cpp3_por(r + 0x86, cpp3_d(pessoa)); // a vaga fica com ele
             break r;
         }
@@ -389,7 +389,7 @@ unsafe extern "thiscall" fn get_manager_record(this: usize, pessoa: usize, criar
     if cpp3_d(r + 0x4a) as i32 == -1 {
         let clube = cpp3_d(pessoa + 0x39) as usize;
         if clube != 0 {
-            crate::comparison::branch("cpp_3 abrir passagem");
+            crate::comparison::branch("cpp_3 open spell");
             cpp3_por(r + 0x4a, cpp3_d(clube));
             cpp3_data(r + 0x4e, pessoa + 0x3e);
             let mut local = [0u8; 8];

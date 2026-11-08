@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usiz
         if usado[k as i8 as usize] == 0 {
             gravar(this, p, c, sinal(k));
             usado[k as usize] = 1;
-            crate::comparison::branch("cql_2 numero da posicao");
+            crate::comparison::branch("cql_2 position number");
             return; // cql2: o número da posição
         }
         b += 1;
@@ -194,7 +194,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
         }
     }
     let vagas = SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS;
-    crate::comparison::branch("cql_2 escala");
+    crate::comparison::branch("cql_2 picks the team");
     pick(todos.as_ptr() as usize, n as u32, vagas.as_ptr() as usize, 0xb, 9, ordem.as_mut_ptr() as usize, 0x5840, c, 0, 0, 0, 0, 0, 0, 0);
     let mut livre = 0usize;
     for &x in todos[..n].iter() {
@@ -255,7 +255,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
         if manter != 0 {
             gravar(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && vez < -11) || (nb >= 12 && vez > -12) {
-            crate::comparison::branch("cql_2 perde o numero");
+            crate::comparison::branch("cql_2 loses the number");
             gravar(this, x, c, 0); // cql2: o número fora do lugar
             continue;
         }
@@ -290,7 +290,7 @@ unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, man
         let mut v = -1i8;
         for &x in guardado.iter() {
             if x != 0 {
-                crate::comparison::branch("cql_2 regrava negativo");
+                crate::comparison::branch("cql_2 rewrites negative");
                 gravar(this, x, c, v as u8 as u32); // cql2: regrava negativo
             }
             v = v.wrapping_sub(1);

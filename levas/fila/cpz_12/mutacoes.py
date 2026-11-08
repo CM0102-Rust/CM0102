@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpz12_venda_fora_do_saldo', '    fin_prm_add_i64(this, v); // cpz12: a venda entra no saldo',
      '    let _ = v; // mutacao: a venda nao entra no saldo',
-     'cpz_12 venda recebida'),
+     'cpz_12 sale received'),
     ('cpz12_compra_fora_do_saldo', '    fin_prm_add_i64(this, v.wrapping_neg()); // cpz12: a compra sai do saldo',
      '    let _ = v; // mutacao: a compra nao sai do saldo',
-     'cpz_12 compra paga'),
+     'cpz_12 purchase paid'),
     ('cpz12_luvas_no_saldo', '    fin_prm_add_i64(this, (valor as i64).wrapping_neg()); // cpz12: as luvas saem do saldo',
      '    fin_prm_add_i64(this, valor as i64); // mutacao: as luvas entram no saldo',
-     'cpz_12 luvas pagas'),
+     'cpz_12 signing-on fees paid'),
 ]

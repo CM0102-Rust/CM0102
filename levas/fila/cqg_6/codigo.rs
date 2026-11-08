@@ -132,7 +132,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             if i != a && cqg6_b(e + 5) == cqg6_b(e7(w, a) + 5) {
                 let o = e7(w, a);
                 let destino = if cqg6_d(e7(r, c)) != 0 { e7(r, c + 1) } else { e7(r, c) };
-                crate::comparison::branch("cqg_6 par do mesmo grupo");
+                crate::comparison::branch("cqg_6 pair from same group");
                 copy_group_entry(destino, o); // cqg6: o outro do grupo
                 k = k.wrapping_add(2);
                 cqg6_pd(o, 0);
@@ -149,7 +149,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
         for _ in 0..5 {
             let a = sorteio(4) as i8 as usize;
             let b = sorteio(4) as i8 as usize; // cqg6: a troca da ordem dos grupos
-            crate::comparison::branch("cqg_6 troca da ordem");
+            crate::comparison::branch("cqg_6 order swap");
             ordem.swap(a, b);
         }
         for q in 0..4usize {
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             }
         }
         if melhor != 0xff {
-            crate::comparison::branch("cqg_6 grupo escolhido");
+            crate::comparison::branch("cqg_6 group chosen");
             let base = melhor as i8 as i32 * 4;
             let v = if cqg6_d(e7(g, s + base)) == 0 { e7(g, s + base) } else { e7(g, s + 1 + base) };
             copy_group_entry(v, p);
@@ -187,7 +187,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             continue;
         }
         if (tentativa as u8 as i8) < 0x14 {
-            crate::comparison::branch("cqg_6 sorteio de novo");
+            crate::comparison::branch("cqg_6 redraw");
             soltar(g);
             soltar(r);
             soltar(w);
@@ -208,7 +208,7 @@ unsafe extern "thiscall" fn draw_phase2_groups(this: usize, tentativa: u32) {
             let c = cqg6_d(e7(g, h * 4 + q));
             pontos(cqg6_d(0xde1f58), cqg6_nacao(c), 1);
             let valor = 1_200_000i32; // cqg6: o prêmio da segunda fase
-            crate::comparison::branch("cqg_6 prêmio da segunda fase");
+            crate::comparison::branch("cqg_6 second stage prize");
             premio(financas(cqg6_d(0xae2a38), c), valor);
             send_prize_money_news(this, c, valor, 0, -1, 0x44a, 0, -2);
         }
@@ -364,7 +364,7 @@ unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
         return 0x47a;
     }
     if em(0x3fd, 0x406) {
-        crate::comparison::branch("cqg_6 grupo 0xa");
+        crate::comparison::branch("cqg_6 group 0xa");
         return 0xa; // cqg6: o grupo das fases 0x3fd..0x406
     }
     if em(0x407, 0x40b) || id == 0x472 {

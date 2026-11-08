@@ -8,11 +8,11 @@
 MUTACOES = [
     ('cpz11_folha_sem_pessoal', '        cpz11_por(this + 0xc, cpz11_i(this + 0xc).wrapping_add(comissao)); // cpz11: o pessoal na folha',
      '        let _ = comissao; // mutacao: sem o pessoal na folha',
-     'cpz_11 folha do pessoal'),
+     'cpz_11 staff payroll'),
     ('cpz11_folha_sem_reputacao', '    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + cpz11_i(this + 0xc) as f64); // cpz11: a reputação na folha',
      '    let folha = { let _ = k; cpz11_i(this + 0xc) }; // mutacao: sem a reputação na folha',
-     'cpz_11 folha pela injury_word_0c'),
+     'cpz_11 payroll by injury_word_0c'),
     ('cpz11_sem_ingressos', '        return r; // cpz11: os dias até a temporada',
      '        return 0; // mutacao: fora da janela dos ingressos',
-     'cpz_11 dias ate a temporada'),
+     'cpz_11 days until the season'),
 ]

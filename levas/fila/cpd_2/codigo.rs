@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn release_overage_u21_players(this: usize, nacao: usiz
     if depois(0xae2c90, cpd2_d(rec + 0x62) as u32, cpd2_d(rec + 0x66) as u32) == 0 {
         return;
     }
-    crate::comparison::branch("sub-21 dispensar acima da idade");
+    crate::comparison::branch("under-21 release over age");
     let sub21: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x53b4f0usize);
     let time = sub21(nacao);
     for c in 0..50usize {

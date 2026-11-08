@@ -74,7 +74,7 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 /// 0xa (seleções), os desempates (1, 2, 4, 5), um classificado direto por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_12 regras da europa");
+    crate::comparison::branch("cqj_12 europe rules");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
     *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: the win in the European qualifiers
     *((this + league::MATCH_CATEGORY) as *mut u8) = 0xa; // cqj12: the match category of the European qualifiers

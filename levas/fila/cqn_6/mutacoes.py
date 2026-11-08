@@ -9,7 +9,7 @@ MUTACOES = [
     ('cqn6_lista_nunca_cai',
      'if cqn6_d(f + 8) == 0xffff_ffff || cqn6_d(f + 0xc) == 0xffff_ffff { // cqn6: um clube sem achar derruba a lista',
      'if false { // mutacao: a lista nunca cai',
-     'cqn_6 calendario fixo'),
+     'cqn_6 fixed calendar'),
     ('cqn6_toco_de_dois_devolve_zero',
      '    1 // cqn6: o toco devolve 1',
      '    0 // mutacao: o toco devolve 0'),

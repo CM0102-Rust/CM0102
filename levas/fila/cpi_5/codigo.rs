@@ -162,6 +162,6 @@ unsafe extern "stdcall" fn compare_fill_vacated_staff_job(clube: usize, cargo: u
     if let Some(p) = escolhida {
         SCOREBOARD.record(cpi5_d(p + 0x39) == clube, || format!("fill_vacated_staff_job({:x}, {}) a pessoa {:x} ficou em {:x}", clube, cargo as u8, p, cpi5_d(p + 0x39)));
     } else {
-        crate::comparison::branch("fill_vacated_staff_job sem ninguem");
+        crate::comparison::branch("fill_vacated_staff_job nobody");
     }
 }

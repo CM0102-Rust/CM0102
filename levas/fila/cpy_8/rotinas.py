@@ -1,5 +1,5 @@
 # O árbitro de cada jogo (officials_manager.cpp): OfficialsManager::choose_match_official 0x79c7b0 (pela montagem do
-# dia 0x6b3c10, contador "montagem avisada": todo jogo pendente do dia), OfficialsManager::clear_busy_flags 0x79bf40
+# dia 0x6b3c10, contador "setup notified": todo jogo pendente do dia), OfficialsManager::clear_busy_flags 0x79bf40
 # (laço do dia 0x5cccd0 e corrida até a data de início 0x5cc850) e OfficialsManager::renew_officials 0x79cee0 (começo
 # da temporada de cada liga, 83 chamadores). Iguais no cm0102-1080.exe; sem SEH; o quadro de 0x208 da 0x79cee0 é só da
 # caixa de erro. Comparadores lado a lado: a 0x79c7b0 pela palavra de saída, pelo estado do sorteio e pela devolução;

@@ -5,11 +5,11 @@
 MUTACOES = [
     ('cpk_clausula_estado', '*((contrato + 0x1f) as *mut u8) = 2; // a cláusula acionada',
      '*((contrato + 0x1f) as *mut u8) = 3; // mutacao: 3',
-     'cpk_3 clausula de rebaixamento'),
+     'cpk_3 relegation clause'),
     ('cpk_oferta_pendente', '*n = (*n).wrapping_sub(1); // uma pendente a menos',
      '// mutacao: sem descontar',
-     'cpk_3 tirar oferta de contrato'),
+     'cpk_3 remove contract offer'),
     ('cpk_suspenso_competicao', 'if b == 0 || julgar(b, jogador, 0, extra, partida) == 0 { // sem a suspensão da competição',
      'if b == 0 || b != 0 { // mutacao: sem a da competicao',
-     'cpk_3 suspenso pela competicao'),
+     'cpk_3 suspended by the competition'),
 ]

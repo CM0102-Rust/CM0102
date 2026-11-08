@@ -63,11 +63,11 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_final
 ///
 /// Only the original runs (simplification: it writes the history, which allocates the record, pays the prizes and sends
 /// the news item, and may set up the Champions Cup; it cannot run twice). The copy runs in Rust mode (counters "cqo_7
-/// historico da final" and "cqo_7 premios") and is proved by the mutations and by the two Rust careers.
+/// historico da final" and "cqo_7 prizes") and is proved by the mutations and by the two Rust careers.
 ///
 /// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
 /// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
-/// "cqo_7 historico da final" e "cqo_7 premios") e é provada pelas mutações e pelas duas carreiras Rust.
+/// "cqo_7 final history" e "cqo_7 prizes") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_RECORD_SEASON_HONOURS)(this)
 }

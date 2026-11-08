@@ -8,7 +8,7 @@ MUTACOES = [
      '    if nota >= nota_minima + 0.5 { 1 } else { 0 } // mutacao: a nota minima mais alta'),
     ('cpp_cargo_pessoa_nula', '        return 0; // pessoa nula',
      '        return 1; // mutacao: a pessoa nula pode',
-     'cpp_4 pessoa nula'),
+     'cpp_4 null person'),
     ('cpp_queda_sem_arredondar', '    Some(match_pl_ftol(d / y + read_f64_at(0x968968)) as u8 as i8)',
      '    Some(match_pl_ftol(d / y) as u8 as i8) // mutacao: sem o arredondamento'),
 ]

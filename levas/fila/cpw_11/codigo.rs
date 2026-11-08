@@ -43,7 +43,7 @@ unsafe extern "thiscall" fn league_add_result(liga: usize, p: usize, jogo: usize
     let aplicar: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16) = core::mem::transmute(0x685f60usize);
     let (mut pts_casa, mut pts_fora) = (0i16, 0i16);
     // ponytail: a original empurra o +0x3e com o alto do ecx (sobra da chamada anterior); a 0x685f60 lê só o curto
-    crate::comparison::branch("cpw_11 resultado aplicado");
+    crate::comparison::branch("cpw_11 result applied");
     aplicar(liga, p, cpw11_d(liga + 0xb1), cpw11_w(liga + 0x3e) as u16 as u32, 1, &mut pts_casa, &mut pts_fora); // cpw11: a tabela
     if *((liga + 0x44) as *const u8) == 0xfe || cpw11_d(0xadadfc) == 0 {
         return 1;

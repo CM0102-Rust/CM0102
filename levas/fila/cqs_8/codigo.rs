@@ -42,7 +42,7 @@ unsafe fn set_up_rules(this: usize) -> u32 {
     construir(&mut data, 0xa, 2, cqs8_w(this + 0x40) as u16 as u32, 5); // cqs8: a data do sorteio
     core::ptr::write_unaligned((this + 0xb6) as *mut u16, data[0] as u16);
     core::ptr::write_unaligned((this + 0xb8) as *mut u16, 0);
-    crate::comparison::branch("cqs_8 regras da eurocopa");
+    crate::comparison::branch("cqs_8 euro rules");
     let rodadas: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(cqs8_d(cqs8_d(this) + 0x3c));
     let t = rodadas(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
     core::ptr::write_unaligned((this + 0xba) as *mut u32, t as u32);
@@ -155,7 +155,7 @@ unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 {
     }
     let n = cqs8_w(this + 0x3e);
     core::ptr::write_unaligned((this + 0xa7) as *mut i16, n.wrapping_sub(1).wrapping_mul(cqs8_w(this + 0x3c))); // cqs8: as rodadas do grupo 1
-    crate::comparison::branch("cqs_8 grupo 1 da eurocopa");
+    crate::comparison::branch("cqs_8 euro group 1");
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(0x687430usize);
     let mut i: i8 = 0;
     if n > 0 {

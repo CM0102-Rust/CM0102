@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cps2_tres_anos', 'if (cps2_w(0xae2c92) as i32) - (ano as i32) < 5 { // cps2: menos de cinco anos na nação',
      'if (cps2_w(0xae2c92) as i32) - (ano as i32) < 3 { // mutacao: tres anos',
-     'cps_2 permissao pela carreira'),
+     'cps_2 permit by career'),
     ('cps2_sem_nacionalidade', 'core::ptr::write_unaligned((p + 0x1e) as *mut usize, cps2_d(cps2_d(p + 0x39) + 0x53)); // cps2: a segunda nacionalidade',
      '// mutacao: sem a segunda nacionalidade',
-     'cps_2 segunda nacionalidade'),
+     'cps_2 second nationality'),
     ('cps2_ano_mais_novo', 'if a < ano { // cps2: o ano mais antigo',
      'if a > ano { // mutacao: o mais novo',
-     'cps_2 permissao pela carreira'),
+     'cps_2 permit by career'),
 ]

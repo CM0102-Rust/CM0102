@@ -21,7 +21,7 @@ unsafe fn cpl5_por_b(a: usize, v: u8) {
 /// põe 4 em +0x4e, zera a felicidade (+0x3f) e +0x3e; com o clube e a nação dele (+0x53), o nível do idioma da nação
 /// (+0x77) para a pessoa (0x7c6830 em [0xb74350], sem o contrato; no máximo 10) nos 4 bits baixos de +0x4f.
 unsafe fn reset_contract_morale(this: usize, pessoa: usize, clube: usize) {
-    crate::comparison::branch("cpl_5 moral zerada");
+    crate::comparison::branch("cpl_5 morale zeroed");
     cpl5_por_b(this + 0x44, 0);
     cpl5_por_b(this + 0x4e, 0);
     cpl5_por(this + 0x45, 0);
@@ -62,7 +62,7 @@ unsafe extern "thiscall" fn init_from_current_contract(this: usize, pessoa: usiz
         show_error_at(0xa8360c, 0xf5);
         return;
     }
-    crate::comparison::branch("cpl_5 contrato pelo atual");
+    crate::comparison::branch("cpl_5 contract by the current one");
     cpl5_por(this, cpl5_d(pessoa));
     cpl5_por(this + 8, 0);
     cpl5_por(this + 4, cpl5_d(clube));

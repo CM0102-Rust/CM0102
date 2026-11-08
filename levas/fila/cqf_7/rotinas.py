@@ -4,7 +4,7 @@
 #   categoria marcada (a chance 0x544410 dos atributos da ficha de não jogador, dividida em float pela quantidade de
 #   categorias, 1..20). 18 chamadas na carreira automática até 2002-06-01 (cobertura de 02/11, ENG, técnico de férias):
 #   contratações e saídas de treinadores do clube humano. A nota vai para o fator do treinador (0x8b41d0, já em Rust),
-#   que pesa o progresso do treino dos jogadores do clube humano (0x8b1750, "cqd_8 programa do humano"). As mutações
+#   que pesa o progresso do treino dos jogadores do clube humano (0x8b1750, "cqd_8 human schedule"). As mutações
 #   estão nela.
 # - 0x8b2470 (TRAINING_MANAGER::reassign_squad_schedules, 1040 bytes): os programas dos dois elencos quando o técnico
 #   humano troca de clube (2 chamadas na carreira: a escolha do clube no começo).

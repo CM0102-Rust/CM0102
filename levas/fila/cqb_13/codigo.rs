@@ -59,7 +59,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
         4 | 6 => 5,
         _ => gravidade,
     };
-    crate::comparison::branch("cqb_13 dia alvo");
+    crate::comparison::branch("cqb_13 target day");
     ajustar(&mut a, alvo, &mut b); // cqb13: o dia da semana alvo
     let n = novo.as_mut_ptr() as usize;
     let v = velho.as_mut_ptr() as usize;
@@ -74,7 +74,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
     let novo_vence = pn > pv // cqb13: a prioridade maior fica
         || (pn == pv && cqb13_w(cqb13_d(n + 0x1c) + 0x80) > cqb13_w(cqb13_d(v + 0x1c) + 0x80));
     if novo_vence {
-        crate::comparison::branch("cqb_13 novo vence");
+        crate::comparison::branch("cqb_13 new one wins");
     }
     let sai_o_velho = novo_vence && *((v + 0x43) as *const u8) == 0xff; // cqb13: o da lista ainda não jogado
     if SAME_DAY_CLASH_DRY_RUN {
@@ -91,7 +91,7 @@ unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, jogo: usize, con
     // push 0; push &gravidade; push o jogo (0x5ad780; ret 0xc), push 0; push causa; push o jogo (0x5aac70; ret 0xc);
     // 0x68d040: ecx = a lista; 0x944c94: push lista; add esp, 4 -> cdecl
     let (sai, causa) = if sai_o_velho {
-        crate::comparison::branch("cqb_13 sai o jogo da lista");
+        crate::comparison::branch("cqb_13 match leaves the list");
         tirar(this, outro);
         juntar(this, jogo, 0);
         (v, jogo)

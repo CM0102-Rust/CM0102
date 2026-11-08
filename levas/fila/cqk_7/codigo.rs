@@ -33,11 +33,11 @@ unsafe fn record_state_league_stage(this: usize, clube: usize, st: u8, fazer: bo
     let comp = cqk7_d(this + 4);
     if st == 6 {
         if fazer {
-            crate::comparison::branch("cqk_7 classificado do estadual");
+            crate::comparison::branch("cqk_7 state league qualified");
             cqk7_classificou(clube, comp, 0, 0x82, 0x32); // cqk7: o classificado do estadual
         }
     } else if st == 3 && fazer {
-        crate::comparison::branch("cqk_7 rebaixado do estadual");
+        crate::comparison::branch("cqk_7 state league relegated");
         cqk7_rebaixado(clube, comp); // cqk7: o rebaixado do estadual
     }
 }
@@ -53,7 +53,7 @@ unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jogo: usize, 
         if cqk7_d(cqk7_d(this + 0xb1) + 0x3b * i as usize) == clube {
             if st == 1 {
                 if fazer {
-                    crate::comparison::branch("cqk_7 campeao do estadual");
+                    crate::comparison::branch("cqk_7 state league champion");
                     cqk7_campeao(clube, comp); // cqk7: o registro do campeão do estadual
                 }
                 let l = cqk7_d(this + 0xb1) + 0x3b * i as usize;
@@ -67,7 +67,7 @@ unsafe fn record_state_knockout(this: usize, clube: usize, st: u8, jogo: usize, 
                     // ponytail: a original empurra eax (lixo do chamador acima da palavra) e ecx/edx inteiros; a
                     // 0x4bf850 e a 0x86c000 só leem as palavras: vão as palavras.
                     let escala: unsafe extern "C" fn(u32, u32, u32, u32) -> u32 = core::mem::transmute(0x4bf850usize);
-                    crate::comparison::branch("cqk_7 eliminado do estadual");
+                    crate::comparison::branch("cqk_7 state league eliminated");
                     let peso = escala(0x1e, 0x32, cqk7_w(jogo + 0x34) as u16 as u32, rodadas);
                     let elim: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(0x86c000usize);
                     elim(cqk7_d(0xdd7f00), clube, comp, cqk7_w(jogo + 0x32) as u16 as u32, cqk7_w(jogo + 0x30) as u16 as u32, peso); // cqk7: o registro do eliminado
@@ -125,7 +125,7 @@ unsafe fn nsl_end_of_stage(this: usize, clube: usize, situacao: u32, fase: u32, 
         // a temporada regular
         if st == 6 {
             if fazer {
-                crate::comparison::branch("cqk_7 nsl classificado");
+                crate::comparison::branch("cqk_7 nsl qualified");
                 cqk7_classificou(clube, comp, 0x435, 0, 0x28); // cqk7: o classificado da NSL
             }
             return (0, 0, 0);

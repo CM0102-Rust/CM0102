@@ -42,7 +42,7 @@ unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize, clube: usi
             1
         }
     };
-    crate::comparison::branch("cpr_13 clube livre");
+    crate::comparison::branch("cpr_13 free club");
     let r = menos_dias(data, p0, 1); // a véspera
     copiar(pa, p1, r);
     // ponytail: a original empurra a folga com os 16 bits altos do ponteiro que a 0x417c10 devolveu; a 0x54c5b0 só lê
@@ -71,7 +71,7 @@ unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize, clube: usi
     let n = jogos(cpr13_d(0xae2a58) as usize, cpr13_d(pa), cpr13_d(pa + 2), cpr13_d(pb), cpr13_d(pb + 2), cpr13_d(clube),
         pl, u32::MAX, 0xffff_fffe, u32::MAX);
     if n as u16 != 0 {
-        crate::comparison::branch("cpr_13 ocupado");
+        crate::comparison::branch("cpr_13 busy");
         return sai(0); // tem jogo na janela
     }
     sai(1)
@@ -85,7 +85,7 @@ unsafe extern "thiscall" fn has_club(this: usize, clube: u32) -> u32 {
     let times = cpr13_d(this + 0xa7) as usize;
     for i in 0..n.max(0) as usize {
         if cpr13_d(times + i * 6) == clube {
-            crate::comparison::branch("cpr_13 copa tem o clube");
+            crate::comparison::branch("cpr_13 cup has the club");
             return 1; // está na copa
         }
     }

@@ -170,7 +170,7 @@ unsafe fn apply_promotion(this: usize, clube: usize, comp: usize, peso: u32, gra
             };
             let x = cpq3_w(pela + 0x69) as i32;
             let nj = || cpq3_d(cpq3_d(clube + 0xcf) + 0x69);
-            crate::comparison::branch("cpq_3 acesso do tecnico");
+            crate::comparison::branch("cpq_3 manager promotion");
             raise_promotion_rating(nj() + 0xa, x, 400);
             raise_promotion_rating(nj() + 8, x, p2);
             raise_promotion_rating(nj() + 0xc, x, p1);
@@ -201,7 +201,7 @@ unsafe fn apply_promotion(this: usize, clube: usize, comp: usize, peso: u32, gra
         if (tipo == 0 || (tipo > 3 && tipo != 5)) || !will_renew_contract(clube, p, c) {
             continue;
         }
-        crate::comparison::branch("cpq_3 acesso renova");
+        crate::comparison::branch("cpq_3 promotion renews");
         offer_renewal(p);
     }
     append_club_history(gravar, this, clube, 8, comp);
@@ -217,7 +217,7 @@ unsafe fn apply_promotion(this: usize, clube: usize, comp: usize, peso: u32, gra
 /// renovação (0x4cda70) dos contratos dos tipos 1, 2, 3 e 5 que vencem; por fim o histórico do clube (tipo 8). Clube ou
 /// competição nulos: a caixa "Error" (linha 0x301).
 unsafe extern "thiscall" fn add_promotion_record(this: usize, clube: usize, comp: usize, peso: u32) {
-    crate::comparison::branch("cpq_3 acesso");
+    crate::comparison::branch("cpq_3 promotion");
     apply_promotion(this, clube, comp, peso, true)
 }
 
@@ -302,7 +302,7 @@ unsafe fn apply_relegation(this: usize, clube: usize, comp: usize, gravar: bool)
             let fator: i16 = if estrangeira(tec, cpq3_d(clube + 0x53), 1) != 0 { -8 } else { -16 };
             let nj = || cpq3_d(cpq3_d(clube + 0xcf) + 0x69);
             let x = || cpq3_w(comp + 0x69);
-            crate::comparison::branch("cpq_3 rebaixamento do tecnico");
+            crate::comparison::branch("cpq_3 manager relegation");
             add_rating_clamped(nj() + 0xa, x().wrapping_mul(-16));
             add_rating_clamped(nj() + 8, x().wrapping_mul(fator));
             add_rating_clamped(nj() + 0xc, x().wrapping_mul(-8));
@@ -325,7 +325,7 @@ unsafe fn apply_relegation(this: usize, clube: usize, comp: usize, gravar: bool)
                     scale_player_reputations(j, cpq3_k(0x9689d8)); // 0,9
                 }
                 if will_renew_contract(clube, p, c) {
-                    crate::comparison::branch("cpq_3 rebaixamento renova");
+                    crate::comparison::branch("cpq_3 relegation renews");
                     offer_renewal(p);
                 }
             }
@@ -347,7 +347,7 @@ unsafe fn apply_relegation(this: usize, clube: usize, comp: usize, gravar: bool)
 /// 1 e 2, reputações × 0,9 e a renovação (0x4cda70) se vence; 3 a 5, reputações × 0,95. Por fim o histórico do clube
 /// (tipo 9). Clube ou competição nulos: a caixa "Error" (linha 0x476).
 unsafe extern "thiscall" fn add_relegation_record(this: usize, clube: usize, comp: usize) {
-    crate::comparison::branch("cpq_3 rebaixamento");
+    crate::comparison::branch("cpq_3 relegation");
     apply_relegation(this, clube, comp, true)
 }
 
@@ -389,10 +389,10 @@ unsafe fn record_qualification(this: usize, clube: usize, comp: usize, fase: u32
     staff_records_add_i32(r + 0xca, pontos);
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
     if selecao(clube) != 0 {
-        crate::comparison::branch("cpq_3 classificado selecao");
+        crate::comparison::branch("cpq_3 qualified national team");
         staff_records_add_i32(r + 0xbe, pontos);
     } else {
-        crate::comparison::branch("cpq_3 classificado clube");
+        crate::comparison::branch("cpq_3 qualified club");
         staff_records_add_i32(r + 0xba, pontos);
     }
 }

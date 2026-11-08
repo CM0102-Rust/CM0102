@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
                 core::ptr::write_unaligned((p + nation::UEFACOEFFICIENT96) as *mut u64, 0);
             }
         }
-        crate::comparison::branch("cqi_1 soma dos coeficientes");
+        crate::comparison::branch("cqi_1 coefficient sum");
         let sum = read_f64(p + nation::UEFACOEFFICIENT95) + read_f64(p + nation::UEFACOEFFICIENT94) + read_f64(p + nation::UEFACOEFFICIENT93) + read_f64(p + nation::UEFACOEFFICIENT92) + read_f64(p + nation::UEFACOEFFICIENT91); // cqi1: as 5 temporadas
         core::ptr::write_unaligned((e + 8) as *mut f32, sum as f32);
         *((e + 0x11) as *mut u8) = 0;
@@ -159,7 +159,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
         } else if id == g(KEY_NATION_SCOTLAND) {
             1
         } else if id == g(KEY_NATION_FRANCE) && year == 0x7d1 {
-            crate::comparison::branch("cqi_1 intertoto da franca");
+            crate::comparison::branch("cqi_1 france intertoto");
             4 // cqi1: France in the Intertoto in 2001
         } else if id == g(KEY_NATION_GERMANY) && year == 0x7d1 {
             3
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
         loop {
             let c = read_u32(p) as usize;
             if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
-                crate::comparison::branch("cqi_1 ja com vaga");
+                crate::comparison::branch("cqi_1 already with a place");
                 p += 12; // cqi1: skips the club that already has a place
             } else if without_human != 0 && c != 0 && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
                 p += 12;
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
                     *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
                     let row = read_u32(c + club::LAST_DIVISION) as usize;
                     if row != 0 {
-                        crate::comparison::branch("cqi_2 nivel da divisao");
+                        crate::comparison::branch("cqi_2 division level");
                         core::ptr::write_unaligned((r + 9) as *mut u16, core::ptr::read_unaligned((row + competition::REPUTATION) as *const u16)); // cqi2: the division level
                         *((r + 0xb) as *mut u8) = read_u8(c + club::LAST_POSITION);
                         let comp = read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize;
@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
     let mut r = 0i8;
     while r < *((this + 0x438) as *const i8) {
         let (band, ultima): ([u8; 4], u8) = if r < 3 {
-            crate::comparison::branch("cqi_2 duas nos grupos");
+            crate::comparison::branch("cqi_2 two in the groups");
             ([0, 2, 2, 0], 0) // cqi2: 1st to 3rd nation
         } else if r < 6 {
             ([0, 2, 1, 0], 0)
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
                     if cap[f] != 0 {
                         break;
                     }
-                    crate::comparison::branch("cqi_2 fase cheia");
+                    crate::comparison::branch("cqi_2 full stage");
                     if f + 1 < 5 {
                         slots[f + 1] = slots[f + 1].wrapping_add(1); // cqi2: the place moves to the next stage
                     }
@@ -522,7 +522,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                 }
                 let c = exe::uefa_find_nth_unplaced_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 0);
                 if assign_comp_place(this, c, it, (j as u8).wrapping_add(stage), i as i8 as i32) {
-                    crate::comparison::branch("cqi_2 clube na intertoto");
+                    crate::comparison::branch("cqi_2 club in intertoto");
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
                 j += 1;
@@ -612,7 +612,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
     let mut r = 0i8;
     while r < n8() {
         let (f1, f2): (u8, u8) = if r < 6 {
-            crate::comparison::branch("cqi_3 tres na primeira fase");
+            crate::comparison::branch("cqi_3 three in the first stage");
             (3, 0) // cqi3: 1st to 6th nation
         } else if r < 8 {
             (4, 0)
@@ -794,7 +794,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     if league == 0 {
         return 0;
     }
-    crate::comparison::branch("cqi_3 voluntario ingles");
+    crate::comparison::branch("cqi_3 english volunteer");
     let write: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_NEWSITEM_SET_SLOT);
     let club_drawn = || {
         let s = exe::utils_random(read_i16(league + league::CLUB_COUNT) as i32) as i16 as i32;
@@ -881,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         if year == read_i16(this + 0x439) {
             return;
         }
-        crate::comparison::branch("cqi_3 virada da classificacao");
+        crate::comparison::branch("cqi_3 qualification rollover");
         core::ptr::write_unaligned((this + 0x439) as *mut i16, year);
         exe::uefaseeding_roll_coefficients(this);
         exe::uefaseeding_set_place_counts(this);
@@ -965,7 +965,7 @@ pub(crate) unsafe fn uefa_seeding_crt_fclose(f: usize) {
 /// (como a original).
 pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;
-    crate::comparison::branch("cpx_6 gravar sementes da uefa");
+    crate::comparison::branch("cpx_6 save UEFA seeds");
     let f = open_temp_file_for_write(0xaa1a50);
     if f == 0 {
         show_error_at(FONTE, 0x64f);

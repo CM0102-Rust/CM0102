@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpp_goleiro', 'cpp5_w(v + 1, 1); // o goleiro',
      'cpp5_w(v + 1, 2); // mutacao: o goleiro vira libero',
-     'cpp_5 vagas da formacao'),
+     'cpp_5 formation slots'),
     ('cpp_verba', 'verba(this, clube); // a verba de transferências',
      'let _ = verba; // mutacao: sem redistribuir a verba',
-     'cpp_5 refazer lista'),
+     'cpp_5 redo list'),
     ('cpp_suspender', '*((e + 8) as *mut u8) = 0x64; // o clube suspende o jogador',
      '// mutacao: o clube nao suspende o jogador',
-     'cpp_5 suspender clube'),
+     'cpp_5 suspend club'),
 ]

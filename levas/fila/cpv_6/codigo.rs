@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
             if *aperto > 10 {
                 *aperto -= 1;
             }
-            crate::comparison::branch("cpv_6 impulso na band 0");
+            crate::comparison::branch("cpv_6 boost in band 0");
             let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
             if !ok && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
                 run_weekly_event(0x59e5a0, this, clube, fin);
@@ -307,7 +307,7 @@ unsafe extern "thiscall" fn try_board_debt_payment(this: usize, clube: usize, fi
         }
         _ => return 0,
     };
-    crate::comparison::branch("cpv_6 sorteio da divida");
+    crate::comparison::branch("cpv_6 debt draw");
     let r = cpv6_sortear(7000); // cpv6: o sorteio da dívida
     if rep >= r.wrapping_add(0xdac) {
         return 0;
@@ -398,7 +398,7 @@ unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: u
             }
         }
     }
-    crate::comparison::branch("cpv_6 injecao avaliada");
+    crate::comparison::branch("cpv_6 injection evaluated");
     let div = match wealth_band(fin) {
         -2 => read_f64_at(0x9689e0),
         -1 => read_f64_at(0x967880),

@@ -51,7 +51,7 @@ unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, fase: u
         copia(&mut d, &mut t2, r);
         if f < 10 { 2 } else { 3 }
     };
-    crate::comparison::branch("cqh_4 tabela das rodadas");
+    crate::comparison::branch("cqh_4 round fixtures");
     for &(i, dia, mes, anos, semana) in GROUP_STAGE_DATES[metade].iter() {
         data(t, i, dia, mes, anos, semana, 2, ano, 0);
     }
@@ -117,7 +117,7 @@ unsafe extern "thiscall" fn set_club_season_expectations(this: usize) {
     let expectativas: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(0x6a3770usize);
     let mut i = 0i16;
     while i < cqh4l_w(this + 0x3e) {
-        crate::comparison::branch("cqh_4 expectativa do clube");
+        crate::comparison::branch("cqh_4 club expectation");
         let clube = cqh4l_d(cqh4l_d(this + 0xb1) + i as usize * 0x3b);
         expectativas(cqh4l_d(0xb67a44), clube, 1); // cqh4: com a notícia
         i += 1; // cqh4: o próximo clube
@@ -148,7 +148,7 @@ unsafe extern "thiscall" fn relegate_club_to_division(_this: usize, clube: usize
         return;
     }
     if humano(clube, 1, 1, 0, 0) != 0 {
-        crate::comparison::branch("cqh_4 técnico sai");
+        crate::comparison::branch("cqh_4 manager leaves");
         tirar(cqh4l_d(0xb67a44), clube, 1, 7, 0);
     }
 }

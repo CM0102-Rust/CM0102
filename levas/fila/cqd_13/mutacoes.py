@@ -1,5 +1,5 @@
 # Mutacoes (cqd_13): as tres na 0x868c50 (4 chamadas ate 2002-06-01, os campeoes das ligas em maio). Nas carreiras de
-# 01/11/2026 dezenas de jogadores passaram do limiar (contador "cqd_13 jogador destacado do campeao"); a injury_word_0c do
+# 01/11/2026 dezenas de jogadores passaram do limiar (contador "cqd_13 champion standout player"); a injury_word_0c do
 # campeao so subiu numa delas, por isso nao serve. Com todos acima do limiar, os de media baixa ganham o historico, moral
 # +20 em vez de +10 e +100 em vez de +50 no contrato (e a renovacao); o moral da ficha (+0x45, 0x544710) pesa nas
 # partidas e o delta 0 nao sorteia (a contagem de sorteios muda); o moral do contrato (+0x44) pesa na felicidade e nos
@@ -9,11 +9,11 @@
 MUTACOES = [
     ('cqd13_todos_destacados', '        if f > limiar as f64 { // cqd13: acima do limiar',
      '        if f >= 0.0 { // mutacao: todos acima do limiar',
-     'cqd_13 jogador destacado do campeao'),
+     'cqd_13 champion standout player'),
     ('cqd13_moral_zero', '            moral(p, 0x14, 1); // cqd13: o moral do jogador destacado',
      '            moral(p, 0, 1); // mutacao: moral sem delta',
-     'cqd_13 jogador destacado do campeao'),
+     'cqd_13 champion standout player'),
     ('cqd13_contrato_50', '            add_contract_morale(k, 100); // cqd13: o contrato do jogador destacado',
      '            add_contract_morale(k, 50); // mutacao: +50 no contrato',
-     'cqd_13 contrato do destacado'),
+     'cqd_13 standout player contract'),
 ]

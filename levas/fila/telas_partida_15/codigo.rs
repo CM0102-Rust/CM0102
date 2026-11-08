@@ -89,7 +89,7 @@ unsafe fn show_selection_warning(texto_obj: usize, msg: *const u8, caixa_sobre: 
 /// parada fora dos 11, os reservas que faltam, os de fora do grupo, "Proceed to the match ?" e a lista
 /// com "No" e "Yes".
 unsafe extern "C" fn match_screens_draw_team_selection() {
-    crate::comparison::branch("telas conferencia da escalacao");
+    crate::comparison::branch("screens line-up check");
     let criar: unsafe extern "thiscall" fn(*mut usize, usize) -> usize = core::mem::transmute(0x4ae590usize);
     let destruir: unsafe extern "thiscall" fn(*mut usize) = core::mem::transmute(0x4ae630usize);
     let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(0x4ae660usize);
@@ -375,7 +375,7 @@ unsafe extern "thiscall" fn match_screens_load(estat: usize, zip: usize) -> u32 
     if zip == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I1%%)(estat, zip);
     }
-    crate::comparison::branch("telas estatisticas carregar");
+    crate::comparison::branch("screens statistics load");
     let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let ler: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
     let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);
@@ -423,7 +423,7 @@ unsafe extern "thiscall" fn match_screens_save(estat: usize, zip: usize) -> u32 
     if zip == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(%%I2%%)(estat, zip);
     }
-    crate::comparison::branch("telas estatisticas salvar");
+    crate::comparison::branch("screens statistics save");
     let abrir: unsafe extern "C" fn(usize, usize, u32, u32, u32) -> usize = core::mem::transmute(0x9326e0usize);
     let escrever: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
     let fechar: unsafe extern "C" fn(*mut usize) = core::mem::transmute(0x932b00usize);

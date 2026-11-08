@@ -53,7 +53,7 @@ unsafe extern "thiscall" fn append_result(this: usize, nacao: usize, pontos: u32
     let (mes, ano) = match_month_year(partida);
     *((p + 2) as *mut u8) = mes; // cpt2: o mes do jogo
     core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: o ano do jogo
-    crate::comparison::branch("cpt_2 resultado");
+    crate::comparison::branch("cpt_2 result");
 }
 
 // ponytail: a original pode realocar o histórico (não roda duas vezes): o plano antes (conta, capacidade, pontos, mês e

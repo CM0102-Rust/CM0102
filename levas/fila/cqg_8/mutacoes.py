@@ -6,9 +6,9 @@
 # - A casa lida da fase 1 e gravada na fase 0.
 MUTACOES = [
     ('cqg8_casa_na_fase_1', 'refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa',
-     'refazer(this, vaga, 1, 0, c); // mutacao: as posições refeitas pela casa', 'cqg_8 posicoes refeitas'),
+     'refazer(this, vaga, 1, 0, c); // mutacao: as posições refeitas pela casa', 'cqg_8 positions redone'),
     ('cqg8_casa_na_faixa_1', 'refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa',
-     'refazer(this, vaga, 0, 1, c); // mutacao: as posições refeitas pela casa', 'cqg_8 posicoes refeitas'),
+     'refazer(this, vaga, 0, 1, c); // mutacao: as posições refeitas pela casa', 'cqg_8 positions redone'),
     ('cqg8_casa_lida_da_fase_1', 'guardada(this, vaga as i8, 0, 0, &mut c); // cqg8: a casa guardada da fase 0',
-     'guardada(this, vaga as i8, 1, 0, &mut c); // mutacao: a casa guardada da fase 0', 'cqg_8 posicoes refeitas'),
+     'guardada(this, vaga as i8, 1, 0, &mut c); // mutacao: a casa guardada da fase 0', 'cqg_8 positions redone'),
 ]

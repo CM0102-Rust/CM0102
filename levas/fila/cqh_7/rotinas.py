@@ -1,9 +1,9 @@
 # A ordem dos árbitros (officials_manager.cpp), pedido de 02/11 (agente C, família das pessoas):
 # - 0x79d4e0 (officials_manager_compare_nation_then_quality_desc, 84 bytes): a ordem do qsort da 0x79bf60 que decide os
 #   árbitros que ficam por nação (os primeiros pela qualidade +0x28 × 50 + +0x22). Milhares de comparações uma vez por
-#   carreira (o jogo novo da carreira automática: "cqh_7 ordem decrescente" 16384 na carreira de 02/11). Duas mutações.
+#   carreira (o jogo novo da carreira automática: "cqh_7 descending order" 16384 na carreira de 02/11). Duas mutações.
 # - 0x79d480 (a mesma ordem, crescente, 84 bytes): a do qsort da 0x79c5c0 depois dos árbitros novos (os índices +0 saem
-#   dessa ordem; "cqh_7 ordem crescente" 262144). Uma mutação.
+#   dessa ordem; "cqh_7 ascending order" 262144). Uma mutação.
 # Item de duas rotinas pequenas: a 0x79d410 foi para a cqg_9 e a 0x79c530 (a cópia do registro, escolhida no começo) já
 # estava no motor.rs (cpy_9, 261ª).
 # Iguais no cm0102-1080.exe (as duas inteiras, conferido byte a byte).

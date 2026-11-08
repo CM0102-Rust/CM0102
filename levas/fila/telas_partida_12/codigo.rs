@@ -704,7 +704,7 @@ unsafe extern "C" fn refresh_latest_scores_rows() {
 /// (0x803d80; bloqueado: −11), mostra "Waiting for other players..." (0x802f80) e abre a tela da
 /// partida (0x718aa0) na vaga do humano: −4.
 unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
-    crate::comparison::branch("telas espera dos outros jogadores");
+    crate::comparison::branch("screens wait for other players");
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let humanos: unsafe extern "thiscall" fn(usize, *mut usize, *mut i16, i32) = core::mem::transmute(0x7ffd80usize);
     let ausente: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x7ffdd0usize);

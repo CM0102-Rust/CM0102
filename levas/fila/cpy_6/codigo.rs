@@ -75,11 +75,11 @@ unsafe extern "thiscall" fn process_fixture(this: usize, jogo: usize, arg: u32) 
     let fase = cpy6_b(jogo + 0x42) as i8;
     if fase > -1 && fase < 0xc {
         if vencedor != 0 {
-            crate::comparison::branch("cpy_6 premio da vitoria");
+            crate::comparison::branch("cpy_6 win bonus");
             european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: o prêmio da vitória
             european_cup_send_prize_money_news(this, vencedor, 0x30d40, jogo);
         } else {
-            crate::comparison::branch("cpy_6 premio do empate");
+            crate::comparison::branch("cpy_6 draw bonus");
             european_cup_add_prize_money(european_cup_club_finance(cpy6_d(jogo + 0x1c)), 0x186a0); // cpy6: o prêmio do empate do mandante
             european_cup_add_prize_money(european_cup_club_finance(cpy6_d(jogo + 0x20)), 0x186a0);
             european_cup_send_prize_money_news(this, cpy6_d(jogo + 0x1c), 0x186a0, jogo);

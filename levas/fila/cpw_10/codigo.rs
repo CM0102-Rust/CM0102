@@ -109,7 +109,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             show_error_at(0xa6bf9c, 0x36e);
             return;
         }
-        crate::comparison::branch("cpw_10 regen da fila");
+        crate::comparison::branch("cpw_10 queued regen");
         regen(this, cpw10_d(0xae23bc).wrapping_add((id as u32).wrapping_mul(0x6e) as usize));
         let mut j = 0i32;
         while j < cpw10_i(this + 0x14) - 1 {
@@ -137,7 +137,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
         if s == 0 {
             return;
         }
-        crate::comparison::branch("cpw_10 tecnico de reserva");
+        crate::comparison::branch("cpw_10 reserve manager");
         let nj = cpw10_d(0xae23c0).wrapping_add((cpw10_d(cpw10_d(this + 0x1c)) as u32).wrapping_mul(0x44) as usize);
         core::ptr::write_unaligned((s + 0x69) as *mut usize, nj);
         let ficha = cpw10_d(s + 0x61);
@@ -188,7 +188,7 @@ unsafe extern "thiscall" fn process_regen_queue(this: usize) {
 unsafe extern "thiscall" fn compare_process_regen_queue(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
     if cpw10_i(this + 0x20) > 2 {
-        crate::comparison::branch("cpw_10 reservas so na original");
+        crate::comparison::branch("cpw_10 reserves only in the original");
         return o(this);
     }
     let c0 = cpw10_i(this + 0x14);

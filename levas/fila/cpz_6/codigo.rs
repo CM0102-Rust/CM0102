@@ -88,7 +88,7 @@ unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: us
             if comentario != 0 {
                 texto(comentario, 0xa62ff4, 0xad9c64usize);
             }
-            crate::comparison::branch("cpz_6 a servico da selecao");
+            crate::comparison::branch("cpz_6 on national team duty");
             return sai(cpz6_d(jogador + 0x24)); // cpz6: a serviço da seleção
         }
         let conv = cpz6_d(this);
@@ -111,7 +111,7 @@ unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: us
                     if comentario != 0 {
                         texto(comentario, 0xa62fc8, 0xad9c64usize);
                     }
-                    crate::comparison::branch("cpz_6 no time da selecao");
+                    crate::comparison::branch("cpz_6 in the national team");
                     return sai(cpz6_d(jogador + 0x24)); // cpz6: já no time da seleção
                 }
             }
@@ -150,7 +150,7 @@ unsafe extern "thiscall" fn get_international_duty_club(this: usize, jogador: us
                 if comentario != 0 {
                     texto(0xde1f64, 0xa62fa4, 0xad9c64usize);
                 }
-                crate::comparison::branch("cpz_6 time das estrelas");
+                crate::comparison::branch("cpz_6 all-star team");
                 return sai(all_star_club(g));
             }
         }

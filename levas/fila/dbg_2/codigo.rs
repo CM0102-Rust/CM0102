@@ -5,7 +5,7 @@
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar estádios");
+    crate::comparison::branch("database write stadiums");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 78, n, stream)
@@ -27,7 +27,7 @@ unsafe extern "C" fn compare_db_files_write_stadiums(stream: usize, use_zip: i32
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar clubes");
+    crate::comparison::branch("database write clubs");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 581, n, stream)
@@ -49,7 +49,7 @@ unsafe extern "C" fn compare_db_files_write_clubs(stream: usize, use_zip: i32, r
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar pessoas 110");
+    crate::comparison::branch("database write people 110");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 110, n, stream)

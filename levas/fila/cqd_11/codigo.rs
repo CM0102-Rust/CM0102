@@ -40,7 +40,7 @@ unsafe fn toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usi
         return;
     }
     if falta {
-        crate::comparison::branch("cqd_11 falta tirada");
+        crate::comparison::branch("cqd_11 absence removed");
     }
     *(p as *mut u8) = m ^ bit;
     let l = cqd11_d(this + lista);
@@ -62,7 +62,7 @@ unsafe fn toggle_mark_and_unlist(this: usize, pessoa: usize, bit: u8, lista: usi
         }
         if cqd11_d(item) == cqd11_d(pessoa) {
             if falta {
-                crate::comparison::branch("cqd_11 registro da falta tirado");
+                crate::comparison::branch("cqd_11 absence record removed");
             }
             tirar(cqd11_d(this + lista), item);
             return;
@@ -182,13 +182,13 @@ unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, jogador:
     gravar(nt, 2, cqd11_d(cqd11_d(jogador + 8) + 0x33) as u32);
     gravar(nt, 3, cqd11_d(cqd11_d(jogador + 0xc) + 0x33) as u32);
     gravar(nt, 4, cqd11_d(clube) as u32);
-    crate::comparison::branch("cqd_11 noticia da falta");
+    crate::comparison::branch("cqd_11 absence news");
     let r = taped_random(3); // cqd11: o sorteio da notícia
     gravar(nt, 5, r as u32);
     gravar(nt, 6, humano(clube, 0, 1, 0, 0));
     let tecnico = cqd11_d(clube + 0xcf);
     if tecnico != 0 && humano(clube, 1, 1, 0, 0) == 0 { // cqd11: o técnico da IA relata
-        crate::comparison::branch("cqd_11 relator tecnico");
+        crate::comparison::branch("cqd_11 technical reporter");
         let t = cqd11_d(clube + 0xcf);
         gravar(nt, 7, cqd11_d(t) as u32);
         gravar(nt, 8, cqd11_d(cqd11_d(t + 4) + 0x33) as u32);

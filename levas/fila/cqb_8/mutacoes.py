@@ -8,9 +8,9 @@
 # - O desafeto sai tambem no empate dos sorteios (>= em vez de >): mais desafeicoes e mais sorteios do contrato.
 MUTACOES = [
     ('cqb8_chance_inicial_20', '    let mut chance: i32 = 0xa; // cqb8: a chance inicial',
-     '    let mut chance: i32 = 0x14; // mutacao: a chance inicial', 'cqb_8 reacao do elenco'),
+     '    let mut chance: i32 = 0x14; // mutacao: a chance inicial', 'cqb_8 squad reaction'),
     ('cqb8_nota_do_jogador_menos_5', '            nota = cqb8_b(p + 0x5d).wrapping_add(10); // cqb8: a nota do jogador do elenco',
-     '            nota = cqb8_b(p + 0x5d).wrapping_add(5); // mutacao: a nota do jogador do elenco', 'cqb_8 nota do jogador'),
+     '            nota = cqb8_b(p + 0x5d).wrapping_add(5); // mutacao: a nota do jogador do elenco', 'cqb_8 player rating'),
     ('cqb8_desafeto_no_empate', '        if r1 > cqb8_sortear(nota as i32) { // cqb8: o desafeto sorteado',
-     '        if r1 >= cqb8_sortear(nota as i32) { // mutacao: o desafeto sorteado', 'cqb_8 desafeto sorteado'),
+     '        if r1 >= cqb8_sortear(nota as i32) { // mutacao: o desafeto sorteado', 'cqb_8 drawn grudge'),
 ]

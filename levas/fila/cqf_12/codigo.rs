@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
         let pedido = cqf12_d(this + 0x5c) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = judge_scout_request(pedido, catorze);
         if processar && !SCOUT_DAILY_DRY_RUN {
-            crate::comparison::branch("cqf_12 pedido processado");
+            crate::comparison::branch("cqf_12 request processed");
             let mut feitos: i8 = 0;
             for k in 0..10u32 {
                 if feitos >= 3 { // cqf12: até três relatórios
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
                     relatorio(lo, jogador, reg, -1000, 1, 0, 0, 1);
                     feitos += 1;
                     if (cqf12_b(reg + 0x66) as i8) > -1 {
-                        crate::comparison::branch("cqf_12 relatorio do pedido");
+                        crate::comparison::branch("cqf_12 request report");
                         acrescentar(l, reg, 0x67);
                     }
                 }
@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -> u32 {
     for k in 0..0x10i32 {
         let p = cqf12_pessoa((cqf12_i(0xae2364) - k - 1) as usize);
         if cqf12_b(p + 0x5f) == 1 {
-            crate::comparison::branch("cqf_12 busca do humano");
+            crate::comparison::branch("cqf_12 human search");
             for j in 0..10u32 {
                 buscar(registro_do_olheiro(this, j, p)); // cqf12: a busca de cada lista
             }

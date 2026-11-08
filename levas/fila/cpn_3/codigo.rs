@@ -80,14 +80,14 @@ unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, jogador: us
     l0 = (l0 as f64 - xf as f64) as f32;
     let dif = s2f as f64 - xf as f64;
     let dif_f = dif as f32;
-    crate::comparison::branch("cpn_3 nota do jogador");
+    crate::comparison::branch("cpn_3 player rating");
     let mut r = dif + l0 as f64 - peso as f64 * (1.0f32 / 60.0) as f64; // o peso da história
     if !(s1f as f64 >= 12.0) {
-        crate::comparison::branch("cpn_3 poucas partidas");
+        crate::comparison::branch("cpn_3 few matches");
         r = r * s1f as f64 * (1.0f32 / 12.0) as f64; // menos de 12 partidas
     }
     if !(r >= 0.0) {
-        crate::comparison::branch("cpn_3 nota negativa");
+        crate::comparison::branch("cpn_3 negative rating");
         r = r * player_club_reputation_ratio(jogador, clube); // a negativa pela reputação
     }
     let rf = r as f32;
@@ -156,7 +156,7 @@ unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, noti
     let formatar: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let por_texto: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(0x4ae660usize);
     let ligar: unsafe extern "thiscall" fn(usize, usize, u32, usize) = core::mem::transmute(0x4ae8a0usize);
-    crate::comparison::branch("cpn_3 texto da crise financeira");
+    crate::comparison::branch("cpn_3 financial crisis text");
     let id = campo(noticia, 0);
     let gravidade = campo(noticia, 1);
     campo(noticia, 2);

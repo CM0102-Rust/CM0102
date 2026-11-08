@@ -11,7 +11,7 @@ unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, registr
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I0%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparison::branch("banco ler estádios");
+    crate::comparison::branch("database read stadiums");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 78, n, stream)
@@ -39,7 +39,7 @@ unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, registr
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I1%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparison::branch("banco ler pessoas 157");
+    crate::comparison::branch("database read people 157");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 157, n, stream)
@@ -67,7 +67,7 @@ unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, re
     if versao != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(%%I2%%)(stream, use_zip, registros, entrada);
     }
-    crate::comparison::branch("banco ler histórico de pessoas");
+    crate::comparison::branch("database read people history");
     let lidos = if use_zip != 0 {
         let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932c30usize);
         zread(registros, 17, n, stream)

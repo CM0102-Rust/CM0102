@@ -1,7 +1,7 @@
 # A lesão nova, a notícia dela e a ausência sem licença (injury.cpp, awol.cpp): Injury::add_injury (0x62d250, ~2,6 KB:
 # o mapa dá 842 bytes, mas a rotina vai até a 0x62dc92; pelos efeitos físicos da partida 0x62c080, pelo dia das lesões
 # 0x62b7b0, pelos registros iniciais 0x62cf70, pela recaída 0x62e500 e pelos surtos 0x62e9e0, todos já em Rust: roda
-# a cada lesão da carreira, "lesao registrada" 16384 e "cpv_8 batida vira lesao" 1024 na base da 261ª),
+# a cada lesão da carreira, "injury recorded" 16384 e "cpv_8 collision becomes injury" 1024 na base da 261ª),
 # injury_post_injury_news (0x62dca0: a notícia 2000 da lesão, chamada só pela 0x62d250: passageira) e
 # AWOL::is_player_awol (0x418f60: a marca de ausente sem licença, lida pela seleção, pelo treino, pelo preço pedido,
 # pelo dia da comissão e pelas transferências, quase sempre sem a marca: passageira). Iguais no cm0102-1080.exe. A

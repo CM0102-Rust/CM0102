@@ -12,10 +12,10 @@ MUTACOES = [
     ('cqs4_virada_sem_arbitros',
      'renovar(cqs4_d(0xb74340), cqs4_d(this + 4)); // cqs4: a renovação dos árbitros da Série C',
      'let _ = renovar; // mutacao: sem a renovacao dos arbitros',
-     'cqs_4 virada da serie c'),
+     'cqs_4 serie c rollover'),
     ('cqs4_previstas_sem_ordenar',
      'ordenar(cqs4_d(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação',
      'let _ = ordenar; // mutacao: sem ordenar pela injury_word_0c',
-     'cqs_4 posicoes previstas'),
+     'cqs_4 expected positions'),
 ]
 # Prova do agente (06/11, carreira Rust de 8 ligas ate 2002-06-01; base com os 12 itens cqr/cqs/cqt_1..4, impressao b690295afd222f6a): as tres ACUSADAS (a final em 2001-343, a virada em 2002-012, as previstas em 2001-001).

@@ -41,7 +41,7 @@ unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     }
     sort_clubs_by_strength(v as *mut u32, k as *mut i32, n);
     if n > 1 {
-        crate::comparison::branch("cpt_13 clubes ordenados");
+        crate::comparison::branch("cpt_13 clubs sorted");
     }
     liberar(k);
 }
@@ -60,7 +60,7 @@ unsafe extern "thiscall" fn set_club_final_position(this: usize, clube: usize, p
     if e == 0 {
         e = acrescentar(this, clube);
     }
-    crate::comparison::branch("cpt_13 posição gravada");
+    crate::comparison::branch("cpt_13 position recorded");
     core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: a posição
     e
 }
@@ -102,7 +102,7 @@ unsafe fn set_final_positions_by_round(this: usize, v: *const u32, gravar: usize
                 s = s.wrapping_add(1);
                 chamadas.push((c, a));
                 if gravar != 0 {
-                    crate::comparison::branch("cpt_13 posição pela rodada");
+                    crate::comparison::branch("cpt_13 position by round");
                     gravar_posicao(cpt13_d(this + 8), c, a as u32);
                 }
             }

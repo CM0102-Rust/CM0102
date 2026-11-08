@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cps5_moral_sem_sorteio', '                let r2 = cps5_sortear(m / 12); // cps5: a parte do moral',
      '                let r2 = m / 24; // mutacao: sem o sorteio',
-     'cps_5 moral sorteado'),
+     'cps_5 drawn morale'),
     ('cps5_desconto_sem_sorteio', '    if cps5_sortear(cps5_sb(p + 0x59)) == 0 { // cps5: o primeiro desconto',
      '    if cps5_sb(p + 0x59) < 10 { // mutacao: sem o sorteio',
-     'cps_5 tecnico sorteado'),
+     'cps_5 drawn manager'),
     ('cps5_moral_sobe_dois', '                        moral(p, 1, 1); // cps5: sobe o moral',
      '                        moral(p, 2, 1); // mutacao',
-     'cps_5 moral sobe'),
+     'cps_5 morale rises'),
 ]

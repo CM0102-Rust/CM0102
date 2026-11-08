@@ -24,7 +24,7 @@ use super::*;
 /// registro local nasce e morre pelos iteradores de vetor do runtime (0x9463af/0x9462bb) como na
 /// original. Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: usize, n: i32) -> usize {
-    crate::comparison::branch("estatisticas montar");
+    crate::comparison::branch("statistics build");
     let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
     let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(stats: usize, zip: 
 /// [pt] { 0x7293c0 } (thiscall, match_stats.cpp): o destrutor das estatísticas da partida: libera o índice
 /// ([this]) e zera o ponteiro e a quantidade (+4).
 pub(crate) unsafe extern "thiscall" fn destroy_match_stats(stats: usize) {
-    crate::comparison::branch("estatisticas desmontar");
+    crate::comparison::branch("statistics tear down");
     let t = *(stats as *const usize);
     if t != 0 {
         exe::crt_operator_delete(t);
@@ -519,7 +519,7 @@ pub(crate) unsafe fn add_commentary_speed_row(list: usize, value: u16, v: u32, s
 /// −1 no parâmetro 8, o painel da aba (parâmetro 2), o estádio e, com o parâmetro 8 em −1, o painel de
 /// narração (com o lance do parâmetro 7 narrado por 0x6d7b00) no parâmetro 8.
 pub(crate) unsafe extern "C" fn build_match_screen() {
-    crate::comparison::branch("telas montar a partida");
+    crate::comparison::branch("screens build the match");
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     const MENOS1: usize = usize::MAX;
@@ -823,7 +823,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
 /// do parâmetro 0xa), 0x723350; as respostas 0x722dc0 e 0x725860; a 10 converte o parâmetro 0x26 no
 /// 0x25). Por fim −11 com [0xb6b7b0] ou o redesenho (0x802d00) com [0xb6b7a8].
 pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond a partida");
+    crate::comparison::branch("screens respond match");
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let g = |a: usize| *(a as *const u32);
@@ -1217,7 +1217,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
 /// clube, placar ou "Match Abandoned"), o agregado ([+0x4b] ≥ 0), a barra de menu, as 7 abas, os
 /// botões de voltar e avançar e o painel da aba (parâmetro 2).
 pub(crate) unsafe extern "C" fn build_match_details_screen() {
-    crate::comparison::branch("telas montar os detalhes");
+    crate::comparison::branch("screens build the details");
     let sm = SCREEN_MANAGER;
     const BUF: usize = 0xde1f64;
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -1534,7 +1534,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(top: *mut i32, base: *
             let t = *top;
             let y = (*base - t - 0x46) / 2 + t;
             if get_screen_param(7) != 0 {
-                crate::comparison::branch("telas visao geral com o narrador");
+                crate::comparison::branch("screens overview with the commentator");
                 let rel = u(u(p0 + live_match::ENGINE) + 0x8f7a);
                 let r = txt(sm, 0x8c, z(y), 0x2ee, z(y + 0x46), 1, 0, 0x10c, 5, 0, 0, 1);
                 let m = u(p0 + live_match::ENGINE);
@@ -2239,7 +2239,7 @@ pub(crate) unsafe fn show_selection_warning(text_obj: usize, msg: *const u8, cai
 /// parada fora dos 11, os reservas que faltam, os de fora do grupo, "Proceed to the match ?" e a lista
 /// com "No" e "Yes".
 pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
-    crate::comparison::branch("telas conferencia da escalacao");
+    crate::comparison::branch("screens line-up check");
     let definir: unsafe extern "thiscall" fn(usize, *const u8) -> usize = core::mem::transmute(FN_TEXT_SET_STRING);
     let ligacao: unsafe extern "thiscall" fn(usize, *const u8, u32, usize) -> i32 = core::mem::transmute(FN_TEXT_ADD_LINK);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -2509,7 +2509,7 @@ pub(crate) unsafe extern "thiscall" fn match_screens_load(stats: usize, zip: usi
     if zip == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MATCH_SCREENS_LOAD)(stats, zip);
     }
-    crate::comparison::branch("telas estatisticas carregar");
+    crate::comparison::branch("screens statistics load");
     let mut h = exe::zopen(zip, 0xa17bd0, 0, 0x16, 4);
     if h == 0 {
         show_error_at(0xa17ba0, 0x49e);
@@ -2561,7 +2561,7 @@ pub(crate) unsafe extern "thiscall" fn match_screens_save(stats: usize, zip: usi
     if zip == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MATCH_SCREENS_SAVE)(stats, zip);
     }
-    crate::comparison::branch("telas estatisticas salvar");
+    crate::comparison::branch("screens statistics save");
     let mut h = exe::zopen(zip, 0xa17bd0, 1, 0x16, 4);
     if h == 0 {
         fatal_error_at(0xa17ba0, 0x4f1);
@@ -2612,7 +2612,7 @@ pub(crate) unsafe extern "thiscall" fn read_match_record(stats: usize, k: i32, o
     if k < 0 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) || out == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_READ_MATCH_RECORD)(stats, k, out);
     }
-    crate::comparison::branch("estatisticas ler registro");
+    crate::comparison::branch("statistics read record");
     let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0xa17b88), 0x98f928);
     if f == 0 {
         show_error_at(0xa17ba0, 0x128);
@@ -2647,7 +2647,7 @@ pub(crate) unsafe extern "thiscall" fn match_screens_record_match(stats: usize, 
     if m == 0 || r == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_MATCH_SCREENS_RECORD_MATCH)(stats, m, r);
     }
-    crate::comparison::branch("estatisticas registrar partida");
+    crate::comparison::branch("statistics record match");
     let fill: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(FN_MATCH_STATS_FILL_MATCH_RECORD);
     fill(stats, m, r, 0);
     let game = core::ptr::read_unaligned((m + engine::MATCH) as *const usize);
@@ -2682,7 +2682,7 @@ pub(crate) unsafe extern "thiscall" fn write_match_record(stats: usize, game: us
     if game == 0 || r == 0 || events == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_WRITE_MATCH_RECORD)(stats, game, r, events);
     }
-    crate::comparison::branch("estatisticas gravar registro");
+    crate::comparison::branch("statistics write record");
     let d = |o: usize| (stats + o) as *mut i32;
     let j = |o: usize| (game + o) as *mut i32;
 
@@ -3465,7 +3465,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
 /// (0x803d80; bloqueado: −11), mostra "Waiting for other players..." (0x802f80) e abre a tela da
 /// partida (0x718aa0) na vaga do humano: −4.
 pub(crate) unsafe extern "C" fn match_screens_handle_waiting_screen() -> i32 {
-    crate::comparison::branch("telas espera dos outros jogadores");
+    crate::comparison::branch("screens wait for other players");
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let sm = SCREEN_MANAGER;
     let h = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16);
@@ -3546,7 +3546,7 @@ pub(crate) unsafe fn show_panel_empty_message(top: *mut i32, base: *mut i32, tex
 /// dois clubes (0x53b640) e a linha do meio, o painel de baixo igual, o retângulo nos parâmetros 0x16 a
 /// 0x19, `*base` no 0xc e os valores (0x720320).
 pub(crate) unsafe extern "C" fn draw_action_zones_panel(top: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das zonas de acao");
+    crate::comparison::branch("screens action zones panel");
     let caixa: ManagerBoxFn = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
     let txt: ManagerTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_TEXT_ITEM);
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
@@ -3692,7 +3692,7 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
         dados = get_screen_param(0x20);
         partida = get_screen_param(0x1f);
         if *((dados + match_record::NO_STATISTICS) as *const u8) != 0 {
-            crate::comparison::branch("telas painel do relatorio da partida");
+            crate::comparison::branch("screens match report panel");
             return show_panel_empty_message(top, base, SEM_RELATORIO);
         }
         if get_screen_param(0x2d) == 0 {
@@ -3701,7 +3701,7 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
                 // simplification: out of memory the original shows the error (and tries to allocate again, to no effect)
                 return o(top, base);
             }
-            crate::comparison::branch("telas painel do relatorio da partida (montar)");
+            crate::comparison::branch("screens match report panel (build)");
             // simplification: the original’s SEH frame only frees the memory if the constructor throws an exception, which it does not
             let r = exe::new_match_events(memoria, (0) as u8);
             set_screen_param(0x2d, r);
@@ -3725,7 +3725,7 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
     if relatorio == 0 {
         return o(top, base);
     }
-    crate::comparison::branch("telas painel do relatorio da partida");
+    crate::comparison::branch("screens match report panel");
 
     let lances = |r: usize| *((r + 6) as *const i16);
     let mut columns: [u8; 2] = [1, 5];
@@ -3834,7 +3834,7 @@ pub(crate) unsafe extern "C" fn draw_match_report_panel(top: *mut i32, base: *mu
 /// (0x49db00), os botões de voltar e avançar, a rolagem até a partida do humano (parâmetro 4) ou à do
 /// parâmetro 2 e a marca de vista do humano da vez no grupo (+0x14 + 4h).
 pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
-    crate::comparison::branch("telas montar os jogos do dia");
+    crate::comparison::branch("screens build the day matches");
     let caixa: ManagerBoxFn = core::mem::transmute(FN_SCREENMANAGER_ADD_BUTTON_ITEM);
     let text_of_cell: ListCellTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
@@ -4039,7 +4039,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
 /// aloca (0x944cf1), constrói os dois blocos (0x9463af com 0x453c30) e grava no parâmetro 0x1d.
 pub(crate) unsafe fn save_match_snapshot(mut copy: usize, state: usize) {
     if copy == 0 {
-        crate::comparison::branch("telas cria a copia do estado da partida");
+        crate::comparison::branch("screens create the match state copy");
         copy = exe::crt_operator_new(0xd7a);
         if copy != 0 {
             exe::crt_vector_constructor_iterator(copy + match_record::HOME_TEAM, 0x625, 2, 0x453c30, 0x453c10);
@@ -4432,7 +4432,7 @@ pub(crate) unsafe fn colour_word(a: usize) -> usize {
 /// próprios de cada página), a tabela dos valores, o lado `lado` no parâmetro 0x1b, -1 no 0x1a e o
 /// preenchimento (0x721cd0).
 pub(crate) unsafe extern "C" fn draw_team_stats_panel(side: u32, top: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das estatisticas do time");
+    crate::comparison::branch("screens team statistics panel");
     let cell: ListCellFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
     let text_of_cell: ListCellTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
@@ -4537,7 +4537,7 @@ pub(crate) unsafe extern "C" fn draw_team_stats_panel(side: u32, top: *mut i32, 
 /// (0x8040a0, item 0x7dc ou 0x7d7 pelo saldo de [dados] ou [dados+4]) quando a pessoa vale (0x53e990),
 /// senão texto; vazio (0xfb em +0x1d) sem nome; e as três células da nota. No fim, 0x723350.
 pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das notas dos jogadores");
+    crate::comparison::branch("screens player ratings panel");
     let cell: ListCellFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_BUTTON);
     let text_of_cell: ListCellTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
@@ -4642,7 +4642,7 @@ pub(crate) const MATCH_STATS_LABELS: [(usize, usize); 13] = [
 /// tabela de 3 colunas (1, 5, 1) e 13 linhas, cada uma com as células dos dois times (colunas 0 e 2;
 /// o item da primeira no parâmetro 9) e o rótulo no meio; depois os valores (0x71e750).
 pub(crate) unsafe extern "C" fn draw_match_stats_panel(top: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel das estatisticas da partida");
+    crate::comparison::branch("screens match statistics panel");
     let text_of_cell: ListCellTextFn = core::mem::transmute(FN_SCREENMANAGER_ADD_AREA_TEXT);
     let list: DisplayListFn = core::mem::transmute(FN_DISPLAY_ADD_AREA);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -4702,7 +4702,7 @@ pub(crate) unsafe fn item_id_or_default(item: i16) -> u16 {
 /// (+0xd, 0x54 bytes; primeiro as de +0x10, depois as de +0xc) que o humano ainda não marcou (0x717cc0,
 /// −4) ou devolve −8; sem ela, com ficha e clube, abre a escalação se 0x474e00 negar e devolve −4.
 pub(crate) unsafe extern "C" fn match_screens_handle_continue_command(item: u32) -> i32 {
-    crate::comparison::branch("telas respond ao continuar");
+    crate::comparison::branch("screens respond on continue");
     let g = |a: usize| *(a as *const u32);
     let human = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16);
     let r = exe::get_human_manager_record(0);
@@ -4800,7 +4800,7 @@ pub(crate) unsafe extern "C" fn match_screens_handle_continue_command(item: u32)
 /// ou +0x20 sem a +0x41). Sem ficha, clube ou partida: a caixa de erro (linhas 0x1e1c, 0x1e24, 0x1e2c),
 /// como a original (a tela já ficou aberta).
 pub(crate) unsafe extern "C" fn match_screens_open_team_selection() {
-    crate::comparison::branch("telas abrir a escalacao");
+    crate::comparison::branch("screens open the line-up");
     if exe::screenmanager_open_screen(SCREEN_MANAGER, 0x7260f0, 0x727c30, 1, 0, 0) == 0 {
         return;
     }
@@ -4840,7 +4840,7 @@ pub(crate) unsafe extern "C" fn match_screens_open_team_selection() {
 /// (0x897590 com 0 ≥ 11), nomeia o melhor titular (0x727e20) por 0x897760. Para 1, 2 e 3 deixa o
 /// comando pendente 1 ([0xdd6be0]) com a escolha (o id, [0xdd6be4]) e devolve −9.
 pub(crate) unsafe extern "C" fn match_screens_handle_team_selection_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond a escalacao");
+    crate::comparison::branch("screens respond line-up");
     let club = get_screen_param(0);
     let p2 = get_screen_param(2);
     let item16 = item as u16 as i16;
@@ -5096,7 +5096,7 @@ pub(crate) unsafe extern "C" fn open_day_fixtures_screen(slot: u32, group: usize
     if group == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_DAY_FIXTURES_SCREEN)(slot, group);
     }
-    crate::comparison::branch("telas abrir os jogos do dia");
+    crate::comparison::branch("screens open the day matches");
     let open: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     if open(SCREEN_MANAGER, slot, 0x717db0, 0x718930, 0, 0, 0) == 0 {
         return;
@@ -5121,7 +5121,7 @@ pub(crate) unsafe extern "C" fn open_day_fixtures_screen(slot: u32, group: usize
 /// +0xba9a6 do item) e 2 o andamento da competição (0x49b830 com o dado), ambos −11; senão a barra de
 /// menu (0x7615d0, senão 0x7643d0). O item vai inteiro (32 bits) para a barra, como na original.
 pub(crate) unsafe extern "C" fn handle_day_fixtures_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond aos jogos do dia");
+    crate::comparison::branch("screens respond day matches");
     let i = item as i16;
     let id = |i: i16| if i == -1 { *(G_CURRENT_COMMAND_ID as *const u16) } else { display_item_id(i) };
     let given = |i: i16| {
@@ -5229,7 +5229,7 @@ pub(crate) unsafe extern "C" fn open_match_screen(slot: u32, partida: usize) {
     if slot == 0 || partida == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_MATCH_SCREEN)(slot, partida);
     }
-    crate::comparison::branch("telas abrir a partida");
+    crate::comparison::branch("screens open the match");
     let open: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, usize, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     if open(SCREEN_MANAGER, slot, 0x718e90, 0x71a240, 1, 0x71b120, 0) == 0 {
         return;
@@ -5274,7 +5274,7 @@ pub(crate) unsafe extern "C" fn open_match_screen(slot: u32, partida: usize) {
 /// [0xb6b7a8]. Itens: 5 troca a competição (0xe) e volta à página 1, 6 e 8 a página anterior e a
 /// seguinte (em círculo), 7 para ou solta a troca automática; cada um liga [0xb6b7b0]. Devolve 0.
 pub(crate) unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u32) -> i32 {
-    crate::comparison::branch("telas respond ao painel dos placares");
+    crate::comparison::branch("screens respond scores panel");
     let pagina = get_screen_param(0x11) as u8 as i8;
     let parado = get_screen_param(0x12);
     let paginas = get_screen_param(0x13) as u8 as i8;
@@ -5330,7 +5330,7 @@ pub(crate) unsafe extern "C" fn match_screens_handle_latest_scores_cycle(item: u
 /// redesenha o painel (0x721cd0 com 0 e −1) e liga [0xb6b7a8]; os itens 9 e 0xa descem e sobem a
 /// linha do parâmetro 0x1c e ligam [0xb6b7b0]. Devolve 0.
 pub(crate) unsafe extern "C" fn handle_team_stats_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond as estatisticas do time");
+    crate::comparison::branch("screens respond team statistics");
     let p0 = get_screen_param(0);
     let row = get_screen_param(0x1c) as u8 as i8;
     if *(G_MATCH_SCREEN_LIVE_DATA_FLAG as *const u32) != 0 && *(*((p0 + live_match::SPECTATORS) as *const usize) as *const u8) & 4 != 0 && *(G_MATCH_SCREEN_VIEW_CHANGED_FLAG as *const u32) == 0 {
@@ -5373,7 +5373,7 @@ pub(crate) unsafe fn set_screen_param(k: u32, v: usize) {
 /// montagem 0x71b630, a resposta 0x71bdc0 e o fechamento 0x71c170) e grava os parâmetros dela (a
 /// partida em 0x1e; a aba 2 começa em 6).
 pub(crate) unsafe extern "C" fn open_match_details(partida: usize) {
-    crate::comparison::branch("telas abrir os detalhes");
+    crate::comparison::branch("screens open the details");
     if exe::screenmanager_open_screen(G_SCREEN_MANAGER, 0x71b630, 0x71bdc0, 0, 0x71c170, 0) == 0 {
         return;
     }
@@ -5404,7 +5404,7 @@ pub(crate) unsafe extern "C" fn open_match_details(partida: usize) {
 /// estatísticas do time (0x722dc0), 6 as notas (0x723350); os redesenhos só com a marca 4 do menu da
 /// partida ([[parâmetro 0]+0x5b]) e [0xb6b7ac]. Por fim −11, o redesenho (0x802d00) e a barra de menu.
 pub(crate) unsafe extern "C" fn match_details_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond aos detalhes");
+    crate::comparison::branch("screens respond details");
     let g = |a: usize| *(a as *const u32);
     let item16 = item as u16 as i16;
     let current_human_display = || *((0xb74c4c + *(0xb77c7a as *const i16) as isize * 0x300) as *const usize);
@@ -5522,7 +5522,7 @@ pub(crate) unsafe extern "C" fn match_details_input(item: u32) -> i32 {
 /// [pt] { 0x71c170 } (cdecl, match_screens.cpp): fecha a tela de detalhes: os parâmetros 0x2d (0x5a8f60),
 /// 0x1d e 0x20 (0x453bc0) são destruídos e liberados, o 0x1f só liberado (0x944c94), e todos zerados.
 pub(crate) unsafe extern "C" fn close_match_details() {
-    crate::comparison::branch("telas fechar os detalhes");
+    crate::comparison::branch("screens close the details");
     for (k, destrutor) in [(0x2du32, Some(0x5a8f60usize)), (0x1d, Some(0x453bc0)), (0x1f, None), (0x20, Some(0x453bc0))] {
         if get_screen_param(k) == 0 {
             continue;
@@ -5580,7 +5580,7 @@ pub(crate) unsafe extern "C" fn open_latest_scores(slot: u32, entry: usize) {
     if slot == 0 || entry == 0 {
         return original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_LATEST_SCORES)(slot, entry);
     }
-    crate::comparison::branch("telas abrir os ultimos placares");
+    crate::comparison::branch("screens open the latest scores");
     let open: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) -> u32 = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     if open(SCREEN_MANAGER, slot, 0x71b300, 0x71b3d0, 0, 0, 0) == 0 {
         return;
@@ -5604,7 +5604,7 @@ pub(crate) unsafe extern "C" fn open_latest_scores(slot: u32, entry: usize) {
 /// placares (0x723d20, de 0x50 a 0x217) e os botões de voltar e avançar (0x5edcc0, desligados quando o
 /// gerente não tem para onde ir).
 pub(crate) unsafe extern "C" fn build_latest_scores() {
-    crate::comparison::branch("telas montar os ultimos placares");
+    crate::comparison::branch("screens build the latest scores");
     let entry = exe::screenmanager_get_screen_param(SCREEN_MANAGER, 0xe);
     let id = *(entry as *const i32);
     exe::background_set_comp_picture((*(G_CLUB_COMP_TABLE as *const usize) as isize + id as isize * 107) as usize, 0, 0);
@@ -5634,7 +5634,7 @@ pub(crate) unsafe extern "C" fn build_latest_scores() {
 /// competição (0x725860) decide; sem decisão, −11 com [0xb6b7b0] ou redesenha com [0xb6b7a8]
 /// (0x802d00). Por fim a barra de menu (0x7615d0, senão 0x7643d0).
 pub(crate) unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
-    crate::comparison::branch("telas respond aos ultimos placares");
+    crate::comparison::branch("screens respond latest scores");
     let g = |a: usize| *(a as *const u32);
     if g(0xb77c84) == 0 {
         let m = g(G_MATCH_DAY) as usize;
@@ -5711,7 +5711,7 @@ pub(crate) unsafe extern "C" fn match_control_label(state: u8, m: usize, out: *m
             if exe::screenmanager_is_manager_done(G_SCREEN_MANAGER, player) != 0 { (0xa16d34, true) } else { (0xa16d24, false) }
         }
     };
-    crate::comparison::branch("telas rotulo do controle");
+    crate::comparison::branch("screens control label");
     text(out, formato);
     if desligado {
         *marks |= 0x40;
@@ -5726,7 +5726,7 @@ pub(crate) unsafe extern "C" fn match_control_label(state: u8, m: usize, out: *m
 /// gerente de telas [0xb74450] (0x7ff010), se houver, são destruídos (0x5a8f60 e 0x453bc0), liberados
 /// (0x944c94) e zerados (0x7ff270).
 pub(crate) unsafe extern "C" fn close_match_screen() {
-    crate::comparison::branch("telas fechar a partida");
+    crate::comparison::branch("screens close the match");
     for (k, destrutor) in [(0x2du32, 0x5a8f60usize), (0x1d, 0x453bc0)] {
         if exe::screenmanager_get_screen_param(G_SCREEN_MANAGER, k) == 0 {
             continue;
@@ -5750,7 +5750,7 @@ pub(crate) unsafe extern "C" fn open_waiting_screen(slot: u32) {
     if slot == 0 {
         return original_fn::<unsafe extern "C" fn(u32)>(IDX_OPEN_WAITING_SCREEN)(slot);
     }
-    crate::comparison::branch("telas abrir a espera");
+    crate::comparison::branch("screens open the wait");
     let open: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32, u32, u32) = core::mem::transmute(FN_SCREENMANAGER_OPEN_SCREEN_FOR_EACH_RECORD);
     open(G_SCREEN_MANAGER, slot, 0x727fa0, 0x727fb0, 0, 0, 0);
 }
@@ -5783,7 +5783,7 @@ pub(crate) unsafe extern "C" fn open_waiting_screen(slot: u32) {
 /// com as linhas que cabem (0x5e5cd0, a altura da fonte 3; quantas no parâmetro 0xf, o primeiro item no 0x10),
 /// os três botões do alto (0x804030, 6 a 8) e o redesenho dos placares (0x724520).
 pub(crate) unsafe extern "C" fn draw_latest_scores_panel(top: *mut i32, base: *mut i32) {
-    crate::comparison::branch("telas painel dos ultimos placares");
+    crate::comparison::branch("screens latest scores panel");
     type T9 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T11 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;
     type T12 = unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize, usize) -> usize;

@@ -1,6 +1,6 @@
 # Os amistosos da pré-temporada da IA (friendly.cpp, o que restava fora da fila): Friendly::plan_club_friendlies
 # (0x5c4770, 0x3ea bytes, pelo plano da pré-temporada 0x5c27a0, que rodou 2 vezes na base: "cpt_11 planejou a
-# pré-temporada"; cada vez marca dezenas de amistosos: "cps_12 amistoso planejado"), Friendly::add_tournament (0x5c6e00,
+# pré-temporada"; cada vez marca dezenas de amistosos: "cps_12 planned friendly"), Friendly::add_tournament (0x5c6e00,
 # 0xfd bytes, pelo torneio da IA 0x5c3be0 na mesma pré-temporada e pelas telas do clube) e, passageira,
 # Friendly::find_human_club_open_invitation (0x5c68b0, 0x61 bytes, pelas telas dos amistosos do humano). Sem SEH. Iguais
 # no cm0102-1080.exe (corpo inteiro das três).

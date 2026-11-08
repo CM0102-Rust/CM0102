@@ -6,11 +6,11 @@
 MUTACOES = [
     ('cpt7_um_sorteio_na_medida', '            let b = cpt7_sortear(100); // cpt7: o segundo sorteio da medida',
      '            let b = a; // mutacao: um sorteio so',
-     'cpt_7 clima inicial'),
+     'cpt_7 initial weather'),
     ('cpt7_vento_sem_sorteio', '        let v = cpt7_sortear(3); // cpt7: o vento inicial',
      '        let v = 1; // mutacao: sem o sorteio',
-     'cpt_7 clima inicial'),
+     'cpt_7 initial weather'),
     ('cpt7_nota_sem_sorteio', '    let r = cpt7_sortear(100); // cpt7: o sorteio da nota',
      '    let r = 50; // mutacao: sem o sorteio',
-     'cpt_7 nota do estadio'),
+     'cpt_7 stadium rating'),
 ]

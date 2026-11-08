@@ -308,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     let l = read_usize(this + friendly::REQUEST_REPLY_LIST);
     let respondido = s == 2 && LAST_FRIENDLY_REPLY == m;
     if respondido {
-        crate::comparison::branch("cqa_2 pedido respondido pelo assistente");
+        crate::comparison::branch("cqa_2 request answered by the assistant");
     }
     let ok = l == 0 || if respondido {
         list_len(l) == before && !list_holds(l, m)

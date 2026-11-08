@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_second_start_new_season(this: usi
     if !rebuild_season(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
         return 0;
     }
-    crate::comparison::branch("cqq_8 virada da serie b");
+    crate::comparison::branch("cqq_8 serie b rollover");
     set_expectations_and_renew_officials(this)
 }
 
@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_second_create_table(this: usize) 
 /// [pt] { 0x42cb70 } (thiscall, bra_nat_second.cpp): `BraNatSecond::set_up_rules`, as regras da Série B e o calendário.
 pub(crate) unsafe extern "thiscall" fn bra_nat_second_set_up_rules(this: usize) -> u32 {
     set_serie_b_rules(this);
-    crate::comparison::branch("cqi_7 regras da serie b");
+    crate::comparison::branch("cqi_7 serie b rules");
     create_main_schedule(this);
     1
 }

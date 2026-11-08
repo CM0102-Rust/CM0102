@@ -17,7 +17,7 @@ unsafe fn cqs2_linha(t: usize, i: usize) -> usize {
 /// liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); o calendário (+0xba) liberado (free 0x9452ca) e
 /// zerado; com a fase atual ≥ 0, as fases 0..=+0x30 que existem destruídas (a virtual 0, o destrutor com 1); +0x30 = −1;
 /// com estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4); o ano (+0x40, word)
-/// sobe `ano` (o contador "cqs_2 virada da mls"); então, cada um com a sua caixa (linhas 0x4af, 0x4b6, 0x4bc e 0x4c3)
+/// sobe `ano` (o contador "cqs_2 mls rollover"); então, cada um com a sua caixa (linhas 0x4af, 0x4b6, 0x4bc e 0x4c3)
 /// se devolver 0: as regras (virtual +0x8c), a tabela da primeira divisão (0x908560), os jogos da temporada
 /// (UsaMls::create_season_fixtures 0x9086e0, que monta também as fases das outras duas divisões) e a ordem da tabela
 /// (League::sort_table 0x6827d0, thiscall(this, 0), ret 4); por fim as posições previstas (virtual +0x5c), as
@@ -57,7 +57,7 @@ unsafe fn mls_start_new_season(this: usize, ano: i16) -> u32 {
     }
     let a = cqs2_w(this + 0x40);
     core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(ano));
-    crate::comparison::branch("cqs_2 virada da mls");
+    crate::comparison::branch("cqs_2 mls rollover");
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqs2_d(cqs2_d(this) + 0x8c));
     if regras(this) == 0 {
         show_error_at(0xaa1fb4, 0x4af);
@@ -130,7 +130,7 @@ unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
     for (k, p) in lugares.iter().enumerate() {
         posicao(cqs2_d(this + 8), cqs2_d(v + 4 * k), *p);
     }
-    crate::comparison::branch("cqs_2 posicoes previstas");
+    crate::comparison::branch("cqs_2 expected positions");
     soltar(v);
 }
 
@@ -164,7 +164,7 @@ unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, lista: *mut usiz
         core::ptr::write_unaligned((*lista + 4 * k as usize) as *mut usize, cqs2_linha(cqs2_d(cqs2_d(this + 0xc) + 4), i as usize));
         i += 1;
     }
-    crate::comparison::branch("cqs_2 clubes da mls");
+    crate::comparison::branch("cqs_2 mls clubs");
 }
 
 /// O comparador da virada: só a original (ponytail: libera tabelas e fases, aloca as novas, sorteia os jogos e os

@@ -108,7 +108,7 @@ unsafe fn construct_group_league(this: usize, ano: u32, p: &BackgroundLeague) ->
         show_error_at(p.arquivo, p.linhas[0]);
         return this;
     }
-    crate::comparison::branch("cqn_4 liga de fundo francesa");
+    crate::comparison::branch("cqn_4 french bottom league");
     let mut lista = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
@@ -265,13 +265,13 @@ unsafe fn destroy_group_league(this: usize, vtabela: usize) {
 
 /// { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
-    crate::comparison::branch("cqn_4 destrutor da cfa");
+    crate::comparison::branch("cqn_4 cfa destructor");
     destroy_group_league(this, 0x96a7b0)
 }
 
 /// { 0x5bd870 } (thiscall, ret 0, fra_lower.cpp): `FraLower::~FraLower()`.
 unsafe extern "thiscall" fn destroy_fra_lower(this: usize) {
-    crate::comparison::branch("cqn_4 destrutor da divisao de baixo");
+    crate::comparison::branch("cqn_4 lower division destructor");
     destroy_group_league(this, 0x96ab78)
 }
 

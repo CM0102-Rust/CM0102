@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 show_error_at(0x9c4374, 0xae);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 calendario da primeira inglesa");
+            crate::comparison::branch("cqp_5 english first division calendar");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, year, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
@@ -335,7 +335,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 play-offs da primeira inglesa");
+            crate::comparison::branch("cqp_5 english first division play-offs");
             let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, year);
@@ -494,7 +494,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u3
 /// (+0xc1), a Premier acima (+0x1c = [0x9cf5bc]) e a Second abaixo (+0x20 = [0x9cf5c4]), 5 reservas no banco
 /// (+0x49) e 3 substituições (+0x4a).
 pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_4 regras da first");
+    crate::comparison::branch("cqi_4 first division rules");
     eng_prm_apply_league_rules(this, &eng_prm_first_division_rules())
 }
 

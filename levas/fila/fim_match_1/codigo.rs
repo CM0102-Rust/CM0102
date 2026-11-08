@@ -10,7 +10,7 @@
 /// (+0x5f, 0xd7a bytes com 2 objetos de 0x625 em +0x11f; sem ele erro 0xa68) e registra (0x7293f0),
 /// libera o motor e tira a partida da fila [0xde2f70] (0x90d6b0).
 unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
-    crate::comparison::branch("telas largar a partida assistida");
+    crate::comparison::branch("screens leave the watched match");
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let ficha: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x765480usize);
     let indice: unsafe extern "thiscall" fn(usize, usize) -> u16 = core::mem::transmute(0x7fffa0usize);

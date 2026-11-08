@@ -7,11 +7,11 @@
 MUTACOES = [
     ('cpx1_recusa_sem_desassossego', '    call_with_offer(0x8c1290, this, o); // cpx1: o desassossego da recusa',
      '    // mutacao: sem o desassossego na recusa',
-     'cpx_1 recusa desassossega'),
+     'cpx_1 refusal unsettles'),
     ('cpx1_retirada_desassossega_sempre', '    if motivo as u16 == 2 { // cpx1: só o motivo 2 desassossega',
      '    if motivo as u16 == 2 || true { // mutacao: toda retirada desassossega',
-     'cpx_1 retirada sem desassossego'),
+     'cpx_1 withdrawal without unsettling'),
     ('cpx1_sem_desmarcar_comprador', '    clear_bid_markers(this, cpx1_clube(cpx1_d(o + 8)), p); // cpx1: desmarcar os lances do comprador',
      '    let _ = p; // mutacao: os lances do comprador ficam marcados',
-     'cpx_1 recusa desmarca'),
+     'cpx_1 refusal unmarks'),
 ]

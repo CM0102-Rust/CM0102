@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize,
     let (mes, ano) = match_month_year(partida);
     *((p + 2) as *mut u8) = mes; // cpt2: the match month
     core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: the match year
-    crate::comparison::branch("cpt_2 resultado");
+    crate::comparison::branch("cpt_2 result");
 }
 
 // simplification: the original may reallocate the history (does not run twice): the plan beforehand (count, capacity, points, month and

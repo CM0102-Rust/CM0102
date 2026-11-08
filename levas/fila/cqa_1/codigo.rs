@@ -75,7 +75,7 @@ unsafe fn round_prizes(copa: usize, r: i32, contar: bool) -> Option<(i32, i32)> 
             return None;
         }
         if contar {
-            crate::comparison::branch("cqa_1 premio pelo fundo");
+            crate::comparison::branch("cqa_1 prize from the fund");
         }
         let q = q0 / confrontos; // cqa1: o fundo pelas rodadas que faltam e pelos confrontos
         if ao_perdedor == -1 {
@@ -115,7 +115,7 @@ unsafe extern "thiscall" fn pay_round_prize_money(copa: usize, vencedor: usize, 
     }
     if ao_vencedor != 0 {
         send_prize_news(copa, cqa1_d(vencedor), ao_vencedor, seguinte, partida, desfecho);
-        crate::comparison::branch("cqa_1 premio do vencedor");
+        crate::comparison::branch("cqa_1 winner prize");
         cqa1_somar(cqa1_financas(cqa1_d(vencedor)), ao_vencedor); // cqa1: o prêmio do vencedor
         core::ptr::write_unaligned((copa + 0x28) as *mut i32, cqa1_i(copa + 0x28).wrapping_sub(ao_vencedor));
     }

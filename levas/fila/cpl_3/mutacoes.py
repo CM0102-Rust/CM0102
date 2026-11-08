@@ -5,9 +5,9 @@
 # jogo some, as financas mudam devagar: PODE ESCAPAR).
 MUTACOES = [
     ('cpl_passada_conta', 'cpl3_por(this + 0x86a, n.wrapping_add(1)); // a conta das transferências passadas',
-     'cpl3_por(this + 0x86a, n); // mutacao: a conta nao sobe', 'cpl_3 transferencia passada'),
+     'cpl3_por(this + 0x86a, n); // mutacao: a conta nao sobe', 'cpl_3 past transfer'),
     ('cpl_permissao_marca', '*marca |= 0x20; // a marca da permissão',
-     '*marca |= 0; // mutacao: sem a marca', 'cpl_3 permissao de trabalho'),
+     '*marca |= 0; // mutacao: sem a marca', 'cpl_3 work permit'),
     ('cpl_premio_conta', 'cpl3_por(this + 0x894, n.wrapping_add(1)); // mais um prêmio',
-     'cpl3_por(this + 0x894, n); // mutacao: a conta nao sobe', 'cpl_3 premio por jogo'),
+     'cpl3_por(this + 0x894, n); // mutacao: a conta nao sobe', 'cpl_3 appearance bonus'),
 ]

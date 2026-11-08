@@ -104,7 +104,7 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
         let limit = fee_limit(comprador);
         let razao = if valor == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / valor as f64 };
         if taxa <= limit {
-            crate::comparison::branch("cpo_1 comprador no limit");
+            crate::comparison::branch("cpo_1 buyer at the limit");
             or_byte(f1, 4); // o comprador: taxa dentro do limite
         } else if valor > 0x3d090 {
             let m = if razao < exe_f64(0x968918) {
@@ -144,7 +144,7 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
     let limit = fee_limit(vendedor);
     let razao = if v2 == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / v2 as f64 };
     if taxa <= limit {
-        crate::comparison::branch("cpo_1 vendedor no limit");
+        crate::comparison::branch("cpo_1 seller at the limit");
         or_byte(f2, 4); // o vendedor: taxa dentro do limite
     } else if v2 > 0x3d090 {
         let m = if razao < exe_f64(0x9689e0) {
@@ -270,7 +270,7 @@ unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: usize, trans
     }
     clamp_board_row(e);
     let tirar: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(0x547c10usize);
-    crate::comparison::branch("cpo_1 tirar favorito");
+    crate::comparison::branch("cpo_1 remove favourite");
     tirar(cpo1_d(cpo1_d(pessoa + 0x39) + 0xbf), pessoa); // o presidente do vendedor
 }
 
@@ -295,7 +295,7 @@ unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, clube: usize) -
             remover(cpo1_d(this + 0x10), item);
             let tecnico = cpo1_d(clube + 0xcf);
             if tecnico != 0 && dias(0xae2c90, cpo1_d(tecnico + 0x3e), cpo1_d(tecnico + 0x42)) > 0x64 {
-                crate::comparison::branch("cpo_1 ultimato cumprido");
+                crate::comparison::branch("cpo_1 ultimatum met");
                 let mut reg = [0u8; 8];
                 reg[0] = 1;
                 reg[2..6].copy_from_slice(&(cpo1_d(clube) as u32).to_le_bytes());

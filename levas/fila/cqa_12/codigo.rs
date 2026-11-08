@@ -64,9 +64,9 @@ unsafe fn update_cup_placed_club(this: usize, clube: usize, jogo: usize, partida
         let v = cqa12_w(clube + 0x80).wrapping_add(soma as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if tipo == 1 {
-            crate::comparison::branch("cqa_12 injury_word_0c do vice");
+            crate::comparison::branch("cqa_12 runner-up injury_word_0c");
         } else {
-            crate::comparison::branch("cqa_12 injury_word_0c do terceiro");
+            crate::comparison::branch("cqa_12 third place injury_word_0c");
         }
         cqa12_pw(clube + 0x80, v); // cqa12: a reputação do colocado
     }
@@ -216,7 +216,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
             let (ai, ah) = (*((0xdd6ec8 + 2) as *const u16), *((hoje + 2) as *const u16));
             let depois = ai > ah || (ai == ah && cqa12_w(0xdd6ec8) > cqa12_w(hoje));
             if !depois {
-                crate::comparison::branch("cqa_12 passagem fechada");
+                crate::comparison::branch("cqa_12 spell closed");
                 if cqa12_i(r + 0x72) != -1 && cqa12_i(r + 0x4a) != -1 {
                     if cqa12_i(r + 0x72) == cqa12_i(r + 0x4a) && cqa12_w(r + 0x50) == cqa12_w(r + 0x78) && cqa12_w(r + 0x4e) == cqa12_w(r + 0x76) {
                         staff_records_copy_date(r + 0x7e, hoje);
@@ -248,7 +248,7 @@ unsafe extern "thiscall" fn record_manager_job_change(this: usize, tecnico: usiz
             }
             cqa12_pi(r + 0x4a, -1);
             if contratado == 1 {
-                crate::comparison::branch("cqa_12 passagem nova");
+                crate::comparison::branch("cqa_12 new spell");
                 cqa12_pi(r + 0x4a, cqa12_i(clube));
                 staff_records_copy_date(r + 0x4e, hoje);
                 let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(0x549f70usize);

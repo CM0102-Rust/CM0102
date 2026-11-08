@@ -6,9 +6,9 @@
 # - A ordem crescente invertida pela qualidade.
 MUTACOES = [
     ('cqh7_peso_40', '(*((r + 0x28) as *const i8) as i16).wrapping_mul(0x32).wrapping_add(cqh7_w(r + 0x22)) // cqh7: o peso da qualidade',
-     '(*((r + 0x28) as *const i8) as i16).wrapping_mul(0x28).wrapping_add(cqh7_w(r + 0x22)) // mutacao: o peso da qualidade', 'cqh_7 ordem decrescente'),
+     '(*((r + 0x28) as *const i8) as i16).wrapping_mul(0x28).wrapping_add(cqh7_w(r + 0x22)) // mutacao: o peso da qualidade', 'cqh_7 descending order'),
     ('cqh7_empate_invertido', 'return cqh7_i(b).wrapping_sub(cqh7_i(a)); // cqh7: o empate pelo índice',
-     'return cqh7_i(a).wrapping_sub(cqh7_i(b)); // mutacao: o empate pelo índice', 'cqh_7 ordem decrescente'),
+     'return cqh7_i(a).wrapping_sub(cqh7_i(b)); // mutacao: o empate pelo índice', 'cqh_7 descending order'),
     ('cqh7_crescente_invertida', 'ka as i32 - kb as i32 // cqh7: a ordem crescente',
-     'kb as i32 - ka as i32 // mutacao: a ordem crescente', 'cqh_7 ordem crescente'),
+     'kb as i32 - ka as i32 // mutacao: a ordem crescente', 'cqh_7 ascending order'),
 ]

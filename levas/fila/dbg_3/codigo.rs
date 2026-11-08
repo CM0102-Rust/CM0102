@@ -5,7 +5,7 @@
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar não jogadores");
+    crate::comparison::branch("database write non-players");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 68, n, stream)
@@ -27,7 +27,7 @@ unsafe extern "C" fn compare_db_files_write_players(stream: usize, use_zip: i32,
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar jogadores");
+    crate::comparison::branch("database write players");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 70, n, stream)
@@ -49,7 +49,7 @@ unsafe extern "C" fn compare_db_files_write_non_players(stream: usize, use_zip: 
 /// chamado pelo endereço) ou `fwrite` 0x945ce6 (a pasta Data); 1 se foi tudo. Sem quadro, sem SEH, sem caixa.
 /// Só o save_database 0x52dad0 chama (com os ponteiros já trocados por índices).
 unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zip: i32, registros: usize, n: u32) -> i32 {
-    crate::comparison::branch("banco gravar preferências");
+    crate::comparison::branch("database write preferences");
     let gravados = if use_zip != 0 {
         let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(0x932e10usize);
         zwrite(registros, 52, n, stream)
