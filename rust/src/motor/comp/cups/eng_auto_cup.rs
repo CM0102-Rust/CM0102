@@ -217,13 +217,13 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
 pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
-    let teams = alloc(((read_i16(this + 0x3e) as i32) << 2) as u32);
+    let teams = alloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         return show_error_at(0x9c4180, 0x2e9);
     }
     let mut i = 0i32;
-    while i < read_i16(this + 0x3e) as i32 {
-        write_u32_from_usize(teams + i as usize * 4, read_u32_as_usize(read_u32_as_usize(this + 0xb2) + i as usize * 4)); // cqs5: a ordem das chaves
+    while i < read_i16(this + cup::TEAM_COUNT) as i32 {
+        write_u32_from_usize(teams + i as usize * 4, read_u32_as_usize(read_u32_as_usize(this + eng_auto_cup::SELECTED_CLUBS) + i as usize * 4)); // cqs5: a ordem das chaves
         i += 1;
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -235,19 +235,19 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, read_i16(this + 0x3e) as u16 as u32, teams, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + 0x40) as u16 as u32, 0, 1,
-            extra as u16 as u32, *((this + 0x51) as *const u8) as u32, 0, 0, 0, core::ptr::null())
+        construct(p, this, read_i16(this + cup::TEAM_COUNT) as u16 as u32, teams, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 0, 1,
+            extra as u16 as u32, *((this + cup::IMPORTANCE_BIAS) as *const u8) as u32, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc), f);
+    write_u32_from_usize(read_u32_as_usize(this + cup::STAGES), f);
     soltar(teams);
     soltar(table);
-    if read_u32_as_usize(read_u32_as_usize(this + 0xc)) == 0 {
+    if read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) == 0 {
         return show_error_at(0x9c4180, 0x300);
     }
     crate::comparacao::ramo("cqs_5 fase das chaves do trofeu");
-    write_u32_from_usize(this + 0x30, 0);
+    write_u32_from_usize(this + cup::CURRENT_STAGE, 0);
 }
 
 
@@ -259,12 +259,12 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
 /// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
 /// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
-    let stage = read_u32_as_usize(this + 0x30) as i32;
-    if stage >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let stage = read_u32_as_usize(this + cup::CURRENT_STAGE) as i32;
+    if stage >= (read_u32_as_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(0x9c4180, 0x314);
     }
     let stage = stage + 1;
-    write_u32_from_usize(this + 0x30, stage as usize);
+    write_u32_from_usize(this + cup::CURRENT_STAGE, stage as usize);
     if stage == 1 {
         crate::comparacao::ramo("cqs_5 final do trofeu");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_ENGAUTOCUP_CREATE_FINAL_STAGE);
@@ -305,10 +305,10 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     if l == 0 {
         return show_error_at(0x9c4180, 0x337);
     }
-    if let Some(c) = first_entrant_with_status(read_u32_as_usize(this + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista da copa
+    if let Some(c) = first_entrant_with_status(read_u32_as_usize(this + cup::TEAM_TABLE), read_i16(this + cup::TEAM_COUNT) as i32, 1) { // cqs6: o finalista da copa
         write_u32_from_usize(l, c);
     }
-    if let Some(c) = first_entrant_with_status(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7), read_i16(this + 0x3e) as i32, 1) { // cqs6: o finalista das chaves
+    if let Some(c) = first_entrant_with_status(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) + 0xa7), read_i16(this + cup::TEAM_COUNT) as i32, 1) { // cqs6: o finalista das chaves
         write_u32_from_usize(l + 4, c);
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
@@ -320,14 +320,14 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 2, l, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + 0x40) as u16 as u32, 1, 1, // cqs6: o ano da final
+        construct(p, this, 2, l, rodadas as u16 as u32, read_u32_as_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 1, 1, // cqs6: o ano da final
              extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc) + 4, f);
+    write_u32_from_usize(read_u32_as_usize(this + cup::STAGES) + 4, f);
     soltar(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + 4);
     if f == 0 {
         return show_error_at(0x9c4180, 0x35a);
     }
@@ -358,38 +358,38 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
         return show_error_at(0x9c4180, 0x3bb);
     }
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let v = alloc(((read_i16(this + 0x3e) as i32) << 3) as u32);
+    let v = alloc(((read_i16(this + cup::TEAM_COUNT) as i32) << 3) as u32);
     if v == 0 {
         return show_error_at(0x9c4180, 0x3c3);
     }
     let mut d: i16 = 0;
-    while d < read_i16(this + 0x3e) {
+    while d < read_i16(this + cup::TEAM_COUNT) {
         let e = d as i32 as usize * 6;
-        write_u32_from_usize(v + d as i32 as usize * 4, read_u32_as_usize(read_u32_as_usize(this + 0xa7) + e));
-        let n = read_i16(this + 0x3e) as i32;
-        write_u32_from_usize(v + (n + d as i32) as usize * 4, read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + 0xc)) + 0xa7) + e));
+        write_u32_from_usize(v + d as i32 as usize * 4, read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e));
+        let n = read_i16(this + cup::TEAM_COUNT) as i32;
+        write_u32_from_usize(v + (n + d as i32) as usize * 4, read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES)) + 0xa7) + e));
         d = d.wrapping_add(1);
     }
     let sort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-    let n = read_i16(this + 0x3e) as i32;
+    let n = read_i16(this + cup::TEAM_COUNT) as i32;
     sort(v, n as u32, 4, 0x4b07d0);
-    let n = read_i16(this + 0x3e) as i32;
+    let n = read_i16(this + cup::TEAM_COUNT) as i32;
     sort(v + n as usize * 4, n as u32, 4, 0x4b07d0);
     let position: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     let a = read_u32_as_usize(v);
-    let b = read_u32_as_usize(v + read_i16(this + 0x3e) as i32 as usize * 4);
+    let b = read_u32_as_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4);
     crate::comparacao::ramo("cqs_6 classificacao do trofeu");
     if read_i16(a + 0x80) > read_i16(b + 0x80) {
         position(read_u32_as_usize(this + 8), a, 1);
-        position(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + 0x3e) as i32 as usize * 4), 2);
+        position(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 2);
     } else {
         position(read_u32_as_usize(this + 8), a, 2);
-        position(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + 0x3e) as i32 as usize * 4), 1);
+        position(read_u32_as_usize(this + 8), read_u32_as_usize(v + read_i16(this + cup::TEAM_COUNT) as i32 as usize * 4), 1);
     }
     for lado in 0..2u8 {
-        let mut k: i16 = if lado == 0 { 1 } else { read_i16(this + 0x3e).wrapping_add(1) };
+        let mut k: i16 = if lado == 0 { 1 } else { read_i16(this + cup::TEAM_COUNT).wrapping_add(1) };
         let mut pos: u8 = 3;
-        let last = read_i16(this + 0x3c).wrapping_sub(1);
+        let last = read_i16(this + cup::ROUND_COUNT).wrapping_sub(1);
         if last < 0 {
             continue;
         }
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
         while r >= 0 {
             let p = pos;
             let mut j: i16 = 0;
-            while j < read_i16(read_u32_as_usize(this + 0xa3) + r as usize * 0x68 + 0x1a) {
+            while j < read_i16(read_u32_as_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) {
                 let c = read_u32_as_usize(v + k as i32 as usize * 4);
                 k = k.wrapping_add(1);
                 position(read_u32_as_usize(this + 8), c, p as u32);

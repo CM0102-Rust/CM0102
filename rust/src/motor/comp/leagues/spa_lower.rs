@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparacao::ramo("cqq_5 calendario da divisao de baixo espanhola");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 set_rounds_around_christmas(t, year, &LOWER_ODD_YEAR_CHRISTMAS, 0xa82880);
             } else {
@@ -344,16 +344,16 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
     let games: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_CREATE_FIXTURES);
     base(this);
     write_u32_from_usize(this, 0x96fb1c);
-    core::ptr::write_unaligned((this + 0x40) as *mut u16, year as u16);
-    *((this + 0x50) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xff;
     write_u32_from_usize(this + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
     if load(this, 1) != 0 {
         return this;
     }
     crate::comparacao::ramo("cqm_6 divisao de baixo nova");
-    *((this + 0x44) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 0x30, 0xffff_ffff);
-    write_u32_from_usize(this + 0x2c, 0);
+    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
+    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_u32_from_usize(this + league::STAGE_COUNT, 0);
     if rules(this) == 0 {
         show_error_at(0xa82880, 0x3f);
         return this;
@@ -463,9 +463,9 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
     let t = alloc(0x512);
-    write_u32_from_usize(this + 0xb1, t);
+    write_u32_from_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa82880, 0x2ac);
         return 0;
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     }
     let mut k: u8 = 0;
     for g in [KEY_CLUB_COMP_SPANISH_FIRST_DIVISION, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION] { // cqm6: os times B da Primera e da Segunda
-        let rows = read_i16(this + 0x3e);
+        let rows = read_i16(this + league::CLUB_COUNT);
         // the row count for the condition advances together with `k`
         let mut kk = k;
         for_each_spanish_b_team(g, &mut kk, rows, |c, entra| {
@@ -499,18 +499,18 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
     crate::comparacao::ramo("cqm_6 tabela da divisao de baixo");
     let mut list = spanish_lower_candidates();
     let how_many = list.len() as u16 as u32;
-    let missing = (read_i16(this + 0x3e) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
+    let missing = (read_i16(this + league::CLUB_COUNT) as u16).wrapping_sub(k as i8 as i16 as u16) as u32; // cqm6: quantos faltam
     list.resize(100, 0);
     embaralhar(list.as_mut_ptr() as usize, how_many, missing);
     let mut j: i16 = 0;
-    while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + 0x3e) {
+    while j < how_many as u16 as i16 && (k as i8 as i16) < read_i16(this + league::CLUB_COUNT) {
         let c = list[j as usize];
         iniciar(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
         write_u32_from_usize(c + 0x60, read_u32_as_usize(this + 4));
         j += 1;
     }
-    (k as i8 as i16 == read_i16(this + 0x3e)) as u32
+    (k as i8 as i16 == read_i16(this + league::CLUB_COUNT)) as u32
 }
 
 

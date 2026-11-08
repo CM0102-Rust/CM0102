@@ -86,14 +86,14 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
 pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32 {
     let sort: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(FN_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_COMP_UTIL_GET_LATEST_PLACED_CLUB);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
+    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 8);
     let other = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_u32_as_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
     let mut l = concacaf_club_lists();
     sort(l.mex.as_mut_ptr() as usize, l.n[0], 2);
     sort(l.centro.as_mut_ptr() as usize, l.n[1], 3); // cqi11: três centro-americanos
     sort(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
     sort(l.mls.as_mut_ptr() as usize, l.n[3], 1);
-    let t = |k: usize| read_u32_as_usize(this + 0xa7).wrapping_add(k * 6);
+    let t = |k: usize| read_u32_as_usize(this + cup::TEAM_TABLE).wrapping_add(k * 6);
     let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
     crate::comparacao::ramo("cqi_11 classificados");
     pd(t(2), l.mex[0]);
@@ -115,9 +115,9 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
         }
     }
     let mut i = 0i32;
-    while i < read_i16(this + 0x3e) as i32 {
-        *((read_u32_as_usize(this + 0xa7) + i as usize * 6 + 4) as *mut u8) = 0;
-        *((read_u32_as_usize(this + 0xa7) + i as usize * 6 + 5) as *mut u8) = 0;
+    while i < read_i16(this + cup::TEAM_COUNT) as i32 {
+        *((read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6 + 4) as *mut u8) = 0;
+        *((read_u32_as_usize(this + cup::TEAM_TABLE) + i as usize * 6 + 5) as *mut u8) = 0;
         i += 1;
     }
     1
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// thiscall, ret 0; negativo, a caixa da linha 0x1ba e devolve 0) e as posições previstas (virtual +0x5c). Depois a
 /// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_u32_as_usize(read_u32_as_usize(this + 0xa7)) == 0 && stage != 0 {
+    if read_u32_as_usize(read_u32_as_usize(this + cup::TEAM_TABLE)) == 0 && stage != 0 {
         let classificar: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_CONCHAMP_SELECT_QUALIFIED_CLUBS);
         if classificar(this) < 0 {
             // simplification: 0x4c11a0 always returns 1; the error case stays with the box and the original’s 0
@@ -159,10 +159,10 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
 /// prêmios (+0x28) de 2.000.000 e a tabela das rodadas (+0xa3) da virtual +0x3c (push 0; push &+0x3a; push &+0x3c;
 /// push −1; mov ecx, this -> thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x28) as *mut u32, 0x1e8480);
+    core::ptr::write_unaligned((this + cup::PRIZE_FUND) as *mut u32, 0x1e8480);
     let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    let t = table(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
-    core::ptr::write_unaligned((this + 0xa3) as *mut u32, t as u32);
+    let t = table(this, 0xffff_ffff, this + cup::ROUND_COUNT, this + cup::STAGE_LABEL, 0);
+    core::ptr::write_unaligned((this + cup::ROUND_TABLE) as *mut u32, t as u32);
     1
 }
 
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
     }
     crate::comparacao::ramo("cqp_13 tabela da concacaf");
     let elo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) -> u32 = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DAY);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     for (i, r) in CONCACAF_CHAMPIONS_CUP_ROUNDS.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
         if i < 2 {

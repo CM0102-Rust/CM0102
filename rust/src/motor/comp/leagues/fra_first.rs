@@ -61,13 +61,13 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     let low: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(FN_FRALOWER_FRALOWER);
     base(this);
     write_u32_from_usize(this, 0x96aa24);
-    core::ptr::write_unaligned((this + 0x40) as *mut u16, year as u16);
+    core::ptr::write_unaligned((this + league::YEAR) as *mut u16, year as u16);
     write_u32_from_usize(this + 4, record);
-    *((this + 0x50) as *mut u8) = 0xc; // cqq6: a disciplina da primeira francesa
+    *((this + league::DISCIPLINE_RULE) as *mut u8) = 0xc; // cqq6: a disciplina da primeira francesa
     let m = new_marker_comp(0x96a994, KEY_CLUB_COMP_FRENCH_CFA);
-    write_u32_from_usize(this + 0xee, m);
+    write_u32_from_usize(this + fra_first::CFA_MARKER, m);
     let m = new_marker_comp(0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
-    write_u32_from_usize(this + 0xf2, m);
+    write_u32_from_usize(this + fra_first::LOWER_MARKER, m);
     if load(this, 1) != 0 {
         return this;
     }
@@ -94,10 +94,10 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
             }
         }
     }
-    *((this + 0x44) as *mut u8) = 0xff;
-    write_u32_from_usize(this + 0x30, 0xffff_ffff);
-    write_u32_from_usize(this + 0x2c, 0);
-    write_u32_from_usize(this + 0xc, 0);
+    *((this + league::STAGE_INDEX) as *mut u8) = 0xff;
+    write_u32_from_usize(this + league::CURRENT_STAGE, 0xffff_ffff);
+    write_u32_from_usize(this + league::STAGE_COUNT, 0);
+    write_u32_from_usize(this + league::STAGES, 0);
     if rules(this) == 0 {
         show_error_at(0x9ccb5c, 0x65);
         return this;
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
         return this;
     }
     predicted(this);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+    let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
     let a = new(0xee);
     let ligas_cfa = if a != 0 { cfa(a, year) } else { 0 };
     let b = new(0xee);
@@ -1027,9 +1027,9 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: usize, file: usize, row: 
 /// 0x7d1) e 20 depois ([0x9cf5cc]), +0xa7 = −1; cheia, o fundo pela cota de 200.000 e a TV de 6.000.000 a cada clube;
 /// 1 (0 sem encher). Fonte 0x9ccb5c, linha 0x1d3.
 pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
-    let n: i16 = if core::ptr::read_unaligned((this + 0x40) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, n);
-    core::ptr::write_unaligned((this + 0xa7) as *mut u16, 0xffff);
+    let n: i16 = if core::ptr::read_unaligned((this + league::YEAR) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, n);
+    core::ptr::write_unaligned((this + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
     if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION) != Some(true) {
         return 0;
     }
@@ -1099,7 +1099,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
         return 0;
     }
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    let year = core::ptr::read_unaligned((this + 0x40) as *const u16);
+    let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16);
     let n: i16 = if year == 0x7d1 { 0x22 } else { 0x26 }; // cqo6: 34 rodadas em 2001, 38 depois
     if !league.is_null() {
         *league = 1;

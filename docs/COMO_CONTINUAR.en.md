@@ -45,7 +45,14 @@ prove (Rust ×2 careers + detector and comparison, as always):
 5. `cabecalhos.py --gravar` (from ROTINAS) or `aplicar_cabecalhos.py` (proposed summaries): the bilingual header;
 6. `nomear_chaves.py`, `nomear_globais.py`, `nomear_campos.py`, `arrumar_rodada4.py --fase a` and `--fase b`,
    `anotar_constantes.py`: named keys, globals, fields, sizes and constants with their value;
-7. `legibilidade.py`: the scoreboard (docs/LEGIBILIDADE.en.md) must not get worse.
+7. `nomear_funcoes_chamadas.py` (addresses passed to `chamar`/`call_thiscall*`), `aplicar_campos_classes.py` (fields of
+   `this` by the class in `Original:`; tables proposed by reading), `traduzir_locais.py --gravar` (locals and
+   parameters, word by word), `aplicar_comentarios.py` (body comments in English) and `separar_comparadores.py --gravar`
+   (new comparers into `motor/compare/`);
+8. `legibilidade.py`: the scoreboard (docs/LEGIBILIDADE.en.md) must not get worse.
+
+A change that depends on the text after `//` (comments) goes to the mutation lists anchor by anchor
+(`trocar_nas_mutacoes.aplicar_por_trecho`), never line by line of the Python file.
 
 Better still: write the item in the new format from the start (docs/COMO_ESCREVER_UM_ITEM.en.md). Each step rewrites
 the mutation lists with the same renames; check the anchors afterwards (`fila.py checar` and the recent batches' lists).

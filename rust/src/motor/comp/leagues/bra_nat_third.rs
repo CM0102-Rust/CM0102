@@ -36,18 +36,18 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     let t = table(this, 10, &mut rodadas, &mut extra, 0);
     let p = new(0xb2);
     let stage = if p != 0 {
-        construct(p, this, 2, list.as_ptr(), rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 10, 1,
+        construct(p, this, 2, list.as_ptr(), rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 10, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x28) as *mut usize, stage);
-    if read_usize(read_usize(this + 0xc) + 0x28) == 0 {
+    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 0x28) as *mut usize, stage);
+    if read_usize(read_usize(this + league::STAGES) + 0x28) == 0 {
         return show_error_at(0x98aba4, 0x392);
     }
     crate::comparacao::ramo("cqs_4 final");
     soltar(t);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 10);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 10);
 }
 
 /// The Series C turnover: archives the season, clears the table, the schedule and the stages, moves to the next year
@@ -72,40 +72,40 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     let liberar_tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
-    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     liberar_tabela(this, 0);
-    let l = read_usize(this + 0xba);
+    let l = read_usize(this + league::ROUND_DATES);
     if l != 0 {
         free(l);
-        core::ptr::write_unaligned((this + 0xba) as *mut usize, 0);
+        core::ptr::write_unaligned((this + league::ROUND_DATES) as *mut usize, 0);
     }
     let stats = read_usize(this + 8);
     if stats != 0 {
         let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
         archive(stats, 1);
     }
-    if (read_usize(this + 0x30) as i32) >= 0 {
+    if (read_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = read_usize(read_usize(this + 0xc) + 4 * i as usize);
+            let f = read_usize(read_usize(this + league::STAGES) + 4 * i as usize);
             if f != 0 {
                 let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f)));
                 destroy(f, 1);
             }
             i += 1;
-            if i > read_usize(this + 0x30) as i32 {
+            if i > read_usize(this + league::CURRENT_STAGE) as i32 {
                 break;
             }
         }
     }
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    free(read_usize(this + 0xc));
-    let n = read_usize(this + 0x2c) as i32;
-    let a = read_i16(this + 0x40);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, a.wrapping_add(1));
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, -1);
+    free(read_usize(this + league::STAGES));
+    let n = read_usize(this + league::STAGE_COUNT) as i32;
+    let a = read_i16(this + league::YEAR);
+    core::ptr::write_unaligned((this + league::YEAR) as *mut i16, a.wrapping_add(1));
     crate::comparacao::ramo("cqs_4 virada da serie c");
     let v = if n > 0 { alloc((n * 4) as u32) } else { 0 };
-    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
+    core::ptr::write_unaligned((this + league::STAGES) as *mut usize, v);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x8c));
     if rules(this) == 0 {
         show_error_at(0x98aba4, 0x202);
@@ -136,11 +136,11 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0x5c));
     predicted(this);
-    let l = read_usize(this + 0xee);
+    let l = read_usize(this + bra_nat_third::CLUB_LIST);
     if l != 0 {
         free(l);
     }
-    core::ptr::write_unaligned((this + 0xee) as *mut usize, 0);
+    core::ptr::write_unaligned((this + bra_nat_third::CLUB_LIST) as *mut usize, 0);
     0
 }
 
@@ -170,9 +170,9 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
     if read_usize(this + 8) == 0 {
         return show_error_at(0x98aba4, 0x4a2);
     }
-    sort(read_usize(this + 0xee), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
+    sort(read_usize(this + bra_nat_third::CLUB_LIST), 0x38, 4, 0x4b07d0); // cqs4: a lista dos 56 pela reputação
     for k in 0..0x38usize {
-        position(read_usize(this + 8), read_usize(read_usize(this + 0xee) + 4 * k), place_for_index(k) as u32);
+        position(read_usize(this + 8), read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k), place_for_index(k) as u32);
     }
     crate::comparacao::ramo("cqs_4 posicoes previstas");
 }
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     }
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
-        let t = read_usize(if g == -1 { this } else { read_usize(read_usize(this + 0xc) + 4 * g as usize) } + 0xb1);
+        let t = read_usize(if g == -1 { this } else { read_usize(read_usize(this + league::STAGES) + 4 * g as usize) } + 0xb1);
         r[2 * k] = (read_usize(t), read_i16(t + 0x19));
         r[2 * k + 1] = (read_usize(t + 0x3b), read_i16(t + 0x54));
     }
@@ -307,19 +307,19 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     let t = table(this, 7, &mut rodadas, &mut extra, 0);
     let p = new(0xb2);
     let stage = if p != 0 {
-        construct(p, this, 0x10, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 7, 1,
+        construct(p, this, 0x10, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 7, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x1c) as *mut usize, stage);
-    if read_usize(read_usize(this + 0xc) + 0x1c) == 0 {
+    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 0x1c) as *mut usize, stage);
+    if read_usize(read_usize(this + league::STAGES) + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
     crate::comparacao::ramo("cqs_3 segunda fase");
     soltar(t);
     soltar(list);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 7);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 7);
 }
 
 /// The Series C third round: the eight second-round winners, drawn (shuffled) into two groups of four, home and away,
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let slots: [u8; 4] = [2, 0, 0, 0];
     let desempate: [u8; 4] = [1, 2, 4, 0];
     let mut v = [0usize; 8];
-    let second = read_usize(read_usize(this + 0xc) + 0x1c);
+    let second = read_usize(read_usize(this + league::STAGES) + 0x1c);
     let mut n = 0usize;
     let mut i = 0i32;
     while i < read_i16(second + 0x3e) as i32 {
@@ -367,18 +367,18 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         let p = new(0xee);
         let stage = if p != 0 {
             construct(p, this, 4, v[4 * (k as usize - 8)..].as_ptr(), 2, read_usize(this + 4), t, rodadas as u16 as u32, 3, 1, 5,
-                      desempate.as_ptr(), slots.as_ptr(), read_i16(this + 0x40) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
+                      desempate.as_ptr(), slots.as_ptr(), read_i16(this + league::YEAR) as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
         } else {
             0
         };
-        core::ptr::write_unaligned((read_usize(this + 0xc) + 4 * k as usize) as *mut usize, stage);
-        if read_usize(read_usize(this + 0xc) + 4 * k as usize) == 0 {
+        core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4 * k as usize) as *mut usize, stage);
+        if read_usize(read_usize(this + league::STAGES) + 4 * k as usize) == 0 {
             return show_error_at(0x98aba4, f);
         }
         soltar(t);
     }
     crate::comparacao::ramo("cqs_3 terceira fase");
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 9);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 9);
 }
 
 
@@ -401,19 +401,19 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let embaralhar: unsafe extern "C" fn(usize, i32) = core::mem::transmute(FN_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 7);
-    let velha = read_usize(this + 0xee);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 7);
+    let velha = read_usize(this + bra_nat_third::CLUB_LIST);
     if velha != 0 {
         soltar(velha);
     }
     let list = alloc(0xe0);
-    core::ptr::write_unaligned((this + 0xee) as *mut usize, list);
+    core::ptr::write_unaligned((this + bra_nat_third::CLUB_LIST) as *mut usize, list);
     if list == 0 {
         show_error_at(0x98aba4, 0x18f);
         return 1;
     }
-    let t = alloc((read_i16(this + 0x3e) as i32 as u32).wrapping_mul(0x3b));
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    let t = alloc((read_i16(this + league::CLUB_COUNT) as i32 as u32).wrapping_mul(0x3b));
+    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(0x98aba4, 0x196);
         return 0;
@@ -426,16 +426,16 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
             break;
         }
         if read_usize(clube + club::DIVISION) == read_usize(this + 4) {
-            core::ptr::write_unaligned((read_usize(this + 0xee) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
+            core::ptr::write_unaligned((read_usize(this + bra_nat_third::CLUB_LIST) + (k as i8 as isize as usize) * 4) as *mut usize, clube);
             k = k.wrapping_add(1);
         }
         i += 1;
         clube = clube.wrapping_add(0x245);
     }
     crate::comparacao::ramo("cql_7 serie c sorteio");
-    embaralhar(read_usize(this + 0xee), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
+    embaralhar(read_usize(this + bra_nat_third::CLUB_LIST), k as i8 as i32); // cql7: o sorteio dos clubes da Série C
     for j in 0..7usize {
-        iniciar(this, j as u32, read_usize(read_usize(this + 0xee) + j * 4), 0, 0);
+        iniciar(this, j as u32, read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + j * 4), 0, 0);
     }
     1
 }

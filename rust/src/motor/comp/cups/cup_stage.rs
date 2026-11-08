@@ -29,46 +29,46 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_CUP);
     base(this);
     write_u32_from_usize(this + 4, a5 as usize);
-    write_u16(this + 0x40, year as u16); // cqs7: o ano da fase
-    write_u8(this + 0x42, b2 as u8);
-    write_u8(this + 0x44, stage as u8);
-    write_u32_from_usize(this + 0x30, usize::MAX);
-    write_u32_from_usize(this + 0x2c, usize::MAX);
-    write_u8(this + 0x51, b3 as u8);
+    write_u16(this + cup::YEAR, year as u16); // cqs7: o ano da fase
+    write_u8(this + cup::COMP_TYPE, b2 as u8);
+    write_u8(this + cup::STAGE_INDEX, stage as u8);
+    write_u32_from_usize(this + cup::CURRENT_STAGE, usize::MAX);
+    write_u32_from_usize(this + cup::STAGE_COUNT, usize::MAX);
+    write_u8(this + cup::IMPORTANCE_BIAS, b3 as u8);
     write_u32_from_usize(this, 0x969468);
     write_u8(this + 0x43, 1);
-    write_u8(this + 0xb1, 0);
-    write_u8(this + 0xab, 0);
-    write_u8(this + 0xac, 0);
-    write_u16(this + 0x3c, rounds as u16);
-    write_u16(this + 0x3a, id as u16);
-    write_u8(this + 0x49, *((parent + 0x49) as *const u8));
-    write_u8(this + 0x4a, *((parent + 0x4a) as *const u8));
-    write_u32_from_usize(this + 0x28, a14 as usize);
+    write_u8(this + cup::RUN_BY_STAGES, 0);
+    write_u8(this + cup::CURRENT_ROUND, 0);
+    write_u8(this + cup::NEXT_DRAW_ROUND, 0);
+    write_u16(this + cup::ROUND_COUNT, rounds as u16);
+    write_u16(this + cup::STAGE_LABEL, id as u16);
+    write_u8(this + cup::SUBSTITUTES_NAMED, *((parent + 0x49) as *const u8));
+    write_u8(this + cup::SUBSTITUTIONS_ALLOWED, *((parent + 0x4a) as *const u8));
+    write_u32_from_usize(this + cup::PRIZE_FUND, a14 as usize);
     let size = (rounds as u16 as i16 as i32 * 0x68) as u32;
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc(size);
-    write_u32_from_usize(this + 0xa3, t);
+    write_u32_from_usize(this + cup::ROUND_TABLE, t);
     if t == 0 {
         show_error_at(F, 0x48);
         return this;
     }
     core::ptr::copy_nonoverlapping(modelo as *const u8, t as *mut u8, size as usize);
-    write_u16(this + 0x3e, n as u16);
+    write_u16(this + cup::TEAM_COUNT, n as u16);
     let zerada: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
     let l = zerada(n as u16 as i16 as i32 as u32, 6);
-    write_u32_from_usize(this + 0xa7, l);
+    write_u32_from_usize(this + cup::TEAM_TABLE, l);
     if l == 0 {
         show_error_at(F, 0x53);
         return this;
     }
     crate::comparacao::ramo("cqs_7 fase de copa");
-    let m = read_i16(this + 0x3e) as i32;
+    let m = read_i16(this + cup::TEAM_COUNT) as i32;
     let mut i = 0i32;
     while i < m {
         let e = i as usize * 6;
-        write_u32_from_usize(read_u32_as_usize(this + 0xa7) + e, read_u32_as_usize(teams + i as usize * 4)); // cqs7: o time i
-        write_u8(read_u32_as_usize(this + 0xa7) + e + 5, 0);
+        write_u32_from_usize(read_u32_as_usize(this + cup::TEAM_TABLE) + e, read_u32_as_usize(teams + i as usize * 4)); // cqs7: o time i
+        write_u8(read_u32_as_usize(this + cup::TEAM_TABLE) + e + 5, 0);
         let s = if sementes != 0 {
             *((sementes + i as usize) as *const u8) // cqs7: a semente do vetor
         } else if by_order != 0 {
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         } else {
             0
         };
-        write_u8(read_u32_as_usize(this + 0xa7) + e + 4, s);
+        write_u8(read_u32_as_usize(this + cup::TEAM_TABLE) + e + 4, s);
         i += 1;
     }
     let (mapa, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
@@ -99,22 +99,22 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
 pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     write_u32_from_usize(this, 0x969468);
-    if read_u32_as_usize(this + 0xa7) != 0 {
-        soltar(read_u32_as_usize(this + 0xa7));
+    if read_u32_as_usize(this + cup::TEAM_TABLE) != 0 {
+        soltar(read_u32_as_usize(this + cup::TEAM_TABLE));
     }
-    if read_u32_as_usize(this + 0xa3) != 0 {
-        soltar(read_u32_as_usize(this + 0xa3));
+    if read_u32_as_usize(this + cup::ROUND_TABLE) != 0 {
+        soltar(read_u32_as_usize(this + cup::ROUND_TABLE));
     }
-    if read_u32_as_usize(this + 0xad) != 0 {
+    if read_u32_as_usize(this + cup::TIE_TABLES) != 0 {
         let mut i = 0i32;
-        while i < read_i16(this + 0x3c) as i32 {
-            let p = read_u32_as_usize(read_u32_as_usize(this + 0xad) + i as usize * 4);
+        while i < read_i16(this + cup::ROUND_COUNT) as i32 {
+            let p = read_u32_as_usize(read_u32_as_usize(this + cup::TIE_TABLES) + i as usize * 4);
             if p != 0 {
                 soltar(p);
             }
             i += 1;
         }
-        soltar(read_u32_as_usize(this + 0xad));
+        soltar(read_u32_as_usize(this + cup::TIE_TABLES));
     }
     crate::comparacao::ramo("cqs_7 fim da fase de copa");
     let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_CUP_DESTRUCTOR_CUP);

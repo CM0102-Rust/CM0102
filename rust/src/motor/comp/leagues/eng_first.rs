@@ -338,7 +338,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparacao::ramo("cqp_5 calendario da primeira inglesa");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, year, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
         }
@@ -354,7 +354,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparacao::ramo("cqp_5 play-offs da primeira inglesa");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, year);
             t

@@ -435,12 +435,12 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     let r = day(this, today, full);
     // simplification: the original returns the league day byte with the upper bits of eax left over from the last call; the
     // the competitions loop only reads the byte.
-    if read_u32_as_usize(this + 0xdd) == 0 || read_u32_as_usize(this + 0x2c) != 0 || full == 0 || read_u32_as_usize(this + 0xe6) == 0 {
+    if read_u32_as_usize(this + league::COMPLETE) == 0 || read_u32_as_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_u32_as_usize(this + league::TIEBREAK_MATCHES) == 0 {
         return r;
     }
     let z = serie_a_zones(this);
-    let n = read_i16(this + 0x3e) as i32 - 1;
-    write_u32_from_usize(this + 0x4c, 0);
+    let n = read_i16(this + league::CLUB_COUNT) as i32 - 1;
+    write_u32_from_usize(this + league::SEASON_CLOSED, 0);
     crate::comparacao::ramo("cql_4 fim da serie a");
     let mut i: i16 = 0;
     if n > 0 {
@@ -449,9 +449,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
             let points = read_i16(l + 0x19);
             if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série A na fronteira
                 sort(this, points as u16 as u32);
-                write_u32_from_usize(this + 0x2c, 1);
+                write_u32_from_usize(this + league::STAGE_COUNT, 1);
                 let v = alloc(4);
-                write_u32_from_usize(this + 0xc, v);
+                write_u32_from_usize(this + league::STAGES, v);
                 let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x28));
                 proxima(this);
                 return r;
@@ -462,8 +462,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
             }
         }
     }
-    write_u32_from_usize(this + 0xdd, 0);
-    write_u32_from_usize(this + 0xe6, 0);
+    write_u32_from_usize(this + league::COMPLETE, 0);
+    write_u32_from_usize(this + league::TIEBREAK_MATCHES, 0);
     let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x94));
     status(this);
     r
@@ -484,15 +484,15 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: us
     let sort: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let r = day(this, today, full);
-    if read_u32_as_usize(this + 0xdd) == 0 || read_u32_as_usize(this + 0x2c) != 0 || full == 0 || read_u32_as_usize(this + 0xe6) == 0 {
+    if read_u32_as_usize(this + league::COMPLETE) == 0 || read_u32_as_usize(this + league::STAGE_COUNT) != 0 || full == 0 || read_u32_as_usize(this + league::TIEBREAK_MATCHES) == 0 {
         return r;
     }
     let z = serie_b_zones();
-    write_u32_from_usize(this + 0x4c, 0);
+    write_u32_from_usize(this + league::SEASON_CLOSED, 0);
     crate::comparacao::ramo("cql_4 fim da serie b");
     let mut found = false;
     let mut i: i16 = 0;
-    while (i as i32) < read_i16(this + 0x3e) as i32 - 1 {
+    while (i as i32) < read_i16(this + league::CLUB_COUNT) as i32 - 1 {
         let l = ita_ser_a_table_row(this, i as usize);
         let points = read_i16(l + 0x19);
         if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: o par da Série B na fronteira
@@ -502,15 +502,15 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date_647050(this: us
         i = i.wrapping_add(1);
     }
     if found {
-        write_u32_from_usize(this + 0x2c, 1);
+        write_u32_from_usize(this + league::STAGE_COUNT, 1);
         let v = alloc(4);
-        write_u32_from_usize(this + 0xc, v);
+        write_u32_from_usize(this + league::STAGES, v);
         let proxima: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x28));
         proxima(this);
         return r;
     }
-    write_u32_from_usize(this + 0xdd, 0);
-    write_u32_from_usize(this + 0xe6, 0);
+    write_u32_from_usize(this + league::COMPLETE, 0);
+    write_u32_from_usize(this + league::TIEBREAK_MATCHES, 0);
     let status: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x94));
     status(this);
     r
@@ -599,12 +599,12 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     }
     crate::comparacao::ramo("cql_4 resultado do desempate");
     let sort: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_SORT_TABLE);
-    write_u32_from_usize(this + 0xad, 0);
+    write_u32_from_usize(this + league::TABLE_COLUMN, 0);
     sort(this, 0);
-    let t = read_u32_as_usize(this + 0xb1);
+    let t = read_u32_as_usize(this + league::TABLE);
     let (a, b) = (read_u32_as_usize(jogo + 0x1c), read_u32_as_usize(jogo + 0x20));
     let mut i: i16 = 0;
-    while i < read_i16(this + 0x3e) {
+    while i < read_i16(this + league::CLUB_COUNT) {
         let l = t + i as usize * 0x3b;
         if read_u32_as_usize(l) == clube {
             if i > 0 {
@@ -614,9 +614,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     let mut tmp = [0u8; 0x3b];
                     core::ptr::copy_nonoverlapping(l as *const u8, tmp.as_mut_ptr(), 0x3b);
                     core::ptr::copy_nonoverlapping((l - 0x3b) as *const u8, l as *mut u8, 0x3b);
-                    let l2 = read_u32_as_usize(this + 0xb1) + i as usize * 0x3b;
+                    let l2 = read_u32_as_usize(this + league::TABLE) + i as usize * 0x3b;
                     core::ptr::copy_nonoverlapping(tmp.as_ptr(), (l2 - 0x3b) as *mut u8, 0x3b);
-                    let l3 = read_u32_as_usize(this + 0xb1) + i as usize * 0x3b;
+                    let l3 = read_u32_as_usize(this + league::TABLE) + i as usize * 0x3b;
                     *((l3 + 4) as *mut u8) = i as u8;
                     *((l3 - 0x3b + 4) as *mut u8) = (i as u8).wrapping_sub(1);
                     *((l3 + 0x37) as *mut u8) = 0xff;
@@ -624,22 +624,22 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     break;
                 }
             }
-            if i < read_i16(this + 0x3e) {
+            if i < read_i16(this + league::CLUB_COUNT) {
                 // simplification: the original reads the club of the next row even on the last one (4 bytes past the table), as here.
                 let abaixo = read_u32_as_usize(l + 0x3b);
                 if abaixo == a || abaixo == b {
                     *((t + i as usize * 0x3b + 4) as *mut u8) = i as u8;
-                    let t2 = read_u32_as_usize(this + 0xb1);
+                    let t2 = read_u32_as_usize(this + league::TABLE);
                     *((t2 + i as usize * 0x3b + 0x3f) as *mut u8) = (i as u8).wrapping_add(1);
-                    *((read_u32_as_usize(this + 0xb1) + i as usize * 0x3b + 0x37) as *mut u8) = 0xff;
-                    *((read_u32_as_usize(this + 0xb1) + i as usize * 0x3b + 0x72) as *mut u8) = 0xff;
+                    *((read_u32_as_usize(this + league::TABLE) + i as usize * 0x3b + 0x37) as *mut u8) = 0xff;
+                    *((read_u32_as_usize(this + league::TABLE) + i as usize * 0x3b + 0x72) as *mut u8) = 0xff;
                     break;
                 }
             }
         }
         i += 1;
     }
-    let n = read_i16(this + 0x3e);
+    let n = read_i16(this + league::CLUB_COUNT);
     let mut k: i16 = 0;
     while k < n {
         if read_u8(ita_ser_a_table_row(this, k as usize) + 0x37) == 1 {
@@ -647,13 +647,13 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
         }
         k += 1;
     }
-    write_u32_from_usize(this + 0xe6, 0);
-    write_u32_from_usize(this + 0xdd, 0);
+    write_u32_from_usize(this + league::TIEBREAK_MATCHES, 0);
+    write_u32_from_usize(this + league::COMPLETE, 0);
     let status_f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x94));
     status_f(this);
     let end: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x10));
     end(this, 0, 0);
-    write_u32_from_usize(this + 0xdd, 1);
+    write_u32_from_usize(this + league::COMPLETE, 1);
     0xffff_ffff
 }
 

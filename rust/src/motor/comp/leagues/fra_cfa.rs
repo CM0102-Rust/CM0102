@@ -294,26 +294,26 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_create_schedule_64ef30(this: usiz
 /// baixo (+0x20 = −1), os bits de regra 0x43 (+0xd9); por fim o calendário (a virtual +0x3c: push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, esi -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x3c) as *mut u16, 2);
-    *((this + 0xc4) as *mut u8) = 2;
+    core::ptr::write_unaligned((this + league::LEGS) as *mut u16, 2);
+    *((this + league::MATCH_CATEGORY) as *mut u8) = 2;
     *((this + 0xc7) as *mut u8) = 2;
-    *((this + 0xc2) as *mut u8) = 3; // cqn4: os pontos por vitória nas ligas de fundo francesas
-    *((this + 0xc3) as *mut u8) = 1;
-    *((this + 0x42) as *mut u8) = 1;
-    *((this + 0xc5) as *mut u8) = 4;
+    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqn4: os pontos por vitória nas ligas de fundo francesas
+    *((this + league::DRAW_POINTS) as *mut u8) = 1;
+    *((this + league::CLUB_SIDES) as *mut u8) = 1;
+    *((this + league::TIEBREAKS) as *mut u8) = 4;
     *((this + 0xc6) as *mut u8) = 1;
-    *((this + 0xbe) as *mut u8) = 0;
-    *((this + 0xbf) as *mut u8) = 0;
-    *((this + 0xc0) as *mut u8) = 0;
-    *((this + 0xc1) as *mut u8) = 0;
+    *((this + league::PROMOTED_COUNT) as *mut u8) = 0;
+    *((this + league::PROMOTION_PLAYOFF_COUNT) as *mut u8) = 0;
+    *((this + league::RELEGATION_PLAYOFF_COUNT) as *mut u8) = 0;
+    *((this + league::RELEGATED_COUNT) as *mut u8) = 0;
     // simplification: the original writes to +0x1c the id of [0x9cf624] (the same global the Spanish Segunda uses for the
     // Primera); fiel.
-    write_u32_from_usize(this + 0x1c, read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
-    write_u32_from_usize(this + 0x20, 0xffff_ffff);
-    core::ptr::write_unaligned((this + 0xd9) as *mut u16, 0x43); // cqn4: os bits de regra das ligas de fundo
+    write_u32_from_usize(this + league::UPPER_DIVISION_ID, read_u32_as_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION));
+    write_u32_from_usize(this + league::LOWER_DIVISION_ID, 0xffff_ffff);
+    core::ptr::write_unaligned((this + league::LEAGUE_FLAGS) as *mut u16, 0x43); // cqn4: os bits de regra das ligas de fundo
     let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
-    let g = calendario(this, 0xffff_ffff, this + 0xa9, this + 0x3a, 0);
-    write_u32_from_usize(this + 0xba, g);
+    let g = calendario(this, 0xffff_ffff, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
+    write_u32_from_usize(this + league::ROUND_DATES, g);
     1
 }
 

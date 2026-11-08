@@ -256,13 +256,13 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
 /// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x2ba; senão +0x30 sobe e, chegando a 3 (depois dos grupos), o mata-mata
 /// (0x402090: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize) {
-    let f = read_u32_as_usize(this + 0x30) as i32;
-    if f >= (read_u32_as_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let f = read_u32_as_usize(this + league::CURRENT_STAGE) as i32;
+    if f >= (read_u32_as_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         show_error_at(0x9870f8, 0x2ba);
         return;
     }
     let f = f + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, f);
     if f == 3 { // cqk12: o mata-mata da Copa Africana depois dos grupos
         crate::comparacao::ramo("cqk_12 mata-mata da copa africana");
         let knockout: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_AFRICANNATIONS_CREATE_KNOCKOUT_STAGE);
@@ -286,16 +286,16 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
     let teams = 4i16; // cqk12: os quatro do grupo A
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, teams);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, teams);
     let t = new(0xec);
-    core::ptr::write_unaligned((this + 0xb1) as *mut u32, t as u32);
+    core::ptr::write_unaligned((this + league::TABLE) as *mut u32, t as u32);
     if t == 0 {
         show_error_at(0x9870f8, 0x1f1);
         return 0;
     }
     crate::comparacao::ramo("cqk_12 grupo a da copa africana");
     let mut i = 0i8;
-    while (i as i16) < read_i16(this + 0x3e) {
+    while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         let national_team = read_u32_as_usize(read_u32_as_usize(this + 0xee).wrapping_add((i as isize * 4) as usize)); // cqk12: a seleção da linha
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, national_team, 0, 0);
@@ -315,7 +315,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
 /// [pt] { 0x401b90 } (thiscall, ret 0, african_nations.cpp; a virtual +0x30): `AfricanNations::record_season_honours()`: o
 /// histórico vem do mata-mata: salta para a virtual +0x30 da fase 3 ([+0xc] + 0xc; jmp, sem quadro).
 pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(this: usize) {
-    let stage = read_u32_as_usize(read_u32_as_usize(this + 0xc) + 0xc);
+    let stage = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + 0xc);
     let h: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(stage) + 0x30));
     h(stage);
 }

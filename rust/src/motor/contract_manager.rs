@@ -1929,12 +1929,12 @@ pub(crate) unsafe extern "C" fn compare_decision_dates(a: usize, b: usize) -> i3
 /// as ofertas de contrato (0x4ce4e0). O índice +0x18 sobe a cada entrada (relido depois da decisão).
 pub(crate) unsafe extern "thiscall" fn process_due_decision_dates(this: usize, data: usize, slice: u32) {
     let n = |c: usize| read_u32(c) as i32;
-    if n(this + 0x18) >= n(this + 0x14) {
+    if n(this + contract_manager_fields::DECISION_NEXT_INDEX) >= n(this + contract_manager_fields::DECISION_COUNT) {
         return;
     }
     let resolver: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_CONTRACT_MANAGER_RESOLVE_CONTRACT_OFFERS);
     loop {
-        let e = (read_u32(this + 0xc) as usize).wrapping_add((n(this + 0x18) as usize).wrapping_mul(14));
+        let e = (read_u32(this + contract_manager_fields::DECISION_DATES) as usize).wrapping_add((n(this + contract_manager_fields::DECISION_NEXT_INDEX) as usize).wrapping_mul(14));
         if call_date_compare(0x456740, e + 4, data) != 0 {
             return; // has not won yet
         }
@@ -1950,9 +1950,9 @@ pub(crate) unsafe extern "thiscall" fn process_due_decision_dates(this: usize, d
                 resolver(this, person); // the person decides the offers
             }
         }
-        let i = n(this + 0x18) + 1;
-        core::ptr::write_unaligned((this + 0x18) as *mut i32, i);
-        if i >= n(this + 0x14) {
+        let i = n(this + contract_manager_fields::DECISION_NEXT_INDEX) + 1;
+        core::ptr::write_unaligned((this + contract_manager_fields::DECISION_NEXT_INDEX) as *mut i32, i);
+        if i >= n(this + contract_manager_fields::DECISION_COUNT) {
             return;
         }
     }
@@ -1973,7 +1973,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_contract_offers(this: usize, 
     let mut n: i8 = 0;
     let mut cap: i8 = 0;
     let mut array: usize = 0;
-    let list = read_u32(this + 0x34) as usize;
+    let list = read_u32(this + contract_manager_fields::CONTRACT_OFFERS) as usize;
     if list != 0 {
         core::ptr::write_unaligned((list + 0xa) as *mut u32, read_u32(list + 2));
         let next: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_LLIST_GET_NEXT);
@@ -1985,7 +1985,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_contract_offers(this: usize, 
                 if cap == n {
                     cap = cap.wrapping_add(20);
                     array = realloc(array, (cap as i32 * 111) as u32);
-                    if read_u32(this + 0x34) == 0 {
+                    if read_u32(this + contract_manager_fields::CONTRACT_OFFERS) == 0 {
                         show_cannot_create_space_box(0x64c, 0x9a8220); // "cannot allocate memory"
                         core::ptr::write_unaligned(out as *mut u32, 0);
                         return 0;
@@ -1995,7 +1995,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_contract_offers(this: usize, 
                 core::ptr::copy(item as *const u8, array.wrapping_add((n as i32 * 111) as usize) as *mut u8, 111);
                 n = n.wrapping_add(1);
             }
-            item = next(read_u32(this + 0x34) as usize);
+            item = next(read_u32(this + contract_manager_fields::CONTRACT_OFFERS) as usize);
         }
     }
     core::ptr::write_unaligned(out as *mut u32, array as u32);
@@ -2728,7 +2728,7 @@ pub(crate) unsafe extern "thiscall" fn remove_contract(this: usize, person: usiz
 /// lista (0x68d1f0) e conta. O byte +0x61 vai empurrado no registrador inteiro (os bits de cima do que estava nele:
 /// o ponteiro lido ou −1). Devolve quantas.
 pub(crate) unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usize) -> u32 {
-    let list = read_usize(this + 0x38);
+    let list = read_usize(this + contract_manager_fields::HELD_OFFERS);
     if list == 0 {
         return 0;
     }
@@ -2737,7 +2737,7 @@ pub(crate) unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usi
     let remover: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LLIST_REMOVE);
     let reenviar: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_ADD_CONTRACT_OFFER);
     let mut n = 0u32;
-    let mut item = next(read_usize(this + 0x38));
+    let mut item = next(read_usize(this + contract_manager_fields::HELD_OFFERS));
     while item != 0 {
         if read_usize(item) == id {
             let t = read_usize(item + 0x59);
@@ -2758,10 +2758,10 @@ pub(crate) unsafe extern "thiscall" fn resubmit_held_offers(this: usize, id: usi
             } else {
                 reenviar(this, item, usize::MAX, usize::MAX, 0xffff_ff00 | byte, 1, 1, 0);
             }
-            remover(read_usize(this + 0x38), item);
+            remover(read_usize(this + contract_manager_fields::HELD_OFFERS), item);
             n += 1;
         }
-        item = next(read_usize(this + 0x38));
+        item = next(read_usize(this + contract_manager_fields::HELD_OFFERS));
     }
     n
 }
@@ -2932,10 +2932,10 @@ pub(crate) unsafe fn decision_reminder_dates(this: usize, person: usize, data: u
 /// As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 pub(crate) unsafe extern "thiscall" fn add_decision_date(this: usize, person: usize, data: usize, slice: u32, kind: u32) {
     crate::comparacao::ramo("cpl_4 data de decisao");
-    if read_usize(this + 0x14) as i32 > (read_usize(this + 0x10) as i32).wrapping_sub(4) {
-        let cap = read_usize(this + 0x10).wrapping_add(100);
-        write_usize(this + 0x10, cap);
-        let p = read_usize(this + 0xc);
+    if read_usize(this + contract_manager_fields::DECISION_COUNT) as i32 > (read_usize(this + contract_manager_fields::DECISION_CAPACITY) as i32).wrapping_sub(4) {
+        let cap = read_usize(this + contract_manager_fields::DECISION_CAPACITY).wrapping_add(100);
+        write_usize(this + contract_manager_fields::DECISION_CAPACITY, cap);
+        let p = read_usize(this + contract_manager_fields::DECISION_DATES);
         let q = if p != 0 {
             let realloc: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_CRT_REALLOC);
             realloc(p, cap.wrapping_mul(14) as u32)
@@ -2943,7 +2943,7 @@ pub(crate) unsafe extern "thiscall" fn add_decision_date(this: usize, person: us
             let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
             alloc(cap.wrapping_mul(14) as u32)
         };
-        write_usize(this + 0xc, q);
+        write_usize(this + contract_manager_fields::DECISION_DATES, q);
         if q == 0 {
             show_cannot_create_space_box(0x103e, 0x9a83e0);
             return;
@@ -2951,20 +2951,20 @@ pub(crate) unsafe extern "thiscall" fn add_decision_date(this: usize, person: us
     }
     let (lembretes, k) = decision_reminder_dates(this, person, data, kind as u8);
     for d in &lembretes[..k] {
-        let n = read_usize(this + 0x14);
-        let e = read_usize(this + 0xc).wrapping_add(n.wrapping_mul(14));
+        let n = read_usize(this + contract_manager_fields::DECISION_COUNT);
+        let e = read_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add(n.wrapping_mul(14));
         write_usize(e, read_usize(person));
         core::ptr::write_unaligned((e + 4) as *mut [u8; 8], *d);
         *((e + 0xd) as *mut u8) = 2;
-        write_usize(this + 0x14, n.wrapping_add(1));
+        write_usize(this + contract_manager_fields::DECISION_COUNT, n.wrapping_add(1));
     }
-    let n = read_usize(this + 0x14);
-    let e = read_usize(this + 0xc).wrapping_add(n.wrapping_mul(14));
+    let n = read_usize(this + contract_manager_fields::DECISION_COUNT);
+    let e = read_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add(n.wrapping_mul(14));
     write_usize(e, read_usize(person));
     *((e + 0xc) as *mut u8) = slice as u8;
     core::ptr::write_unaligned((e + 4) as *mut [u8; 8], core::ptr::read_unaligned(data as *const [u8; 8]));
     *((e + 0xd) as *mut u8) = kind as u8;
-    write_usize(this + 0x14, n.wrapping_add(1)); // the decision date
+    write_usize(this + contract_manager_fields::DECISION_COUNT, n.wrapping_add(1)); // the decision date
 }
 
 // simplification: all three reallocate (and 0x4c7950 generates the contract through 0x85e960); they do not run twice. The comparer builds
@@ -3053,7 +3053,7 @@ pub(crate) unsafe fn first_offer_for_staff_club(l: usize, p: usize, c: usize) ->
 /// sai da lista (0x68d1f0) e as pendentes da pessoa (+8 do registro de 79 bytes em [0xae2d0c]) descem uma.
 pub(crate) unsafe extern "thiscall" fn remove_contract_offer(this: usize, person: *const u32, clube: *const u32) {
     let (c, p) = (*clube as usize, *person as usize);
-    let l = read_usize(this + 0x34);
+    let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     if l == 0 {
         return;
     }
@@ -3123,7 +3123,7 @@ pub(crate) unsafe fn pending_offers_byte(id: usize) -> *mut u8 {
 /// a marca de contrato acertado (0x8c5430 sobre [0xde1f54]) e, do começo da lista, cada oferta da pessoa (0x68d1f0),
 /// descontando o byte, até ele zerar.
 pub(crate) unsafe extern "thiscall" fn remove_pending_offers_for_staff(this: usize, person: *const u32) {
-    let l = read_usize(this + 0x34);
+    let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     if l == 0 || *pending_offers_byte(*person as usize) == 0 {
         return;
     }
@@ -3174,7 +3174,7 @@ pub(crate) unsafe fn ability_above_club_reputation(offer: usize) -> u32 {
 /// sem decisão (+0x62) fica marcada (1) e a decisão da pessoa é agendada (0x4cd230 com a vaga +0x20). Devolve se a
 /// habilidade da pessoa / 500 passa a reputação do clube.
 pub(crate) unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usize, offer: usize) -> u32 {
-    let l = read_usize(this + 0x34);
+    let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
     let mut e = contract_manager_list_next(l);
     while e != 0 {
@@ -3200,7 +3200,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_decision_for_transfer(this: usiz
 /// ofertas guardadas (+0x38; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item cujo +0 é o id `pessoa`
 /// (0x68d1b0 percorre). Sem lista: nada.
 pub(crate) unsafe extern "thiscall" fn remove_held_offers(this: usize, person: u32) {
-    let l = read_usize(this + 0x38);
+    let l = read_usize(this + contract_manager_fields::HELD_OFFERS);
     if l == 0 {
         return;
     }
@@ -3448,9 +3448,9 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_operator(this: usize, so
         b(o); // the five bytes
     }
     d(0x21);
-    copy_record_date(this + 0x25, source + 0x25);
-    copy_record_date(this + 0x2d, source + 0x2d);
-    let m = (this + 0x35) as *mut u8;
+    copy_record_date(this + staff_contract::DATE_STARTED, source + 0x25);
+    copy_record_date(this + staff_contract::CONTRACT_EXPIRES, source + 0x2d);
+    let m = (this + staff_contract::CONTRACT_TYPE) as *mut u8;
     let s = read_u8(source + 0x35);
     let cl = ((((s << 2) as i8 >> 2) as u8 ^ *m) & 0x3f) ^ *m; // the low 6 bits
     *m = cl;
@@ -3470,7 +3470,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_operator(this: usize, so
     b(0x49);
     d(0x4a);
     b(0x4e);
-    let m = (this + 0x4f) as *mut u8;
+    let m = (this + staff_contract::SQUAD_STATUS) as *mut u8;
     let c = *m;
     let al = ((read_u8(source + 0x4f) ^ c) & 0xf) ^ c; // o nibble baixo
     *m = al;
@@ -3559,12 +3559,12 @@ pub(crate) unsafe extern "stdcall" fn contract_manager_raise_match_morale(person
 /// quando dados, do clube (+4) e do técnico (+8) recebe por cima o último (5 duplas e um byte), a contagem desce e o
 /// mesmo lugar é visto de novo. Sobrando algum, reordena (qsort 0x945333 com 0x4dc970).
 pub(crate) unsafe extern "thiscall" fn remove_talks_records(this: usize, person: usize, manager: usize, clube: usize) {
-    let n = (this + 0x2c) as *mut i32;
+    let n = (this + contract_manager_fields::TALKS_COUNT) as *mut i32;
     let mut i = 0i32;
     let mut off = 0usize;
     if *n > 0 {
         loop {
-            let base = read_u32(this + 0x28) as usize;
+            let base = read_u32(this + contract_manager_fields::TALKS_RECORDS) as usize;
             let r = base.wrapping_add(off);
             let home = read_u32(r) == read_u32(person)
                 && (clube == 0 || read_u32(r + 4) == read_u32(clube)) // o clube
@@ -3585,7 +3585,7 @@ pub(crate) unsafe extern "thiscall" fn remove_talks_records(this: usize, person:
     }
     if *n != 0 {
         let qsort: unsafe extern "C" fn(usize, i32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-        qsort(read_u32(this + 0x28) as usize, *n, 0x15, 0x4dc970);
+        qsort(read_u32(this + contract_manager_fields::TALKS_RECORDS) as usize, *n, 0x15, 0x4dc970);
     }
 }
 
@@ -3732,8 +3732,8 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
         injury_date_add_days(G_CURRENT_DATE, (sortear(5) + 1) as u32, &mut d); // cpr10: a decisão em 1 a 5 dias
         let append: unsafe extern "thiscall" fn(usize, usize, *const u8, u32, u32) = core::mem::transmute(FN_CONTRACT_MANAGER_ADD_DECISION_DATE);
         append(this, person, d.as_ptr(), 2, 3);
-        let n = read_u32_as_usize(this + 0x14);
-        e = read_u32_as_usize(this + 0xc).wrapping_add(n.wrapping_sub(1).wrapping_mul(14));
+        let n = read_u32_as_usize(this + contract_manager_fields::DECISION_COUNT);
+        e = read_u32_as_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add(n.wrapping_sub(1).wrapping_mul(14));
     }
     let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let data = e + 4;
@@ -3791,7 +3791,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
     if ta < ma || (ta == ma && td < read_i16(m)) {
         set_today_plus_days(data, 0xe);
     }
-    core::ptr::write_unaligned((this + 0x1c) as *mut u32, read_u32_as_usize(this + 0x1c).wrapping_add(1) as u32);
+    core::ptr::write_unaligned((this + contract_manager_fields::DECISIONS_ADDED) as *mut u32, read_u32_as_usize(this + contract_manager_fields::DECISIONS_ADDED).wrapping_add(1) as u32);
 }
 
 

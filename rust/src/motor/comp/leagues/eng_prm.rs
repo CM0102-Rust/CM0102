@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
                 return 0;
             }
             crate::comparacao::ramo("cqp_5 calendario da premiership");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_first_set_christmas_rounds(t, year, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t
         }

@@ -189,13 +189,13 @@ pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u
 /// que caíram da primeira ([0x9cf5cc]), 1.500.000 aos que ficaram ([0x9cf5d0]) e 1.500.000 aos que subiram do
 /// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
 pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x14);
     if fra_first_fill_league_table(this, 0x9ccc0c, 0x171, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION) != Some(true) {
         return 0;
     }
     crate::comparacao::ramo("cqj_6 tabela da segunda");
-    core::ptr::write_unaligned((this + 0x28) as *mut i32, 0);
-    *((this + 0xe1) as *mut u8) = 2;
+    core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, 0);
+    *((this + league::PRIZE_MODE) as *mut u8) = 2;
     eng_prm_pay_tv_rights(this, 0x1e8480, comp_record_of(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION)); // cqj6: a TV de quem caiu da primeira
     eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_SECOND_DIVISION));
     eng_prm_pay_tv_rights(this, 0x16e360, comp_record_of(KEY_CLUB_COMP_FRENCH_NATIONAL));

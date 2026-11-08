@@ -77,8 +77,8 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqj_12 regras da europa");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
-    *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
-    *((this + 0xc4) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
+    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias europeias
+    *((this + league::MATCH_CATEGORY) as *mut u8) = 0xa; // cqj12: a categoria dos jogos das eliminatórias europeias
     let day = 0x19; // cqj12: o dia do começo das eliminatórias europeias
     let word = comp_date_word(this, day, 2, 5);
     finish_rules_setup(this, word, 0)
@@ -110,8 +110,8 @@ pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules_921040(this
     }
     crate::comparacao::ramo("cqj_12 regras da america do sul");
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
-    *((this + 0xc2) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
-    *((this + 0xbe) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
+    *((this + league::WIN_POINTS) as *mut u8) = 3; // cqj12: a vitória nas eliminatórias sul-americanas
+    *((this + league::PROMOTED_COUNT) as *mut u8) = 4u8.wrapping_sub(*((this + 0xef) as *const u8)).wrapping_sub(*((this + 0xee) as *const u8)); // cqj12: as vagas diretas da América do Sul
     let day = 0x19; // cqj12: o dia do começo da eliminatória sul-americana
     let word = comp_date_word(this, day, 0, 5);
     finish_rules_setup(this, word, 0)

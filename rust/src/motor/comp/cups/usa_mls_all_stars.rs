@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
         return 0;
     }
     crate::comparacao::ramo("cqm_12 tabela do jogo das estrelas");
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
     let sorteio: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_DRAW_DATE);
     let jogo: unsafe extern "C" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_CUP_SET_ROUND_MATCH_DATE);
     sorteio(t, 0, 0xf, 5, 0, 5, year);

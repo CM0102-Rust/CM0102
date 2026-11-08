@@ -43,7 +43,14 @@ português e no formato antigo; depois de integrá-la (e antes de publicar), pas
 5. `cabecalhos.py --gravar` (pelo ROTINAS) ou `aplicar_cabecalhos.py` (resumos propostos): o cabeçalho bilíngue;
 6. `nomear_chaves.py`, `nomear_globais.py`, `nomear_campos.py`, `arrumar_rodada4.py --fase a` e `--fase b`,
    `anotar_constantes.py`: chaves, globais, campos, tamanhos e constantes com nome ou valor;
-7. `legibilidade.py`: o placar (docs/LEGIBILIDADE.md) não pode piorar.
+7. `nomear_funcoes_chamadas.py` (endereços passados a `chamar`/`call_thiscall*`), `aplicar_campos_classes.py` (campos de
+   `this` pela classe do `Original:`; tabelas propostas por leitura), `traduzir_locais.py --gravar` (locais e parâmetros,
+   palavra por palavra), `aplicar_comentarios.py` (comentários do corpo em inglês) e `separar_comparadores.py --gravar`
+   (os comparadores novos para `motor/compare/`);
+8. `legibilidade.py`: o placar (docs/LEGIBILIDADE.md) não pode piorar.
+
+Troca que depende do texto depois de `//` (comentários) vai às listas de mutação trecho por trecho
+(`trocar_nas_mutacoes.aplicar_por_trecho`), nunca linha a linha do arquivo Python.
 
 Melhor ainda: escrever o item já no formato novo (docs/COMO_ESCREVER_UM_ITEM.md). Cada passo regrava as listas de
 mutação com as mesmas trocas; confira as âncoras depois (`fila.py checar` e as listas das levas recentes).

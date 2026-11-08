@@ -20,12 +20,12 @@ pub(crate) unsafe fn aus_nsl_table_row_club(t: usize, i: usize) -> usize {
 /// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
 /// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
-    let stage = read_usize(this + 0x30) as i32;
-    if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
+    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(0x987c20, 0x2f0);
     }
     let stage = stage + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 0 {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_AUSNSL_CREATE_FINALS_SERIES_STAGE);
         f(this);
@@ -69,22 +69,22 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     let t = table(this, 0, &mut rodadas, &mut extra, 0);
     let p = new(0xee);
     let stage = if p != 0 {
-        construct(p, this, 6, clubs.as_ptr(), 1, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + 0xc2) as u32,
-                  read_u8(this + 0xc3) as u32, read_u8(this + 0xc4) as u32, this + 0xc5, slots.as_ptr(), read_i16(this + 0x40) as u16 as u32, 0,
-                  extra as u16 as u32, read_u8(this + 0x51) as u32, 1, 0, read_i16(this + 0xd9) as u16 as u32, -1, 0, 2)
+        construct(p, this, 6, clubs.as_ptr(), 1, read_usize(this + 4), t, rodadas as u16 as u32, read_u8(this + league::WIN_POINTS) as u32,
+                  read_u8(this + league::DRAW_POINTS) as u32, read_u8(this + league::MATCH_CATEGORY) as u32, this + league::TIEBREAKS, slots.as_ptr(), read_i16(this + league::YEAR) as u16 as u32, 0,
+                  extra as u16 as u32, read_u8(this + league::IMPORTANCE) as u32, 1, 0, read_i16(this + league::LEAGUE_FLAGS) as u16 as u32, -1, 0, 2)
     } else {
         0
     };
-    core::ptr::write_unaligned(read_usize(this + 0xc) as *mut usize, stage);
+    core::ptr::write_unaligned(read_usize(this + league::STAGES) as *mut usize, stage);
     soltar(t);
-    let stage = read_usize(read_usize(this + 0xc));
+    let stage = read_usize(read_usize(this + league::STAGES));
     if stage == 0 {
         show_error_at(0x987c20, 0x328);
         return 0;
     }
     crate::comparacao::ramo("cqr_3 serie final");
     noticia(stage);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 0);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 0);
     1
 }
 
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     if list == 0 {
         return show_error_at(0x987c20, 0x348);
     }
-    let serie = read_usize(read_usize(this + 0xc));
+    let serie = read_usize(read_usize(this + league::STAGES));
     core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(serie, 0)); // cqr3: o primeiro da série final
     core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(serie, 1)); // cqr3: o segundo da série final
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -121,14 +121,14 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let t = table(this, 1, &mut rodadas, &mut extra, 0);
     let p = new(0xb2);
     let stage = if p != 0 {
-        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 1, 1,
+        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 1, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 4) as *mut usize, stage);
+    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 4) as *mut usize, stage);
     soltar(t);
-    let stage = read_usize(read_usize(this + 0xc) + 4);
+    let stage = read_usize(read_usize(this + league::STAGES) + 4);
     if stage == 0 {
         return show_error_at(0x987c20, 0x35c);
     }
@@ -206,7 +206,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
     crate::comparacao::ramo("cqj_8 regras da nsl");
     let vt = *(this as *const usize);
     let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
-    let r = f(this, -1, this + 0xa9, this + 0x3a, 0);
+    let r = f(this, -1, this + league::ROUND_COUNT, this + league::STAGE_ID, 0);
     write_u32_at(this, 0xba, r as u32);
     1
 }
@@ -269,17 +269,17 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
     let mut i: i16 = 0;
     let mut clube = read_usize(G_CLUB_TABLE);
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
-        if (k as i16) >= read_i16(this + 0x3e) {
+        if (k as i16) >= read_i16(this + league::CLUB_COUNT) {
             break;
         }
         if is_in_division(clube, KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) {
-            jap_j1_init_table_row(this, k as u8, read_i16(this + 0x3e), 0, clube); // cqm9: a linha da NSL
+            jap_j1_init_table_row(this, k as u8, read_i16(this + league::CLUB_COUNT), 0, clube); // cqm9: a linha da NSL
             k = k.wrapping_add(1);
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i16 != read_i16(this + 0x3e) {
+    if k as i16 != read_i16(this + league::CLUB_COUNT) {
         show_error_at(0x987c20, 0x252);
         return 0;
     }

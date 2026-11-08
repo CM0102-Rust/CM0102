@@ -16,7 +16,7 @@ MUTACOES = [
     ('cpi_suspensao_nacao', 'm != 0 && read_usize(m) as i32 == x // the nation’s +0x71', 'm != 0 // mutacao: sem conferir'),
     ('cpi_vaga_15', '15 => Some((job & !0xff) | 8), // o 15 procura 8', '15 => Some((job & !0xff) | 6), // mutacao: procura 6'),
     ('cpi_noticia_recusa', 'break; // a entrega recusada encerra', 'continue; // mutacao: segue'),
-    ('cpi_missao_comp', '|| read_usize(this + 0x195) as i32 > -1 // the competition', '// mutacao: sem a competicao'),
+    ('cpi_missao_comp', '|| read_usize(this + player_search_fields::ASSIGNED_COMP) as i32 > -1 // the competition', '// mutacao: sem a competicao'),
     ('cpi_copa_fase', 'return 0; // an incomplete stage', '{} // mutacao: aceita a incompleta'),
     ('cpj_mais_velho_data', 'init_default_date(this + 0x18); // the date of the oldest', 'init_default_date(this + 0x17); // mutacao: a data um byte antes'),
     ('cpj_permissao_marca', 'return 0; // without the permission flag', '// mutacao: sem conferir a marca'),

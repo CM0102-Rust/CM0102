@@ -72,13 +72,13 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     let mut n = 0i16;
     for k in 0..16usize {
         let e = ent(n as i32);
-        write_u32_from_usize(e, read_u32_as_usize(read_u32_as_usize(this + 0x14) + k * 6));
+        write_u32_from_usize(e, read_u32_as_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + k * 6));
         write_u32_from_usize(e + 4, 0);
         n += 1;
     }
     let mut k = 0i32;
-    while k < read_i16(this + 0x3e) as i32 {
-        let t = read_u32_as_usize(this + 0xa7) + k as usize * 6;
+    while k < read_i16(this + cup::TEAM_COUNT) as i32 {
+        let t = read_u32_as_usize(this + cup::TEAM_TABLE) + k as usize * 6;
         if read_u8(t + 5) == 1 {
             let e = ent(n as i32);
             write_u32_from_usize(e, read_u32_as_usize(t));
@@ -89,9 +89,9 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     }
     if n < 0x20 {
         show_error_at(0x9c4900, 0x4ee);
-        write_u32_from_usize(this + 0x30, usize::MAX);
+        write_u32_from_usize(this + cup::CURRENT_STAGE, usize::MAX);
         soltar(list);
-        write_u8(this + 0xb1, 0);
+        write_u8(this + cup::RUN_BY_STAGES, 0);
         return;
     }
     sort(list, 0x20, 9, 0x586f60);
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
                 8,
                 rules.as_ptr(),
                 rules_b.as_ptr(),
-                read_i16(this + 0x40) as u16 as u32,
+                read_i16(this + cup::YEAR) as u16 as u32,
                 g as u32,
                 id as u16 as u32,
                 0xf,
@@ -249,14 +249,14 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
         } else {
             0
         };
-        write_u32_from_usize(read_u32_as_usize(this + 0xc) + g as usize * 4, stage);
-        if read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4) == 0 {
+        write_u32_from_usize(read_u32_as_usize(this + cup::STAGES) + g as usize * 4, stage);
+        if read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + g as usize * 4) == 0 {
             show_error_at(0x9c4900, 0x5c9);
             return;
         }
         soltar(table);
-        write_u32_from_usize(this + 0x30, g as usize);
-        news_of_group(read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4));
+        write_u32_from_usize(this + cup::CURRENT_STAGE, g as usize);
+        news_of_group(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + g as usize * 4));
     }
     soltar(groups);
     let uefa = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP) * 4);
@@ -266,8 +266,8 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     }
     let mut target = ((read_i16(uefa + 0x3e) as i32 - 0x18) * 6) as usize;
     let mut k = 0i32;
-    while k < read_i16(this + 0x3e) as i32 {
-        let t = read_u32_as_usize(this + 0xa7) + k as usize * 6;
+    while k < read_i16(this + cup::TEAM_COUNT) as i32 {
+        let t = read_u32_as_usize(this + cup::TEAM_TABLE) + k as usize * 6;
         if read_u8(t + 5) == 2 {
             let e = read_u32_as_usize(uefa + 0xa7).wrapping_add(target);
             target = target.wrapping_add(6);
@@ -406,17 +406,17 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
         show_error_at(0x9c4900, 0x81b);
         return;
     }
-    let v = alloc(((read_i16(this + 0x36) as i32) << 2) as u32);
+    let v = alloc(((read_i16(this + cup::ENTRANT_COUNT) as i32) << 2) as u32);
     if v == 0 {
         show_error_at(0x9c4900, 0x823);
         return;
     }
     let mut i = 0i16;
-    while i < read_i16(this + 0x36) {
-        core::ptr::write_unaligned((v + i as usize * 4) as *mut u32, read_u32_as_usize(read_u32_as_usize(this + 0x14) + i as usize * 6) as u32);
+    while i < read_i16(this + cup::ENTRANT_COUNT) {
+        core::ptr::write_unaligned((v + i as usize * 4) as *mut u32, read_u32_as_usize(read_u32_as_usize(this + cup::ENTRANT_BOOK) + i as usize * 6) as u32);
         i += 1;
     }
-    sort(v, read_i16(this + 0x36) as i32);
+    sort(v, read_i16(this + cup::ENTRANT_COUNT) as i32);
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
     let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     }
     let e7 = |l: usize, i: i32| l.wrapping_add((i * 7) as usize);
     for b in 0..8i32 {
-        let stage = || read_u32_as_usize(read_u32_as_usize(this + 0xc) + b as usize * 4);
+        let stage = || read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + b as usize * 4);
         let e = e7(w, 2 * b);
         write_u32_from_usize(e, read_u32_as_usize(row(stage(), 0)));
         write_u8(e + 6, 0);
@@ -526,7 +526,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     }
     sort(w, 0x10, 7, 0x5871e0);
     for i in 0..16 {
-        let body = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + 0x50) as i8 as i32 * 4) as usize));
+        let body = read_u32_as_usize(read_u32_as_usize(read_u32_as_usize(G_DISCIPLINE)).wrapping_add((read_u8(this + cup::DISCIPLINE_INDEX) as i8 as i32 * 4) as usize));
         cards(body, read_u32_as_usize(e7(w, i)));
     }
     let r = zerada(0x10, 7);
@@ -651,7 +651,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
                 8,
                 rules.as_ptr(),
                 rules_b.as_ptr(),
-                read_i16(this + 0x40) as u16 as u32,
+                read_i16(this + cup::YEAR) as u16 as u32,
                 (h + 8) as u32,
                 id as u16 as u32,
                 0xf,
@@ -665,15 +665,15 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         } else {
             0
         };
-        let slot = read_u32_as_usize(this + 0xc) + (h + 8) as usize * 4;
+        let slot = read_u32_as_usize(this + cup::STAGES) + (h + 8) as usize * 4;
         write_u32_from_usize(slot, stage);
-        if read_u32_as_usize(read_u32_as_usize(this + 0xc) + (h + 8) as usize * 4) == 0 {
+        if read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + (h + 8) as usize * 4) == 0 {
             show_error_at(0x9c4900, 0x715);
             return;
         }
         soltar(table);
-        write_u32_from_usize(this + 0x30, (h + 8) as usize);
-        news_of_group(read_u32_as_usize(read_u32_as_usize(this + 0xc) + (h + 8) as usize * 4));
+        write_u32_from_usize(this + cup::CURRENT_STAGE, (h + 8) as usize);
+        news_of_group(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + (h + 8) as usize * 4));
     }
     soltar(w);
     soltar(g);
@@ -688,7 +688,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
     for b in 0..8usize {
         let e = read_u32_as_usize(uefa + 0xa7).wrapping_add(target);
         target = target.wrapping_sub(6);
-        let terceiro = read_u32_as_usize(row(read_u32_as_usize(read_u32_as_usize(this + 0xc) + b * 4), 2));
+        let terceiro = read_u32_as_usize(row(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + b * 4), 2));
         write_u8(e + 4, 0);
         write_u32_from_usize(e, terceiro);
         write_u8(e + 5, 0);
@@ -698,7 +698,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         write_u8(read_u32_as_usize(uefa + 0x14) + (n * 6) as usize + 4, 5);
         write_u16(uefa + 0x36, (read_i16(uefa + 0x36) as u16).wrapping_add(1));
         write_u32_from_usize(read_u32_as_usize(e) + 0x1db, read_u32_as_usize(KEY_CLUB_COMP_UEFA_CUP));
-        let quarto = read_u32_as_usize(row(read_u32_as_usize(read_u32_as_usize(this + 0xc) + b * 4), 3));
+        let quarto = read_u32_as_usize(row(read_u32_as_usize(read_u32_as_usize(this + cup::STAGES) + b * 4), 3));
         write_u32_from_usize(quarto + 0x1db, usize::MAX);
     }
     let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(uefa) + 0x5c));
@@ -815,9 +815,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 let r = read_i16(jogo + 0x34);
                 if r == 0 {
                     let weight = scale_by_round(1, 0x14, 0, 2);
-                    let round = read_i16(read_usize(this + 0xa3) + 0x6f) as u16 as u32;
+                    let round = read_i16(read_usize(this + cup::ROUND_TABLE) + 0x6f) as u16 as u32;
                     // simplification: the stage +0x3a goes in a register with garbage in the high 16 bits; 0x86bdd0 only uses the word.
-                    european_cup_add_qualified_record(clube, comp, read_i16(this + 0x3a) as u16 as u32, round, weight);
+                    european_cup_add_qualified_record(clube, comp, read_i16(this + cup::STAGE_LABEL) as u16 as u32, round, weight);
                 } else {
                     let weight = scale_by_round(1, 0x14, r, 2);
                     european_cup_add_qualified_record(clube, comp, 0x41c, 0, weight);
@@ -862,11 +862,11 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
             }
             0 => {
                 let weight = scale_by_round(0x4b, 0x64, read_i16(jogo + 0x34), 2);
-                let knockout = read_usize(read_usize(this + 0xc) + 0x30);
+                let knockout = read_usize(read_usize(this + cup::STAGES) + 0x30);
                 let rounds = read_usize(knockout + 0xa3);
                 let r = read_i16(jogo + 0x34) as i32;
                 // the upper bits of the register the original pushes are those of the stages pointer (+0xc)
-                let round = (read_usize(this + 0xc) as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + 0x6f) as u16 as u32;
+                let round = (read_usize(this + cup::STAGES) as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + 0x6f) as u16 as u32;
                 european_cup_add_qualified_record(clube, comp, 0, round, weight);
             }
             0xff => {
@@ -941,7 +941,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     }
     let tv: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_RULINGBODY_RESET_BOOKINGS_FOR_CLUB);
     for k in 0..8 {
-        let obj = read_usize(read_usize(read_usize(G_DISCIPLINE)) + 4 * (read_u8(this + 0x50) as i8 as i32 as usize));
+        let obj = read_usize(read_usize(read_usize(G_DISCIPLINE)) + 4 * (read_u8(this + cup::DISCIPLINE_INDEX) as i8 as i32 as usize));
         tv(obj, read_usize(list + 4 * k));
     }
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
@@ -954,15 +954,15 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let stage = if p != 0 {
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 8, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 0xc, 2, extra as u16 as u32, 0x14, 1, 0, 0, 0)
+        construct(p, this, 8, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + cup::YEAR) as u16 as u32, 0xc, 2, extra as u16 as u32, 0x14, 1, 0, 0, 0)
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 0x30) as *mut usize, stage);
+    core::ptr::write_unaligned((read_usize(this + cup::STAGES) + 0x30) as *mut usize, stage);
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     free(list);
     free(t);
-    let stage = read_usize(read_usize(this + 0xc) + 0x30);
+    let stage = read_usize(read_usize(this + cup::STAGES) + 0x30);
     if stage == 0 {
         return show_error_at(0x9c4900, 0x78a);
     }
@@ -972,7 +972,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     }
     let build: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(FN_CUP_SET_UP_ROUND);
     build(stage, 0);
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, 0xc);
+    core::ptr::write_unaligned((this + cup::CURRENT_STAGE) as *mut i32, 0xc);
 }
 
 // simplification: the draw rolls, 0x7e9180 and the constructor allocate and the round creates the matches: original only. The plan,
@@ -1013,7 +1013,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usiz
     let (linha, sem_7) = match t {
         1 => (0x7b5, true),
         2 => (0x7cf, false),
-        3 if core::ptr::read_unaligned((this + 0x30) as *const i32) == 0xb => (0x7e9, false),
+        3 if core::ptr::read_unaligned((this + cup::CURRENT_STAGE) as *const i32) == 0xb => (0x7e9, false),
         _ => {
             let base: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_COMP_COLLECT_CLUB_LIST);
             return base(this, out, 0);
@@ -1126,21 +1126,21 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
 /// 0x9452ca) e aloca 6 × 71 bytes (0x944e46; sem memória: a caixa da linha 0x44e e 0, com +0x14 nulo); preenche as
 /// quatro bandas (fill_champions_league_entrants). Sem as 71 entradas: +0x36 = 0 e 0; senão 1.
 pub(crate) unsafe extern "thiscall" fn european_cup_collect_entrants(this: usize) -> u32 {
-    *((this + 0x36) as *mut i16) = 0x47;
-    *((this + 0x38) as *mut i16) = 0x47;
-    let velha = read_usize(this + 0x14);
+    *((this + cup::ENTRANT_COUNT) as *mut i16) = 0x47;
+    *((this + cup::ENTRANT_CAPACITY) as *mut i16) = 0x47;
+    let velha = read_usize(this + cup::ENTRANT_BOOK);
     if velha != 0 {
         let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
         free(velha);
     }
-    let t = european_cup_malloc((read_i16(this + 0x36) as i32).wrapping_mul(6) as u32);
-    core::ptr::write_unaligned((this + 0x14) as *mut usize, t);
+    let t = european_cup_malloc((read_i16(this + cup::ENTRANT_COUNT) as i32).wrapping_mul(6) as u32);
+    core::ptr::write_unaligned((this + cup::ENTRANT_BOOK) as *mut usize, t);
     if t == 0 {
         show_error_at(0x9c4900, 0x44e);
         return 0;
     }
-    if fill_champions_league_entrants(t) != read_i16(this + 0x36) as i32 {
-        *((this + 0x36) as *mut i16) = 0;
+    if fill_champions_league_entrants(t) != read_i16(this + cup::ENTRANT_COUNT) as i32 {
+        *((this + cup::ENTRANT_COUNT) as *mut i16) = 0;
         return 0;
     }
     1
@@ -1182,9 +1182,9 @@ pub(crate) unsafe fn fill_qualifying_table(this: usize, t: usize) {
 /// 0x584fa0 (0x58388f, 0x584e9a). +0x3e = 55; aloca 6 × 55 bytes em +0xa7 (sem memória: a caixa da linha 0x2f6 e −1)
 /// e monta as linhas da qualificação de trás para a frente (fill_qualifying_table); devolve 1.
 pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize) -> i32 {
-    *((this + 0x3e) as *mut i16) = 0x37;
+    *((this + cup::TEAM_COUNT) as *mut i16) = 0x37;
     let t = european_cup_malloc(0x14a);
-    core::ptr::write_unaligned((this + 0xa7) as *mut usize, t);
+    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(0x9c4900, 0x2f6);
         return -1;
@@ -1203,12 +1203,12 @@ pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize)
 /// 0, o sorteio dos grupos da fase 1 (0x585290, thiscall(this)); na 8, os da fase 2 (0x585ab0, thiscall(this, 0),
 /// ret 4); na 12, as quartas (0x586330, thiscall(this)). Quem chama não lê a devolução.
 pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
-    let f = read_i32(this + 0x30);
-    if f >= read_i32(this + 0x2c).wrapping_sub(1) {
+    let f = read_i32(this + cup::CURRENT_STAGE);
+    if f >= read_i32(this + cup::STAGE_COUNT).wrapping_sub(1) {
         return show_error_at(0x9c4900, 0x495);
     }
     let f = f.wrapping_add(1);
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, f);
+    core::ptr::write_unaligned((this + cup::CURRENT_STAGE) as *mut i32, f);
     crate::comparacao::ramo("cpy_5 fase seguinte");
     match f {
         0 => {
@@ -1422,7 +1422,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usi
         show_error_at(0x9c4900, if f < 8 { 0x17a } else { 0x1aa });
         return 0;
     }
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as u16 as u32;
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as u16 as u32;
     let half = if f < 8 {
         if f < 4 { 0 } else { 1 }
     } else {

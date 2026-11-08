@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn fra_third_set_up_rules(this: usize) -> u3
 /// [pt] { 0x5c05d0 } (thiscall, ret 0, fra_third.cpp): `FraThird::create_table()`: 20 clubes ([0x9cf5d4]); cheia, o fundo
 /// pela cota de 20.000 e a TV de 200.000 a cada clube; 1. Fonte 0x9ccc80, linha 0x15d.
 pub(crate) unsafe extern "thiscall" fn fra_third_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x14);
     if fra_first_fill_league_table(this, 0x9ccc80, 0x15d, KEY_CLUB_COMP_FRENCH_NATIONAL) != Some(true) {
         return 0;
     }

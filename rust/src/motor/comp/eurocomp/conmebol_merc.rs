@@ -44,14 +44,14 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
     data(junho.as_mut_ptr(), 1, 5, year_of_today as u32, -1);
     if core::ptr::read_unaligned(junho.as_ptr().add(2) as *const u16) == year_of_today
         && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16)
-        && read_i16(this + 0x40) as i32 != year_of_today as i32
+        && read_i16(this + league::YEAR) as i32 != year_of_today as i32
     {
         let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 8));
         virada(this);
     }
-    if read_u32_as_usize(this + 0x45) == 0 && full != 0 {
+    if read_u32_as_usize(this + league::ACTIVE) == 0 && full != 0 {
         let day = read_i16(this + 0xb6) as u16; // cqr11: o dia do sorteio
-        let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
+        let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparacao::ramo("cqr_11 sorteio da mercosul");
             clubs(this);
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             predicted(this);
             soltar(read_u32_as_usize(this + 0xee));
             write_u32_from_usize(this + 0xee, 0);
-            write_u32_from_usize(this + 0x45, 1);
+            write_u32_from_usize(this + league::ACTIVE, 1);
         }
     }
     league(this, today, full)
@@ -105,15 +105,15 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
-    write_u32_from_usize(this + 0xb1, t);
+    write_u32_from_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0x9a7e5c, 0x155);
         return 0;
     }
     let mut i = 0i8;
-    while (i as i16) < read_i16(this + 0x3e) {
+    while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         crate::comparacao::ramo("cqr_11 linha do primeiro grupo");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-    let teams = alloc(((read_i16(this + 0x3e) as i32) << 2) as u32);
+    let teams = alloc(((read_i16(this + league::CLUB_COUNT) as i32) << 2) as u32);
     if teams == 0 {
         show_error_at(0x9a7e5c, 0x1fb);
         return 0;
@@ -168,24 +168,24 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
         construct(
             p,
             this,
-            read_i16(this + 0x3e) as u16 as u32,
+            read_i16(this + league::CLUB_COUNT) as u16 as u32,
             teams,
-            read_i16(this + 0x3c) as u16 as u32,
+            read_i16(this + league::LEGS) as u16 as u32,
             read_u32_as_usize(this + 4),
             table,
             rodadas as u16 as u32,
             b(0xc2),
             b(0xc3),
             b(0xc4),
-            this + 0xc5,
-            this + 0xbe,
-            read_i16(this + 0x40) as u16 as u32,
+            this + league::TIEBREAKS,
+            this + league::PROMOTED_COUNT,
+            read_i16(this + league::YEAR) as u16 as u32,
             g as u32,
             id as u16 as u32,
             b(0x51),
             2,
             0,
-            read_i16(this + 0xd9) as u16 as u32,
+            read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,
             -1,
             0,
             2,
@@ -193,16 +193,16 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc) + g as usize * 4, stage);
+    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4, stage);
     soltar(teams);
     soltar(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4);
     if f == 0 {
         show_error_at(0x9a7e5c, 0x211);
         return 0;
     }
     noticia(f);
-    write_u32_from_usize(this + 0x30, g as usize);
+    write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
     1
 }
 

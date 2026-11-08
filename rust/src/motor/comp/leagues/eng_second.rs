@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 return 0;
             }
             crate::comparacao::ramo("cqp_4 calendario da segunda inglesa");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_second_set_christmas_rounds(t, year, &DIVISION_TWO_CHRISTMAS, 0x9c43e8);
             t
         }
@@ -314,7 +314,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 return 0;
             }
             crate::comparacao::ramo("cqp_4 play-offs da segunda inglesa");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_TWO_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &SECOND_DIVISION_PLAYOFF_1, year);
             t
@@ -346,7 +346,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule_5770e0(this: u
                 return 0;
             }
             crate::comparacao::ramo("cqp_4 calendario da terceira inglesa");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             eng_second_set_christmas_rounds(t, year, &THIRD_DIVISION_CHRISTMAS_SCHEDULE, 0x9c4424);
             t
         }
@@ -362,7 +362,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule_5770e0(this: u
                 return 0;
             }
             crate::comparacao::ramo("cqp_4 play-offs da terceira inglesa");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const i16) as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &THIRD_DIVISION_PLAYOFF_SEMIFINAL, year);
             eng_cc_cup_write_cup_round(t, 1, &DIVISION_THREE_PLAYOFF_1, year);
             t
@@ -423,15 +423,15 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
         return 0;
     }
     let mut i: i32 = 0;
-    while i < *((this + 0x3e) as *const i16) as i32 {
-        let row = read_usize(this + 0xb1) + (i as usize) * 0x3b;
+    while i < *((this + league::CLUB_COUNT) as *const i16) as i32 {
+        let row = read_usize(this + league::TABLE) + (i as usize) * 0x3b;
         if read_usize(row) == clube {
             match s {
                 1 => {
                     crate::comparacao::ramo("cpz_2 venceu o mata-mata");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), clube, comp, 0x32);
-                    *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
+                    *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                     *(saiu as *mut u8) = 1;
                     return 0;
                 }
@@ -440,7 +440,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     slot(eng_second_staff_records(), clube, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
-                    *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                    *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                     return 0;
                 }
                 _ => {}

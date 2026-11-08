@@ -251,7 +251,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
                 return 0;
             }
             crate::comparacao::ramo("cqq_4 calendario da segunda espanhola");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 spa_second_set_league_rounds(t, year, 0, &SEGUNDA_ODD_ALL_ROUNDS);
             } else {
@@ -303,9 +303,9 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let iniciar: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let premios: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x16);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x16);
     let t = alloc(0x512);
-    write_u32_from_usize(this + 0xb1, t);
+    write_u32_from_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0xa828bc, 0x298);
         return 0;
@@ -320,22 +320,22 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
             iniciar(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparacao::ramo("cqm_6 time b na segunda");
-                *((read_u32_as_usize(this + 0xb1) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
+                *((read_u32_as_usize(this + league::TABLE) + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
             }
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
         i = i.wrapping_add(1);
     }
     crate::comparacao::ramo("cqm_6 tabela da segunda");
-    if k as i8 as i16 != read_i16(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
     let f = premios(this, 0xc350);
-    write_u32_from_usize(this + 0x28, f as usize);
-    *((this + 0xe1) as *mut u8) = 1;
+    write_u32_from_usize(this + league::PRIZE_FUND, f as usize);
+    *((this + league::PRIZE_MODE) as *mut u8) = 1;
     1
 }
 

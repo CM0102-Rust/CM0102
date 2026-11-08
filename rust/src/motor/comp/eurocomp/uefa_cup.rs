@@ -157,8 +157,8 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
         return 0;
     }
     crate::comparacao::ramo("cqq_10 tabela da uefa");
-    let year = core::ptr::read_unaligned((this + 0x40) as *const i16) as i32 as u32;
-    let (tab, n) = uefa_cup_rounds(*((this + 0xb2) as *const i8));
+    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
+    let (tab, n) = uefa_cup_rounds(*((this + uefa_cup::PRELIMINARY_CLUB_COUNT) as *const i8));
     for (i, r) in tab[..n].iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }

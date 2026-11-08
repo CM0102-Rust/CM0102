@@ -13,12 +13,12 @@ use super::*;
 /// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
 /// (0x4382c0, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
-    let stage = read_usize(this + 0x30) as i32;
-    if stage >= (read_usize(this + 0x2c) as i32).wrapping_sub(1) {
+    let stage = read_usize(this + league::CURRENT_STAGE) as i32;
+    if stage >= (read_usize(this + league::STAGE_COUNT) as i32).wrapping_sub(1) {
         return show_error_at(0x98af98, 0x202);
     }
     let stage = stage + 1;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, stage);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut i32, stage);
     if stage == 2 {
         let final_: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_BRAREGPARANA_CREATE_FINAL_STAGE);
         final_(this); // cqo8: a final depois do segundo turno
@@ -56,14 +56,14 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     core::ptr::write_unaligned((list + 4) as *mut usize, b);
     if a == b {
         crate::comparacao::ramo("cqo_8 mesmo campeao");
-        core::ptr::write_unaligned((this + 0x30) as *mut u32, 1);
-        core::ptr::write_unaligned((this + 0x2c) as *mut u32, 2);
+        core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 1);
+        core::ptr::write_unaligned((this + league::STAGE_COUNT) as *mut u32, 2);
         for k in 0..2 {
-            *((read_usize(read_usize(read_usize(this + 0xc) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: campeão dos dois turnos
+            *((read_usize(read_usize(read_usize(this + league::STAGES) + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: campeão dos dois turnos
         }
         let mut i: i16 = 0;
-        while i < read_i16(this + 0x3e) {
-            let row = read_usize(this + 0xb1) + i as usize * 0x3b;
+        while i < read_i16(this + league::CLUB_COUNT) {
+            let row = read_usize(this + league::TABLE) + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
                 *((row + 0x37) as *mut u8) = 5;
             }
@@ -83,12 +83,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + 0x40) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
+        construct(p, this, 2, list, rodadas as u16 as u32, read_usize(this + 4), t, read_i16(this + league::YEAR) as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, sementes.as_ptr())
     } else {
         0
     };
-    core::ptr::write_unaligned((read_usize(this + 0xc) + 8) as *mut usize, stage);
-    let stage = read_usize(read_usize(this + 0xc) + 8);
+    core::ptr::write_unaligned((read_usize(this + league::STAGES) + 8) as *mut usize, stage);
+    let stage = read_usize(read_usize(this + league::STAGES) + 8);
     if stage == 0 {
         return show_error_at(0x98af98, 0x250);
     }
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     let free: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     free(t);
     free(list);
-    core::ptr::write_unaligned((this + 0x30) as *mut u32, 2);
+    core::ptr::write_unaligned((this + league::CURRENT_STAGE) as *mut u32, 2);
 }
 
 /// The end of the Parana season: with a final, the honours come from the final; without one, from the league, and the
@@ -117,8 +117,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
 ///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
     let campeoes: unsafe extern "C" fn() -> u32 = core::mem::transmute(FN_BRA_NAT_FIRST_FILL_CHAMPIONS_CUP_ENTRANTS);
-    if read_usize(this + 0x30) == 2 {
-        let f = read_usize(read_usize(this + 0xc) + 8);
+    if read_usize(this + league::CURRENT_STAGE) == 2 {
+        let f = read_usize(read_usize(this + league::STAGES) + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + 0x30));
         history(f);
         crate::comparacao::ramo("cqo_8 historico da final");
@@ -130,9 +130,9 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
     let prize: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_FINANCE_ADD_PRIZE_MONEY);
     let noticia: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
-        let c = read_usize(read_usize(this + 0xb1) + linha);
+        let c = read_usize(read_usize(this + league::TABLE) + linha);
         prize(finances(read_usize(G_FINANCE_TABLE), c), valor);
-        noticia(this, read_usize(read_usize(this + 0xb1) + linha), valor, 0, posicao, 0, 0, -2);
+        noticia(this, read_usize(read_usize(this + league::TABLE) + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparacao::ramo("cqo_8 premios");
     campeoes()

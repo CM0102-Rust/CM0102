@@ -158,33 +158,33 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
     let release_table: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_LEAGUE_FREE_TABLE);
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let archive: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_COMP_STATS_ARCHIVE_SEASON_AND_RESET);
-    write_u32_from_usize(this + 0x4c, 0);
+    write_u32_from_usize(this + league::SEASON_CLOSED, 0);
     release_table(this, 0);
-    if read_u32_as_usize(this + 0xba) != 0 {
-        soltar(read_u32_as_usize(this + 0xba));
-        write_u32_from_usize(this + 0xba, 0);
+    if read_u32_as_usize(this + league::ROUND_DATES) != 0 {
+        soltar(read_u32_as_usize(this + league::ROUND_DATES));
+        write_u32_from_usize(this + league::ROUND_DATES, 0);
     }
     if read_u32_as_usize(this + 8) != 0 {
         archive(read_u32_as_usize(this + 8), 1);
     }
-    if (read_u32_as_usize(this + 0x30) as i32) >= 0 {
+    if (read_u32_as_usize(this + league::CURRENT_STAGE) as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + i as usize * 4);
+            let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + i as usize * 4);
             if f != 0 {
                 let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(f)));
                 destroy(f, 1);
             }
             i += 1;
-            if i > read_u32_as_usize(this + 0x30) as i32 {
+            if i > read_u32_as_usize(this + league::CURRENT_STAGE) as i32 {
                 break;
             }
         }
     }
     crate::comparacao::ramo("cqs_12 temporada nova da copa america");
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, read_i16(this + 0x40).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
-    write_u32_from_usize(this + 0x45, 0);
-    write_u32_from_usize(this + 0x30, usize::MAX);
+    core::ptr::write_unaligned((this + league::YEAR) as *mut i16, read_i16(this + league::YEAR).wrapping_add(2)); // cqs12: a Copa América a cada 2 anos
+    write_u32_from_usize(this + league::ACTIVE, 0);
+    write_u32_from_usize(this + league::CURRENT_STAGE, usize::MAX);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x8c));
     if rules(this) == 0 {
         show_error_at(0x9cd640, 0x28b);
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let league: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_LEAGUE_UPDATE_FOR_DATE);
     let day = read_i16(this + 0xb6) as u16; // cqr13: o dia do sorteio
-    let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + 0x40) as u16);
+    let year = (read_i16(this + 0xb8) as u16).wrapping_add(read_i16(this + league::YEAR) as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     // simplification: in the two passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
         return 0;
     }
-    if year_of_today == year && day_of_today == day && read_u32_as_usize(this + 0x45) == 0 && full == 0 {
+    if year_of_today == year && day_of_today == day && read_u32_as_usize(this + league::ACTIVE) == 0 && full == 0 {
         crate::comparacao::ramo("cqr_13 sorteio da copa america");
         selecoes(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_u32_as_usize(read_u32_as_usize(this) + 0x5c));
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
         soltar(read_u32_as_usize(this + 0xee));
         write_u32_from_usize(this + 0xee, 0);
         write_u32_from_usize(this + 0xf2, 0);
-        write_u32_from_usize(this + 0x45, 1);
+        write_u32_from_usize(this + league::ACTIVE, 1);
     }
     league(this, today, full)
 }
@@ -286,15 +286,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let row: unsafe extern "thiscall" fn(usize, u32, usize, u32, u32) = core::mem::transmute(FN_LEAGUE_INIT_TABLE_ROW);
     let noticia: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SEND_GROUP_DRAW_NEWS);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 4);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 4);
     let t = new(0xec);
-    write_u32_from_usize(this + 0xb1, t);
+    write_u32_from_usize(this + league::TABLE, t);
     if t == 0 {
         show_error_at(0x9cd640, 0x1d4);
         return 0;
     }
     let mut i = 0i8;
-    while (i as i16) < read_i16(this + 0x3e) {
+    while (i as i16) < read_i16(this + league::CLUB_COUNT) {
         crate::comparacao::ramo("cqr_13 linha do primeiro grupo");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
@@ -356,15 +356,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
             b(0xc2),
             b(0xc3),
             b(0xc4),
-            this + 0xc5,
-            this + 0xbe,
-            read_i16(this + 0x40) as u16 as u32,
+            this + league::TIEBREAKS,
+            this + league::PROMOTED_COUNT,
+            read_i16(this + league::YEAR) as u16 as u32,
             g as u32,
             id as u16 as u32,
             b(0x51),
             4,
             0,
-            read_i16(this + 0xd9) as u16 as u32,
+            read_i16(this + league::LEAGUE_FLAGS) as u16 as u32,
             -1,
             0,
             2,
@@ -372,15 +372,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
     } else {
         0
     };
-    write_u32_from_usize(read_u32_as_usize(this + 0xc) + g as usize * 4, stage);
+    write_u32_from_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4, stage);
     soltar(teams);
     soltar(table);
-    let f = read_u32_as_usize(read_u32_as_usize(this + 0xc) + g as usize * 4);
+    let f = read_u32_as_usize(read_u32_as_usize(this + league::STAGES) + g as usize * 4);
     if f == 0 {
         show_error_at(0x9cd640, 0x2d6);
         return 0;
     }
-    write_u32_from_usize(this + 0x30, g as usize);
+    write_u32_from_usize(this + league::CURRENT_STAGE, g as usize);
     noticia(f);
     1
 }

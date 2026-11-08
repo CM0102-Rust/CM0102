@@ -451,14 +451,14 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
         show_error_at(0xa701b0, 0x33e);
         return 0;
     }
-    if read_usize(this + 0x1f6) == 0 {
+    if read_usize(this + player_search_fields::RESULT_COUNT) == 0 {
         crate::comparacao::ramo("cqa_6 busca vazia");
         return 0; // cqa6: sem resultados, não está
     }
     let reference: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
     reference(person, k);
     let bsearch: unsafe extern "C" fn(usize, usize, usize, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let r = bsearch(k, read_usize(this + 0x1ee), read_usize(this + 0x1f6), 0x2d, 0x7bce50);
+    let r = bsearch(k, read_usize(this + player_search_fields::RESULTS), read_usize(this + player_search_fields::RESULT_COUNT), 0x2d, 0x7bce50);
     if r == 0 {
         return 0;
     }
@@ -714,13 +714,13 @@ pub(crate) unsafe extern "thiscall" fn player_search_slot_sum_goals(this: usize)
 /// no vetor de pessoas [0xae23bc] (110 bytes), se ainda confere com os nomes e a data guardados (0x53e990 com +0x174,
 /// +0x178, +0x17c e a data em +0x184); senão 0.
 pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
-    let i = read_u32(this + 0x180) as i32;
+    let i = read_u32(this + player_search_fields::SCOUT_ID) as i32;
     if i <= -1 {
         return 0;
     }
     let person = (read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(110));
     let checks: unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
-    if checks(person, read_u32(this + 0x174), read_u32(this + 0x178), read_u32(this + 0x17c), this + 0x184) == 0 {
+    if checks(person, read_u32(this + player_search_fields::SCOUT_NAME_REF), read_u32(this + 0x178), read_u32(this + 0x17c), this + 0x184) == 0 {
         return 0; // the slot changed person
     }
     person
@@ -786,13 +786,13 @@ pub(crate) unsafe extern "thiscall" fn set_scout(this: usize, scout: usize) -> u
     }
     if scout != 0 {
         let write: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_FILL_STAFF_NAME_REF);
-        write(scout, this + 0x174);
+        write(scout, this + player_search_fields::SCOUT_NAME_REF);
     } else {
-        core::ptr::write_unaligned((this + 0x180) as *mut u32, u32::MAX);
+        core::ptr::write_unaligned((this + player_search_fields::SCOUT_ID) as *mut u32, u32::MAX);
     }
-    core::ptr::write_unaligned((this + 0x18c) as *mut u32, u32::MAX);
-    *((this + 0x194) as *mut u8) = 0xff;
-    core::ptr::write_unaligned((this + 0x195) as *mut u32, u32::MAX);
+    core::ptr::write_unaligned((this + player_search_fields::ASSIGNED_NATION) as *mut u32, u32::MAX);
+    *((this + player_search_fields::ASSIGNED_REGION) as *mut u8) = 0xff;
+    core::ptr::write_unaligned((this + player_search_fields::ASSIGNED_COMP) as *mut u32, u32::MAX);
     1
 }
 
@@ -824,21 +824,21 @@ pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, clube: 
     if check_search_scout(this).is_none() {
         return original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT)(this, clube, nacao, regiao, comp, base, opponent); // message box: original only
     }
-    let marcada = read_usize(this + 0x190) as i32 > -1
-        || read_usize(this + 0x18c) as i32 > -1
-        || *((this + 0x194) as *const i8) > -1
-        || read_usize(this + 0x195) as i32 > -1 // the competition
-        || read_usize(this + 0x199) != 0
-        || read_usize(this + 0x19d) != 0;
+    let marcada = read_usize(this + player_search_fields::ASSIGNED_CLUB) as i32 > -1
+        || read_usize(this + player_search_fields::ASSIGNED_NATION) as i32 > -1
+        || *((this + player_search_fields::ASSIGNED_REGION) as *const i8) > -1
+        || read_usize(this + player_search_fields::ASSIGNED_COMP) as i32 > -1 // the competition
+        || read_usize(this + player_search_fields::ASSIGNED_BASE) != 0
+        || read_usize(this + player_search_fields::ASSIGNED_OPPONENT) != 0;
     if !marcada {
         return 0;
     }
-    clube.write_unaligned(read_usize(this + 0x190) as u32);
-    nacao.write_unaligned(read_usize(this + 0x18c) as u32);
-    *regiao = *((this + 0x194) as *const u8);
-    comp.write_unaligned(read_usize(this + 0x195) as u32);
-    base.write_unaligned(read_usize(this + 0x199) as u32);
-    opponent.write_unaligned(read_usize(this + 0x19d) as u32);
+    clube.write_unaligned(read_usize(this + player_search_fields::ASSIGNED_CLUB) as u32);
+    nacao.write_unaligned(read_usize(this + player_search_fields::ASSIGNED_NATION) as u32);
+    *regiao = *((this + player_search_fields::ASSIGNED_REGION) as *const u8);
+    comp.write_unaligned(read_usize(this + player_search_fields::ASSIGNED_COMP) as u32);
+    base.write_unaligned(read_usize(this + player_search_fields::ASSIGNED_BASE) as u32);
+    opponent.write_unaligned(read_usize(this + player_search_fields::ASSIGNED_OPPONENT) as u32);
     1
 }
 
@@ -856,15 +856,15 @@ pub(crate) unsafe extern "thiscall" fn get_scout_assignment(this: usize, clube: 
 /// olheiros do clube cobrindo a nação (0x7f9190 do [0xb74448]). Devolve 1 ou 0.
 pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: usize) -> u32 {
     let mut person = 0usize;
-    let i = read_usize(this + 0x180) as i32;
+    let i = read_usize(this + player_search_fields::SCOUT_ID) as i32;
     if i > -1 {
         let checks: unsafe extern "C" fn(usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_STAFF_MATCHES_NAMES);
         let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
-        if checks(p, read_usize(this + 0x174), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) != 0 {
-            person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this + 0x180).wrapping_mul(staff::SIZE));
+        if checks(p, read_usize(this + player_search_fields::SCOUT_NAME_REF), read_usize(this + 0x178), read_usize(this + 0x17c), this + 0x184) != 0 {
+            person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(this + player_search_fields::SCOUT_ID).wrapping_mul(staff::SIZE));
         }
     }
-    if read_u8(this + 0xa) != 4 || person == 0 || nacao == 0 {
+    if read_u8(this + player_search_fields::LIST_TYPE) != 4 || person == 0 || nacao == 0 {
         return 0;
     }
     let clube = read_usize(person + staff::CLUB_JOB);
@@ -872,21 +872,21 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nacao: u
         return 0;
     }
     let missao: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_PLAYER_SEARCH_GET_SCOUT_ASSIGNMENT);
-    if missao(this, this + 0x190, this + 0x18c, this + 0x194, this + 0x195, this + 0x199, this + 0x19d) != 0 {
-        let c = read_usize(this + 0x190) as i32;
+    if missao(this, this + player_search_fields::ASSIGNED_CLUB, this + player_search_fields::ASSIGNED_NATION, this + player_search_fields::ASSIGNED_REGION, this + player_search_fields::ASSIGNED_COMP, this + player_search_fields::ASSIGNED_BASE, this + player_search_fields::ASSIGNED_OPPONENT) != 0 {
+        let c = read_usize(this + player_search_fields::ASSIGNED_CLUB) as i32;
         if c > -1 && read_usize(read_usize(G_CLUB_TABLE).wrapping_add((c as usize).wrapping_mul(club::SIZE)) + 0x53) == nacao {
             return 1;
         }
-        let n = read_usize(this + 0x18c) as i32;
+        let n = read_usize(this + player_search_fields::ASSIGNED_NATION) as i32;
         if n > -1 && read_usize(nacao) as i32 == n {
             return 1;
         }
-        let r = read_u8(this + 0x194);
+        let r = read_u8(this + player_search_fields::ASSIGNED_REGION);
         if (r as i8) > -1 && read_u8(nacao + nation::ACTUAL_REGION) == r {
             return 1;
         }
         // the original compares the same byte again when there is a base
-        if read_usize(this + 0x199) != 0 && read_u8(nacao + nation::ACTUAL_REGION) == r {
+        if read_usize(this + player_search_fields::ASSIGNED_BASE) != 0 && read_u8(nacao + nation::ACTUAL_REGION) == r {
             return 1;
         }
         return 0;

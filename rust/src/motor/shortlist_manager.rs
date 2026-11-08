@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, clube: usize)
     {
         return;
     }
-    let reg = read_u32_as_usize(this + 0xdc).wrapping_add(read_u32_as_usize(clube).wrapping_mul(9));
+    let reg = read_u32_as_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_u32_as_usize(clube).wrapping_mul(9));
     if read_u8(reg + 4) != 1 || read_u8(reg + 8) >= 100 || finances(read_u32_as_usize(G_FINANCE_TABLE), clube) == 0 {
         return;
     }
@@ -1051,7 +1051,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         if fin != 0 && ad == 1 {
             si = reputation_cap_by_finances(band(fin) as i8, si);
         }
-        let ax = read_i16(read_usize(this + 0xdc).wrapping_add(read_usize(p2).wrapping_mul(9)) + 5);
+        let ax = read_i16(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(p2).wrapping_mul(9)) + 5);
         let m = if si > ax { si } else { ax };
         let cx = match_pl_ftol(si as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
         let den0 = ((b4 as f64 + a88 as f64) + aa8 as f64) + read_f32(0x9689a8) as f64;
@@ -1345,7 +1345,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 di = reputation_cap_by_finances(m as i8, di);
             }
         }
-        let ax = read_i16(read_usize(this + 0xdc).wrapping_add(read_usize(d4).wrapping_mul(9)) + 5);
+        let ax = read_i16(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(d4).wrapping_mul(9)) + 5);
         let m = if di > ax { di } else { ax };
         let axv = match_pl_ftol(di as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
         // simplification: at the club itself (p2 == d4) the original divides by the float [base+0x58] that nobody wrote (leftover from
@@ -2640,7 +2640,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
     if budget < 0 {
         budget = 0;
     }
-    let entry = read_usize(this + 0xdc).wrapping_add(read_usize(clube).wrapping_mul(9));
+    let entry = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(clube).wrapping_mul(9));
     if read_u8(entry + 4) != 1 {
         return;
     }
@@ -2978,7 +2978,7 @@ pub(crate) unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: u
         while i < *(list as *const i16) as i32 {
             let item = next(list);
             if item != 0 {
-                let e = read_usize(this + 0xdc).wrapping_add(read_usize(item + 4).wrapping_mul(9));
+                let e = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(item + 4).wrapping_mul(9));
                 crate::comparacao::ramo("cpp_5 suspender clube");
                 *((e + 8) as *mut u8) = 0x64; // o clube suspende o jogador
                 if clear != 0 {
@@ -3233,13 +3233,13 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, not_use
     let serve: unsafe extern "stdcall" fn(usize, u32) -> u8 = core::mem::transmute(FN_SHORTLIST_STAFF_FITS_SLOT_POSITION);
     crate::comparacao::ramo("cpo_8 montar listas");
     for k in 0..32usize {
-        let v = this + 0x18 + k * 4;
+        let v = this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + k * 4;
         if read_usize(v) != 0 {
             livrar(read_usize(v));
             write_u32(v, 0);
         }
     }
-    write_u32(this + 0xd8, 0);
+    write_u32(this + shortlist_manager_fields::POSITION_LIST_CAPACITY, 0);
     for vaga in 0..16u32 {
         let base = read_usize(G_STAFF_TABLE);
         let mut n = 0i32;
@@ -3250,19 +3250,19 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, not_use
             }
             i += 1;
         }
-        if n > read_i32(this + 0xd8) {
-            write_u32(this + 0xd8, n as u32);
+        if n > read_i32(this + shortlist_manager_fields::POSITION_LIST_CAPACITY) {
+            write_u32(this + shortlist_manager_fields::POSITION_LIST_CAPACITY, n as u32);
         }
     }
     for k in 0..32usize {
-        let v = alloc(read_usize(this + 0xd8).wrapping_mul(12) as u32);
-        write_u32(this + 0x18 + k * 4, v as u32);
+        let v = alloc(read_usize(this + shortlist_manager_fields::POSITION_LIST_CAPACITY).wrapping_mul(12) as u32);
+        write_u32(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + k * 4, v as u32);
         if v == 0 {
             fatal_error_at(0xa825a4, 0x10c);
         }
     }
     for k in 0..16usize {
-        write_u32(this + 0x98 + k * 4, 0);
+        write_u32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + k * 4, 0);
     }
     let base = read_usize(G_STAFF_TABLE);
     let mut i = 0usize;
@@ -3273,12 +3273,12 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, not_use
                 continue;
             }
             let pv = vaga as usize;
-            let count = read_i32(this + 0x98 + pv * 4);
-            if count >= read_i32(this + 0xd8) {
+            let count = read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + pv * 4);
+            if count >= read_i32(this + shortlist_manager_fields::POSITION_LIST_CAPACITY) {
                 fatal_error_at(0xa825a4, 0x121);
             }
             let o = (count as usize).wrapping_mul(12);
-            let (l1, l2) = (read_usize(this + 0x18 + pv * 4).wrapping_add(o), read_usize(this + 0x58 + pv * 4).wrapping_add(o));
+            let (l1, l2) = (read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + pv * 4).wrapping_add(o), read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + pv * 4).wrapping_add(o));
             write_u32(l1, i as u32);
             write_u32(l2, i as u32);
             let mut nacao = read_usize(p + 0x1a);
@@ -3292,7 +3292,7 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, not_use
             write_u32(l1 + 8, read_usize(p + 0x52) as u32);
             let k = contract_with_own_club(p);
             write_u32(l2 + 8, if k != 0 { read_u8(k + 0x3d) as i8 as i32 as u32 } else { 100 });
-            write_u32(this + 0x98 + pv * 4, (count + 1) as u32);
+            write_u32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + pv * 4, (count + 1) as u32);
         }
         i += 1;
     }
@@ -3318,8 +3318,8 @@ pub(crate) unsafe extern "thiscall" fn sort_position_lists(this: usize) {
     for vaga in 0..16usize {
         let mut j = 0i32;
         let mut o = 0usize;
-        while j < read_i32(this + 0x98 + vaga * 4) {
-            let p = staff_records_staff_by_id(read_usize(read_usize(this + 0x18 + vaga * 4) + o));
+        while j < read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4) {
+            let p = staff_records_staff_by_id(read_usize(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + o));
             let k = contract_with_own_club(p);
             if vaga == 15 {
                 write_u32(read_usize(this + 0x54) + o + 8, read_usize(p + 0x52) as u32);
@@ -3328,10 +3328,10 @@ pub(crate) unsafe extern "thiscall" fn sort_position_lists(this: usize) {
                 continue;
             }
             if k != 0 && band(k) == 0 {
-                write_u32(read_usize(this + 0x18 + vaga * 4) + o + 8, read_usize(p + 0x52) as u32);
+                write_u32(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + o + 8, read_usize(p + 0x52) as u32);
                 let clube = read_usize(p + 0x39);
                 if clube != 0 && human(clube, 0, 1, 0, 0) != 0 && listado(p, 0) != 0 {
-                    let e = read_usize(this + 0x18 + vaga * 4) + o + 8;
+                    let e = read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + o + 8;
                     write_u32(e, read_i32(e).wrapping_add(-0x16e360) as u32);
                     let terco = read_i32(p + 0x52) / 3;
                     if read_i32(e) < terco {
@@ -3342,10 +3342,10 @@ pub(crate) unsafe extern "thiscall" fn sort_position_lists(this: usize) {
                 if k != 0 {
                     crate::comparacao::ramo("cpo_8 band do contrato");
                 }
-                write_u32(read_usize(this + 0x18 + vaga * 4) + o + 8, 0);
+                write_u32(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + o + 8, 0);
             }
             // a segunda lista
-            let p2 = staff_records_staff_by_id(read_usize(read_usize(this + 0x58 + vaga * 4) + o));
+            let p2 = staff_records_staff_by_id(read_usize(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4) + o));
             let k2 = contract_with_own_club(p2);
             let clube = read_usize(p2 + 0x39);
             let key: i32 = if read_usize(p2 + 0x61) == 0 || clube == 0 || read_usize(clube + club::DIVISION) == 0 {
@@ -3363,14 +3363,14 @@ pub(crate) unsafe extern "thiscall" fn sort_position_lists(this: usize) {
             } else {
                 read_u8(k2 + 0x3d) as i8 as i32
             };
-            write_u32(read_usize(this + 0x58 + vaga * 4) + o + 8, key as u32);
+            write_u32(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4) + o + 8, key as u32);
             j += 1;
             o += 12;
         }
-        let n = read_usize(this + 0x98 + vaga * 4) as u32;
-        sort(read_usize(this + 0x18 + vaga * 4), n, 12, 0x83b670);
-        let n = read_usize(this + 0x98 + vaga * 4) as u32;
-        sort(read_usize(this + 0x58 + vaga * 4), n, 12, 0x83b670);
+        let n = read_usize(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4) as u32;
+        sort(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4), n, 12, 0x83b670);
+        let n = read_usize(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4) as u32;
+        sort(read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4), n, 12, 0x83b670);
     }
 }
 
@@ -3415,12 +3415,12 @@ pub(crate) unsafe extern "thiscall" fn collect_interested_clubs(this: usize, pla
     }
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let key = [read_usize(player) as u32, 0xffff_ffff];
-    let mut e = bsearch(key.as_ptr(), read_usize(this), read_i32(this + 0x10), 8, 0x757ea0);
+    let mut e = bsearch(key.as_ptr(), read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0);
     if e == 0 {
         return;
     }
     let base = read_usize(this);
-    let last = base.wrapping_add((read_i32(this + 0x10) as usize).wrapping_mul(8)).wrapping_sub(8);
+    let last = base.wrapping_add((read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) as usize).wrapping_mul(8)).wrapping_sub(8);
     let id = read_usize(player);
     if e > base {
         loop {
@@ -3440,7 +3440,7 @@ pub(crate) unsafe extern "thiscall" fn collect_interested_clubs(this: usize, pla
     }
     loop {
         let club_id = read_usize(e + 4);
-        let entry = read_usize(this + 0xdc).wrapping_add(club_id.wrapping_mul(9));
+        let entry = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(club_id.wrapping_mul(9));
         let slots = read_usize(entry);
         let mut k = 0usize;
         while k < 0x28 && read_usize(slots + 0xf + k * 0x25) != read_usize(player) {
@@ -3531,17 +3531,17 @@ pub(crate) unsafe extern "thiscall" fn add_shortlist_entry(this: usize, person: 
         if v == 0 {
             fatal_error_at(0xa825a4, 0x159d);
         }
-        write_u32(this + 0xc, 100);
+        write_u32(this + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY, 100);
     }
     if read_usize(this) != 0 {
         let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
         let key = [read_usize(person) as u32, if clube != 0 { read_usize(clube) as u32 } else { 0xffff_ffff }];
-        if bsearch(key.as_ptr(), read_usize(this), read_i32(this + 0x10), 8, 0x757ea0) != 0 {
+        if bsearch(key.as_ptr(), read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0) != 0 {
             return;
         }
     }
     crate::comparacao::ramo("cpo_9 nova entrada");
-    if read_i32(this + 8) == read_i32(this + 0x10) {
+    if read_i32(this + 8) == read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) {
         let v = realloc(read_usize(this), (read_i32(this + 8) as u32).wrapping_mul(8).wrapping_add(0x320));
         write_u32(this, v as u32);
         if v == 0 {
@@ -3549,13 +3549,13 @@ pub(crate) unsafe extern "thiscall" fn add_shortlist_entry(this: usize, person: 
         }
         write_u32(this + 8, read_i32(this + 8).wrapping_add(100) as u32);
     }
-    if read_i32(this + 0xc) == read_i32(this + 0x14) {
-        let v = realloc(read_usize(this + 4), (read_i32(this + 0xc) as u32).wrapping_mul(8).wrapping_add(0x320));
+    if read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY) == read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT) {
+        let v = realloc(read_usize(this + 4), (read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY) as u32).wrapping_mul(8).wrapping_add(0x320));
         write_u32(this + 4, v as u32);
         if v == 0 {
             fatal_error_at(0xa825a4, 0x15be);
         }
-        write_u32(this + 0xc, read_i32(this + 0xc).wrapping_add(100) as u32);
+        write_u32(this + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY, read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY).wrapping_add(100) as u32);
     }
     insert_sorted_pair(this, 0, 0x10, person, clube, 0x757ea0); // the array by person
     insert_sorted_pair(this, 4, 0x14, person, clube, 0x844740); // the vector by club
@@ -4065,7 +4065,7 @@ pub(crate) unsafe extern "thiscall" fn is_on_shortlist(this: usize, player: usiz
     }
     let key: [u32; 2] = [read_usize(player) as u32, if clube != 0 { read_usize(clube) as u32 } else { u32::MAX }]; // sem clube: −1
     let bsearch: unsafe extern "C" fn(*const [u32; 2], usize, usize, usize, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-    let p = bsearch(&key, v, read_usize(this + 0x10), 8, 0x757ea0);
+    let p = bsearch(&key, v, read_usize(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), 8, 0x757ea0);
     (p as u32 & !0xff) | (p != 0) as u32
 }
 

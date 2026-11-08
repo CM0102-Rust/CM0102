@@ -115,7 +115,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         return;
     }
     call_thiscall_1(0x775ba0, read_u32_as_usize(G_NATIONAL_TEAMS), p);
-    let bench = read_u32_as_usize(this + 0x3c);
+    let bench = read_u32_as_usize(this + player_regen_fields::PLAYER_DATA_POOL);
     let (ficha_id, nacao_id, nacao2_id) = (read_i32(bench), read_i32(bench + 4), read_i32(bench + 8));
     let remove_of_bench: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_PLAYER_REGEN_REMOVE_PLAYER_DATA_FROM_POOL);
     remove_of_bench(this, ficha_id);
@@ -1118,7 +1118,7 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
         }
         i += 1;
     }
-    qsort(read_u32_as_usize(this + 0x10), read_u32_as_usize(this + 0x14) as u32, 0xc, 0x7ae240);
+    qsort(read_u32_as_usize(this + player_regen_fields::REGEN_QUEUE), read_u32_as_usize(this + player_regen_fields::REGEN_QUEUE_COUNT) as u32, 0xc, 0x7ae240);
 }
 
 // simplification: calls the news (they allocate and deliver), the regen as a non-player, the new contracts and the lists: the path
@@ -1532,21 +1532,21 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_
 /// caixa 0xa0a e fim). Pela process_retirements (0x7a59e0), quando um jogador que também tem ficha de não jogador
 /// deixa de jogar.
 pub(crate) unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, person: i32, nacao: u32, second: u32) {
-    if read_usize(this + 0x40) == read_usize(this + 0x44).wrapping_sub(1) {
-        let p = crt_realloc(read_usize(this + 0x3c), read_usize(this + 0x44).wrapping_add(250) << 4);
-        write_usize(this + 0x3c, p);
-        write_usize(this + 0x44, read_usize(this + 0x44).wrapping_add(250));
+    if read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY).wrapping_sub(1) {
+        let p = crt_realloc(read_usize(this + player_regen_fields::PLAYER_DATA_POOL), read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY).wrapping_add(250) << 4);
+        write_usize(this + player_regen_fields::PLAYER_DATA_POOL, p);
+        write_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY).wrapping_add(250));
         if p == 0 {
             regen_out_of_memory(0xa0a);
         }
     }
     crate::comparacao::ramo("cpu_9 banco de jogadores");
     let record = read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(0x6e) as usize);
-    let item = read_usize(this + 0x3c).wrapping_add(read_usize(this + 0x40) << 4);
+    let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
     write_usize(item, read_usize(read_usize(record + 0x61)));
     write_usize(item + 4, nacao as usize);
     write_usize(item + 8, second as usize);
-    write_usize(this + 0x40, read_usize(this + 0x40).wrapping_add(1));
+    write_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT).wrapping_add(1));
 }
 
 
@@ -1557,7 +1557,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pers
 /// fichas de não jogador (conta em +0x20) tem alguma. O eax leva os 24 bits altos da conta (setne no al), como na
 /// original.
 pub(crate) unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) -> u32 {
-    let c = read_u32_as_usize(this + 0x20) as u32;
+    let c = read_u32_as_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) as u32;
     (c & 0xffff_ff00) | (c != 0) as u32
 }
 
@@ -2604,20 +2604,20 @@ pub(crate) unsafe fn regen_out_of_memory(row: u32) -> ! {
 /// sem memória, caixa 0x9c4 e fim).
 pub(crate) unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, id: u32, nacao: u32, second: u32) {
     crate::comparacao::ramo("cpk_2 reserva de tecnico");
-    if read_usize(this + 0x40) == read_usize(this + 0x44).wrapping_sub(1) {
-        let p = crt_realloc(read_usize(this + 0x1c), read_usize(this + 0x24).wrapping_add(250) << 4);
-        write_usize(this + 0x1c, p);
-        write_usize(this + 0x24, read_usize(this + 0x24).wrapping_add(250));
+    if read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY).wrapping_sub(1) {
+        let p = crt_realloc(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_add(250) << 4);
+        write_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS, p);
+        write_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_add(250));
         if p == 0 {
             regen_out_of_memory(0x9c4);
         }
     }
-    let n = read_usize(this + 0x20);
-    let item = read_usize(this + 0x1c).wrapping_add(n << 4);
+    let n = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT);
+    let item = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(n << 4);
     write_usize(item, id as usize);
     write_usize(item + 4, nacao as usize);
     write_usize(item + 8, second as usize);
-    write_usize(this + 0x20, n.wrapping_add(1)); // one more reserve
+    write_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT, n.wrapping_add(1)); // one more reserve
 }
 
 /// appends the record fields to the 26-byte pending retirement table (+4), growing by 250
@@ -2629,11 +2629,11 @@ pub(crate) unsafe extern "thiscall" fn add_spare_non_player_record(this: usize, 
 /// ficam como estão). Conta = capacidade − 1: cresce 250 (realloc 0x945667; sem memória, caixa 0xa53 e fim).
 pub(crate) unsafe extern "thiscall" fn add_retirement(this: usize, r: usize) {
     crate::comparacao::ramo("cpk_2 aposentadoria");
-    let cap = read_usize(this + 0xc);
+    let cap = read_usize(this + player_regen_fields::RETIREMENT_CAPACITY);
     if read_usize(this + 8) == cap.wrapping_sub(1) {
         let p = crt_realloc(read_usize(this + 4), cap.wrapping_add(250).wrapping_mul(26));
         write_usize(this + 4, p);
-        write_usize(this + 0xc, read_usize(this + 0xc).wrapping_add(250));
+        write_usize(this + player_regen_fields::RETIREMENT_CAPACITY, read_usize(this + player_regen_fields::RETIREMENT_CAPACITY).wrapping_add(250));
         if p == 0 {
             regen_out_of_memory(0xa53);
         }
@@ -2669,30 +2669,30 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
     }
     crate::comparacao::ramo("cpk_2 vaga para o regen");
     let person = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
-    let cap = read_usize(this + 0x18);
-    if read_usize(this + 0x14) == cap.wrapping_sub(1) {
-        let p = crt_realloc(read_usize(this + 0x10), cap.wrapping_add(250).wrapping_mul(12));
-        write_usize(this + 0x10, p);
-        write_usize(this + 0x18, read_usize(this + 0x18).wrapping_add(250));
+    let cap = read_usize(this + player_regen_fields::REGEN_QUEUE_CAPACITY);
+    if read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT) == cap.wrapping_sub(1) {
+        let p = crt_realloc(read_usize(this + player_regen_fields::REGEN_QUEUE), cap.wrapping_add(250).wrapping_mul(12));
+        write_usize(this + player_regen_fields::REGEN_QUEUE, p);
+        write_usize(this + player_regen_fields::REGEN_QUEUE_CAPACITY, read_usize(this + player_regen_fields::REGEN_QUEUE_CAPACITY).wrapping_add(250));
         if p == 0 {
             regen_out_of_memory(0xaac);
         }
     }
-    let queue = read_usize(this + 0x10).wrapping_add(read_usize(this + 0x14).wrapping_mul(12));
+    let queue = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add(read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT).wrapping_mul(12));
     write_usize(queue, id as usize);
     write_u16(queue + 4, core::ptr::read_unaligned((entry + 4) as *const u16));
     write_u16(queue + 6, core::ptr::read_unaligned((entry + 6) as *const u16));
-    write_usize(this + 0x14, read_usize(this + 0x14).wrapping_add(1)); // one more in the regen queue
+    write_usize(this + player_regen_fields::REGEN_QUEUE_COUNT, read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT).wrapping_add(1)); // one more in the regen queue
     if read_usize(person + staff::NON_PLAYER) != 0 {
-        if read_usize(this + 0x20) == read_usize(this + 0x24).wrapping_sub(1) {
-            let p = crt_realloc(read_usize(this + 0x1c), read_usize(this + 0x24).wrapping_add(250) << 4);
-            write_usize(this + 0x1c, p);
-            write_usize(this + 0x24, read_usize(this + 0x24).wrapping_add(250));
+        if read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) == read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_sub(1) {
+            let p = crt_realloc(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_add(250) << 4);
+            write_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS, p);
+            write_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_add(250));
             if p == 0 {
                 regen_out_of_memory(0xac5);
             }
         }
-        let item = || read_usize(this + 0x1c).wrapping_add(read_usize(this + 0x20) << 4);
+        let item = || read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) << 4);
         write_usize(item(), read_usize(read_usize(person + staff::NON_PLAYER)));
         let nacao = read_usize(person + staff::NATION);
         if nacao != 0 {
@@ -2703,23 +2703,23 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
             write_usize(item() + 4, s as usize);
         }
         write_usize(item() + 0xc, read_usize(person));
-        write_usize(this + 0x20, read_usize(this + 0x20).wrapping_add(1));
+        write_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT).wrapping_add(1));
     }
     if read_usize(person + staff::PLAYER) != 0 {
-        let cap = read_usize(this + 0x44);
-        if read_usize(this + 0x40) == cap.wrapping_sub(1) {
-            let p = crt_realloc(read_usize(this + 0x3c), cap.wrapping_add(250) << 4);
-            write_usize(this + 0x3c, p);
-            write_usize(this + 0x44, read_usize(this + 0x44).wrapping_add(250));
-            if read_usize(this + 0x40) == 0 {
+        let cap = read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY);
+        if read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == cap.wrapping_sub(1) {
+            let p = crt_realloc(read_usize(this + player_regen_fields::PLAYER_DATA_POOL), cap.wrapping_add(250) << 4);
+            write_usize(this + player_regen_fields::PLAYER_DATA_POOL, p);
+            write_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY).wrapping_add(250));
+            if read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == 0 {
                 regen_out_of_memory(0xae9); // the original checks the count (+0x40), not the pointer
             }
         }
-        let item = || read_usize(this + 0x3c).wrapping_add(read_usize(this + 0x40) << 4);
+        let item = || read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
         write_usize(item(), read_usize(read_usize(person + staff::PLAYER)));
         write_usize(item() + 4, read_usize(read_usize(person + staff::NATION)));
         write_usize(item() + 0xc, read_usize(person));
-        write_usize(this + 0x40, read_usize(this + 0x40).wrapping_add(1));
+        write_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT).wrapping_add(1));
     }
 }
 
@@ -3179,11 +3179,11 @@ pub(crate) unsafe extern "thiscall" fn build_nation_club_lists(this: usize) {
 pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
     let regen: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_PLAYER_REGEN_REGENERATE_AS_YOUTH_PLAYER);
     let copy: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_REGEN_QUEUE_ENTRY_ASSIGN);
-    let c0 = read_i32(this + 0x14);
-    let first = read_usize(this + 0x10);
+    let c0 = read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT);
+    let first = read_usize(this + player_regen_fields::REGEN_QUEUE);
     let mut k = 0i32;
     while k < c0 {
-        if !is_regen_entry_due(first) || read_i32(this + 0x40) == 0 {
+        if !is_regen_entry_due(first) || read_i32(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == 0 {
             break;
         }
         let id = read_i32(first);
@@ -3196,20 +3196,20 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
         crate::comparacao::ramo("cpw_10 regen da fila");
         regen(this, read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize));
         let mut j = 0i32;
-        while j < read_i32(this + 0x14) - 1 {
-            let e = read_usize(this + 0x10).wrapping_add((j as u32).wrapping_mul(0xc) as usize);
+        while j < read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT) - 1 {
+            let e = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add((j as u32).wrapping_mul(0xc) as usize);
             copy(e, e + 0xc);
             j += 1;
         }
-        let n = read_i32(this + 0x14);
-        let last = read_usize(this + 0x10).wrapping_add((n as u32).wrapping_mul(0xc) as usize).wrapping_sub(0xc);
+        let n = read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT);
+        let last = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add((n as u32).wrapping_mul(0xc) as usize).wrapping_sub(0xc);
         core::ptr::write_unaligned(last as *mut i32, -1);
         write_u16(last + 4, 0);
         write_u16(last + 6, 0);
-        core::ptr::write_unaligned((this + 0x14) as *mut i32, n - 1); // cpw10: a entrada sai
+        core::ptr::write_unaligned((this + player_regen_fields::REGEN_QUEUE_COUNT) as *mut i32, n - 1); // cpw10: a entrada sai
         k += 1;
     }
-    let total = read_i32(this + 0x20);
+    let total = read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT);
     if total <= 2 {
         return;
     }
@@ -3217,12 +3217,12 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
     let normalizar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
     let remove: unsafe extern "thiscall" fn(usize, i32) = core::mem::transmute(FN_PLAYER_REGEN_REMOVE_SPARE_NON_PLAYER_RECORD);
     for _ in 0..total - 2 {
-        let s = doador(this, read_usize(read_usize(this + 0x1c) + 4));
+        let s = doador(this, read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS) + 4));
         if s == 0 {
             return;
         }
         crate::comparacao::ramo("cpw_10 tecnico de reserva");
-        let nj = read_usize(G_NON_PLAYER_TABLE).wrapping_add((read_usize(read_usize(this + 0x1c)) as u32).wrapping_mul(0x44) as usize);
+        let nj = read_usize(G_NON_PLAYER_TABLE).wrapping_add((read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as u32).wrapping_mul(0x44) as usize);
         core::ptr::write_unaligned((s + 0x69) as *mut usize, nj);
         let sheet = read_usize(s + 0x61);
         if sheet == 0 {
@@ -3261,7 +3261,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             let c = rebuilt_coach_rating(s, read_i16(read_usize(s + 0x61) + 0xd), Some(0x969040), k, teto);
             write_u16(read_usize(s + 0x69) + 0xc, c);
         }
-        remove(this, read_i32(read_usize(this + 0x1c)));
+        remove(this, read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)));
     }
 }
 
@@ -3300,9 +3300,9 @@ pub(crate) unsafe extern "thiscall" fn is_retirement_pending(this: usize, person
 /// (PLAYER_REGEN::remove_spare_non_player_record 0x7a82b0 com o id lido da saída); devolve o eax dela.
 pub(crate) unsafe extern "thiscall" fn take_spare_non_player_record(this: usize, id: *mut u32, nacao: *mut u32, second: *mut u32) -> u32 {
     crate::comparacao::ramo("cpt_10 ficha reservada");
-    *id = read_u32_as_usize(read_u32_as_usize(this + 0x1c)) as u32;
-    *nacao = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 4) as u32;
-    *second = read_u32_as_usize(read_u32_as_usize(this + 0x1c) + 8) as u32;
+    *id = read_u32_as_usize(read_u32_as_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as u32;
+    *nacao = read_u32_as_usize(read_u32_as_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS) + 4) as u32;
+    *second = read_u32_as_usize(read_u32_as_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS) + 8) as u32;
     let remove: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(FN_PLAYER_REGEN_REMOVE_SPARE_NON_PLAYER_RECORD);
     remove(this, *id)
 }

@@ -258,7 +258,7 @@ pub(crate) const BRAZIL_TURNOVER_COMPS: [usize; 14] = [KEY_CLUB_COMP_BRAZILIAN_N
 /// a tabela 0x42a480, caixas nas linhas 0x223, 0x22a, 0x230 e 0x237); as viradas das outras catorze (a virtual +8);
 /// as expectativas e os árbitros.
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     let cadeia: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(read_usize(read_usize(this) + 0xb0));
     cadeia(this, 1);
     for f in [0x42b760usize, 0x42b520, 0x42b130] {
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
 /// virada da Série A): +0x4c = 0, o corpo comum (a tabela 0x42ca70, caixas nas linhas 0x20c, 0x213, 0x219 e 0x220), as
 /// expectativas e os árbitros.
 pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season_42cc10(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x4c) as *mut u32, 0);
+    core::ptr::write_unaligned((this + league::SEASON_CLOSED) as *mut u32, 0);
     if !rebuild_season(this, 0x42ca70, 0x98ab64, [0x20c, 0x213, 0x219, 0x220], 1) {
         return 0;
     }

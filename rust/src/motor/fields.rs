@@ -142,3 +142,276 @@ pub(crate) mod staff {
     pub(crate) const NON_PLAYER: usize = 0x69; // 4 byte(s), int
     pub(crate) const SQUAD_SELECTED_FOR: usize = 0x6d; // 1 byte(s), byte
 }
+
+/// Fields of the `bra_nat_third` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `bra_nat_third`.
+#[allow(dead_code)]
+pub(crate) mod bra_nat_third {
+    pub(crate) const CLUB_LIST: usize = 0xee; // 4 byte(s): pointer to the list of the 56 Serie C clubs (first seven from the league, then the group places)
+}
+
+/// Fields of the `contract_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `contract_manager_fields`.
+#[allow(dead_code)]
+pub(crate) mod contract_manager_fields {
+    pub(crate) const DECISION_DATES: usize = 0xc; // 4 byte(s): Array of 14-byte decision date entries (person, date, slice, type at +0xd), sorted
+    pub(crate) const DECISION_CAPACITY: usize = 0x10; // 4 byte(s): Capacity of the decision date array (grows by 100)
+    pub(crate) const DECISION_COUNT: usize = 0x14; // 4 byte(s): Number of decision date entries
+    pub(crate) const DECISION_NEXT_INDEX: usize = 0x18; // 4 byte(s): Index of the next decision date to process
+    pub(crate) const DECISIONS_ADDED: usize = 0x1c; // 4 byte(s): Counter bumped each time an offer decision is scheduled [inference]
+    pub(crate) const TALKS_RECORDS: usize = 0x28; // 4 byte(s): Array of 21-byte contract talks records (person, manager, club)
+    pub(crate) const TALKS_COUNT: usize = 0x2c; // 4 byte(s): Number of talks records
+    pub(crate) const CONTRACT_OFFERS: usize = 0x34; // 4 byte(s): Linked list of current contract offers
+    pub(crate) const HELD_OFFERS: usize = 0x38; // 4 byte(s): Linked list of held contract offers awaiting resubmission
+}
+
+/// Fields of the `cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `cup`.
+#[allow(dead_code)]
+pub(crate) mod cup {
+    pub(crate) const STAGES: usize = 0xc; // 4 byte(s): Pointer to the array of stage object pointers ([+0xc][i] = stage i) (inherited from Comp)
+    pub(crate) const ENTRANT_BOOK: usize = 0x14; // 4 byte(s): Pointer to the entrant book, 6-byte entries: +0 club, +4 entry class, +5 status (inherited from Comp)
+    pub(crate) const VENUE_STADIUM_ID: usize = 0x24; // 4 byte(s): Fixed stadium id of the competition, -1 when none; a team whose stadium matches plays at home (inherited from Comp)
+    pub(crate) const PRIZE_FUND: usize = 0x28; // 4 byte(s): Prize fund; round prize money paid to winners/losers is subtracted from it (inherited from Comp)
+    pub(crate) const STAGE_COUNT: usize = 0x2c; // 4 byte(s): Number of stages in the stage array +0xc (inherited from Comp)
+    pub(crate) const CURRENT_STAGE: usize = 0x30; // 4 byte(s): Index of the current stage, -1 before the first; advance_stage increments it up to STAGE_COUNT-1 (inherited from Comp)
+    pub(crate) const ENTRANT_COUNT: usize = 0x36; // 2 byte(s): Number of entries used in the entrant book +0x14 (inherited from Comp)
+    pub(crate) const ENTRANT_CAPACITY: usize = 0x38; // 2 byte(s): Capacity of the entrant book +0x14 (inherited from Comp)
+    pub(crate) const STAGE_LABEL: usize = 0x3a; // 2 byte(s): Stage label code (the 'extra' from create_round_table, e.g. a group name code), copied into each match +0x32 and the cup news (inherited from Comp)
+    pub(crate) const ROUND_COUNT: usize = 0x3c; // 2 byte(s): Number of rounds (records in ROUND_TABLE / pointers in TIE_TABLES) (inherited from Comp)
+    pub(crate) const TEAM_COUNT: usize = 0x3e; // 2 byte(s): Number of teams in TEAM_TABLE +0xa7 (inherited from Comp)
+    pub(crate) const YEAR: usize = 0x40; // 2 byte(s): Season year of the competition; round dates store a year offset relative to it (inherited from Comp)
+    pub(crate) const COMP_TYPE: usize = 0x42; // 1 byte(s): Competition type code (1 league, 2 cup, 4 ...), used by club records and to pick which matches a fixture slot applies to (inherited from Comp)
+    pub(crate) const STAGE_INDEX: usize = 0x44; // 1 byte(s): Index of this stage inside its parent competition; 0xff for a top-level competition (inherited from Comp)
+    pub(crate) const SEASON_SET_UP: usize = 0x45; // 4 byte(s): Set once the season's entrants and fixture tree are built; rounds are not drawn or set up while 0, cleared at season start (inherited from Comp)
+    pub(crate) const SUBSTITUTES_NAMED: usize = 0x49; // 1 byte(s): Number of substitutes named on the bench (e.g. 7) (inherited from Comp)
+    pub(crate) const SUBSTITUTIONS_ALLOWED: usize = 0x4a; // 1 byte(s): Number of substitutions allowed (e.g. 3) (inherited from Comp)
+    pub(crate) const SEASON_CLOSED: usize = 0x4c; // 4 byte(s): Set once the finished competition has written its history and records for the season (inherited from Comp)
+    pub(crate) const DISCIPLINE_INDEX: usize = 0x50; // 1 byte(s): Index of the competition's entry in the discipline rules table (inherited from Comp)
+    pub(crate) const IMPORTANCE_BIAS: usize = 0x51; // 1 byte(s): Added to (match round - ROUND_COUNT) to give a cup match's importance (minimum 1); passed on to its stages (inherited from Comp) [inference]
+    pub(crate) const ROUND_TABLE: usize = 0xa3; // 4 byte(s): Pointer to the round records, 0x68 bytes each (+7 round code, +0xb draw rules, +0xd tiebreak rules, +0x18 teams, +0x1a ties, +0x1c new teams, +0x21 legs, +0x5c/+0x60/+0x64 prizes)
+    pub(crate) const TEAM_TABLE: usize = 0xa7; // 4 byte(s): Pointer to the cup team table, 6-byte entries: +0 club, +4 seed/level, +5 outcome/status
+    pub(crate) const CURRENT_ROUND: usize = 0xab; // 1 byte(s): Round currently being set up (next round whose fixtures are created)
+    pub(crate) const NEXT_DRAW_ROUND: usize = 0xac; // 1 byte(s): Next round to be drawn; incremented after each draw except the third-place round
+    pub(crate) const TIE_TABLES: usize = 0xad; // 4 byte(s): Pointer to the per-round array of pointers to that round's ties (0x35 bytes each)
+    pub(crate) const RUN_BY_STAGES: usize = 0xb1; // 1 byte(s): Set when the cup has no knockout tree of its own (first round without ties) and is driven by its stages +0xc; cleared at season start [inference]
+}
+
+/// Fields of the `eng_auto_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `eng_auto_cup`.
+#[allow(dead_code)]
+pub(crate) mod eng_auto_cup {
+    pub(crate) const SELECTED_CLUBS: usize = 0xb2; // 4 byte(s): Pointer to the array of the 56 chosen club pointers (north half then south half, sorted by latitude and reputation)
+}
+
+/// Fields of the `eng_cc_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `eng_cc_cup`.
+#[allow(dead_code)]
+pub(crate) mod eng_cc_cup {
+    pub(crate) const EUROPEAN_ENTRANT_COUNT: usize = 0xb2; // 1 byte(s): Signed count of entrants playing in European cups (capped at 12), who enter the League Cup in a later round
+}
+
+/// Fields of the `eng_fa_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `eng_fa_cup`.
+#[allow(dead_code)]
+pub(crate) mod eng_fa_cup {
+    pub(crate) const FIFTH_ROUND_QUESTION_ASKED: usize = 0xb2; // 1 byte(s): Set once the human manager was asked whether the club enters at the 5th round (1999)
+    pub(crate) const EXEMPTION_COUNT: usize = 0xb3; // 1 byte(s): Signed count of exempted clubs, adjusting team, match and new-team counts of rounds 2 to 5
+    pub(crate) const FIFTH_ROUND_ENTRY: usize = 0xb4; // 1 byte(s): 1 when the club chose to enter at the 5th round, changing the round table
+}
+
+/// Fields of the `fra_first` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `fra_first`.
+#[allow(dead_code)]
+pub(crate) mod fra_first {
+    pub(crate) const CFA_MARKER: usize = 0xee; // 4 byte(s): pointer to the marker competition of the CFA
+    pub(crate) const LOWER_MARKER: usize = 0xf2; // 4 byte(s): pointer to the marker competition of the French lower division
+}
+
+/// Fields of the `friendly` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `friendly`.
+#[allow(dead_code)]
+pub(crate) mod friendly {
+    pub(crate) const PRESEASON_BASE_DATE: usize = 0xa7; // 8 byte(s): Date stored on the preseason planning day; tour and friendly windows are offsets from it
+    pub(crate) const FIRST_TOURNAMENT_COMP_ID: usize = 0xaf; // 2 byte(s): Competition id of tournament slot 0; slot index = comp id byte minus this
+    pub(crate) const TOURNAMENT_SLOTS: usize = 0xb1; // 0x3417 byte(s): 127 tournament slots of 0x69 bytes (+0 owner/occupied, +4 date, +0x64 slot, +0x65 created comp)
+    pub(crate) const FRIENDLY_MATCH_LIST: usize = 0x34c8; // 4 byte(s): Linked list of arranged friendly matches (0x19-byte records: club, date, home, away)
+    pub(crate) const SCHEDULED_SLOT_LIST: usize = 0x34cc; // 4 byte(s): Linked list of 0x19-byte scheduled friendly slots by club, date and opponent (expired invitations cleared daily)
+    pub(crate) const PENDING_TOURNAMENT_LIST: usize = 0x34d0; // 4 byte(s): Linked list of pending (not yet played) tournaments
+    pub(crate) const REQUEST_REPLY_LIST: usize = 0x34d4; // 4 byte(s): Linked list of friendly requests awaiting a reply
+    pub(crate) const PLANNED_FRIENDLIES: usize = 0x34d8; // 4 byte(s): Array of 0x14-byte planned AI preseason friendlies, sorted by date
+    pub(crate) const PLANNED_NEXT_INDEX: usize = 0x34dc; // 4 byte(s): Index of the next planned friendly to create
+    pub(crate) const PLANNED_COUNT: usize = 0x34e0; // 4 byte(s): Number of planned friendlies
+    pub(crate) const PLANNED_CAPACITY: usize = 0x34e4; // 4 byte(s): Capacity of the planned friendlies array (100)
+    pub(crate) const PRESEASON_PLAN_DAY_A: usize = 0x34e8; // 2 byte(s): One of the two preseason planning day numbers; also compared with the current year for the Intertoto check [inference]
+    pub(crate) const PRESEASON_PLAN_DAY_B: usize = 0x34ea; // 2 byte(s): The other preseason planning day number checked by update_for_date [inference]
+    pub(crate) const INTL_DATE_TABLE: usize = 0x34ec; // 4 byte(s): Array of 0x14-byte international friendly date entries
+    pub(crate) const INTL_DATE_COUNT: usize = 0x34f0; // 4 byte(s): Number of international date entries (starts at 0xc8)
+    pub(crate) const INTL_LAST_DAY_DONE: usize = 0x34f4; // 2 byte(s): Last day processed by update_international_friendlies (400 = none)
+    pub(crate) const SORTED_NATIONS: usize = 0x34fa; // 4 byte(s): Array of nation pointers with a continent, sorted by reputation
+    pub(crate) const SORTED_NATION_COUNT: usize = 0x34fe; // 4 byte(s): Number of entries in the sorted nation array
+    pub(crate) const BANNED_NATION_PAIRS: usize = 0x3502; // 4 byte(s): Array of 8-byte banned nation pairs (-1 = any)
+    pub(crate) const BANNED_PAIR_COUNT: usize = 0x3506; // 1 byte(s): Number of banned nation pairs (signed byte)
+}
+
+/// Fields of the `injury_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `injury_fields`.
+#[allow(dead_code)]
+pub(crate) mod injury_fields {
+    pub(crate) const INJURY_HISTORY: usize = 0xc; // 4 byte(s): Injury history object (per-person past injuries)
+    pub(crate) const RECOVERY_NEWS_QUEUE: usize = 0x10; // 4 byte(s): Array of 22-byte return-from-injury news entries, sorted by date
+    pub(crate) const RECOVERY_NEWS_COUNT: usize = 0x18; // 4 byte(s): Number of recovery news entries
+    pub(crate) const OUTBREAKS: usize = 0x1c; // 4 byte(s): Array of 17-byte illness outbreaks (date, illness type, club index)
+    pub(crate) const OUTBREAK_CAPACITY: usize = 0x20; // 4 byte(s): Capacity of the outbreak array
+    pub(crate) const OUTBREAK_COUNT: usize = 0x24; // 4 byte(s): Number of illness outbreaks
+    pub(crate) const MATCH_HIT_LIST: usize = 0x28; // 4 byte(s): Linked list of knocks taken in today's matches (freed daily)
+}
+
+/// Fields of the `intertoto_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `intertoto_cup`.
+#[allow(dead_code)]
+pub(crate) mod intertoto_cup {
+    pub(crate) const WINNERS_SENT_TO_UEFA: usize = 0xb2; // 4 byte(s): Set once the finished Intertoto has passed its winners into the UEFA Cup entrant book
+}
+
+/// Fields of the `league` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `league`.
+#[allow(dead_code)]
+pub(crate) mod league {
+    pub(crate) const STAGES: usize = 0xc; // 4 byte(s): pointer to the array of extra stage objects (4 bytes each, STAGE_COUNT entries)
+    pub(crate) const UPPER_DIVISION_ID: usize = 0x1c; // 4 byte(s): competition id of the division above (promotion target); -1 = none (top of the pyramid)
+    pub(crate) const LOWER_DIVISION_ID: usize = 0x20; // 4 byte(s): competition id of the division below (relegation target); -1 = none
+    pub(crate) const FIXED_STADIUM_ID: usize = 0x24; // 4 byte(s): stadium id used for the fixtures; the club whose stadium (+0x69) matches plays at home; -1 = none [inference]
+    pub(crate) const PRIZE_FUND: usize = 0x28; // 4 byte(s): total prize money shared by table position at season end (fund / (1+2+..+n) per share)
+    pub(crate) const STAGE_COUNT: usize = 0x2c; // 4 byte(s): number of stages beyond the league itself (play-offs, second phase...)
+    pub(crate) const CURRENT_STAGE: usize = 0x30; // 4 byte(s): index of the current extra stage; -1 = still in the league stage
+    pub(crate) const STAGE_ID: usize = 0x3a; // 2 byte(s): stage/round code (output of create_schedule; copied to each fixture +0x32, announced in status news)
+    pub(crate) const LEGS: usize = 0x3c; // 2 byte(s): times each pair of clubs meets (2 = home and away)
+    pub(crate) const CLUB_COUNT: usize = 0x3e; // 2 byte(s): number of clubs (rows in TABLE)
+    pub(crate) const YEAR: usize = 0x40; // 2 byte(s): season year of the league
+    pub(crate) const CLUB_SIDES: usize = 0x42; // 1 byte(s): 1 = played by club sides (written by every set_up_rules) [inference]
+    pub(crate) const STAGE_INDEX: usize = 0x44; // 1 byte(s): index of this object as a stage of its parent; 0xff = the main competition itself, 0xfe = special stage
+    pub(crate) const ACTIVE: usize = 0x45; // 4 byte(s): nonzero when the competition has clubs/is active; zero makes the day update, sort and completion checks skip [inference]
+    pub(crate) const SEASON_CLOSED: usize = 0x4c; // 4 byte(s): set once the season-end history and records were written; cleared by start_new_season
+    pub(crate) const DISCIPLINE_RULE: usize = 0x50; // 1 byte(s): discipline (suspension) rule set code (9 English, 0xc French, 0x11 Italian, 0x1a Spanish...)
+    pub(crate) const IMPORTANCE: usize = 0x51; // 1 byte(s): competition importance (0xf for state leagues); match importance = (IMPORTANCE - 10) / 4 + 10
+    pub(crate) const SQUAD_FLAGS: usize = 0x52; // 1 byte(s): flags; bit 2 = squad registration with fixed squad numbers (registration deadline before the first round)
+    pub(crate) const GAMES_PER_CLUB: usize = 0xa7; // 2 byte(s): league games each club plays = (CLUB_COUNT - 1) x LEGS; -1 = not computed yet
+    pub(crate) const ROUND_COUNT: usize = 0xa9; // 2 byte(s): number of rounds (entries in ROUND_DATES)
+    pub(crate) const MATCH_RULES: usize = 0xab; // 2 byte(s): match rules flags copied to each fixture +0x38: bit 2 extra time, bits 0x21 penalties
+    pub(crate) const TABLE_COLUMN: usize = 0xad; // 4 byte(s): head-to-head column used when sorting (14 bytes per column in the rows); 0 = main table
+    pub(crate) const TABLE: usize = 0xb1; // 4 byte(s): pointer to the league table: CLUB_COUNT rows of 0x3b bytes
+    pub(crate) const STOPPED: usize = 0xb5; // 1 byte(s): nonzero = league stopped/closed: no daily update, never complete [inference]
+    pub(crate) const ROUND_DATES: usize = 0xba; // 4 byte(s): pointer to the round date table (0x41-byte entries: day, year - YEAR, code, TV slots, +0x3d stadium value)
+    pub(crate) const PROMOTED_COUNT: usize = 0xbe; // 1 byte(s): clubs promoted directly (top band)
+    pub(crate) const PROMOTION_PLAYOFF_COUNT: usize = 0xbf; // 1 byte(s): clubs going to the promotion play-off (band below PROMOTED_COUNT)
+    pub(crate) const RELEGATION_PLAYOFF_COUNT: usize = 0xc0; // 1 byte(s): clubs going to the relegation play-off (band above RELEGATED_COUNT)
+    pub(crate) const RELEGATED_COUNT: usize = 0xc1; // 1 byte(s): clubs relegated directly (bottom band)
+    pub(crate) const WIN_POINTS: usize = 0xc2; // 1 byte(s): points for a win
+    pub(crate) const DRAW_POINTS: usize = 0xc3; // 1 byte(s): points for a draw
+    pub(crate) const MATCH_CATEGORY: usize = 0xc4; // 1 byte(s): match category copied to each fixture +0x3a (2 = league)
+    pub(crate) const TIEBREAKS: usize = 0xc5; // 4 byte(s): four tie-break codes (1 goal difference, 2 goals for, 3 row byte +0x12, 4 head-to-head, 5 row word +0x31, 6 sort only); 0 ends
+    pub(crate) const LAST_RESULT_DATE: usize = 0xc9; // 8 byte(s): date of the last result added; on that date the day update re-sorts the table and updates statuses
+    pub(crate) const LAST_UPDATE_DATE: usize = 0xd1; // 8 byte(s): date of the last full daily update (new-day check)
+    pub(crate) const LEAGUE_FLAGS: usize = 0xd9; // 2 byte(s): rule bits: 1 champion status, 2/4/8 promotion status 0/7/6, 0x20 mid-table status, 0x40/0x80 round order, 0x100 fixed table slots
+    pub(crate) const COMPLETE: usize = 0xdd; // 4 byte(s): league stage finished (all games played or ended by date)
+    pub(crate) const PRIZE_MODE: usize = 0xe1; // 1 byte(s): prize payment mode: 1 = PRIZE_FUND by position, 2 = nothing, 3 = paid by the competition (virtual +0x6c)
+    pub(crate) const TIEBREAK_MATCHES: usize = 0xe6; // 4 byte(s): a points tie across a band boundary goes to a tie-break match (no prizes or end records until resolved)
+    pub(crate) const FIXED_FIXTURES: usize = 0xea; // 4 byte(s): pointer to a fixed fixture list (0x10-byte entries, +8/+0xc club ids) used instead of the round robin; 0 = none
+}
+
+/// Fields of the `player_regen_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `player_regen_fields`.
+#[allow(dead_code)]
+pub(crate) mod player_regen_fields {
+    pub(crate) const RETIREMENT_CAPACITY: usize = 0xc; // 4 byte(s): Capacity of the retirements array (grows by 250)
+    pub(crate) const REGEN_QUEUE: usize = 0x10; // 4 byte(s): Array of 12-byte regen queue entries (staff id, date)
+    pub(crate) const REGEN_QUEUE_COUNT: usize = 0x14; // 4 byte(s): Number of regen queue entries
+    pub(crate) const REGEN_QUEUE_CAPACITY: usize = 0x18; // 4 byte(s): Capacity of the regen queue (grows by 250)
+    pub(crate) const SPARE_NON_PLAYER_RECORDS: usize = 0x1c; // 4 byte(s): Array of 16-byte spare non-player records (record, nation, second nation)
+    pub(crate) const SPARE_NON_PLAYER_COUNT: usize = 0x20; // 4 byte(s): Number of spare non-player records
+    pub(crate) const SPARE_NON_PLAYER_CAPACITY: usize = 0x24; // 4 byte(s): Capacity of the spare non-player array (grows by 250)
+    pub(crate) const PLAYER_DATA_POOL: usize = 0x3c; // 4 byte(s): Array of 16-byte free player-data records (record id, nation, second nation) reused by youth regens
+    pub(crate) const PLAYER_DATA_POOL_COUNT: usize = 0x40; // 4 byte(s): Number of free player-data records
+    pub(crate) const PLAYER_DATA_POOL_CAPACITY: usize = 0x44; // 4 byte(s): Capacity of the player-data pool (grows by 250)
+}
+
+/// Fields of the `player_search_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `player_search_fields`.
+#[allow(dead_code)]
+pub(crate) mod player_search_fields {
+    pub(crate) const LIST_TYPE: usize = 0xa; // 1 byte(s): Search list type (1 to 4; 4 = scout watching matches)
+    pub(crate) const SCOUT_NAME_REF: usize = 0x174; // 0x18 byte(s): Scout reference: first, second and common name ids (+0x174/+0x178/+0x17c), staff index (+0x180) and date (+0x184)
+    pub(crate) const SCOUT_ID: usize = 0x180; // 4 byte(s): Staff index of the scout (-1 = none)
+    pub(crate) const ASSIGNED_NATION: usize = 0x18c; // 4 byte(s): Scout assignment: nation (-1 = none)
+    pub(crate) const ASSIGNED_CLUB: usize = 0x190; // 4 byte(s): Scout assignment: club to follow (-1 = none)
+    pub(crate) const ASSIGNED_REGION: usize = 0x194; // 1 byte(s): Scout assignment: region (-1 = none)
+    pub(crate) const ASSIGNED_COMP: usize = 0x195; // 4 byte(s): Scout assignment: competition (-1 = none)
+    pub(crate) const ASSIGNED_BASE: usize = 0x199; // 4 byte(s): Scout assignment flag: scout the region of the club's base [inference]
+    pub(crate) const ASSIGNED_OPPONENT: usize = 0x19d; // 4 byte(s): Scout assignment flag: scout the next opposition [inference]
+    pub(crate) const RESULTS: usize = 0x1ee; // 4 byte(s): Sorted array of 0x2d-byte search results
+    pub(crate) const RESULT_COUNT: usize = 0x1f6; // 4 byte(s): Number of search results
+}
+
+/// Fields of the `shortlist_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `shortlist_manager_fields`.
+#[allow(dead_code)]
+pub(crate) mod shortlist_manager_fields {
+    pub(crate) const PAIRS_BY_CLUB_CAPACITY: usize = 0xc; // 4 byte(s): Capacity of the by-club pair array (starts at 100)
+    pub(crate) const PAIRS_BY_PERSON_COUNT: usize = 0x10; // 4 byte(s): Number of by-person pairs
+    pub(crate) const PAIRS_BY_CLUB_COUNT: usize = 0x14; // 4 byte(s): Number of by-club pairs
+    pub(crate) const POSITION_LISTS_BY_PERSON: usize = 0x18; // 0x40 byte(s): 16 position list arrays keyed by person
+    pub(crate) const POSITION_LISTS_BY_KEY: usize = 0x58; // 0x40 byte(s): 16 position list arrays keyed by contract value
+    pub(crate) const POSITION_LIST_COUNTS: usize = 0x98; // 0x40 byte(s): 16 counts, one per position list
+    pub(crate) const POSITION_LIST_CAPACITY: usize = 0xd8; // 4 byte(s): Size of each position list (largest number of people)
+    pub(crate) const CLUB_SHORTLISTS: usize = 0xdc; // 4 byte(s): Table of 9-byte per-club shortlist records (pointer to 40 entries of 37 bytes, active flag +4, days +8)
+}
+
+/// Fields of the `staff_contract` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `staff_contract`.
+#[allow(dead_code)]
+pub(crate) mod staff_contract {
+    pub(crate) const WAGE: usize = 0xc; // 4 byte(s): Weekly wage (minimum 55 by default)
+    pub(crate) const GOAL_BONUS: usize = 0x10; // 4 byte(s): Goal bonus (-1 = none)
+    pub(crate) const ASSIST_BONUS: usize = 0x14; // 4 byte(s): Assist bonus (-1 = none)
+    pub(crate) const CLEAN_SHEET_BONUS: usize = 0x18; // 4 byte(s): Clean sheet bonus (-1 = none)
+    pub(crate) const NON_PROMOTION_RC: usize = 0x1c; // 1 byte(s): Non-promotion release clause (2 = active)
+    pub(crate) const MINIMUM_FEE_RC: usize = 0x1d; // 1 byte(s): Minimum fee release clause (1 = active)
+    pub(crate) const RELEASE_FEE: usize = 0x21; // 4 byte(s): Release fee
+    pub(crate) const DATE_STARTED: usize = 0x25; // 8 byte(s): Contract start date
+    pub(crate) const CONTRACT_EXPIRES: usize = 0x2d; // 8 byte(s): Contract end date
+    pub(crate) const CONTRACT_TYPE: usize = 0x35; // 1 byte(s): Bit field: low 6 bits the contract type, bits 6-7 flags
+    pub(crate) const PREVIOUS_WAGE: usize = 0x36; // 4 byte(s): Copy of the wage taken when the contract is set up [inference]
+    pub(crate) const UNHAPPY_FLAG: usize = 0x3e; // 1 byte(s): Byte cleared when a transfer request is withdrawn or morale is reset [inference]
+    pub(crate) const FLAGS: usize = 0x40; // 4 byte(s): Contract flags (set_flags ORs marks in)
+    pub(crate) const MORALE: usize = 0x44; // 1 byte(s): Morale in the contract (signed); set to professionalism + loyalty + 5 on request withdrawal
+    pub(crate) const GRIEVANCES: usize = 0x45; // 4 byte(s): Grievance bits (0x10, 1, 4, 8, 0x100, 0x80, ...)
+    pub(crate) const LEAVING_ON_BOSMAN: usize = 0x49; // 1 byte(s): Leaving on a free transfer
+    pub(crate) const TRANSFER_ARRANGED_FOR: usize = 0x4a; // 4 byte(s): Club the transfer is arranged with (-1 = none)
+    pub(crate) const TRANSFER_STATUS: usize = 0x4e; // 1 byte(s): Transfer status bits (bit 1 listed, bit 3 transfer requested)
+    pub(crate) const SQUAD_STATUS: usize = 0x4f; // 1 byte(s): Squad status (high nibble the role, 7 = for sale)
+}
+
+/// Fields of the `transfer_manager_fields` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `transfer_manager_fields`.
+#[allow(dead_code)]
+pub(crate) mod transfer_manager_fields {
+    pub(crate) const NEGOTIATIONS: usize = 0xc; // 4 byte(s): Pointer to the array of negotiation pointers
+    pub(crate) const NEGOTIATION_CAPACITY: usize = 0x10; // 4 byte(s): Capacity of the negotiation array (grows by 50)
+    pub(crate) const NEGOTIATION_COUNT: usize = 0x14; // 4 byte(s): Number of live negotiations
+    pub(crate) const DAY_CURSOR: usize = 0x84c; // 1 byte(s): Current day index into SCHEDULE_BUCKETS (0..49, wraps)
+    pub(crate) const CURRENT_DATE: usize = 0x84d; // 8 byte(s): Date the manager is processing (day i16 at +0, year i16 at +2; year 0 = not started)
+    pub(crate) const CURRENT_SLICE: usize = 0x855; // 1 byte(s): Day slice the manager is processing (0..2)
+    pub(crate) const SHORTLIST_MANAGER: usize = 0x856; // 4 byte(s): Pointer to the SHORTLIST_MANAGER used for bid markers, interest and squad status
+    pub(crate) const NEXT_SERIAL: usize = 0x85a; // 4 byte(s): Next serial number given to a new offer or negotiation
+    pub(crate) const LOWEST_FREE_SLOT: usize = 0x85e; // 4 byte(s): Lowest freed offer slot to reuse, -1 if none
+    pub(crate) const PAST_TRANSFERS: usize = 0x862; // 4 byte(s): Pointer to the past-transfer array (0x25-byte records)
+    pub(crate) const PAST_TRANSFER_COUNT: usize = 0x86a; // 4 byte(s): Number of past-transfer records
+    pub(crate) const PERSON_FLAGS: usize = 0x86e; // 4 byte(s): Pointer to the 8-byte per-person transfer record array (indexed by staff id; bit flags, offer counts)
+    pub(crate) const INSTALMENTS: usize = 0x872; // 14 byte(s): Inline LLIST of 13-byte instalment records (amount, paying club, receiving club, remaining)
+    pub(crate) const NEXT_SALE_PERCENTAGES: usize = 0x880; // 4 byte(s): Pointer to the sell-on percentage array (13-byte records, sorted)
+    pub(crate) const NEXT_SALE_PERCENTAGE_COUNT: usize = 0x888; // 4 byte(s): Number of sell-on percentage records
+    pub(crate) const APPEARANCE_MONEY: usize = 0x88c; // 4 byte(s): Pointer to the first-team appearance money array (13-byte records, sorted by person)
+    pub(crate) const APPEARANCE_MONEY_COUNT: usize = 0x894; // 4 byte(s): Number of first-team appearance money records
+    pub(crate) const INTERNATIONAL_APPEARANCE_MONEY: usize = 0x898; // 4 byte(s): Pointer to the international appearance money array (13-byte records, sorted by person)
+    pub(crate) const INTERNATIONAL_APPEARANCE_MONEY_COUNT: usize = 0x8a0; // 4 byte(s): Number of international appearance money records
+    pub(crate) const TRANSFER_WINDOWS: usize = 0x8a4; // 4 byte(s): Pointer to the array of TRANSFER_WINDOW pointers (+0 rules index, +4 month, +5 closes)
+    pub(crate) const TRANSFER_WINDOW_COUNT: usize = 0x8a8; // 4 byte(s): Number of transfer windows
+    pub(crate) const TRANSFER_RULES: usize = 0x8ac; // 112 byte(s): 28 pointers to per-nation transfer rule objects (nation id at rule +0xa)
+    pub(crate) const FUTURE_TRANSFERS: usize = 0x920; // 4 byte(s): Pointer to the future-transfer array (12-byte records: date +0, offer slot +8; sorted)
+    pub(crate) const FUTURE_TRANSFER_COUNT: usize = 0x928; // 4 byte(s): Number of future-transfer records
+    pub(crate) const FREE_TRANSFER_QUEUE: usize = 0x92c; // 14 byte(s): Inline LLIST of 9-byte free-transfer queue records (person id, reason, compensation)
+    pub(crate) const WORK_PERMITS: usize = 0x93a; // 4 byte(s): Pointer to the work-permit array (14-byte records: person +0, year +8, nation +0xa; sorted)
+    pub(crate) const WORK_PERMIT_COUNT: usize = 0x93e; // 4 byte(s): Number of work-permit records
+    pub(crate) const LOAN_NEGOTIATIONS: usize = 0x946; // 4 byte(s): Pointer to the LLIST of loan negotiation items (0x50 bytes: person, club, offer copy); created on demand
+}
+
+/// Fields of the `uefa_cup` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `uefa_cup`.
+#[allow(dead_code)]
+pub(crate) mod uefa_cup {
+    pub(crate) const PRELIMINARY_CLUB_COUNT: usize = 0xb2; // 1 byte(s): Signed count of clubs in the preliminary round (coefficient 10 or more); shapes the round table
+}

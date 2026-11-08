@@ -287,7 +287,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
                 return 0;
             }
             crate::comparacao::ramo("cqp_6 calendario da primera");
-            let year = core::ptr::read_unaligned((this + 0x40) as *const u16) as u32;
+            let year = core::ptr::read_unaligned((this + league::YEAR) as *const u16) as u32;
             if (year as i16) % 2 != 0 {
                 write_rounds_winter_break(t, year, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);
             } else {
@@ -348,7 +348,7 @@ pub(crate) fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// +0x52 = 2 [sem nome].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
     crate::comparacao::ramo("cqk_4 regras da primera");
-    core::ptr::write_unaligned((this + 0xa9) as *mut u16, 0x26);
+    core::ptr::write_unaligned((this + league::ROUND_COUNT) as *mut u16, 0x26);
     spa_first_apply_league_rules(this, &primera_rules())
 }
 
@@ -431,10 +431,10 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: usize, esc
 /// League::calc_prize_fund 0x682f70 pela cota de 250.000), +0xe1 = 1, a TV de 5.000.000 a cada clube (0x683010:
 /// thiscall(liga, valor, 0), ret 8) e 1.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 0x14);
+    core::ptr::write_unaligned((this + league::CLUB_COUNT) as *mut i16, 0x14);
     let alloc: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_MALLOC);
     let t = alloc(0x49c);
-    core::ptr::write_unaligned((this + 0xb1) as *mut usize, t);
+    core::ptr::write_unaligned((this + league::TABLE) as *mut usize, t);
     if t == 0 {
         show_error_at(0xa82844, 0x250);
         return 0;
@@ -462,21 +462,21 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
             // o byte.
             iniciar(this, row as u32, clube, 0, 0);
             k = k.wrapping_add(1);
-            if k as i8 as i16 == read_i16(this + 0x3e) {
+            if k as i8 as i16 == read_i16(this + league::CLUB_COUNT) {
                 break;
             }
         }
         i = i.wrapping_add(1);
         clube = clube.wrapping_add(0x245);
     }
-    if k as i8 as i16 != read_i16(this + 0x3e) {
+    if k as i8 as i16 != read_i16(this + league::CLUB_COUNT) {
         return 0;
     }
     crate::comparacao::ramo("cqk_5 tabela da primera");
     let prize: unsafe extern "thiscall" fn(usize, i32) -> i32 = core::mem::transmute(FN_LEAGUE_CALC_PRIZE_FUND);
     let f = prize(this, 0x3d090); // cqk5: a cota da Primera
-    core::ptr::write_unaligned((this + 0x28) as *mut i32, f);
-    *((this + 0xe1) as *mut u8) = 1; // cqk5: o prêmio pela tabela no fim da liga
+    core::ptr::write_unaligned((this + league::PRIZE_FUND) as *mut i32, f);
+    *((this + league::PRIZE_MODE) as *mut u8) = 1; // cqk5: o prêmio pela tabela no fim da liga
     let pay: unsafe extern "thiscall" fn(usize, i32, usize) = core::mem::transmute(FN_LEAGUE_PAY_TV_RIGHTS);
     pay(this, 0x4c4b40, 0); // cqk5: a TV da Primera
     1
@@ -530,17 +530,17 @@ pub(crate) unsafe extern "thiscall" fn spa_first_update_staff_records_for_status
     if f > 1 {
         return 0;
     }
-    let n = read_i16(this + 0x3e) as i32;
+    let n = read_i16(this + league::CLUB_COUNT) as i32;
     let mut i: i32 = 0;
     while i < n {
-        let row = read_usize(this + 0xb1) + (i as usize) * 0x3b;
+        let row = read_usize(this + league::TABLE) + (i as usize) * 0x3b;
         if read_usize(row) == clube {
             if f == 0 {
                 match s {
                     1 => {
                         let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                         promotion(eng_second_staff_records(), clube, comp, 0x32);
-                        *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
+                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
                         return 0;
                     }
                     2 | 0xff => {
@@ -550,7 +550,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_update_staff_records_for_status
                         // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
                         let away: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
                         away(eng_second_staff_records(), clube, comp, read_i16(jogo + 0x32) as u16 as u32, read_i16(jogo + 0x30) as u16 as u32, weight);
-                        *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                         return 0;
                     }
                     _ => {}
@@ -558,13 +558,13 @@ pub(crate) unsafe extern "thiscall" fn spa_first_update_staff_records_for_status
             } else {
                 match s {
                     1 => {
-                        *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
                         return 0;
                     }
                     2 | 0xff => {
                         let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
                         cair(eng_second_staff_records(), clube, comp);
-                        *((read_usize(this + 0xb1) + (i as usize) * 0x3b + 0x37) as *mut u8) = 3;
+                        *((read_usize(this + league::TABLE) + (i as usize) * 0x3b + 0x37) as *mut u8) = 3;
                         return 0;
                     }
                     _ => {}

@@ -20,5 +20,5 @@ MUTACOES = [
     ('cpn_alvos_evento', 'atualizar(this, p, clube, 3, kind);', 'let _ = (atualizar, kind); // mutacao: sem o evento 3', 'cpn_6 alvo fora do clube'),
     ('cpn_busca_mesma_regiao', 'return 1; // the same region as the club’s nation', 'return 0; // mutacao: a mesma regiao nao cobre', 'cpn_7 mesma regiao'),
     ('cpn_busca_nacao_do_olheiro', 'return 1; // the nation is not foreign for the scout', 'return 0; // mutacao: a nacao do olheiro nao cobre', 'cpn_7 nacao do olheiro'),
-    ('cpn_amistoso_lista', 'remove(read_usize(this + 0x34c8), jogo) // removes the match from the friendlies list', '1 // mutacao: o jogo fica na lista', 'cpn_7 tirar o amistoso'),
+    ('cpn_amistoso_lista', 'remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), jogo) // removes the match from the friendlies list', '1 // mutacao: o jogo fica na lista', 'cpn_7 tirar o amistoso'),
 ]

@@ -1785,7 +1785,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let ceiling: unsafe extern "thiscall" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_FINANCE_GET_MAX_WAGE);
     write_i32(this + 0x10, 0);
-    write_i32(this + 0xc, 0);
+    write_i32(this + league::STAGES, 0);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this + 8).wrapping_mul(club::SIZE));
     let mut ocupadas: i8 = 0;
     for k in 0..50usize {
@@ -1808,7 +1808,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         if w > read_i32(this + 0x10) {
             write_i32(this + 0x10, w);
         }
-        write_i32(this + 0xc, read_i32(this + 0xc).wrapping_add(w));
+        write_i32(this + league::STAGES, read_i32(this + league::STAGES).wrapping_add(w));
     }
     // the staff: the sum goes to the payroll after the three lists (the same sum, in 32 bits)
     let mut comissao = 0i32;
@@ -1831,7 +1831,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     }
     if comissao != 0 {
         crate::comparacao::ramo("cpz_11 folha do pessoal");
-        write_i32(this + 0xc, read_i32(this + 0xc).wrapping_add(comissao)); // cpz11: o pessoal na folha
+        write_i32(this + league::STAGES, read_i32(this + league::STAGES).wrapping_add(comissao)); // cpz11: o pessoal na folha
     }
     let tipo1 = read_u8(clube + club::PROFESSIONAL_STATUS) == 1;
     let rep = read_i16(clube + club::REPUTATION) as i32;
@@ -1852,7 +1852,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
             v = v.wrapping_div(t);
         }
         let foul = 15 - ocupadas as i32;
-        write_i32(this + 0xc, read_i32(this + 0xc).wrapping_add(foul.wrapping_mul(v)));
+        write_i32(this + league::STAGES, read_i32(this + league::STAGES).wrapping_add(foul.wrapping_mul(v)));
     }
     let k = if tipo1 {
         let nacao = read_usize(clube + club::NATION);
@@ -1872,8 +1872,8 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
         0x96a5c0
     };
     crate::comparacao::ramo("cpz_11 folha pela injury_word_0c");
-    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + read_i32(this + 0xc) as f64); // cpz11: a reputação na folha
-    write_i32(this + 0xc, folha);
+    let folha = match_pl_ftol(rep.wrapping_mul(rep) as f64 * read_f64_at(k) + read_i32(this + league::STAGES) as f64); // cpz11: a reputação na folha
+    write_i32(this + league::STAGES, folha);
     let t = ceiling(this, 0, -1);
     write_i32(this + 0x14, t);
 }
