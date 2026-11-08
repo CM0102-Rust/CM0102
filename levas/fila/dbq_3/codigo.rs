@@ -45,7 +45,7 @@ unsafe extern "C" fn staff_get_natural_position_mask(pessoa: usize) -> u32 {
     }
     for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x18), (0x13, 0x38), (0x14, 0x30)] {
         if b(k) == 20 {
-            m |= bit; // o throw_in, o zagueiro...
+            m |= bit; // o lateral, o zagueiro...
         }
     }
     let algum_20 = (0x10..=0x14).any(|k| b(k) == 20);

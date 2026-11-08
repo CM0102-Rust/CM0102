@@ -1,4 +1,4 @@
-# Mutacoes. Cada clube que poe o jogador na lista conta dois (o limite de 5 chega antes: menos clubes miram cada
+# Mutacoes. Cada clube que poe o jogador na lista conta dois (o limit de 5 chega antes: menos clubes miram cada
 # jogador, as ofertas mudam). O contrato nao fica a venda (o +0x4f segue sem o 7: os clubes nao o tratam como listado;
 # comparando, o plano acusa). O clube antigo nao recebe o premio por jogos (o dinheiro dele muda; so se houver premio
 # pago ate 2002-06-01: PODE ESCAPAR, ver o ramo).

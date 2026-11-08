@@ -163,16 +163,16 @@ unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, clube: usiz
         }
     }
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let mut faixa = 0u8;
+    let mut band = 0u8;
     if selecao(clube) == 0 {
         let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
         let fin = financas(cpp3_d(0xae2a38) as usize, clube);
         if fin != 0 {
             let riqueza: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
-            faixa = riqueza(fin);
+            band = riqueza(fin);
         }
     }
-    *((board_row_by_id(this, cpp3_d(clube)) + 1) as *mut u8) = faixa;
+    *((board_row_by_id(this, cpp3_d(clube)) + 1) as *mut u8) = band;
 }
 
 unsafe extern "thiscall" fn comparar_reset_board_for_new_manager(this: usize, clube: usize) {

@@ -14,7 +14,7 @@ unsafe fn dbs2_i16(a: usize) -> i32 {
 
 /// { 0x5461b0 } (cdecl, Database.cpp): `write_position_name(mascara, texto, tamanho)`: o nome da posição (0x66f4e0;
 /// cada um escreve por cima do anterior) contando as posições: 1 goleiro, 2 líbero, 4 zagueiro central (com 0x200 sem
-/// 0x80/0x800), defensor (com 0x200) ou throw_in, 8 throw_in ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
+/// 0x80/0x800), defensor (com 0x200) ou lateral, 8 lateral ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
 /// 0x20 sem nenhuma antes (conta 1) meia-atacante (0x200), ponta (0x80 e 0x800), ponta esquerda (0x80) ou direita, 0x40
 /// com 0x200 atacante; mais de 3: "utility player"; nenhuma: "player". Devolve o byte do gênero do último pelo idioma
 /// (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4; os outros não mudam (começa em 0). Tamanho < 30: a original (caixa).
@@ -51,9 +51,9 @@ unsafe extern "C" fn write_position_name(mascara: u32, texto: usize, tamanho: i3
         n += 1;
         if m & 0x200 != 0 {
             if m & 0x80 == 0 && m & 0x800 == 0 {
-                escrever(0x9b7d40, 2, 1); // central save_shot
+                escrever(0x9b7d40, 2, 1); // central defender
             } else {
-                escrever(0x9b7d28, 2, 1); // save_shot
+                escrever(0x9b7d28, 2, 1); // defender
             }
         } else {
             escrever(0x9b7d34, 5, 1); // full back
@@ -111,7 +111,7 @@ unsafe extern "C" fn comparar_write_position_name(mascara: u32, texto: usize, ta
 /// (qualidades 0x40): matador letal, matador ou goleador veloz (pela soma índice + qualidades % 3), oportunista,
 /// matador ou artilheiro (% 4), atacante dinâmico, de força, forte, criativo, empolgante, habilidoso. Meia (posição
 /// 0x10): com 0x40000 "inspirational" e por cima "free-scoring" (devolve 0); armador, ladrão de bola, dinâmico,
-/// esforçado, confiável, veloz. Qualidades 2 (sem 4): throw_in veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
+/// esforçado, confiável, veloz. Qualidades 2 (sem 4): lateral veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
 /// pela idade (+0x18 da pessoa [0xae23bc] + 110 × índice): veterano acima de índice % 3 + 33 (sem a qualidade 1),
 /// revelação abaixo de índice % 3 + 18 com +0x22 nulo e a soma % 3 = 0. Devolve o gênero: com o idioma 4, 1, 3 ou 4
 /// conforme o texto; senão o byte `genero` (1 com o idioma 5, que a original grava também no próprio argumento; a
@@ -187,10 +187,10 @@ unsafe extern "C" fn write_player_description(pessoa: i32, posicao: u32, qualida
     }
     if q & 4 != 0 {
         if tem(0x200000) {
-            return escrever(0x9b7d8c, 1); // pacey save_shot
+            return escrever(0x9b7d8c, 1); // pacey defender
         }
         if tem(0x1200) {
-            return escrever(0x9b7d78, 1); // cultured save_shot
+            return escrever(0x9b7d78, 1); // cultured defender
         }
         return g;
     }

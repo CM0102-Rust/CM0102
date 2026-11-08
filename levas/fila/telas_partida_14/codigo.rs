@@ -41,7 +41,7 @@ unsafe fn free_match_snapshot() {
 
 /// O fundo das telas da partida: a foto (0x41c670), senão o da competição (0x41c410), senão o do clube
 /// (0x41c250 e 0x41bfb0). Devolve o `eax` da última chamada (a original empilha o byte da cor do
-/// kit por cima dele).
+/// uniforme por cima dele).
 unsafe fn set_match_background(foto: usize, competicao: usize, clube: usize) -> usize {
     let pela_foto: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c670usize);
     let pela_competicao: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(0x41c410usize);
@@ -110,7 +110,7 @@ unsafe fn add_commentary_speed_row(lista: usize, valor: u16, v: u32, sujo: (usiz
 /// +0xea da ficha do humano (0x765480) e libera a foto do parâmetro 0x1d. Modo 1 (parâmetro 1): só a
 /// figura de fundo vazia (0x41c0d0). Senão: tira a marca de "saiu" (−911) do humano nos espectadores
 /// ([partida+0x5b] +0xc5 + 4h, contando em +0x108); o fundo; os cabeçalhos dos dois times (cores do
-/// kit 0x53b640, nome, caixa do clube, placar ou "A" de abandonada) e o agregado ([+0x4f] ≥ 0;
+/// uniforme 0x53b640, nome, caixa do clube, placar ou "A" de abandonada) e o agregado ([+0x4f] ≥ 0;
 /// somado ao placar fora do modo 2 de [+0x67]); a área da narração (fundo "match.mbr"), a do relógio
 /// (minuto [+0x4d] no parâmetro 3), as setas "<<<"/">>>" (ou os símbolos da fonte [0x9cc2c4]), o
 /// controle (0x725a70, parâmetro 4) e os botões táticos dos dois times (parâmetros 5 e 6; o do
@@ -171,7 +171,7 @@ unsafe extern "C" fn build_match_screen() {
     set_match_background(rd(p + 0x1c), rd(p + 0x18), rd(p + 0x20));
 
     // os cabeçalhos: as cores u16 (o resto das variáveis da original é lixo da pilha, aqui 0); o byte do
-    // kit vai num registrador sujo (estendido)
+    // uniforme vai num registrador sujo (estendido)
     let (mut cor_a, mut cor_b) = (0u32, 0u32);
     cores(rd(p + 0x20), rb(st + 0x152) as usize, &mut cor_a, &mut cor_b);
     format_match_team_name(rd(p + 0x20), rb(p + 0x44));
@@ -868,7 +868,7 @@ unsafe extern "C" fn build_match_details_screen() {
     caixa(sm, 0x64, 0xa, 0x1bc, 0x46, 1, 0, 1, 7, 0, 0, 2, rd(reg + 0x1c));
     let r = if rb(foto + 0x11f) == 0xfd { texto(BUF, 0xa164c4, 0xad9c64) } else { formatar(BUF, 0x98806c, rb(foto + 0x11f) as u32) };
     texto_do_gerente(sm, 0x18f, 0xf, 0x1b7, 0x41, 0x30, colour_word(0xae3184), 0xc, 6, colour_with_high_bits(r as usize, 0xaebdea), BUF, 1);
-    // o byte do kit do segundo time vai num ecx sujo (estendido)
+    // o byte do uniforme do segundo time vai num ecx sujo (estendido)
     cores(rd(reg + 0x20), rb(foto + 0x777) as usize, &mut cor_a, &mut cor_b);
     formatar(BUF, 0x987ff0, rd(reg + 0x20) + 0x38);
     texto_do_gerente(sm, 0x1be, 0xa, 0x316, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);

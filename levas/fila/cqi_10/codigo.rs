@@ -23,11 +23,11 @@ unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([usize; 3], u
     let mut v = [0usize; 3];
     let mut k = 0usize;
     let mut vaga = cqi10_w(uefa + 0x3e).wrapping_sub(0x1b);
-    let limite = vaga.wrapping_add(3);
+    let limit = vaga.wrapping_add(3);
     let mut i = 0i16;
     if cqi10_w(this + 0x3e) > 0 {
         loop {
-            if vaga >= limite {
+            if vaga >= limit {
                 break;
             }
             let e = cqi10_d(this + 0xa7).wrapping_add((i as isize * 6) as usize);
@@ -62,11 +62,11 @@ unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, hoje: usi
                 show_error_at(0x9e9e14, 0x29e);
             } else {
                 let mut vaga = cqi10_w(uefa + 0x3e).wrapping_sub(0x1b);
-                let limite = vaga.wrapping_add(3);
+                let limit = vaga.wrapping_add(3);
                 let mut i = 0i16;
                 if cqi10_w(this + 0x3e) > 0 {
                     loop {
-                        if vaga >= limite {
+                        if vaga >= limit {
                             break;
                         }
                         let e = cqi10_d(this + 0xa7).wrapping_add((i as isize * 6) as usize);

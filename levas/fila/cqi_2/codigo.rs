@@ -162,7 +162,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
     }
     let mut r = 0i8;
     while r < *((this + 0x438) as *const i8) {
-        let (faixa, ultima): ([u8; 4], u8) = if r < 3 {
+        let (band, ultima): ([u8; 4], u8) = if r < 3 {
             crate::comparacao::ramo("cqi_2 duas nos grupos");
             ([0, 2, 2, 0], 0) // cqi2: 1ª a 3ª nação
         } else if r < 6 {
@@ -180,7 +180,7 @@ unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubes: 
         } else {
             ([0, 0, 0, 0], 1)
         };
-        let mut vagas = [faixa[0], faixa[1], faixa[2], faixa[3], ultima];
+        let mut vagas = [band[0], band[1], band[2], band[3], ultima];
         let e = cqi2_e(this, r as i32);
         let mut k = 1u8;
         while k < 8 {

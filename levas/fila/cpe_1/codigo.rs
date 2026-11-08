@@ -69,16 +69,16 @@ unsafe fn friendly_random(n: i32) -> i32 {
 /// mesma cidade (+0x57) e os acima da faixa do sorteio (+4 > sorteio(3) + 3). Pela reputação (+0x80) do clube: abaixo
 /// de 2000 a mesma nação (+0x53); de 2000 a 3999 o mesmo +0x75 da nação; de 4000 a 7999 o mesmo +0x71; com o +4 do
 /// clube acima de sorteio(2), a mesma nação. Fica com o candidato quando sorteio(5) = 1; nenhum: 0. Sem SEH, sem caixa.
-unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
-    let mut faixa = faixa as i8;
-    if faixa < 1 {
-        faixa = 1;
-    } else if faixa > 0x14 {
-        faixa = 0x14;
+unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
+    let mut band = band as i8;
+    if band < 1 {
+        band = 1;
+    } else if band > 0x14 {
+        band = 0x14;
     }
     let cp = friendly_club_by_id(cpe1_d(clube));
     let mut chave = [0u8; 0x16];
-    chave[5] = faixa as u8;
+    chave[5] = band as u8;
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(0x946464usize);
     let mut c;
     loop {
@@ -161,13 +161,13 @@ unsafe fn candidate_regions(candidatos: impl Iterator<Item = usize>) -> Vec<(usi
     reg
 }
 
-unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
+unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(%%I0%%);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, faixa, excluir),
-        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, faixa, excluir)));
-    PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, faixa {}) original={:x} rust={:x} {:x?} x {:x?}",
-        clube, lista, n, faixa as i8, r, m, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, band, excluir),
+        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, band, excluir)));
+    PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, band {}) original={:x} rust={:x} {:x?} x {:x?}",
+        clube, lista, n, band as i8, r, m, mo, mr));
     r
 }
 
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, clube: usiz
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| cpe1_d(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, ordenados, n, faixa_max, nacao),
         || crate::aleatorio::sem_contar(|| find_tour_opponent(this, clube, ordenados, n, faixa_max, nacao)));
-    PLACAR.registrar(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, faixa {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    PLACAR.registrar(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         clube, ordenados, n, faixa_max as i8, nacao, r, m, mo, mr));
     r
 }

@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: as telas da partida (6): a tela dos jogos do dia e o capitão padrão (match_screens.cpp) ----------
 
 /// { 0x717cc0 } (cdecl, match_screens.cpp): abre a tela dos jogos do dia na vaga `vaga` (0x7fe4a0 com a
-/// montagem 0x717db0 e a resposta 0x718930, sem match_wrap_up) e grava os parâmetros dela (0x7ff130): 1 o
+/// montagem 0x717db0 e a resposta 0x718930, sem fechamento) e grava os parâmetros dela (0x7ff130): 1 o
 /// grupo de jogos, 2 e 3 zero, 4 um. Grupo nulo: a original (caixa de erro e [0xb67a34] = 0).
 unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
     if grupo == 0 {
@@ -87,7 +87,7 @@ unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatica: usize, c
     vaga
 }
 
-// ponytail: abrir e respond mexem em telas e menu (não rodam duas vezes): no modo comparação só a
+// ponytail: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 unsafe extern "C" fn comparar_open_day_fixtures_screen(vaga: u32, grupo: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, grupo)

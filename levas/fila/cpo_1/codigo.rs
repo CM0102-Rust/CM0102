@@ -101,10 +101,10 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
     if comprador != 0 {
         let g = board_row_at(this, cpo1_d(comprador)) + 0x38;
         cpo1_f_por(g, valor as f64 + cpo1_f(g));
-        let limite = fee_limit(comprador);
+        let limit = fee_limit(comprador);
         let razao = if valor == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / valor as f64 };
-        if taxa <= limite {
-            crate::comparacao::ramo("cpo_1 comprador no limite");
+        if taxa <= limit {
+            crate::comparacao::ramo("cpo_1 comprador no limit");
             or_byte(f1, 4); // o comprador: taxa dentro do limite
         } else if valor > 0x3d090 {
             let m = if razao < exe_f64(0x968918) {
@@ -141,10 +141,10 @@ unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1:
     let v2 = player_value_for_club(pessoa, vendedor); // aqui sem o mínimo 1
     let g = board_row_at(this, cpo1_d(vendedor)) + 0x38;
     cpo1_f_por(g, cpo1_f(g) - v2 as f64);
-    let limite = fee_limit(vendedor);
+    let limit = fee_limit(vendedor);
     let razao = if v2 == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / v2 as f64 };
-    if taxa <= limite {
-        crate::comparacao::ramo("cpo_1 vendedor no limite");
+    if taxa <= limit {
+        crate::comparacao::ramo("cpo_1 vendedor no limit");
         or_byte(f2, 4); // o vendedor: taxa dentro do limite
     } else if v2 > 0x3d090 {
         let m = if razao < exe_f64(0x9689e0) {

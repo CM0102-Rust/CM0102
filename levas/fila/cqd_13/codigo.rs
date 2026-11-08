@@ -252,7 +252,7 @@ unsafe extern "thiscall" fn add_league_champions_record(this: usize, clube: usiz
 /// do clube na partida (+0x188/+0x18a/+0x18c, lado 0x625 × visitante; peso × 400, × k1, × k2); o histórico do técnico
 /// (tipo 0: o clube e a competição de +0x14 do jogo); o registro dele (0x86f5b0 com criar): +1 em +0x8a e ftol(peso^4 ×
 /// 0,5) (pow da CRT 0x945ff0) em +0xb6, +0xca e, na seleção (0x53b900), +0xbe, senão +0xba. O presidente (+0xbf) e os
-/// 20 da escalação. Os 50 do elenco enquanto a reputação não pass_ball de peso × 400: com ficha, válidos e fora o técnico,
+/// 20 da escalação. Os 50 do elenco enquanto a reputação não passar de peso × 400: com ficha, válidos e fora o técnico,
 /// moral +15 (0x544710) e +100 no contrato; com a situação do contrato (+0x4f >> 4) 1-3 ou 5, a renovação. As
 /// convocações da competição guardada (0x76d940) acabam (0x774f30); o histórico do clube (tipo 0); com a mídia e peso
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
@@ -402,17 +402,17 @@ unsafe fn compare_champion_update(nome: &str, this: usize, clube: usize, notas: 
     conta.extend(fichas.iter().take(corte + 1).map(|&(m, _, _)| (m, 1)));
     conta.extend(contratos.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
     // Os de depois, pela faixa da 0x544710: o moral m sobe de 0 a 20 (+20 ou +10 sorteados), preso em 1..20.
-    let faixa = |&(m, _, m0): &(usize, usize, i8)| -> bool {
+    let band = |&(m, _, m0): &(usize, usize, i8)| -> bool {
         let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
         v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
     };
-    let mut na_faixa = fichas.iter().skip(corte + 1).all(faixa);
+    let mut na_faixa = fichas.iter().skip(corte + 1).all(band);
     let mr = crate::comparacao::Memoria::ler(&conta);
     antes.escrever();
     original();
-    na_faixa &= fichas.iter().skip(corte + 1).all(faixa);
+    na_faixa &= fichas.iter().skip(corte + 1).all(band);
     let mo = crate::comparacao::Memoria::ler(&conta);
-    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da faixa: {}) original={:x?} rust={:x?}",
+    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 

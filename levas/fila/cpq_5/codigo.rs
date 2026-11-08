@@ -124,9 +124,9 @@ unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta:
     let copia: unsafe extern "thiscall" fn(*mut [u32; 2], *mut [u32; 2], *const [u32; 2]) -> usize = core::mem::transmute(0x417c10usize);
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
     let hoje = CPQ5_HOJE as *const [u32; 2];
-    let (mut dia, mut limite, mut inicio, mut t, mut t2) = ([0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2]);
+    let (mut dia, mut limit, mut inicio, mut t, mut t2) = ([0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2], [0u32; 2]);
     padrao(&mut dia);
-    mais(hoje, &mut limite, 0x16d);
+    mais(hoje, &mut limit, 0x16d);
     padrao(&mut inicio);
     let mut motivo = 0u32;
     // ponytail: o motivo da regra é uma variável só, sem valor antes da primeira chamada (a original não a zera; a
@@ -167,7 +167,7 @@ unsafe extern "thiscall" fn find_next_allowed_transfer_date(this: usize, oferta:
     let regra_v = if vendedor != 0 && cpq5_d(oferta + 4) != 0 { nation_transfer_rules_or_zero(this, cpq5_d(vendedor + 0x53)) } else { 0 };
     crate::comparacao::ramo("cpq_5 dia permitido");
     copia(&mut dia, &mut t, &inicio); // o primeiro dia testado é o início
-    while date_pair_before(&dia, &limite) {
+    while date_pair_before(&dia, &limit) {
         let mut ve_vendedor = true;
         if regra_c != 0 && rules_can_make_offer(regra_c, oferta, comprador, &dia, &mut m) == 0 {
             if m as u16 != 9 && motivo as u16 == 0 {

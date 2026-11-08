@@ -1,5 +1,5 @@
 # Mutacoes do clube rejeitado, do esfriar das relacoes e da lista das rejeitadas, todas no diario das pessoas. A do
-# esfriar troca o 15 pelo 14 (o limite do sorteio muda em toda vaga ocupada: a sequencia de sorteios sai da referencia);
+# esfriar troca o 15 pelo 14 (o limit do sorteio muda em toda vaga ocupada: a sequencia de sorteios sai da referencia);
 # a da lista copia as favoritas no lugar das rejeitadas: a carreira ate 2002-06-01 deve acusar as duas. A do clube
 # rejeitado desloca a lista em uma vaga (o terceiro cai em +0x1c, a primeira pessoa favorita): so muda algo quando a
 # 0x547e70 roda e acha vaga; a carreira PODE NAO acusar (o comparando acusa na primeira chamada).

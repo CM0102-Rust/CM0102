@@ -124,7 +124,7 @@ unsafe extern "thiscall" fn build_position_lists(this: usize, _nao_usado: u32) {
 /// contrato, 2000 com os bits 0 ou 3 ou sem jogador (+0x61), sem clube, sem divisão (+0x57) ou divisão sem marca em
 /// [0xadadfc] com reputação abaixo de 6000, ou sem contrato; senão o +0x3d do contrato.
 unsafe extern "thiscall" fn sort_position_lists(this: usize) {
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
     let humano: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(0x600a50usize);
     let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x5444a0usize);
     let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn sort_position_lists(this: usize) {
                 o += 12;
                 continue;
             }
-            if k != 0 && faixa(k) == 0 {
+            if k != 0 && band(k) == 0 {
                 cpo8_w(cpo8_d(this + 0x18 + vaga * 4) + o + 8, cpo8_d(p + 0x52) as u32);
                 let clube = cpo8_d(p + 0x39);
                 if clube != 0 && humano(clube, 0, 1, 0, 0) != 0 && listado(p, 0) != 0 {
@@ -153,7 +153,7 @@ unsafe extern "thiscall" fn sort_position_lists(this: usize) {
                 }
             } else {
                 if k != 0 {
-                    crate::comparacao::ramo("cpo_8 faixa do contrato");
+                    crate::comparacao::ramo("cpo_8 band do contrato");
                 }
                 cpo8_w(cpo8_d(this + 0x18 + vaga * 4) + o + 8, 0);
             }

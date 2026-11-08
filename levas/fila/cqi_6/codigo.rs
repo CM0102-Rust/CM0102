@@ -103,15 +103,15 @@ unsafe fn serie_c1b_rules(this: usize) -> Vec<(usize, u8, u32)> {
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
 unsafe fn ita_ser_a_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
-    let faixa = [(this + 0x1c, 0xd0)];
-    let antes = crate::comparacao::Memoria::ler(&faixa);
+    let band = [(this + 0x1c, 0xd0)];
+    let antes = crate::comparacao::Memoria::ler(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&faixa);
+    let mo = crate::comparacao::Memoria::ler(&band);
     antes.escrever();
     CQI6_ENSAIO = true;
     let rr = crate::aleatorio::pausar_rastro(copia);
     CQI6_ENSAIO = false;
-    let mr = crate::comparacao::Memoria::ler(&faixa);
+    let mr = crate::comparacao::Memoria::ler(&band);
     mo.escrever();
     let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];

@@ -211,7 +211,7 @@ unsafe extern "thiscall" fn process_club_finance_events(this: usize, clube: usiz
             if *aperto > 10 {
                 *aperto -= 1;
             }
-            crate::comparacao::ramo("cpv_6 impulso na faixa 0");
+            crate::comparacao::ramo("cpv_6 impulso na band 0");
             let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
             if !ok && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
                 run_weekly_event(0x59e5a0, this, clube, fin);
@@ -380,7 +380,7 @@ unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usize, clube: 
 /// faixa (−2: 0,25; −1: 0,1; outras: 0,001). Com o estádio do clube de +0xbf: sorteio(30 / divisor) abaixo do nível
 /// (+0xf) e o nível +0x20 acima de sorteio(5) + 10: (20 × nível + 150) × reputação + 750000; sem ele: sorteio(4 /
 /// divisor) zero: (5 × reputação + 15000) × 50. Dívida acima de 10 × o valor: 10% da dívida. Teto: reputação² + 1,5
-/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor pass_ball de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
+/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor passar de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
 /// notícia (0x59f300, tipo 3, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
     if cpv6_w(clube + 0x80) < 0x128e { // cpv6: o filtro da injeção

@@ -1,6 +1,6 @@
 # Mutacoes das regras do contrato. A do clube em temporada inverte a resposta (o contrato padrao soma ao salario
 # com o clube em temporada, 0x865640): muda os contratos gerados na criacao, que vao para o .qst. A do clube numa
-# grande nacao tira a Holanda (os contratos padrao dos clubes holandeses mudam de faixa, 0x8650f2). A da nacao grande
+# grande nacao tira a Holanda (os contratos padrao dos clubes holandeses mudam de band, 0x8650f2). A da nacao grande
 # tira a Holanda tambem, mas a 0x549ea0 so roda na regeneracao dos jovens (temporada): ESCAPA da prova do save
 # (lacuna); o comparador dela roda no jogo real comparando da cadeia.
 MUTACOES = [

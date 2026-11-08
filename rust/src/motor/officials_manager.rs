@@ -145,8 +145,8 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 *m = 0;
                 continue;
             }
-            let limite = if *((nac + 0x11c) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
-            if grupo <= limite {
+            let limit = if *((nac + 0x11c) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
+            if grupo <= limit {
                 ficam += 1;
                 *m = 1;
                 crate::comparacao::ramo("cqg_9 arbitro mantido");
@@ -511,9 +511,9 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: 
                         }
                     }
                     match achou {
-                        Some(faixa) => {
-                            crate::comparacao::ramo("cpy_8 faixa da liga");
-                            faixa // cpy8: a faixa da liga
+                        Some(band) => {
+                            crate::comparacao::ramo("cpy_8 band da liga");
+                            band // cpy8: a faixa da liga
                         }
                         None => (read_i32(b + 8), read_i32(b + 4)),
                     }
@@ -611,15 +611,15 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     }
     let nacao = if read_usize(comp + competition::CLUB_COMP_NATION) != 0 { read_i32(read_usize(comp + competition::CLUB_COMP_NATION)) } else { sortear(read_i32(0xae2350)) };
     let b = nation_officials_block(this, nacao);
-    let mut faixa = None;
+    let mut band = None;
     for f in 0..read_i16(b + 0x10).max(0) as usize {
         let e = b + 0x12 + f * 0x10;
         if read_i32(e + 0xc) == read_i32(comp) {
-            faixa = Some((read_i32(e), read_i32(e + 4)));
+            band = Some((read_i32(e), read_i32(e + 4)));
             break;
         }
     }
-    let (ini, n) = faixa.unwrap_or((read_i32(b + 8), read_i32(b + 4)));
+    let (ini, n) = band.unwrap_or((read_i32(b + 8), read_i32(b + 4)));
     let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_PICK_FIRST_NAME_FOR_NATION);
     for k in 0..n.max(0) {
         let ficha = read_usize(G_OFFICIAL_TABLE).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);
@@ -872,21 +872,21 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
                 }
             }
         }
-        let faixa = |alto: (i32, u8), medio: (i32, u8), baixo: (i32, u8)| {
+        let band = |alto: (i32, u8), medio: (i32, u8), baixo: (i32, u8)| {
             let w = read_i16(e + 0x1e);
             let (n, k) = if w > 0x78 { alto } else if w > 0x50 { medio } else { baixo };
             random_byte_plus(n, k)
         };
         fix_official_attribute(e, 0x24, || if read_i16(e + 0x1e) > 0x64 { random_byte_plus(0xc, 7) } else { random_byte_plus(0xa, 5) });
-        fix_official_attribute(e, 0x25, || faixa((0xe, 7), (0xf, 5), (0xa, 5)));
-        fix_official_attribute(e, 0x26, || faixa((0xb, 0xa), (0xf, 5), (0xa, 5)));
+        fix_official_attribute(e, 0x25, || band((0xe, 7), (0xf, 5), (0xa, 5)));
+        fix_official_attribute(e, 0x26, || band((0xb, 0xa), (0xf, 5), (0xa, 5)));
         fix_official_attribute(e, 0x27, || if read_i16(e + 0x1e) > 0x50 { random_byte_plus(0xf, 6) } else { random_byte_plus(0x14, 1) });
-        fix_official_attribute(e, 0x28, || faixa((0xa, 0xb), (0xf, 5), (0xa, 7)));
-        fix_official_attribute(e, 0x29, || faixa((0xd, 8), (0xe, 7), (0xf, 6)));
+        fix_official_attribute(e, 0x28, || band((0xa, 0xb), (0xf, 5), (0xa, 7)));
+        fix_official_attribute(e, 0x29, || band((0xd, 8), (0xe, 7), (0xf, 6)));
         fix_official_attribute(e, 0x2a, || if sortear(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
-        let mut limite = [0u8; 8];
+        let mut limit = [0u8; 8];
         let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(FN_DATE_DATE_549F70);
-        let d = data(limite.as_mut_ptr(), 1, 1, 0x776, -1);
+        let d = data(limit.as_mut_ptr(), 1, 1, 0x776, -1);
         let (dia, ano) = (read_i16(d as usize), read_i16(d as usize + 2) as u16);
         let ano_e = read_i16(e + 0xe) as u16;
         if ano > ano_e || (ano == ano_e && dia > read_i16(e + 0xc)) {

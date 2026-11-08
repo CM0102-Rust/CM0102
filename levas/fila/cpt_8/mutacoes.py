@@ -1,5 +1,5 @@
 # Mutacoes. O fator do treinador entra como (fator - 100) / 5 no peso do sorteio do progresso de cada categoria
-# (0x8b1750): com 110 o peso sobe 2, o limite dos sorteios 0x90cfc0 muda e os atributos treinados mudam (o motor das
+# (0x8b1750): com 110 o peso sobe 2, o limit dos sorteios 0x90cfc0 muda e os atributos treinados mudam (o motor das
 # partidas le os atributos). Tecnico do computador: todo clube sem humano, quente, sem contador. Sem tecnico: os clubes
 # entre a saida e a chegada do tecnico (so pega se a carreira tiver clube sem tecnico com jogador treinando). Clube
 # humano com treinadores de nota na categoria: a media sem o divisor (soma / 0,5) sobe o fator (so pega se o humano de

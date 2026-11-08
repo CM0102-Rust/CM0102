@@ -20,7 +20,7 @@ unsafe fn display_item_id(item: i16) -> u16 {
 }
 
 /// { 0x718aa0 } (cdecl, match_screens.cpp): abre a tela da partida `partida` na vaga `vaga` (0x7fe4a0
-/// com a montagem 0x718e90, a resposta 0x71a240 e o match_wrap_up 0x71b120) e grava os parâmetros dela
+/// com a montagem 0x718e90, a resposta 0x71a240 e o fechamento 0x71b120) e grava os parâmetros dela
 /// (0x7ff130; o 0xe é [partida+0x63]); marca o humano da vez como espectador ([[partida+0x5b]+0xc5+4h],
 /// contando em +0x108) e, sem confirmação ([partida+0x57]), confirma pela rede (0x6b5260) e, se
 /// confirmou, grava 2 no parâmetro 1. Vaga ou partida nula: a original (caixa de erro).

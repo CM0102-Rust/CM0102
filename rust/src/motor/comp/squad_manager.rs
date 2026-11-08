@@ -10,7 +10,7 @@ pub(crate) const CQN3_COPAS: [usize; 3] = [KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS
 /// Gets the competition's club list via its virtual +0x58 (stage), calls f for each club and frees the list.
 ///
 /// [pt] Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
-/// lista alocada é solta pela 0x9452ca depois de `cada` pass_ball por todos.
+/// lista alocada é solta pela 0x9452ca depois de `cada` passar por todos.
 pub(crate) unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(FN_CRT_FREE);
     let metodo: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(comp) as usize + 0x58) as usize);
@@ -307,7 +307,7 @@ pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     None
 }
 
-/// the rule: a new arrival gets the first free number for his position: goalkeeper 1; save_shot 2 (right back), 3 (left)
+/// the rule: a new arrival gets the first free number for his position: goalkeeper 1; defender 2 (right back), 3 (left)
 /// or 4 to 6; defensive, central and attacking midfielder 6 to 8; striker 8 to 11 (good position = rating 15 or more);
 /// otherwise the first free from 12 to 50, and lastly the highest free from 11 down; positive with a human manager,
 /// negative without
@@ -420,10 +420,10 @@ pub(crate) unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
     reg
 }
 
-/// As vagas da escalação de referência da 0x859fe0 para a 0x6e2000: os 11 starters e os 9 reservas, cada um com as
+/// As vagas da escalação de referência da 0x859fe0 para a 0x6e2000: os 11 titulares e os 9 reservas, cada um com as
 /// posições que servem (máscaras: 1 goleiro, 4/0x10/0x40 os setores, 0x80..0x800 as faixas [inferência]).
 pub(crate) const CQL2_VAGAS: [u16; 20] = [
-    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os starters
+    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // os reservas
 ];
 
@@ -437,7 +437,7 @@ pub(crate) const CQL2_VAGAS: [u16; 20] = [
 ///
 /// [pt] { 0x859fe0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::assign_club_squad_numbers`): numera o elenco do
 /// clube `c`. Junta os jogadores do elenco (+0xd7, 50 vagas; só os da tabela das pessoas com contrato) e os do clube
-/// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 starters e os 9 reservas de referência
+/// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 titulares e os 9 reservas de referência
 /// (0x6e2000, cdecl de 15, com `CQL2_VAGAS` e os modos 0x5840) e põe os outros depois, nas vagas livres; ordena os 30
 /// últimos pela idade (qsort 0x945333 com a 0x540130) e junta a lista. Depois, na ordem: do 22º em diante, quem não tem
 /// contrato com o clube (0x4cf5f0) ou tem contrato do tipo 6 ou 7 (+0x4f, nibble alto) [inferência: juvenil e amador]
@@ -769,10 +769,10 @@ pub(crate) unsafe extern "thiscall" fn comparar_assign_league_squad_numbers(this
     });
 }
 
-/// As vagas da escalação de referência da 0x85aae0: os 11 starters e até 14 reservas (as da 0x859fe0, `CQL2_VAGAS`,
+/// As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `CQL2_VAGAS`,
 /// até a 19ª; a 20ª aqui é de goleiro).
 pub(crate) const CQL3_VAGAS: [u16; 25] = [
-    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os starters
+    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // os titulares
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // os reservas
 ];
 
@@ -788,7 +788,7 @@ pub(crate) const CQL3_VAGAS: [u16; 25] = [
 /// lista, 0)), os candidatos são os da tabela das pessoas com contrato, sem contrato do tipo 5 (+0x35 & 0x3f; o
 /// contrato achado fica em [0xae1080]), sem contrato de empréstimo e sem as marcas 8 e 0x10 (+0x6d & 0x18); fora da
 /// etapa 1, a marca 1 cai para 0 e a 4 vira 2, e os 2 são contados. A escalação de referência (0x6e2000 com
-/// `CQL3_VAGAS`, os 11 starters e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
+/// `CQL3_VAGAS`, os 11 titulares e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
 /// inscritos (2) que ficaram fora da escalação perdem a inscrição (vão a 4 com `marca`, senão 0) e a conta baixa (no
 /// mínimo 21). Depois cada escalado: na etapa 1, é inscrito (1 com `marca`, senão 2) e contado; nas outras, quem ainda
 /// não é 2 nem tem a marca 8 é inscrito do mesmo jeito enquanto a conta for menor que as vagas da escalação. Devolve a

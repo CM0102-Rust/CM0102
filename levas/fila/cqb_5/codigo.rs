@@ -363,7 +363,7 @@ unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, retroativa: u
 }
 
 /// Comparador da 0x62d250: só a original (aloca, entrega a notícia, agenda aposentadoria e chama originais que sorteiam
-/// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode injure de novo: não pode rodar duas vezes). Confere
+/// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode lesionar de novo: não pode rodar duas vezes). Confere
 /// o que a lesão garante depois: argumentos inválidos ou só recorrência dão −1; −1 de resto só com a pessoa ainda
 /// lesionada (+0xe ≠ −1) ou sem vetor; vaga válida com a pessoa ainda nela (+0xe = vaga, sem recaída que a tenha
 /// trocado): o tipo na vaga e em +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e = +0x2a e +0x2a = a volta ao treino pela
@@ -384,7 +384,7 @@ unsafe extern "thiscall" fn comparar_add_injury(this: usize, tipo_arg: u32, retr
             r >= 0 // trocada depois (a recaída lesionou de novo): nada a conferir
         } else {
             let l = injury_entry(this, r as usize);
-            // a recaída (0x62e500) pode injure de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
+            // a recaída (0x62e500) pode lesionar de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
             // a nova lesão a reocupa (a primeira livre), com o tipo dela; confere a nova
             let t = cqb5_b(l) as i8;
             let tipo = if t != tipo && (0x4d..=0x4f).contains(&t) { t } else { tipo };

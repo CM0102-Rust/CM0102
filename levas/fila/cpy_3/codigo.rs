@@ -67,7 +67,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
     ordenar(cpy3_d(entrada), 0x28, 0x25, 0x83b690);
     let vaga = |i: i32| cpy3_d(entrada).wrapping_add((i as usize).wrapping_mul(0x25));
     // as vagas abertas entre as primeiras 8, ou até a quarta vaga de jogador aberta
-    let mut limite: i8 = 8;
+    let mut limit: i8 = 8;
     let mut abertas: i8 = 0;
     let mut jogadores: u8 = 0;
     let mut soma: i32 = 0;
@@ -78,21 +78,21 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
             if cpy3_b(v) == 0xb {
                 jogadores = jogadores.wrapping_add(1);
                 if jogadores == 4 {
-                    limite = i.wrapping_add(1);
+                    limit = i.wrapping_add(1);
                 }
             }
             soma = soma.wrapping_add(cpy3_i(v + 0xb));
             abertas = abertas.wrapping_add(1);
         }
         i = i.wrapping_add(1);
-        if i >= limite {
+        if i >= limit {
             break;
         }
     }
     let a = abertas as i32;
     let mut repartido: i32 = 0;
-    if limite > 0 {
-        for k in 0..limite as i32 {
+    if limit > 0 {
+        for k in 0..limit as i32 {
             let v = vaga(k);
             if cpy3_i(v + 0xf) != -1 {
                 continue;
@@ -128,8 +128,8 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
     }
     let mut resto = verba.wrapping_sub(repartido);
     let mut baixos: i8 = 0;
-    if limite > 0 {
-        for k in 0..limite as i32 {
+    if limit > 0 {
+        for k in 0..limit as i32 {
             let v = vaga(k);
             let t = cpy3_b(v);
             if t != 0xb && cpy3_i(v + 0x13) > -1 {
@@ -190,7 +190,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
         }
     }
     // a sobra vai à primeira vaga de jogador do próprio clube que o técnico aceitaria vender
-    if limite >= 0x28 {
+    if limit >= 0x28 {
         return;
     }
     let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
@@ -201,7 +201,7 @@ unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clube: usize) 
     let fim: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(0x85fa00usize);
     let ofertas: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32 = core::mem::transmute(0x8c5cf0usize);
     let menos_dias: unsafe extern "thiscall" fn(usize, *mut [u8; 8], u32) -> usize = core::mem::transmute(0x54c8e0usize);
-    let mut k = limite;
+    let mut k = limit;
     while resto > 0 {
         let v = vaga(k as i32);
         let alvo = cpy3_i(v + 0xf);

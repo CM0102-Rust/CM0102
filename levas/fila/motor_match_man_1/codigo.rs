@@ -1,10 +1,10 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (7): a regra do elenco e as notas do jogador (match_man.cpp) ----------
 
 /// { 0x6e8910 } (cdecl, match_man.cpp): cumpre a `regra` do elenco (byte 0: 1 estrangeiro de fora da
 /// comunidade, 2 estrangeiro, 3 acima da idade em +1; +2 máximo em campo, +3 máximo no banco, +4 e +5
 /// o permitido e o atual) na escalação do `clube` (nação +0x53; 0x53d980/0x53d740): tira os restritos
 /// da lista de reserva (`reserva`, `nr`); se há mais restritos em campo que o máximo (+2), escolhe entre
-/// os starters restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
+/// os titulares restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
 /// um, o de menor perda na nota (0x6e2f20), refazendo o banco (0x6e2000) se um titular saiu dele;
 /// depois faz o mesmo no banco (`saida` + `nt`) com o máximo +3 (ou +4 − +5).
 #[allow(clippy::too_many_arguments)]
@@ -336,7 +336,7 @@ unsafe fn player_stat(f: usize, k: u32, c: u32, x: f32) -> f64 {
 }
 
 /// A nota da posição (máscara `m`) pelos atributos da ficha `f` na tabela `tab` (0xa15d50 ou
-/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de throw_in
+/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de lateral
 /// (0x800/0x80) na faixa 0x10; a secundária da 0x6e2f20 não.
 unsafe fn position_rating(f: usize, m: u32, masc: u32, tab: usize, principal: bool) -> i32 {
     let fb = |k: usize| signed_byte_at(f, k);
@@ -902,7 +902,7 @@ fn combine_rating(flags: u32, l40: i32, l4c: i32) -> i32 {
 /// observador `o`: a nota da posição (tabela 0xa15d50) vezes o ajuste da reputação, forma,
 /// habilidade vista, idade, contrato e conhecimento do observador. -10000 sem ficha (+0x61) ou
 /// abaixo do limite.
-unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
+unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limit: i32, o: usize) -> i32 {
     if p == 0 {
         return -10000;
     }
@@ -913,7 +913,7 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     let fb = |k: usize| signed_byte_at(f, k);
     let bd = *(0xb63d28 as *const usize);
     let da_base = *(p as *const i32) < *(0xae2364 as *const i32);
-    let ativo = limite > -1;
+    let ativo = limit > -1;
     let mut l24: i32 = 10000;
     let mut l28: i32 = 100;
     let sem_valor = flags & 0x800;
@@ -942,14 +942,14 @@ unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, clube: usiz
     let l40 = edi + if flags & 0x200 != 0 { 100 } else { position_attribute_adjust(f, pos) };
     let mut cont: i8 = 0;
     let mut soma: i32 = 0;
-    let corte = |soma: i32, cont: i8| ativo && soma * 200 / (cont as i32) < limite;
+    let corte = |soma: i32, cont: i8| ativo && soma * 200 / (cont as i32) < limit;
     if flags & 0x40 != 0 {
         cont = 1;
         soma = core::ptr::read_unaligned((f + 0xb) as *const i16) as i32 / 50;
         if clube == *((p + 0x39) as *const usize) && o != 0 && scouted_over_a_year_ago(o, p) {
             soma = match_pl_ftol((read_f64_at(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64_at(0x96a350)) * soma as f64);
         }
-        if ativo && soma * 200 < limite {
+        if ativo && soma * 200 < limit {
             return -10000;
         }
     }
@@ -1127,7 +1127,7 @@ unsafe fn outside_nation_penalty(p: usize, clube: usize, flags: u32, l4c: i32) -
 /// a idade dos veteranos e o bônus das férias. -10000 sem pessoa ou ficha; -1000000 vetado.
 #[allow(clippy::too_many_arguments)]
 unsafe extern "C" fn lineup_slot_score(
-    p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, _marca_alta: u32,
+    p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limit: i32, marca: u32, _marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
     if p == 0 || f == 0 {
@@ -1147,8 +1147,8 @@ unsafe extern "C" fn lineup_slot_score(
         l24 = valor(bd, p, 0);
         l28 = l24 as i16 as i32 / 100;
     }
-    let limite = if ferias != 0 { 0 } else { limite };
-    let ativo = ferias != 0 || limite > -1;
+    let limit = if ferias != 0 { 0 } else { limit };
+    let ativo = ferias != 0 || limit > -1;
     let (conhece, obs) = if lado != 0 {
         (*((lado + 0x1f) as *const usize), *((lado + 0x1b) as *const usize))
     } else if tecnico != 0 {
@@ -1182,14 +1182,14 @@ unsafe extern "C" fn lineup_slot_score(
     };
     let mut cont: i8 = 0;
     let mut soma: i32 = 0;
-    let corte = |soma: i32, cont: i8| ativo && soma * 200 / (cont as i32) < limite;
+    let corte = |soma: i32, cont: i8| ativo && soma * 200 / (cont as i32) < limit;
     if flags & 0x40 != 0 {
         cont = 1;
         soma = core::ptr::read_unaligned((f + 0xb) as *const i16) as i32 / 50;
         if clube == *((p + 0x39) as *const usize) && tecnico != 0 && scouted_over_a_year_ago(tecnico, p) {
             soma = match_pl_ftol((read_f64_at(0x968fa8) - match_man_days_since_date(p) as f64 * read_f64_at(0x96a350)) * soma as f64);
         }
-        if ativo && soma * 200 < limite {
+        if ativo && soma * 200 < limit {
             return -10000;
         }
     }
@@ -1552,33 +1552,33 @@ unsafe fn holiday_selection_bonus(p: usize, clube: usize, ferias: usize, pos: u3
     l4c
 }
 
-unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limite: i32, o: usize) -> i32 {
+unsafe extern "C" fn comparar_off_match_score(p: usize, pos: u32, flags: u32, clube: usize, limit: i32, o: usize) -> i32 {
     let f = original_fn::<unsafe extern "C" fn(usize, u32, u32, usize, i32, usize) -> i32>(%%I1%%);
     if is_recording_top_level() {
-        return f(p, pos, flags, clube, limite, o);
+        return f(p, pos, flags, clube, limit, o);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     reg.push((0xae1080, 4));
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(p, pos, flags, clube, limite, o), || crate::aleatorio::sem_contar(|| off_match_score(p, pos, flags, clube, limite, o)));
-    PLACAR.registrar(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limite {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limite, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || f(p, pos, flags, clube, limit, o), || crate::aleatorio::sem_contar(|| off_match_score(p, pos, flags, clube, limit, o)));
+    PLACAR.registrar(igual && r == n, || format!("off_match_score({:#x}, pos {:#x}, flags {:#x}, limit {}) original={} rust={} {:x?} x {:x?}", p, pos as u16, flags, limit, r, n, mo, mr));
     r
 }
 
 #[allow(clippy::too_many_arguments)]
 unsafe extern "C" fn comparar_lineup_slot_score(
-    p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limite: i32, marca: u32, marca_alta: u32,
+    p: usize, f: usize, reg: usize, pos: u32, flags: u32, clube: usize, lado: usize, tecnico: usize, limit: i32, marca: u32, marca_alta: u32,
     bytes: u32, tatica: u32, pos2: u32, ferias: usize,
 ) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32, usize, usize, usize, i32, u32, u32, u32, u32, u32, usize) -> i32>(%%I2%%);
     if is_recording_top_level() {
-        return o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias);
+        return o(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias);
     }
     let mut regioes = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
     regioes.push((0xae1080, 4));
     let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regioes,
-        || o(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias),
-        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limite, marca, marca_alta, bytes, tatica, pos2, ferias)),
+        || o(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias),
+        || crate::aleatorio::sem_contar(|| lineup_slot_score(p, f, reg, pos, flags, clube, lado, tecnico, limit, marca, marca_alta, bytes, tatica, pos2, ferias)),
     );
     PLACAR.registrar(igual && r == n, || format!("lineup_slot_score({:#x}, pos {:#x}/{:#x}, flags {:#x}, marca {:#x}) original={} rust={} {:x?} x {:x?}", p, pos as u16, pos2 as u16, flags, marca, r, n, mo, mr));
     r

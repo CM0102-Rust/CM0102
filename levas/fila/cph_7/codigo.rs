@@ -119,10 +119,10 @@ unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube: usize) ->
     let confronto: unsafe extern "C" fn(usize, usize, i32) -> u8 = core::mem::transmute(0x4b02e0usize);
     let mut b = 0i8;
     while b < 0x32 {
-        let limite = (cph7_d(0xae235c) as i32).wrapping_sub((cph7_d(0xae2350) as i32).wrapping_mul(2));
-        let i = cph7_sortear(limite) as usize;
+        let limit = (cph7_d(0xae235c) as i32).wrapping_sub((cph7_d(0xae2350) as i32).wrapping_mul(2));
+        let i = cph7_sortear(limit) as usize;
         let c = (cph7_d(0xae23b4) as usize).wrapping_add(i).wrapping_add(i.wrapping_mul(145).wrapping_mul(4));
-        if confronto(clube, c, limite) != 0 && cph7_d(c + 0xcf) != 0 && rival_manager_passes_draws(c) {
+        if confronto(clube, c, limit) != 0 && cph7_d(c + 0xcf) != 0 && rival_manager_passes_draws(c) {
             return cph7_d(cph7_d(c + 0xcf) as usize);
         }
         b += 1;

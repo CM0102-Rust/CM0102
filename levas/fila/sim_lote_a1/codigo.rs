@@ -66,8 +66,8 @@ unsafe extern "thiscall" fn get_exchange_offers_for_player(gerente: usize, jogad
     if jogador != 0 && *(jogador as *const i32) >= *(0xae2364 as *const i32) {
         return 0;
     }
-    let limite = || *((*((gerente + 0x86e) as *const usize) as isize + *(jogador as *const i32) as isize * 8 + 2) as *const u8) as u32;
-    if limite() == 0 {
+    let limit = || *((*((gerente + 0x86e) as *const usize) as isize + *(jogador as *const i32) as isize * 8 + 2) as *const u8) as u32;
+    if limit() == 0 {
         return 0; // sem trocas marcadas
     }
     if transfer_manager_contract_club(jogador) == 0 {
@@ -106,7 +106,7 @@ unsafe extern "thiscall" fn get_exchange_offers_for_player(gerente: usize, jogad
                 }
             }
         }
-        if conta == limite() {
+        if conta == limit() {
             break;
         }
     }

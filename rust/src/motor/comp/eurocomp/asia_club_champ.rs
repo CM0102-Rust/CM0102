@@ -400,7 +400,7 @@ pub(crate) unsafe fn asia_club_champ_compare_round_table(nome: &str, fase: u32, 
     a
 }
 
-/// A Liga dos Campeões asiática, eliminatórias de cada zona: 1ª rodada sorteada em 1/8 e play em 23/8, 2ª em 14/9 e 20/9, ida e volta.
+/// A Liga dos Campeões asiática, eliminatórias de cada zona: 1ª rodada sorteada em 1/8 e jogada em 23/8, 2ª em 14/9 e 20/9, ida e volta.
 pub(crate) const CQP11_ASIA_CLUBES_MATA: [Cqp11Op; 36] = [
     Cqp11S(0, 1, 7, 0, 5), Cqp11J(0, 0x17, 7, 0, 2, 2, 0), Cqp11W(0x7, 0xa), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0), Cqp11B(0x17, 4), Cqp11W(0x18, 0x10), Cqp11W(0x1a, 8), Cqp11W(0x1c, 0x10), Cqp11W(0xf, 0x83),

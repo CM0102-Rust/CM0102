@@ -117,10 +117,10 @@ unsafe extern "thiscall" fn set_slot_position(this: usize, casa: u32, posicao: u
     } else {
         crate::comparacao::ramo("cpk_7 formacao posicao extra");
     }
-    for faixa in 0..3usize {
+    for band in 0..3usize {
         for altura in 0..4usize {
-            let arg = faixa as u32 | (altura as u32) << 16;
-            let i = altura + 4 * (faixa + 6 * s);
+            let arg = band as u32 | (altura as u32) << 16;
+            let i = altura + 4 * (band + 6 * s);
             let (sem_bola, com_bola) = (this + 0x164 + 4 * i, this + 0x194 + 4 * i);
             let (g, e) = (cpk7_w(geral) as u16 as u32, cpk7_w(extra_da_casa) as u16 as u32);
             let (a, b) = if g == e {

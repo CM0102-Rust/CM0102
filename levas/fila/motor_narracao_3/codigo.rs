@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
 
 /// Avança a posição de leitura da fila da narração (+0xc, anel de 12): marca a nova vaga (+0x3d =
 /// −1, tira o bit 0x8000 do evento) e, chegando na de escrita (+8, e então +0x2d68 = −1) ou na

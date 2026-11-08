@@ -323,11 +323,11 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: usize, uefa: usize) -> ([u
     let mut v = [0usize; 3];
     let mut k = 0usize;
     let mut vaga = read_i16(uefa + 0x3e).wrapping_sub(0x1b);
-    let limite = vaga.wrapping_add(3);
+    let limit = vaga.wrapping_add(3);
     let mut i = 0i16;
     if read_i16(this + 0x3e) > 0 {
         loop {
-            if vaga >= limite {
+            if vaga >= limit {
                 break;
             }
             let e = read_u32_as_usize(this + 0xa7).wrapping_add((i as isize * 6) as usize);
@@ -368,11 +368,11 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
                 show_error_at(0x9e9e14, 0x29e);
             } else {
                 let mut vaga = read_i16(uefa + 0x3e).wrapping_sub(0x1b);
-                let limite = vaga.wrapping_add(3);
+                let limit = vaga.wrapping_add(3);
                 let mut i = 0i16;
                 if read_i16(this + 0x3e) > 0 {
                     loop {
-                        if vaga >= limite {
+                        if vaga >= limit {
                             break;
                         }
                         let e = read_u32_as_usize(this + 0xa7).wrapping_add((i as isize * 6) as usize);

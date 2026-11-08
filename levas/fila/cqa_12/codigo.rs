@@ -141,7 +141,7 @@ unsafe extern "thiscall" fn add_cup_runners_up_record(this: usize, clube: usize,
 }
 
 /// { 0x86b710 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
-/// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com contest de terceiro: `update_cup_placed_club` com o tipo
+/// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com disputa de terceiro: `update_cup_placed_club` com o tipo
 /// 2. Nulos: a caixa (linha 0x67b).
 unsafe extern "thiscall" fn add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {

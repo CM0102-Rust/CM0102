@@ -13,7 +13,7 @@ MUTACOES = [
     ('s_fator', "} else if *w(0x8ed0) > 0x3c {\n                read_f32_at(0x96d320) as f64", "} else if *w(0x8ed0) > 0x3d {\n                read_f32_at(0x96d320) as f64"),
     ('s_chute', "if us + 0xa5 > sortear(0x172)", "if us + 0xa6 > sortear(0x172)"),
     ('s_gol', "if us + 0x2d > sortear((7 - local_28 as i32 * 3)", "if us + 0x2e > sortear((7 - local_28 as i32 * 3)", "simulacao rapida gol"),
-    ('s_goleiros', "if byte(q, 0x19) >= 0 && tabela_do_jogador(q) == 1 {\n                mais((q + 0xf) as *mut u8);", "if byte(q, 0x19) >= 0 && tabela_do_jogador(q) == 2 {\n                mais((q + 0xf) as *mut u8);", "simulacao rapida gol"),
+    ('s_goleiros', "if byte(q, 0x19) >= 0 && player_table(q) == 1 {\n                mais((q + 0xf) as *mut u8);", "if byte(q, 0x19) >= 0 && player_table(q) == 2 {\n                mais((q + 0xf) as *mut u8);", "simulacao rapida gol"),
     ('s_assistencia', "somar(q, 0x15e);", "somar(q, 0x15f);", "simulacao rapida gol"),
     ('s_penaltis', "*pb(0x49) = sortear(5) as i8;", "*pb(0x49) = sortear(6) as i8;", "simulacao rapida penalties"),
     ('s_mando', "mais(b(0xf5be + s * 0x36));", "mais(b(0xf5bd + s * 0x36));", "simulacao rapida gol do mando"),

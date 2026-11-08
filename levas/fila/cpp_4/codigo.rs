@@ -68,15 +68,15 @@ unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usiz
     }
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let tempo = |p: usize| dias(0xae2c90, cpp4_d(p + 0x3e), cpp4_d(p + 0x42));
-    let limite = |p: usize| (read_u8_volatile(p + 0x59) as i8 as i32 + 0x15) * 10;
+    let limit = |p: usize| (read_u8_volatile(p + 0x59) as i8 as i32 + 0x15) * 10;
     if read_u8_volatile(pessoa + 0x3d) == 0xb {
         let jogador = cpp4_d(pessoa + 0x61) as usize;
         if jogador != 0 && cpp4_w(jogador + 0xb) > 0x128e && rep(clube) < 0x1a5e {
             let contract_of: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4cf5a0usize);
             let c = contract_of(cpp4_d(0xae1050) as usize, pessoa);
             if c != 0 {
-                let faixa = read_u8_volatile(c + 0x4f) >> 4;
-                if faixa != 0 && faixa <= 3 {
+                let band = read_u8_volatile(c + 0x4f) >> 4;
+                if band != 0 && band <= 3 {
                     return 0;
                 }
                 if dias(0xae2c90, cpp4_d(c + 0x25), cpp4_d(c + 0x29)) < 0xb4 {
@@ -108,7 +108,7 @@ unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usiz
             if rep(atual) > rep(clube) {
                 return 0;
             }
-            if tempo(pessoa) < limite(pessoa) && rep(cpp4_d(pessoa + 0x39) as usize) > 0x1482 {
+            if tempo(pessoa) < limit(pessoa) && rep(cpp4_d(pessoa + 0x39) as usize) > 0x1482 {
                 return 0;
             }
         }
@@ -140,7 +140,7 @@ unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, pessoa: usiz
         if cpp4_d(pessoa + 0x39) == 0 {
             return 1;
         }
-        if tempo(pessoa) > limite(pessoa) {
+        if tempo(pessoa) > limit(pessoa) {
             let r = rep(cpp4_d(pessoa + 0x39) as usize);
             if r < 0x1e46 && (r as i32 + 0x2ee) < rep(clube) as i32 {
                 return 1;

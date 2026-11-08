@@ -5,9 +5,9 @@
 /// Formação negativa ou fora: a original (caixa de erro).
 unsafe extern "thiscall" fn formation_record(t: usize, f: i16, humano: u32) -> usize {
     let primeiras = core::ptr::read_unaligned((t + 0x5fd) as *const i32);
-    let limite = if humano != 0 { primeiras } else { core::ptr::read_unaligned((t + 0x5f5) as *const i32).wrapping_add(primeiras) };
+    let limit = if humano != 0 { primeiras } else { core::ptr::read_unaligned((t + 0x5f5) as *const i32).wrapping_add(primeiras) };
     let f = f as i32;
-    if f < 0 || f >= limite {
+    if f < 0 || f >= limit {
         return original_fn::<unsafe extern "thiscall" fn(usize, i16, u32) -> usize>(%%I0%%)(t, f as i16, humano);
     }
     if f < primeiras {

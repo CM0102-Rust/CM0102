@@ -1,6 +1,6 @@
 # Mutacoes (com o ramo de cada uma). O alcance da nacao com o tipo 2 (o comparando acusa pelas saidas na primeira
 # partida de liga; a carreira pela escalacao automatica, que deixa de achar as regras da nacao: os estrangeiros acima
-# do limite passam a jogar). A regra de outra nacao (o comparando acusa pelo valor; a carreira pela escalacao). O
+# do limit passam a jogar). A regra de outra nacao (o comparando acusa pelo valor; a carreira pela escalacao). O
 # amistoso com a primeira vaga do clube (o comparando acusa no primeiro amistoso achado depois da primeira vaga; a
 # carreira pelos amistosos de pre-temporada).
 MUTACOES = [

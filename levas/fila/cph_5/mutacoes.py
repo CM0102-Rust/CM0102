@@ -1,6 +1,6 @@
 # Mutacoes das aposentadorias. A da pendente apaga a ultima com pessoa 0 em vez de -1 (o registro apagado vira uma
 # pessoa valida): o comparando acusa na primeira remocao; a carreira, se o vetor for lido alem da contagem. As da
-# decisao mudam o limite do tecnico fraco (49) e o do sorteio do jogador (700): devem acusar (aposentadorias mudam o
+# decisao mudam o limit do tecnico fraco (49) e o do sorteio do jogador (700): devem acusar (aposentadorias mudam o
 # banco e os sorteios seguintes).
 MUTACOES = [
     ('cph_pendente_fim', 'core::ptr::write_unaligned(fim as *mut u32, u32::MAX); // a última sem pessoa',

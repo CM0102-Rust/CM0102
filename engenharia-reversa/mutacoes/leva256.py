@@ -31,7 +31,7 @@ MUTACOES = [
     ('cpt10_duas_semanas', '*s = (*s).wrapping_add(1); // cpt10: mais uma semana', '*s = (*s).wrapping_add(2); // mutacao: duas semanas', 'cpt_10 semana'),
     ('cpt10_semana_de_6_dias', 'let resto = v % 7; // cpt10: a semana de 7 dias', 'let resto = v % 6; // mutacao: a semana de 6 dias', 'cpt_10 semana'),
     ('cpt11_sem_plano', 'planejar(this); // cpt11: planejar', '// mutacao: nao planeja', 'cpt_11 planejou a pré-temporada'),
-    ('cpt11_faixa_250', 'let faixa = (rep / 500) as u8; // cpt11: a faixa', 'let faixa = (rep / 250) as u8; // mutacao: faixa pela metade', 'cpt_11 candidato da pré-temporada'),
+    ('cpt11_faixa_250', 'let band = (rep / 500) as u8; // cpt11: a faixa', 'let faixa = (rep / 250) as u8; // mutacao: faixa pela metade', 'cpt_11 candidato da pré-temporada'),
     ('cpt11_janela_curta', 'let mut ini = fim.wrapping_sub(18); // cpt11: o início da janela', 'let mut ini = fim.wrapping_sub(11); // mutacao: janela curta', 'cpt_11 janela gravada'),
     ('cpt12_largura', 'let largura = (n as u8).wrapping_mul(2).wrapping_add(1) as i8 as i16; // cpt12: a largura da excursão', 'let largura = (n as u8).wrapping_mul(2).wrapping_add(3) as i8 as i16; // mutacao: mais larga', 'cpt_12 janela da excursão'),
     ('cpt12_mando_trocado', 'let m = acrescentar(this, clube, &mut d1, outro, 0); // cpt12: o clube em casa', 'let m = acrescentar(this, outro, &mut d1, clube, 0); // mutacao: mando trocado', 'cpt_12 jogo da excursão marcado'),

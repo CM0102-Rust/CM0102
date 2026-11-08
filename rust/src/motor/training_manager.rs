@@ -1052,7 +1052,7 @@ pub(crate) fn coach_average_divisor(n: i8) -> f64 {
 /// valor entra como (fator − 100) / 5 no peso do sorteio do progresso). Clube nulo: 0. Sem técnico (+0xcf) ou com técnico
 /// do computador (id abaixo de [0xae2364] − 16): 100 (o eax leva os 16 bits altos do ponteiro do técnico, como na
 /// original). Técnico humano: a comissão dele (0x8b4cd0, seis vagas de 9 bytes: id −1 é vaga vazia, a nota da categoria
-/// em +4 + categoria); com n treinadores de nota, a soma (16 bits) tackle pelo n-ésimo divisor e truncada (_ftol
+/// em +4 + categoria); com n treinadores de nota, a soma (16 bits) dividida pelo n-ésimo divisor e truncada (_ftol
 /// 0x945640), × 40/7 (0x970400) e truncada; abaixo de 50, 50. Quente no ramo do computador: sem contador ali.
 pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, clube: usize, categoria: i8) -> u32 {
     let _ = this;

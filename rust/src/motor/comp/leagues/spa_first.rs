@@ -15,12 +15,12 @@ pub(crate) type Cqp6Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn spa_first_write_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqp6Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
+    let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
         let i = primeira + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
-            faixa(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+            band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
     }
 }
@@ -398,15 +398,15 @@ pub(crate) unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
 /// grava as regras sem a virtual +0x3c; os campos da lista saem iguais aos da original (o +0xa9 da Primera, que a
 /// virtual reescreve, fica de fora), e a devolução 1; no fim fica a faixa da original.
 pub(crate) unsafe fn spa_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
-    let faixa = [(this + 0x1c, 0xd0)];
-    let antes = crate::comparacao::Memoria::ler(&faixa);
+    let band = [(this + 0x1c, 0xd0)];
+    let antes = crate::comparacao::Memoria::ler(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&faixa);
+    let mo = crate::comparacao::Memoria::ler(&band);
     antes.escrever();
     CQK4_ENSAIO = true;
     let rr = crate::aleatorio::pausar_rastro(copia);
     CQK4_ENSAIO = false;
-    let mr = crate::comparacao::Memoria::ler(&faixa);
+    let mr = crate::comparacao::Memoria::ler(&band);
     mo.escrever();
     let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];

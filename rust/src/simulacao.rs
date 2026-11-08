@@ -306,7 +306,7 @@ static RELOGIOS: [AtomicU64; 14] = [const { AtomicU64::new(0) }; 14];
 
 /// clock() da CRT { 0x947299 } na simulacao: um relogio por rotina chamadora, que avanca 1 ms a
 /// cada consulta dela. Um relogio unico (ou o real) faz as esperas do dia de jogo (match_day.cpp,
-/// "volta quando clock() pass_ball de X") dependerem de quantas vezes a barra de menus e as telas
+/// "volta quando clock() passar de X") dependerem de quantas vezes a barra de menus e as telas
 /// consultaram o relogio, o que varia com as mensagens do Windows.
 unsafe extern "C" fn clock_fixo() -> i32 {
     let r = crate::desvios::RETORNO;
@@ -486,7 +486,7 @@ static mut RESTAURAR_ORIGINAL: usize = 0;
 /// pessoas) sai de ferias como o ON_HOLIDAY=YES do auto_setup (0x827cc9: set_on_holiday 0x5fd2f0 com 1), e o
 /// carimbo das ferias (+0x9a65, setter 0x5fdd30) volta a 0, como depois do reset 0x5fb810 da carreira
 /// automatica: com o carimbo do relogio real do save, o clock fixo da simulacao nunca passaria dele + 2000 e a
-/// barra throw_in (0x7615d0) nao andaria sozinha. Igual nos dois modos (nao e rotina portada).
+/// barra lateral (0x7615d0) nao andaria sozinha. Igual nos dois modos (nao e rotina portada).
 unsafe extern "C" fn restaurar_humanos_de_ferias() -> i32 {
     let hm = *(0xb63c98 as *const usize);
     if hm != 0 {

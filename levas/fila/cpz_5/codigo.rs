@@ -81,7 +81,7 @@ unsafe extern "thiscall" fn record_tactic_result(this: usize, jogo: usize) -> u3
         let r = p / b;
         let f = |o: usize| (l + o) as *mut f64;
         core::ptr::write_unaligned(f(0x10), r * h * g);
-        core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: a razão da stance normal
+        core::ptr::write_unaligned(f(0x18), r * g * q2 * q); // cpz5: a razão da postura normal
         core::ptr::write_unaligned(f(0x20), r * r * h);
     }
     1

@@ -51,7 +51,7 @@ unsafe fn contract_wage(pessoa: usize) -> i32 {
 
 /// O bônus de quem paga mais (o trecho 0x596c0d..0x597238): clube da Inglaterra, Itália ou Espanha, reputação acima
 /// de 4750, faixa 0 a 2, pelo fator salarial `w` (a palavra, com sinal) e pela marca +0x82.
-unsafe fn big_spender_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
+unsafe fn big_spender_bonus(clube: usize, band: i8, w: i32) -> i32 {
     let nac = cqc2_d(clube + 0x53);
     if nac == 0 {
         return 0;
@@ -60,15 +60,15 @@ unsafe fn big_spender_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
     if n != cqc2_i(0x9cf2e4) && n != cqc2_i(0x9cf360) && n != cqc2_i(0x9cf488) {
         return 0;
     }
-    if cqc2_w(clube + 0x80) <= 0x128e || !(faixa == 2 || faixa == 1 || faixa == 0) {
+    if cqc2_w(clube + 0x80) <= 0x128e || !(band == 2 || band == 1 || band == 0) {
         return 0;
     }
     let w16 = w as i16;
     let x = w16 as i32;
     let (base, oito) = if cqc2_b(clube + 0x82) != 0 { (0x4e2, 0x2710) } else { (0x2ee, 0x1770) };
-    if w16 < 0x1676 || faixa == 0 {
+    if w16 < 0x1676 || band == 0 {
         x.wrapping_sub(base).wrapping_mul(6)
-    } else if faixa == 1 {
+    } else if band == 1 {
         x.wrapping_mul(8).wrapping_sub(oito)
     } else {
         x.wrapping_sub(base).wrapping_mul(10)
@@ -137,20 +137,20 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
     }
     let rep = cqc2_w(clube + 0x80);
     let mut di: i32 = rep as i32 / 50;
-    let faixa: i8 = if fin_prm_is_national_team(clube) { 0 } else { cqc2_faixa(fin) };
+    let band: i8 = if fin_prm_is_national_team(clube) { 0 } else { cqc2_faixa(fin) };
     let nac = cqc2_d(clube + 0x53);
     let e = |g: usize| cqc2_i(nac) == cqc2_i(g);
     let tabela: usize = if nac == 0 || e(0x9cf510) || e(0x9cf2dc) || e(0x9cf3e4) || e(0x9cf224) {
         0x9c8498
     } else if [0x9cf36c, 0x9cf4a8, 0x9cf2ac, 0x9cf430, 0x9cf408, 0x9cf4f8, 0x9cf434, 0x9cf2c0, 0x9cf2fc, 0x9cf45c, 0x9cf314].iter().any(|&g| e(g)) {
         0x9c8548
-    } else if e(0x9cf300) || (cqc2_b(clube + 0x82) != 0 && faixa != 2 && faixa != 1) {
+    } else if e(0x9cf300) || (cqc2_b(clube + 0x82) != 0 && band != 2 && band != 1) {
         0x9c85f8
     } else {
         0x9c86a8
     };
     let padrao = tabela == 0x9c86a8;
-    match faixa {
+    match band {
         0 => {
             if rep > 0x1676 {
                 di = if padrao { (rep as i32 - 0x186a) / 25 + 0x73 } else { di + 5 };
@@ -205,7 +205,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                 r = cap;
             }
         }
-        b20 = big_spender_bonus(clube, faixa, s);
+        b20 = big_spender_bonus(clube, band, s);
     } else {
         let mut f = fator;
         if nac != 0 {
@@ -298,7 +298,7 @@ unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, cargo_arg: u
                 }
             }
         }
-        b20 = big_spender_bonus(clube, faixa, s);
+        b20 = big_spender_bonus(clube, band, s);
     }
     if pessoa != 0 {
         let repf = rep as i32 as f64;

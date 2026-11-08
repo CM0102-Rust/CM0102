@@ -1075,7 +1075,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_build_international_date_table(t
 /// ano da Copa: o primeiro a partir do de hoje ([0xae2c92]) com (ano − 2) múltiplo de 4. Cada data (+0x34ec, conta
 /// +0x34f0) ganha a data em +3 pela 0x54a130 (lea ecx, entrada + 3; 4 pushes; sem add esp -> thiscall(data, dia, mês,
 /// ano, dia da semana), ret 0x10) com o dia (+1) e o dia da semana (+0) em byte com sinal, o mês (+2) e o ano da Copa
-/// mais o +0xb (com sinal), menos 4 se pass_ball de 3 anos à frente de hoje (palavras). Depois o qsort pela data (0x945333:
+/// mais o +0xb (com sinal), menos 4 se passar de 3 anos à frente de hoje (palavras). Depois o qsort pela data (0x945333:
 /// 4 pushes; add esp, 0x10 -> cdecl(tabela, conta, 0x14, 0x5cc610)).
 pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
     let hoje = read_u16(G_CURRENT_DATE_YEAR);
@@ -1091,7 +1091,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_international_dates(this: usize) 
         let mut ano = (read_u8(e + 0xb) as i8 as i16 as u16).wrapping_add(ciclo as u16);
         if ano as i32 - hoje as i32 > 3 {
             crate::comparacao::ramo("cqb_3 ano para tras");
-            ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se pass_ball de 3 anos à frente
+            ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente
         }
         let com_sinal = |o: usize| read_u8(e + o) as i8 as i16 as u16 as u32;
         // ponytail: o dia e o dia da semana vão sobre o edx de metade alta zerada (como a original); o mês e o ano vão
@@ -1256,12 +1256,12 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
             if b == 3 && friendly_random(4) == 0 {
                 b = 2;
             }
-            let mut faixa = ((read_i16(clube + club::REPUTATION) as i32 / 500) as u8).wrapping_add(b);
+            let mut band = ((read_i16(clube + club::REPUTATION) as i32 / 500) as u8).wrapping_add(b);
             let quantos = (friendly_random(3) as u8).wrapping_add(4) as i8; // cqb4: quantos amistosos
             let mut j = 0i8;
             while read_i8(cand + 4) < quantos && j < quantos {
                 // ponytail: a original empurra o dword do local da faixa (os bytes altos são sobra); a 0x5c4cb0 só lê o byte
-                let opp = adversario(this, cand, entradas, conta, faixa as u32, 0);
+                let opp = adversario(this, cand, entradas, conta, band as u32, 0);
                 let marcado = if opp != 0 {
                     crate::comparacao::ramo("cqb_4 adversario achado");
                     if read_i8(cand + 5) > read_i8(opp + 5) { // cqb4: o de faixa maior em casa
@@ -1273,8 +1273,8 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
                     1
                 };
                 if marcado != 0 {
-                    let f = match_pl_ftol(faixa as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
-                    faixa = if (f as i8) < 1 { 1 } else { f };
+                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
+                    band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);
             }
@@ -1349,7 +1349,7 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: us
     t
 }
 
-/// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido pass_ball) e a devolução.
+/// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
 pub(crate) unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(IDX_ADD_TOURNAMENT);
     let t = free_tournament_slot(this);
@@ -2000,8 +2000,8 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoj
     let dia = read_u16(hoje) as i16 as i32;
     if dia == read_u16(this + 0x34ea) as i32 || dia == read_u16(this + 0x34e8) as i32 {
         let mut t = [0u8; 8];
-        let limite = semanas(hoje, &mut t, 8);
-        if friendly_date_after(0xdd6ec8, limite) {
+        let limit = semanas(hoje, &mut t, 8);
+        if friendly_date_after(0xdd6ec8, limit) {
             return 1;
         }
         copiar(this + 0xa7, &mut t, hoje);
@@ -2130,10 +2130,10 @@ pub(crate) unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize)
                 let r = v + n as usize * 0x16;
                 let rep = read_u16(clube + club::REPUTATION) as i16 as i32;
                 crate::comparacao::ramo("cpt_11 candidato da pré-temporada");
-                let faixa = (rep / 500) as u8; // cpt11: a faixa
+                let band = (rep / 500) as u8; // cpt11: a faixa
                 write_u32_from_usize(r, read_u32_as_usize(clube));
                 *((r + 4) as *mut u8) = 0;
-                *((r + 5) as *mut u8) = faixa;
+                *((r + 5) as *mut u8) = band;
                 write_u32_from_usize(r + 6, read_u32_as_usize(read_u32_as_usize(clube + club::NATION)));
                 write_u32_from_usize(r + 0xa, 0);
                 write_u32_from_usize(r + 0x12, 0);
@@ -3305,16 +3305,16 @@ pub(crate) unsafe fn friendly_random(n: i32) -> i32 {
 /// mesma cidade (+0x57) e os acima da faixa do sorteio (+4 > sorteio(3) + 3). Pela reputação (+0x80) do clube: abaixo
 /// de 2000 a mesma nação (+0x53); de 2000 a 3999 o mesmo +0x75 da nação; de 4000 a 7999 o mesmo +0x71; com o +4 do
 /// clube acima de sorteio(2), a mesma nação. Fica com o candidato quando sorteio(5) = 1; nenhum: 0. Sem SEH, sem caixa.
-pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
-    let mut faixa = faixa as i8;
-    if faixa < 1 {
-        faixa = 1;
-    } else if faixa > 0x14 {
-        faixa = 0x14;
+pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
+    let mut band = band as i8;
+    if band < 1 {
+        band = 1;
+    } else if band > 0x14 {
+        band = 0x14;
     }
     let cp = friendly_club_by_id(read_usize(clube));
     let mut chave = [0u8; 0x16];
-    chave[5] = faixa as u8;
+    chave[5] = band as u8;
     let bsearch: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut c;
     loop {
@@ -3399,13 +3399,13 @@ pub(crate) unsafe fn candidate_regions(candidatos: impl Iterator<Item = usize>) 
     reg
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, faixa: u32, excluir: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn comparar_find_friendly_opponent(this: usize, clube: usize, lista: usize, n: u32, band: u32, excluir: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> usize>(IDX_FIND_FRIENDLY_OPPONENT);
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| lista + 0x16 * i));
-    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, faixa, excluir),
-        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, faixa, excluir)));
-    PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, faixa {}) original={:x} rust={:x} {:x?} x {:x?}",
-        clube, lista, n, faixa as i8, r, m, mo, mr));
+    let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, lista, n, band, excluir),
+        || crate::aleatorio::sem_contar(|| find_friendly_opponent(this, clube, lista, n, band, excluir)));
+    PLACAR.registrar(igual && r == m, || format!("find_friendly_opponent({:x}, {:x}, n {}, band {}) original={:x} rust={:x} {:x?} x {:x?}",
+        clube, lista, n, band as i8, r, m, mo, mr));
     r
 }
 
@@ -3478,7 +3478,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_tour_opponent(this: usize, 
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| read_usize(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, clube, ordenados, n, faixa_max, nacao),
         || crate::aleatorio::sem_contar(|| find_tour_opponent(this, clube, ordenados, n, faixa_max, nacao)));
-    PLACAR.registrar(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, faixa {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    PLACAR.registrar(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         clube, ordenados, n, faixa_max as i8, nacao, r, m, mo, mr));
     r
 }
@@ -3645,7 +3645,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_register_comp_objects(amistoso: 
 /// update_international_friendlies()`, pelo dia dos amistosos (0x5c2460, já em Rust). No primeiro dia do ano: as listas
 /// de nações ([+0x34f6], [0xae2350] delas) se esvaziam (0x68d080), a lista em +0x34fa (conta +0x34fe) se ordena pela
 /// reputação (0x5cc5f0) e cada data internacional (+0x34ec, 20 bytes, conta +0x34f0) ganha o ano pelo ciclo da Copa
-/// (ano − 2 múltiplo de 4, mais o deslocamento +0xb, menos 4 se pass_ball de 3 anos à frente; 0x5cbdd0), reordenadas pela
+/// (ano − 2 múltiplo de 4, mais o deslocamento +0xb, menos 4 se passar de 3 anos à frente; 0x5cbdd0), reordenadas pela
 /// data (0x5cc610). Depois, se a data de 0xdd6ec8 não passa de hoje + 12 semanas (0x54c770) e o dia não foi feito
 /// (+0x34f4), as entradas com a data de hoje + 12 semanas (bsearch e as vizinhas iguais) vão à 0x5cbdf0 e o dia fica
 /// marcado.

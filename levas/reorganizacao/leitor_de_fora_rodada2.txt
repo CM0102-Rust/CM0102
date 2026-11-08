@@ -1,0 +1,19 @@
+Leitor de fora, rodada 2 (07/11/2026, noite): agente novo, sem contexto, a mesma amostra mais transfer_manager.rs.
+Melhorou: o cabeçalho do motor.rs orienta; mem/keys/globals/fields/exe_fns são "a melhor parte"; os cabeçalhos em
+inglês das rotinas desviadas são legíveis. Os 10 maiores obstáculos que restam, na ordem dele:
+
+1. Cabeçalhos só em português no motor de partidas (o formato antigo `/// { 0x6cd330 }`, 87 em match_eng.rs, sem linha
+   em inglês nem `Original:`). Proposta: gerar a linha em inglês e o Original para todos.
+2. Objetos internos sem nome de campo (liga, jogador na partida, motor, oferta, objeto de regras): estender fields.rs.
+3. Endereços crus onde já há constante (0xae2c90 = G_CURRENT_DATE como argumento): passada mecânica mais larga.
+4. Comparadores sem documentação em inglês (mais de 150 na amostra).
+5. Rotinas no arquivo errado (match_eng.rs com rotinas de match_pl.cpp; eng_prm.rs com as da EngThird).
+6. Identificadores em português que sobraram (Cql6Divisao, locais, campos de struct).
+7. História das levas no código: faixas "Nª leva", marcas de mutação `cqk1:`, os diários de DESLIGADAS/ZERADAS.
+8. A troca de nomes corrompeu a prosa portuguesa ("tem de pass_ball de 1,5", "direction do jogador").
+9. Constantes sem valor dito (read_f64_at(0x968e48) sem o número; a tabela de janelas em bytes).
+10. Aritmética de registro repetida (G_CLUB_TABLE + i*0x245): club_record(i) e CLUB_SIZE.
+
+Visão geral dele: o andaime é bom, mas o corpo das rotinas ainda é desmontagem transliterada para Rust (deslocamentos
+crus em objetos sem nome, nomes e comentários em português, comparador misturado com a lógica); o motor de partidas
+continua quase ilegível para quem não lê português.

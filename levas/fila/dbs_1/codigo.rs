@@ -129,7 +129,7 @@ unsafe extern "C" fn comparar_database_format_official_name(oficial: usize, text
 /// máscara (0x66f4e0 com o texto 0xad9c64; a forma com maiúscula se o byte `maiuscula` não é 0), na ordem: goleiro
 /// (1), jogador de apoio (0x260/0x160/0x460), atacante (0x40 com 0x700), ala (0x88/0x808), ponta esquerda (0x90/0xa0),
 /// ponta direita (0x810/0x820), meia central e meia-atacante (0x100/0x200/0x400 com 0x18 ou 0x20), zagueiro central
-/// (0x204/0x104/0x404), throw_in esquerdo (0x84), throw_in direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
+/// (0x204/0x104/0x404), lateral esquerdo (0x84), lateral direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
 /// byte do gênero pelo idioma (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4, os outros 0 (reserva: sempre 0). Texto
 /// nulo: 0. Na mídia (0x72d270) e na tela da pessoa (0x87dd80).
 unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usize, maiuscula: u32) -> u8 {
@@ -170,7 +170,7 @@ unsafe extern "C" fn position_mask_get_text(mascara: u32, texto: usize, maiuscul
     } else if m == 0 {
         ((0x9b81f4, 0x9b81c8), 0, 0) // substitute (o gênero fica 0)
     } else {
-        ((0x9b819c, 0x9b8170), 2, 1) // save_shot
+        ((0x9b819c, 0x9b8170), 2, 1) // defender
     };
     formatar(texto, if maiuscula as u8 != 0 { t.1 } else { t.0 }, 0xad9c64);
     if m == 0 {

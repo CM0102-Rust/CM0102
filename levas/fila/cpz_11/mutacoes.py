@@ -1,6 +1,6 @@
 # Mutacoes (cpz_11). A folha (0x598370) roda todo sabado para todo clube com nacao, e o passe diario paga os salarios
 # da semana pela folha (+0xc, lida logo depois da chamada em 0x59bf84): sem o pessoal na folha, ou sem o termo da
-# injury_word_0c (reputacao² × fator, que nunca e zero com injury_word_0c > 0), todos os clubes pagam menos, o saldo sobe, a faixa
+# injury_word_0c (reputacao² × fator, que nunca e zero com injury_word_0c > 0), todos os clubes pagam menos, o saldo sobe, a band
 # das financas 0x5986b0 muda e com ela os sorteios da divida, da injecao e do clima; o teto salarial 0x5968d0 tambem
 # le a folha. Os dias ate a temporada (0x59b4c0) devolvendo 0 na janela: os ingressos da temporada (0x599a20, "cpv_5
 # ingressos vendidos" 512 na base) nao sao vendidos e +0x18/+0x164 sao zerados; o saldo dos clubes muda. A terceira

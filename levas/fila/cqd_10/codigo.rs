@@ -237,7 +237,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
         player_regen_remove_retirement(this, item);
         return;
     }
-    // a vaga para o regen: hoje (até 29 anos) ou de 1 a 65 dias depois (se pass_ball do dia 365, sorteio(35) do ano
+    // a vaga para o regen: hoje (até 29 anos) ou de 1 a 65 dias depois (se passar do dia 365, sorteio(35) do ano
     // seguinte)
     vaga[0] = cqd10_i(item) as u32;
     let hoje = cqd10_d(0xae2c90) as u32;
@@ -299,7 +299,7 @@ unsafe fn process_due_retirement(this: usize, item: usize, p: usize, vaga: &mut 
 /// (a data passou): o jovem (até 29) com clube ou marca, fora do motivo 8, desiste; com ficha de contrato (0x4cf6d0)
 /// ou sob oferta (0x8cde70), desiste (marcas & 0xcf); quem mudou de clube há menos de 210 dias, até 37 anos, com
 /// contrato, fora da lista e sem +0x45, fica; senão a notícia (0x7a92e0), as ofertas (0x4ccbf0), o contrato, a seleção
-/// (0x775ba0), as listas de observação, o elenco (0x7aace0), as faltas (0x4196a0, 0x4197c0) e a contest (0x56a090); o
+/// (0x775ba0), as listas de observação, o elenco (0x7aace0), as faltas (0x4196a0, 0x4197c0) e a disputa (0x56a090); o
 /// jogador pode virar técnico; com ficha e registro de não jogador, a ficha vai para o banco (0x7a8350) e o contrato
 /// novo (0x85e960); senão a vaga para o regen (0x7a87d0) e, com registro de não jogador, sai dos cargos (0x7aaeb0) ou
 /// é refeito como não jogador (0x7ab340). Não vencida: com a data do anúncio passada e sem anúncio, a notícia do

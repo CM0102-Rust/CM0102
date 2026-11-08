@@ -10,11 +10,11 @@ type Cqo10G = (u32, u32, u32, u32);
 /// memória, a caixa `linha_g` e devolve 0) com as datas de `grupos`. Na fase `limite`, o mata-mata: é_liga = 0, rodadas =
 /// o tamanho de `mata`, extra = 0; a tabela de 0x68 bytes por rodada (sem memória, a caixa `linha_m`), as rodadas pela
 /// `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal). Acima de `limite`: devolve 0 sem gravar nada.
-unsafe fn create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limite: i8, id: i16, grupos: &[Cqo10G],
+unsafe fn create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, limit: i8, id: i16, grupos: &[Cqo10G],
     mata: &[Cql10R], arquivo: usize, linha_g: u32, linha_m: u32, nome_g: &'static str, nome: &'static str) -> usize {
     let f = fase as u8 as i8;
     let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    if f < limite {
+    if f < limit {
         let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, i32) -> usize = core::mem::transmute(0x68a160usize);
         let jogo: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(0x68a1c0usize);
         if !liga.is_null() {
@@ -37,7 +37,7 @@ unsafe fn create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut
         }
         return t;
     }
-    if f != limite {
+    if f != limit {
         return 0;
     }
     if !liga.is_null() {
@@ -74,8 +74,8 @@ unsafe fn written_group_schedule_bytes(t: usize, n: i16) -> Vec<u8> {
 /// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (de grupos ou de mata-mata, pelo é_liga
 /// da cópia) têm de ser iguais; a tabela da cópia é liberada (0x9452ca).
 unsafe fn ita_cup_compare_schedule(nome: &str, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32,
-    o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize, limite: i8) -> usize {
-    if fase as u8 as i8 > limite {
+    o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize, limit: i8) -> usize {
+    if fase as u8 as i8 > limit {
         // ponytail: acima do mata-mata nenhuma das duas grava nada; as saídas podem nem existir
         let a = o();
         PLACAR.registrar(a == 0, || format!("{}(fase {}) devolveu {:#x}", nome, fase as u8 as i8, a));
@@ -86,7 +86,7 @@ unsafe fn ita_cup_compare_schedule(nome: &str, fase: u32, rodadas: *mut i16, ext
     let reg = [(0xb67a34usize, 4usize)];
     let (a, b, igual, _, _) = crate::comparacao::lado_a_lado(&reg, o, || c(&mut r2, &mut e2, if liga.is_null() { core::ptr::null_mut() } else { &mut l2 }));
     let saidas = *rodadas == r2 && *extra == e2 && (liga.is_null() || *liga == l2);
-    let grupos = (fase as u8 as i8) < limite;
+    let grupos = (fase as u8 as i8) < limit;
     let tabela = if a != 0 && b != 0 {
         if grupos { written_group_schedule_bytes(a, *rodadas) == written_group_schedule_bytes(b, r2) } else { eng_cc_cup_written_round_bytes(a, *rodadas) == eng_cc_cup_written_round_bytes(b, r2) }
     } else {

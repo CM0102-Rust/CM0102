@@ -99,7 +99,7 @@ unsafe fn set_c1_club_progress(this: usize, clube: usize, fase: u8, atual: u8, m
         m = match m {
             2..=5 => 2,
             14..=17 => {
-                crate::comparacao::ramo("cqk_6 faixa do play-out");
+                crate::comparacao::ramo("cqk_6 band do play-out");
                 0xe // cqk6: a melhor na faixa do play-out
             }
             v => v,

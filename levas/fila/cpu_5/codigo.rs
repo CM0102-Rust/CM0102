@@ -46,7 +46,7 @@ unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
     let chave: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(0x669360usize);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(0x923010usize);
     let est = cpu5_d(jogo + 0x18);
     if est == 0 || cpu5_d(est + 0x38) == 0 || cpu5_d(est + 0x3c) == 0 || cpu5_d(jogo + 0x14) == 0 {
@@ -77,7 +77,7 @@ unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
     if cpu5_b(jogo + 0x3f) == 2 { // cpu5: a fatia da noite
         let fin = financas(cpu5_d(0xae2a38), casa);
         if fin != 0 {
-            let f = faixa(fin) as i8;
+            let f = band(fin) as i8;
             let n = if f == -2 {
                 1000
             } else if f == -1 && (cpu5_b(fin + 0x166) as i8) > 0xf {

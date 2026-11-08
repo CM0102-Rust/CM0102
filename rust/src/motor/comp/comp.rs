@@ -11,9 +11,9 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, clube: usize) -> u8 {
     let base = *((this + 4) as *const usize);
     let d = |p: usize, o: usize| *((p + o) as *const usize);
-    let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
+    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
     let nacao = d(clube, 0x53);
-    if *(clube as *const i32) >= limite {
+    if *(clube as *const i32) >= limit {
         let continente = d(base, 0x59);
         if continente != 0 && (nacao == 0 || d(nacao, 0x71) != continente) {
             return 0;
@@ -833,7 +833,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_are_round_fixtures_known(this: u
 /// Original: `Comp::counts_for_fixture_clash` (0x48e360, comp.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
-/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das units_digit (0x4b0850) da rodada (+0x30, com sinal)
+/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
 /// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
 pub(crate) unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, _outro: usize) -> u32 {
     let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_ROUND_VARIANT);
@@ -844,5 +844,12 @@ pub(crate) unsafe extern "thiscall" fn comparar_counts_for_fixture_clash(this: u
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, jogo, outro);
     let n = counts_for_fixture_clash(this, jogo, outro);
     PLACAR.registrar(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(jogo + 0x30), r, n));
+    r
+}
+
+pub(crate) unsafe extern "stdcall" fn comparar_special_club(clube: usize) -> u32 {
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SPECIAL_CLUB)(clube);
+    let v = special_club(clube);
+    PLACAR.registrar(r == v, || format!("special_club({:#x}) original={} rust={}", clube, r, v));
     r
 }

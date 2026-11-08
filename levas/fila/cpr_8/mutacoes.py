@@ -1,4 +1,4 @@
-# Mutacoes. No jogo novo, o jogador acima do limite de idade so fica com habilidade (+5) acima de 100, nao de 80 (a
+# Mutacoes. No jogo novo, o jogador acima do limit de idade so fica com habilidade (+5) acima de 100, nao de 80 (a
 # lista inicial ganha aposentadorias: os regens e os elencos mudam na temporada). Na busca de novas aposentadorias, o
 # jogador de clube fora das competicoes do jogo se aposenta com sorteio(2) = 0, nao sorteio(3) (mais aposentadorias;
 # os sorteios seguintes tambem mudam). A data da aposentadoria pela nacao com sorteio(31) e nao sorteio(30) (as datas

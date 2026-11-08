@@ -1,4 +1,4 @@
-# Mutacoes. O surto novo com 1 em 5 de ficar de fora em vez de 1 em 4 (o sorteio muda de faixa: outros surtos entram;
+# Mutacoes. O surto novo com 1 em 5 de ficar de fora em vez de 1 em 4 (o sorteio muda de band: outros surtos entram;
 # comparando, o plano usa a mesma regra mas a original nao: a conta difere). Os surtos espalhando 0 a 1 doente em vez
 # de 0 a 2 e os surtos saindo com seis dias em vez de cinco (so o modo Rust e a carreira: o comparador roda a
 # original; doentes a mais ou a menos mudam as escalacoes e as partidas). Se nenhum surto acontecer ate 2002-06-01,

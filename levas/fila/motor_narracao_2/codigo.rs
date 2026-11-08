@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (5): a narração combinada e o comentário de contexto ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (5): a narração combinada e o comentário de contexto ----------
 
 /// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
@@ -414,7 +414,7 @@ unsafe extern "thiscall" fn context_commentary(m: usize, lado: u32, evento: u32,
         }
         1
     };
-    let ate_media = |limite: i16| media().is_some_and(|v| v >= limite) as u32;
+    let ate_media = |limit: i16| media().is_some_and(|v| v >= limit) as u32;
     let fim = || media().map_or(1, |v| (v <= 0x1a2b) as u32);
     let nao_trava = if fase3 as i8 != -3 { 3 } else { 0 };
     match ev {

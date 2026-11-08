@@ -37,7 +37,7 @@ unsafe fn rebalance_attr_vector(v: *mut u8, inicio: i8, fim: i8, jogador: usize,
     let mut marca = [0u32; 64];
     for step_towards in 0..2 {
         let (mut quantas, mut soma) = (0i32, 0i32);
-        let mut limite = 0x1ei32;
+        let mut limit = 0x1ei32;
         let (mut total, mut n, mut melhor);
         loop {
             total = 0i32;
@@ -48,7 +48,7 @@ unsafe fn rebalance_attr_vector(v: *mut u8, inicio: i8, fim: i8, jogador: usize,
                 while c < fim {
                     if !fora(c) {
                         let x = w(c);
-                        if (x as i32).abs() <= limite as i16 as i32 {
+                        if (x as i32).abs() <= limit as i16 as i32 {
                             total = total.wrapping_add(x as i32);
                             n = n.wrapping_add(1);
                             marca[c as usize] = 1;
@@ -66,7 +66,7 @@ unsafe fn rebalance_attr_vector(v: *mut u8, inicio: i8, fim: i8, jogador: usize,
                 }
             }
             // ponytail: com inicio >= fim (ou menos de 12 células) o original roda para sempre; a cópia também
-            limite += 5;
+            limit += 5;
         }
         if melhor > -1 {
             marca[melhor as usize] = 1;
@@ -197,7 +197,7 @@ unsafe extern "C" fn comparar_staff_normalise_player_physical_attributes(pessoa:
 
 /// { 0x53a0e0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) pelo peso. Nação com
 /// mais de 10 segundos nomes (`nation_name_index` +0x1c): 3 sorteios na faixa dela (a partir de +4),
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com até
+/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com até
 /// 10: sorteio na tabela inteira ([0xae239c], no máximo 0x7fff). Só o rand() da CRT. Chamada por
 /// OfficialsManager::add_random_officials (0x79c6b4), na criação dos árbitros do jogo novo.
 unsafe extern "C" fn database_pick_second_name_by_weight(nacao: usize) -> usize {

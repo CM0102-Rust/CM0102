@@ -5,7 +5,7 @@ unsafe fn cpj6_d(a: usize) -> usize {
 }
 
 /// { 0x6951e0 } (thiscall, ret 8, manager_manager.cpp): `MANAGER_MANAGER::update_board_after_fixture(partida,
-/// jogo)`: partida play (+0 ≠ −2, +0x40 ≠ 0): a confiança da diretoria de cada lado com técnico (+0xcf) muda pela
+/// jogo)`: partida jogada (+0 ≠ −2, +0x40 ≠ 0): a confiança da diretoria de cada lado com técnico (+0xcf) muda pela
 /// 0x695240 (mandante +0x1c com 1, visitante +0x20 com 0).
 unsafe extern "thiscall" fn update_board_after_fixture(this: usize, partida: usize, jogo: usize) {
     if cpj6_d(partida) as i32 == -2 || *((partida + 0x40) as *const u8) == 0 {

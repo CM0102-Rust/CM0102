@@ -4,7 +4,7 @@
 /// nula com jogador (+0x61) da `posicao`, sem lesão grave (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364]
 /// (com sinal) e habilidade atual (+5 do jogador, curto com sinal) acima do `limite`. A ordem dos testes é a da
 /// original (a 0x62c400 só é chamada para os da posição). Contador de 8 bits (no máximo 50).
-unsafe fn count_squad_above_ability(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool) -> u8 {
+unsafe fn count_squad_above_ability(clube: usize, limit: i32, posicao: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let mut n = 0u8;
@@ -20,7 +20,7 @@ unsafe fn count_squad_above_ability(clube: usize, limite: i32, posicao: impl Fn(
         if core::ptr::read_unaligned(p as *const i32) >= *(0xae2364 as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limite {
+        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit {
             n += 1;
         }
     }
@@ -71,8 +71,8 @@ unsafe extern "C" fn club_has_enough_defenders(clube: usize) -> u8 {
             return 0; // a defesa toma gols demais
         }
     }
-    let limite = squad_ability_threshold(clube, 0x91);
-    (count_squad_above_ability(clube, limite, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
+    let limit = squad_ability_threshold(clube, 0x91);
+    (count_squad_above_ability(clube, limit, |j| *((j + 0x11) as *const u8) == 20) > 2) as u8 // zagueiros (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_defenders(clube: usize) -> u8 {
@@ -88,9 +88,9 @@ unsafe extern "C" fn club_has_enough_midfielders(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    let limite = squad_ability_threshold(clube, 0x91);
+    let limit = squad_ability_threshold(clube, 0x91);
     let meia = |j: usize| *((j + 0x14) as *const u8) == 20 || *((j + 0x12) as *const u8) == 20 || *((j + 0x13) as *const u8) == 20;
-    (count_squad_above_ability(clube, limite, meia) > 2) as u8 // meias (dbo)
+    (count_squad_above_ability(clube, limit, meia) > 2) as u8 // meias (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_midfielders(clube: usize) -> u8 {
@@ -112,8 +112,8 @@ unsafe extern "C" fn club_has_enough_strikers(clube: usize) -> u8 {
             return 0; // o ataque faz poucos gols
         }
     }
-    let limite = squad_ability_threshold(clube, 0x96);
-    (count_squad_above_ability(clube, limite, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
+    let limit = squad_ability_threshold(clube, 0x96);
+    (count_squad_above_ability(clube, limit, |j| *((j + 0x15) as *const u8) == 20) > 1) as u8 // atacantes (dbo)
 }
 
 unsafe extern "C" fn comparar_club_has_enough_strikers(clube: usize) -> u8 {

@@ -581,7 +581,7 @@ pub(crate) unsafe fn contract_wage(pessoa: usize) -> i32 {
 ///
 /// [pt] O bônus de quem paga mais (o trecho 0x596c0d..0x597238): clube da Inglaterra, Itália ou Espanha, reputação acima
 /// de 4750, faixa 0 a 2, pelo fator salarial `w` (a palavra, com sinal) e pela marca +0x82.
-pub(crate) unsafe fn big_spender_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
+pub(crate) unsafe fn big_spender_bonus(clube: usize, band: i8, w: i32) -> i32 {
     let nac = read_usize(clube + club::NATION);
     if nac == 0 {
         return 0;
@@ -590,15 +590,15 @@ pub(crate) unsafe fn big_spender_bonus(clube: usize, faixa: i8, w: i32) -> i32 {
     if n != read_i32(KEY_NATION_ENGLAND) && n != read_i32(KEY_NATION_ITALY) && n != read_i32(KEY_NATION_SPAIN) {
         return 0;
     }
-    if read_i16(clube + club::REPUTATION) <= 0x128e || !(faixa == 2 || faixa == 1 || faixa == 0) {
+    if read_i16(clube + club::REPUTATION) <= 0x128e || !(band == 2 || band == 1 || band == 0) {
         return 0;
     }
     let w16 = w as i16;
     let x = w16 as i32;
     let (base, oito) = if read_u8(clube + club::PLC) != 0 { (0x4e2, 0x2710) } else { (0x2ee, 0x1770) };
-    if w16 < 0x1676 || faixa == 0 {
+    if w16 < 0x1676 || band == 0 {
         x.wrapping_sub(base).wrapping_mul(6)
-    } else if faixa == 1 {
+    } else if band == 1 {
         x.wrapping_mul(8).wrapping_sub(oito)
     } else {
         x.wrapping_sub(base).wrapping_mul(10)
@@ -676,20 +676,20 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
     }
     let rep = read_i16(clube + club::REPUTATION);
     let mut di: i32 = rep as i32 / 50;
-    let faixa: i8 = if fin_prm_is_national_team(clube) { 0 } else { wealth_band(fin) };
+    let band: i8 = if fin_prm_is_national_team(clube) { 0 } else { wealth_band(fin) };
     let nac = read_usize(clube + club::NATION);
     let e = |g: usize| read_i32(nac) == read_i32(g);
     let tabela: usize = if nac == 0 || e(KEY_NATION_WALES) || e(KEY_NATION_REPUBLIC_OF_IRELAND) || e(KEY_NATION_NORTHERN_IRELAND) || e(KEY_NATION_AUSTRALIA) {
         0x9c8498
     } else if [KEY_NATION_JAPAN, KEY_NATION_SWEDEN, KEY_NATION_CROATIA, KEY_NATION_POLAND, KEY_NATION_NORWAY, KEY_NATION_UNITED_STATES, KEY_NATION_PORTUGAL, KEY_NATION_DENMARK, KEY_NATION_FINLAND, KEY_NATION_SCOTLAND, KEY_NATION_GERMANY].iter().any(|&g| e(g)) {
         0x9c8548
-    } else if e(KEY_NATION_FRANCE) || (read_u8(clube + club::PLC) != 0 && faixa != 2 && faixa != 1) {
+    } else if e(KEY_NATION_FRANCE) || (read_u8(clube + club::PLC) != 0 && band != 2 && band != 1) {
         0x9c85f8
     } else {
         0x9c86a8
     };
     let padrao = tabela == 0x9c86a8;
-    match faixa {
+    match band {
         0 => {
             if rep > 0x1676 {
                 di = if padrao { (rep as i32 - 0x186a) / 25 + 0x73 } else { di + 5 };
@@ -744,7 +744,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                 r = cap;
             }
         }
-        b20 = big_spender_bonus(clube, faixa, s);
+        b20 = big_spender_bonus(clube, band, s);
     } else {
         let mut f = fator;
         if nac != 0 {
@@ -837,7 +837,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, pessoa: usize, c
                 }
             }
         }
-        b20 = big_spender_bonus(clube, faixa, s);
+        b20 = big_spender_bonus(clube, band, s);
     }
     if pessoa != 0 {
         let repf = rep as i32 as f64;
@@ -1275,7 +1275,7 @@ pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
 /// club league, TV 3/4 and 1/4, the net to the home club and the stadium upkeep; outside it, half of each to both
 /// Original: `FinanceTable::process_match_income` (0x59a5d0, fin_prm.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x59a5d0 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::process_match_income(partida, resultado)`, pelo match_wrap_up
+/// [pt] { 0x59a5d0 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::process_match_income(partida, resultado)`, pelo fechamento
 /// da partida do dia (0x6b5f00). Sem resultado ou sem partida: a caixa (a original). Seleção de um dos lados: nada. Os
 /// valores: com público (+0x34 do resultado), a TV pelo público (1 / (sorteio(10) + 2) inteiro, que é 0, mais 1,75, ×
 /// público) e a renda do estádio (+0x38); os custos do jogo (sem os dois clubes de +0x64 = 1: público / 4; senão por
@@ -1652,7 +1652,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
                 if forte(pres, ficha) && read_i8(pres + 0x57) > 0xf && read_i8(ficha + 0x20) > 0xf {
                     read_f64_at(0x96a740)
                 } else {
-                    crate::comparacao::ramo("cqb_2 divisor da faixa 0 baixa");
+                    crate::comparacao::ramo("cqb_2 divisor da band 0 baixa");
                     read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {
@@ -2818,7 +2818,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             if *aperto > 10 {
                 *aperto -= 1;
             }
-            crate::comparacao::ramo("cpv_6 impulso na faixa 0");
+            crate::comparacao::ramo("cpv_6 impulso na band 0");
             let ok = run_weekly_event(0x59e050, this, clube, fin) != 0; // cpv6: o impulso na faixa 0
             if !ok && run_weekly_event(0x59dd40, this, clube, fin) == 0 {
                 run_weekly_event(0x59e5a0, this, clube, fin);
@@ -2998,7 +2998,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_board_debt_payment(this: usi
 /// faixa (−2: 0,25; −1: 0,1; outras: 0,001). Com o estádio do clube de +0xbf: sorteio(30 / divisor) abaixo do nível
 /// (+0xf) e o nível +0x20 acima de sorteio(5) + 10: (20 × nível + 150) × reputação + 750000; sem ele: sorteio(4 /
 /// divisor) zero: (5 × reputação + 15000) × 50. Dívida acima de 10 × o valor: 10% da dívida. Teto: reputação² + 1,5
-/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor pass_ball de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
+/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor passar de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
 /// notícia (0x59f300, tipo 3, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, clube: usize, fin: usize) -> u32 {
     if read_i16(clube + club::REPUTATION) < 0x128e { // cpv6: o filtro da injeção
@@ -3094,7 +3094,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_try_cash_injection(this: usize, 
 /// finanças (0x5986b0): −2 × 0,75, −1 × 0,95, 1 × 1,5, 2 × 2. Limitado ao teto do clube (+0x14) e à faixa do cargo.
 pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
     let id = read_usize(this + 8);
     let clube = read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(0x245));
     if read_u8(clube + club::PROFESSIONAL_STATUS) == 3 {
@@ -3160,7 +3160,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8
             w = match_pl_ftol(read_i16(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
         }
     }
-    match faixa(this) as i8 {
+    match band(this) as i8 {
         -2 => w = match_pl_ftol(w as f64 * read_f64_at(0x969040)),
         -1 => w = match_pl_ftol(w as f64 * read_f64_at(0x9689d0)),
         1 => w = match_pl_ftol(w as f64 * read_f64_at(0x968940)),

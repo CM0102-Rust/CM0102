@@ -221,22 +221,22 @@ unsafe extern "thiscall" fn contract_manager_offer_contract(this: usize, pessoa:
             if !(b > read_f64_at(0x967890)) {
                 b = 1.0;
             }
-            let limite = match_pl_ftol(game_pow(a, read_f64_at(0x968950)) / b);
-            let reduz = (limite as f64 * read_f64_at(0x968940)) < total as f64;
+            let limit = match_pl_ftol(game_pow(a, read_f64_at(0x968950)) / b);
+            let reduz = (limit as f64 * read_f64_at(0x968940)) < total as f64;
             let mut feito = false;
             if reduz {
                 while semanas > 0x68 {
                     semanas -= 0x34;
                     cqf3_pd(c + 0xc, match_pl_ftol(cqf3_i(c + 0xc) as f64 * read_f64_at(0x9689c0)) as u32);
                     total = semanas.wrapping_mul(cqf3_i(c + 0xc));
-                    if limite >= total {
+                    if limit >= total {
                         feito = true;
                         break;
                     }
                 }
             }
-            if !feito && total > limite {
-                let q = limite / semanas;
+            if !feito && total > limit {
+                let q = limit / semanas;
                 if (q as f64) < teto {
                     crate::comparacao::ramo("cqf_3 teto pelo total");
                     teto = q as f64; // cqf3: o teto pelo total

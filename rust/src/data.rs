@@ -137,14 +137,14 @@ unsafe fn preparar(e: &Estatica) -> *mut Data {
     e.valor as *mut Data
 }
 
-/// Avanca `dia` (que pode pass_ball de 365) para os anos seguintes. Comparacoes em 16 bits com sinal.
+/// Avanca `dia` (que pode passar de 365) para os anos seguintes. Comparacoes em 16 bits com sinal.
 fn normalizar_para_frente(mut dia: i16, mut ano: u16) -> (i16, u16) {
     loop {
-        let limite = if bissexto(ano) == 1 { 365 } else { 364 };
-        if dia <= limite {
+        let limit = if bissexto(ano) == 1 { 365 } else { 364 };
+        if dia <= limit {
             return (dia, ano);
         }
-        dia = dia.wrapping_sub(limite + 1);
+        dia = dia.wrapping_sub(limit + 1);
         ano = ano.wrapping_add(1);
     }
 }

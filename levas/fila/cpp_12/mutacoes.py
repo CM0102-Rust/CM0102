@@ -1,4 +1,4 @@
-# Mutacoes. O limite dos convocados (2 -> 0: qualquer convocado na janela barra o jogo; os choques de data 0x5ad780 mudam,
+# Mutacoes. O limit dos convocados (2 -> 0: qualquer convocado na janela barra o jogo; os choques de data 0x5ad780 mudam,
 # a tabela e as datas mudam). O visitante com convocados demais liberado (o jogo e marcado onde a original recusa). A
 # ordem das convocacoes invertida (consistente: o qsort termina): a 0x776fc0 para no primeiro registro depois da janela
 # e passa a nao ver os convocados, e as listas de lesoes e de transferencias mudam de ordem. Nenhuma na 0x7779b0 (a

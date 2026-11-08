@@ -7,7 +7,7 @@ use super::*;
 /// Original: `Match_Stats::Match_Stats` (0x729000, match_stats.cpp, thiscall).
 ///
 /// [pt] { 0x729000 } (thiscall, ret 8, match_stats.cpp): o construtor das estatísticas da partida.
-/// Confere o CD: entre as units_digit (GetLogicalDriveStringsA, 200) a primeira de CD (GetDriveTypeA 5)
+/// Confere o CD: entre as unidades (GetLogicalDriveStringsA, 200) a primeira de CD (GetDriveTypeA 5)
 /// com "<raiz>cm0102.exe" (0x4c0aa0; nas outras fecha a busca, 0x4c0c10); sem ela, a caixa "Insert
 /// CD" e tenta de novo, para sempre. Com `zip` e a carga do save (0x72aa80) pronto; senão o índice de
 /// `n` entradas (+4, [this] com n × 12 bytes; sem memória, erro 0x62 e o jogo fecha), +0x1c = n, os
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: 
     let qualquer_unidade = *(0x729089 as *const u8) == 0x90;
     let sempre_achou = *(0x7290cb as *const u8) != 0x85; // o original tem `test eax, eax` (85 c0); qualquer outra coisa é patch sem CD (xor 31 c0 ou 33 c0)
     'cd: loop {
-        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de units_digit
+        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
         // (mais de 50 letras), impossível
         let mut lista = [0u8; 0x100];
         if units_digit(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: 
                     }
                     fechar_busca(ach);
                 }
-                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 units_digit
+                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
                 i += 4;
                 if lista[i] == 0 {
                     break;
@@ -459,7 +459,7 @@ pub(crate) unsafe fn free_match_snapshot() {
 ///
 /// [pt] O fundo das telas da partida: a foto (0x41c670), senão o da competição (0x41c410), senão o do clube
 /// (0x41c250 e 0x41bfb0). Devolve o `eax` da última chamada (a original empilha o byte da cor do
-/// kit por cima dele).
+/// uniforme por cima dele).
 pub(crate) unsafe fn set_match_background(foto: usize, competicao: usize, clube: usize) -> usize {
     let pela_foto: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_STADIUM_PICTURE);
     let pela_competicao: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_BACKGROUND_SET_COMP_PICTURE);
@@ -539,7 +539,7 @@ pub(crate) unsafe fn add_commentary_speed_row(lista: usize, valor: u16, v: u32, 
 /// +0xea da ficha do humano (0x765480) e libera a foto do parâmetro 0x1d. Modo 1 (parâmetro 1): só a
 /// figura de fundo vazia (0x41c0d0). Senão: tira a marca de "saiu" (−911) do humano nos espectadores
 /// ([partida+0x5b] +0xc5 + 4h, contando em +0x108); o fundo; os cabeçalhos dos dois times (cores do
-/// kit 0x53b640, nome, caixa do clube, placar ou "A" de abandonada) e o agregado ([+0x4f] ≥ 0;
+/// uniforme 0x53b640, nome, caixa do clube, placar ou "A" de abandonada) e o agregado ([+0x4f] ≥ 0;
 /// somado ao placar fora do modo 2 de [+0x67]); a área da narração (fundo "match.mbr"), a do relógio
 /// (minuto [+0x4d] no parâmetro 3), as setas "<<<"/">>>" (ou os símbolos da fonte [0x9cc2c4]), o
 /// controle (0x725a70, parâmetro 4) e os botões táticos dos dois times (parâmetros 5 e 6; o do
@@ -600,7 +600,7 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     set_match_background(rd(p + 0x1c), rd(p + 0x18), rd(p + 0x20));
 
     // os cabeçalhos: as cores u16 (o resto das variáveis da original é lixo da pilha, aqui 0); o byte do
-    // kit vai num registrador sujo (estendido)
+    // uniforme vai num registrador sujo (estendido)
     let (mut cor_a, mut cor_b) = (0u32, 0u32);
     cores(rd(p + 0x20), rb(st + 0x152) as usize, &mut cor_a, &mut cor_b);
     format_match_team_name(rd(p + 0x20), rb(p + 0x44));
@@ -1305,7 +1305,7 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
     caixa(sm, 0x64, 0xa, 0x1bc, 0x46, 1, 0, 1, 7, 0, 0, 2, rd(reg + 0x1c));
     let r = if rb(foto + 0x11f) == 0xfd { texto(BUF, 0xa164c4, 0xad9c64) } else { formatar(BUF, 0x98806c, rb(foto + 0x11f) as u32) };
     texto_do_gerente(sm, 0x18f, 0xf, 0x1b7, 0x41, 0x30, colour_word(0xae3184), 0xc, 6, colour_with_high_bits(r as usize, 0xaebdea), BUF, 1);
-    // o byte do kit do segundo time vai num ecx sujo (estendido)
+    // o byte do uniforme do segundo time vai num ecx sujo (estendido)
     cores(rd(reg + 0x20), rb(foto + 0x777) as usize, &mut cor_a, &mut cor_b);
     formatar(BUF, 0x987ff0, rd(reg + 0x20) + 0x38);
     texto_do_gerente(sm, 0x1be, 0xa, 0x316, 0x46, 0x30, cor_b as usize, 1, 7, cor_a as usize, BUF, 1);
@@ -1449,7 +1449,7 @@ pub(crate) unsafe extern "C" fn comparar_build_match_details_screen() {
 /// ball) and stores the match state in the param 0x1d copy
 /// Original: `refresh_possession_bar` (0x71d9e0, match_screens.cpp, cdecl).
 ///
-/// [pt] { 0x71d9e0 } (cdecl, match_screens.cpp): na partida (parâmetro 0), sem contest de pênaltis
+/// [pt] { 0x71d9e0 } (cdecl, match_screens.cpp): na partida (parâmetro 0), sem disputa de pênaltis
 /// ([estado + 0x53] = 0), pega as cores dos dois clubes (0x53b640 com os uniformes +0x152 e +0x777) e,
 /// se a posse (+0x142) mudou desde a cópia do parâmetro 0x1d (ou sem cópia), redesenha a barra da posse
 /// da visão geral: o percentual (50 sem valor ou sem a marca +0x767) em "%d%%" nos itens 3 e 4 a partir
@@ -1530,7 +1530,7 @@ pub(crate) unsafe fn overview_would_error() -> bool {
 ///
 /// [pt] { 0x71c270 } (cdecl, match_screens.cpp, ~6 KB): desenha a visão geral da partida de `*topo` a
 /// `*base` (`*base` −= 0x28 logo de saída). Na partida (parâmetro 0; estado em +0x5f): o título do
-/// período (pelo [estado + 0x4f], com os nomes do parâmetro 1 = 4 ou os outros) e, sem contest de
+/// período (pelo [estado + 0x4f], com os nomes do parâmetro 1 = 4 ou os outros) e, sem disputa de
 /// pênaltis ([estado + 0x53] = 0), a barra da posse (moldura, "Last 5 Mins", as cores dos clubes; o item
 /// no parâmetro 0x21, a altura no 0x22; `*base` −= 0x37) e a caixa do comentário (com o parâmetro 7 o
 /// narrador escreve o último lance nela, 0x6d7b00; o item no parâmetro 8). Fora dela: o estádio e a
@@ -1538,7 +1538,7 @@ pub(crate) unsafe fn overview_would_error() -> bool {
 /// intervalo, a prorrogação e os pênaltis, a competição (com o atalho 0x7e5 quando não é amistoso nem
 /// de seleção), a lista dos autores em duas colunas (gols, gol contra, pênalti perdido, expulsão,
 /// lesão; os minutos do mesmo jogador e tipo juntos, quebrando a linha com mais de 10 letras), a
-/// contest de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
+/// disputa de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
 pub(crate) unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     if overview_would_error() {
         return original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_OVERVIEW_PANEL)(topo, base);
@@ -1847,7 +1847,7 @@ pub(crate) unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: 
         marcas[i - 1] = 1;
     }
 
-    // a contest de pênaltis
+    // a disputa de pênaltis
     if core::ptr::read_unaligned((e + 0x53) as *const u32) != 0 {
         let m = if linhas[0] > linhas[1] { linhas[0] } else { linhas[1] };
         linhas[lado_da_linha] = m;
@@ -2390,14 +2390,14 @@ pub(crate) unsafe fn show_selection_warning(texto_obj: usize, msg: *const u8, ca
 ///
 /// [pt] { 0x7260f0 } (cdecl, match_screens.cpp, ~7 KB com os pedaços até 0x727c2e): desenha a conferência
 /// da escalação do clube (parâmetro 0) para o jogo (parâmetro 1) e a equipe (parâmetro 2). Passa pelas
-/// 20 vagas da tática (0x8968f0): conta starters (< 11), reservas (< 11 + o banco [jogo+0x4d] & 0xf)
+/// 20 vagas da tática (0x8968f0): conta titulares (< 11), reservas (< 11 + o banco [jogo+0x4d] & 0xf)
 /// e os de fora; dos que estão no time, junta os convocados pela seleção (0x7757d0), os emprestados a
 /// outro clube (0x4cf6d0/0x4cf5a0, fora da seleção), os inelegíveis com o mesmo motivo do primeiro
 /// (0x8cf5e0), os suspensos (0x55d270), os lesionados e os indisponíveis (0x62c400/0x62ed70: lesão de
 /// tipo 0x4d a 0x51 no idioma 0 conta como indisponível) e os sem permissão de trabalho (0x8c7560, fora
 /// da competição [0x9cf684] e de amistoso). Depois o fundo do clube, o menu, as cores e o título com o
 /// nome. O primeiro grupo não vazio, nessa ordem, vira o aviso "Team Selection" com os nomes (ligados)
-/// e o botão "Ok"; senão o limite do banco do dia (0x8cf880); senão menos de 11 starters; senão
+/// e o botão "Ok"; senão o limite do banco do dia (0x8cf880); senão menos de 11 titulares; senão
 /// "Please Confirm": o capitão escolhido (0x727e20) quando não há um válido, os cobradores de bola
 /// parada fora dos 11, os reservas que faltam, os de fora do grupo, "Proceed to the match ?" e a lista
 /// com "No" e "Yes".
@@ -3140,8 +3140,8 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(modo: u32, area: usize) {
                         let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * 110);
                         if confere(pessoa, n1, n2, n3, reg + 0x1a4) != 0 {
                             let v = if lado == 0 { *(dados as *const i32) } else { *((dados + 4) as *const i32) };
-                            let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
-                            botao = (if v >= limite { 0x7dc } else { 0x7d7 }, pessoa);
+                            let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
+                            botao = (if v >= limit { 0x7dc } else { 0x7d7 }, pessoa);
                         }
                     }
                     if core::ptr::read_unaligned((reg + 0x194) as *const u32) == core::ptr::read_unaligned((dados + 0x3c) as *const u32) {
@@ -3571,8 +3571,8 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                                 let pessoa = (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * 110);
                                 if confere(pessoa, n98, na0, na4, reg + 0x1a4) != 0 {
                                     let v = if lado == 0 { i32_em(ev) } else { i32_em(ev + 4) };
-                                    let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
-                                    ligar(sm, it, if v >= limite { 0x7dc } else { 0x7d7 });
+                                    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
+                                    ligar(sm, it, if v >= limit { 0x7dc } else { 0x7d7 });
                                     dado(sm, it, pessoa);
                                 }
                             }
@@ -4469,7 +4469,7 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
 /// zero (o primeiro só na partida). Pelo lado do parâmetro 0xa (i8): a posse em três (+0xc, +0x16,
 /// +0x20, "%d%%" truncado a i8; o terceiro é 100 − os outros) no item do parâmetro 0xb; o tempo de bola
 /// em jogo (+0x2a × 60 / 11 segundos, vazio no lado 4); as cores dos dois clubes (0x53b640 com o
-/// kit +0x152 e +0x777); as três zonas do campo (+0x143, +0x148, +0x14d; 50 sem valor ou sem a
+/// uniforme +0x152 e +0x777); as três zonas do campo (+0x143, +0x148, +0x14d; 50 sem valor ou sem a
 /// marca +0x768/+0x76d/+0x772) em barras entre os parâmetros 0x16 e 0x18 na altura do 0x19; e a barra
 /// da posse (+0x13e/+0x763) de 0xd4 a 0x2a6 na altura do parâmetro 0xc. No fim guarda o estado.
 pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
@@ -4928,8 +4928,8 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(topo: *mut i32, base: 
                     if pessoa_vale(pessoa, a, b, c, reg + 0x14) != 0 {
                         botao = true;
                         let saldo = if i == 0 { *(dados as *const i32) } else { *((dados + 4) as *const i32) };
-                        let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
-                        let item = if saldo >= limite { 0x7dc } else { 0x7d7 };
+                        let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
+                        let item = if saldo >= limit { 0x7dc } else { 0x7d7 };
                         celula(sm, tabela, col + 4, j, 1, 0, 1, 2, colour_word(0xae317e), BUF, item, pessoa);
                     }
                 }
@@ -5417,12 +5417,12 @@ pub(crate) unsafe extern "thiscall" fn fixture_entry_matches(estat: usize, k: i3
 /// seleção (0x53b900): 0 se a palavra +0x80 do clube passa de 4999 ou de 0x157b, senão 2; senão pelo tipo
 /// (tabela de saltos em 0x729d38) e as tabelas de bytes do exe em 0x729d64 e 0x729d94.
 pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
-    let limite = *(G_STAFF_COUNT as *const i32);
+    let limit = *(G_STAFF_COUNT as *const i32);
     for o in [0x1c, 0x20] {
         let p = core::ptr::read_unaligned((*((jogo + o) as *const usize) + 0xcf) as *const usize);
         if p != 0 {
             let id = *(p as *const i32);
-            if id >= limite.wrapping_sub(0x10) && id < limite && *((p + 0x5f) as *const u8) != 0 {
+            if id >= limit.wrapping_sub(0x10) && id < limit && *((p + 0x5f) as *const u8) != 0 {
                 return 0;
             }
         }
@@ -5497,7 +5497,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_match_stats_get_record_bucket(jog
 /// Original: `open_day_fixtures_screen` (0x717cc0, match_screens.cpp, cdecl).
 ///
 /// [pt] { 0x717cc0 } (cdecl, match_screens.cpp): abre a tela dos jogos do dia na vaga `vaga` (0x7fe4a0 com a
-/// montagem 0x717db0 e a resposta 0x718930, sem match_wrap_up) e grava os parâmetros dela (0x7ff130): 1 o
+/// montagem 0x717db0 e a resposta 0x718930, sem fechamento) e grava os parâmetros dela (0x7ff130): 1 o
 /// grupo de jogos, 2 e 3 zero, 4 um. Grupo nulo: a original (caixa de erro e [0xb67a34] = 0).
 pub(crate) unsafe extern "C" fn open_day_fixtures_screen(vaga: u32, grupo: usize) {
     if grupo == 0 {
@@ -5589,7 +5589,7 @@ pub(crate) unsafe extern "C" fn match_screens_find_best_rated_starter_slot(tatic
     vaga
 }
 
-// ponytail: abrir e respond mexem em telas e menu (não rodam duas vezes): no modo comparação só a
+// ponytail: abrir e responder mexem em telas e menu (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 pub(crate) unsafe extern "C" fn comparar_open_day_fixtures_screen(vaga: u32, grupo: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_DAY_FIXTURES_SCREEN)(vaga, grupo)
@@ -5639,7 +5639,7 @@ pub(crate) unsafe fn display_item_id(item: i16) -> u16 {
 /// Original: `open_match_screen` (0x718aa0, match_screens.cpp, cdecl).
 ///
 /// [pt] { 0x718aa0 } (cdecl, match_screens.cpp): abre a tela da partida `partida` na vaga `vaga` (0x7fe4a0
-/// com a montagem 0x718e90, a resposta 0x71a240 e o match_wrap_up 0x71b120) e grava os parâmetros dela
+/// com a montagem 0x718e90, a resposta 0x71a240 e o fechamento 0x71b120) e grava os parâmetros dela
 /// (0x7ff130; o 0xe é [partida+0x63]); marca o humano da vez como espectador ([[partida+0x5b]+0xc5+4h],
 /// contando em +0x108) e, sem confirmação ([partida+0x57]), confirma pela rede (0x6b5260) e, se
 /// confirmou, grava 2 no parâmetro 1. Vaga ou partida nula: a original (caixa de erro).
@@ -5815,7 +5815,7 @@ pub(crate) unsafe fn set_screen_param(k: u32, v: usize) {
 /// Original: `open_match_details` (0x71b4a0, match_screens.cpp, cdecl).
 ///
 /// [pt] { 0x71b4a0 } (cdecl, match_screens.cpp): abre a tela de detalhes da partida `partida` (0x7fe600 com a
-/// montagem 0x71b630, a resposta 0x71bdc0 e o match_wrap_up 0x71c170) e grava os parâmetros dela (a
+/// montagem 0x71b630, a resposta 0x71bdc0 e o fechamento 0x71c170) e grava os parâmetros dela (a
 /// partida em 0x1e; a aba 2 começa em 6).
 pub(crate) unsafe extern "C" fn open_match_details(partida: usize) {
     crate::comparacao::ramo("telas abrir os detalhes");
@@ -6132,7 +6132,7 @@ pub(crate) unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
     ligacao(item)
 }
 
-// ponytail: abrir e respond mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
+// ponytail: abrir e responder mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 pub(crate) unsafe extern "C" fn comparar_open_latest_scores(vaga: u32, entrada: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_LATEST_SCORES)(vaga, entrada)

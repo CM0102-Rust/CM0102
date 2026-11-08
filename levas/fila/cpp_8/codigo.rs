@@ -103,9 +103,9 @@ unsafe fn five_days_ago() -> [u8; 8] {
 }
 
 /// A data `limite` (dia com sinal em +0, ano sem sinal em +2) é depois da do surto `e`?
-unsafe fn is_after_outbreak(limite: &[u8; 8], e: usize) -> bool {
-    let dia = i16::from_le_bytes([limite[0], limite[1]]);
-    let ano = u16::from_le_bytes([limite[2], limite[3]]);
+unsafe fn is_after_outbreak(limit: &[u8; 8], e: usize) -> bool {
+    let dia = i16::from_le_bytes([limit[0], limit[1]]);
+    let ano = u16::from_le_bytes([limit[2], limit[3]]);
     let ano_e = cpp8_w(e + 2) as u16;
     ano > ano_e || (ano == ano_e && dia > cpp8_w(e))
 }

@@ -425,7 +425,7 @@ pub(crate) unsafe fn contract_region(pessoa: usize, clube: usize) -> Option<(usi
 /// For a routine that internally makes tape calls: runs it on a scratch tape and replays the recorded inner calls
 /// through `chamar` in order; outside post-match comparison just calls it.
 ///
-/// [pt] Uma rotina sem porta que por dentro chama units_digit da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
+/// [pt] Uma rotina sem porta que por dentro chama unidades da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
 /// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
 /// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
 /// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
@@ -482,7 +482,7 @@ pub(crate) unsafe fn club_staff_vector(clube: usize, chamar: &mut dyn FnMut(usiz
 /// por gostar ou não do jogador (0x547810/0x547840) e pelo jogador ser favorito ou rejeitado do clube, no mínimo 5;
 /// sorteio(chance) acima de sorteio(nota): a pessoa passa a não gostar do jogador (0x547af0 com 1) e, com vínculo e
 /// sorteio(nota) abaixo de sorteio(10), a marca 1 do contrato (0x867560) ou, nos tópicos 0x1e/0x20 ou com sorteio(nota)
-/// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as units_digit
+/// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as unidades
 /// da fita que a original chama: o vínculo 0x4cf5f0 (0x75551e, 0x7557dc), o humano 0x600a50 (0x755598) e as 0x4cf5f0
 /// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `replay_inner_tape_calls`.
 pub(crate) unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
@@ -491,7 +491,7 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, c
     let confronto: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
     let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(FN_CLUB_ADD_DISLIKED_STAFF);
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED_OR_REQUESTED);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_STAFF_CONTRACT_GET_EXPIRY_BAND);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_STAFF_CONTRACT_GET_EXPIRY_BAND);
     let a_pedido: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_LISTED_BY_REQUEST);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_FAVOURED_BY);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
@@ -544,7 +544,7 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, c
         if c == 0 {
             chance -= 0xf;
         } else {
-            if faixa(c) != 0 {
+            if band(c) != 0 {
                 chance -= 10;
             }
             chance += (read_i8(c + 0x3d) as i32 / 10) as i8 as i32;
@@ -698,7 +698,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_s
 /// n + 10, sorteio(+0x5a) abaixo de sorteio(n), a mesma máscara e reputação acima de 3750: a primeira vez, a história
 /// 0x25 dele (0x72c1f0 em [0xb6b7c8]); sem a marca 0x800 (0x8676f0), a marca 0x800 (0x867560). As duas com efeito vão
 /// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `replay_inner_tape_calls`, o que a 0x62c400
-/// (0x7580ee) e a 0x544520 (0x75810a) chamam de units_digit por dentro.
+/// (0x7580ee) e a 0x544520 (0x75810a) chamam de unidades por dentro.
 pub(crate) unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mascara: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_STAFF_GET_NATURAL_POSITION_MASK);
     let contar: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_CLUB_COUNT_SQUAD_WITH_POSITION_MASK);
@@ -1107,7 +1107,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     let mesma_posicao: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(FN_CLUB_COUNT_SQUAD_WITH_POSITION_MASK);
     let forca = contar(novo, 0, 0) as i8 as i32;
     let rn = read_i16(novo + 0x80);
-    let limite = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
+    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
     let mesma = mesma_posicao(novo, natural_position_mask(p)) as i8 as i32;
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let categoria: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
@@ -1135,7 +1135,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
                 return;
             }
         }
-        if media_contract_flags(c) & 0x400 != 0 && forca >= limite {
+        if media_contract_flags(c) & 0x400 != 0 && forca >= limit {
             crate::comparacao::ramo("cqa_13 elenco forte");
             clear_contract_flags(c, 0x400);
         }
@@ -1469,7 +1469,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(
 /// [pt] { 0x75cfc0 } (thiscall, ret 0x10, media.cpp, quadro SEH da notícia local): `Media::queue_sale_unrest_story(velho,
 /// novo, jogador, companheiro)`, pelas reações à transferência (0x758200). Velho clube com técnico (+0xcf), fora da
 /// seleção (0x53b900), companheiro e jogador com ficha (+0x61). A notícia 0xbe4: o técnico, o companheiro e o jogador
-/// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não pass_ball de
+/// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não passar de
 /// sorteio(5) + 10), o veículo (0x757f30), o comentarista (0x7dab90 com a nação +0x53 ou −1) e 2; vai ao técnico do velho
 /// clube (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, velho: usize, novo: usize, p: usize, comp: usize) {
@@ -2551,8 +2551,8 @@ pub(crate) unsafe extern "thiscall" fn expire_story_log(this: usize) {
             100 // os dias das outras histórias
         };
         let mut local = [0u8; 8];
-        let limite = datar(0xae2c90, &mut local, dias);
-        if media_date_before(r, limite) {
+        let limit = datar(0xae2c90, &mut local, dias);
+        if media_date_before(r, limit) {
             let n = read_usize(this + 8);
             let ultimo = read_usize(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
             core::ptr::copy(ultimo as *const u8, r as *mut u8, 0x17);
@@ -3661,10 +3661,10 @@ pub(crate) unsafe extern "thiscall" fn pick_rival_manager_id(_this: usize, clube
     let confronto: unsafe extern "C" fn(usize, usize, i32) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_LEAGUE_CLASH_TYPE);
     let mut b = 0i8;
     while b < 0x32 {
-        let limite = (read_u32(G_CLUB_COUNT) as i32).wrapping_sub((read_u32(G_NATION_COUNT) as i32).wrapping_mul(2));
-        let i = friendly_random(limite) as usize;
+        let limit = (read_u32(G_CLUB_COUNT) as i32).wrapping_sub((read_u32(G_NATION_COUNT) as i32).wrapping_mul(2));
+        let i = friendly_random(limit) as usize;
         let c = (read_u32(G_CLUB_TABLE) as usize).wrapping_add(i).wrapping_add(i.wrapping_mul(145).wrapping_mul(4));
-        if confronto(clube, c, limite) != 0 && read_u32(c + 0xcf) != 0 && rival_manager_passes_draws(c) {
+        if confronto(clube, c, limit) != 0 && read_u32(c + 0xcf) != 0 && rival_manager_passes_draws(c) {
             return read_u32(read_u32(c + 0xcf) as usize);
         }
         b += 1;
@@ -3690,7 +3690,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_pick_rival_manager_id(this: usiz
 /// queue_manager_fa_complaint_story(clube, pessoa, tipo, a, b, c)`, pela disciplina (0x55e300) e pelo MANAGER_MANAGER
 /// (0x6a9e60, 0x6ab800). Clube com nação (+0x53) e técnico (+0xcf), e pessoa: a notícia 0x178e (o clube; o técnico, id
 /// e chaves, ou −1; o tipo; a pessoa, id e chaves; a; b; a nação ou −1; c) aos técnicos da nação (0x7863f0) se a
-/// reputação (+0x80) pass_ball de 4750, senão ao clube (0x7861e0).
+/// reputação (+0x80) passar de 4750, senão ao clube (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     let _ = this;
     if clube == 0 || read_usize(clube + club::NATION) == 0 || read_usize(clube + club::MANAGER) == 0 || pessoa == 0 {

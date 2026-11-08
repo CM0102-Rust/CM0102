@@ -84,19 +84,19 @@ unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usi
     } else {
         core::ptr::read_unaligned(0xae2c90 as *const i16)
     };
-    let limite = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
-    let p: usize = if dia < limite(0x1e) {
+    let limit = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
+    let p: usize = if dia < limit(0x1e) {
         3
-    } else if dia < limite(0x31) {
+    } else if dia < limit(0x31) {
         0
-    } else if dia < limite(0x44) {
+    } else if dia < limit(0x44) {
         1
-    } else if dia < limite(0x57) {
+    } else if dia < limit(0x57) {
         2
     } else {
         3
     };
-    let faixa: u32 = if cid == 0 {
+    let band: u32 = if cid == 0 {
         *s = 0;
         *s.add(1) = 0;
         2
@@ -154,7 +154,7 @@ unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, jogo: usi
             3
         }
     };
-    let t = temperatura(this, faixa, jogo) as i8;
+    let t = temperatura(this, band, jogo) as i8;
     *s.add(2) = t as u8;
     if t >= 0 {
         return;
@@ -188,8 +188,8 @@ unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s: *mut u8, 
 /// dia d (do jogo +0x2a, sem sinal; sem jogo o dia do jogo) e x = d × faixa: faixa 0: x % 6 + 1; 1: x % 6 − 5; 2:
 /// x % 7 + 7; 3: x % 8 + 14; 4: x % 7 + 22; 5: x % 6 + 29; 6: x % 6 + 35; outra: −100. Jogo da fatia da noite (+0x3f = 2):
 /// abaixo de 10, − 2; senão × 0,8 truncado. (Lê +0x3f do jogo mesmo sem jogo, como a original.)
-unsafe extern "thiscall" fn get_temperature(_this: usize, faixa: u32, jogo: usize) -> u8 {
-    let f = faixa as u8 as i8 as i32;
+unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, jogo: usize) -> u8 {
+    let f = band as u8 as i8 as i32;
     let d: i32 = if jogo != 0 {
         core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32
     } else {
@@ -216,10 +216,10 @@ unsafe extern "thiscall" fn get_temperature(_this: usize, faixa: u32, jogo: usiz
 }
 
 /// Comparador: pelo valor.
-unsafe extern "thiscall" fn comparar_get_temperature(this: usize, faixa: u32, jogo: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(%%I1%%)(this, faixa, jogo);
-    let n = get_temperature(this, faixa, jogo);
-    PLACAR.registrar(r == n, || format!("get_temperature(faixa {}, jogo {:#x}) original={} rust={}", faixa as u8 as i8, jogo, r as i8, n as i8));
+unsafe extern "thiscall" fn comparar_get_temperature(this: usize, band: u32, jogo: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(%%I1%%)(this, band, jogo);
+    let n = get_temperature(this, band, jogo);
+    PLACAR.registrar(r == n, || format!("get_temperature(band {}, jogo {:#x}) original={} rust={}", band as u8 as i8, jogo, r as i8, n as i8));
     r
 }
 

@@ -64,7 +64,7 @@ pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize
 
 // ---------- quadragesima oitava leva: folhas de outros modulos ----------
 
-/// { 0x4b0850 } (comp_util.cpp): algarismo das units_digit de `n` (abaixo de 1000; senao 0).
+/// { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
 pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
     if n < 1000 {
         (n % 10) as u8
@@ -109,8 +109,8 @@ pub(crate) unsafe extern "C" fn is_national_team(clube: usize) -> u32 {
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return 0;
     }
-    let limite = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
-    (*(clube as *const i32) >= limite) as u32
+    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
+    (*(clube as *const i32) >= limit) as u32
 }
 
 // ---------- 256a leva: as posições previstas da copa: as posições pela rodada de saída, ordenar os clubes pela força e gravar a posição do clube na estatística (Cup.cpp, comp_util.cpp, comp_stats.cpp) ----------
@@ -1018,5 +1018,29 @@ pub(crate) unsafe extern "C" fn comparar_comp_util_get_parent_stage_id(id: i32) 
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_COMP_UTIL_GET_PARENT_STAGE_ID)(id);
     let n = comp_util_get_parent_stage_id(id);
     PLACAR.registrar(r == n, || format!("comp_util_get_parent_stage_id({:#x}): original={:#x} rust={:#x}", id, r, n));
+    r
+}
+
+pub(crate) unsafe extern "C" fn comparar_units_digit(n: i32) -> u8 {
+    let r = original_fn::<unsafe extern "C" fn(i32) -> u8>(IDX_UNITS_DIGIT)(n);
+    let v = units_digit(n);
+    PLACAR.registrar(r == v, || format!("units_digit({}) original={} rust={}", n, r, v));
+    r
+}
+
+pub(crate) unsafe extern "C" fn comparar_is_national_team(clube: usize) -> u32 {
+    if is_recording_post_match() {
+        return call_recording(0x53b900, 0, [clube as u32, 0, 0, 0, 0], || original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_NATIONAL_TEAM)(clube));
+    }
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_IS_NATIONAL_TEAM)(clube);
+    let v = is_national_team(clube);
+    PLACAR.registrar(r == v, || format!("is_national_team original={} rust={}", r, v));
+    r
+}
+
+pub(crate) unsafe extern "C" fn comparar_competition_counts(id: i32) -> u32 {
+    let r = original_fn::<unsafe extern "C" fn(i32) -> u32>(IDX_COMPETITION_COUNTS)(id);
+    let v = competition_counts(id);
+    PLACAR.registrar(r == v, || format!("competition_counts({}) original={} rust={}", id, r, v));
     r
 }

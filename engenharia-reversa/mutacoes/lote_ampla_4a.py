@@ -1,5 +1,5 @@
 # Lote 4a da carreira ampla (22/10/2026, de dia, intercalado com as levas): o lote 3 e as escapadas
-# por dados das levas 206, 210 a 213. Uso: python mutacoes.py mutacoes\lote_ampla_4a.py --carreira 2002-03-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limite 7200
+# por dados das levas 206, 210 a 213. Uso: python mutacoes.py mutacoes\lote_ampla_4a.py --carreira 2002-03-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limit 7200
 MUTACOES = [
     ('c_k0_b', '                if v > 0x4b { 1 } else if v >= 0x28 { 2 } else if v >= 10 { 3 } else { baixo(-30) }', '                if v > 0x4b { 1 } else if v >= 0x28 { 3 } else if v >= 10 { 3 } else { baixo(-30) }'),
     ('c_tipo5_b', '    if *((c + 0x35) as *const u8) & 0x3f == 5 {\n        return 8;', '    if *((c + 0x35) as *const u8) & 0x3f == 5 {\n        return 7;'),

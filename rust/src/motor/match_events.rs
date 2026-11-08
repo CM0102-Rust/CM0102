@@ -768,7 +768,7 @@ pub(crate) unsafe extern "stdcall" fn comparar_event_text(ev: usize, ctx: usize,
 /// da partida `ctx` no `painel` (0xb74450) e toca o som dele. Antes, o ruido da torcida do humano da
 /// vez ([0xb77c7a]; canal +0x20, "fxloop2.wav") e reposto se parou. Com o codigo valido e a opcao 1
 /// zerada, monta o texto `G` (+0x108) do som escolhido (o trecho +0xd entre `|`) como a 0x6d8d10, mas
-/// numa linha propria e com cores: comeca nas do clube do lance (0x53b640 com o kit do lado),
+/// numa linha propria e com cores: comeca nas do clube do lance (0x53b640 com o uniforme do lado),
 /// `<O>` passa as do outro, `<Y>` e `<R>`/`<r>` sem `f` as padrao ([0xaebdea]/[0xaebdec] ou
 /// [0xae31a8]); `<N>` e o numero, `<n>` por extenso; o nome do jogador e curto se o texto inteiro
 /// cabe em menos de 300 (0x5e5ad0 com a `fonte`). Larga demais para `largura` - 16: quebra (0x90cb20)
@@ -835,7 +835,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         if core::ptr::read_unaligned((sons() as isize + qual() * 0x110 + 0x108) as *const usize) == 0 {
             return 0;
         }
-        // as cores do clube do lance (kit do lado)
+        // as cores do clube do lance (uniforme do lado)
         let lado = b(6);
         let mut clube_id = if lado != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
         let kit = *((ctx as isize + lado as i8 as isize * 1573 + 0x152) as *const u8) as u32;
@@ -1187,7 +1187,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_commentate_on_panel(nar: usize, 
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, i32, u32, usize, u32) -> u32>(IDX_COMMENTATE_ON_PANEL)(nar, ev, ctx, comp, painel, largura, quebrar, fonte, modo)
 }
 
-// ---------- 172a leva: o match_wrap_up do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
+// ---------- 172a leva: o fechamento do motor (6): a leitura da narração, o nome do jogador e a habilidade vista ----------
 
 /// Advances the commentary queue read position (+0xc, ring of 12), marks the slot and switches the queue off on
 /// reaching write/saved position; returns whether it did.
@@ -1348,7 +1348,7 @@ pub(crate) unsafe extern "C" fn comparar_commentary_player_name(pt: usize, jogad
     PLACAR.registrar(igual, || format!("commentary_player_name({}, {}) {:x?} x {:x?}", jogador, lado, mo, mr));
 }
 
-// ---------- 171a leva: o match_wrap_up do motor (5): a narração combinada e o comentário de contexto ----------
+// ---------- 171a leva: o fechamento do motor (5): a narração combinada e o comentário de contexto ----------
 
 /// Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
@@ -1719,7 +1719,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_combine_with_previous(t: usize, 
 /// dos 20 jogadores do lado (+0x47cb) postas exatamente em cada limite de média (7501, 7001, 8000,
 /// 7750, 6699), as fronteiras de `>=`/`>`; e, com uma mídia falsa (uma notícia de hoje de cada tipo
 /// para os dois clubes) e o minuto 31, os caminhos que dependem das notícias. O estado do sorteador e as notas voltam ao que eram e os
-/// sorteios não contam nem entram no rastro de uma comparação pela fita em curso (o shot, 0x702050,
+/// sorteios não contam nem entram no rastro de uma comparação pela fita em curso (o chute, 0x702050,
 /// chama esta rotina por dentro): a trajetória do jogo comparando não muda.
 pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
     let estado = crate::comparacao::Memoria::ler(&crate::aleatorio::REGIOES_DO_ESTADO);
@@ -1759,8 +1759,8 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
             for lado in 0..2u32 {
                 let notas: Vec<(usize, usize)> = (0..20).map(|k| (m + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
                 let guardadas = crate::comparacao::Memoria::ler(&notas);
-                for limite in [None, Some(0x1d4di16), Some(0x1b59), Some(8000), Some(0x1e46), Some(0x1a2b)] {
-                    if let Some(v) = limite {
+                for limit in [None, Some(0x1d4di16), Some(0x1b59), Some(8000), Some(0x1e46), Some(0x1a2b)] {
+                    if let Some(v) = limit {
                         for &(a, _) in &notas {
                             core::ptr::write_unaligned(a as *mut i16, v);
                         }
@@ -1771,7 +1771,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
                         let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();
                         reg.push((ps as usize, 4));
                         let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(m, lado, evento, ps), || context_commentary(m, lado, evento, ps));
-                        PLACAR.registrar(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limite, r, n, mo, mr));
+                        PLACAR.registrar(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
                     }
                 }
                 guardadas.escrever();
@@ -1785,7 +1785,7 @@ pub(crate) unsafe fn probe_context_commentary(m: usize, o: unsafe extern "thisca
 
 
 
-// ---------- 169a leva: o match_wrap_up do motor (3): a fila da narracao (match_events.cpp) ----------
+// ---------- 169a leva: o fechamento do motor (3): a fila da narracao (match_events.cpp) ----------
 
 /// puts an event at the front of the commentary queue (steps the 12-slot ring back, drops the repeat) and queues it via
 /// 0x6d6f70

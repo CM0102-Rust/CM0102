@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (1): o gol da bola, a partida abandonada e as vagas do lado ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (1): o gol da bola, a partida abandonada e as vagas do lado ----------
 
 /// { 0x6d58f0 } (thiscall, match_eng.cpp): a bola numa área (casas centrais +0x8ea7 de 2 a 6): 1 na
 /// área de cima (linha +0x8ea8 0 ou 1), −1 na de baixo (10 ou 11), senão 0. Devolve só `al`.

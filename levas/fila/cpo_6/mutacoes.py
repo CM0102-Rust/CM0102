@@ -1,7 +1,7 @@
 # Mutacoes (com o ramo de cada uma), todas na resposta do tecnico da maquina (428 chamadas na carreira ate 2002-06-01;
 # a resposta escolhe o efeito da historia em 0x736c00: confiancas, noticias, sorteios). Os tipos comuns (0, 2, 9, 0xc,
 # 0xd, 0xe, 0x11, 0x21..0x23, 0x52) sao as historias mais frequentes. A primeira tira o sorteio que o original descarta
-# (o gerador anda um a menos; o comparador lado a lado no gerador tambem acusa). A segunda muda o limite da soma
+# (o gerador anda um a menos; o comparador lado a lado no gerador tambem acusa). A segunda muda o limit da soma
 # (sorteio(0x24) -> 0x20) e a terceira a nota (x 5 -> x 4), as duas mudam a resposta. Se a carreira nao tiver historia
 # de tipo comum com contrato 0x10..0x30 na lista, a primeira PODE ESCAPAR (ver o ramo).
 MUTACOES = [

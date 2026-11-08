@@ -29,7 +29,7 @@ unsafe fn contract_region(pessoa: usize, clube: usize) -> Option<(usize, usize)>
     (c != 0).then_some((c, 0x50))
 }
 
-/// Uma rotina sem porta que por dentro chama units_digit da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
+/// Uma rotina sem porta que por dentro chama unidades da fita (0x544520 e 0x544600 chamam a 0x4cf5f0; a 0x62c400
 /// alcança a 0x600a50 e portas): na comparação pela fita, a original grava essas chamadas internas no nível de cima
 /// (com o comparador da rotina, a original e a cópia dele gravam cada uma a sua). A cópia roda a rotina numa fita de
 /// rascunho e pede as mesmas chamadas por `chamar`, na ordem. Fora da comparação (sem GRAVAR_POS) só chama.
@@ -80,7 +80,7 @@ unsafe fn club_staff_vector(clube: usize, chamar: &mut dyn FnMut(usize, usize, [
 /// por gostar ou não do jogador (0x547810/0x547840) e pelo jogador ser favorito ou rejeitado do clube, no mínimo 5;
 /// sorteio(chance) acima de sorteio(nota): a pessoa passa a não gostar do jogador (0x547af0 com 1) e, com vínculo e
 /// sorteio(nota) abaixo de sorteio(10), a marca 1 do contrato (0x867560) ou, nos tópicos 0x1e/0x20 ou com sorteio(nota)
-/// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as units_digit
+/// zero, as queixas 0x800 (0x867700). As três com efeito vão por `chamar` (as portas do pós-jogo), e também as unidades
 /// da fita que a original chama: o vínculo 0x4cf5f0 (0x75551e, 0x7557dc), o humano 0x600a50 (0x755598) e as 0x4cf5f0
 /// de dentro da 0x544520 (0x7554e8) e da 0x544600 (0x75567f, 0x7556ad), estas por `replay_inner_tape_calls`.
 unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize, ids: usize, n: u32, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
@@ -89,7 +89,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
     let confronto: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(0x4b02e0usize);
     let rejeitar: unsafe extern "C" fn(usize, usize, u32) = core::mem::transmute(0x547940usize);
     let listada: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544520usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
     let a_pedido: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x544600usize);
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547810usize);
     let nao_gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x547840usize);
@@ -142,7 +142,7 @@ unsafe fn squad_reaction_to_story_with(topico: u32, jogador: usize, clube: usize
         if c == 0 {
             chance -= 0xf;
         } else {
-            if faixa(c) != 0 {
+            if band(c) != 0 {
                 chance -= 10;
             }
             chance += (cqb8_b(c + 0x3d) as i32 / 10) as i8 as i32;
@@ -283,7 +283,7 @@ unsafe extern "thiscall" fn comparar_apply_squad_reaction_to_player_story(this: 
 /// n + 10, sorteio(+0x5a) abaixo de sorteio(n), a mesma máscara e reputação acima de 3750: a primeira vez, a história
 /// 0x25 dele (0x72c1f0 em [0xb6b7c8]); sem a marca 0x800 (0x8676f0), a marca 0x800 (0x867560). As duas com efeito vão
 /// por `chamar`, e também o vínculo 0x4cf5f0 (0x7580c2, unidade da fita) e, por `replay_inner_tape_calls`, o que a 0x62c400
-/// (0x7580ee) e a 0x544520 (0x75810a) chamam de units_digit por dentro.
+/// (0x7580ee) e a 0x544520 (0x75810a) chamam de unidades por dentro.
 unsafe fn warn_position_rivals_with(jogador: usize, clube: usize, chamar: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mascara: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x5481a0usize);
     let contar: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(0x548150usize);

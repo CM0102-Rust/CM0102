@@ -6,7 +6,7 @@ use super::*;
 /// kick/corner) and side, narrates and returns 1; 0 in play.
 ///
 /// [pt] { 0x6cd490 } (match_eng.cpp) com o comentario injetado: com o lance ja parado (0x8eb2), 1.
-/// Solta a bola do dono e, com a bola fora do campo, marca a reposicao (0x8eb2: 2 throw_in, 3 ou
+/// Solta a bola do dono e, com a bola fora do campo, marca a reposicao (0x8eb2: 2 lateral, 3 ou
 /// 4 conforme a linha de fundo e o lado que tocou por ultimo; 0x8eae: o lado que repoe), narra
 /// (0x1f76/0x1f75/0x1f77) e devolve 1. Bola em campo, 0.
 pub(crate) unsafe fn ball_out_with(this: usize, lado_b: u8, chamar: ChamarComentario) -> u8 {
@@ -39,15 +39,15 @@ pub(crate) unsafe fn ball_out_with(this: usize, lado_b: u8, chamar: ChamarComent
     1
 }
 
-// ---------- centesima vigesima nona leva: a play (0x70dfd0) ----------
+// ---------- centesima vigesima nona leva: a jogada (0x70dfd0) ----------
 
 /// Port of 0x70dfd0 with external calls injected: player j contests a play against the opponent's strength; returns 1
 /// if resolved in his favour.
 ///
 /// [pt] { 0x70dfd0 } (ret 0x10, match_pl.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
 /// narra, 0x716e10 cansa, 0x6cd770 a bola espirra, 0x6f0630 dominio; e as de dentro da saida de
-/// campo): o jogador `j` tenta a play contra a `forca` do adversario (altura `altura`, `estilo`
-/// que vai para a narracao, `forte` pelo alto). Devolve 1 se a play se resolveu nele, 0 se nao.
+/// campo): o jogador `j` tenta a jogada contra a `forca` do adversario (altura `altura`, `estilo`
+/// que vai para a narracao, `forte` pelo alto). Devolve 1 se a jogada se resolveu nele, 0 se nao.
 /// O goleiro do lado, quem cobra (+0xf582) e, do lado sem a bola, quem tem +0x10d zerado nao jogam.
 /// O ataque e sorteio pelo +0x8ea9 do motor (300, 400, 500, 1000, 1800), dividido por altura + 1.
 /// Com a bola no proprio lado (+0x8eab) por sorteio(ataque + 100) == 0: 0x1f5e, -300 em +0x4782 e
@@ -57,7 +57,7 @@ pub(crate) unsafe fn ball_out_with(this: usize, lado_b: u8, chamar: ChamarComent
 /// vale 85%. A nota e sorteio(atributo) - forca / 3 - ataque: abaixo de -100 so ganha sorteio(2)
 /// em +0x2b; negativa, nada. Falta forte: forca > sorteio(150) + 200. O arbitro olha a falta
 /// (0x6cfca0): 1 em 5, sem falta forte, a registra (0x6bb9a0) e segue sem punicao; senao pune
-/// (0x6cfd10, como na 0x6f5c30, mas o penalty so tira 500 do +0x35). Sem punicao: nota de 400 vence
+/// (0x6cfd10, como na 0x6f5c30, mas o penalti so tira 500 do +0x35). Sem punicao: nota de 400 vence
 /// (+0x1e em +0x35, +0x12, +0x2b; 0x1ffe da meia-lua, 0x21d6 pelo alto, 0x1f66/0x1f65 com o estilo;
 /// 0x6f0630; marca o lance); senao o goleiro do lado narra 0x1fe7; da meia-lua com nota acima de
 /// 200, 0x1ffd e a bola espirra sem chutador; senao 0x21d8/0x1f85/0x1f84 e a bola espirra
@@ -366,7 +366,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, chamar: &
     let noticia = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
     let noticia_34 = |n: usize, p: usize, c: usize, tp: u32, pa: usize| (ch.borrow_mut())(0x744240, n, [p as u32, c as u32, tp, pa as u32, 0]);
     let por_20 = |c: usize, f: u32| (ch.borrow_mut())(0x867560, c, [f, 0, 0, 0, 0]);
-    // ponytail: a 0x7c1e30 (devolve ponto flutuante) tambem reaches a 0x68d0d0 em 3 niveis, fica direta
+    // ponytail: a 0x7c1e30 (devolve ponto flutuante) tambem alcanca a 0x68d0d0 em 3 niveis, fica direta
     let contrato = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
     let teste_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
     let g = |a: usize| *(a as *const usize);
@@ -510,109 +510,109 @@ pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINAIS[i])
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_a(this: usize, j: usize) -> u16 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABELA_A)(this, j);
-    let n = tabela_a(this, j);
-    PLACAR.registrar(r == n, || format!("tabela_a(pos {}, lado {}) original={} rust={}", byte(j, 0x19), byte(j, 0x27), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_table_a(this: usize, j: usize) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABLE_A)(this, j);
+    let n = table_a(this, j);
+    PLACAR.registrar(r == n, || format!("table_a(pos {}, lado {}) original={} rust={}", byte(j, 0x19), byte(j, 0x27), r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_b(this: usize, j: usize) -> u16 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABELA_B)(this, j);
-    let n = tabela_b(this, j);
-    PLACAR.registrar(r == n, || format!("tabela_b(pos {}, lado {}) original={} rust={}", byte(j, 0x19), byte(j, 0x27), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_table_b(this: usize, j: usize) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABLE_B)(this, j);
+    let n = table_b(this, j);
+    PLACAR.registrar(r == n, || format!("table_b(pos {}, lado {}) original={} rust={}", byte(j, 0x19), byte(j, 0x27), r, n));
     r
 }
 pub(crate) unsafe extern "thiscall" fn comparar_diferenca(this: usize, l: u8, v: u8) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u8, u8) -> u8>(IDX_DIFERENCA_LADO)(this, l, v);
-    let n = diferenca_lado(this, l, v);
-    PLACAR.registrar(r == n, || format!("diferenca_lado({}, {}) original={} rust={}", l, v, r, n));
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u8, u8) -> u8>(IDX_SIDE_DIFFERENCE)(this, l, v);
+    let n = side_difference(this, l, v);
+    PLACAR.registrar(r == n, || format!("side_difference({}, {}) original={} rust={}", l, v, r, n));
     r
 }
-pub(crate) unsafe extern "stdcall" fn comparar_faixa(l: u8, b: i8, c: i8) -> u8 {
-    let r = original_fn::<unsafe extern "stdcall" fn(u8, i8, i8) -> u8>(IDX_FAIXA)(l, b, c);
-    let n = faixa(l, b, c);
-    PLACAR.registrar(r == n, || format!("faixa({}, {}, {}) original={} rust={}", l, b, c, r, n));
+pub(crate) unsafe extern "stdcall" fn comparar_band(l: u8, b: i8, c: i8) -> u8 {
+    let r = original_fn::<unsafe extern "stdcall" fn(u8, i8, i8) -> u8>(IDX_BAND)(l, b, c);
+    let n = band(l, b, c);
+    PLACAR.registrar(r == n, || format!("band({}, {}, {}) original={} rust={}", l, b, c, r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_por_diferenca(this: usize, a: i8, b: i8, c: i8, d: i8) -> u16 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u16>(IDX_POR_DIFERENCA)(this, a, b, c, d);
-    let n = por_diferenca(this, a, b, c, d);
-    PLACAR.registrar(r == n, || format!("por_diferenca({}, {}, {}, {}) original={} rust={}", a, b, c, d, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_by_difference(this: usize, a: i8, b: i8, c: i8, d: i8) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u16>(IDX_BY_DIFFERENCE)(this, a, b, c, d);
+    let n = by_difference(this, a, b, c, d);
+    PLACAR.registrar(r == n, || format!("by_difference({}, {}, {}, {}) original={} rust={}", a, b, c, d, r, n));
     r
 }
-pub(crate) unsafe extern "stdcall" fn comparar_limite(l: u8, v: i8) -> u8 {
-    let r = original_fn::<unsafe extern "stdcall" fn(u8, i8) -> u8>(IDX_LIMITE)(l, v);
-    let n = limite(l, v);
-    PLACAR.registrar(r == n, || format!("limite({}, {}) original={} rust={}", l, v, r, n));
+pub(crate) unsafe extern "stdcall" fn comparar_limit(l: u8, v: i8) -> u8 {
+    let r = original_fn::<unsafe extern "stdcall" fn(u8, i8) -> u8>(IDX_LIMIT)(l, v);
+    let n = limit(l, v);
+    PLACAR.registrar(r == n, || format!("limit({}, {}) original={} rust={}", l, v, r, n));
     r
 }
 pub(crate) unsafe extern "thiscall" fn comparar_condicao(this: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_CONDICAO_JOGADOR)(this);
-    let n = condicao_jogador(this);
-    PLACAR.registrar(r == n, || format!("condicao_jogador(lado {}, v {}) original={} rust={}", byte(this, 0x27), byte(this, 0x103), r, n));
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_CONDITION)(this);
+    let n = player_condition(this);
+    PLACAR.registrar(r == n, || format!("player_condition(lado {}, v {}) original={} rust={}", byte(this, 0x27), byte(this, 0x103), r, n));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_tabela_do_jogador(j: usize) -> u16 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(IDX_TABELA_DO_JOGADOR)(j);
-    let n = tabela_do_jogador(j);
-    PLACAR.registrar(r == n, || format!("tabela_do_jogador(motor {:#x}) original={} rust={}", *((j + 0x19e) as *const usize), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_player_table(j: usize) -> u16 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(IDX_PLAYER_TABLE)(j);
+    let n = player_table(j);
+    PLACAR.registrar(r == n, || format!("player_table(motor {:#x}) original={} rust={}", *((j + 0x19e) as *const usize), r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_diferenca_jogador(this: usize, j: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_DIFERENCA_JOGADOR)(this, j);
-    let n = diferenca_jogador(this, j);
-    PLACAR.registrar(r == n, || format!("diferenca_jogador(lado {}, v {}) original={} rust={}", lado(j), byte(j, 0x103), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_player_difference(this: usize, j: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_PLAYER_DIFFERENCE)(this, j);
+    let n = player_difference(this, j);
+    PLACAR.registrar(r == n, || format!("player_difference(lado {}, v {}) original={} rust={}", lado(j), byte(j, 0x103), r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_byte_do_lado(this: usize, j: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_BYTE_DO_LADO)(this, j);
-    let n = byte_do_lado(this, j);
-    PLACAR.registrar(r == n, || format!("byte_do_lado(lado {}) original={} rust={}", lado(j), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_side_byte(this: usize, j: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SIDE_BYTE)(this, j);
+    let n = side_byte(this, j);
+    PLACAR.registrar(r == n, || format!("side_byte(lado {}) original={} rust={}", lado(j), r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_limite_jogador(this: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_LIMITE_JOGADOR)(this);
-    let n = limite_jogador(this);
-    PLACAR.registrar(r == n, || format!("limite_jogador(lado {}, v {}) original={} rust={}", lado(this), byte(this, 0x103), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_player_limit(this: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_LIMIT)(this);
+    let n = player_limit(this);
+    PLACAR.registrar(r == n, || format!("player_limit(lado {}, v {}) original={} rust={}", lado(this), byte(this, 0x103), r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_faixa_jogador(this: usize, l: u8) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u32>(IDX_FAIXA_JOGADOR)(this, l);
-    let n = faixa_jogador(this, l);
-    PLACAR.registrar(r == n, || format!("faixa_jogador({}, {}, {}) original={} rust={}", l, byte(this, 0x102), byte(this, 0x103), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_player_band(this: usize, l: u8) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u8) -> u32>(IDX_PLAYER_BAND)(this, l);
+    let n = player_band(this, l);
+    PLACAR.registrar(r == n, || format!("player_band({}, {}, {}) original={} rust={}", l, byte(this, 0x102), byte(this, 0x103), r, n));
     r
 }
 
-pub(crate) unsafe extern "thiscall" fn comparar_byte_da_posicao(this: usize, i: i8) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_BYTE_DA_POSICAO)(this, i);
-    let n = byte_da_posicao(this, i);
-    PLACAR.registrar(r == n, || format!("byte_da_posicao({}) original={} rust={}", i, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_position_byte(this: usize, i: i8) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_POSITION_BYTE)(this, i);
+    let n = position_byte(this, i);
+    PLACAR.registrar(r == n, || format!("position_byte({}) original={} rust={}", i, r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_campo_pela_posicao(this: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_CAMPO_PELA_POSICAO)(this);
-    let n = campo_pela_posicao(this);
-    PLACAR.registrar(r == n, || format!("campo_pela_posicao(lado {}, pos {}) original={} rust={}", lado(this), byte(this, 0x19), r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_field_by_position(this: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_FIELD_BY_POSITION)(this);
+    let n = field_by_position(this);
+    PLACAR.registrar(r == n, || format!("field_by_position(lado {}, pos {}) original={} rust={}", lado(this), byte(this, 0x19), r, n));
     r
 }
-pub(crate) unsafe extern "thiscall" fn comparar_pode_escolher(this: usize, j: usize, b: i8, c: i8) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u32>(IDX_PODE_ESCOLHER)(this, j, b, c);
-    let n = pode_escolher(this, j, b, c);
-    PLACAR.registrar(r == n, || format!("pode_escolher({}, {}) original={} rust={}", b, c, r, n));
+pub(crate) unsafe extern "thiscall" fn comparar_can_choose(this: usize, j: usize, b: i8, c: i8) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u32>(IDX_CAN_CHOOSE)(this, j, b, c);
+    let n = can_choose(this, j, b, c);
+    PLACAR.registrar(r == n, || format!("can_choose({}, {}) original={} rust={}", b, c, r, n));
     r
 }
 /// Sorteia: original e Rust partem do mesmo estado do gerador e o jogo segue com o da original.
-pub(crate) unsafe extern "thiscall" fn comparar_apontar(this: usize, a: i8, b: i8, c: i8, d: i8) {
-    let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8)>(IDX_APONTAR);
+pub(crate) unsafe extern "thiscall" fn comparar_aim_set_facing_direction(this: usize, a: i8, b: i8, c: i8, d: i8) {
+    let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8)>(IDX_AIM_SET_FACING_DIRECTION);
     let mut regioes = vec![(this + 0x19a, 2)];
     regioes.extend(crate::aleatorio::REGIOES_DO_ESTADO);
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(
         &regioes,
         || f(this, a, b, c, d),
-        || crate::aleatorio::sem_contar(|| apontar(this, a, b, c, d)),
+        || crate::aleatorio::sem_contar(|| aim_set_facing_direction(this, a, b, c, d)),
     );
-    PLACAR.registrar(igual, || format!("apontar({}, {}, {}, {}) original={:x?} rust={:x?}", a, b, c, d, mo, mr));
+    PLACAR.registrar(igual, || format!("aim_set_facing_direction({}, {}, {}, {}) original={:x?} rust={:x?}", a, b, c, d, mo, mr));
 }
 
 pub(crate) unsafe extern "thiscall" fn comparar_tire_fatigue(this: usize, x: f32, codigo: i16) {

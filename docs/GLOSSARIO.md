@@ -137,11 +137,11 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x6ce310 | `aggregate_score` | aggregate_score | `placar_agregado` |
 | 0x4cca30 | `agreed_contract_offer` | agreed_contract_offer | `oferta_acertada` |
 | 0x8c8090 | `ai_respond_to_bid` | TRANSFER_MANAGER::ai_respond_to_bid | `resposta_da_ia_ao_lance` |
+| 0x6f4920 | `aim_set_facing_direction` | aim (set facing direction) | `apontar` |
 | 0x48ce10 | `all_stages_complete` | Comp::all_stages_complete | `competicao_todas_completas` |
 | 0x85a470 | `allocate_squad_number` | SQUAD_MANAGER::allocate_squad_number | `dar_numero_de_camisa` |
 | 0x83b6e0 | `allocate_transfer_budget` | Shortlist_Manager::allocate_transfer_budget | `distribuir_verba_de_transferencias` |
 | 0x686670 | `announce_team_status` | League::announce_team_status | `anunciar_situacao_na_liga` |
-| 0x6f4920 | `apontar` | aim (set facing direction) | `apontar` |
 | 0x58dea0 | `append_result` | FIFA_RANKINGS::append_result | `resultado_no_historico` |
 | 0x557000 | `apply_appeal_result` | Discipline::apply_appeal_result | `recurso_da_suspensao` |
 | 0x716450 | `apply_factor` | apply_factor | `aplicar_fator` |
@@ -192,6 +192,7 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x6d58f0 | `ball_goal_end` | ball_goal_end | `bola_na_area` |
 | 0x714d00 | `ball_in_attack` | ball_in_attack | `bola_no_ataque` |
 | 0x6cd490 | `ball_out` | ball_out | `bola_fora` |
+| 0x6cb960 | `band` | band | `faixa` |
 | 0x6d5950 | `behind_on_aggregate` | behind_on_aggregate | `atras_no_agregado` |
 | 0x6cd5f0 | `behind_the_extreme` | behind_the_extreme | `atras_do_extremo` |
 | 0x6e1940 | `best_in_list` | best_in_list | `melhor_da_lista` |
@@ -317,14 +318,13 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x76abf0 | `build_selection_pools` | build_selection_pools | `montar_reservas_das_selecoes` |
 | 0x85dfc0 | `build_venue_list` | Stadium::build_venue_list | `lista_de_estadios_neutros` |
 | 0x933080 | `buscar_no_conteiner` | seek_in_container | `buscar_no_conteiner` |
-| 0x5b57c0 | `byte_da_posicao` | position_byte | `byte_da_posicao` |
-| 0x6cfda0 | `byte_do_lado` | side_byte | `byte_do_lado` |
+| 0x6cb6c0 | `by_difference` | by_difference | `por_diferenca` |
 | 0x59af40 | `calc_gate_receipts` | FinanceTable::calc_gate_receipts | `renda_do_estadio` |
 | 0x4d0c60 | `calc_player_value` | CONTRACT_MANAGER::calc_player_value | `valor_do_jogador` |
 | 0x682f70 | `calc_prize_fund` | League::calc_prize_fund | `premio_da_liga` |
 | 0x85cba0 | `calculate_match_attendance` | Stadium::calculate_match_attendance | `publico_do_jogo` |
 | 0x775f90 | `call_up_replacement` | call_up_replacement | `convocar_substituto` |
-| 0x6f4600 | `campo_pela_posicao` | field_by_position | `campo_pela_posicao` |
+| 0x6bce20 | `can_choose` | can_choose | `pode_escolher` |
 | 0x8ce990 | `can_club_bid_for_player` | TRANSFER_MANAGER::can_club_bid_for_player | `clube_pode_chegar_ao_jogador` |
 | 0x7f9190 | `can_club_scout_nation` | SCOUT_MANAGER::can_club_scout_nation | `olheiros_cobrem_a_nacao` |
 | 0x8d0530 | `can_end_loan` | TRANSFER_MANAGER::can_end_loan | `pode_encerrar_emprestimo` |
@@ -426,7 +426,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x549a30 | `club_squad_strength_band` | club_squad_strength_band | `faixa_de_forca_do_elenco` |
 | 0x85add0 | `club_uses_squad_numbers` | SQUAD_MANAGER::club_uses_squad_numbers | `clube_usa_numeros` |
 | 0x6d5cd0 | `code_byte` | code_byte | `byte_do_codigo` |
-| 0x83bd00 | `codigo_da_posicao` | position_code | `codigo_da_posicao` |
 | 0x8c44e0 | `collapse_offer` | TRANSFER_MANAGER::collapse_offer | `desfazer_oferta` |
 | 0x8c47d0 | `collapse_offers_for_player` | TRANSFER_MANAGER::collapse_offers_for_player | `desfazer_ofertas_pelo_jogador` |
 | 0x7f9690 | `collect_club_scout_targets` | SCOUT_MANAGER::collect_club_scout_targets | `alvos_dos_olheiros_do_clube` |
@@ -502,7 +501,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x4c2560 | `con_merc_cup_select_invited_clubs` | ConMercCup::select_invited_clubs | `cqs11_merconorte_convidados` |
 | 0x4c1ed0 | `con_merc_cup_set_up_rules` | ConMercCup::set_up_rules | `cqj11_merconorte_regras` |
 | 0x4c2c90 | `con_merc_cup_update_for_date` | ConMercCup::update_for_date | `cqr12_merconorte_dia` |
-| 0x70dfa0 | `condicao_jogador` | player_condition | `condicao_jogador` |
 | 0x7164b0 | `condition_test` | condition_test | `teste_de_condicao` |
 | 0x6b5260 | `confirm_network_match` | confirm_network_match | `confirmar_partida_em_rede` |
 | 0x8c3310 | `confirm_offer_by_club` | confirm_offer_by_club | `confirmar_oferta_pelo_clube` |
@@ -628,7 +626,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x9091e0 | `create_third_division_stage` | UsaMls::create_third_division_stage | `cqs1_terceira_divisao_da_mls` |
 | 0x42e700 | `create_third_round_groups` | BraNatThird::create_third_round_groups | `cqs3_terceira_fase_da_serie_c` |
 | 0x51cb90 | `create_tie_fixtures` | Cup::create_tie_fixtures | `copa_criar_jogos_do_confronto` |
-| 0x866f60 | `criterio_da_comissao` | staff_criterion | `criterio_da_comissao` |
 | 0x521e00 | `cup_check_complete` | Cup::check_complete | `copa_completa` |
 | 0x51ebc0 | `cup_compare_draw_entries_by_seed` | cup_compare_draw_entries_by_seed | `ordem_dos_cabecas_de_chave` |
 | 0x5221c0 | `cup_compare_entries_by_level_asc` | cup_compare_entries_by_level_asc | `ordem_dos_cabecas_de_chave_crescente` |
@@ -770,8 +767,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x7293c0 | `destroy_match_stats` | Match_Stats::~Match_Stats | `desmontar_estatisticas_da_partida` |
 | 0x8c6ae0 | `detach_offer_players` | TRANSFER_MANAGER::detach_offer_players | `soltar_jogadores_da_oferta` |
 | 0x6d26b0 | `develop_player` | develop_player | `evoluir_jogador` |
-| 0x6c4130 | `diferenca_jogador` | player_difference | `diferenca_jogador` |
-| 0x6c4180 | `diferenca_lado` | side_difference | `diferenca_lado` |
 | 0x715f30 | `difference_of_player` | difference_of_player | `diferenca_do_jogador` |
 | 0x6d4330 | `direct_marker` | direct_marker | `marcador_direto` |
 | 0x6f4a30 | `direction` | direction | `direcao` |
@@ -876,10 +871,9 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x757c70 | `expire_story_log` | Media::expire_story_log | `expirar_historias_da_midia` |
 | 0x897ee0 | `extra_tactic_slot` | extra_tactic_slot | `vaga_extra_tatica` |
 | 0x6fa140 | `facing` | facing | `virado_para` |
-| 0x6cb960 | `faixa` | band | `faixa` |
-| 0x6f5b20 | `faixa_jogador` | player_band | `faixa_jogador` |
 | 0x4485b0 | `fans_player_record_assign` | fans_player_record_assign | `copiar_recorde_do_torcedor` |
 | 0x547790 | `favourite_of` | favourite_of | `favorito_de` |
+| 0x6f4600 | `field_by_position` | field_by_position | `campo_pela_posicao` |
 | 0x729ff0 | `fill_match_record` | Match_Stats::fill_match_record | `preencher_registro_da_partida` |
 | 0x7e4750 | `fill_match_record_from_fixture` | fill_match_record_from_fixture | `registro_da_partida_pelo_clube` |
 | 0x8cf6b0 | `fill_squad_restrictions` | TRANSFER_MANAGER::fill_squad_restrictions | `restricoes_da_partida` |
@@ -1103,8 +1097,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x700370 | `gravar_8ea8` | write_8ea8 | `gravar_8ea8` |
 | 0x700350 | `gravar_8ea9` | write_8ea9 | `gravar_8ea9` |
 | 0x700390 | `gravar_8eaa` | write_8eaa | `gravar_8eaa` |
-| 0x8967d0 | `gravar_formacao_tatica` | set_tactic_formation | `gravar_formacao_tatica` |
-| 0x896a90 | `gravar_vaga_tatica` | set_tactic_slot | `gravar_vaga_tatica` |
 | 0x5ecf20 | `greece_rules_init_transfer_windows` | GREECE_RULES::init_transfer_windows | `janelas_grecia` |
 | 0x424c00 | `greece_rules_init_transfer_windows_424c00` | BELGIUM_RULES::init_transfer_windows | `janelas_belgica` |
 | 0x7ec7e0 | `greece_rules_init_transfer_windows_7ec7e0` | RUSSIA_RULES::init_transfer_windows | `janelas_russia` |
@@ -1292,9 +1284,8 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x700400 | `ler_8eb2` | read_8eb2 | `ler_8eb2` |
 | 0x547810 | `likes` | likes | `gosta_de` |
 | 0x547d60 | `likes_club` | likes_club | `gosta_do_clube` |
+| 0x6cb930 | `limit` | limit | `limite` |
 | 0x68a980 | `limit_club_division_tier` | League::limit_club_division_tier | `teto_da_divisao_dos_clubes` |
-| 0x6cb930 | `limite` | limit | `limite` |
-| 0x70df40 | `limite_jogador` | player_limit | `limite_jogador` |
 | 0x6c4ec0 | `line_up_kickoff` | line_up_kickoff | `arrumar_saida` |
 | 0x6c4820 | `line_up_set_piece` | line_up_set_piece | `arrumar_bola_parada` |
 | 0x6e2f20 | `lineup_slot_score` | lineup_slot_score | `nota_para_a_vaga` |
@@ -1488,7 +1479,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x76e040 | `person_field_3a` | person_field_3a | `campo_3a_da_pessoa` |
 | 0x69fc60 | `person_in_list` | person_in_list | `pessoa_na_lista` |
 | 0x8c1870 | `person_in_transfer_list` | person_in_transfer_list | `pessoa_na_lista_de_transferencias` |
-| 0x8968f0 | `pessoa_da_vaga_tatica` | tactic_slot_person | `pessoa_da_vaga_tatica` |
 | 0x6e2000 | `pick` | pick | `escalar` |
 | 0x735870 | `pick_ai_manager_response` | Media::pick_ai_manager_response | `resposta_do_tecnico_da_maquina` |
 | 0x7ad0e0 | `pick_best_club_for_player` | PLAYER_REGEN::pick_best_club_for_player | `melhor_clube_para_o_jovem` |
@@ -1508,12 +1498,16 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x6b4360 | `play_the_day` | play_the_day | `jogar_o_dia` |
 | 0x544380 | `player_attribute_rating` | player_attribute_rating | `nota_relativa_do_atributo` |
 | 0x5442f0 | `player_attribute_rating_with_scaled_ability` | player_attribute_rating_with_scaled_ability | `nota_relativa_com_habilidade_reduzida` |
+| 0x6f5b20 | `player_band` | player_band | `faixa_jogador` |
 | 0x6e1cd0 | `player_by_record` | player_by_record | `jogador_pela_ficha` |
 | 0x8d0a70 | `player_club_uses_bosman` | player_club_uses_bosman | `clube_do_jogador_com_lei_bosman` |
+| 0x70dfa0 | `player_condition` | player_condition | `condicao_jogador` |
+| 0x6c4130 | `player_difference` | player_difference | `diferenca_jogador` |
 | 0x8cd150 | `player_has_pending_offer` | TRANSFER_MANAGER::player_has_pending_offer | `jogador_com_oferta_pendente` |
 | 0x717470 | `player_highlight` | player_highlight | `destaque_do_jogador` |
 | 0x6c2fe0 | `player_in_block` | player_in_block | `jogador_no_bloco` |
 | 0x6cda20 | `player_left` | player_left | `jogador_saiu` |
+| 0x70df40 | `player_limit` | player_limit | `limite_jogador` |
 | 0x7163c0 | `player_marks_rot` | player_marks_rot | `marcas_do_jogador_rot` |
 | 0x6f09f0 | `player_move` | player_move | `mover_jogador` |
 | 0x8c7560 | `player_needs_work_permit` | TRANSFER_MANAGER::player_needs_work_permit | `precisa_de_permissao_de_trabalho` |
@@ -1553,14 +1547,15 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x7c0d70 | `player_stats_record_match` | PlayerStats::record_match | `registrar_partida_nas_estatisticas` |
 | 0x7c6650 | `player_stats_reset_player` | PlayerStats::reset_player | `zerar_estatisticas_do_jogador` |
 | 0x7c6e30 | `player_stats_years_since_at_club` | player_stats_years_since_at_club | `anos_desde_o_clube` |
+| 0x717410 | `player_table` | player_table | `tabela_do_jogador` |
 | 0x717430 | `player_table_a_1a` | player_table_a_1a | `tabela_a_1a_do_jogador` |
 | 0x717450 | `player_table_b` | player_table_b | `tabela_b_do_jogador` |
 | 0x6cbc00 | `players_in_line` | players_in_line | `jogadores_na_linha` |
 | 0x6cc070 | `players_on_path` | players_on_path | `jogadores_no_trajeto` |
-| 0x6bce20 | `pode_escolher` | can_choose | `pode_escolher` |
 | 0x68aad0 | `points_for_result` | League::points_for_result | `pontos_do_resultado` |
-| 0x6cb6c0 | `por_diferenca` | by_difference | `por_diferenca` |
 | 0x933170 | `posicao_no_conteiner` | position_in_container | `posicao_no_conteiner` |
+| 0x5b57c0 | `position_byte` | position_byte | `byte_da_posicao` |
+| 0x83bd00 | `position_code` | position_code | `codigo_da_posicao` |
 | 0x5b5270 | `position_marks` | position_marks | `marcas_da_posicao` |
 | 0x5b7d20 | `position_mask` | position_mask | `mascara_de_posicoes` |
 | 0x5482f0 | `position_mask_get_text` | position_mask_get_text | `texto_da_mascara_da_posicao` |
@@ -1820,7 +1815,6 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x48ea40 | `send_tv_rights_news` | Comp::send_tv_rights_news | `noticia_da_tv` |
 | 0x522610 | `separate_shared_stadium_ties` | Cup::separate_shared_stadium_ties | `copa_separar_estadio_compartilhado` |
 | 0x557120 | `serve_international_bans` | Discipline::serve_international_bans | `cumprir_suspensoes_internacionais` |
-| 0x844300 | `serve_para_a_vaga` | shortlist_slot_fits | `serve_para_a_vaga` |
 | 0x8c5410 | `set_agreed_contract_flag` | set_agreed_contract_flag | `marcar_contrato_acertado` |
 | 0x69f7c0 | `set_board_ratings` | MANAGER_MANAGER::set_board_ratings | `gravar_notas_da_diretoria` |
 | 0x4c6960 | `set_bra_champ_cup_winner` | ConmebolSeeding::set_bra_champ_cup_winner | `conmebol_campeao_dos_campeoes` |
@@ -1858,6 +1852,8 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x7858c0 | `set_slot_string` | NewsItem::set_slot_string | `gravar_texto_na_noticia` |
 | 0x85a850 | `set_squad_number` | SQUAD_MANAGER::set_squad_number | `gravar_numero_de_camisa` |
 | 0x5b5290 | `set_square` | set_square | `gravar_casa` |
+| 0x8967d0 | `set_tactic_formation` | set_tactic_formation | `gravar_formacao_tatica` |
+| 0x896a90 | `set_tactic_slot` | set_tactic_slot | `gravar_vaga_tatica` |
 | 0x62c660 | `set_training_load` | Injury::set_training_load | `gravar_carga_de_treino` |
 | 0x8b4e50 | `set_type` | TRAINING_SCHEDULE::set_type | `tipo_do_programa` |
 | 0x79bf60 | `set_up_officials` | OfficialsManager::set_up_officials | `montar_os_arbitros` |
@@ -1882,11 +1878,14 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x844280 | `shortlist_manager_remove_from_transfer_list` | shortlist_manager_remove_from_transfer_list | `tirar_da_lista_de_transferencias` |
 | 0x84b4d0 | `shortlist_manager_squad_status_allowed` | shortlist_manager_squad_status_allowed | `estatuto_permitido` |
 | 0x83c090 | `shortlist_set_up_formation_slots` | shortlist_set_up_formation_slots | `montar_vagas_da_formacao` |
+| 0x844300 | `shortlist_slot_fits` | shortlist_slot_fits | `serve_para_a_vaga` |
 | 0x6f6c00 | `shot` | shot | `chute` |
 | 0x70a910 | `shot_on_goal` | shot_on_goal | `chute_a_gol` |
 | 0x70c040 | `shot_outcome` | shot_outcome | `desfecho_do_chute` |
 | 0x700bd0 | `shot_value` | shot_value | `valor_do_chute` |
+| 0x6cfda0 | `side_byte` | side_byte | `byte_do_lado` |
 | 0x6d5b20 | `side_centre_backs_without_conflict` | side_centre_backs_without_conflict | `zagueiros_do_lado_sem_conflito` |
+| 0x6c4180 | `side_difference` | side_difference | `diferenca_lado` |
 | 0x6bba50 | `side_of_move` | side_of_move | `lado_do_lance` |
 | 0x6d5af0 | `side_slots_without_conflict` | side_slots_without_conflict | `vagas_do_lado_sem_conflito` |
 | 0x6f4a40 | `side_state` | side_state | `estado_do_lado` |
@@ -1955,6 +1954,7 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x867aa0 | `staff_contract_is_bonus_type_allowed` | staff_contract_is_bonus_type_allowed | `tipo_de_bonus_permitido` |
 | 0x547c90 | `staff_count_disliked_staff_at_club` | staff_count_disliked_staff_at_club | `contar_rejeitados_no_clube` |
 | 0x547ce0 | `staff_count_favoured_staff_at_club` | staff_count_favoured_staff_at_club | `contar_favoritos_no_clube` |
+| 0x866f60 | `staff_criterion` | staff_criterion | `criterio_da_comissao` |
 | 0x547f90 | `staff_fade_staff_relationships` | staff_fade_staff_relationships | `esmaecer_relacoes` |
 | 0x5480f0 | `staff_get_disliked_staff` | staff_get_disliked_staff | `pessoas_rejeitadas` |
 | 0x548090 | `staff_get_favoured_staff` | staff_get_favoured_staff | `pessoas_favoritas` |
@@ -2004,13 +2004,13 @@ Desde 07/11/2026 as rotinas desviadas têm nome em inglês no código (o nome do
 | 0x43f300 | `swap_bytes_32_array` | swap_bytes_32_array | `trocar_bytes_dos_dwords` |
 | 0x8973e0 | `swap_selection_slots` | Tactics::swap_selection_slots | `trocar_vagas_da_escalacao` |
 | 0x7f7270 | `sync_scout_lists` | SCOUT_MANAGER::sync_scout_lists | `sincronizar_listas_dos_olheiros` |
-| 0x6c38c0 | `tabela_a` | table_a | `tabela_a` |
-| 0x6c38f0 | `tabela_b` | table_b | `tabela_b` |
-| 0x717410 | `tabela_do_jogador` | player_table | `tabela_do_jogador` |
+| 0x6c38c0 | `table_a` | table_a | `tabela_a` |
 | 0x6c3920 | `table_a_1a` | table_a_1a | `tabela_a_1a` |
+| 0x6c38f0 | `table_b` | table_b | `tabela_b` |
 | 0x55cae0 | `table_penalty` | table_penalty | `punicao_da_tabela` |
 | 0x70ec80 | `tackle` | tackle | `dividida` |
 | 0x6cfe10 | `tackle_injury` | tackle_injury | `lesao_na_dividida` |
+| 0x8968f0 | `tactic_slot_person` | tactic_slot_person | `pessoa_da_vaga_tatica` |
 | 0x898040 | `tactics_byte` | tactics_byte | `byte_tatico` |
 | 0x8982b0 | `tactics_row` | tactics_row | `linha_tatica` |
 | 0x6f0630 | `take_ball` | take_ball | `pegar_bola` |

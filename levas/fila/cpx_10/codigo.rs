@@ -191,7 +191,7 @@ unsafe extern "thiscall" fn post_manager_under_pressure_news(this: usize, clube:
         }
     }
     let l = board_row_of(this, clube);
-    let motivo: i8 = if (cpx10_w(l + 8) as i32) < cpx10_w(l + 6) as i32 - 500 /* cpx10: o limite pela avaliação +8 */ && {
+    let motivo: i8 = if (cpx10_w(l + 8) as i32) < cpx10_w(l + 6) as i32 - 500 /* cpx10: o limit pela avaliação +8 */ && {
         crate::comparacao::ramo("cpx_10 motivo pela avaliacao");
         cpx10_sortear(3) == 0
     } {

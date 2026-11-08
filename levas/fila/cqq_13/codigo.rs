@@ -28,17 +28,17 @@ unsafe fn cqq13_nome_da_rodada(rodadas: usize, jogo: usize) -> u32 {
 /// classificação com +0x32 e o nome da rodada do jogo na tabela de rodadas da fase do mata-mata ([[+0xc] + 4 × limite]
 /// + 0xa3; os 16 bits altos que a original empurra são os do ponteiro da fase); 1, o campeão (0x86a800); 2, o vice
 /// (0x86b0b0).
-unsafe fn cqq13_italia(this: usize, clube: usize, desfecho: u32, fase: u32, jogo: usize, a6: u32, limite: i8, rodada_g: u32, peso_g: u32, nome: &'static str) -> u32 {
+unsafe fn cqq13_italia(this: usize, clube: usize, desfecho: u32, fase: u32, jogo: usize, a6: u32, limit: i8, rodada_g: u32, peso_g: u32, nome: &'static str) -> u32 {
     let (d, f) = (desfecho as u8, fase as u8 as i8);
     let comp = cqq13_d(this + 4);
-    if f < limite {
+    if f < limit {
         if d == 6 {
             crate::comparacao::ramo(nome);
             european_cup_add_qualified_record(clube, comp, 0, rodada_g, peso_g);
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(clube, comp, 0x41c, 0x28); // cqq13: não passou dos grupos
         }
-    } else if f == limite {
+    } else if f == limit {
         match d {
             0xff => {
                 let peso = scale_by_round(0x32, 0x64, cqq13_w(jogo + 0x34), 5);
@@ -47,7 +47,7 @@ unsafe fn cqq13_italia(this: usize, clube: usize, desfecho: u32, fase: u32, jogo
             }
             0 => {
                 let peso = scale_by_round(0x32, 0x64, cqq13_w(jogo + 0x34), 5);
-                let mata = cqq13_d(cqq13_d(this + 0xc) + limite as usize * 4);
+                let mata = cqq13_d(cqq13_d(this + 0xc) + limit as usize * 4);
                 let rodada = (mata as u32 & 0xffff_0000) | cqq13_nome_da_rodada(cqq13_d(mata + 0xa3), jogo);
                 european_cup_add_qualified_record(clube, comp, cqq13_w(jogo + 0x32) as u16 as u32, rodada, peso);
             }

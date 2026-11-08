@@ -104,8 +104,8 @@ unsafe extern "thiscall" fn expire_story_log(this: usize) {
             100 // os dias das outras histórias
         };
         let mut local = [0u8; 8];
-        let limite = datar(0xae2c90, &mut local, dias);
-        if media_date_before(r, limite) {
+        let limit = datar(0xae2c90, &mut local, dias);
+        if media_date_before(r, limit) {
             let n = cpl6_d(this + 8);
             let ultimo = cpl6_d(this).wrapping_add(n.wrapping_mul(0x17)).wrapping_sub(0x17);
             core::ptr::copy(ultimo as *const u8, r as *mut u8, 0x17);

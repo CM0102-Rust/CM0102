@@ -161,8 +161,8 @@ unsafe fn reputation_by_manager(clube: usize, r: i16) -> i32 {
 
 /// O teto da reputação pelas finanças (0x5a0590 e 0x5986b0): faixa 1, o maior entre 1,25 r e r + 750; faixa 2, o maior
 /// entre 1,5 r e r + 1500.
-fn reputation_cap_by_finances(faixa: i8, r: i16) -> i16 {
-    match faixa {
+fn reputation_cap_by_finances(band: i8, r: i16) -> i16 {
+    match band {
         1 => match_pl_ftol(max_f64(r as f64 * 1.25, (r as i32 + 0x2ee) as f64)) as i16,
         2 => match_pl_ftol(max_f64(r as f64 * 1.5, (r as i32 + 0x5dc) as f64)) as i16,
         _ => r,
@@ -235,7 +235,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
     let vista: unsafe extern "C" fn(usize, usize, u32) -> i16 = core::mem::transmute(0x5407e0usize);
     // 0x5a0590: push clube; mov ecx, [0xae2a38] -> thiscall, ret 4; 0x5986b0: mov ecx, finanças -> thiscall, ret 0
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     // 0x4cbb60: push clube; push pessoa; mov ecx, [0xae1050] -> thiscall, ret 8
     let lugar: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(0x4cbb60usize);
     // 0x669bd0: push &data b; push &data a; push clube; add esp, 0xc -> cdecl
@@ -672,7 +672,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         let mut si: i16 = cqe4_h(p2 + 0x80);
         let fin = financas(cqe4_d(0xae2a38), p2);
         if fin != 0 && ad == 1 {
-            si = reputation_cap_by_finances(faixa(fin) as i8, si);
+            si = reputation_cap_by_finances(band(fin) as i8, si);
         }
         let ax = cqe4_h(cqe4_d(this + 0xdc).wrapping_add(cqe4_d(p2).wrapping_mul(9)) + 5);
         let m = if si > ax { si } else { ax };
@@ -961,7 +961,7 @@ unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usize, p1: usiz
         let mut di: i16 = cqe4_h(d4 + 0x80);
         let fin = financas(cqe4_d(0xae2a38), d4);
         if fin != 0 && ae == 1 && c != 0 && cqe4_d(c + 0x45) == 0 {
-            let m = faixa(fin);
+            let m = band(fin);
             if m == 0xfe {
                 fl(0x40000000);
             } else {

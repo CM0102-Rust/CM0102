@@ -119,9 +119,9 @@ unsafe extern "thiscall" fn choose_match_official(this: usize, jogo: usize, said
                         }
                     }
                     match achou {
-                        Some(faixa) => {
-                            crate::comparacao::ramo("cpy_8 faixa da liga");
-                            faixa // cpy8: a faixa da liga
+                        Some(band) => {
+                            crate::comparacao::ramo("cpy_8 band da liga");
+                            band // cpy8: a faixa da liga
                         }
                         None => (cpy8_i(b + 8), cpy8_i(b + 4)),
                     }
@@ -212,15 +212,15 @@ unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
     }
     let nacao = if cpy8_d(comp + 0x5d) != 0 { cpy8_i(cpy8_d(comp + 0x5d)) } else { sortear(cpy8_i(0xae2350)) };
     let b = nation_officials_block(this, nacao);
-    let mut faixa = None;
+    let mut band = None;
     for f in 0..cpy8_w(b + 0x10).max(0) as usize {
         let e = b + 0x12 + f * 0x10;
         if cpy8_i(e + 0xc) == cpy8_i(comp) {
-            faixa = Some((cpy8_i(e), cpy8_i(e + 4)));
+            band = Some((cpy8_i(e), cpy8_i(e + 4)));
             break;
         }
     }
-    let (ini, n) = faixa.unwrap_or((cpy8_i(b + 8), cpy8_i(b + 4)));
+    let (ini, n) = band.unwrap_or((cpy8_i(b + 8), cpy8_i(b + 4)));
     let nome: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(0x539c60usize);
     for k in 0..n.max(0) {
         let ficha = cpy8_d(0xae23e8).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);

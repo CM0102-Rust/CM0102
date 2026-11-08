@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
     let protegido: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x868210usize);
     let compensacao: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32 = core::mem::transmute(0x8d0780usize);
     let bosman: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(0x8d0a70usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x867d30usize);
     // 0x868210: push 0; push 0; push clube; mov ecx, contrato -> thiscall; 0x8d0780 e 0x8d0a70: mov ecx, [0xde1f54]
     // antes dos pushes (a cópia passa o ecx como a original; as duas só leem a pilha, ret 0xc e ret 4); 0x867d30: mov
     // ecx, contrato -> thiscall
@@ -57,7 +57,7 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
     if t > cqd12_i(pessoa(contrato) + 0x52) {
         return 0;
     }
-    let k = faixa(contrato) as i8 as i32;
+    let k = band(contrato) as i8 as i32;
     if k as u32 > 0xe {
         return 0;
     }
@@ -68,11 +68,11 @@ unsafe extern "thiscall" fn shortlist_manager_is_compensation_deal(this: usize, 
         5 | 6 => 0.8,
         7 | 8 => 0.9,
         _ => {
-            count_hot_branch(&CQD12_LONGE, "cqd_12 faixa longe");
+            count_hot_branch(&CQD12_LONGE, "cqd_12 band longe");
             return 1; // cqd12: as faixas 9-14
         }
     };
-    count_hot_branch(&CQD12_FAIXA, "cqd_12 faixa pelo fator");
+    count_hot_branch(&CQD12_FAIXA, "cqd_12 band pelo fator");
     // fild [vaga+0xb]; fild [vaga+3]; fmul fator; fcompp: 1 se o +3 × fator passa do +0xb (precisão dupla)
     (cqd12_i(vaga + 3) as f64 * fator > cqd12_i(vaga + 0xb) as f64) as u32
 }

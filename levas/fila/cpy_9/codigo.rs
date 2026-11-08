@@ -192,21 +192,21 @@ unsafe extern "C" fn officials_manager_validate_officials() {
                 }
             }
         }
-        let faixa = |alto: (i32, u8), medio: (i32, u8), baixo: (i32, u8)| {
+        let band = |alto: (i32, u8), medio: (i32, u8), baixo: (i32, u8)| {
             let w = cpy9_w(e + 0x1e);
             let (n, k) = if w > 0x78 { alto } else if w > 0x50 { medio } else { baixo };
             random_byte_plus(n, k)
         };
         fix_official_attribute(e, 0x24, || if cpy9_w(e + 0x1e) > 0x64 { random_byte_plus(0xc, 7) } else { random_byte_plus(0xa, 5) });
-        fix_official_attribute(e, 0x25, || faixa((0xe, 7), (0xf, 5), (0xa, 5)));
-        fix_official_attribute(e, 0x26, || faixa((0xb, 0xa), (0xf, 5), (0xa, 5)));
+        fix_official_attribute(e, 0x25, || band((0xe, 7), (0xf, 5), (0xa, 5)));
+        fix_official_attribute(e, 0x26, || band((0xb, 0xa), (0xf, 5), (0xa, 5)));
         fix_official_attribute(e, 0x27, || if cpy9_w(e + 0x1e) > 0x50 { random_byte_plus(0xf, 6) } else { random_byte_plus(0x14, 1) });
-        fix_official_attribute(e, 0x28, || faixa((0xa, 0xb), (0xf, 5), (0xa, 7)));
-        fix_official_attribute(e, 0x29, || faixa((0xd, 8), (0xe, 7), (0xf, 6)));
+        fix_official_attribute(e, 0x28, || band((0xa, 0xb), (0xf, 5), (0xa, 7)));
+        fix_official_attribute(e, 0x29, || band((0xd, 8), (0xe, 7), (0xf, 6)));
         fix_official_attribute(e, 0x2a, || if sortear(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
-        let mut limite = [0u8; 8];
+        let mut limit = [0u8; 8];
         let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, i32) -> *const u8 = core::mem::transmute(0x549f70usize);
-        let d = data(limite.as_mut_ptr(), 1, 1, 0x776, -1);
+        let d = data(limit.as_mut_ptr(), 1, 1, 0x776, -1);
         let (dia, ano) = (cpy9_w(d as usize), cpy9_w(d as usize + 2) as u16);
         let ano_e = cpy9_w(e + 0xe) as u16;
         if ano > ano_e || (ano == ano_e && dia > cpy9_w(e + 0xc)) {

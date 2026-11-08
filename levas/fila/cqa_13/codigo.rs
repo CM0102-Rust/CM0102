@@ -260,7 +260,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
     let mesma_posicao: unsafe extern "C" fn(usize, u32) -> u8 = core::mem::transmute(0x548150usize);
     let forca = contar(novo, 0, 0) as i8 as i32;
     let rn = cqa13_w(novo + 0x80);
-    let limite = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
+    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: o limite do elenco forte
     let mesma = mesma_posicao(novo, natural_position_mask(p)) as i8 as i32;
     let dias: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(0x54cdb0usize);
     let categoria: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(0x4ca470usize);
@@ -288,7 +288,7 @@ unsafe extern "thiscall" fn process_transfer_squad_reactions(this: usize, p: usi
                 return;
             }
         }
-        if media_contract_flags(c) & 0x400 != 0 && forca >= limite {
+        if media_contract_flags(c) & 0x400 != 0 && forca >= limit {
             crate::comparacao::ramo("cqa_13 elenco forte");
             clear_contract_flags(c, 0x400);
         }
@@ -616,7 +616,7 @@ unsafe extern "thiscall" fn comparar_queue_signing_celebration_story(this: usize
 /// { 0x75cfc0 } (thiscall, ret 0x10, media.cpp, quadro SEH da notícia local): `Media::queue_sale_unrest_story(velho,
 /// novo, jogador, companheiro)`, pelas reações à transferência (0x758200). Velho clube com técnico (+0xcf), fora da
 /// seleção (0x53b900), companheiro e jogador com ficha (+0x61). A notícia 0xbe4: o técnico, o companheiro e o jogador
-/// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não pass_ball de
+/// (id e as três chaves de cada), os ids dos dois clubes, sorteio(2) (+2 se +0x5b do companheiro não passar de
 /// sorteio(5) + 10), o veículo (0x757f30), o comentarista (0x7dab90 com a nação +0x53 ou −1) e 2; vai ao técnico do velho
 /// clube (0x7861e0).
 unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, velho: usize, novo: usize, p: usize, comp: usize) {

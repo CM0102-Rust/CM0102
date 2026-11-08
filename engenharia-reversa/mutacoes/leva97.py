@@ -6,6 +6,6 @@ MUTACOES = [
     ('d_folego', "        let r = sortear(5) + 5;\n        let f = (j + 0x4d) as *mut f32;", "        let r = sortear(5) + 6;\n        let f = (j + 0x4d) as *mut f32;"),
     ('d_situacao', "== 5 && ta() & 1 == 0 {", "== 4 && ta() & 1 == 0 {"),
     ('d_repete', "        if r <= sortear(5) {\n            return;", "        if r <= sortear(6) {\n            return;"),
-    ('d_faixa', "(faixa((dir == 0) as u8, byte(m, 0x8ea7), byte(m, 0x8ea8)) != 0 && byte(m, 0x8ea9) != -1)", "(faixa((dir == 0) as u8, byte(m, 0x8ea7), byte(m, 0x8ea8)) != 0 || byte(m, 0x8ea9) != -1)"),
+    ('d_faixa', "(band((dir == 0) as u8, byte(m, 0x8ea7), byte(m, 0x8ea8)) != 0 && byte(m, 0x8ea9) != -1)", "(band((dir == 0) as u8, byte(m, 0x8ea7), byte(m, 0x8ea8)) != 0 || byte(m, 0x8ea9) != -1)"),
     ('d_2b', "        if b(0x2b) != 0 && !e_dono {", "        if b(0x2b) > 1 && !e_dono {"),
 ]

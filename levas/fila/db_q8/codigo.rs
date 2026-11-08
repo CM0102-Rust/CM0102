@@ -1,9 +1,9 @@
-// ---------- %%LEVA%%a leva: as cores do kit do clube, o técnico do clube e o nome do clube em inglês (Database.cpp) ----------
+// ---------- %%LEVA%%a leva: as cores do uniforme do clube, o técnico do clube e o nome do clube em inglês (Database.cpp) ----------
 
-/// { 0x53b640 } (cdecl, Database.cpp): as cores do `kit` (byte: 1 casa +0x83/+0x87, 2 fora
+/// { 0x53b640 } (cdecl, Database.cpp): as cores do `uniforme` (byte: 1 casa +0x83/+0x87, 2 fora
 /// +0x8b/+0x8f, 3 terceiro +0x93/+0x97; 2 e 3 sem uma das duas cores: as de casa trocadas) do `clube`
 /// em pixels (0x5e4800 com os bytes +0x37, +0x38, +0x39 da cor e formato 0): `frente` e `fundo`, que
-/// começam com [0xaebdf0] e [0xae3184]. Outro kit: só os padrões. Devolve 1. Clube nulo: a
+/// começam com [0xaebdf0] e [0xae3184]. Outro uniforme: só os padrões. Devolve 1. Clube nulo: a
 /// original (padrões, caixa "Error" e 0).
 unsafe extern "C" fn database_get_club_kit_colours(clube: usize, kit: u32, frente: *mut u16, fundo: *mut u16) -> u32 {
     if clube == 0 {

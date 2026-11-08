@@ -1,6 +1,6 @@
 // ---------- %%LEVA%%a leva: as telas da partida (13): a barra da posse, o painel da visão geral da partida e a tabela da liga ao vivo (match_screens.cpp) ----------
 
-/// { 0x71d9e0 } (cdecl, match_screens.cpp): na partida (parâmetro 0), sem contest de pênaltis
+/// { 0x71d9e0 } (cdecl, match_screens.cpp): na partida (parâmetro 0), sem disputa de pênaltis
 /// ([estado + 0x53] = 0), pega as cores dos dois clubes (0x53b640 com os uniformes +0x152 e +0x777) e,
 /// se a posse (+0x142) mudou desde a cópia do parâmetro 0x1d (ou sem cópia), redesenha a barra da posse
 /// da visão geral: o percentual (50 sem valor ou sem a marca +0x767) em "%d%%" nos itens 3 e 4 a partir
@@ -73,7 +73,7 @@ unsafe fn overview_would_error() -> bool {
 
 /// { 0x71c270 } (cdecl, match_screens.cpp, ~6 KB): desenha a visão geral da partida de `*topo` a
 /// `*base` (`*base` −= 0x28 logo de saída). Na partida (parâmetro 0; estado em +0x5f): o título do
-/// período (pelo [estado + 0x4f], com os nomes do parâmetro 1 = 4 ou os outros) e, sem contest de
+/// período (pelo [estado + 0x4f], com os nomes do parâmetro 1 = 4 ou os outros) e, sem disputa de
 /// pênaltis ([estado + 0x53] = 0), a barra da posse (moldura, "Last 5 Mins", as cores dos clubes; o item
 /// no parâmetro 0x21, a altura no 0x22; `*base` −= 0x37) e a caixa do comentário (com o parâmetro 7 o
 /// narrador escreve o último lance nela, 0x6d7b00; o item no parâmetro 8). Fora dela: o estádio e a
@@ -81,7 +81,7 @@ unsafe fn overview_would_error() -> bool {
 /// intervalo, a prorrogação e os pênaltis, a competição (com o atalho 0x7e5 quando não é amistoso nem
 /// de seleção), a lista dos autores em duas colunas (gols, gol contra, pênalti perdido, expulsão,
 /// lesão; os minutos do mesmo jogador e tipo juntos, quebrando a linha com mais de 10 letras), a
-/// contest de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
+/// disputa de pênaltis, o árbitro, o público, o tempo, "Match Abandoned" e a barra da posse (0x71d9e0).
 unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
     if overview_would_error() {
         return original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(%%I1%%)(topo, base);
@@ -390,7 +390,7 @@ unsafe extern "C" fn draw_match_overview_panel(topo: *mut i32, base: *mut i32) {
         marcas[i - 1] = 1;
     }
 
-    // a contest de pênaltis
+    // a disputa de pênaltis
     if core::ptr::read_unaligned((e + 0x53) as *const u32) != 0 {
         let m = if linhas[0] > linhas[1] { linhas[0] } else { linhas[1] };
         linhas[lado_da_linha] = m;

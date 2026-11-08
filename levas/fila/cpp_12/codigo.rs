@@ -20,9 +20,9 @@ unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize, b: usize) 
     if clube == 0 {
         return false;
     }
-    let limite = cpp12_i(0xae235c).wrapping_sub(cpp12_i(0xae2350).wrapping_mul(2));
+    let limit = cpp12_i(0xae235c).wrapping_sub(cpp12_i(0xae2350).wrapping_mul(2));
     let id = cpp12_i(clube);
-    if id >= limite {
+    if id >= limit {
         return false;
     }
     let rec = cpp12_d(this + 0x20).wrapping_add((id as usize).wrapping_mul(6));

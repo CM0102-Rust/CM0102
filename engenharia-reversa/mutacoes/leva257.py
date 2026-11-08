@@ -11,7 +11,7 @@ MUTACOES = [
     ('cpu3_sem_registro_o_padrao', 'return 0.0; // cpu3: sem registro, zero', 'return padrao as f64; // mutacao: o padrao para todos'),
     ('cpu4_nenhuma_clausula', 'return 1; // cpu4: com a clausula ativa', 'return 0; // mutacao: nenhuma clausula ativa'),
     ('cpu4_sem_regras_livre', 'return 1; // cpu4: sem as regras novas', 'return 0; // mutacao: sem as regras novas, livre'),
-    ('cpu4_periodo_de_dois_anos', 'let limite: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade', 'let limite: u8 = { idade(pessoa, d); 2 }; // mutacao: sempre 2 anos'),
+    ('cpu4_periodo_de_dois_anos', 'let limit: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade', 'let limite: u8 = { idade(pessoa, d); 2 }; // mutacao: sempre 2 anos'),
     ('cpu5_sem_rolagem_das_financas', '            if friendly_random(n) == 0 { // cpu5: a rolagem das finanças', '            if n < 0 { // mutacao: sem o sorteio', 'cpu_5 rolagem das financas'),
     ('cpu5_fatia_errada', '    if read_u8(jogo + 0x3f) == 2 { // cpu5: a fatia da noite', '    if read_u8(jogo + 0x3f) != 2 { // mutacao: a fatia errada', 'cpu_5 rolagem das financas'),
     ('cpu5_chuva_sem_sorteio', '            if friendly_random(n) != 0 { // cpu5: o sorteio da chuva forte', '            if n != 0 { // mutacao: sem o sorteio', 'cpu_5 chuva forte'),

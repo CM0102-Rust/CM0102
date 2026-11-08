@@ -204,10 +204,10 @@ unsafe extern "thiscall" fn set_season_expectations(this: usize, clube: usize, n
         por(n - 1);
     }
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let fin = financas(cqc9_d(0xae2a38), clube);
     crate::comparacao::ramo("cqc_9 meta");
-    match faixa(fin) as i8 {
+    match band(fin) as i8 {
         2 => por(if meta() > 5 { meta() - 3 } else { meta() - 2 }),
         1 => por(if meta() > 5 { meta() - 2 } else { meta() - 1 }),
         0 => {
@@ -368,10 +368,10 @@ unsafe fn finish_board_update(this: usize, clube: usize) {
         }
     }
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x5a0590usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let r = if cqc9_selecao(clube) == 0 {
         let fin = financas(cqc9_d(0xae2a38), clube);
-        if fin != 0 { faixa(fin) } else { 0 }
+        if fin != 0 { band(fin) } else { 0 }
     } else {
         0
     };

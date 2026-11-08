@@ -49,7 +49,7 @@ unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize,
     }
     let v = if *t.add(5) != 0xff { *t.add(5) } else { *t.add(3) };
     if v != 0xff {
-        crate::comparacao::ramo("cpr_1 limite de nao comunitarios");
+        crate::comparacao::ramo("cpr_1 limit de nao comunitarios");
         clear_restriction_table(t);
         *t.add(5) = v; // o limite de não comunitários
         return;
@@ -73,16 +73,16 @@ unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize,
 /// (0x8cf7e0 em 6 bytes locais: +0 tipo, +1 idade, +5 quantidade); sem tipo, 0. O lado humano (+0x1c/+0x40 ou
 /// +0x20/+0x41) vai para a 0x8968f0. Pelas (+0x4d & 0xf) + 11 vagas, a pessoa da vaga (`jogadores[k]` ou a tática
 /// [0xde1d08] 0x8968f0) conta se é estrangeira na nação do clube (0x53d980 com 1; tipo 1, também fora da UE, 0x53d740)
-/// ou passa da idade (+0x18, tipo 3): +2 (starters) ou +3 (as outras) e +4 (todas). A conta vai a `saida`; passando da
+/// ou passa da idade (+0x18, tipo 3): +2 (titulares) ou +3 (as outras) e +4 (todas). A conta vai a `saida`; passando da
 /// quantidade, 1 e, com `msg`, o aviso (0x66f4e0) pelo tipo, pela conta e pela quantidade.
 unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_limit(this: usize, clube: usize, partida: usize, msg: usize, jogadores: usize, _nao_usado: u32, saida: usize) -> u32 {
-    let limite: unsafe extern "thiscall" fn(usize, usize, *mut u8) = core::mem::transmute(0x8cf7e0usize);
+    let limit: unsafe extern "thiscall" fn(usize, usize, *mut u8) = core::mem::transmute(0x8cf7e0usize);
     let da_tatica: unsafe extern "thiscall" fn(usize, usize, usize, u32) -> usize = core::mem::transmute(0x8968f0usize);
     let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
     let comunitaria: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(0x53d740usize);
     let texto: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(0x66f4e0usize);
     let mut l = [0u8; 6];
-    limite(this, partida, l.as_mut_ptr());
+    limit(this, partida, l.as_mut_ptr());
     let tipo = l[0];
     if tipo == 0 {
         return 0;

@@ -683,7 +683,7 @@ pub(crate) const CPW7_BYTE_DO_CASO: u8 = 0x90;
 /// marca o bit 2, notícia da falta (0x41a630, com o clube do contrato), o byte +0xa da linha de 79 bytes ([0xae2d0c])
 /// soma sorteio(10), a condição (0x62c590) cai 25 × (21 − o +0x34 do jogador) + sorteio + 100 (0x62bd10), o registro
 /// (pessoa, hoje, caso) entra na lista das faltas ([this+4], 0x68d0d0); clube da IA (0x600a50) com técnico (+0xcf, +0x69)
-/// e sorteio(+0x14 dele) não zero: a multa (0x5a5980, prazo 1 se sorteio(nota do técnico 0x544410 com o +0x19) pass_ball
+/// e sorteio(+0x14 dele) não zero: a multa (0x5a5980, prazo 1 se sorteio(nota do técnico 0x544410 com o +0x19) passar
 /// de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, pessoa: usize) {
     if pessoa == 0 || read_usize(pessoa + staff::PLAYER) == 0 || read_i32(pessoa) >= read_i32(0xae2364) {
@@ -867,7 +867,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_end_absence(this: usize, r: usiz
 /// 0x68d0d0, 0x11 bytes). Clube de humano (0x7875e0): um treinador das 5 vagas (+0x19f, sorteio(5), até achar um ou
 /// sorteio(20) dar zero) e a notícia 0x138f ao clube (o jogador, sorteio(2), as chaves dele e do treinador ou −1).
 /// Clube da IA (0x600a50) com técnico (+0xcf, +0x69): sorteio(+0x14 dele) acima de sorteio(10) leva à multa (0x5a5980,
-/// prazo 1 se sorteio(nota 0x544410 com o +0x19) pass_ball de sorteio(5), senão 2; motivo 1).
+/// prazo 1 se sorteio(nota 0x544410 com o +0x19) passar de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador: usize, clube: usize) {
     let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(FN_DATE_DATE_54A110);
     let mut reg = [0u8; 0x11];

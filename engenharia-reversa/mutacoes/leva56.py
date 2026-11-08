@@ -6,7 +6,7 @@ MUTACOES = [
     ('c_10', "        if byte(j, 0x19) > 10 || d32(j, 0x6d) == 0 {", "        if byte(j, 0x19) > 11 || d32(j, 0x6d) == 0 {"),
     ('c_e9', "1 | 2 => match_pl_ftol(f(j, if tipo == 1 { 0xdd } else { 0xe9 }) - 2.0 * dist(j, a7, a8) as f64) as i16,", "1 | 2 => match_pl_ftol(f(j, if tipo == 1 { 0xdd } else { 0xdd }) - 2.0 * dist(j, a7, a8) as f64) as i16,"),
     ('c_2x', "1 | 2 => match_pl_ftol(f(j, if tipo == 1 { 0xdd } else { 0xe9 }) - 2.0 *", "1 | 2 => match_pl_ftol(f(j, if tipo == 1 { 0xdd } else { 0xe9 }) - 1.0 *"),
-    ('c_t4', "            4 => if tabela_a(this, j) == 1 { 100 } else { 0 },", "            4 => if tabela_a(this, j) & 1 != 0 { 100 } else { 0 },"),
+    ('c_t4', "            4 => if table_a(this, j) == 1 { 100 } else { 0 },", "            4 => if table_a(this, j) & 1 != 0 { 100 } else { 0 },"),
     ('c_lista_sel', "                        || is_national_team(d32(partida, if lado == 0 { 0x1c } else { 0x20 })) != 0", "                        || is_national_team(d32(partida, if lado == 0 { 0x20 } else { 0x1c })) != 0"),
     ('c_5f', "                    && byte(tec, 0x5f) != 0\n", "\n"),
     ('c_lista_ordem', "                            v = 10000 - b as i16;", "                            v = 10000 + b as i16;"),

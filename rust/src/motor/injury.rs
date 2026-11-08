@@ -241,9 +241,9 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, codigo: u32) -
     let b = |o: usize| byte(p, o);
     let minuto = *((m + 0x8ed0) as *const i16) as i32 / 11;
     let em_campo = minuto - b(0x1f) as i32;
-    let limite = |t: i32| (t * 33 + 0xfa0).min(0x1964);
+    let limit = |t: i32| (t * 33 + 0xfa0).min(0x1964);
     // as condicoes comuns: sem gol, sem cartao, +0x17 ate 8, +0x03 ate 2 e a atuacao ate o limite
-    let comum = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limite(em_campo);
+    let comum = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limit(em_campo);
     let buscar = |cod: u32, data: &[u8; 8]| {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
         f(*(G_MEDIA as *const usize), ficha, *((p + 0xf9) as *const usize), -1, cod, data) != 0
@@ -293,11 +293,11 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, codigo: u32) -
             }
             sim
         }
-        0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && em_campo >= 0x37 && atuacao <= limite(em_campo),
+        0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && em_campo >= 0x37 && atuacao <= limit(em_campo),
         0x21b8 => {
             atuacao < 0x1964
                 && (b(0x14) as u8 as i32) > sortear(3)
-                && tabela_do_jogador(p) & 4 != 0
+                && player_table(p) & 4 != 0
                 && byte(*((p + 0x6d) as *const usize), 0x11) as i32 > sortear(4) + 0xf
                 && b(0xc) == 0
                 && (b(0x17) as i32) < sortear(6)
@@ -1093,7 +1093,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, tipo_arg: u32, re
 }
 
 /// Comparador da 0x62d250: só a original (aloca, entrega a notícia, agenda aposentadoria e chama originais que sorteiam
-/// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode injure de novo: não pode rodar duas vezes). Confere
+/// no meio, como o treino 0x8b1750 e a recaída 0x62e500, que pode lesionar de novo: não pode rodar duas vezes). Confere
 /// o que a lesão garante depois: argumentos inválidos ou só recorrência dão −1; −1 de resto só com a pessoa ainda
 /// lesionada (+0xe ≠ −1) ou sem vetor; vaga válida com a pessoa ainda nela (+0xe = vaga, sem recaída que a tenha
 /// trocado): o tipo na vaga e em +0x1d, +0x1c = 0, +0x2c = +0x28, +0x2e = +0x2a e +0x2a = a volta ao treino pela
@@ -1114,7 +1114,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_add_injury(this: usize, tipo_arg
             r >= 0 // trocada depois (a recaída lesionou de novo): nada a conferir
         } else {
             let l = injury_entry(this, r as usize);
-            // a recaída (0x62e500) pode injure de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
+            // a recaída (0x62e500) pode lesionar de novo a própria pessoa com 0x4d/0x4e/0x4f: a troca libera esta vaga e
             // a nova lesão a reocupa (a primeira livre), com o tipo dela; confere a nova
             let t = read_u8(l) as i8;
             let tipo = if t != tipo && (0x4d..=0x4f).contains(&t) { t } else { tipo };
@@ -2137,10 +2137,10 @@ pub(crate) unsafe fn advance_time_slice(e: usize, f: i8) {
 /// entradas até `limite` (ano sem sinal, dia com sinal), a primeira de tipo 3 da pessoa é anulada (id −1; sem
 /// `alterar` só fica de fora) e a busca para; depois, a partir dessa posição (ou da conta − [this+0x1c], se maior),
 /// a de tipo 3 da pessoa. Devolve o endereço dela ou 0.
-pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limite: &[u8; 8], alterar: bool) -> usize {
+pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], alterar: bool) -> usize {
     let conta = read_u32_as_usize(this + 0x14) as i32;
     let base = read_u32_as_usize(this + 0xc);
-    let (la, ld) = (u16::from_le_bytes([limite[2], limite[3]]), i16::from_le_bytes([limite[0], limite[1]]));
+    let (la, ld) = (u16::from_le_bytes([limit[2], limit[3]]), i16::from_le_bytes([limit[0], limit[1]]));
     let mut i = read_u32_as_usize(this + 0x18) as i32;
     let mut anulada = -1i32;
     while i < conta {
@@ -2288,12 +2288,12 @@ pub(crate) unsafe fn five_days_ago() -> [u8; 8] {
     d
 }
 
-/// True when date limite is after outbreak e's date (unsigned year, then signed day).
+/// True when date limit is after outbreak e's date (unsigned year, then signed day).
 ///
 /// [pt] A data `limite` (dia com sinal em +0, ano sem sinal em +2) é depois da do surto `e`?
-pub(crate) unsafe fn is_after_outbreak(limite: &[u8; 8], e: usize) -> bool {
-    let dia = i16::from_le_bytes([limite[0], limite[1]]);
-    let ano = u16::from_le_bytes([limite[2], limite[3]]);
+pub(crate) unsafe fn is_after_outbreak(limit: &[u8; 8], e: usize) -> bool {
+    let dia = i16::from_le_bytes([limit[0], limit[1]]);
+    let ano = u16::from_le_bytes([limit[2], limit[3]]);
     let ano_e = read_i16(e + 2) as u16;
     ano > ano_e || (ano == ano_e && dia > read_i16(e))
 }
@@ -3486,5 +3486,19 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_recurring_injury_type(this: 
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_RECURRING_INJURY_TYPE)(this, pessoa);
     let n = get_recurring_injury_type(this, pessoa);
     PLACAR.registrar(r == n, || format!("get_recurring_injury_type(pessoa {:x}) original={:x} rust={:x}", pessoa, r, n));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_injury_severity(lesoes: usize, tipo: i8) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u8>(IDX_INJURY_SEVERITY)(lesoes, tipo);
+    let n = injury_severity(lesoes, tipo);
+    PLACAR.registrar(r == n, || format!("injury_severity({}) original={} rust={}", tipo, r, n));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_injury_grade(lesoes: usize, pessoa: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_INJURY_GRADE)(lesoes, pessoa);
+    let n = injury_grade(lesoes, pessoa);
+    PLACAR.registrar(r == n, || format!("injury_grade() original={} rust={}", r, n));
     r
 }

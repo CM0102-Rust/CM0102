@@ -203,7 +203,7 @@ unsafe extern "thiscall" fn comparar_european_cup_set_club_progress(this: usize,
 }
 
 /// { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
-/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das units_digit (0x4b0850) da rodada (+0x30, com sinal)
+/// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
 /// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
 unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, jogo: usize, _outro: usize) -> u32 {
     let units_digit: unsafe extern "C" fn(i32) -> u8 = core::mem::transmute(0x4b0850usize);

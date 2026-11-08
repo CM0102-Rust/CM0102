@@ -55,18 +55,18 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     let mut t = [0u8; 8];
     diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
     let pessoa = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c).wrapping_mul(110));
-    let limite: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade
+    let limit: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade
     if !anos.is_null() {
-        *anos = limite;
+        *anos = limit;
     }
     let mut l = [0u8; 8];
     let p = diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
     core::ptr::copy_nonoverlapping(p as *const u8, l.as_mut_ptr(), 8);
     let a = u16::from_le_bytes([l[2], l[3]]) as i32;
-    if a < limite as i32 {
+    if a < limit as i32 {
         return 1; // cpu4: dentro do periodo
     }
-    if !no_limite.is_null() && a == limite as i32 && u16::from_le_bytes([l[0], l[1]]) == 0 {
+    if !no_limite.is_null() && a == limit as i32 && u16::from_le_bytes([l[0], l[1]]) == 0 {
         *no_limite = 1;
     }
     0
@@ -643,4 +643,107 @@ pub(crate) unsafe extern "thiscall" fn comparar_construct_staff_contract(this: u
     let (ro, rr, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 0x4f)], || o(this), || construct_staff_contract(this));
     PLACAR.registrar(igual && ro == rr, || format!("construct_staff_contract({:#x}) original={:x?} rust={:x?}", this, mo, mr));
     ro
+}
+
+/// the staff criterion: an 8-bit score (id mod 7, ratings, age, reputation, number of roles) decides by the roles
+/// whether it returns 1
+/// Original: `staff_criterion` (0x866f60, staff_contracts.cpp, thiscall).
+///
+/// [pt] { 0x866f60 } (thiscall, staff_contracts.cpp): o critério da comissão técnica `t` (pessoa [t] em
+/// [0xae23bc], 0x6e bytes; clube [t+4] em [0xae23b4], 0x245 bytes; funções em [t+0x45]): 0 se a
+/// pessoa é o técnico ou o auxiliar do clube (+0xcf, +0xd3) ou não tem função; senão uma nota em 8
+/// bits (id mod 7 + +0x59 + +0x5a + +0x5b, descontos pelas notas baixas e pela idade, +0x44 em
+/// faixas, a reputação do clube, e menos o número de funções acima de uma) decide pelas funções e
+/// pelas notas se devolve 1.
+pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
+    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(0x6e));
+    let clube = (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + 4) as *const i32) as usize).wrapping_mul(0x245));
+    let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
+    let tecnico = u(clube + club::MANAGER);
+    if tecnico != 0 && p == tecnico {
+        return 0;
+    }
+    let auxiliar = u(clube + club::ASSISTANT_MANAGER);
+    if auxiliar != 0 && p == auxiliar {
+        return 0;
+    }
+    let funcoes = u(t + 0x45) as u32;
+    if funcoes == 0 {
+        return 0;
+    }
+    let b = |o: usize| *((p + o) as *const i8);
+    let (b59, b5a, b5b, b5d) = (b(0x59), b(0x5a), b(0x5b), b(0x5d));
+    let b44 = *((t + 0x44) as *const i8);
+    let mut nota = ((*(p as *const i32) % 7) as u8).wrapping_add(b59 as u8).wrapping_add(b5a as u8).wrapping_add(b5b as u8);
+    if b5a == 1 {
+        nota = nota.wrapping_sub(2);
+    }
+    if b59 == 1 {
+        nota = nota.wrapping_sub(3);
+    } else if b59 < 6 {
+        nota = nota.wrapping_sub(1);
+    }
+    if b5b == 1 {
+        nota = nota.wrapping_sub(3);
+    } else if b5b < 6 {
+        nota = nota.wrapping_sub(1);
+    }
+    if b5d == 1 {
+        nota = nota.wrapping_sub(2);
+    }
+    if b44 > 0x4b {
+        nota = nota.wrapping_add(10);
+    } else if b44 > 0x32 {
+        nota = nota.wrapping_add(5);
+    } else if b44 > 0 {
+        nota = nota.wrapping_add(2);
+    }
+    let ficha = u(p + 0x61);
+    if ficha != 0 {
+        let rep = core::ptr::read_unaligned((ficha + 0xb) as *const i16);
+        if rep > 0x1c52 {
+            nota = nota.wrapping_sub(5);
+        } else if rep > 0x1676 {
+            nota = nota.wrapping_sub(3);
+        }
+    }
+    let tecnica = *((t + 0x40) as *const u32) & 8 != 0;
+    let m1 = funcoes & 0x1000002;
+    let mut k = 0u8;
+    for bits in [0x20000u32, 0x40000, 0x1000002, 0x200600, 0x2840, 0x14] {
+        if funcoes & bits != 0 {
+            k += 1;
+        }
+    }
+    if tecnica || funcoes & 0x4582208 != 0 {
+        k += 1;
+    }
+    if k > 1 {
+        nota = nota.wrapping_sub(3);
+        if b5b < 6 {
+            nota = nota.wrapping_sub(k);
+        }
+        if b5d < 6 {
+            nota = nota.wrapping_sub(k);
+        }
+        if b59 == 1 {
+            nota = nota.wrapping_add((k as i8).wrapping_mul(-2) as u8);
+        } else if b59 < 6 {
+            nota = nota.wrapping_sub(k);
+        }
+        if b5a < 6 {
+            nota = nota.wrapping_sub(k);
+        }
+    }
+    let nota = nota as i8;
+    let sim = (b59 < 15 && *((t + 0x4e) as *const u8) & 1 != 0)
+        || (m1 != 0 && b59 < 10 && nota < 25)
+        || (funcoes & 0x20020 != 0 && nota < 25)
+        || (funcoes & 0x200 != 0 && nota < 18)
+        || (funcoes & 4 != 0 && b(0x57) > 15 && b5b < 10)
+        || (funcoes & 0x2808 != 0 && b59 < 10 && b5a < 6 && nota < 30)
+        || ((funcoes & 0x82200 != 0 || tecnica) && b5b < 10 && nota < 20)
+        || funcoes & 0x111 != 0
+        || (b44 as i32) < -0x46 - b59 as i32;
+    sim as u32
 }

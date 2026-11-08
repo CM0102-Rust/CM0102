@@ -2,7 +2,7 @@
 # partida): sem o sorteio das financas nos jogos da noite (um sorteio a menos por jogo da noite), o sorteio das financas
 # na fatia errada (os jogos fora da noite sorteiam e os da noite nao) e sem o sorteio da chuva forte (um a menos por jogo
 # com chuva 5 de 1 a 13 graus em estadio pequeno). A contagem de sorteios muda e tudo o que sorteia depois muda. A da
-# chuva pode escapar se nenhum jogo ate 2002-06-01 tiver chuva 5 nessa faixa (o contador mostra).
+# chuva pode escapar se nenhum jogo ate 2002-06-01 tiver chuva 5 nessa band (o contador mostra).
 MUTACOES = [
     ('cpu5_sem_rolagem_das_financas', '            if cpu5_sortear(n) == 0 { // cpu5: a rolagem das finanças',
      '            if n < 0 { // mutacao: sem o sorteio',

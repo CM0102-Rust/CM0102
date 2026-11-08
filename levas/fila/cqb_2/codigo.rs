@@ -68,7 +68,7 @@ unsafe extern "thiscall" fn try_finance_boost_event(this: usize, clube: usize, f
                 if forte(pres, ficha) && cqb2_c(pres + 0x57) > 0xf && cqb2_c(ficha + 0x20) > 0xf {
                     read_f64_at(0x96a740)
                 } else {
-                    crate::comparacao::ramo("cqb_2 divisor da faixa 0 baixa");
+                    crate::comparacao::ramo("cqb_2 divisor da band 0 baixa");
                     read_f64_at(0x96a738) // cqb2: o divisor da faixa 0 de reputação baixa
                 }
             } else if rep < 0x186a {

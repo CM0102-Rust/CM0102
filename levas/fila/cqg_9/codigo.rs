@@ -91,8 +91,8 @@ unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 *m = 0;
                 continue;
             }
-            let limite = if *((nac + 0x11c) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
-            if grupo <= limite {
+            let limit = if *((nac + 0x11c) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: os árbitros que ficam por nação
+            if grupo <= limit {
                 ficam += 1;
                 *m = 1;
                 crate::comparacao::ramo("cqg_9 arbitro mantido");

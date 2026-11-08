@@ -1,6 +1,6 @@
-# Mutacoes do olheiro (atacante rapido, meias criativos, faixa de forca): as duas primeiras invertem a resposta; a da
-# faixa tira a ordenacao (soma a habilidade dos primeiros do elenco na ordem guardada, nao dos melhores: a media cai e a
-# faixa muda na maioria dos clubes). Mesma lacuna do dbo_1: so o relatorio de um clube (run_scout_day 0x7b3e20) as
+# Mutacoes do olheiro (atacante rapido, meias criativos, band de forca): as duas primeiras invertem a resposta; a da
+# band tira a ordenacao (soma a habilidade dos primeiros do elenco na ordem guardada, nao dos melhores: a media cai e a
+# band muda na maioria dos clubes). Mesma lacuna do dbo_1: so o relatorio de um clube (run_scout_day 0x7b3e20) as
 # chama e a resposta so vai para a noticia; PODEM ESCAPAR da carreira ate 2002-06-01; os comparadores rodam no jogo
 # real comparando.
 MUTACOES = [

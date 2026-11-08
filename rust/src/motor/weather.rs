@@ -45,7 +45,7 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usize) -> u8 {
     let chave: unsafe extern "C" fn(usize) -> i8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let financas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_FINANCETABLE_GET_CLUB_FINANCE);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(FN_FINANCE_GET_WEALTH_BAND);
     let clima: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_WEATHER_GET_MATCH_WEATHER);
     let est = read_usize(jogo + 0x18);
     if est == 0 || read_usize(est + 0x38) == 0 || read_usize(est + 0x3c) == 0 || read_usize(jogo + 0x14) == 0 {
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, jogo: usi
     if read_u8(jogo + 0x3f) == 2 { // cpu5: a fatia da noite
         let fin = financas(read_usize(G_FINANCE_TABLE), casa);
         if fin != 0 {
-            let f = faixa(fin) as i8;
+            let f = band(fin) as i8;
             let n = if f == -2 {
                 1000
             } else if f == -1 && (read_u8(fin + 0x166) as i8) > 0xf {
@@ -300,19 +300,19 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     } else {
         core::ptr::read_unaligned(G_CURRENT_DATE as *const i16)
     };
-    let limite = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
-    let p: usize = if dia < limite(0x1e) {
+    let limit = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
+    let p: usize = if dia < limit(0x1e) {
         3
-    } else if dia < limite(0x31) {
+    } else if dia < limit(0x31) {
         0
-    } else if dia < limite(0x44) {
+    } else if dia < limit(0x44) {
         1
-    } else if dia < limite(0x57) {
+    } else if dia < limit(0x57) {
         2
     } else {
         3
     };
-    let faixa: u32 = if cid == 0 {
+    let band: u32 = if cid == 0 {
         *s = 0;
         *s.add(1) = 0;
         2
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
             3
         }
     };
-    let t = temperatura(this, faixa, jogo) as i8;
+    let t = temperatura(this, band, jogo) as i8;
     *s.add(2) = t as u8;
     if t >= 0 {
         return;
@@ -408,8 +408,8 @@ pub(crate) unsafe extern "thiscall" fn comparar_get_match_weather(this: usize, s
 /// dia d (do jogo +0x2a, sem sinal; sem jogo o dia do jogo) e x = d × faixa: faixa 0: x % 6 + 1; 1: x % 6 − 5; 2:
 /// x % 7 + 7; 3: x % 8 + 14; 4: x % 7 + 22; 5: x % 6 + 29; 6: x % 6 + 35; outra: −100. Jogo da fatia da noite (+0x3f = 2):
 /// abaixo de 10, − 2; senão × 0,8 truncado. (Lê +0x3f do jogo mesmo sem jogo, como a original.)
-pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, faixa: u32, jogo: usize) -> u8 {
-    let f = faixa as u8 as i8 as i32;
+pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, jogo: usize) -> u8 {
+    let f = band as u8 as i8 as i32;
     let d: i32 = if jogo != 0 {
         core::ptr::read_unaligned((jogo + 0x2a) as *const u16) as i32
     } else {
@@ -436,10 +436,10 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, faixa: u32,
 }
 
 /// Comparador: pelo valor.
-pub(crate) unsafe extern "thiscall" fn comparar_get_temperature(this: usize, faixa: u32, jogo: usize) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(IDX_GET_TEMPERATURE)(this, faixa, jogo);
-    let n = get_temperature(this, faixa, jogo);
-    PLACAR.registrar(r == n, || format!("get_temperature(faixa {}, jogo {:#x}) original={} rust={}", faixa as u8 as i8, jogo, r as i8, n as i8));
+pub(crate) unsafe extern "thiscall" fn comparar_get_temperature(this: usize, band: u32, jogo: usize) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(IDX_GET_TEMPERATURE)(this, band, jogo);
+    let n = get_temperature(this, band, jogo);
+    PLACAR.registrar(r == n, || format!("get_temperature(band {}, jogo {:#x}) original={} rust={}", band as u8 as i8, jogo, r as i8, n as i8));
     r
 }
 

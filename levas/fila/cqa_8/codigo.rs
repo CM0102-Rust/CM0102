@@ -79,12 +79,12 @@ unsafe fn match_bonuses_for_slot(jogo: usize, contrato: usize, vaga: usize, pala
 }
 
 /// { 0x4ca6d0 } (thiscall, ret 8, contract_manager.cpp): `CONTRACT_MANAGER::update_after_match(jogo, resumo)`, pelo
-/// match_wrap_up da partida do dia (0x6b5f00). Com +0x40 e +0x41 do jogo, o vencedor pelo placar (+0x47/+0x48; com +0x47 =
+/// fechamento da partida do dia (0x6b5f00). Com +0x40 e +0x41 do jogo, o vencedor pelo placar (+0x47/+0x48; com +0x47 =
 /// −1, +0x43/+0x44) e uma cópia dos 50 do elenco (+0xd7) de cada clube. Primeiro, por lado (clube B do parceiro
 /// 0x540a50 e o lado pulado pela reputação ficam de fora), as 20 vagas do resumo (+0x190 + lado × 0x625, 0x49 bytes):
-/// fora das seleções, o contrato com o clube (0x4cf5f0) paga os bônus (match_bonuses_for_slot); os minutos (+0x30 dos starters,
+/// fora das seleções, o contrato com o clube (0x4cf5f0) paga os bônus (match_bonuses_for_slot); os minutos (+0x30 dos titulares,
 /// 90 sem valor; 90 − +0x32 dos reservas) mudam a felicidade (+0x3d, minutos × 10 / 90, presa em 50 abaixo de 50) ou,
-/// nas seleções, o +9 do registro de 79 bytes; fora das seleções e dos amistosos, os reservas e os starters de pouco
+/// nas seleções, o +9 do registro de 79 bytes; fora das seleções e dos amistosos, os reservas e os titulares de pouco
 /// jogo sorteiam (2 × sorteio(30)) contra os minutos: a felicidade cai 4, +0x3e conta e a moral cai (0x4cb250); senão
 /// +0x3f conta (com 5 ou mais, fora do clube humano, a marca de elenco 1 em 0x540980) e a moral sobe (0x4cb0a0). O
 /// vencedor (e o perdedor) sorteia(21 − +0x57) abaixo de 4 para +3 (−3) na moral +0x44; a pessoa sai da cópia do
@@ -228,7 +228,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
     let trocar: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(0x4cbd20usize);
     for lado in 0..2usize {
         let (clube, outro) = match_clubs_by_side(jogo, lado);
-        let limite: i8 = if parceiro(clube, core::ptr::null_mut(), 1) != 0 { 14 } else { 8 };
+        let limit: i8 = if parceiro(clube, core::ptr::null_mut(), 1) != 0 { 14 } else { 8 };
         if skip_side_by_reputation(jogo, lado) {
             continue;
         }
@@ -264,7 +264,7 @@ unsafe extern "thiscall" fn update_after_match(this: usize, jogo: usize, resumo:
             if *p.add(0x3e) != 100 {
                 *p.add(0x3e) = (*p.add(0x3e)).wrapping_add(1);
             }
-            if cqa8_b(contrato + 0x3e) >= limite && humano(clube, 0, 1, 0, 0) == 0 && parceiro(clube, core::ptr::null_mut(), 1) == 0 {
+            if cqa8_b(contrato + 0x3e) >= limit && humano(clube, 0, 1, 0, 0) == 0 && parceiro(clube, core::ptr::null_mut(), 1) == 0 {
                 let l = lugar(this, pessoa, clube);
                 if l == 2 || l == 4 {
                     trocar(this, pessoa, clube, 0);

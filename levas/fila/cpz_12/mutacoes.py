@@ -1,6 +1,6 @@
 # Mutacoes (cpz_12). Toda transferencia com valor paga a compra (0x599890) e recebe a venda (0x599800); o jogador que
 # muda de clube ou aceita a oferta de contrato recebe as luvas (0x5998e0). Sem a venda no saldo, sem a compra tirada
-# do saldo ou sem as luvas tiradas, o saldo dos clubes envolvidos muda: a verba de transferencias (0x598800), a faixa
+# do saldo ou sem as luvas tiradas, o saldo dos clubes envolvidos muda: a verba de transferencias (0x598800), a band
 # das financas (0x5986b0) e os eventos da semana (divida, injecao) mudam, e com eles as ofertas seguintes. Escapam so
 # se nenhuma transferencia com valor (ou com luvas) acontecer ate 2002-06-01 (os contadores mostram).
 MUTACOES = [

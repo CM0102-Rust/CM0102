@@ -207,7 +207,7 @@ unsafe extern "thiscall" fn comparar_build_international_date_table(this: usize)
 /// ano da Copa: o primeiro a partir do de hoje ([0xae2c92]) com (ano − 2) múltiplo de 4. Cada data (+0x34ec, conta
 /// +0x34f0) ganha a data em +3 pela 0x54a130 (lea ecx, entrada + 3; 4 pushes; sem add esp -> thiscall(data, dia, mês,
 /// ano, dia da semana), ret 0x10) com o dia (+1) e o dia da semana (+0) em byte com sinal, o mês (+2) e o ano da Copa
-/// mais o +0xb (com sinal), menos 4 se pass_ball de 3 anos à frente de hoje (palavras). Depois o qsort pela data (0x945333:
+/// mais o +0xb (com sinal), menos 4 se passar de 3 anos à frente de hoje (palavras). Depois o qsort pela data (0x945333:
 /// 4 pushes; add esp, 0x10 -> cdecl(tabela, conta, 0x14, 0x5cc610)).
 unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
     let hoje = cqb3_w(0xae2c92);
@@ -223,7 +223,7 @@ unsafe extern "thiscall" fn resolve_international_dates(this: usize) {
         let mut ano = (cqb3_b(e + 0xb) as i8 as i16 as u16).wrapping_add(ciclo as u16);
         if ano as i32 - hoje as i32 > 3 {
             crate::comparacao::ramo("cqb_3 ano para tras");
-            ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se pass_ball de 3 anos à frente
+            ano = ano.wrapping_add(0xfffc); // cqb3: menos 4 se passar de 3 anos à frente
         }
         let com_sinal = |o: usize| cqb3_b(e + o) as i8 as i16 as u16 as u32;
         // ponytail: o dia e o dia da semana vão sobre o edx de metade alta zerada (como a original); o mês e o ano vão

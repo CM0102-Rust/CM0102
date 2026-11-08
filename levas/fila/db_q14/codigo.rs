@@ -2,7 +2,7 @@
 
 /// { 0x539b90 } (cdecl, Database.cpp): um primeiro nome (linha de 60 bytes em [0xae23f0]) pelo peso.
 /// Nação com mais de 15 primeiros nomes (`nation_name_index` +0x18): 3 sorteios na faixa dela,
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum pass_ball). Sem nação ou com
+/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com
 /// até 15: sorteio na tabela inteira ([0xae2398], no máximo 0x7fff). Só o rand() da CRT.
 unsafe extern "C" fn database_pick_first_name_by_weight(nacao: usize) -> usize {
     let linha = |i: i32| (*(0xae23f0 as *const usize)).wrapping_add((i as usize).wrapping_mul(60));

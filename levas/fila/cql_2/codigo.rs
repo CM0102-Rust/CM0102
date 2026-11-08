@@ -142,16 +142,16 @@ unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
     reg
 }
 
-/// As vagas da escalação de referência da 0x859fe0 para a 0x6e2000: os 11 starters e os 9 reservas, cada um com as
+/// As vagas da escalação de referência da 0x859fe0 para a 0x6e2000: os 11 titulares e os 9 reservas, cada um com as
 /// posições que servem (máscaras: 1 goleiro, 4/0x10/0x40 os setores, 0x80..0x800 as faixas [inferência]).
 const CQL2_VAGAS: [u16; 20] = [
-    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os starters
+    0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // os reservas
 ];
 
 /// { 0x859fe0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::assign_club_squad_numbers`): numera o elenco do
 /// clube `c`. Junta os jogadores do elenco (+0xd7, 50 vagas; só os da tabela das pessoas com contrato) e os do clube
-/// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 starters e os 9 reservas de referência
+/// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 titulares e os 9 reservas de referência
 /// (0x6e2000, cdecl de 15, com `CQL2_VAGAS` e os modos 0x5840) e põe os outros depois, nas vagas livres; ordena os 30
 /// últimos pela idade (qsort 0x945333 com a 0x540130) e junta a lista. Depois, na ordem: do 22º em diante, quem não tem
 /// contrato com o clube (0x4cf5f0) ou tem contrato do tipo 6 ou 7 (+0x4f, nibble alto) [inferência: juvenil e amador]

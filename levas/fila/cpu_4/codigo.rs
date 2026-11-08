@@ -52,18 +52,18 @@ unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, no_
     let mut t = [0u8; 8];
     diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
     let pessoa = cpu4_d(0xae23bc).wrapping_add(cpu4_d(c).wrapping_mul(110));
-    let limite: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade
+    let limit: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade
     if !anos.is_null() {
-        *anos = limite;
+        *anos = limit;
     }
     let mut l = [0u8; 8];
     let p = diferenca(0xae2c90, t.as_mut_ptr(), d0, d1);
     core::ptr::copy_nonoverlapping(p as *const u8, l.as_mut_ptr(), 8);
     let a = u16::from_le_bytes([l[2], l[3]]) as i32;
-    if a < limite as i32 {
+    if a < limit as i32 {
         return 1; // cpu4: dentro do periodo
     }
-    if !no_limite.is_null() && a == limite as i32 && u16::from_le_bytes([l[0], l[1]]) == 0 {
+    if !no_limite.is_null() && a == limit as i32 && u16::from_le_bytes([l[0], l[1]]) == 0 {
         *no_limite = 1;
     }
     0

@@ -11,7 +11,7 @@ unsafe fn set_screen_param(k: u32, v: usize) {
 }
 
 /// { 0x71b4a0 } (cdecl, match_screens.cpp): abre a tela de detalhes da partida `partida` (0x7fe600 com a
-/// montagem 0x71b630, a resposta 0x71bdc0 e o match_wrap_up 0x71c170) e grava os parâmetros dela (a
+/// montagem 0x71b630, a resposta 0x71bdc0 e o fechamento 0x71c170) e grava os parâmetros dela (a
 /// partida em 0x1e; a aba 2 começa em 6).
 unsafe extern "C" fn open_match_details(partida: usize) {
     crate::comparacao::ramo("telas abrir os detalhes");

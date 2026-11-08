@@ -182,8 +182,8 @@ unsafe extern "C" fn fill_team_stats_rows(modo: u32, area: usize) {
                         let pessoa = (*(0xae23bc as *const usize)).wrapping_add(id as usize * 110);
                         if confere(pessoa, n1, n2, n3, reg + 0x1a4) != 0 {
                             let v = if lado == 0 { *(dados as *const i32) } else { *((dados + 4) as *const i32) };
-                            let limite = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
-                            botao = (if v >= limite { 0x7dc } else { 0x7d7 }, pessoa);
+                            let limit = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
+                            botao = (if v >= limit { 0x7dc } else { 0x7d7 }, pessoa);
                         }
                     }
                     if core::ptr::read_unaligned((reg + 0x194) as *const u32) == core::ptr::read_unaligned((dados + 0x3c) as *const u32) {
@@ -609,8 +609,8 @@ unsafe extern "C" fn refresh_latest_scores_rows() {
                                 let pessoa = (*(0xae23bc as *const usize)).wrapping_add(id as usize * 110);
                                 if confere(pessoa, n98, na0, na4, reg + 0x1a4) != 0 {
                                     let v = if lado == 0 { i32_em(ev) } else { i32_em(ev + 4) };
-                                    let limite = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
-                                    ligar(sm, it, if v >= limite { 0x7dc } else { 0x7d7 });
+                                    let limit = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
+                                    ligar(sm, it, if v >= limit { 0x7dc } else { 0x7d7 });
                                     dado(sm, it, pessoa);
                                 }
                             }

@@ -1,6 +1,6 @@
 # Lote 5c da carreira ampla (28/10/2026): as escapadas antigas (levas 166 a 226) numa carreira que passa da Copa e de
 # janeiro de 2003; em paralelo ao 5b, noutra pasta (--sem-trava, autorizado pelo Lucas).
-# Uso: python mutacoes.py mutacoes\lote_ampla_5c.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limite 14400 --sem-trava
+# Uso: python mutacoes.py mutacoes\lote_ampla_5c.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limit 14400 --sem-trava
 MUTACOES = [
     ('c_k0_b', '                if v > 0x4b { 1 } else if v >= 0x28 { 2 } else if v >= 10 { 3 } else { baixo(-30) }', '                if v > 0x4b { 1 } else if v >= 0x28 { 3 } else if v >= 10 { 3 } else { baixo(-30) }'),
     ('c_tipo5_b', '    if *((c + 0x35) as *const u8) & 0x3f == 5 {\n        return 8;', '    if *((c + 0x35) as *const u8) & 0x3f == 5 {\n        return 7;'),

@@ -150,11 +150,11 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
         return 0;
     }
     let x = cpy12_w(clube + 0x80) as f64 * read_f64_at(0x968918);
-    let mut limite = match_pl_ftol(x * x);
-    if limite < 0x249f0 {
-        limite = 0x249f0;
-    } else if limite > 0x1e8480 {
-        limite = 0x1e8480;
+    let mut limit = match_pl_ftol(x * x);
+    if limit < 0x249f0 {
+        limit = 0x249f0;
+    } else if limit > 0x1e8480 {
+        limit = 0x1e8480;
     }
     if comprando as u8 == 0 {
         let contar: unsafe extern "C" fn(usize, u32, u32) -> u8 = core::mem::transmute(0x53c590usize);
@@ -174,7 +174,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
             pedido = pelo_contrato;
         }
         let pelo_atual = player_value(j, cpy12_d(j + 0x39), 0);
-        if pedido <= limite || pelo_atual < valor {
+        if pedido <= limit || pelo_atual < valor {
             return 0;
         }
         let (p, v) = (pedido as f64, valor as f64);
@@ -204,7 +204,7 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
         crate::comparacao::ramo("cpy_12 diretoria sem verba");
         return 0x800;
     }
-    if valor <= limite {
+    if valor <= limit {
         return 0;
     }
     let pelo_clube = player_value(j, clube, 0);
@@ -214,13 +214,13 @@ unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j: usize, clu
     if fin == 0 {
         return 0;
     }
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
-    let k = match faixa(fin) {
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
+    let k = match band(fin) {
         2 => read_f64_at(0x96d1f8),
         1 => read_f64_at(0x96d1f0),
         _ => read_f64_at(0x968ea0),
     };
-    let teto = match_pl_ftol(limite as f64 * read_f64_at(0x96a5d0) + menor as f64 + k);
+    let teto = match_pl_ftol(limit as f64 * read_f64_at(0x96a5d0) + menor as f64 + k);
     if !(valor as f64 * read_f64_at(0x96d1e8) > teto as f64) {
         return 0;
     }

@@ -1,7 +1,7 @@
 // ---------- %%LEVA%%a leva: o fim das estatísticas da partida: o construtor (com a conferência do CD) e o destrutor (match_stats.cpp) ----------
 
 /// { 0x729000 } (thiscall, ret 8, match_stats.cpp): o construtor das estatísticas da partida.
-/// Confere o CD: entre as units_digit (GetLogicalDriveStringsA, 200) a primeira de CD (GetDriveTypeA 5)
+/// Confere o CD: entre as unidades (GetLogicalDriveStringsA, 200) a primeira de CD (GetDriveTypeA 5)
 /// com "<raiz>cm0102.exe" (0x4c0aa0; nas outras fecha a busca, 0x4c0c10); sem ela, a caixa "Insert
 /// CD" e tenta de novo, para sempre. Com `zip` e a carga do save (0x72aa80) pronto; senão o índice de
 /// `n` entradas (+4, [this] com n × 12 bytes; sem memória, erro 0x62 e o jogo fecha), +0x1c = n, os
@@ -38,7 +38,7 @@ unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: usize, n: i
     let qualquer_unidade = *(0x729089 as *const u8) == 0x90;
     let sempre_achou = *(0x7290cb as *const u8) != 0x85; // o original tem `test eax, eax` (85 c0); qualquer outra coisa é patch sem CD (xor 31 c0 ou 33 c0)
     'cd: loop {
-        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de units_digit
+        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
         // (mais de 50 letras), impossível
         let mut lista = [0u8; 0x100];
         if units_digit(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
@@ -56,7 +56,7 @@ unsafe extern "thiscall" fn construct_match_stats(estat: usize, zip: usize, n: i
                     }
                     fechar_busca(ach);
                 }
-                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 units_digit
+                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
                 i += 4;
                 if lista[i] == 0 {
                     break;

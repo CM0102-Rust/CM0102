@@ -126,12 +126,12 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
             if b == 3 && cqb4_sortear(4) == 0 {
                 b = 2;
             }
-            let mut faixa = ((cqb4_w(clube + 0x80) as i32 / 500) as u8).wrapping_add(b);
+            let mut band = ((cqb4_w(clube + 0x80) as i32 / 500) as u8).wrapping_add(b);
             let quantos = (cqb4_sortear(3) as u8).wrapping_add(4) as i8; // cqb4: quantos amistosos
             let mut j = 0i8;
             while cqb4_c(cand + 4) < quantos && j < quantos {
                 // ponytail: a original empurra o dword do local da faixa (os bytes altos são sobra); a 0x5c4cb0 só lê o byte
-                let opp = adversario(this, cand, entradas, conta, faixa as u32, 0);
+                let opp = adversario(this, cand, entradas, conta, band as u32, 0);
                 let marcado = if opp != 0 {
                     crate::comparacao::ramo("cqb_4 adversario achado");
                     if cqb4_c(cand + 5) > cqb4_c(opp + 5) { // cqb4: o de faixa maior em casa
@@ -143,8 +143,8 @@ unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entradas: usize, o
                     1
                 };
                 if marcado != 0 {
-                    let f = match_pl_ftol(faixa as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
-                    faixa = if (f as i8) < 1 { 1 } else { f };
+                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8;
+                    band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);
             }
@@ -213,7 +213,7 @@ unsafe extern "thiscall" fn add_tournament(this: usize, anfitriao: usize, tipo: 
     t
 }
 
-/// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido pass_ball) e a devolução.
+/// Comparador da 0x5c6e00: lado a lado no torneio livre (0x69 bytes, mais o que um nome comprido passar) e a devolução.
 unsafe extern "thiscall" fn comparar_add_tournament(this: usize, anfitriao: usize, tipo: u32, inicio: usize, a: u32, b: u32, c: u32, d: u32, e: u32, convidados: usize, nome: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, u32, u32, u32, usize, usize) -> usize>(%%I1%%);
     let t = free_tournament_slot(this);

@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_init(
 /// (0x5e42b0); área que abre por cima guarda o fundo (0x5e3dd0); desenha o painel (0x5e5df0). Área só
 /// de grade (0x80000): as linhas da grade (0x5e3730, cor [0xae317e]) e fim. Nas outras: guarda o fundo
 /// da barra de rolagem, põe cada item à mostra na sua célula (as grades +0x1c/+0x10c e +0x94/+0x184,
-/// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até pass_ball da última
+/// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até passar da última
 /// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
 /// erro Area.cpp 245 e a organização 0x403350).
 pub(crate) unsafe extern "thiscall" fn draw(area: usize, redesenhar: u32) {

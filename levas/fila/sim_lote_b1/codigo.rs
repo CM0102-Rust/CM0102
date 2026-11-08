@@ -229,12 +229,12 @@ unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linha: usize, s
         return 0xff;
     }
     let descem = d2.wrapping_add(d1) as i8;
-    let limite = clubes as i32 - descem as i32;
-    if (pos as i32) < limite {
+    let limit = clubes as i32 - descem as i32;
+    if (pos as i32) < limit {
         return decidir(clubes.wrapping_sub(descem as i16), clubes).unwrap_or(0xff);
     }
     let mut i = 0i16;
-    while (i as i32) < limite {
+    while (i as i32) < limit {
         let r = league_row(liga, i as i32);
         if *((r + 0x37) as *const u8) == 0xff {
             if let Some(m) = ver(r) {

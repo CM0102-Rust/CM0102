@@ -120,7 +120,7 @@ unsafe extern "C" fn refresh_match_stats_values() {
 /// zero (o primeiro só na partida). Pelo lado do parâmetro 0xa (i8): a posse em três (+0xc, +0x16,
 /// +0x20, "%d%%" truncado a i8; o terceiro é 100 − os outros) no item do parâmetro 0xb; o tempo de bola
 /// em jogo (+0x2a × 60 / 11 segundos, vazio no lado 4); as cores dos dois clubes (0x53b640 com o
-/// kit +0x152 e +0x777); as três zonas do campo (+0x143, +0x148, +0x14d; 50 sem valor ou sem a
+/// uniforme +0x152 e +0x777); as três zonas do campo (+0x143, +0x148, +0x14d; 50 sem valor ou sem a
 /// marca +0x768/+0x76d/+0x772) em barras entre os parâmetros 0x16 e 0x18 na altura do 0x19; e a barra
 /// da posse (+0x13e/+0x763) de 0xd4 a 0x2a6 na altura do parâmetro 0xc. No fim guarda o estado.
 unsafe extern "C" fn refresh_action_zones_values() {

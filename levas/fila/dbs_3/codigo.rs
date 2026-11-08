@@ -20,7 +20,7 @@ unsafe fn computed_player_attribute(pessoa: usize, atributo: u32) -> i32 {
     f(pessoa, dbs3_u32(pessoa + 0x61), atributo) as i8 as i32
 }
 
-/// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), throw_in (+0x11, com +0x19
+/// Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), lateral (+0x11, com +0x19
 /// ou com +0x17/+0x18), zagueiros (+0x12/+0x13 sem +0x17/+0x18 a 15), meias (+0x14, +0x15). `bits` = os valores
 /// de cada caso na ordem; mais o da soma das dez posições (+0x10..+0x19) acima de 110.
 unsafe fn natural_position_bits(j: usize, bits: [u32; 7], soma: u32) -> u32 {
@@ -138,8 +138,8 @@ unsafe extern "C" fn staff_get_player_strength_flags(pessoa: usize, outro: usize
         }
     }
     let v = m(2, 0x16);
-    let limite = 1400 - dbs3_i16(j() + 0xb) / 10;
-    if !(limite as f64 >= v) {
+    let limit = 1400 - dbs3_i16(j() + 0xb) / 10;
+    if !(limit as f64 >= v) {
         let a = m(6, 2) as f32;
         let c = m(6, 1) as f32;
         let r = sortear(3);

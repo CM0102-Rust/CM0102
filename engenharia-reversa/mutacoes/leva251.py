@@ -22,7 +22,7 @@ MUTACOES = [
     ('cpo_gratidao_nao_sobe', '*((ficha + 0x44) as *mut u8) += 1;', '// mutacao: sem subir +0x44', 'cpo_7 gratidao sobe'),
     ('cpo_gratidao_sem_sorteio_3', 'crate::comparacao::ramo("cpo_7 gratidao sorteio 3");\n            sorteio(3)', 'crate::comparacao::ramo("cpo_7 gratidao sorteio 3");\n            0 // mutacao: sem o sorteio', 'cpo_7 gratidao sorteio 3'),
     ('cpo_montar_vaga', 'if serve(p, vaga) == 0 {', 'if serve(p, vaga ^ 1) == 0 { // mutacao: a vaga vizinha', 'cpo_8 montar listas'),
-    ('cpo_ordenar_faixa', 'if k != 0 && faixa(k) == 0 {', 'if k != 0 { // mutacao: sem a faixa do vencimento', 'cpo_8 faixa do contrato'),
+    ('cpo_ordenar_faixa', 'if k != 0 && band(k) == 0 {', 'if k != 0 { // mutacao: sem a faixa do vencimento', 'cpo_8 faixa do contrato'),
     ('cpo_interessados_valor', '&& valor > read_i32(jogador + 0x52) {', '&& valor <= read_i32(jogador + 0x52) { // mutacao: invertida', 'cpo_8 clube interessado'),
     ('cpo_lista_pela_pessoa', 'insert_sorted_pair(this, 0, 0x10, pessoa, clube, 0x757ea0); // o vetor pela pessoa', '// mutacao: sem o vetor pela pessoa', 'cpo_9 nova entrada'),
     ('cpo_prever_negocia', 'crate::comparacao::ramo("cpo_9 negocia");\n    1\n}', 'crate::comparacao::ramo("cpo_9 negocia");\n    2 // mutacao: recusa\n}', 'cpo_9 negocia'),

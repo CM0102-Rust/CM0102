@@ -2,7 +2,7 @@
 # taticas da IA e as pre-definidas na criacao do jogo). As posicoes de cada vaga, refeitas pela casa guardada
 # (0x5b3560), decidem a escalacao da IA (os jogadores por posicao), que entra nas partidas simuladas.
 # - A casa da vaga gravada na fase 1 em vez da 0 (as casas da fase 1 mudam e as posicoes sao refeitas por elas).
-# - A casa da vaga gravada na faixa 1 em vez da 0.
+# - A casa da vaga gravada na band 1 em vez da 0.
 # - A casa lida da fase 1 e gravada na fase 0.
 MUTACOES = [
     ('cqg8_casa_na_fase_1', 'refazer(this, vaga, 0, 0, c); // cqg8: as posições refeitas pela casa',

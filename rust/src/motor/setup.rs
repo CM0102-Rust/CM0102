@@ -170,7 +170,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
     let qualquer_unidade = exigir && *(0x82aac4 as *const u8) == 0x90;
     let sempre_achou = exigir && *(0x82ab07 as *const u8) != 0x85;
     loop {
-        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de units_digit
+        // ponytail: o buffer nasce zerado; a original só leria lixo com mais de 200 bytes de unidades
         let mut lista = [0u8; 0x100];
         if units_digit(200, lista.as_mut_ptr()) != 0 && lista[0] != 0 {
             let mut i = 0usize;
@@ -196,7 +196,7 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
                     }
                     fechar_busca(ach);
                 }
-                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 units_digit
+                // ponytail: a original anda com um i8 (passos de 4): só passaria de 127 com mais de 32 unidades
                 i += 4;
                 if lista[i] == 0 {
                     break;

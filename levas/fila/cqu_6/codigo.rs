@@ -239,13 +239,13 @@ unsafe fn cqu6_bloco(this: usize, de: i32, lista: &[usize], n: i32) {
 /// das vagas de baixo vêm a Segunda, a Primeira e os continentais, nessa ordem. Devolve 1.
 unsafe fn cqu6_inscritos(this: usize) -> i32 {
     let base = cqu6_d(0xae23b4);
-    let limite = || (cqu6_d(0xae235c) as i32).wrapping_sub((cqu6_d(0xae2350) as i32).wrapping_mul(2));
+    let limit = || (cqu6_d(0xae235c) as i32).wrapping_sub((cqu6_d(0xae2350) as i32).wrapping_mul(2));
     let mut continentais = [0usize; 20];
     let mut primeira = [0usize; 20];
     let mut segunda = [0usize; 22];
     let (mut nc, mut np, mut ns) = (0i16, 0i16, 0i16);
     let mut i = 0i32;
-    while i < limite() {
+    while i < limit() {
         let c = base + i as usize * 0x245;
         let nac = cqu6_d(c + 0x53);
         if nac != 0 && cqu6_d(nac) == cqu6_d(0x9cf488) && !cqu6_time_b(c) {
@@ -287,7 +287,7 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
         }
         let mut n = 0i32;
         let mut i = 0i32;
-        while i < limite() {
+        while i < limit() {
             if n >= 0x78 {
                 break;
             }
@@ -311,7 +311,7 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
         soltar(lista);
     } else {
         let mut i = 0i32;
-        while i < limite() {
+        while i < limit() {
             let c = base + i as usize * 0x245;
             if cqu6_de_baixo(c) && !cqu6_time_b(c) && cqu6_d(c + 0x1db) as i32 == -1 {
                 k += 1;
@@ -323,10 +323,10 @@ unsafe fn cqu6_inscritos(this: usize) -> i32 {
             i += 1;
         }
     }
-    if faltam_w - k > 0 && limite() > 0 {
+    if faltam_w - k > 0 && limit() > 0 {
         crate::comparacao::ramo("cqu_6 completar com os sem divisao");
         let mut i = 0i32;
-        while i < limite() {
+        while i < limit() {
             let c = base + i as usize * 0x245;
             let nac = cqu6_d(c + 0x53);
             if nac != 0 && cqu6_d(nac) == cqu6_d(0x9cf488) && !cqu6_time_b(c) && cqu6_d(c + 0x1db) as i32 == -1

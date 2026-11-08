@@ -2,7 +2,7 @@
 # expectativas entram na confianca da diretoria pelas partidas e nas demissoes; os sorteios do presidente mudam a contagem
 # de sorteios da carreira.
 # - A meta parte da posicao de perigo + 1 (todos os clubes com linha na liga).
-# - As confiancas abaixo de 6500 voltam com 6x em vez de 5x (todos os clubes nessa faixa).
+# - As confiancas abaixo de 6500 voltam com 6x em vez de 5x (todos os clubes nessa band).
 # - O primeiro sorteio do presidente passa de 50 a 60 (os clubes com presidente fora da marca 1 de +2).
 MUTACOES = [
     ('cqc9_meta_mais_1', '    por(cqc9_u(lg + 0x72) as i32); // cqc9: a meta pela posição de perigo',

@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: a aprovação final da oferta pelos clubes, o match_wrap_up da oferta aprovada e o acerto das cláusulas das transferências anteriores (transfer_manager.cpp) ----------
+// ---------- %%LEVA%%a leva: a aprovação final da oferta pelos clubes, o fechamento da oferta aprovada e o acerto das cláusulas das transferências anteriores (transfer_manager.cpp) ----------
 
 unsafe fn cpw2_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)

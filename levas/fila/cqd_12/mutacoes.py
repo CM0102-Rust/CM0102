@@ -9,8 +9,8 @@ MUTACOES = [
      'cqd_12 com lei Bosman'),
     ('cqd12_fator_invertido', '    (cqd12_i(vaga + 3) as f64 * fator > cqd12_i(vaga + 0xb) as f64) as u32',
      '    (cqd12_i(vaga + 3) as f64 * fator < cqd12_i(vaga + 0xb) as f64) as u32 // mutacao: comparacao invertida',
-     'cqd_12 faixa pelo fator'),
+     'cqd_12 band pelo fator'),
     ('cqd12_longe_recusa', '            return 1; // cqd12: as faixas 9-14',
      '            return 0; // mutacao: as faixas 9-14 recusam',
-     'cqd_12 faixa longe'),
+     'cqd_12 band longe'),
 ]

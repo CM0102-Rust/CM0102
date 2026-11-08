@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: as ofertas em espera no match_wrap_up da janela, a notícia das expectativas da federação e a do protesto da torcida (transfer_manager.cpp, manager_manager.cpp) ----------
+// ---------- %%LEVA%%a leva: as ofertas em espera no fechamento da janela, a notícia das expectativas da federação e a do protesto da torcida (transfer_manager.cpp, manager_manager.cpp) ----------
 
 unsafe fn cpv3_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)

@@ -63,8 +63,8 @@ unsafe extern "C" fn mostrar(entrada: u32) {
 pub unsafe fn montar(tramp: usize, dentro: bool) -> usize {
     // CM_SONDA_FAIXA=ini-fim[/de-ate]: as chamadas vão na mesma variável (uma variável a mais desloca a heap e a carreira)
     let texto = win::texto_ambiente("CM_SONDA_FAIXA");
-    let (faixa, chamadas) = texto.split_once('/').unwrap_or((&texto, ""));
-    let (ini, fim) = faixa.split_once('-').map(|(a, b)| (hex(a) & !3, hex(b) & !3)).unwrap_or((0, 0));
+    let (band, chamadas) = texto.split_once('/').unwrap_or((&texto, ""));
+    let (ini, fim) = band.split_once('-').map(|(a, b)| (hex(a) & !3, hex(b) & !3)).unwrap_or((0, 0));
     let veneno = hex(&win::texto_ambiente("CM_SONDA_VENENO"));
     let (de, ate) = chamadas.split_once('-').map(|(a, b)| (a.parse().unwrap_or(1u32), b.parse().unwrap_or(u32::MAX))).unwrap_or((1, u32::MAX));
     let mostra = win::ambiente("CM_SONDA_MOSTRAR");
@@ -144,7 +144,7 @@ pub unsafe fn montar(tramp: usize, dentro: bool) -> usize {
     c.extend([0xff, 0x25]); c.extend(a(&raw mut ALVO));
     assert!(c.len() <= 512);
     core::ptr::copy_nonoverlapping(c.as_ptr(), codigo as *mut u8, c.len());
-    linha(&format!("sonda_pilha: {}, faixa {:#x}..{:#x} abaixo da entrada com {:#x}, chamadas {}..{}",
+    linha(&format!("sonda_pilha: {}, band {:#x}..{:#x} abaixo da entrada com {:#x}, chamadas {}..{}",
         if dentro { "dentro" } else { "depois" }, ini, fim, veneno, de, ate));
     codigo
 }
@@ -181,7 +181,7 @@ pub unsafe fn instalar_lista() {
         let mut c: Vec<u8> = original.clone();
         c.push(0xe9);
         c.extend(((end as usize + n) as i32).wrapping_sub((tramp + c.len() + 4) as i32).to_le_bytes());
-        // trecho: push eax/ecx/edi (na própria pilha: outra thread pode pass_ball pela mesma rotina); lea edi, [esp − 4];
+        // trecho: push eax/ecx/edi (na própria pilha: outra thread pode passar pela mesma rotina); lea edi, [esp − 4];
         // mov ecx, quadro/4; mov eax, veneno; std; rep stosd; cld (de cima para baixo: passa pela página de guarda na
         // ordem, como o __chkstk); pop; jmp trampolim. O quadro envenenado fica 12 bytes abaixo da entrada.
         let trecho = tramp + c.len();

@@ -1,5 +1,5 @@
 # Mutacoes. A forma inicial com 74 por dia em vez de 75 (todos os jogadores comecam com outra forma: as escalacoes e
-# as partidas mudam; comparando, o lado a lado acusa). As lesoes iniciais com 1 em 99 (o sorteio muda de faixa e de
+# as partidas mudam; comparando, o lado a lado acusa). As lesoes iniciais com 1 em 99 (o sorteio muda de band e de
 # sequencia: outra carreira; so o modo Rust e a carreira, o comparador roda a original). As listas dos jovens com os
 # clubes das nacoes com +0x11c (o regen dessas nacoes acha clube na lista; comparando, o plano usa a mesma regra e a
 # original nao: a lista difere). As tres rodam na criacao da carreira automatica.

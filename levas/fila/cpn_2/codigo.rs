@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: a caixa do técnico humano: respond a todas as notícias, se há notícia pendente e o texto num campo da notícia (news.cpp) ----------
+// ---------- %%LEVA%%a leva: a caixa do técnico humano: responder a todas as notícias, se há notícia pendente e o texto num campo da notícia (news.cpp) ----------
 
 unsafe fn cpn2_d(a: usize) -> usize {
     core::ptr::read_unaligned(a as *const usize)

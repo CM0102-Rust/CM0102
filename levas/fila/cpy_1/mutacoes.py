@@ -1,7 +1,7 @@
 # Mutacoes (cpy_1), na conta das vagas com lance (0x844540), que a avaliacao das listas (0x84a020, 210 mil chamadas
 # ate 2002-06-01) faz com a posicao 0xb antes de decidir os lances do clube do computador. Contar tambem o alvo sem
 # lance, ou o lance de outra posicao, ou contar cada vaga em dobro muda a conta que a 0x84a020 guarda e compara com o
-# limite de lances do clube: os lances e as transferencias da carreira mudam.
+# limit de lances do clube: os lances e as transferencias da carreira mudam.
 MUTACOES = [
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: alvo sem lance não conta',
      '            // mutacao: o alvo sem lance conta',

@@ -6,7 +6,7 @@ use super::*;
 /// o clube? So nas competicoes que contam (0x4b0700), com o bit 1 de +0xd9 e a rodada +0xa9 >= 24:
 /// a linha do clube (+0xb1, 0x3b bytes, +0x3e linhas) sem situacao +0x37 de 5, 2, 3, -2, -4 ou -5;
 /// numa copia da tabela (0x687710) preenchida (0x685f60) e ordenada (0x6827d0), o clube tem de estar
-/// na frente (+4 zero) e nenhum outro reaches-lo com os jogos que faltam (+0xa7 - +0x11 vezes os
+/// na frente (+4 zero) e nenhum outro alcanca-lo com os jogos que faltam (+0xa7 - +0x11 vezes os
 /// pontos por vitoria +0xc2, contra os pontos +0x19). A copia volta (0x687970).
 pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, clube: usize, partida: usize) -> u32 {
     if *((partida + 0x42) as *const u8) != 0xff {
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, clube: usize, 
 /// [pt] { 0x6be120 } (ret 4, match_eng.cpp) com o comentario injetado: narra a situacao da
 /// classificacao do lado. Grupo decidido (0x6854a0) ou mata-mata ja resolvido (0x6ce310 na rodada
 /// 0x82 ou 0x96): 0x2171/0x2170. Com +0x8ebb: 0x2120 se o lado esta na frente do agregado, senao
-/// 0x2121 quando a media do +0x1b dos starters e baixa e a forca (+0x80) do outro clube pesa. No fim,
+/// 0x2121 quando a media do +0x1b dos titulares e baixa e a forca (+0x80) do outro clube pesa. No fim,
 /// para o lado 1 sem +0x1a8: 0x2001 se o jogo ainda nao estiver decidido.
 pub(crate) unsafe fn comment_standing_with(this: usize, lado: u32, chamar: ChamarComentario) {
     let t = || *((this + 0x4792) as *const usize);
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_set_club_season_expectations(thi
 ///
 /// [pt] { 0x6831a0 } (thiscall, ret 0xc, league.cpp; this não é lido): `League::relegate_club_to_division(clube, divisão,
 /// _)`: a competição do clube (+0x57) vira a divisão e a anterior vai para +0x5b; as cláusulas de rebaixamento (0x4cd030
-/// push antiga; push clube; mov ecx, [0xae1050] -> thiscall, ret 8); se a divisão não é play (sem a tabela das
+/// push antiga; push clube; mov ecx, [0xae1050] -> thiscall, ret 8); se a divisão não é jogada (sem a tabela das
 /// competições [0xadadfc], sem divisão ou sem a competição do id dela) e o clube tem técnico humano que decide
 /// (0x600a50 push 0; push 0; push 1; push 1; push clube; add esp, 0x14 -> cdecl), o técnico sai (0x69b790 push 0; push
 /// 7; push 1; push clube; mov ecx, [0xb67a44] -> thiscall, ret 0x10).
@@ -3924,12 +3924,12 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(liga: usize, linh
         return 0xff;
     }
     let descem = d2.wrapping_add(d1) as i8;
-    let limite = clubes as i32 - descem as i32;
-    if (pos as i32) < limite {
+    let limit = clubes as i32 - descem as i32;
+    if (pos as i32) < limit {
         return decidir(clubes.wrapping_sub(descem as i16), clubes).unwrap_or(0xff);
     }
     let mut i = 0i16;
-    while (i as i32) < limite {
+    while (i as i32) < limit {
         let r = league_row(liga, i as i32);
         if *((r + 0x37) as *const u8) == 0xff {
             if let Some(m) = ver(r) {
@@ -4515,4 +4515,17 @@ pub(crate) unsafe extern "thiscall" fn comparar_limit_club_division_tier(this: u
         || limit_club_division_tier(this, valor, fora, dentro, baixar));
     PLACAR.registrar(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
         valor as u8 as i8, fora as u8, dentro as u8, baixar, mo, mr));
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_narrate_qualification(this: usize, lado: u32) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_NARRATE_QUALIFICATION);
+    if is_recording_top_level() {
+        call_recording(0x6be120, this, [lado, 0, 0, 0, 0], || {
+            o(this, lado);
+            0
+        });
+        return;
+    }
+    let (igual, n) = comparar_com_comentarios(|| o(this, lado), |c| comment_standing_with(this, lado, c));
+    PLACAR.registrar(igual, || format!("narrate_qualification({}) {} chamadas", lado as u8, n));
 }

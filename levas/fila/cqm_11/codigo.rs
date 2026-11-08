@@ -149,9 +149,9 @@ unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i32) {
     }
     let mut n = 0i32;
     let todos = || cqm11_d(0xae235c) as i32;
-    let limite = if cqm11_w(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
+    let limit = if cqm11_w(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
     enter_clubs_pass(this, &mut n, todos, true, |c, n| {
-        comp_id_at(c, 0x57) == Some(cqm11_d(0x9cf5d4)) && cqm11_d(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(cqm11_d(0x9cf5d8)) && n < limite
+        comp_id_at(c, 0x57) == Some(cqm11_d(0x9cf5d4)) && cqm11_d(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(cqm11_d(0x9cf5d8)) && n < limit
     });
     // a original testa o tamanho antes de cada clube: a passada para quando a lista chega a 16
     let mut i: i16 = 0;

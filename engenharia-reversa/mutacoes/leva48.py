@@ -9,5 +9,5 @@ MUTACOES = [
     ('c_neg', "    if i < 0 {\n        return 0;\n    }\n    (*(this", "    if i < -1 {\n        return 0;\n    }\n    (*(this"),
     ('c_80', "wrapping_add((80 * i) as usize)", "wrapping_add((79 * i) as usize)"),
     ('s_2', "wrapping_mul(2));", "wrapping_mul(3));"),
-    ('s_maior', "    (*(clube as *const i32) >= limite) as u32", "    (*(clube as *const i32) > limite) as u32"),
+    ('s_maior', "    (*(clube as *const i32) >= limit) as u32", "    (*(clube as *const i32) > limit) as u32"),
 ]

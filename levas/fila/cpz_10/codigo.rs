@@ -197,7 +197,7 @@ unsafe extern "thiscall" fn comparar_get_pundit_name(this: usize, tipo: u32, id:
 /// queue_manager_fa_complaint_story(clube, pessoa, tipo, a, b, c)`, pela disciplina (0x55e300) e pelo MANAGER_MANAGER
 /// (0x6a9e60, 0x6ab800). Clube com nação (+0x53) e técnico (+0xcf), e pessoa: a notícia 0x178e (o clube; o técnico, id
 /// e chaves, ou −1; o tipo; a pessoa, id e chaves; a; b; a nação ou −1; c) aos técnicos da nação (0x7863f0) se a
-/// reputação (+0x80) pass_ball de 4750, senão ao clube (0x7861e0).
+/// reputação (+0x80) passar de 4750, senão ao clube (0x7861e0).
 unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: usize, clube: usize, pessoa: usize, tipo: u32, a: u32, b: u32, c: u32) {
     let _ = this;
     if clube == 0 || cpz10_d(clube + 0x53) == 0 || cpz10_d(clube + 0xcf) == 0 || pessoa == 0 {

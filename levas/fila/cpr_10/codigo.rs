@@ -80,10 +80,10 @@ unsafe fn advance_time_slice(e: usize, f: i8) {
 /// entradas até `limite` (ano sem sinal, dia com sinal), a primeira de tipo 3 da pessoa é anulada (id −1; sem
 /// `alterar` só fica de fora) e a busca para; depois, a partir dessa posição (ou da conta − [this+0x1c], se maior),
 /// a de tipo 3 da pessoa. Devolve o endereço dela ou 0.
-unsafe fn find_type3_decision(this: usize, id: i32, limite: &[u8; 8], alterar: bool) -> usize {
+unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], alterar: bool) -> usize {
     let conta = cpr10_d(this + 0x14) as i32;
     let base = cpr10_d(this + 0xc);
-    let (la, ld) = (u16::from_le_bytes([limite[2], limite[3]]), i16::from_le_bytes([limite[0], limite[1]]));
+    let (la, ld) = (u16::from_le_bytes([limit[2], limit[3]]), i16::from_le_bytes([limit[0], limit[1]]));
     let mut i = cpr10_d(this + 0x18) as i32;
     let mut anulada = -1i32;
     while i < conta {
@@ -122,9 +122,9 @@ unsafe fn find_type3_decision(this: usize, id: i32, limite: &[u8; 8], alterar: b
 /// sobe (até a do dia [0xae2c88]); se o contrato da pessoa ([this] + 80 × índice do registro de 79 bytes) acaba antes
 /// de hoje + 180, hoje + 4 + sorteio(4). No fim, a data não passa de hoje + 14, e +0x1c sobe.
 unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: i32, vaga: i32) {
-    let mut limite = [0u8; 8];
-    injury_date_add_days(0xae2c90, 0xe, &mut limite);
-    let mut e = find_type3_decision(this, id, &limite, true);
+    let mut limit = [0u8; 8];
+    injury_date_add_days(0xae2c90, 0xe, &mut limit);
+    let mut e = find_type3_decision(this, id, &limit, true);
     let pessoa = cpr10_d(0xae23bc).wrapping_add((id as usize).wrapping_mul(0x6e));
     if e == 0 {
         crate::comparacao::ramo("cpr_10 nova decisao");
@@ -247,9 +247,9 @@ const CPR10_ESTATICAS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xa
 /// as datas estáticas, o vetor das decisões e +0x1c (a cópia sem contar).
 unsafe extern "thiscall" fn comparar_schedule_offer_decision(this: usize, id: i32, vaga: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32)>(%%I1%%);
-    let mut limite = [0u8; 8];
-    injury_date_add_days(0xae2c90, 0xe, &mut limite);
-    if find_type3_decision(this, id, &limite, false) == 0 {
+    let mut limit = [0u8; 8];
+    injury_date_add_days(0xae2c90, 0xe, &mut limit);
+    if find_type3_decision(this, id, &limit, false) == 0 {
         return o(this, id, vaga);
     }
     let mut reg = crate::aleatorio::REGIOES_DO_ESTADO.to_vec();

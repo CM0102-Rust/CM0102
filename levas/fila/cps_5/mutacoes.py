@@ -2,7 +2,7 @@
 # 50; o atrito com o tecnico quase nunca chega a queixa e fica sem mutacao). A parte do moral sem sorteio (o sorteador
 # anda uma vez a menos por jogador de um clube em sete, todo dia: tudo o que sorteia depois muda). O primeiro desconto
 # do tecnico sem sorteio (um sorteio a menos por pessoa que passa os tres filtros). O moral sobe dois em vez de um (o
-# 0x544710 sorteia com outro limite e o moral muda: as partidas mudam).
+# 0x544710 sorteia com outro limit e o moral muda: as partidas mudam).
 MUTACOES = [
     ('cps5_moral_sem_sorteio', '                let r2 = cps5_sortear(m / 12); // cps5: a parte do moral',
      '                let r2 = m / 24; // mutacao: sem o sorteio',

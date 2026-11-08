@@ -17,14 +17,14 @@ unsafe fn cpu11_pw(a: usize, v: u16) {
 /// ganha a marca +0x143 e as outras casas com a mesma posição a perdem). A posição extra (+0x14e) sai da lista da
 /// outra fase: a mesma posição, ou a de mesmo lado (0x5b73a0), ou a primeira, ou com duas o meio dos bits das duas.
 /// Zera +0x187f. Argumentos fora da faixa: a original (caixa e 0). Devolve 1.
-unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
+unsafe extern "thiscall" fn set_slot_coordinate(this: usize, casa: u32, fase: u32, band: u32, coord: u32) -> u32 {
     let (s, f) = (casa as u8 as i8, fase as u8 as i8);
-    let (zx, zy) = (faixa as u16 as i16, (faixa >> 16) as u16 as i16);
+    let (zx, zy) = (band as u16 as i16, (band >> 16) as u16 as i16);
     let (cx, cy) = (coord as u16 as i16, (coord >> 16) as u16 as i16);
     if !(0..=10).contains(&s) || !(0..=1).contains(&f) || !(0..=2).contains(&zx) || !(0..=3).contains(&zy)
         || !(0..=0x1a).contains(&cx) || !(0..=0x23).contains(&cy)
     {
-        return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%)(this, casa, fase, faixa, coord);
+        return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%)(this, casa, fase, band, coord);
     }
     let casa_no: unsafe extern "C" fn(u32, i8, u32, *mut i16) -> u32 = core::mem::transmute(0x5b7e60usize);
     let separar: unsafe extern "C" fn(u32, *mut u16, *mut u16) -> u32 = core::mem::transmute(0x5b73a0usize);
@@ -209,11 +209,11 @@ fn formation_regions(this: usize) -> [(usize, usize); 3] {
 }
 
 /// Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
-unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, faixa: u32, coord: u32) -> u32 {
+unsafe extern "thiscall" fn comparar_set_slot_coordinate(this: usize, casa: u32, fase: u32, band: u32, coord: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(%%I0%%);
     let reg = formation_regions(this);
-    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, faixa, coord), || set_slot_coordinate(this, casa, fase, faixa, coord));
-    PLACAR.registrar(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, faixa, coord, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, casa, fase, band, coord), || set_slot_coordinate(this, casa, fase, band, coord));
+    PLACAR.registrar(igual && r == n, || format!("set_slot_coordinate({:x}, {}, {}, {:x}, {:x}) {}/{} {:x?} x {:x?}", this, casa as u8 as i8, fase as u8 as i8, band, coord, r, n, mo, mr));
     r
 }
 

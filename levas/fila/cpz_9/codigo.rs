@@ -46,7 +46,7 @@ static mut CPZ9_MONTARIA: bool = false;
 /// 0x68d0d0, 0x11 bytes). Clube de humano (0x7875e0): um treinador das 5 vagas (+0x19f, sorteio(5), até achar um ou
 /// sorteio(20) dar zero) e a notícia 0x138f ao clube (o jogador, sorteio(2), as chaves dele e do treinador ou −1).
 /// Clube da IA (0x600a50) com técnico (+0xcf, +0x69): sorteio(+0x14 dele) acima de sorteio(10) leva à multa (0x5a5980,
-/// prazo 1 se sorteio(nota 0x544410 com o +0x19) pass_ball de sorteio(5), senão 2; motivo 1).
+/// prazo 1 se sorteio(nota 0x544410 com o +0x19) passar de sorteio(5), senão 2; motivo 1).
 unsafe extern "thiscall" fn report_poor_fitness(this: usize, jogador: usize, clube: usize) {
     let iniciar_data: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x54a110usize);
     let mut reg = [0u8; 0x11];

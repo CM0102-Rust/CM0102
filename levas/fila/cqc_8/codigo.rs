@@ -52,7 +52,7 @@ unsafe fn manager_manager_is_national_team(c: usize) -> u32 {
 
 /// O peso do jogo (o double em [esp+0x2c]) e o fator (o double em [esp+0x34], 0,5 de início), pela competição da
 /// partida: sem competição 0,01; fora da competição do clube (0x48f150) 0,2; amistoso (0x5c6710) 0,67 se o mandante
-/// é seleção, senão 0,05; não play (+0x40) 0,1; na liga do mandante 1 com o fator 0,06 × (+0x69 da liga) + 0,27;
+/// é seleção, senão 0,05; não jogada (+0x40) 0,1; na liga do mandante 1 com o fator 0,06 × (+0x69 da liga) + 0,27;
 /// senão 1 − |500 × (+0x69) − reputação| / 15000, × 1,25 na copa (+0x3a = 8) e pela fase (+0x30: 0x78 × 1,25, 0x82
 /// × 1,5, 0x8c × 0,75, 0x96 e 0xa0 × 2).
 unsafe fn match_weight(clube: usize, partida: usize, fator: &mut f64) -> f64 {
@@ -92,7 +92,7 @@ unsafe fn match_weight(clube: usize, partida: usize, fator: &mut f64) -> f64 {
 }
 
 /// A nota de uma linha da escalação (0x49 bytes; `e` aponta o byte da nota em +0x1c0/+0x1c4): o byte que entra nas
-/// médias (0 = fora). Com +0x4c do jogo, os 11 starters valem 90; reservas (k ≥ 11) só com o byte de entrada
+/// médias (0 = fora). Com +0x4c do jogo, os 11 titulares valem 90; reservas (k ≥ 11) só com o byte de entrada
 /// (e − 2 ≠ 0xff) e menos ele. `nota`, `troca` são os deslocamentos dos dois bytes tentados em ordem (o primeiro ≥ 0
 /// vale; senão o +0x4d do jogo).
 unsafe fn lineup_rating(jogo: usize, e: usize, k: i32, nota: usize, troca: usize, entrada: usize) -> Option<i8> {
@@ -119,7 +119,7 @@ unsafe fn lineup_rating(jogo: usize, e: usize, k: i32, nota: usize, troca: usize
 
 /// { 0x695240 } (thiscall, ret 0x10, manager_manager.cpp): `MANAGER_MANAGER::update_board_confidence_after_match(
 /// clube, partida, jogo, mandante)`, pela diretoria depois da partida (0x6951e0, um lado por vez). O ajuste começa
-/// pela contest (±20/30 contra o adversário ou pela seleção da partida +0x18), soma a diferença de reputação / 35 (sem
+/// pela disputa (±20/30 contra o adversário ou pela seleção da partida +0x18), soma a diferença de reputação / 35 (sem
 /// jogo) ou, com o jogo, a nota do time (média das notas por idade +0x1c4, as notas +0x127/+0x128, a diferença com o
 /// adversário, a soma de +0x4d − nota; x87: (... + 0,1) × 67 − 470, × fator) mais a reputação média dos adversários
 /// (pela nação, 0x53d980) contra a do clube / 40, até ±100. Pelo placar (+0x47/+0x48 ou +0x43/+0x44): vitória 0x800,
@@ -138,7 +138,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     let vis = mandante == 0;
     let mut fator: f64 = 0.5;
     let mut peso = match_weight(clube, partida, &mut fator);
-    // a contest (pela seleção da partida +0x18)
+    // a disputa (pela seleção da partida +0x18)
     let ev = cqc8_d(partida + 0x18);
     let cidade = |p: usize| p != 0 && cqc8_d(p + 0x38) != 0;
     let mut aj: i32 = 0;

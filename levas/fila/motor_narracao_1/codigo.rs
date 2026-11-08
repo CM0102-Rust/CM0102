@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (3): a fila da narracao (match_events.cpp) ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (3): a fila da narracao (match_events.cpp) ----------
 
 /// { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
 /// a posição de escrita (+8, anel de 12) recua uma casa (de 0 vai a 11); se o último da fila (+6

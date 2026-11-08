@@ -182,8 +182,8 @@ unsafe extern "C" fn draw_player_ratings_panel(topo: *mut i32, base: *mut i32) {
                     if pessoa_vale(pessoa, a, b, c, reg + 0x14) != 0 {
                         botao = true;
                         let saldo = if i == 0 { *(dados as *const i32) } else { *((dados + 4) as *const i32) };
-                        let limite = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
-                        let item = if saldo >= limite { 0x7dc } else { 0x7d7 };
+                        let limit = (*(0xae235c as *const i32)).wrapping_sub((*(0xae2350 as *const i32)).wrapping_mul(2));
+                        let item = if saldo >= limit { 0x7dc } else { 0x7d7 };
                         celula(sm, tabela, col + 4, j, 1, 0, 1, 2, colour_word(0xae317e), BUF, item, pessoa);
                     }
                 }

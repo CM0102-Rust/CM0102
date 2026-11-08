@@ -180,16 +180,16 @@ unsafe extern "thiscall" fn is_work_permit_granted(this: usize, p: usize, _nacao
     }
     if sorteio != 0 {
         let a = cqb7_sorteio(3);
-        let limite = 0xb - a + cqb7_sorteio(3);
-        if marcados as i32 > limite {
+        let limit = 0xb - a + cqb7_sorteio(3);
+        if marcados as i32 > limit {
             return 1;
         }
         if janela == 0 {
             return 0;
         }
         let b = cqb7_sorteio(10);
-        let limite = 0x46 - b + cqb7_sorteio(10);
-        return ((marcados as i32 * 100) / janela as i32 > limite) as u32;
+        let limit = 0x46 - b + cqb7_sorteio(10);
+        return ((marcados as i32 * 100) / janela as i32 > limit) as u32;
     }
     crate::comparacao::ramo("cqb_7 jogos pela selecao");
     if marcados > 0xb { // cqb7: mais de 11 jogos marcados

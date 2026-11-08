@@ -459,7 +459,7 @@ unsafe extern "system" fn virtual_alloc(end: usize, tam: usize, tipo: u32, prot:
             return r;
         }
     }
-    linha("alocador: AVISO faixa fixa do VirtualAlloc esgotada; endereco do Windows");
+    linha("alocador: AVISO band fixa do VirtualAlloc esgotada; endereco do Windows");
     f(0, tam, tipo, prot)
 }
 

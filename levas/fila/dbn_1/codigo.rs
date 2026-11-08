@@ -228,7 +228,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
     if nacoes == 0 {
         database_fatal_error(0x51b);
     }
-    let limite = if pequena { 15 } else { 20 }; // clubes por nação
+    let limit = if pequena { 15 } else { 20 }; // clubes por nação
     let chaves = [0x9cf2e4usize, 0x9cf360, 0x9cf314, 0x9cf488, 0x9cf300, 0x9cf408, 0x9cf260, 0x9cf218, 0x9cf2c0, 0x9cf244,
         0x9cf338, 0x9cf36c, 0x9cf434, 0x9cf45c, 0x9cf4a8];
     let mut c = rd(0xae23b4);
@@ -245,7 +245,7 @@ unsafe extern "C" fn database_trim_club_table(tamanho: u32) {
                 _ => true,
             };
             if entra {
-                if cont < limite {
+                if cont < limit {
                     wi(l + cont as usize * 4, gi(c));
                     if cont == 0 || rep(c) < rep_id(gi(l + gi(l + 0xcc) as usize * 4)) {
                         wi(l + 0xcc, cont);

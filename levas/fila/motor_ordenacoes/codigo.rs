@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
 
 /// { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
 /// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome

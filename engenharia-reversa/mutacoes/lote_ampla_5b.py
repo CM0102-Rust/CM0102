@@ -1,6 +1,6 @@
 # Lote 5b da carreira ampla (28/10/2026): as escapadas das levas 232 a 238 (banco: historicos, comissao, olheiros, vinculos,
 # preferencias, regras por nacao, chaves), numa carreira que passa da Copa e de janeiro de 2003.
-# Uso: python mutacoes.py mutacoes\lote_ampla_5b.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limite 14400
+# Uso: python mutacoes.py mutacoes\lote_ampla_5b.py --carreira 2003-01-31 --ligas "ENG ESP ITA FRA BRA JPN AUS USA" --limit 14400
 MUTACOES = [
     ('dbi_crescer_historico_de_competicoes', '        core::ptr::write_unaligned(linha as *mut i32, i); // a linha nova guarda o próprio índice', '        core::ptr::write_unaligned(linha as *mut i32, i + 1); // mutacao: o índice + 1'),
     ('dbi_ordem_do_elenco_pela_habilidade_atual', '        palavra(jb, 5) - palavra(ja, 5) // a habilidade atual maior primeiro', '        palavra(ja, 5) - palavra(jb, 5) // mutacao: a menor primeiro'),

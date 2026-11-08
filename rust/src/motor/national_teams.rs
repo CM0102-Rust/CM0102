@@ -2569,9 +2569,9 @@ pub(crate) unsafe fn has_too_many_called_up(this: usize, clube: usize, a: usize,
     if clube == 0 {
         return false;
     }
-    let limite = read_i32(0xae235c).wrapping_sub(read_i32(0xae2350).wrapping_mul(2));
+    let limit = read_i32(0xae235c).wrapping_sub(read_i32(0xae2350).wrapping_mul(2));
     let id = read_i32(clube);
-    if id >= limite {
+    if id >= limit {
         return false;
     }
     let rec = read_usize(this + 0x20).wrapping_add((id as usize).wrapping_mul(6));
@@ -4050,4 +4050,39 @@ pub(crate) unsafe extern "thiscall" fn comparar_record_club_call_ups(this: usize
     }
     let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, time, b, p), || record_club_call_ups(this, time, b, p));
     PLACAR.registrar(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", time, b, p, mo, mr));
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_set_person_44(this: usize, pessoa: usize, k: i8) {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_SET_PERSON_44);
+    let reg = [(person_block(this, pessoa, k) + 0x44, 1)];
+    let (_, _, igual, mo, mr) = crate::comparacao::lado_a_lado(&reg, || o(this, pessoa, k), || set_person_44(this, pessoa, k));
+    PLACAR.registrar(igual, || format!("set_person_44 original={:x?} rust={:x?}", mo, mr));
+}
+
+pub(crate) unsafe extern "stdcall" fn comparar_class_by_national_side(pessoa: usize) -> u8 {
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u8>(IDX_CLASS_BY_NATIONAL_SIDE)(pessoa);
+    let v = class_by_national_side(pessoa);
+    PLACAR.registrar(r == v, || format!("class_by_national_side({:#x}) original={} rust={}", pessoa, r, v));
+    r
+}
+
+pub(crate) unsafe extern "stdcall" fn comparar_national_or_special(clube: usize) -> u32 {
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_NATIONAL_OR_SPECIAL)(clube);
+    let v = national_or_special(clube);
+    PLACAR.registrar(r == v, || format!("national_or_special({:#x}) original={} rust={}", clube, r, v));
+    r
+}
+
+pub(crate) unsafe extern "stdcall" fn comparar_dislikes_national_side(pessoa: usize) -> u32 {
+    let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_DISLIKES_NATIONAL_SIDE)(pessoa);
+    let v = dislikes_national_side(pessoa);
+    PLACAR.registrar(r == v, || format!("dislikes_national_side({:#x}) original={} rust={}", pessoa, r, v));
+    r
+}
+
+pub(crate) unsafe extern "thiscall" fn comparar_copy_date_and_mark(this: usize, origem: usize) -> usize {
+    let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_COPY_DATE_AND_MARK);
+    let (r, v, igual, mo, mr) = crate::comparacao::lado_a_lado(&[(this, 9)], || o(this, origem), || copy_date_and_mark(this, origem));
+    PLACAR.registrar(igual && r == v, || format!("copy_date_and_mark original={:#x} {:x?} rust={:#x} {:x?}", r, mo, v, mr));
+    r
 }

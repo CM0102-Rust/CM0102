@@ -198,7 +198,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
 /// [pt] regra: o Troféu da Liga (LDV Vans) tem 56 clubes: todos os da segunda e da terceira divisões, o rebaixado da
 /// terceira para a Conference e, para completar, clubes da Conference (com a regra da nação ligada, os que já estavam
 /// nela pela categoria, 6 ou menos primeiro; senão até 30 da Conference ou outros ingleses fora da divisão genérica,
-/// ordenados pela reputação e com os melhores embaralhados); a lista é tackle em Norte e Sul pela latitude da cidade
+/// ordenados pela reputação e com os melhores embaralhados); a lista é dividida em Norte e Sul pela latitude da cidade
 /// do estádio e cada metade vai da menor reputação para a maior
 pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
     eng_auto_cup_select_section_clubs(this)

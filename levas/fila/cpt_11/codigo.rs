@@ -46,8 +46,8 @@ unsafe extern "thiscall" fn friendly_update_for_date(this: usize, hoje: usize, a
     let dia = cpt11_w(hoje) as i16 as i32;
     if dia == cpt11_w(this + 0x34ea) as i32 || dia == cpt11_w(this + 0x34e8) as i32 {
         let mut t = [0u8; 8];
-        let limite = semanas(hoje, &mut t, 8);
-        if friendly_date_after(0xdd6ec8, limite) {
+        let limit = semanas(hoje, &mut t, 8);
+        if friendly_date_after(0xdd6ec8, limit) {
             return 1;
         }
         copiar(this + 0xa7, &mut t, hoje);
@@ -172,10 +172,10 @@ unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize) {
                 let r = v + n as usize * 0x16;
                 let rep = cpt11_w(clube + 0x80) as i16 as i32;
                 crate::comparacao::ramo("cpt_11 candidato da pré-temporada");
-                let faixa = (rep / 500) as u8; // cpt11: a faixa
+                let band = (rep / 500) as u8; // cpt11: a faixa
                 cpt11_pd(r, cpt11_d(clube));
                 *((r + 4) as *mut u8) = 0;
-                *((r + 5) as *mut u8) = faixa;
+                *((r + 5) as *mut u8) = band;
                 cpt11_pd(r + 6, cpt11_d(cpt11_d(clube + 0x53)));
                 cpt11_pd(r + 0xa, 0);
                 cpt11_pd(r + 0x12, 0);

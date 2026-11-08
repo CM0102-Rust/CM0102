@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up das propostas de contrato da oferta, a fila da transferência livre e as negociações de troca do jogador (transfer_manager.cpp) ----------
+// ---------- %%LEVA%%a leva: o fechamento das propostas de contrato da oferta, a fila da transferência livre e as negociações de troca do jogador (transfer_manager.cpp) ----------
 
 /// O nó de uma lista do jogo (0x68d0d0/0x68d1b0): contagem u16 em +0, cabeça +2, cauda +6, cursor +0xa;
 /// cada nó tem o dado em +0 e o próximo em +6.

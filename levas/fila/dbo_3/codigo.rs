@@ -8,7 +8,7 @@ unsafe fn count_natural_at_position(clube: usize, posicao: usize, atributo: usiz
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let rep = core::ptr::read_unaligned((clube + 0x80) as *const i16) as i32;
-    let limite = (rep / 75 + 25).clamp(40, 0x87);
+    let limit = (rep / 75 + 25).clamp(40, 0x87);
     let a = (rep / 500 + 5).min(teto);
     let mut n = 0u8;
     for k in 0..50 {
@@ -23,7 +23,7 @@ unsafe fn count_natural_at_position(clube: usize, posicao: usize, atributo: usiz
         if core::ptr::read_unaligned(p as *const i32) >= *(0xae2364 as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limite && *((j + atributo) as *const i8) as i32 > a {
+        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit && *((j + atributo) as *const i8) as i32 > a {
             n += 1;
         }
     }

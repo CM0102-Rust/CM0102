@@ -947,7 +947,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
     } else if (f as i8) < 0xc {
         if d == 6 {
             crate::comparacao::ramo("cpz_4 passou da fase 2");
-            european_cup_add_qualified_record(clube, comp, 0, 0x78, 0x32); // cpz4: pass_ball da fase 2 pesa 0x32
+            european_cup_add_qualified_record(clube, comp, 0, 0x78, 0x32); // cpz4: passar da fase 2 pesa 0x32
         } else if d == 0xfe {
             european_cup_add_failed_to_qualify_record(clube, comp, 0x44a, 0x32);
             leave_euro_competition(clube);

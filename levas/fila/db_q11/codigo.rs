@@ -57,7 +57,7 @@ unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: usize) {
     for step_towards in 0..2 {
         let bp = w(fim);
         let (mut quantas, mut soma) = (0i32, 0i32);
-        let mut limite = 0x28i32;
+        let mut limit = 0x28i32;
         let (mut total, mut n, mut melhor);
         loop {
             total = 0i32;
@@ -67,7 +67,7 @@ unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: usize) {
                 let mut c = fim;
                 loop {
                     let x = w(c) as i32;
-                    if x.abs() <= limite as i16 as i32 {
+                    if x.abs() <= limit as i16 as i32 {
                         total += x;
                         n += 1;
                         marca[c as usize] = 1;
@@ -87,7 +87,7 @@ unsafe extern "C" fn staff_normalise_non_player_attributes(pessoa: usize) {
                 }
             }
             // ponytail: com a célula do corte = −127 o original roda para sempre; a cópia também
-            limite += 10;
+            limit += 10;
         }
         if melhor > -1 {
             marca[melhor as usize] = 1;

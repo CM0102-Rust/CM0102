@@ -113,7 +113,7 @@ unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o: usize) {
         u32::MAX
     } else {
         let c2 = cqb6_contrato(p);
-        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de pass_ball)
+        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
         if c2 != 0 && cqb6_b(c2 + 0x35) & 0x3f != 5 { cqb6_d(transfer_manager_club_of_contract(c2)) as u32 } else { u32::MAX }
     };
     if !CQB6_ENSAIO {
@@ -176,7 +176,7 @@ unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: usize, o: u
     let mut chave = [0u8; 0xd];
     core::ptr::write_unaligned(chave.as_mut_ptr().add(9) as *mut usize, cqb6_d(p));
     let c2 = cqb6_contrato(p);
-    // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de pass_ball)
+    // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
     let id_clube = if c2 != 0 { cqb6_d(transfer_manager_club_of_contract(c2)) } else { usize::MAX };
     core::ptr::write_unaligned(chave.as_mut_ptr().add(1) as *mut usize, id_clube);
     let busca: unsafe extern "C" fn(*const u8, usize, usize, u32, usize) -> usize = core::mem::transmute(0x946464usize);
@@ -293,7 +293,7 @@ unsafe extern "thiscall" fn post_sale_percentage_news(_this: usize, e: usize, pa
             return;
         }
         let c2 = cqb6_contrato(p);
-        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de pass_ball)
+        // ponytail: a original lê [0] se o segundo contrato faltasse; inalcançável (o mesmo contrato acabou de passar)
         if c2 != 0 { cqb6_d(transfer_manager_club_of_contract(c2)) } else { usize::MAX }
     };
     cqb6_gravar(n, 9, v9 as u32);

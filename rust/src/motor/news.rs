@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_deliver_to_manager(this: usize, 
     r
 }
 
-// ---------- 250a leva: a caixa do técnico humano: respond a todas as notícias, se há notícia pendente e o texto num campo da notícia (news.cpp) ----------
+// ---------- 250a leva: a caixa do técnico humano: responder a todas as notícias, se há notícia pendente e o texto num campo da notícia (news.cpp) ----------
 
 
 

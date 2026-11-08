@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
 /// do clube na partida (+0x188/+0x18a/+0x18c, lado 0x625 × visitante; peso × 400, × k1, × k2); o histórico do técnico
 /// (tipo 0: o clube e a competição de +0x14 do jogo); o registro dele (0x86f5b0 com criar): +1 em +0x8a e ftol(peso^4 ×
 /// 0,5) (pow da CRT 0x945ff0) em +0xb6, +0xca e, na seleção (0x53b900), +0xbe, senão +0xba. O presidente (+0xbf) e os
-/// 20 da escalação. Os 50 do elenco enquanto a reputação não pass_ball de peso × 400: com ficha, válidos e fora o técnico,
+/// 20 da escalação. Os 50 do elenco enquanto a reputação não passar de peso × 400: com ficha, válidos e fora o técnico,
 /// moral +15 (0x544710) e +100 no contrato; com a situação do contrato (+0x4f >> 4) 1-3 ou 5, a renovação. As
 /// convocações da competição guardada (0x76d940) acabam (0x774f30); o histórico do clube (tipo 0); com a mídia e peso
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
@@ -423,17 +423,17 @@ pub(crate) unsafe fn compare_champion_update(nome: &str, this: usize, clube: usi
     conta.extend(fichas.iter().take(corte + 1).map(|&(m, _, _)| (m, 1)));
     conta.extend(contratos.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
     // Os de depois, pela faixa da 0x544710: o moral m sobe de 0 a 20 (+20 ou +10 sorteados), preso em 1..20.
-    let faixa = |&(m, _, m0): &(usize, usize, i8)| -> bool {
+    let band = |&(m, _, m0): &(usize, usize, i8)| -> bool {
         let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
         v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
     };
-    let mut na_faixa = fichas.iter().skip(corte + 1).all(faixa);
+    let mut na_faixa = fichas.iter().skip(corte + 1).all(band);
     let mr = crate::comparacao::Memoria::ler(&conta);
     antes.escrever();
     original();
-    na_faixa &= fichas.iter().skip(corte + 1).all(faixa);
+    na_faixa &= fichas.iter().skip(corte + 1).all(band);
     let mo = crate::comparacao::Memoria::ler(&conta);
-    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da faixa: {}) original={:x?} rust={:x?}",
+    PLACAR.registrar(mo == mr && na_faixa, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
         nome, clube, renovados.len(), corte, fichas.len(), !na_faixa, mo, mr));
 }
 
@@ -555,7 +555,7 @@ pub(crate) unsafe fn match_rating_for_manager(p: usize, lado: u32, saida: &mut u
 /// Original: `Staff_Records::record_match_result` (0x868830, staff_records.cpp, thiscall).
 ///
 /// [pt] { 0x868830 } (thiscall, ret 8, staff_records.cpp): `Staff_Records::record_match_result(jogo, partida)`, pelo
-/// match_wrap_up da partida do dia (0x6b5f00), a cada jogo. Jogo não disputado (+0x3a = 1): nada. Os registros dos dois
+/// fechamento da partida do dia (0x6b5f00), a cada jogo. Jogo não disputado (+0x3a = 1): nada. Os registros dos dois
 /// técnicos (+0xcf do mandante +0x1c e do visitante +0x20; 0x86f5b0 com criar): +1 jogo (+0x8e); os gols pró (+0x96) e
 /// contra (+0x9a) pelo placar (+0x47/+0x48, ou +0x43/+0x44 com +0x47 = −1); vitória (+0x90, bônus 900), empate (+0x92,
 /// 300 para os dois) ou derrota (+0x94). A nota de cada um (0x48e190 com 0 / 1, a reputação do adversário, os pontos da
@@ -904,7 +904,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_runners_up_record(this: usize, cl
 /// Original: `Staff_Records::add_cup_third_place_record` (0x86b710, staff_records.cpp, thiscall).
 ///
 /// [pt] { 0x86b710 } (thiscall, ret 0xc, staff_records.cpp, SEH só das datas locais): `Staff_Records::
-/// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com contest de terceiro: `update_cup_placed_club` com o tipo
+/// add_cup_third_place_record(clube, jogo, partida)`, pelas copas com disputa de terceiro: `update_cup_placed_club` com o tipo
 /// 2. Nulos: a caixa (linha 0x67b).
 pub(crate) unsafe extern "thiscall" fn add_cup_third_place_record(this: usize, clube: usize, jogo: usize, partida: usize) {
     if clube == 0 || jogo == 0 || partida == 0 {

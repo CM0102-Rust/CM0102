@@ -1,4 +1,4 @@
-// ---------- %%LEVA%%a leva: o match_wrap_up do motor (2): os zagueiros do lado, o arbitro e o jogador da partida ----------
+// ---------- %%LEVA%%a leva: o fechamento do motor (2): os zagueiros do lado, o arbitro e o jogador da partida ----------
 
 /// { 0x6d5b20 } (thiscall, ret 4, match_eng.cpp): os zagueiros do lado `lado` sem conflito (0x5b8dc0
 /// na formação +0xaac5, ou +0x91e2 com lado 0).

@@ -4,7 +4,7 @@
 /// (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5 do jogador, curto com
 /// sinal) acima do `limite` e o `extra` (os atributos do jogador). Na ordem da original (a 0x62c400 só para os da
 /// posição). Contador de 8 bits (no máximo 50).
-unsafe fn count_squad_above_ability_with(clube: usize, limite: i32, posicao: impl Fn(usize) -> bool, extra: impl Fn(usize) -> bool) -> u8 {
+unsafe fn count_squad_above_ability_with(clube: usize, limit: i32, posicao: impl Fn(usize) -> bool, extra: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
     let lesao: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x62c400usize);
     let mut n = 0u8;
@@ -20,7 +20,7 @@ unsafe fn count_squad_above_ability_with(clube: usize, limite: i32, posicao: imp
         if core::ptr::read_unaligned(p as *const i32) >= *(0xae2364 as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limite && extra(j) {
+        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit && extra(j) {
             n += 1;
         }
     }
@@ -40,8 +40,8 @@ unsafe extern "C" fn club_has_enough_hard_workers(clube: usize) -> u8 {
     if clube == 0 {
         return 0;
     }
-    let limite = (club_reputation(clube) / 65 + 40).clamp(40, 0x8c);
-    let n = count_squad_above_ability_with(clube, limite, |_| true, |j| *((j + 0x44) as *const i8) > 14);
+    let limit = (club_reputation(clube) / 65 + 40).clamp(40, 0x8c);
+    let n = count_squad_above_ability_with(clube, limit, |_| true, |j| *((j + 0x44) as *const i8) > 14);
     (n > 4) as u8 // esforcados (dbo)
 }
 
@@ -93,10 +93,10 @@ unsafe extern "C" fn club_has_ball_winning_midfielders(clube: usize) -> u8 {
         return 0;
     }
     let rep = club_reputation(clube);
-    let limite = (rep / 75 + 25).clamp(40, 0x87);
+    let limit = (rep / 75 + 25).clamp(40, 0x87);
     let a = (rep / 500 + 5).min(14);
     let meia = |j: usize| *((j + 0x14) as *const u8) == 20 || *((j + 0x12) as *const u8) == 20 || *((j + 0x13) as *const u8) == 20;
-    let n = count_squad_above_ability_with(clube, limite, meia, |j| *((j + 0x44) as *const i8) as i32 > a && *((j + 0x3e) as *const i8) as i32 > a);
+    let n = count_squad_above_ability_with(clube, limit, meia, |j| *((j + 0x44) as *const i8) as i32 > a && *((j + 0x3e) as *const i8) as i32 > a);
     (n > 1) as u8 // meias que roubam (dbo)
 }
 

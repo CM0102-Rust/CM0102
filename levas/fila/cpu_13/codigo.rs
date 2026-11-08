@@ -64,7 +64,7 @@ unsafe extern "C" fn player_search_get_club_target_rating(clube: usize, base: *m
     } else if esi > 5000 {
         match_pl_ftol(esi as f64 * read_f64_at(0x968e18) + read_f64_at(0x9690b8))
     } else if esi > 3000 {
-        crate::comparacao::ramo("cpu_13 faixa de 3000 a 5000");
+        crate::comparacao::ramo("cpu_13 band de 3000 a 5000");
         esi.wrapping_mul(5).wrapping_sub(5000) // cpu13: a faixa do meio
     } else {
         match_pl_ftol(esi as f64 * read_f64_at(0x969018) + read_f64_at(0x9688e8))

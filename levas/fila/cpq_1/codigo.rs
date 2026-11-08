@@ -143,7 +143,7 @@ unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, 
         }
     }
     let v = cpq1_w(club_board_row(this, clube) + 6);
-    let mut limite: i32 = if v > 0xdac { 10 } else if v <= 0xbb8 { 500 } else { 200 };
+    let mut limit: i32 = if v > 0xdac { 10 } else if v <= 0xbb8 { 500 } else { 200 };
     let div = cpq1_d(clube + 0x57);
     let comp = if div != 0 { cpq1_d(cpq1_d(0xadadfc).wrapping_add(cpq1_d(div).wrapping_mul(4))) } else { 0 };
     if comp != 0 && cpq1_d(comp + 8) != 0 {
@@ -185,28 +185,28 @@ unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, 
             }
             let s19 = cpq1_i(ln + 0x19);
             if s19 > 1 {
-                if limite as i16 == 10 || s19 > 2 {
+                if limit as i16 == 10 || s19 > 2 {
                     return;
                 }
-                if limite as i16 == 200 {
-                    limite = 0x32;
+                if limit as i16 == 200 {
+                    limit = 0x32;
                 }
             } else {
                 let s41 = cpq1_i(ln + 0x41);
                 if s41 > 1 {
-                    if limite as i16 == 10 || s41 > 3 {
+                    if limit as i16 == 10 || s41 > 3 {
                         return;
                     }
-                    if limite as i16 == 200 {
-                        limite = 100;
+                    if limit as i16 == 200 {
+                        limit = 100;
                     }
                 } else if cpq1_i(ln + 0x55) > 1 {
-                    limite = match_pl_ftol(limite as i16 as i32 as f64 * cpq1_k(0x968940)); // 1,5
+                    limit = match_pl_ftol(limit as i16 as i32 as f64 * cpq1_k(0x968940)); // 1,5
                 } else if cpq1_i(ln + 0x2d) > 1 {
-                    if limite as i16 == 10 {
-                        limite = 200;
-                    } else if limite as i16 == 200 {
-                        limite = 300;
+                    if limit as i16 == 10 {
+                        limit = 200;
+                    } else if limit as i16 == 200 {
+                        limit = 300;
                     }
                 }
             }
@@ -214,9 +214,9 @@ unsafe extern "thiscall" fn consider_sacking_manager(this: usize, clube: usize, 
     }
     let marca: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x7a7eb0usize);
     let teto = if marca(cpq1_d(0xb7434c), cpq1_d(clube + 0xcf)) != 0 {
-        match_pl_ftol(limite as i16 as i32 as f64 * cpq1_k(0x9689e0)) // 0,25
+        match_pl_ftol(limit as i16 as i32 as f64 * cpq1_k(0x9689e0)) // 0,25
     } else {
-        limite
+        limit
     };
     let pres = chairman_record(clube);
     let r = if pres != 0 {

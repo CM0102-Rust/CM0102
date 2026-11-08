@@ -10,6 +10,6 @@ MUTACOES = [
      'return 0; // mutacao: nenhuma clausula ativa'),
     ('cpu4_sem_regras_livre', 'return 1; // cpu4: sem as regras novas',
      'return 0; // mutacao: sem as regras novas, livre'),
-    ('cpu4_periodo_de_dois_anos', 'let limite: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade',
-     'let limite: u8 = { idade(pessoa, d); 2 }; // mutacao: sempre 2 anos'),
+    ('cpu4_periodo_de_dois_anos', 'let limit: u8 = if (idade(pessoa, d) as u8 as i8) < 0x1c { 3 } else { 2 }; // cpu4: o periodo pela idade',
+     'let limit: u8 = { idade(pessoa, d); 2 }; // mutacao: sempre 2 anos'),
 ]

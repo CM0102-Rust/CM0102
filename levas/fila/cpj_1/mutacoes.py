@@ -1,6 +1,6 @@
 # Mutacoes. O construtor com a data um byte antes (recordes fora da impressao: PODE ESCAPAR da carreira; o comparando
 # acusa). A permissao sem conferir a marca (o comparando acusa no primeiro sem permissao; a carreira, pelas notas do
-# motor). O limite sem o comunitario (o comparando acusa no primeiro comunitario de nacao com a regra 0xe; a carreira,
+# motor). O limit sem o comunitario (o comparando acusa no primeiro comunitario de nacao com a regra 0xe; a carreira,
 # se a shortlist decidir).
 MUTACOES = [
     ('cpj_mais_velho_data', 'init_default_date(this + 0x18); // a data do mais velho',

@@ -26,7 +26,7 @@ unsafe fn cpv7_b(a: usize) -> u8 {
 /// finanças (0x5986b0): −2 × 0,75, −1 × 0,95, 1 × 1,5, 2 × 2. Limitado ao teto do clube (+0x14) e à faixa do cargo.
 unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
     let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let faixa: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
+    let band: unsafe extern "thiscall" fn(usize) -> u8 = core::mem::transmute(0x5986b0usize);
     let id = cpv7_d(this + 8);
     let clube = cpv7_d(0xae23b4).wrapping_add(id.wrapping_mul(0x245));
     if cpv7_b(clube + 0x64) == 3 {
@@ -92,7 +92,7 @@ unsafe extern "thiscall" fn get_max_staff_wage(this: usize, cargo: i8) -> i32 {
             w = match_pl_ftol(cpv7_w(liga + 0x69) as f64 * w as f64 * read_f64_at(0x968918)); // cpv7: o peso da liga
         }
     }
-    match faixa(this) as i8 {
+    match band(this) as i8 {
         -2 => w = match_pl_ftol(w as f64 * read_f64_at(0x969040)),
         -1 => w = match_pl_ftol(w as f64 * read_f64_at(0x9689d0)),
         1 => w = match_pl_ftol(w as f64 * read_f64_at(0x968940)),

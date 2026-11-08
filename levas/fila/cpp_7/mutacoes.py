@@ -1,4 +1,4 @@
-# Mutacoes. Sem contar a tentativa da oferta recusada (o sorteio(2 x tentativas) muda de faixa e o "mais de uma
+# Mutacoes. Sem contar a tentativa da oferta recusada (o sorteio(2 x tentativas) muda de band e o "mais de uma
 # tentativa" demora: ofertas que seriam rejeitadas sao reagendadas; muda a carreira). O jogador da oferta continua nas
 # outras ofertas (depois da transferencia, outros clubes seguem com oferta por ele). A oferta em dinheiro com 1000 a
 # mais (o valor da transferencia muda o dinheiro dos dois clubes). As tres so no modo Rust e na carreira: os

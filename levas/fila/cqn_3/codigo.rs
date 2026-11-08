@@ -9,7 +9,7 @@ unsafe fn cqn3_d(a: usize) -> u32 {
 const CQN3_COPAS: [usize; 3] = [0x9cf6e8, 0x9cf6f0, 0x9cf6f8];
 
 /// Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
-/// lista alocada é solta pela 0x9452ca depois de `cada` pass_ball por todos.
+/// lista alocada é solta pela 0x9452ca depois de `cada` passar por todos.
 unsafe fn for_each_comp_club(comp: usize, etapa: u32, mut cada: impl FnMut(usize)) {
     let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
     let metodo: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(cqn3_d(cqn3_d(comp) as usize + 0x58) as usize);

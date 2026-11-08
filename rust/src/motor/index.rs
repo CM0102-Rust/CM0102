@@ -87,9 +87,9 @@ pub(crate) unsafe fn match_key_name_chain(nome: usize, pares: &[(u32, u32)], lin
 ///
 /// [pt] Um laço da set_key_ids: `i` de 0 enquanto `i < limite()` (relido a cada volta, com sinal). Devolve se rodou (a
 /// original só põe o -1 de volta no edi depois de um laço que rodou).
-pub(crate) unsafe fn key_ids_loop(limite: impl Fn() -> i32, mut f: impl FnMut(i32)) -> bool {
+pub(crate) unsafe fn key_ids_loop(limit: impl Fn() -> i32, mut f: impl FnMut(i32)) -> bool {
     let mut i = 0i32;
-    while i < limite() {
+    while i < limit() {
         f(i);
         i += 1;
     }

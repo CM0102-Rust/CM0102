@@ -35,12 +35,12 @@ unsafe extern "thiscall" fn fixture_entry_matches(estat: usize, k: i32, a: i32, 
 /// seleção (0x53b900): 0 se a palavra +0x80 do clube passa de 4999 ou de 0x157b, senão 2; senão pelo tipo
 /// (tabela de saltos em 0x729d38) e as tabelas de bytes do exe em 0x729d64 e 0x729d94.
 unsafe extern "stdcall" fn match_stats_get_record_bucket(jogo: usize, registro: usize) -> u8 {
-    let limite = *(0xae2364 as *const i32);
+    let limit = *(0xae2364 as *const i32);
     for o in [0x1c, 0x20] {
         let p = core::ptr::read_unaligned((*((jogo + o) as *const usize) + 0xcf) as *const usize);
         if p != 0 {
             let id = *(p as *const i32);
-            if id >= limite.wrapping_sub(0x10) && id < limite && *((p + 0x5f) as *const u8) != 0 {
+            if id >= limit.wrapping_sub(0x10) && id < limit && *((p + 0x5f) as *const u8) != 0 {
                 return 0;
             }
         }

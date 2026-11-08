@@ -77,7 +77,7 @@ unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize
         return original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(%%I1%%)(clube, vetor, dobro);
     }
     let parceiro: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(0x540a50usize);
-    let limite: i8 = if dobro != 0 { 100 } else { 50 };
+    let limit: i8 = if dobro != 0 { 100 } else { 50 };
     let p = parceiro(clube, core::ptr::null_mut(), 1);
     if p == 0 {
         for i in 0..50 {
@@ -99,7 +99,7 @@ unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize
         }
     }
     for i in 0..50 {
-        if n >= limite {
+        if n >= limit {
             break;
         }
         let q = squad_slot(p, i);
@@ -108,7 +108,7 @@ unsafe extern "C" fn database_collect_club_squad(clube: usize, vetor: *mut usize
             n += 1;
         }
     }
-    for k in n..limite {
+    for k in n..limit {
         core::ptr::write_unaligned(vetor.add(k as usize), 0);
     }
     1

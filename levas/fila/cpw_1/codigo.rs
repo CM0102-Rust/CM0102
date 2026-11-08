@@ -116,7 +116,7 @@ unsafe fn set_news_staff_slots(n: usize, p: usize) {
 /// (linha 0x2d91). Pessoa na lista de transferências (0x8c1870), com ofertas (0x8c5cf0) ou oferecida em troca (0x8c5e40):
 /// nada. Senão a notícia 0xbc2 ao técnico do clube do contrato (0x7861e0): o clube, a pessoa, a situação no elenco (+0x4f
 /// >> 4), 0, o fim do contrato (+0x2d dia com sinal, +0x2f ano), o salário (+0xc) e, na vaga 11, 1 se a adaptabilidade
-/// (+0x59) for menor que 10, a +0x5b menor que 5 e a reputação da ficha (+0xd) pass_ball de 4750.
+/// (+0x59) for menor que 10, a +0x5b menor que 5 e a reputação da ficha (+0xd) passar de 4750.
 unsafe extern "thiscall" fn post_wants_new_contract_news(this: usize, contrato: usize) {
     let _ = this;
     if contrato == 0 {
@@ -159,7 +159,7 @@ unsafe extern "thiscall" fn comparar_post_wants_new_contract_news(this: usize, c
 /// { 0x4d9460 } (thiscall, ret 8, contract_manager.cpp, quadro SEH da notícia local): `CONTRACT_MANAGER::
 /// post_transfer_request_withdrawn_news(contrato, motivo)`. Sem contrato: a caixa "Error" (linha 0x2ba6). Senão a
 /// notícia 0xbc0 ao técnico do clube do contrato (0x7861e0): o clube, a pessoa, o motivo e, na vaga 7, 1 se +0x3f do
-/// contrato pass_ball de 1.
+/// contrato passar de 1.
 unsafe extern "thiscall" fn post_transfer_request_withdrawn_news(this: usize, contrato: usize, motivo: u32) {
     let _ = this;
     if contrato == 0 {

@@ -200,7 +200,7 @@ static mut CQF10_RELATORIO: bool = false;
 /// scout_match(jogo, resultado, saida)`, pela partida observada (0x7f8c00). `this` é a lista de busca do olheiro: +0 o
 /// dono, +0xa o tipo (4 = observar partidas), +0x170 o registro do clube observado, +0x174..+0x184 os nomes do olheiro,
 /// +0x180 o id dele, +0x190 o clube acompanhado, +0x195 o jogador acompanhado, +0x1a5/+0x1ad o começo e o fim. Sem jogo
-/// ou resultado: a caixa da linha 0xef1. Do tipo 4, com olheiro que confere (0x53e990) e resultado de partida play
+/// ou resultado: a caixa da linha 0xef1. Do tipo 4, com olheiro que confere (0x53e990) e resultado de partida jogada
 /// (+0x4c zero): o clube acompanhado que joga recebe o histórico (0x7bd310); dentro das datas (antes do fim só com
 /// jogador acompanhado), se o jogo é do jogador acompanhado, relata; senão a busca tem de cobrir a nação da competição
 /// (0x7b7490) e o clube do olheiro tem de ter pedido (0x7f9690, 0x7f8d70 com 1) algum jogador de um dos dois clubes. O
@@ -405,7 +405,7 @@ unsafe fn scout_match_body(this: usize, jogo: usize, resultado: usize, saida: us
                     continue;
                 }
             }
-            // a nota: starters (até o 11º) pela nota +4, senão +0, senão a do resultado (+0x4d); reservas descontam a
+            // a nota: titulares (até o 11º) pela nota +4, senão +0, senão a do resultado (+0x4d); reservas descontam a
             // entrada (+2); resultado sem notas (+0x4c): titular vale 90
             let nota_de = |x: usize| -> u8 {
                 let a = cqf10_b(x + 4);

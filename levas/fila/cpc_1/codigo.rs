@@ -17,7 +17,7 @@ unsafe fn list_next_item(l: usize) -> usize {
     proximo(l)
 }
 
-/// A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa pass_ball: a competição (+0), a fase
+/// A partida `f` passa pelo filtro da find_next_fixture? Cada filtro em -1 deixa passar: a competição (+0), a fase
 /// (+0x34, curto com sinal) e os dois clubes (cada um o mandante +0xc ou o visitante +0x10).
 unsafe fn fixture_matches_next_filter(f: usize, comp: i32, fase: i32, clube_a: i32, clube_b: i32) -> bool {
     let d = |o: usize| core::ptr::read_unaligned((f + o) as *const i32);

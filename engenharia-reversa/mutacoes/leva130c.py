@@ -1,4 +1,4 @@
-# Reforcos fortes da leva130 (as fracas escaparam: valores no limite de 1, sorteios sem virada).
+# Reforcos fortes da leva130 (as fracas escaparam: valores no limit de 1, sorteios sem virada).
 # Uso: python mutacoes.py mutacoes\leva130c.py --carreira 2002-06-01
 MUTACOES = [
     ('e_1e_sem2', "ajustar(clube, 0xc, 0x4b);", "ajustar(clube, 0xc, -0x4b);", "eventos 0x1e"),

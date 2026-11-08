@@ -15,12 +15,12 @@ pub(crate) type Cqo5Rodada = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, ano: u32, primeira: i32, tabela: &[Cqo5Rodada]) {
     let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
-    let faixa: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
+    let band: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, u32) = core::mem::transmute(FN_LEAGUE_ROUND_SET_MATCH_SLOT);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in tabela.iter().enumerate() {
         let i = primeira + k as i32;
         data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, ano, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
-            faixa(t, i, j as i32, a as i32, b as i32, c as i32, 0);
+            band(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
     }
 }
@@ -705,7 +705,7 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, clube: usize, fase: u8, a
         m = match m {
             2..=5 => 2,
             14..=17 => {
-                crate::comparacao::ramo("cqk_6 faixa do play-out");
+                crate::comparacao::ramo("cqk_6 band do play-out");
                 0xe // cqk6: a melhor na faixa do play-out
             }
             v => v,

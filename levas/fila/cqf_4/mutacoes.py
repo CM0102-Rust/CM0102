@@ -1,5 +1,5 @@
 # Mutacoes (cqf_4), no sorteio dos grupos da Copa do Mundo de 2002 (uma vez, em 27/12/2001, pelo dia da Copa):
-# - o limite de times por grupo sobe um: menos sorteios repetidos na parte aleatoria (que roda antes do sorteio real
+# - o limit de times por grupo sobe um: menos sorteios repetidos na parte aleatoria (que roda antes do sorteio real
 #   de 2002), e a contagem dos sorteios da carreira muda dali em diante;
 # - as nacoes do sorteio real na ordem inversa: os grupos (e o jogo de abertura de 31/05, a Franca detentora no grupo A)
 #   mudam;
@@ -8,7 +8,7 @@
 # match_condition do ano; o dia do sorteio dentro da match_condition inteira.
 MUTACOES = [
     ('cqf4_limite_do_grupo_mais_um',
-     'let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: o limite de times por grupo',
+     'let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: o limit de times por grupo',
      'let lim = ((k / 8) as i8).wrapping_add(2); // mutacao: um time a mais por grupo',
      'cqf_4 vaga no grupo'),
     ('cqf4_sorteio_2002_invertido',

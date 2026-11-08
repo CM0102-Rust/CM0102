@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn has_match(this: usize, clube: u32, so_mar
     0
 }
 
-/// { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penalties (0x49/0x4a),
+/// { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penaltis (0x49/0x4a),
 /// senao pela prorrogacao (0x47/0x48), senao pelo tempo normal (0x43/0x44); placar -1 nao conta.
 /// Jogo ou clube nulo, ou clube fora do jogo: o original mostra uma caixa de erro e devolve 0.
 pub(crate) unsafe extern "C" fn won_the_match(jogo: usize, clube: u32) -> u8 {
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(dia: usize, ate_o_fim: u32
 /// history and each side's club (0x6b79a0)
 /// Original: `close_day_match` (0x6b5f00, match_day.cpp, thiscall, ret 4).
 ///
-/// [pt] { 0x6b5f00 } (thiscall, ret 4, match_day.cpp): o match_wrap_up de uma partida do dia `p` (0x69
+/// [pt] { 0x6b5f00 } (thiscall, ret 4, match_day.cpp): o fechamento de uma partida do dia `p` (0x69
 /// bytes): copia os 0x4f bytes de p+4 para a partida (+0) e, com competicao (+0x14), le o numero da
 /// rodada de um clube humano ([adadfc] da competicao +8, 0x4a4850, +0x2d acima de 1; como na
 /// original, olha so o visitante +0x20 nas duas voltas) e registra o resultado: p+0x47 = -3 (jogo de
@@ -759,7 +759,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(dia: usize) -> u32 {
             k += 1;
         }
 
-        // o match_wrap_up de cada partida
+        // o fechamento de cada partida
         ajustar_relogio(hora);
         andar(dia, 1);
         *(G_MATCH_DAY_PLAYING_FLAG as *mut u32) = 0;
@@ -1522,7 +1522,7 @@ pub(crate) fn post_match_gates() -> [usize; 15] {
     ]
 }
 
-/// Roda a comparacao de uma rotina do pos-jogo pela fita: as 14 do banco entram como units_digit.
+/// Roda a comparacao de uma rotina do pos-jogo pela fita: as 14 do banco entram como unidades.
 pub(crate) unsafe fn comparar_pos(nome: &str, reg: Vec<(usize, usize)>, original: impl FnOnce(), rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32)) {
     use std::sync::atomic::Ordering::Relaxed;
     let gravar = GRAVAR_POS.swap(true, Relaxed);
@@ -1790,7 +1790,7 @@ pub(crate) unsafe extern "thiscall" fn comparar_find_record_fixture(estat: usize
     r
 }
 
-// ---------- 170a leva: o match_wrap_up do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
+// ---------- 170a leva: o fechamento do motor (4): as ordens das partidas e dos jogadores e a troca do evento ----------
 
 /// one step of the human's match on a network, by the clock and the humans' scoreboard (everyone sees each state;
 /// sounds, events, engine step, end, half time, goals, minute); records it (0x729ff0) and picks the day's human match

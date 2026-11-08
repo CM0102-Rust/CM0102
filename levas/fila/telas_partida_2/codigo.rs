@@ -115,7 +115,7 @@ unsafe extern "C" fn latest_scores_input(item: u32) -> i32 {
     ligacao(item)
 }
 
-// ponytail: abrir e respond mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
+// ponytail: abrir e responder mexem em telas, menu e hora (não rodam duas vezes): no modo comparação só a
 // original roda; as cópias se provam no jogo do Lucas em modo Rust (contadores "telas ..." no ddraw.log)
 unsafe extern "C" fn comparar_open_latest_scores(vaga: u32, entrada: usize) {
     original_fn::<unsafe extern "C" fn(u32, usize)>(%%I0%%)(vaga, entrada)

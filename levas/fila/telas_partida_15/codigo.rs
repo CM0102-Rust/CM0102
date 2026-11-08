@@ -77,14 +77,14 @@ unsafe fn show_selection_warning(texto_obj: usize, msg: *const u8, caixa_sobre: 
 
 /// { 0x7260f0 } (cdecl, match_screens.cpp, ~7 KB com os pedaços até 0x727c2e): desenha a conferência
 /// da escalação do clube (parâmetro 0) para o jogo (parâmetro 1) e a equipe (parâmetro 2). Passa pelas
-/// 20 vagas da tática (0x8968f0): conta starters (< 11), reservas (< 11 + o banco [jogo+0x4d] & 0xf)
+/// 20 vagas da tática (0x8968f0): conta titulares (< 11), reservas (< 11 + o banco [jogo+0x4d] & 0xf)
 /// e os de fora; dos que estão no time, junta os convocados pela seleção (0x7757d0), os emprestados a
 /// outro clube (0x4cf6d0/0x4cf5a0, fora da seleção), os inelegíveis com o mesmo motivo do primeiro
 /// (0x8cf5e0), os suspensos (0x55d270), os lesionados e os indisponíveis (0x62c400/0x62ed70: lesão de
 /// tipo 0x4d a 0x51 no idioma 0 conta como indisponível) e os sem permissão de trabalho (0x8c7560, fora
 /// da competição [0x9cf684] e de amistoso). Depois o fundo do clube, o menu, as cores e o título com o
 /// nome. O primeiro grupo não vazio, nessa ordem, vira o aviso "Team Selection" com os nomes (ligados)
-/// e o botão "Ok"; senão o limite do banco do dia (0x8cf880); senão menos de 11 starters; senão
+/// e o botão "Ok"; senão o limite do banco do dia (0x8cf880); senão menos de 11 titulares; senão
 /// "Please Confirm": o capitão escolhido (0x727e20) quando não há um válido, os cobradores de bola
 /// parada fora dos 11, os reservas que faltam, os de fora do grupo, "Proceed to the match ?" e a lista
 /// com "No" e "Yes".

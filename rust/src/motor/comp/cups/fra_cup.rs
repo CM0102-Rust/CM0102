@@ -331,9 +331,9 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
     }
     let mut n = 0i32;
     let todos = || read_u32_as_usize(G_CLUB_COUNT) as i32;
-    let limite = if read_i16(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
+    let limit = if read_i16(this + 0x40) == 0x7d1 { 0x10 } else { 0xe };
     enter_clubs_pass(this, &mut n, todos, true, |c, n| {
-        comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_u32_as_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limite
+        comp_id_at(c, 0x57) == Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_u32_as_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_u32_as_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
     });
     // a original testa o tamanho antes de cada clube: a passada para quando a lista chega a 16
     let mut i: i16 = 0;

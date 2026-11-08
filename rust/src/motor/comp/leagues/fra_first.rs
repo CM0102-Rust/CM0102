@@ -935,7 +935,7 @@ pub(crate) unsafe fn is_2001_season(this: usize) -> bool {
 ///
 /// [pt] As regras comuns às três: 1 ponto pelo empate (+0xc3), categoria 2 nas partidas (+0xc4), clubes nacionais (+0x42
 /// = 1), os desempates 1, 2 e 3 (+0xc5..+0xc7), nenhum play-off (+0xbf = +0xc0 = 0), os bits de regra +0xd9 = 0x83
-/// (a liga tem campeão, as vagas de cima são de acesso e a ordem das rodadas tackle ao meio) e 3 substituições
+/// (a liga tem campeão, as vagas de cima são de acesso e a ordem das rodadas dividida ao meio) e 3 substituições
 /// (+0x4a).
 pub(crate) fn common_rules() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 1), (0xc6, 1, 2), (0xc7, 1, 3), (0xbf, 1, 0), (0xc0, 1, 0), (0xd9, 2, 0x83), (0x4a, 1, 3)]
@@ -990,15 +990,15 @@ pub(crate) unsafe fn national_division_rules(this: usize) -> Vec<(usize, u8, u32
 /// grava as regras sem a virtual +0x3c; os campos que a cópia grava saem iguais aos da original, e a devolução 1; no
 /// fim fica a faixa da original.
 pub(crate) unsafe fn fra_first_compare_league_rules(nome: &str, this: usize, escritas: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copia: impl FnOnce() -> u32) -> u32 {
-    let faixa = [(this + 0x1c, 0xd0)];
-    let antes = crate::comparacao::Memoria::ler(&faixa);
+    let band = [(this + 0x1c, 0xd0)];
+    let antes = crate::comparacao::Memoria::ler(&band);
     let r = original();
-    let mo = crate::comparacao::Memoria::ler(&faixa);
+    let mo = crate::comparacao::Memoria::ler(&band);
     antes.escrever();
     CQJ5_ENSAIO = true;
     let rr = crate::aleatorio::pausar_rastro(copia);
     CQJ5_ENSAIO = false;
-    let mr = crate::comparacao::Memoria::ler(&faixa);
+    let mr = crate::comparacao::Memoria::ler(&band);
     mo.escrever();
     let campo = |m: &crate::comparacao::Memoria, d: usize, t: u8| -> u32 {
         let b = &m.0[0].1[d - 0x1c..];
