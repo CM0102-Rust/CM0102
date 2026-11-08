@@ -472,7 +472,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     }
     let (a73, b73) = (read_u8(ea + 0x73) as i32, read_u8(eb + 0x73) as i32);
     let clubs = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
-    if (a73 - b73).abs() > match_pl_ftol(clubs as f64 * read_f64_at(0x9689e0)) as i16 as i32 { // 0x9689e0 = 0.25
+    if (a73 - b73).abs() > ftol(clubs as f64 * read_f64_at(0x9689e0)) as i16 as i32 { // 0x9689e0 = 0.25
         return 0;
     }
     let (na, nb) = (league_stats_rating(ea, a73 as f64), league_stats_rating(eb, b73 as f64));

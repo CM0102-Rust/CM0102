@@ -30,7 +30,7 @@ unsafe fn cqc8_f(a: usize) -> f64 {
 }
 
 /// _ftol (0x945640): truncado para inteiro (a original usa só eax).
-fn ftol_f64(x: f64) -> i32 {
+fn ftol(x: f64) -> i32 {
     x as i64 as i32
 }
 
@@ -220,7 +220,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         v += cqc8_f(0x967880);
         v = v * cqc8_f(0x96d1c8) - cqc8_f(0x96d1c0); // cqc8: a nota do jogo (× 67 − 470)
         v *= fator;
-        aj = aj.wrapping_add(ftol_f64(v));
+        aj = aj.wrapping_add(ftol(v));
         // a reputação média dos adversários escalados (pela nação do clube)
         let estrangeira: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(0x53d980usize);
         let (mut s1, mut s2) = (0i32, 0i32);
@@ -403,13 +403,13 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         if cqc8_u(board_row(this, clube) + 0xf) & 4 != 0 { // a palavra +0xe & 0x400
             mult = mult + mult;
             if (aj as i16) < 0 {
-                aj = ftol_f64((aj as i16) as f64 * cqc8_f(0x968940));
+                aj = ftol((aj as i16) as f64 * cqc8_f(0x968940));
             }
         } else {
             mult *= cqc8_f(0x968940);
         }
     }
-    let mut dx = ftol_f64((aj as i16) as f64 * mult);
+    let mut dx = ftol((aj as i16) as f64 * mult);
     if fl & 0x800 != 0 && (dx as i16) < 0 {
         dx = (dx as i16 as i32) / 3;
     }
@@ -517,7 +517,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
         let tec = cqc8_d(clube + 0xcf);
         let marca: unsafe extern "thiscall" fn(usize, usize) -> u8 = core::mem::transmute(0x7a7eb0usize);
         if tec != 0 && marca(cqc8_d(0xb7434c), tec) != 0 {
-            aj = ftol_f64((aj as i16) as f64 * cqc8_f(0x968968));
+            aj = ftol((aj as i16) as f64 * cqc8_f(0x968968));
         }
     }
     // a confiança
@@ -525,7 +525,7 @@ unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, clu
     crate::comparison::branch("cqc_8 confianca");
     for (o, k) in [(6usize, 0x968e40usize), (0xa, 0x968968), (8, 0x968980), (0xc, 0x968918)] {
         let l = board_row(this, clube) + o;
-        let t = ftol_f64(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste
+        let t = ftol(v * cqc8_f(k)); // cqc8: a confiança pelo ajuste
         cqc8_pw(l, cqc8_w(l).wrapping_add(t as i16));
     }
     for o in [6usize, 0xa, 8, 0xc] {

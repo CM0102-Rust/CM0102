@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
                 _ => non_player_attribute_rating(f, 0x11),
             };
             // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
-            let q = match_pl_ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: the quantity divisor
+            let q = ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: the quantity divisor
             crate::comparison::branch("cqf_7 nota do treinador");
             *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
         }
@@ -958,9 +958,9 @@ pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: us
     }
     if n != 0 {
         crate::comparison::branch("cpt_8 treinadores");
-        soma = match_pl_ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: the average of the coaches
+        soma = ftol(soma as f64 / coach_average_divisor(n)) as i16; // cpt8: the average of the coaches
     }
-    let r = match_pl_ftol(soma as f64 * read_f64_at(0x970400)); // 0x970400 = 5.714285714
+    let r = ftol(soma as f64 * read_f64_at(0x970400)); // 0x970400 = 5.714285714
     if (r as i16) < 0x32 {
         return 0x32;
     }
@@ -1005,12 +1005,12 @@ pub(crate) unsafe extern "thiscall" fn get_coach_assignments(this: usize, manage
 /// (0x8b2250) e pela reassign_squad_schedules (0x8b2470); vai para a ficha de forma (Injury::set_training_load 0x62c660).
 pub(crate) unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
     let level = |k: usize| *((this + k) as *const i8) as f64;
-    let a = match_pl_ftol(level(4) * read_f64_at(0x96f878)) as i16; // 0x96f878 = -1.3
-    let mut s = match_pl_ftol(level(8) * read_f64_at(0x968968)) as i16; // 0x968968 = 0.5
+    let a = ftol(level(4) * read_f64_at(0x96f878)) as i16; // 0x96f878 = -1.3
+    let mut s = ftol(level(8) * read_f64_at(0x968968)) as i16; // 0x968968 = 0.5
     s = s.wrapping_sub(a);
-    s = s.wrapping_sub(match_pl_ftol(level(7) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
-    s = s.wrapping_sub(match_pl_ftol(level(6) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
-    s = s.wrapping_sub(match_pl_ftol(level(5) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
+    s = s.wrapping_sub(ftol(level(7) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
+    s = s.wrapping_sub(ftol(level(6) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
+    s = s.wrapping_sub(ftol(level(5) * read_f64_at(0x969540)) as i16); // 0x969540 = -0.5
     if s >= 0x64 {
         return 0x64;
     }

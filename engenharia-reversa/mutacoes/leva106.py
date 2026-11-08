@@ -14,5 +14,5 @@ MUTACOES = [
     ('e_pot', "    let lo = pot * 50 - 3750;", "    let lo = pot * 50 - 3700;"),
     ('e_teto9', "    let r9 = preso(c9, f_9, f4(0x96d210), f4(0x96d208), t9);", "    let r9 = preso(c9, f_9, f4(0x96d210), f4(0x96d20c), t9);"),
     ('e_10000', "        let v = (v as i16).min(10000);", "        let v = (v as i16).min(9999);"),
-    ('e_rep', "                rb = match_pl_ftol(target as i16 as f64 * d8(0x967880) + rb as i16 as f64 * d8(0x9689d8));", "                rb = match_pl_ftol(target as i16 as f64 * d8(0x967880) + rb as i16 as f64);"),
+    ('e_rep', "                rb = ftol(target as i16 as f64 * d8(0x967880) + rb as i16 as f64 * d8(0x9689d8));", "                rb = ftol(target as i16 as f64 * d8(0x967880) + rb as i16 as f64);"),
 ]

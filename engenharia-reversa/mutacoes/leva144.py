@@ -4,7 +4,7 @@ MUTACOES = [
     ('c_lateral', "x = 7 - random(7) as i8;", "x = 6 - random(7) as i8;", "conducao throw_in sorteada"),
     ('c_falta', "y = if side == 0 { byte(m, engine::OFFSIDE_LINE).wrapping_sub(2) }", "y = if side == 0 { byte(m, engine::OFFSIDE_LINE).wrapping_sub(3) }", "conducao falta na area"),
     ('c_penalti', "let a4 = if random(100) == 0 { 5 } else { 1 };", "let a4 = if random(100) == 0 { 4 } else { 1 };", "conducao penalty"),
-    ('c_pressao', "l58 = match_pl_ftol(-(k as f64 * read_f64_at(0x969040)));", "l58 = match_pl_ftol(-(k as f64 * read_f64_at(0x969040) * 1.1));"),
+    ('c_pressao', "l58 = ftol(-(k as f64 * read_f64_at(0x969040)));", "l58 = ftol(-(k as f64 * read_f64_at(0x969040) * 1.1));"),
     ('c_passe', "l30 = (l49 as i32 + l27 as i32 + sum).wrapping_mul(l28) / 5;", "l30 = (l49 as i32 + l27 as i32 + sum).wrapping_mul(l28) / 6;"),
     ('c_avancar', "l14 = 4000 - l30;", "l14 = 4100 - l30;", "conducao instrucao de avancar"),
     ('c_perto', "+ *w(p, 0x29) as f64 * read_f64_at(0x968978));", "+ *w(p, 0x29) as f64 * read_f64_at(0x968978) * 1.1);"),

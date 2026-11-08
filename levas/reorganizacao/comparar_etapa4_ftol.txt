@@ -1,0 +1,8 @@
+    pool nao paginado 2.12 -> 2.15 GB, paginado 3.76 -> 3.76 GB
+execucao 1: parou em 2002-000, 255692718 sorteios, impressao deda0ba7647ebed9, partidas 0/0000000000000000, banco 0000000000000000, 569 s
+    alocador: AVISO nenhuma regiao fixa livre; heap do Windows (simulacao nao reproduzivel)
+    data: 100000000 comparacoes, 0 divergencias
+    motor: 1000000000 comparacoes, 0 divergencias
+    aleatorio: 100000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+0

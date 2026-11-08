@@ -7,7 +7,7 @@ MUTACOES = [
     ('n_contrato', "        3 | 4 | 7 => 25,", "        3 | 4 | 7 => 24,"),
     ('n_final', "        (500 - l4c) * l40", "        (501 - l4c) * l40"),
     ('n_veterano', "            Some(0x9689e0)", "            Some(0x968968)"),
-    ('n_forma', "        sum += match_pl_ftol(a / ((read_f64_at(0x96d640) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8)));", "        sum += match_pl_ftol(a / ((read_f64_at(0x96d640) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8))) + 1;"),
+    ('n_forma', "        sum += ftol(a / ((read_f64_at(0x96d640) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8)));", "        sum += ftol(a / ((read_f64_at(0x96d640) - b * read_f64_at(0x96a5c0)) * read_f64_at(0x968ff8))) + 1;"),
     ('v_folego', "        let e = extra + ((60 - minute) * 150).min(3000);", "        let e = extra + ((60 - minute) * 149).min(3000);"),
     ('v_tatica', "        l4c += fb(0x26) / 7;", "        l4c += fb(0x26) / 8;"),
     ('v_ferias', "        bonus = (base * 200).max(10000) + 40000;", "        bonus = (base * 200).max(10000) + 39999;"),

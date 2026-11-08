@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32)
 /// byte de baixo menor que 14 (com sinal), −2; senão −3 (word).
 pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
     let estatistica: unsafe extern "thiscall" fn(usize, usize, u32) -> f64 = core::mem::transmute(FN_COMP_STATS_GET_CLUB_STAT);
-    let x = match_pl_ftol(estatistica(read_u32_as_usize(this + 8), club, 0x12));
+    let x = ftol(estatistica(read_u32_as_usize(this + 8), club, 0x12));
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: the situation by statistic 0x12
 }
 

@@ -176,17 +176,17 @@ pub(crate) unsafe fn league_comp_reputation(league: usize) -> i32 {
 /// truncamento). Abaixo dele, o público vai a ele e o recorde (+0x7b) sobe até ele.
 pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
     let lim = if r < 5 {
-        let lim = match_pl_ftol((r.wrapping_mul(250)) as f64 * f);
+        let lim = ftol((r.wrapping_mul(250)) as f64 * f);
         if read_i32(c + club::ATTENDANCE) >= lim {
             return;
         }
         lim
     } else {
         let x = (r.wrapping_sub(4).wrapping_mul(750)) as f64 * f;
-        if read_i32(c + club::ATTENDANCE) >= match_pl_ftol(x).wrapping_add(1000) {
+        if read_i32(c + club::ATTENDANCE) >= ftol(x).wrapping_add(1000) {
             return;
         }
-        match_pl_ftol(x + 1000.0)
+        ftol(x + 1000.0)
     };
     write_i32(c + club::ATTENDANCE, lim);
     if lim > read_i32(c + club::MAX_ATTENDANCE) {
@@ -314,18 +314,18 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
         if pos == 1 && promotion() == 0 {
             let k = league_comp_reputation(league) + d.max(0) as i32;
             let val = if owner { k.wrapping_mul(200) } else { k.wrapping_mul(100) };
-            add(match_pl_ftol(val as f64 * f));
+            add(ftol(val as f64 * f));
         } else if promotion() == 0 && pos < 3 {
             let k = league_comp_reputation(league) + d.max(0) as i32;
             let val = if owner { k.wrapping_mul(125) } else { k.wrapping_mul(65) };
-            add(match_pl_ftol(val as f64 * f));
+            add(ftol(val as f64 * f));
         } else if promotion() != 0 && pos as i32 <= *((league + league::PROMOTED_COUNT) as *const i8) as i32 {
             if cima != 0 {
                 let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(read_i16(read_usize(league + 4) + 0x69));
                 if a < 1 {
                     a = 1;
                 }
-                let v = match_pl_ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.1).max(100);
+                let v = ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.1).max(100);
                 if owner {
                     let r = sorteio(v);
                     add(r.wrapping_add(v));
@@ -340,26 +340,26 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             if a > 0 {
                 let s = a as i32;
                 if owner {
-                    let v = match_pl_ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(75) as f64 * f);
+                    let v = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(75) as f64 * f);
                     let r = sorteio(v);
-                    let w = match_pl_ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(75) as f64 * f);
+                    let w = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(75) as f64 * f);
                     add(r.wrapping_add(w));
                 } else {
-                    let v = match_pl_ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(25) as f64 * f);
+                    let v = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(25) as f64 * f);
                     let r = sorteio(v);
-                    let w = match_pl_ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(10) as f64 * f);
+                    let w = ftol(league_comp_reputation(league).wrapping_mul(s).wrapping_mul(10) as f64 * f);
                     add(r.wrapping_add(w));
                 }
             } else {
                 let r = league_comp_reputation(league);
                 let val = if owner { r.wrapping_mul(50) } else { r.wrapping_mul(25) };
-                let v = match_pl_ftol(val as f64 * f);
+                let v = ftol(val as f64 * f);
                 add(sorteio(v));
             }
             let games = *((e + 5) as *const u8);
             if games != 0 {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
-                write_i32(c + club::ATTENDANCE, match_pl_ftol(val as f64 * f * 0.2));
+                write_i32(c + club::ATTENDANCE, ftol(val as f64 * f * 0.2));
             }
         } else if relegation() != 0
             && pos as i32 > read_i16(league + league::CLUB_COUNT) as i32 - *((league + league::RELEGATED_COUNT) as *const i8) as i32
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 if a > -1 {
                     a = -1;
                 }
-                let mut v = match_pl_ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.2).min(-100);
+                let mut v = ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.2).min(-100);
                 if read_i32(low + 0x20) == -1 {
                     let r = sorteio(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
@@ -377,7 +377,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let r = sorteio(v);
                 add(r.wrapping_add(v));
                 let rb = league_comp_reputation(low);
-                let lim = if rb > 7 { match_pl_ftol(rb.wrapping_mul(3000) as f64 * f) } else { match_pl_ftol(rb.wrapping_mul(2000) as f64 * f) };
+                let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
                 crate::comparison::branch("cqt_4 publico de quem caiu");
             }
@@ -391,12 +391,12 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             } else {
                 r.wrapping_mul(d as i32).wrapping_mul(5)
             };
-            let v = match_pl_ftol(val as f64 * f);
+            let v = ftol(val as f64 * f);
             add(sorteio(v));
             let games = *((e + 5) as *const u8);
             if games != 0 {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
-                write_i32(c + club::ATTENDANCE, match_pl_ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
+                write_i32(c + club::ATTENDANCE, ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
             crate::comparison::branch("cqt_4 publico do meio da tabela");
             raise_attendance_floor(c, league_comp_reputation(league), f);

@@ -19,7 +19,7 @@ MUTACOES = [
     ('cqa6_achado_nao_esta', '1 // cqa6: achado', '0 // mutacao: achado nao esta', 'cqa_6 achado'),
     ('cqa6_removido_conta', 'if read_u8(r + 0x20) & 1 != 0 { // cqa6: the removed one does not count', 'if read_u8(r + 0x20) & 1 != 0 && false { // mutacao: a removida conta', 'cqa_6 removido'),
     ('cqa7_valor_base_030', 'read_f64(0x96f918)) as u32 // cqa7: o valor base', '0.30) as u32 // mutacao: o valor base com 0,30', 'cqa_7 valor base'),
-    ('cqa7_listado_110', '*out = match_pl_ftol(*out as f64 * read_f64(0x9689b8)); // cqa7: the listed player of another club × 1.05', '*out = ftol(*out as f64 * 1.10); // mutacao: o listado x 1,10', 'cqa_7 listado para transferencia'),
+    ('cqa7_listado_110', '*out = ftol(*out as f64 * read_f64(0x9689b8)); // cqa7: the listed player of another club × 1.05', '*out = ftol(*out as f64 * 1.10); // mutacao: o listado x 1,10', 'cqa_7 listado para transferencia'),
     ('cqa7_idade_com_09', '(dd * read_f64(0x968e80) + read_f64(0x9689b0)); // cqa7: the age above the divisor', '(dd * read_f64(0x968e80) + 0.9); // mutacao: a idade com 0,9', 'cqa_7 idade'),
     ('cqa8_vencedor_sem_sorteio', '                let r = sorteio(0x15 - read_i8(person + staff::AMBITION) as i32); // cqa8: the winner random draw', '                let r = 4; // mutacao: sem o sorteio do vencedor', 'cqa_8 moral do vencedor'),
     ('cqa8_moral_sem_sorteio', '                    let r1 = sorteio(0x1e); // cqa8: the first morale random draw', '                    let r1 = 15; // mutacao: sem o primeiro sorteio da moral', 'cqa_8 testa a moral'),

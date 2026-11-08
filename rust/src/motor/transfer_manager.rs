@@ -1081,7 +1081,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
     crate::comparison::branch("cqe_2 opção montada");
     *atracao = 0x32; // cqe2: the attraction of the option
     write_u32_from_usize(new + offer::FEE, value as u32 as usize); // cqe2: the option price
-    let mut ceiling = match_pl_ftol(value as f64 * read_f64_at(0x9689c0)); // 0x9689c0 = 1.1
+    let mut ceiling = ftol(value as f64 * read_f64_at(0x9689c0)); // 0x9689c0 = 1.1
     // simplification: the position, the base rating, the marks and the status carry over from one slot to the next (the original leaves them on the
     // stack without value up to the first slot with record +0x61; a candidate without a record does not happen: they start at zero). The flags
     // outside 0..4 of the reach (which 0x5408c0 does not return) would be the previous ebp, initially the offer pointer.
@@ -4819,13 +4819,13 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     let pw = game_pow(x, read_f64_at(0x968938)); // 0x968938 = 4
     let a = x * read_f64_at(0x96a6b0); // 0x96a6b0 = 300
     let v = if !(pw >= a) { pw } else { a };
-    let mut n = match_pl_ftol(game_pow(read_i8_as_i32(p + staff::TEMPERAMENT) as f64, read_f64_at(0x968950)) * read_f64_at(0x968f10) - read_f64_at(0x96a590)) as i16; // 0x968950 = 2, 0x968f10 = 8, 0x96a590 = 1600
+    let mut n = ftol(game_pow(read_i8_as_i32(p + staff::TEMPERAMENT) as f64, read_f64_at(0x968950)) * read_f64_at(0x968f10) - read_f64_at(0x96a590)) as i16; // 0x968950 = 2, 0x968f10 = 8, 0x96a590 = 1600
     let sheet = read_usize(p + staff::PLAYER);
     n = n.wrapping_sub((read_i16(sheet + player_sheet::CURRENT_REPUTATION) as i32 / 40) as i16);
-    n = n.wrapping_sub(match_pl_ftol(v) as i16);
-    n = n.wrapping_sub(match_pl_ftol(game_pow(read_i8_as_i32(p + staff::AMBITION) as f64, read_f64_at(0x968950))) as i16); // 0x968950 = 2
-    n = n.wrapping_add(match_pl_ftol(game_pow(read_i8_as_i32(p + staff::PROFESSIONALISM) as f64, read_f64_at(0x968930))) as i16); // 0x968930 = 3
-    n = n.wrapping_add(match_pl_ftol(game_pow(read_i8_as_i32(p + staff::LOYALTY) as f64, read_f64_at(0x968930))) as i16); // 0x968930 = 3
+    n = n.wrapping_sub(ftol(v) as i16);
+    n = n.wrapping_sub(ftol(game_pow(read_i8_as_i32(p + staff::AMBITION) as f64, read_f64_at(0x968950))) as i16); // 0x968950 = 2
+    n = n.wrapping_add(ftol(game_pow(read_i8_as_i32(p + staff::PROFESSIONALISM) as f64, read_f64_at(0x968930))) as i16); // 0x968930 = 3
+    n = n.wrapping_add(ftol(game_pow(read_i8_as_i32(p + staff::LOYALTY) as f64, read_f64_at(0x968930))) as i16); // 0x968930 = 3
     if c2 == 0 {
         return;
     }
@@ -4849,8 +4849,8 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     let value: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
     let price: unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_ASKING_PRICE);
     let ponderado: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_TRANSFER_OFFER_GET_WEIGHTED_VALUE);
-    let a1 = match_pl_ftol(value(read_usize(G_CONTRACT_MANAGER), p, of_contract, 0, -1, 0) as f64 * read_f64_at(0x968940)); // 0x968940 = 1.5
-    let b1 = match_pl_ftol(price(read_usize(G_CONTRACT_MANAGER), of_contract, buyer, p, 0, 1, 1) as f64 * read_f64_at(0x9689b0)); // 0x9689b0 = 0.8
+    let a1 = ftol(value(read_usize(G_CONTRACT_MANAGER), p, of_contract, 0, -1, 0) as f64 * read_f64_at(0x968940)); // 0x968940 = 1.5
+    let b1 = ftol(price(read_usize(G_CONTRACT_MANAGER), of_contract, buyer, p, 0, 1, 1) as f64 * read_f64_at(0x9689b0)); // 0x9689b0 = 0.8
     let pond = ponderado(o, 0, 0, 0, 1, 1);
     let smaller = if a1 < b1 { a1 } else { b1 };
     if pond < smaller {
@@ -6548,7 +6548,7 @@ pub(crate) unsafe extern "thiscall" fn find_negotiated_loan_contract(this: usize
 ///
 /// [pt] O valor da oferta (+0x1b) × `f`, truncado (_ftol 0x945640; o x87 em precisão dupla).
 pub(crate) unsafe fn offer_value_times(o: usize, f: f64) -> usize {
-    match_pl_ftol(read_usize(o + offer::FEE) as i32 as f64 * f) as usize
+    ftol(read_usize(o + offer::FEE) as i32 as f64 * f) as usize
 }
 
 /// Person -> club of their contract (stored at 0xae1080), or 0.
@@ -7949,11 +7949,11 @@ pub(crate) unsafe extern "thiscall" fn pay_fee_and_record_clauses(this: usize, o
         let fv = finances(table(), seller);
         if fc != 0 {
             let s = (fc + finance::INSTALMENT_BALANCE) as *mut i32;
-            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970420))); // 0x970420 = -0.2380952381
+            *s = (*s).wrapping_add(ftol(parcela as f64 * read_f64_at(0x970420))); // 0x970420 = -0.2380952381
         }
         if fv != 0 {
             let s = (fv + finance::INSTALMENT_BALANCE) as *mut i32;
-            *s = (*s).wrapping_add(match_pl_ftol(parcela as f64 * read_f64_at(0x970418))); // 0x970418 = 0.2380952381
+            *s = (*s).wrapping_add(ftol(parcela as f64 * read_f64_at(0x970418))); // 0x970418 = 0.2380952381
         }
         by_in_list(this + transfer_manager_fields::INSTALMENTS, r.as_ptr(), 0xd);
     }
@@ -8772,7 +8772,7 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, off
             if interest(read_usize(this + transfer_manager_fields::SHORTLIST_MANAGER), p, buyer, 0, 0, 1, 0) > read_f64_at(0x968e58) { // 0x968e58 = 3.15
                 let x = deadline as i32 as f64 * read_f64_at(0x968e18); // 0x968e18 = 2.5
                 let ceiling = read_f64_at(0x968dd8); // 0x968dd8 = 30
-                value = Some(match_pl_ftol(if ceiling < x || x.is_nan() { ceiling } else { x }) as u8);
+                value = Some(ftol(if ceiling < x || x.is_nan() { ceiling } else { x }) as u8);
             }
         }
     }
@@ -8835,8 +8835,8 @@ pub(crate) unsafe extern "thiscall" fn pay_transfer_instalments(this: usize) {
         *((e + instalment::REMAINING) as *mut i8) = n;
         let fracoes = if n < 4 { Some((0x968918, 0x968f30)) } else if n < 8 { Some((0x967880, 0x969518)) } else { None };
         if let Some((a, b)) = fracoes {
-            write_u32(fp + finance::INSTALMENT_BALANCE, read_i32(fp + finance::INSTALMENT_BALANCE).wrapping_add(match_pl_ftol(read_i32(e) as f64 * read_f64_at(a))) as u32);
-            write_u32(fr + finance::INSTALMENT_BALANCE, read_i32(fr + finance::INSTALMENT_BALANCE).wrapping_add(match_pl_ftol(read_i32(e) as f64 * read_f64_at(b))) as u32);
+            write_u32(fp + finance::INSTALMENT_BALANCE, read_i32(fp + finance::INSTALMENT_BALANCE).wrapping_add(ftol(read_i32(e) as f64 * read_f64_at(a))) as u32);
+            write_u32(fr + finance::INSTALMENT_BALANCE, read_i32(fr + finance::INSTALMENT_BALANCE).wrapping_add(ftol(read_i32(e) as f64 * read_f64_at(b))) as u32);
         }
         if read_u8(e + instalment::REMAINING) == 0 {
             crate::comparison::branch("cpo_10 prestacao acabada");
@@ -9302,7 +9302,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_veto(_this: usize, offer: usi
         crate::comparison::branch("cpl_2 veto da diretoria valores");
         for k in [0xb, 9, 0xd] {
             let p = (read_usize(player + staff::PLAYER) + k) as *mut i16;
-            core::ptr::write_unaligned(p, match_pl_ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%; 0x9689d8 = 0.9
+            core::ptr::write_unaligned(p, ftol(core::ptr::read_unaligned(p) as f64 * read_f64_at(0x9689d8)) as i16); // 90%; 0x9689d8 = 0.9
         }
         return 1;
     }
@@ -10531,7 +10531,7 @@ pub(crate) unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize,
                         core::ptr::read_unaligned(0x967878 as *const f64)
                     };
                     crate::comparison::branch("cpv_2 injury_word_0c do jogador");
-                    let sum = match_pl_ftol(dif * k) as i16; // cpv2: the reputation rises
+                    let sum = ftol(dif * k) as i16; // cpv2: the reputation rises
                     let r = (sheet + player_sheet::CURRENT_REPUTATION) as *mut i16;
                     core::ptr::write_unaligned(r, core::ptr::read_unaligned(r).wrapping_add(sum));
                     let f2 = read_usize(person + staff::PLAYER);

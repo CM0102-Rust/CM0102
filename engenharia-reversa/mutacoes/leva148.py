@@ -1,6 +1,6 @@
 # Mutacoes da leva148 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva148.py --carreira 2002-06-01
 MUTACOES = [
-    ('i_angulo', "match_pl_ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0))", "match_pl_ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0) + 1.0)"),
+    ('i_angulo', "ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0))", "ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0) + 1.0)"),
     ('i_ceu', "*b(engine::ABANDON_MINUTE) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0xf) }", "*b(engine::ABANDON_MINUTE) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0x10) }"),
     ('i_duracao', "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1ef;", "    *b(engine::SUBSTITUTION_PENDING) = 0;\n    *w(engine::PERIOD_END) = 0x1f0;"),
     ('i_folego', "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2710;", "    *w(engine::LAST_STANCE_CALL_TICK) = 0x2700;"),

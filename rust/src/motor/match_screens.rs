@@ -344,13 +344,13 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
             pb(x + 3, b(y - 0x4d));
             // simplification: fld f32 × fmul f64 (0.01) in 80 bits on the x87; in f64 it gives the same truncation (f32 × 0.01 never falls within 2^-53 of an integer)
             let rating = core::ptr::read_unaligned((y - 0x1c) as *const f32) as f64 * core::ptr::read_unaligned(0x967898 as *const f64);
-            pb(x + 4, match_pl_ftol(rating) as u8);
+            pb(x + 4, ftol(rating) as u8);
             for (o, de) in [(5, 0x5d), (6, 0x5a), (7, 0x5c), (8, 0x5b), (9, 0x5f), (0xa, 0x5e), (0xb, 0x59), (0xc, 0x58),
                             (0xd, 0x55), (0xe, 0x54), (0xf, 0x56), (0x10, 0x45), (0x11, 0x46), (0x12, 0x44), (0x13, 0x43),
                             (0x16, 0x4a), (0x17, 0x47), (0x14, 0x49)] {
                 pb(x + o, b(y - de));
             }
-            pw(x + 0x1a, match_pl_ftol(core::ptr::read_unaligned((y - 0x18) as *const f32) as f64) as u16);
+            pw(x + 0x1a, ftol(core::ptr::read_unaligned((y - 0x18) as *const f32) as f64) as u16);
             pb(x + 0x15, b(y - 0x52));
             pb(x + 0x18, b(y - 0x48));
             pw(x + 0x1c, w(y - 0x22));

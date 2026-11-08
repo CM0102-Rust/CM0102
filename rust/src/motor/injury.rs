@@ -124,9 +124,9 @@ pub(crate) unsafe fn injure_with(m: usize, kind: u32, chance: u32, p: usize, o: 
         *b(p, match_player::INJURY_FORCES_OFF) = 1;
         *folego = (*folego as f64 - (c * c) as f64) as f32;
     } else {
-        local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
+        local = random(ftol((c * c) as f64 * read_f64_at(0x968968))) as f32; // 0x968968 = 0.5
         *folego = (*folego as f64 - local as f64) as f32;
-        let r = random(match_pl_ftol(local as f64 * read_f32_at(0x968f18) as f64)); // 0x968f18 = 0.5
+        let r = random(ftol(local as f64 * read_f32_at(0x968f18) as f64)); // 0x968f18 = 0.5
         *((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;
         let d5 = (p + match_player::STAMINA_ATTRIBUTE) as *mut f32;
         *d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32; // 0x968f18 = 0.5
@@ -737,7 +737,7 @@ pub(crate) fn injury_type_offset(kind: i8) -> usize {
 /// [0x967898], fimul, _ftol 0x945640; x87 em dupla precisão), no máximo 60 dias antes do fim.
 pub(crate) unsafe fn return_to_training_days(kind: i8, days: i16) -> i16 {
     let pct = read_i8_as_i32(G_INJURY_TYPE_TRAINING_RETURN_PERCENT + injury_type_offset(kind));
-    let x = match_pl_ftol(pct as f64 * read_f64_at(0x967898) * days as f64) as i16; // 0x967898 = 0.01
+    let x = ftol(pct as f64 * read_f64_at(0x967898) * days as f64) as i16; // 0x967898 = 0.01
     if (x as i32) + 0x3c < days as i32 { days.wrapping_sub(0x3c) } else { x }
 }
 
@@ -2712,7 +2712,7 @@ pub(crate) unsafe extern "thiscall" fn get_condition(this: usize, player: usize,
         100
     };
     if em_porcento != 0 {
-        c = match_pl_ftol(c as i16 as f64 * read_f32_at(0x96bac8) as f64 + read_f64_at(0x968968)); // 0x96bac8 = 0.009999999776, 0x968968 = 0.5
+        c = ftol(c as i16 as f64 * read_f32_at(0x96bac8) as f64 + read_f64_at(0x968968)); // 0x96bac8 = 0.009999999776, 0x968968 = 0.5
         if c as i16 > 100 {
             c = 100;
         }
@@ -2742,7 +2742,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_condition(this: usize, player: 
     atualizar(this, player);
     let c = core::ptr::read_unaligned((*(this as *const usize)).wrapping_add((*(player as *const i32) as usize).wrapping_mul(31)).wrapping_add(0xa) as *const i16);
     if em_porcento != 0 {
-        return match_pl_ftol(c as f64 * *(0x96bac8 as *const f32) as f64) as u16; // in percent
+        return ftol(c as f64 * *(0x96bac8 as *const f32) as f64) as u16; // in percent
     }
     c as u16
 }
@@ -2999,8 +2999,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     } else {
         read_f64_at(0x967890) // 0x967890 = 1
     };
-    let r1 = match_pl_ftol(l38.wrapping_mul(500) as f64 * k);
-    let r2 = match_pl_ftol(l3c.wrapping_mul(250) as f64 * k);
+    let r1 = ftol(l38.wrapping_mul(500) as f64 * k);
+    let r2 = ftol(l3c.wrapping_mul(250) as f64 * k);
     let mut cond = r2.wrapping_add(mc).wrapping_add(r1);
     if cond > 10000 {
         cond = 10000;

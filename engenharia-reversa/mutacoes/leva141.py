@@ -4,7 +4,7 @@ MUTACOES = [
     ('l_teto', '    if *w(engine::INJURY_COUNT) > 6 {\n        return;', '    if *w(engine::INJURY_COUNT) > 7 {\n        return;'),
     ('l_causador', 'let q = (o + 0x31) as *mut i16;\n        *q = (*q).wrapping_sub(10);', 'let q = (o + 0x31) as *mut i16;\n        *q = (*q).wrapping_sub(9);'),
     ('l_grave', 'if g as i8 > 0x32 {\n        crate::comparison::branch("lesao grave");', 'if g as i8 > 0x33 {\n        crate::comparison::branch("lesao grave");'),
-    ('l_folego', 'local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968))) as f32;', 'local = random(match_pl_ftol((c * c) as f64 * read_f64_at(0x968968)) + 1) as f32;'),
+    ('l_folego', 'local = random(ftol((c * c) as f64 * read_f64_at(0x968968))) as f32;', 'local = random(ftol((c * c) as f64 * read_f64_at(0x968968)) + 1) as f32;'),
     ('l_59', '*((p + match_player::STAMINA_BOOST) as *mut f32) = r as f32;', '*((p + match_player::STAMINA_BOOST) as *mut f32) = (r + 1) as f32;'),
     ('l_d5', '*d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64) as f32;', '*d5 = (*d5 as f64 * read_f32_at(0x968f18) as f64 * 1.01) as f32;'),
     ('l_forca', 'let v = (byte(person, player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64_at(0x96d458);', 'let v = (byte(person, player_sheet::INJURY_PRONENESS) as i32 * 26) as f64 + read_f64_at(0x96d458);'),

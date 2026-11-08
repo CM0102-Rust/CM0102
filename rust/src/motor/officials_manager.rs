@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     let b = nation_officials_block(this, k);
                     let count = read_i32(b + officials_nation_block::REFEREE_COUNT) as f64;
                     crate::comparison::branch("cpy_8 arbitro neutro");
-                    (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(match_pl_ftol(count * -0.75)), match_pl_ftol(count * 0.25)) // cpy8: the top quarter
+                    (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
                     let nacao = if read_usize(comp + competition::NATION) != 0 {
                         read_i32(read_usize(comp + competition::NATION))

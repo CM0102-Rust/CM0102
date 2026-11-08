@@ -8,7 +8,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn chance_to_know(person: usize, level: i8) -> i32 {
     let x = (*((person + 4) as *const i16) as f64 + (level as f64 + level as f64)) * 0.05 + 10.0;
     let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5; // 0x968a80 = 0.3333333333
-    match_pl_ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
+    ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y })
 }
 
 /// Fog of war: records knowledge of `pessoa` (9-byte records in [this], by id): stamps today's date at +1 and raises

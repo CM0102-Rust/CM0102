@@ -213,7 +213,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: usize, call: &mut dyn FnMut(usize, us
                         && partida() != 0
                         && byte(partida(), 0x40) != 0
                     {
-                        let r1 = random(match_pl_ftol(read_f32_at(p + match_player::CONFIDENCE) as f64));
+                        let r1 = random(ftol(read_f32_at(p + match_player::CONFIDENCE) as f64));
                         if r1 > random(100) {
                             let r3 = random(byte(person, staff::TEMPERAMENT) as i32);
                             if r3 < random(10) {
@@ -789,7 +789,7 @@ pub(crate) unsafe fn age_at_date(p: usize, data: usize) -> i8 {
 pub(crate) unsafe fn free_agent_adjust(p: usize, x: i16) -> i16 {
     let x = x as f64;
     let k = if *((p + staff::INT_APPS) as *const u8) != 0 { 0x9689e0 } else { 0x968e48 };
-    match_pl_ftol(x - x * read_f64_at(k)) as i16
+    ftol(x - x * read_f64_at(k)) as i16
 }
 
 /// True if a <= x <= b.
@@ -1112,11 +1112,11 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             if !in_range(e34, 1, 200) {
                 let mut x: i16 = if in_range(e2c, 1, 200) {
-                    if e2c > 100 { match_pl_ftol(e2c as f64 * read_f64_at(0x9689e0)) as i16 } else { s16(3).wrapping_add(1) } // 0x9689e0 = 0.25
+                    if e2c > 100 { ftol(e2c as f64 * read_f64_at(0x9689e0)) as i16 } else { s16(3).wrapping_add(1) } // 0x9689e0 = 0.25
                 } else if in_range(e20, 1, 200) {
-                    match_pl_ftol(e20 as f64 * read_f64_at(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
+                    ftol(e20 as f64 * read_f64_at(if e20 < 0xaf { 0x968f20 } else { 0x9689e0 })) as i16
                 } else if in_range(ca0, 1, 200) {
-                    let t = match_pl_ftol(ca0 as f64 * read_f64_at(0x9689e0)); // 0x9689e0 = 0.25
+                    let t = ftol(ca0 as f64 * read_f64_at(0x9689e0)); // 0x9689e0 = 0.25
                     let r = sorteio(t);
                     s16(r).wrapping_add(1)
                 } else {
@@ -1203,7 +1203,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             }
             if rd(p + staff::CLUB_JOB) == 0 && (b(p + staff::INT_APPS) == 0 || age_at_date(p, data) > 0x20) {
                 let r = sorteio(6); // the original stores ca in [0x20] only for the fild
-                let f = match_pl_ftol(ca as f64 * read_f64_at(0x969518)); // 0x969518 = -0.1
+                let f = ftol(ca as f64 * read_f64_at(0x969518)); // 0x969518 = -0.1
                 ca = ca.wrapping_add(r.wrapping_mul(f) as i16);
                 ca = if ca < 1 { 1 } else if ca > 200 { 200 } else { ca };
             }
@@ -1443,7 +1443,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         vet_j(j, p, 0xae2044, &mut e1a, core::ptr::null_mut(), core::ptr::null_mut());
                         vet_j(cj, q, 0xae2114, core::ptr::null_mut(), core::ptr::null_mut(), core::ptr::null_mut());
                         let dif = (w(j + player_sheet::CURRENT_ABILITY) as i32 - w(cj + 5) as i32).abs();
-                        let mut esc = match_pl_ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
+                        let mut esc = ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
                         let g0 = w(G_PLAYER_INIT_ATTRIBUTE_VECTOR_A);
                         let comparar = if g0 == 0x14 {
                             if w(G_PLAYER_INIT_ATTRIBUTE_VECTOR_B) == g0 {
@@ -1591,7 +1591,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             ww(nj + non_player::WORLD_REPUTATION, a);
             ww(nj + non_player::HOME_REPUTATION, bp);
             let rep = |x: usize| w(x + 0x80);
-            let vezes = |x: usize, k: usize| match_pl_ftol(rep(x) as f64 * read_f64_at(k)) as i16;
+            let vezes = |x: usize, k: usize| ftol(rep(x) as f64 * read_f64_at(k)) as i16;
             if !in_range(a, 1, 10000) {
                 let c = rd(p + staff::CLUB_JOB);
                 let s = rd(p + staff::NATIONAL_JOB);
@@ -1740,7 +1740,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         vet_nj(nj, p, 0xae18bc, core::ptr::null_mut());
                         vet_nj(cn, q, 0xae2238, core::ptr::null_mut());
                         let dif = (w(nj + non_player::CURRENT_ABILITY) as i32 - w(cn + 4) as i32).abs();
-                        let mut esc = match_pl_ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
+                        let mut esc = ftol(dif as f64 * read_f64_at(0x968e18)); // 0x968e18 = 2.5
                         if w(G_NON_PLAYER_ATTRIBUTE_VECTOR) != -0x7f {
                             let mut o = 0isize;
                             loop {
@@ -3126,12 +3126,12 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     }
     let mut adjust = 0i32;
     if m(2, 0x16) > read_f32_at(0x969570) as f64 { // 0x969570 = 180
-        let a = match_pl_ftol(m(2, 0xd)) as i8 as i32;
+        let a = ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
-            adjust = match_pl_ftol(a as f64 - read_f64_at(0x969568)); // 0x969568 = 65
+            adjust = ftol(a as f64 - read_f64_at(0x969568)); // 0x969568 = 65
         }
         let x = (m(2, 5) * read_f32_at(0x969560) as f64) as f32; // fstp dword; 0x969560 = 50
-        adjust = adjust.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
+        adjust = adjust.wrapping_add(ftol(x as f64 / m(2, 1)));
     }
     if b(0x37).wrapping_add(adjust) > random(50) {
         f += 0x200;
@@ -3145,7 +3145,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         let mut sim = false;
         if v14f as f64 > read_f64_at(0x9689a0) { // 0x9689a0 = 0
             let r = random(10) + 5;
-            sim = match_pl_ftol(v14f as f64) as i8 as i32 > r;
+            sim = ftol(v14f as f64) as i8 as i32 > r;
         }
         if !sim && computed_player_attribute(person, 0x17) > random(5) + 15 {
             let x = m(2, 7) * read_f64_at(0x968f50); // fstp qword; 0x968f50 = 150
@@ -3260,12 +3260,12 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     }
     let mut adjust = 0i32;
     if m(2, 0x16) > read_f32_at(0x969570) as f64 { // 0x969570 = 180
-        let a = match_pl_ftol(m(2, 0xd)) as i8 as i32;
+        let a = ftol(m(2, 0xd)) as i8 as i32;
         if a > 10 {
             adjust = 70 - a;
         }
         let x = (m(2, 5) * read_f32_at(0x969580) as f64) as f32; // fstp dword; 0x969580 = -50
-        adjust = adjust.wrapping_add(match_pl_ftol(x as f64 / m(2, 1)));
+        adjust = adjust.wrapping_add(ftol(x as f64 / m(2, 1)));
     }
     if b(0x37) < random(-50).wrapping_add(adjust) {
         f += 0x400;
@@ -3275,7 +3275,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         let vf = v as f32; // fst dword
         if v > read_f64_at(0x9689a0) { // 0x9689a0 = 0
             let r = random(10);
-            if (match_pl_ftol(vf as f64) as i8 as i32) < r {
+            if (ftol(vf as f64) as i8 as i32) < r {
                 f += 0x800;
             }
         }
@@ -5072,7 +5072,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
         }
         let cx = (division as i32).wrapping_mul(500) as i16 as f64; // imul cx, cx, 0x1f4: 16 bits
         let r = ((teto - x) * rep as f64 + cx * x) * read_f64_at(0x967880); // 0x967880 = 0.1
-        return (match_pl_ftol(r) as u32).wrapping_add(bonus as u32);
+        return (ftol(r) as u32).wrapping_add(bonus as u32);
     }
     // no league, or the club already at the division’s level: reputation ±500; the high part of eax is leftover
     let mut eax = if league == 0 { comp } else { high as usize };
@@ -6850,7 +6850,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     }
     remove_or_restore_training(person, 0);
     let b = |d: usize| *((player + d) as *const i8) as i32;
-    let f = |x: i32, k: usize| match_pl_ftol(x as f64 * read_f64_at(k));
+    let f = |x: i32, k: usize| ftol(x as f64 * read_f64_at(k));
     let smaller = b(player_sheet::RIGHT_FOOT).min(b(player_sheet::LEFT_FOOT));
     let t = f(b(player_sheet::PLAYER_PACE), 0x968940) - f(b(player_sheet::LEADERSHIP), 0x969548) - f(b(player_sheet::JUMPING), 0x969540) - f(b(player_sheet::ACCELERATION), 0x969538)
         + (f(b(player_sheet::TEAMWORK), 0x9689b0) - f(b(player_sheet::TECHNIQUE), 0x969548) - f(smaller, 0x969530)) + b(player_sheet::WORK_RATE);
@@ -6952,7 +6952,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
     let v = array.as_mut_ptr();
     let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, -20, &[],
-        |x| match_pl_ftol(x as f64 * read_f64_at(0x968f98))); // 0x968f98 = 1.75
+        |x| ftol(x as f64 * read_f64_at(0x968f98))); // 0x968f98 = 1.75
     let devolver: unsafe extern "C" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_DATABASE_ATTRIBUTE_VECTOR_TO_PLAYER);
     devolver(player, person, v as usize);
     if *((player + player_sheet::GOALKEEPER) as *const i8) >= 0xf {
@@ -8246,7 +8246,7 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
         let b = *((not_player + d) as *const i8) as f64;
         let x = (*((not_player + non_player::CURRENT_ABILITY) as *const i16) as f64 + (b + b)) * 0.05 + 10.0;
         let y = (x * x * 0.1 + x) * read_f64_at(0x968a80) + 0.5; // 0x968a80 = 0.3333333333
-        match_pl_ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
+        ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
     };
     match a {
         1 => byte(person, staff::ADAPTABILITY),
@@ -9318,7 +9318,7 @@ pub(crate) unsafe fn attribute_rating(v: f64) -> u8 {
     let x = v * read_f64_at(0x967888) + read_f64_at(0x9688b0); // 0x967888 = 0.05, 0x9688b0 = 10
     let z = (x * x * read_f64_at(0x967880) + x) * read_f64_at(0x968a80) + read_f64_at(0x968968); // arredonda; 0x967880 = 0.1, 0x968a80 = 0.3333333333, 0x968968 = 0.5
     let (minimo, maximo) = (read_f64_at(0x967890), read_f64_at(0x968ea8)); // 0x967890 = 1, 0x968ea8 = 20
-    match_pl_ftol(if z > minimo {
+    ftol(if z > minimo {
         if z < maximo {
             z
         } else {

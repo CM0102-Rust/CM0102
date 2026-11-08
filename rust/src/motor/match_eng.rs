@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn classify_move(this: usize, code: i16, a: 
         ang = (0x168i32 - ang as i32) as i16;
     }
     let assinado = sinal.wrapping_mul(ang);
-    let tol = match_pl_ftol(read_f32_at(0x96d848) as f64 - (strength as f64 * read_f32_at(0x96d84c) as f64 - read_f32_at(this + match_player::TECHNIQUE) as f64)); // 0x96d848 = 90, 0x96d84c = 18
+    let tol = ftol(read_f32_at(0x96d848) as f64 - (strength as f64 * read_f32_at(0x96d84c) as f64 - read_f32_at(this + match_player::TECHNIQUE) as f64)); // 0x96d848 = 90, 0x96d84c = 18
     let (lim, menos) = (tol as i16, (tol.wrapping_neg()) as i16);
     let person = *((this + match_player::PLAYER) as *const usize);
     let (r, attr) = if assinado > lim {
@@ -267,9 +267,9 @@ pub(crate) unsafe extern "thiscall" fn can_play(this: usize, a: i8, b: i8, calcu
         let f: unsafe extern "stdcall" fn(usize, i8, i8) -> u8 = core::mem::transmute(FN_CAN_RUN_INTO_CENTRAL_BOX);
         let v = byte(this, match_player::MOMENT_VISION) as i32;
         let (base, k) = if f(this, a, b) != 0 { (v * 4, 0x96d7b0) } else { (v * 5, 0x96d664) };
-        let t1 = match_pl_ftol((base as f64 + strength as f64 * read_f32_at(0x968a78) as f64) + read_f32_at(k) as f64); // 0x968a78 = 10
+        let t1 = ftol((base as f64 + strength as f64 * read_f32_at(0x968a78) as f64) + read_f32_at(k) as f64); // 0x968a78 = 10
         let d = distance_table_cell(byte(this, match_player::CELL_Y) as i32 - b as i32, byte(this, match_player::CELL_X) as i32 - a as i32);
-        let t2 = match_pl_ftol((d as f64 - adjust as f64) * read_f32_at(0x96afb0) as f64 - read_f32_at(0x969560) as f64); // 0x96afb0 = 20, 0x969560 = 50
+        let t2 = ftol((d as f64 - adjust as f64) * read_f32_at(0x96afb0) as f64 - read_f32_at(0x969560) as f64); // 0x96afb0 = 20, 0x969560 = 50
         let t = t1.wrapping_sub(t2) as i16;
         t.clamp(0x1e, 0x87)
     };
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
         let b = random(n);
         if b > a { b } else { a }
     };
-    let base = match_pl_ftol(*((this + match_player::STAMINA) as *const f32) as f64 * read_f32_at(0x96d758) as f64) as i16 as i32; // 0x96d758 = 0.002499999944
+    let base = ftol(*((this + match_player::STAMINA) as *const f32) as f64 * read_f32_at(0x96d758) as f64) as i16 as i32; // 0x96d758 = 0.002499999944
     grava(0x104, best_of_two(base + i(match_player::BASE_PACE) - 0x19));
     grava(0x10a, best_of_two(i(match_player::BASE_POSITIONING)));
     grava(0x107, random(i(match_player::BASE_MOVEMENT)));
@@ -679,9 +679,9 @@ pub(crate) unsafe fn spread_disposition_delta(this: usize, side_b: i8, delta: i1
         let w = (p + match_player::MATCH_RATING) as *mut i16;
         match partes[i] {
             RoleBitEffect::Pula => {}
-            RoleBitEffect::Fator(k) => *w = (*w).wrapping_add(match_pl_ftol(delta as f64 * read_f64_at(k)) as i16),
+            RoleBitEffect::Fator(k) => *w = (*w).wrapping_add(ftol(delta as f64 * read_f64_at(k)) as i16),
             RoleBitEffect::Inteiro => *w = (*w).wrapping_add(delta),
-            RoleBitEffect::Dobro => *w = (*w).wrapping_add(match_pl_ftol(delta as f64 + delta as f64) as i16),
+            RoleBitEffect::Dobro => *w = (*w).wrapping_add(ftol(delta as f64 + delta as f64) as i16),
         }
     }
 }
@@ -973,7 +973,7 @@ pub(crate) unsafe extern "thiscall" fn choose_standout(this: usize) {
                 continue;
             }
             let disp = *((p + match_player::MATCH_RATING) as *const i16);
-            let v = match_pl_ftol(disp as f64 * read_f64_at(0x96a350)) as i16; // 0x96a350 = 0.001
+            let v = ftol(disp as f64 * read_f64_at(0x96a350)) as i16; // 0x96a350 = 0.001
             let u = |o: usize| byte(p, o) as u8 as i16;
             let pt = disp
                 .wrapping_add(125i16.wrapping_mul(u(0x10).wrapping_add(2 * u(0x0c))))
@@ -1089,7 +1089,7 @@ pub(crate) unsafe extern "thiscall" fn formation_square(this: usize, player: usi
 /// [pt] Grava ftol(a / (a + b) x 100) e o complemento a 100 nos bytes `pa` e `pb`; 50 e 50 sem total positivo.
 pub(crate) unsafe fn write_percent_pair(this: usize, a: i32, total: i32, pa: isize, pb: isize) {
     let (x, y) = if total > 0 {
-        let v = match_pl_ftol(a as f64 / total as f64 * read_f32_at(0x968960) as f64) as u8; // 0x968960 = 100
+        let v = ftol(a as f64 / total as f64 * read_f32_at(0x968960) as f64) as u8; // 0x968960 = 100
         (v, 100u8.wrapping_sub(v))
     } else {
         (50, 50)
@@ -1174,15 +1174,15 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_c(this: usize, argumento: 
         }
         let f = |o: usize| read_f32_at(p + o) as f64;
         let mut v = if mode as u8 != 0 {
-            random(match_pl_ftol(f(match_player::PENALTIES))) as f64
+            random(ftol(f(match_player::PENALTIES))) as f64
         } else if random(7) == 0 {
-            random(match_pl_ftol(f(match_player::FREE_KICKS) + read_f32_at(0x96b020) as f64)) as f64 // 0x96b020 = 15
+            random(ftol(f(match_player::FREE_KICKS) + read_f32_at(0x96b020) as f64)) as f64 // 0x96b020 = 15
         } else if random(3) != 0 {
             let x = f(match_player::FLAIR) * read_f64_at(0x967880) + f(match_player::DRIBBLING) * read_f64_at(0x96a6a8) + f(match_player::LONG_SHOTS) * read_f64_at(0x969510) + f(match_player::ANTICIPATION) * read_f64_at(0x969510) + f(match_player::FINISHING) + read_f64_at(0x969550); // 0x967880 = 0.1, 0x96a6a8 = 0.45, 0x969510 = 0.35, 0x969550 = 18
-            random(match_pl_ftol(x)) as f64 * factor as f64
+            random(ftol(x)) as f64 * factor as f64
         } else {
             let x = f(match_player::STRENGTH) * read_f64_at(0x9689e0) + f(match_player::JUMPING) * read_f64_at(0x969040) + f(match_player::HEADING) + read_f32_at(0x968a78) as f64; // 0x9689e0 = 0.25, 0x969040 = 0.75, 0x968a78 = 10
-            random(match_pl_ftol(x)) as f64 * factor as f64
+            random(ftol(x)) as f64 * factor as f64
         };
         if v > read_f32_at(0x96af88) as f64 { // 0x96af88 = 25
             let v32 = v as f32;
@@ -1231,9 +1231,9 @@ pub(crate) unsafe extern "thiscall" fn value_by_condition(this: usize, target: u
     let base = read_f32_at(this + match_player::CONFIDENCE) as f64 * read_f64_at(0x967898) + read_f64_at(0x969040); // 0x967898 = 0.01, 0x969040 = 0.75
     let b = byte(this, match_player::ANGER) as i32;
     if target != 0 && target == *((this + match_player::LAST_FOULED_BY) as *const usize) {
-        match_pl_ftol(base * (b + 5) as f64 * read_f64_at(0x968e18)) // 0x968e18 = 2.5
+        ftol(base * (b + 5) as f64 * read_f64_at(0x968e18)) // 0x968e18 = 2.5
     } else {
-        match_pl_ftol((base * b as f64 + read_f64_at(0x9688a0)) * read_f64_at(0x968968)) // 0x9688a0 = 5, 0x968968 = 0.5
+        ftol((base * b as f64 + read_f64_at(0x9688a0)) * read_f64_at(0x968968)) // 0x9688a0 = 5, 0x968968 = 0.5
     }
 }
 
@@ -1406,11 +1406,11 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_e(this: usize, argumento: 
         }
         let f = |o: usize| read_f32_at(p + o) as f64;
         let v = if mode as u8 != 0 {
-            random(match_pl_ftol(f(match_player::FREE_KICKS) - f(match_player::FINISHING) - f(match_player::JUMPING) + read_f32_at(0x969560) as f64)) as f64 // 0x969560 = 50
+            random(ftol(f(match_player::FREE_KICKS) - f(match_player::FINISHING) - f(match_player::JUMPING) + read_f32_at(0x969560) as f64)) as f64 // 0x969560 = 50
         } else if random(5) != 0 {
-            random(match_pl_ftol(f(match_player::VISION) + f(match_player::PASSING) + f(match_player::CROSSING) + read_f32_at(0x968990) as f64)) as f64 * factor as f64 // 0x968990 = 5
+            random(ftol(f(match_player::VISION) + f(match_player::PASSING) + f(match_player::CROSSING) + read_f32_at(0x968990) as f64)) as f64 * factor as f64 // 0x968990 = 5
         } else {
-            random(match_pl_ftol(f(match_player::HEADING) + read_f32_at(0x968990) as f64)) as f64 * factor as f64 // 0x968990 = 5
+            random(ftol(f(match_player::HEADING) + read_f32_at(0x968990) as f64)) as f64 * factor as f64 // 0x968990 = 5
         };
         if chosen == 0xff || v > best as f64 {
             best = v as f32;
@@ -2391,7 +2391,7 @@ pub(crate) unsafe fn penalty_shootout_step_with(m: usize, mode: u32, call: &mut 
                 None
             };
             if let Some(f) = factor {
-                strength = strength.wrapping_add(random(match_pl_ftol(strength as f64 * f)));
+                strength = strength.wrapping_add(random(ftol(strength as f64 * f)));
             }
             let (mut tipo, mut som) = (0x33i8, 0u16);
             if mode as u8 == 3 {
@@ -2877,7 +2877,7 @@ pub(crate) unsafe fn tackle_contest_with(m: usize, x: i8, y: i8, call: &mut dyn 
             *b(m, engine::PENDING_PLAY_SEVERITY) = grav as u8;
         }
     };
-    let punish_now = |d: usize| random(match_pl_ftol(to_goal(d) as f64 * 10.0 + 2.0)) != 0;
+    let punish_now = |d: usize| random(ftol(to_goal(d) as f64 * 10.0 + 2.0)) != 0;
     // mode 1: foul by the winner on the loser; 2: by the loser on the winner; 3: only one challenger
     let mut punido: Option<(u8, usize, usize)> = None;
     'faltas: {
@@ -3719,7 +3719,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
     let acrescimos = || {
         let r = random(10) as i8;
         *w(engine::CLOCK) = (*w(engine::CLOCK)).wrapping_add(r as i16);
-        let v = random(match_pl_ftol(r as f64 * read_f64_at(0x9689b0))); // 0x9689b0 = 0.8
+        let v = random(ftol(r as f64 * read_f64_at(0x9689b0))); // 0x9689b0 = 0.8
         *b(engine::STOPPAGE_TIME) = (*b(engine::STOPPAGE_TIME)).wrapping_add(v as u8);
     };
     let mut n = n_in as u8 as i8;
@@ -4017,7 +4017,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                 let action = *((q + match_player::ACTION) as *const i16);
                 if action == 0x11 || action == 0x12 {
                     let v = read_f32_at(q + if action == 0x11 { 0x71 } else { 0xc1 }) as f64;
-                    if random(match_pl_ftol(read_f32_at(0x96d2c0) as f64 - v * read_f32_at(0x968960) as f64)) == 0 { // 0x96d2c0 = 2010, 0x968960 = 100
+                    if random(ftol(read_f32_at(0x96d2c0) as f64 - v * read_f32_at(0x968960) as f64)) == 0 { // 0x96d2c0 = 2010, 0x968960 = 100
                         cansou = true;
                     }
                 }
@@ -4210,7 +4210,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
     *b(m, engine::LAST_SHOT_SIDE) = lado as u8;
     *w(m, engine::LAST_SHOT_MINUTE) = minuto;
     let l18 = !((*dw(m, engine::MOMENTUM_B) as f64) < read_f64_at(0x96d810)); // 0x96d810 = 1680
-    let l1b = ((match_pl_ftol(d as f64 * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 5) * 5) as i8; // 0x96d754 = 9, 0x968e18 = 2.5
+    let l1b = ((ftol(d as f64 * read_f32_at(0x96d754) as f64 + read_f64_at(0x968e18)) as i8 as i32 / 5) * 5) as i8; // 0x96d754 = 9, 0x968e18 = 2.5
     if tipo == 0x39 || tipo == 3 {
         l28 = 5;
     }
@@ -4461,7 +4461,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
                     *b(p, match_player::SHOTS_ON_TARGET) = (*b(p, match_player::SHOTS_ON_TARGET)).wrapping_add(1);
                     let k: i32 = if tipo != 0x33 { 0xdc } else { 400 };
                     if l10 == 0xe || l10 == 0xf {
-                        *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(match_pl_ftol(k as f64 * read_f64_at(0x968968)) as i16); // 0x968968 = 0.5
+                        *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(ftol(k as f64 * read_f64_at(0x968968)) as i16); // 0x968968 = 0.5
                     } else {
                         *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(k as i16);
                     }
@@ -4546,7 +4546,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         _ => read_f32_at(0x968e70), // 0x968e70 = 1
     } as f64;
     let ganho = if l38 < 0 { l38 as f64 / fator } else { l38 as f64 * fator };
-    *dw(m, engine::MOMENTUM_B) = (*dw(m, engine::MOMENTUM_B)).wrapping_add(match_pl_ftol(ganho));
+    *dw(m, engine::MOMENTUM_B) = (*dw(m, engine::MOMENTUM_B)).wrapping_add(ftol(ganho));
     let c = ShotLocals {
         p, m, g, lado, tipo, a1, v, v0, som, modo, conta: a5 as u8 as i8, lista: a6, d, l10, l11, l14, l16,
         l17: 0, l18, l19, l1a, l1b, l20, l25, l28, l38_antes, l40, l50, l54, l58, l5c, l60, l64, l68,
@@ -4946,7 +4946,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
                 let r = random(4);
                 ajustar(p, r);
             }
-            let piso = match_pl_ftol((ub(p, match_player::ASSISTS) as f64 * read_f32_at(0x968f18) as f64 + read_f64_at(0x96afa0)) * read_f64_at(0x968908)) as i16; // 0x968f18 = 0.5, 0x96afa0 = 4.5, 0x968908 = 1000
+            let piso = ftol((ub(p, match_player::ASSISTS) as f64 * read_f32_at(0x968f18) as f64 + read_f64_at(0x96afa0)) * read_f64_at(0x968908)) as i16; // 0x968f18 = 0.5, 0x96afa0 = 4.5, 0x968908 = 1000
             if *w(p, match_player::MATCH_RATING) <= piso {
                 *w(p, match_player::MATCH_RATING) = piso;
             }
@@ -4970,7 +4970,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, chamar: &mut dyn FnM
                 if !(v > read_f64_at(0x96d7f8)) { // 0x96d7f8 = -1000
                     v = read_f64_at(0x96d7f8); // 0x96d7f8 = -1000
                 }
-                *w(g, match_player::MATCH_RATING) = (match_pl_ftol(v) as i16).wrapping_add(di);
+                *w(g, match_player::MATCH_RATING) = (ftol(v) as i16).wrapping_add(di);
             }
         }
         let q = u(m, engine::ASSIST_CANDIDATE);
@@ -6195,14 +6195,14 @@ pub(crate) unsafe fn cell_angle_degrees(i: i32, j: i32) -> u16 {
         0x10e
     } else if i > 0 {
         if j > 0 {
-            match_pl_ftol((i as f64 / j as f64).abs().atan() * graus)
+            ftol((i as f64 / j as f64).abs().atan() * graus)
         } else {
-            match_pl_ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0)) // 0x96d2b0 = 90
+            ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2b0)) // 0x96d2b0 = 90
         }
     } else if j < 0 {
-        match_pl_ftol((i as f64 / j as f64).abs().atan() * graus + read_f64_at(0x96d2a8)) // 0x96d2a8 = 180
+        ftol((i as f64 / j as f64).abs().atan() * graus + read_f64_at(0x96d2a8)) // 0x96d2a8 = 180
     } else {
-        match_pl_ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2a0)) // 0x96d2a0 = 270
+        ftol((j as f64 / i as f64).abs().atan() * graus + read_f64_at(0x96d2a0)) // 0x96d2a0 = 270
     };
     if a as i16 > 0x167 {
         a = 0;
@@ -6425,14 +6425,14 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, rapida: u8, comme
         let t = (read_f64_at(0x9688a8) - x) as f32; // 0x9688a8 = 100
         let a = (ga * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0)) - x * read_f64_at(0x968a80); // 0x96a5c0 = 0.0001, 0x9688a0 = 5, 0x968a80 = 0.3333333333
         let a = if !(a > read_f64_at(0x9688b0)) && a < read_f64_at(0x9689a0) { read_f64_at(0x9689a0) } else if a > read_f64_at(0x9688b0) { read_f64_at(0x9688b0) } else { a }; // 0x9688b0 = 10, 0x9689a0 = 0
-        *b(0x1ad) = match_pl_ftol(a) as u8;
+        *b(0x1ad) = ftol(a) as u8;
         let stadium = u(casa, club::STADIUM);
         let base = if stadium == u(game, fixture::STADIUM) || stadium == u(fora, club::STADIUM) { read_f32_at(0x968e70) } else { read_f32_at(0x968970) } as f64; // 0x968e70 = 1, 0x968970 = 0
         let c = (g6 * read_f64_at(0x96a5c0) + read_f64_at(0x9688a0)) - t as f64 * read_f64_at(0x968a80); // 0x96a5c0 = 0.0001, 0x9688a0 = 5, 0x968a80 = 0.3333333333
         let cf = c as f32 as f64;
         let smaller = if c > read_f64_at(0x9688b0) { read_f64_at(0x9688b0) } else { cf }; // 0x9688b0 = 10
         let r = if base > smaller { base } else if cf > read_f64_at(0x9688b0) { read_f64_at(0x9688b0) } else { cf }; // 0x9688b0 = 10
-        *b(0x1ae) = match_pl_ftol(r) as u8;
+        *b(0x1ae) = ftol(r) as u8;
     }
     // the squads
     let pick: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize, usize, usize, *mut i8) -> i8 = core::mem::transmute(FN_MATCH_MAN_INIT);
@@ -6986,7 +6986,7 @@ pub(crate) unsafe fn tackle_injury_with(m: usize, a: usize, tipo_a: i16, b: usiz
         return;
     }
     if direct != 0 && a != 0 {
-        if random(50000) >= match_pl_ftol(f[0] as f64 * f4(0x968a78)) {
+        if random(50000) >= ftol(f[0] as f64 * f4(0x968a78)) {
             return;
         }
         let kind = if (1..=5).contains(&grav[0]) {
@@ -7019,7 +7019,7 @@ pub(crate) unsafe fn tackle_injury_with(m: usize, a: usize, tipo_a: i16, b: usiz
             match r {
                 4 => {
                     f[i] = (d9 * d8(0x968fd0) * f[i] as f64) as f32;
-                    chance[i] = match_pl_ftol(chance[i] as f64 * d8(0x9689c0)) as i8;
+                    chance[i] = ftol(chance[i] as f64 * d8(0x9689c0)) as i8;
                 }
                 8 | 9 => {
                     let k = if r == 8 { d8(0x96afd8) } else { d8(0x96d450) };
@@ -7037,7 +7037,7 @@ pub(crate) unsafe fn tackle_injury_with(m: usize, a: usize, tipo_a: i16, b: usiz
             let x = if r79 > d8(0x968950) { r79 } else { d8(0x968950) };
             f[i] = (f4(0x968a78) / x * f[i] as f64) as f32;
         }
-        if random(50000) >= match_pl_ftol(f[i] as f64 * f4(0x968a78)) {
+        if random(50000) >= ftol(f[i] as f64 * f4(0x968a78)) {
             continue;
         }
         let ch = chance[i] as u8 as u32;
@@ -7256,9 +7256,9 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     // floors: (A, B, C) for +0xb, +0x9, +0xd
     let (mut pa, mut pb, mut pc) = (1i32, 1i32, 1i32);
     let floor = |p: f64, flag: bool| -> (i32, i32, i32) {
-        let a = match_pl_ftol(if p < d8(0x96d470) { p } else { d8(0x96d470) });
+        let a = ftol(if p < d8(0x96d470) { p } else { d8(0x96d470) });
         let pk = p * d8(0x96a670);
-        let c = match_pl_ftol(if pk < d8(0x96d468) { pk } else { d8(0x96d468) });
+        let c = ftol(if pk < d8(0x96d468) { pk } else { d8(0x96d468) });
         (a, if flag { a } else { c }, c)
     };
     let div_d: i16;
@@ -7285,7 +7285,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
                 };
                 if let Some((menos, k, teto)) = lim {
                     let p = (injury_word_0c() - menos) as f64 * (factor as f64 - d8(k));
-                    let v = match_pl_ftol(if p < d8(teto) { p } else { d8(teto) });
+                    let v = ftol(if p < d8(teto) { p } else { d8(teto) });
                     (pa, pb, pc) = (v, v, v);
                 }
             }
@@ -7299,8 +7299,8 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
             div_d = (age(0xd, 0x15) as i16).wrapping_sub(nivel0).wrapping_add(1);
             if !((factor as f64) < d8(0x968f10)) && injury_word_0c() > 0x157c {
                 let p = (injury_word_0c() - 0x157c) as f64 * (factor as f64 - d8(0x968f10));
-                pa = match_pl_ftol(p * d8(0x96afd8));
-                let c = match_pl_ftol(p * d8(0x968a80));
+                pa = ftol(p * d8(0x96afd8));
+                let c = ftol(p * d8(0x968a80));
                 pb = if grande { pa } else { c };
                 pc = c;
             }
@@ -7328,13 +7328,13 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let st = sheet();
     let (v9, vb, vd) = (w(st, 9) as i32, w(st, player_sheet::CURRENT_REPUTATION) as i32, w(st, player_sheet::WORLD_REPUTATION) as i32);
     let step_towards = (level as i32 as f64 * d8(0x968968) + d8(0x9688a0)) * desvio * d8(0x968ff8);
-    let mut n9 = match_pl_ftol(v9 as f64 + step_towards);
-    let mut nb = match_pl_ftol(vb as f64 + step_towards);
-    let mut nd = match_pl_ftol(vd as f64 + step_towards);
+    let mut n9 = ftol(v9 as f64 + step_towards);
+    let mut nb = ftol(vb as f64 + step_towards);
+    let mut nd = ftol(vd as f64 + step_towards);
     if strong as u8 != 0 {
-        let mut c = match_pl_ftol((level as i32 * 250) as f64 * rating as f64 / average());
+        let mut c = ftol((level as i32 * 250) as f64 * rating as f64 / average());
         if desvio < f4(0x968970) {
-            c = match_pl_ftol(c as i16 as f64 * rating as f64 / average());
+            c = ftol(c as i16 as f64 * rating as f64 / average());
         }
         let c16 = c as i16;
         if c16 > nb as i16 {
@@ -7353,7 +7353,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     // morale by the difference in rating +0xb
     let base = if vb as i16 > 1 { vb } else { 1 };
     let dif = new_b as i16 as i32 - vb;
-    let x = match_pl_ftol(dif as f64 * d8(0x96a6b0) / base as f64 + (rating as f64 + d8(0x967890)) * d8(0x968968)) as i16;
+    let x = ftol(dif as f64 * d8(0x96a6b0) / base as f64 + (rating as f64 + d8(0x967890)) * d8(0x968968)) as i16;
     let mut m: i16 = if x > 0 {
         (random(3) + (x as i32).min(dif)) as i16
     } else if x == 0 {
@@ -7361,11 +7361,11 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     } else {
         let v = x as f64 * d8(0x968940);
         let t = if v > dif as f64 { v } else { dif as f64 };
-        match_pl_ftol(t - random(3) as f64) as i16
+        ftol(t - random(3) as f64) as i16
     };
     if m < 0 {
         let r = random(byte(person, staff::DETERMINATION) as i32) + 1;
-        m = match_pl_ftol(m as f32 as f64 / (r as f64 * d8(0x9689e0))) as i16;
+        m = ftol(m as f32 as f64 / (r as f64 * d8(0x9689e0))) as i16;
     }
     let delta = random(m.clamp(-20, 20) as i32);
     if jm != 0 {
@@ -7390,10 +7390,10 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
         let t = t as i16 as f32 as f64;
         let smaller = current as f32 as f64 - f as f64 * low;
         if smaller > t {
-            return match_pl_ftol(smaller);
+            return ftol(smaller);
         }
         let greater = high * f as f64 + current as f32 as f64;
-        match_pl_ftol(if greater < t { greater } else { t })
+        ftol(if greater < t { greater } else { t })
     };
     let lo = pot * 50 - 3750;
     let tb = band(new_b, cb, lo, pot * 50 + 2500);
@@ -7413,14 +7413,14 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
             let k = (game_pow(id as f64 * d8(0x96a578), d8(0x968930)) * d8(0x968968)) as f32 as f64;
             let r = w(club, club::REPUTATION) as f64;
             let target = match byte(e, contract::SQUAD_STATUS) as u8 >> 4 {
-                1 => match_pl_ftol(r * k * d8(0x968978)),
-                2 => match_pl_ftol(r * k * d8(0x9689c0)),
-                3 | 5 => match_pl_ftol(r * k),
-                4 => match_pl_ftol(r * k * d8(0x9689b0)),
+                1 => ftol(r * k * d8(0x968978)),
+                2 => ftol(r * k * d8(0x9689c0)),
+                3 | 5 => ftol(r * k),
+                4 => ftol(r * k * d8(0x9689b0)),
                 _ => 0,
             };
             if (rb as i16) < target as i16 {
-                rb = match_pl_ftol(target as i16 as f64 * d8(0x967880) + rb as i16 as f64 * d8(0x9689d8));
+                rb = ftol(target as i16 as f64 * d8(0x967880) + rb as i16 as f64 * d8(0x9689d8));
             }
         }
     }
@@ -7573,7 +7573,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         }
         let somado = (byte(p, match_player::MOMENT_WORK_RATE) as i32 + byte(p, match_player::MOMENT_POSITIONING) as i32) as f64;
         // the contest: random roll(k / weight) below the target
-        let contest = |k: i32| random(match_pl_ftol(k as f64 / weight as f64));
+        let contest = |k: i32| random(ftol(k as f64 / weight as f64));
         let atacante_t1 = || atacante != 0 && table(atacante) == 1;
         let bit100 = *((p + match_player::ACTION) as *const u16) & 0x100 != 0;
         let letras = || match random(4) {
@@ -7645,7 +7645,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
                     let how_many = n() as f64;
                     let more = if byte(p, match_player::CELL_X) == 4 && matches!(byte(p, match_player::CELL_Y), 0 | 0xb) { read_f64_at(0x9688b0) } else { read_f64_at(0x968930) }; // 0x9688b0 = 10, 0x968930 = 3
                     let q5 = game_pow(how_many, read_f64_at(0x9688a0)); // 0x9688a0 = 5
-                    Some(match_pl_ftol(q5 * byte(p, match_player::MOMENT_DECISIONS) as f64 + more))
+                    Some(ftol(q5 * byte(p, match_player::MOMENT_DECISIONS) as f64 + more))
                 } else {
                     let r = random(if distf < read_f64_at(0x968950) { 100 } else { 10 }); // 0x968950 = 2
                     if r as f64 > distf {
@@ -7659,7 +7659,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
                 let vence = match k {
                     None => true,
                     Some(k) => {
-                        let r = random(match_pl_ftol(f(p, match_player::JUMPING) as f64 + f(p, match_player::JUMPING) as f64)) + byte(p, match_player::MOMENT_POSITIONING) as i32;
+                        let r = random(ftol(f(p, match_player::JUMPING) as f64 + f(p, match_player::JUMPING) as f64)) + byte(p, match_player::MOMENT_POSITIONING) as i32;
                         r > random(k as i16 as i32)
                     }
                 };
@@ -7768,7 +7768,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         }
         let mut strength = random(value(p, atacante) as i8 as i32);
         if atacante != 0 && limit(atacante) == 0 && *arriscado == 0 && byte(p, match_player::YELLOW_CARDS) == 0 {
-            let r1 = random(match_pl_ftol(f(p, match_player::AGGRESSION) as f64));
+            let r1 = random(ftol(f(p, match_player::AGGRESSION) as f64));
             if r1 > random(0xc) {
                 let pula = w(atacante, match_player::MATCH_RATING) as i32 <= random(1000) + 0x1d4c && {
                     let rel = relacao(*((atacante + match_player::STAFF) as *const usize), *((p + match_player::STAFF) as *const usize), 0) as i32;
@@ -7813,7 +7813,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         let Some(mut escolha) = chosen else { continue };
         let mut value_play = random(dominio(p, &mut escolha, a, b) as i16 as i32);
         if kind == 0x11 && escolha != 0x29 {
-            value_play = value_play.wrapping_add(random(match_pl_ftol(byte(p, match_player::MOMENT_PACE) as f64 * f(p, match_player::ACCELERATION) as f64)));
+            value_play = value_play.wrapping_add(random(ftol(byte(p, match_player::MOMENT_PACE) as f64 * f(p, match_player::ACCELERATION) as f64)));
         } else if kind == 0x12 && escolha != 0x29 {
             let c = byte(p, match_player::MOMENT_PACE) as i32;
             value_play = value_play.wrapping_add(c * c);
@@ -7874,13 +7874,13 @@ pub(crate) unsafe fn pressure_on_player_with(m: usize, j: usize, out: *mut i16, 
         if in_list(j, p) != 0 {
             count = count.wrapping_add(2);
             let v = by_position(p) as i8 as i32 + byte(p, match_player::MOMENT_POSITIONING) as i32 - base();
-            let r = match_pl_ftol(v as f64 * k);
+            let r = ftol(v as f64 * k);
             *out = (*out).wrapping_add(r as i16);
             weight = r.wrapping_add(r);
         } else if byte(p, match_player::BUSY) >= 0 && table(p) != 1 && (byte(p, match_player::MOMENT_POSITIONING) != 0 || *((p + match_player::ACTION) as *const u16) & 0x100 != 0) {
             count = count.wrapping_add(1);
             let v = byte(p, match_player::MOMENT_POSITIONING) as i32 - base();
-            weight = match_pl_ftol(v as f64 * k / (byte(p, match_player::BUSY) as i32 + 1) as f64);
+            weight = ftol(v as f64 * k / (byte(p, match_player::BUSY) as i32 + 1) as f64);
             *out = (*out).wrapping_add(weight as i16);
         }
         if list != 0 && weight as i16 > 5 {
@@ -9099,7 +9099,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             0
         }
     };
-    let pf = |x: i32| match_pl_ftol(x as f64);
+    let pf = |x: i32| ftol(x as f64);
     let _ = pf;
     for k in 0..20usize {
         let p = m + engine::PLAYERS + 8920 * ls as usize + 0x1be * k;
@@ -9116,7 +9116,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             continue;
         }
         let role = role_of(p);
-        let mut v34 = match_pl_ftol(read_f32_at(0x968db0) as f64 - d58 as f64 * d58 as f64 * read_f32_at(0x969580) as f64); // 0x968db0 = 5000, 0x969580 = -50
+        let mut v34 = ftol(read_f32_at(0x968db0) as f64 - d58 as f64 * d58 as f64 * read_f32_at(0x969580) as f64); // 0x968db0 = 5000, 0x969580 = -50
         if t(0x70df40)(p) != 0 {
             v34 = v34.wrapping_sub(1500);
         } else if t(0x70dfa0)(p) != 0 {
@@ -9126,7 +9126,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         let mut v1c: i32 = if role == 1 {
             0
         } else {
-            match_pl_ftol((read_f32_at(p + match_player::STAMINA) as f64 + *((p + match_player::MATCH_RATING) as *const i16) as f64 - read_f32_at(0x968da8) as f64) * read_f32_at(0x96d22c) as f64) // 0x968da8 = 15000, 0x96d22c = 0.25
+            ftol((read_f32_at(p + match_player::STAMINA) as f64 + *((p + match_player::MATCH_RATING) as *const i16) as f64 - read_f32_at(0x968da8) as f64) * read_f32_at(0x96d22c) as f64) // 0x968da8 = 15000, 0x96d22c = 0.25
         };
         if t(0x70dfa0)(p) == 0 {
             let mp = closest_to_goal(m, p);
@@ -9171,15 +9171,15 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             }
         } else {
             let a = read_f32_at(p + match_player::VISION) as f64;
-            let r = match_pl_ftol(a * a * read_f64_at(0x96d410)); // 0x96d410 = -5
+            let r = ftol(a * a * read_f64_at(0x96d410)); // 0x96d410 = -5
             edi = edi.wrapping_sub(r);
             v38 = r.wrapping_neg();
         }
         let band_l: unsafe extern "thiscall" fn(usize, u8) -> u8 = core::mem::transmute(FN_MATCH_PLAYER_IS_IN_PENALTY_AREA);
         if band_l(p, (lp == 0) as u8) != 0 {
-            let b = match_pl_ftol(read_f32_at(p + match_player::TECHNIQUE) as f64 * read_f32_at(p + match_player::PACE) as f64 * read_f64_at(0x96d410)); // 0x96d410 = -5
+            let b = ftol(read_f32_at(p + match_player::TECHNIQUE) as f64 * read_f32_at(p + match_player::PACE) as f64 * read_f64_at(0x96d410)); // 0x96d410 = -5
             let a = read_f32_at(p + match_player::FINISHING) as f64;
-            let d = match_pl_ftol(a * a * read_f64_at(0x9688a0)).wrapping_sub(b); // 0x9688a0 = 5
+            let d = ftol(a * a * read_f64_at(0x9688a0)).wrapping_sub(b); // 0x9688a0 = 5
             edi = edi.wrapping_add(d);
             v38 = v38.wrapping_add(d);
         }
@@ -9278,7 +9278,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         let n_i = n as i32;
         v1c = v1c.wrapping_add((5 - n_i) * 400);
         if target_area && n < 3 && k7c < 1 {
-            v1c = v1c.wrapping_add(match_pl_ftol(game_pow((3 - n_i) as f64, read_f64_at(0x968930)) * read_f64_at(0x9688a8))); // 0x968930 = 3, 0x9688a8 = 100
+            v1c = v1c.wrapping_add(ftol(game_pow((3 - n_i) as f64, read_f64_at(0x968930)) * read_f64_at(0x9688a8))); // 0x968930 = 3, 0x9688a8 = 100
         }
         let mut s72 = 0u16;
         if byte(c, match_player::PREFERRED_FOOT) != classificar(c, 0x5d, bx, by, tx, ty, d68, &mut s72) as i8 {
@@ -9304,17 +9304,17 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
                 None
             };
             if let Some(v) = val {
-                v1c = v1c.wrapping_add(match_pl_ftol(v));
+                v1c = v1c.wrapping_add(ftol(v));
             }
         }
         if !(d58 as f64 <= read_f64_at(0x968940) || d58.is_nan()) && !target_area { // 0x968940 = 1.5
             let e = byte(c, match_player::MOMENT_DECISIONS) as i32 + 5;
-            v30 = v30.wrapping_add(match_pl_ftol((-700 * e) as f64 / factor_nation as f64));
-            v44 = match_pl_ftol((-500 * e) as f64 / factor_nation as f64);
+            v30 = v30.wrapping_add(ftol((-700 * e) as f64 / factor_nation as f64));
+            v44 = ftol((-500 * e) as f64 / factor_nation as f64);
         } else if moveu == 0 {
             let x = (30 - byte(c, match_player::MOMENT_VISION) as i32) as f64 * (read_f32_at(0x968a78) as f64 - read_f32_at(p + match_player::JUMPING) as f64) * factor_nation as f64; // 0x968a78 = 10
-            v30 = v30.wrapping_add(match_pl_ftol(x * read_f32_at(0x96d400) as f64)); // 0x96d400 = -40
-            v44 = match_pl_ftol(x * read_f32_at(0x96d3fc) as f64); // 0x96d3fc = -20
+            v30 = v30.wrapping_add(ftol(x * read_f32_at(0x96d400) as f64)); // 0x96d400 = -40
+            v44 = ftol(x * read_f32_at(0x96d3fc) as f64); // 0x96d3fc = -20
         }
         if role == 1 {
             if t(0x70dfa0)(c) == 0 && random(100000) != 0 {
@@ -9322,7 +9322,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             }
             let v = byte(c, match_player::MOMENT_DECISIONS) as i32;
             if t(0x70def0)(c) == 0 {
-                v1c = v1c.wrapping_add(match_pl_ftol((-1000 * v) as f64 * (d58 as f64 + read_f64_at(0x967880)))); // 0x967880 = 0.1
+                v1c = v1c.wrapping_add(ftol((-1000 * v) as f64 * (d58 as f64 + read_f64_at(0x967880)))); // 0x967880 = 0.1
             }
             v44 = v44.wrapping_add(-1000 - 2200 * v);
             v30 = v30.wrapping_add(-2000 - 5000 * v);
@@ -9336,21 +9336,21 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
                 v1c = v1c.wrapping_sub(2000);
             }
             if target_area_def {
-                v1c = v1c.wrapping_add(match_pl_ftol(byte(c, match_player::MOMENT_DECISIONS) as f64 * d58 as f64 * d58 as f64 * read_f32_at(0x96d3f8) as f64)); // 0x96d3f8 = -20000
+                v1c = v1c.wrapping_add(ftol(byte(c, match_player::MOMENT_DECISIONS) as f64 * d58 as f64 * d58 as f64 * read_f32_at(0x96d3f8) as f64)); // 0x96d3f8 = -20000
             }
         }
         if target_area_def {
-            v1c = v1c.wrapping_sub(match_pl_ftol((byte(c, match_player::MOMENT_DECISIONS) as i32 * 32 + 200) as f64 * d58 as f64));
+            v1c = v1c.wrapping_sub(ftol((byte(c, match_player::MOMENT_DECISIONS) as i32 * 32 + 200) as f64 * d58 as f64));
         }
         let alcanca_r = alcanca_f(c, tx, ty);
         if alcanca_r != 0 {
             let v = byte(c, match_player::MOMENT_DECISIONS) as f64;
             let a = read_f32_at(p + match_player::JUMPING) as f64 * read_f32_at(0x968960) as f64; // 0x968960 = 100
             let b = read_f32_at(c + match_player::CROSSING) as f64 * read_f32_at(0x968960) as f64; // 0x968960 = 100
-            v4c = match_pl_ftol((a + read_f32_at(0x96d1a8) as f64) * v * read_f32_at(0x96afc4) as f64 + b); // 0x96d1a8 = 500, 0x96afc4 = 0.1000000015
-            v50 = match_pl_ftol((read_f32_at(0x96d408) as f64 - a) * v * read_f32_at(0x96afc4) as f64 + b); // 0x96d408 = 3000, 0x96afc4 = 0.1000000015
+            v4c = ftol((a + read_f32_at(0x96d1a8) as f64) * v * read_f32_at(0x96afc4) as f64 + b); // 0x96d1a8 = 500, 0x96afc4 = 0.1000000015
+            v50 = ftol((read_f32_at(0x96d408) as f64 - a) * v * read_f32_at(0x96afc4) as f64 + b); // 0x96d408 = 3000, 0x96afc4 = 0.1000000015
             if (marks(c) >> 32) & 4 != 0 {
-                let w = match_pl_ftol(read_f32_at(c + match_player::TEAMWORK) as f64 * read_f32_at(0x968960) as f64 + read_f32_at(0x96d1a8) as f64); // 0x968960 = 100, 0x96d1a8 = 500
+                let w = ftol(read_f32_at(c + match_player::TEAMWORK) as f64 * read_f32_at(0x968960) as f64 + read_f32_at(0x96d1a8) as f64); // 0x968960 = 100, 0x96d1a8 = 500
                 v4c = v4c.wrapping_add(w);
                 v50 = v50.wrapping_add(w);
             }
@@ -9434,7 +9434,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         let zera = |v1c: &mut i32, d58: &mut f32, v: f64, k: f32| {
             *d58 = v as f32;
             if v < read_f64_at(0x9689a0) || v.is_nan() { // 0x9689a0 = 0
-                *v1c = v1c.wrapping_add(match_pl_ftol(*d58 as f64 * *d58 as f64 * k as f64));
+                *v1c = v1c.wrapping_add(ftol(*d58 as f64 * *d58 as f64 * k as f64));
                 *d58 = 0.0;
             }
         };
@@ -9462,7 +9462,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
             let v = d58 as f64 - k7c as f64;
             zera(&mut v1c, &mut d58, v, read_f32_at(0x96d3f0)); // 0x96d3f0 = -200
         }
-        v1c = v1c.wrapping_add(match_pl_ftol(d58 as f64 * d58 as f64 * read_f32_at(0x968960) as f64)); // 0x968960 = 100
+        v1c = v1c.wrapping_add(ftol(d58 as f64 * d58 as f64 * read_f32_at(0x968960) as f64)); // 0x968960 = 100
         let near = (ls == 0 && by >= ty) || (ls == 1 && by <= ty);
         let mut c2 = true;
         if near && (d58 as f64) < read_f64_at(0x96d3e8) && !(if ls == 1 { ty < 3 } else if ls == 0 { ty > 8 } else { false }) // 0x96d3e8 = 3.1
@@ -9470,9 +9470,9 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         {
             c2 = false;
             let s: i16 = if t(0x70def0)(p) != 0 {
-                match_pl_ftol(read_f32_at(0x96d3e4) as f64 - d58 as f64 * read_f32_at(0x96d208) as f64) as i16 // 0x96d3e4 = 1500, 0x96d208 = 375
+                ftol(read_f32_at(0x96d3e4) as f64 - d58 as f64 * read_f32_at(0x96d208) as f64) as i16 // 0x96d3e4 = 1500, 0x96d208 = 375
             } else {
-                match_pl_ftol(read_f32_at(0x96d2dc) as f64 - d58 as f64 * read_f32_at(0x96d210) as f64) as i16 // 0x96d2dc = 1000, 0x96d210 = 250
+                ftol(read_f32_at(0x96d2dc) as f64 - d58 as f64 * read_f32_at(0x96d210) as f64) as i16 // 0x96d2dc = 1000, 0x96d210 = 250
             };
             if ls == 0 {
                 v1c = v1c.wrapping_sub((d60 + 1).wrapping_mul(s as i32));
@@ -9485,7 +9485,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
                 v1c = v1c.wrapping_sub(1500);
             } else if role != 1 {
                 let v10 = byte(c, match_player::MOMENT_VISION) as i32 + 10;
-                v1c = v1c.wrapping_add(match_pl_ftol(v10 as f64 * d58 as f64 * d58 as f64));
+                v1c = v1c.wrapping_add(ftol(v10 as f64 * d58 as f64 * d58 as f64));
                 let bottom_t = if ls == 1 { ty < 3 } else if ls == 0 { ty > 8 } else { false };
                 if bottom_t {
                     if espaco(m, p) != 0 {
@@ -9501,7 +9501,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
                     }
                 }
                 if (ls == 0 && ty > by) || (ls == 1 && ty < by) {
-                    v1c = v1c.wrapping_add(match_pl_ftol(v10 as f64 * d58 as f64 * d58 as f64));
+                    v1c = v1c.wrapping_add(ftol(v10 as f64 * d58 as f64 * d58 as f64));
                 }
             }
         }
@@ -9770,7 +9770,7 @@ pub(crate) static mut CLUBES74: Vec<u8> = Vec::new();
 ///
 /// [pt] Bonus de fadiga do sorteio: 0x96d2d8 - distancia ao gol x 0x968a78.
 pub(crate) unsafe fn goal_distance_bonus(d: f32) -> i32 {
-    match_pl_ftol(read_f32_at(0x96d2d8) as f64 - d as f64 * read_f32_at(0x968a78) as f64) // 0x96d2d8 = 225, 0x968a78 = 10
+    ftol(read_f32_at(0x96d2d8) as f64 - d as f64 * read_f32_at(0x968a78) as f64) // 0x96d2d8 = 225, 0x968a78 = 10
 }
 
 /// Reputation used in the target rating: home if same nation as the player, current if both clubs share a nation, else
@@ -9862,12 +9862,12 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                     return c;
                 }
                 let mut e = (*((c + match_player::SHOTS_ON_TARGET) as *const u8) as i32 + *((c + match_player::SHOTS) as *const u8) as i32 + 0x14) * 10;
-                e = e.wrapping_sub(match_pl_ftol(f18 as f64 * f18 as f64 - read_f32_at(0x968960) as f64)); // 0x968960 = 100
+                e = e.wrapping_sub(ftol(f18 as f64 * f18 as f64 - read_f32_at(0x968960) as f64)); // 0x968960 = 100
                 let n = n17 as i32;
                 e = e.wrapping_sub(n.wrapping_mul(n).wrapping_mul(n));
                 e = e.wrapping_add(*((c + match_player::MATCH_RATING) as *const i16) as i32 / 200);
-                e = e.wrapping_sub(match_pl_ftol(*((c + match_player::ASSISTS) as *const u8) as f64 * read_f64_at(0x96d2d0))); // 0x96d2d0 = -7.5
-                e = e.wrapping_sub(match_pl_ftol(f1c as f64 * f1c as f64 * read_f32_at(0x969560) as f64)); // 0x969560 = 50
+                e = e.wrapping_sub(ftol(*((c + match_player::ASSISTS) as *const u8) as f64 * read_f64_at(0x96d2d0))); // 0x96d2d0 = -7.5
+                e = e.wrapping_sub(ftol(f1c as f64 * f1c as f64 * read_f32_at(0x969560) as f64)); // 0x969560 = 50
                 b = b.wrapping_add(e);
                 store(c, b.wrapping_add(target_reputation(j, c, clubs)));
             }
@@ -9933,12 +9933,12 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                     a = a.wrapping_add(0x14);
                 }
                 let mut e = (*((q + match_player::SHOTS_ON_TARGET) as *const u8) as i32 + *((q + match_player::SHOTS) as *const u8) as i32 + 0xa) * 10;
-                e = e.wrapping_sub(match_pl_ftol(read_f64_at(0x96d2a8) - *((q + match_player::MATCH_RATING) as *const i16) as f64 * read_f64_at(0x96d2c8))); // 0x96d2a8 = 180, 0x96d2c8 = 0.03
-                e = e.wrapping_sub(match_pl_ftol(f18 as f64 * f18 as f64 - read_f32_at(0x968960) as f64)); // 0x968960 = 100
-                e = e.wrapping_sub(match_pl_ftol(*((q + match_player::ASSISTS) as *const u8) as f64 * read_f64_at(0x96d2d0))); // 0x96d2d0 = -7.5
+                e = e.wrapping_sub(ftol(read_f64_at(0x96d2a8) - *((q + match_player::MATCH_RATING) as *const i16) as f64 * read_f64_at(0x96d2c8))); // 0x96d2a8 = 180, 0x96d2c8 = 0.03
+                e = e.wrapping_sub(ftol(f18 as f64 * f18 as f64 - read_f32_at(0x968960) as f64)); // 0x968960 = 100
+                e = e.wrapping_sub(ftol(*((q + match_player::ASSISTS) as *const u8) as f64 * read_f64_at(0x96d2d0))); // 0x96d2d0 = -7.5
                 let n = n14 as i32;
                 e = e.wrapping_sub(n.wrapping_mul(n));
-                e = e.wrapping_sub(match_pl_ftol(f1c as f64 * f1c as f64 * read_f32_at(0x969560) as f64)); // 0x969560 = 50
+                e = e.wrapping_sub(ftol(f1c as f64 * f1c as f64 * read_f32_at(0x969560) as f64)); // 0x969560 = 50
                 let mut rating = a.wrapping_add(e);
                 let pos = byte(q, match_player::POSITION);
                 let role = |base: usize| -> u16 {
@@ -10249,28 +10249,28 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
             }
             let age = byte(d32(j, match_player::STAFF), 0x18);
             if age < 20 {
-                s = match_pl_ftol(s as f64 * read_f64_at(0x969520)) as i16; // 0x969520 = 0.85
+                s = ftol(s as f64 * read_f64_at(0x969520)) as i16; // 0x969520 = 0.85
             } else if age < 24 {
-                s = match_pl_ftol(s as f64 * read_f64_at(0x9689d0)) as i16; // 0x9689d0 = 0.95
+                s = ftol(s as f64 * read_f64_at(0x9689d0)) as i16; // 0x9689d0 = 0.95
             }
-            match_pl_ftol((*((pd + player_sheet::CURRENT_REPUTATION) as *const i16) as f64 * read_f64_at(0x96d240) + read_f64_at(0x969040)) * s as f64) as i16 // 0x96d240 = 2.5e-05, 0x969040 = 0.75
+            ftol((*((pd + player_sheet::CURRENT_REPUTATION) as *const i16) as f64 * read_f64_at(0x96d240) + read_f64_at(0x969040)) * s as f64) as i16 // 0x96d240 = 2.5e-05, 0x969040 = 0.75
         };
         let far = || {
             let g1 = dist(j, a7, a8);
             let g2 = dist(j, a7, a8);
-            match_pl_ftol(f(j, match_player::FREE_KICKS) - g2 as f64 * g1 as f64) as i16
+            ftol(f(j, match_player::FREE_KICKS) - g2 as f64 * g1 as f64) as i16
         };
         let v: i16 = match kind {
-            1 | 2 => match_pl_ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 * dist(j, a7, a8) as f64) as i16,
+            1 | 2 => ftol(f(j, if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 * dist(j, a7, a8) as f64) as i16,
             3 => {
                 let points = || {
-                    let s = match_pl_ftol(f(j, match_player::CORNERS) - f(j, match_player::JUMPING) * read_f32_at(0x968f18) as f64) as i16; // 0x968f18 = 0.5
+                    let s = ftol(f(j, match_player::CORNERS) - f(j, match_player::JUMPING) * read_f32_at(0x968f18) as f64) as i16; // 0x968f18 = 0.5
                     if table_a(this, j) & 0x40 == 0 {
                         s
                     } else if s > 0 {
-                        match_pl_ftol(s as f64 * read_f64_at(0x969040)) as i16 // 0x969040 = 0.75
+                        ftol(s as f64 * read_f64_at(0x969040)) as i16 // 0x969040 = 0.75
                     } else {
-                        match_pl_ftol(s as f64 * read_f64_at(0x968928)) as i16 // 0x968928 = 1.25
+                        ftol(s as f64 * read_f64_at(0x968928)) as i16 // 0x968928 = 1.25
                     }
                 };
                 if attack {
@@ -10297,7 +10297,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
                         || f5fd480(*(G_HUMAN_MANAGER as *const usize), d32(block, engine::SIDE0_MANAGER)) != 0)
                     && excluidos == 0;
                 if list {
-                    let mut v = match_pl_ftol(f(j, match_player::PENALTIES) - (byte(d32(j, match_player::PLAYER), 0xf) as i32 * 20 - 20) as f64) as i16;
+                    let mut v = ftol(f(j, match_player::PENALTIES) - (byte(d32(j, match_player::PLAYER), 0xf) as i32 * 20 - 20) as f64) as i16;
                     for b in 0..50i32 {
                         if f601070(*(G_HUMAN_MANAGER as *const usize), b, d32(block, engine::SIDE0_MANAGER)) == d32(j, match_player::STAFF) {
                             v = 10000 - b as i16;
@@ -10308,20 +10308,20 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
                 } else if j == d32(this, engine::GOALKEEPER) || j == d32(this, engine::GOALKEEPER_SIDE1) {
                     -10000
                 } else {
-                    let mut s = match_pl_ftol(f(j, match_player::PENALTIES)) as i16;
+                    let mut s = ftol(f(j, match_player::PENALTIES)) as i16;
                     if s > 0 {
                         let sheet = d32(j, match_player::STAFF);
                         let age = byte(sheet, staff::YEAR_OF_BIRTH);
                         if age < 20 {
-                            s = match_pl_ftol(s as f64 * read_f64_at(0x969510)) as i16; // 0x969510 = 0.35
+                            s = ftol(s as f64 * read_f64_at(0x969510)) as i16; // 0x969510 = 0.35
                         } else if age < 24 {
-                            s = match_pl_ftol(s as f64 * read_f64_at(0x969040)) as i16; // 0x969040 = 0.75
+                            s = ftol(s as f64 * read_f64_at(0x969040)) as i16; // 0x969040 = 0.75
                         }
                         let b5a = byte(sheet, staff::PRESSURE);
                         if b5a != 0 && sorteio(b5a as i32) == 0 {
-                            s = match_pl_ftol(s as f64 * read_f64_at(0x969510)) as i16; // 0x969510 = 0.35
+                            s = ftol(s as f64 * read_f64_at(0x969510)) as i16; // 0x969510 = 0.35
                         }
-                        s = match_pl_ftol((*((d32(j, match_player::PLAYER) + 0xb) as *const i16) as f64 * read_f64_at(0x96d240) + read_f64_at(0x969040)) * s as f64) as i16; // 0x96d240 = 2.5e-05, 0x969040 = 0.75
+                        s = ftol((*((d32(j, match_player::PLAYER) + 0xb) as *const i16) as f64 * read_f64_at(0x96d240) + read_f64_at(0x969040)) * s as f64) as i16; // 0x96d240 = 2.5e-05, 0x969040 = 0.75
                     }
                     s
                 }
@@ -10335,12 +10335,12 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
                         far()
                     }
                 } else if table_ball() < read_f64_at(0x96d310) { // 0x96d310 = 6.1
-                    match_pl_ftol(f(j, match_player::FREE_KICKS) * 2.0 - f(j, match_player::JUMPING) * read_f32_at(0x968f18) as f64) as i16 // 0x968f18 = 0.5
+                    ftol(f(j, match_player::FREE_KICKS) * 2.0 - f(j, match_player::JUMPING) * read_f32_at(0x968f18) as f64) as i16 // 0x968f18 = 0.5
                 } else {
                     far()
                 }
             }
-            8 => match_pl_ftol(read_f32_at(0x968960) as f64 - dist(j, a7, a8) as f64) as i16, // 0x968960 = 100
+            8 => ftol(read_f32_at(0x968960) as f64 - dist(j, a7, a8) as f64) as i16, // 0x968960 = 100
             _ => fatal_exit(),
         };
         if melhor == 0 || v > melhor_v {
@@ -10421,13 +10421,13 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     let nv = level as i32;
     let dif = (value as f64 - global_stats_ratio(alt != 0)) * read_f32_at(0x96d490) as f64; // 0x96d490 = 1.299999952
     let g = (nv as f64 * read_f64_at(0x968968) + read_f64_at(0x9688a0)) * dif * read_f64_at(0x968ff8); // 0x968968 = 0.5, 0x9688a0 = 5, 0x968ff8 = 50
-    let mut new_current = match_pl_ftol(atual as f64 + g) as i16;
-    let mut new_home = match_pl_ftol(casa as f64 + g) as i16;
-    let mut novo_mundo = match_pl_ftol(mundo as f64 + g) as i16;
+    let mut new_current = ftol(atual as f64 + g) as i16;
+    let mut new_home = ftol(casa as f64 + g) as i16;
+    let mut novo_mundo = ftol(mundo as f64 + g) as i16;
     if bonus != 0 {
-        let mut t = match_pl_ftol((nv * 250) as f64 * value as f64 / global_stats_ratio(alt != 0));
+        let mut t = ftol((nv * 250) as f64 * value as f64 / global_stats_ratio(alt != 0));
         if g < read_f32_at(0x968970) as f64 { // 0x968970 = 0
-            t = match_pl_ftol(t as i16 as f64 * value as f64 / global_stats_ratio(alt != 0));
+            t = ftol(t as i16 as f64 * value as f64 / global_stats_ratio(alt != 0));
         }
         let t = t as i16;
         new_home = new_home.max(t);
@@ -10449,7 +10449,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
             let hi = k * high + rf;
             if hi < mf { hi } else { mf }
         };
-        match_pl_ftol(v) as i16
+        ftol(v) as i16
     };
     let r_home = band(casa, read_f32_at(0x96d210) as f64, read_f32_at(0x96d20c) as f64, average(n_home, casa, new_home)); // 0x96d210 = 250, 0x96d20c = 300
     let r_current = band(atual, read_f32_at(0x96d210) as f64, read_f32_at(0x96d208) as f64, average(n_current, atual, new_current)); // 0x96d210 = 250, 0x96d208 = 375
@@ -10525,11 +10525,11 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
     }
     let rep = rep_de(meu);
     let nv = level as i32;
-    let mut new = match_pl_ftol((nv as f64 * read_f64_at(0x968968) + read_f64_at(0x9688a0)) * f as f64 * read_f64_at(0x968ff8) + rep as f64) as i16; // 0x968968 = 0.5, 0x9688a0 = 5, 0x968ff8 = 50
+    let mut new = ftol((nv as f64 * read_f64_at(0x968968) + read_f64_at(0x9688a0)) * f as f64 * read_f64_at(0x968ff8) + rep as f64) as i16; // 0x968968 = 0.5, 0x9688a0 = 5, 0x968ff8 = 50
     if bonus != 0 {
-        let mut t = match_pl_ftol((nv * 250) as f64 * value as f64 / global_stats_ratio(alt != 0));
+        let mut t = ftol((nv * 250) as f64 * value as f64 / global_stats_ratio(alt != 0));
         if (f as f64) < zero {
-            t = match_pl_ftol(t as i16 as f64 * value as f64 / global_stats_ratio(alt != 0));
+            t = ftol(t as i16 as f64 * value as f64 / global_stats_ratio(alt != 0));
         }
         if t as i16 > new {
             new = t as i16;
@@ -10553,7 +10553,7 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
         let high = delta as f64 + rf as f64;
         if high < mf as f64 { high } else { mf as f64 }
     };
-    let r = (match_pl_ftol(v) as i16).clamp(1, 10000);
+    let r = (ftol(v) as i16).clamp(1, 10000);
     *((this as isize + 0x1d6 + 2 * side as isize) as *mut i16) = r;
 }
 
@@ -11086,7 +11086,7 @@ pub(crate) unsafe fn luck_multiplier(v: f64, person: usize) -> f64 {
 /// [pt] Palavra do motor (com sinal) vezes `k`, truncada de volta na palavra `destino`.
 pub(crate) unsafe fn scale_engine_word(this: usize, source: usize, k: f64, target: usize) {
     let v = *((this + source) as *const i16) as f64;
-    *((this + target) as *mut i16) = match_pl_ftol(v * k) as i16;
+    *((this + target) as *mut i16) = ftol(v * k) as i16;
 }
 
 /// Computes a side's team strength in seven words (+0x1da ... +0x1f2, step 4, + 2 x side) by summing over the 20
@@ -11257,7 +11257,7 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
                 (1, _) => parcelas[i],
                 _ => parcelas[i] * read_f64_at(kk),
             };
-            *w(0x1da + 4 * i) = (*w(0x1da + 4 * i)).wrapping_add(match_pl_ftol(x) as i16);
+            *w(0x1da + 4 * i) = (*w(0x1da + 4 * i)).wrapping_add(ftol(x) as i16);
         }
     }
     let partida = *((this + engine::MATCH) as *const usize);
@@ -11282,13 +11282,13 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
                     0
                 };
                 if k != 0 {
-                    *w(0x1de) = match_pl_ftol(*((this + engine::TEAM_STRENGTH_2) as *const i16) as f64 * read_f32_at(k) as f64) as i16;
+                    *w(0x1de) = ftol(*((this + engine::TEAM_STRENGTH_2) as *const i16) as f64 * read_f32_at(k) as f64) as i16;
                 }
             }
         }
     }
-    *w(0x1de) = match_pl_ftol(*w(0x1de) as f64 * read_f32_at(0x96d3b8) as f64) as i16; // 0x96d3b8 = 1.049999952
-    *w(0x1e2) = match_pl_ftol(*w(0x1e2) as f64 * read_f32_at(0x96d3b0) as f64) as i16; // 0x96d3b0 = 1.019999981
+    *w(0x1de) = ftol(*w(0x1de) as f64 * read_f32_at(0x96d3b8) as f64) as i16; // 0x96d3b8 = 1.049999952
+    *w(0x1e2) = ftol(*w(0x1e2) as f64 * read_f32_at(0x96d3b0) as f64) as i16; // 0x96d3b0 = 1.019999981
     let game = *((partida + fixture::COMPETITION) as *const usize);
     let aplica = if game == 0 {
         true
@@ -11302,12 +11302,12 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
         }
     };
     if aplica {
-        *w(0x1de) = match_pl_ftol(*((this + engine::TEAM_STRENGTH_2) as *const i16) as f64 * read_f32_at(0x96a33c) as f64) as i16; // 0x96a33c = 1.100000024
+        *w(0x1de) = ftol(*((this + engine::TEAM_STRENGTH_2) as *const i16) as f64 * read_f32_at(0x96a33c) as f64) as i16; // 0x96a33c = 1.100000024
     }
     let (casa, fora) = (*((partida + fixture::HOME_CLUB) as *const usize), *((partida + fixture::AWAY_CLUB) as *const usize));
     if casa != 0 && fora != 0 && *((casa + club::REPUTATION) as *const i16) < 0x9c4 {
-        *w(0x1de) = match_pl_ftol(*w(0x1de) as f64 * read_f32_at(0x96d368) as f64) as i16; // 0x96d368 = 1.039999962
-        *w(0x1e2) = match_pl_ftol(*w(0x1e2) as f64 * read_f32_at(0x96d390) as f64) as i16; // 0x96d390 = 1.149999976
+        *w(0x1de) = ftol(*w(0x1de) as f64 * read_f32_at(0x96d368) as f64) as i16; // 0x96d368 = 1.039999962
+        *w(0x1e2) = ftol(*w(0x1e2) as f64 * read_f32_at(0x96d390) as f64) as i16; // 0x96d390 = 1.149999976
     }
     if partida == 0 || casa == 0 || fora == 0 {
         return;
@@ -11494,7 +11494,7 @@ pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -
     let strength = |p: usize| {
         let s = *((p + match_player::MOMENT_ANTICIPATION) as *const i8) as i32 + *((p + match_player::MOMENT_PACE) as *const i8) as i32;
         let w = core::ptr::read_unaligned((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64;
-        match_pl_ftol(s as f64 * (w * read_f64_at(0x968ef0) + read_f64_at(0x968968)) * core::ptr::read_unaligned((p + match_player::STAMINA) as *const f32) as f64) // 0x968ef0 = 0.005, 0x968968 = 0.5
+        ftol(s as f64 * (w * read_f64_at(0x968ef0) + read_f64_at(0x968968)) * core::ptr::read_unaligned((p + match_player::STAMINA) as *const f32) as f64) // 0x968ef0 = 0.005, 0x968968 = 0.5
     };
     strength(pb).wrapping_sub(strength(pa))
 }

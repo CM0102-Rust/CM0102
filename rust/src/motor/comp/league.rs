@@ -2165,7 +2165,7 @@ pub(crate) unsafe fn apply_form_factor(this: usize, e: usize, factor: f64) -> i3
     let r = *((e + league_projection::POINTS_PER_GAME) as *const f32) as f64 * factor;
     *((e + league_projection::POINTS_PER_GAME) as *mut f32) = r as f32; // fst: stores the float and continues with the 53-bit one
     let resta = read_i16(this + league::GAMES_PER_CLUB) as i32 - read_i16(e + league_projection::PLAYED) as i32;
-    *((e + league_projection::PROJECTED_POINTS) as *mut i16) = (match_pl_ftol(resta as f64 * r) as i16).wrapping_add(read_i16(e + league_projection::POINTS));
+    *((e + league_projection::PROJECTED_POINTS) as *mut i16) = (ftol(resta as f64 * r) as i16).wrapping_add(read_i16(e + league_projection::POINTS));
     resta
 }
 
@@ -2242,7 +2242,7 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
         let e = projection_entry(buf, i as i32);
         let resta = read_i16(this + league::GAMES_PER_CLUB) as i32 - read_i16(e + league_projection::PLAYED) as i32;
         pior = resta as u32;
-        *((e + league_projection::PROJECTED_POINTS) as *mut i16) = (match_pl_ftol(resta as f64 * *((e + league_projection::POINTS_PER_GAME) as *const f32) as f64) as i16).wrapping_add(read_i16(e + league_projection::POINTS));
+        *((e + league_projection::PROJECTED_POINTS) as *mut i16) = (ftol(resta as f64 * *((e + league_projection::POINTS_PER_GAME) as *const f32) as f64) as i16).wrapping_add(read_i16(e + league_projection::POINTS));
         i += 1;
     }
     qsort(buf, read_i16(this + league::CLUB_COUNT) as i32 as u32, 0xe, 0x68afd0);

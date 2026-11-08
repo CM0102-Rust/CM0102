@@ -1503,7 +1503,7 @@ pub(crate) unsafe fn rebuilt_coach_rating(person: usize, v: i16, factor: Option<
     let m = if p > v { p } else { v };
     let mk = m * read_f64_at(k);
     let t = read_f64_at(ceiling);
-    match_pl_ftol(if !(mk >= t) { mk } else { t }) as u16
+    ftol(if !(mk >= t) { mk } else { t }) as u16
 }
 
 /// The post of the rebuilt coach at his AI club (0x7a6757..0x7a68d8): coach in empty coach slots or assistant, by his
@@ -1637,16 +1637,16 @@ pub(crate) unsafe fn damp_confidence_change(v: i32, gosta: bool, not_likes: bool
     let mut v = v;
     if gosta {
         let x = v as i16 as f64;
-        v = if (v as i16) < 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) }; // 0x968968 = 0.5
+        v = if (v as i16) < 0 { ftol(x * read_f64_at(0x968968)) } else { ftol(x + x) }; // 0x968968 = 0.5
     } else if not_likes {
         let x = v as i16 as f64;
-        v = if (v as i16) > 0 { match_pl_ftol(x * read_f64_at(0x968968)) } else { match_pl_ftol(x + x) }; // 0x968968 = 0.5
+        v = if (v as i16) > 0 { ftol(x * read_f64_at(0x968968)) } else { ftol(x + x) }; // 0x968968 = 0.5
     }
     let x = v as i16 as i32;
     if x < -1000 {
-        v = match_pl_ftol((x + 1000) as f64 * read_f64_at(0x968918) - read_f64_at(0x968908)); // 0x968918 = 0.2, 0x968908 = 1000
+        v = ftol((x + 1000) as f64 * read_f64_at(0x968918) - read_f64_at(0x968908)); // 0x968918 = 0.2, 0x968908 = 1000
     } else if x > 1000 {
-        v = match_pl_ftol((x - 1000) as f64 * read_f64_at(0x968918) + read_f64_at(0x968908)); // 0x968918 = 0.2, 0x968908 = 1000
+        v = ftol((x - 1000) as f64 * read_f64_at(0x968918) + read_f64_at(0x968908)); // 0x968918 = 0.2, 0x968908 = 1000
     }
     v as i16
 }
@@ -1663,9 +1663,9 @@ pub(crate) unsafe fn fan_confidence_change(club: usize, target: u32) -> i16 {
     let favourite: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_FAVOURS_STAFF);
     let rejeitado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_CLUB_DISLIKES_STAFF);
     let conf = if club != 0 { read_i16(manager_manager_row(club) + 8) as i32 } else { 0 };
-    let t = match_pl_ftol((conf - 5000) as f64 * read_f64_at(0x96d280)); // 0x96d280 = -0.05
+    let t = ftol((conf - 5000) as f64 * read_f64_at(0x96d280)); // 0x96d280 = -0.05
     let d = (target as i32).wrapping_sub(t) as i16;
-    let v = match_pl_ftol(d as f64 * read_f64_at(0x969040)); // 0x969040 = 0.75
+    let v = ftol(d as f64 * read_f64_at(0x969040)); // 0x969040 = 0.75
     let manager = read_usize(club + club::MANAGER);
     let fav = favourite(manager, club) != 0;
     let rej = !fav && rejeitado(manager, club) != 0;
@@ -1682,7 +1682,7 @@ pub(crate) unsafe fn board_confidence_change(club: usize, target: u32) -> i16 {
     let not_likes: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_DISLIKED_BY);
     let conf = if club != 0 { read_i16(manager_manager_row(club) + 6) as i32 } else { 0 };
     let s = ((conf - 6000) / 20).wrapping_add(target as i32) as i16;
-    let v = match_pl_ftol(s as f64 * read_f64_at(0x969040)); // 0x969040 = 0.75
+    let v = ftol(s as f64 * read_f64_at(0x969040)); // 0x969040 = 0.75
     let (tecnico, presidente) = (read_usize(club + club::MANAGER), read_usize(club + club::CHAIRMAN));
     let g = gosta(tecnico, presidente) != 0;
     let n = !g && not_likes(tecnico, presidente) != 0;
@@ -2615,7 +2615,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player
     copy_record_date(item() + 8, G_CURRENT_DATE);
     *((item() + 0x10) as *mut u8) = 0; // the rumour has not come out yet
     write_usize(item() + 0x11, cap_interest_value(value) as usize);
-    write_usize(item() + 0x15, match_pl_ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
+    write_usize(item() + 0x15, ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
     let n = read_usize(this + media_fields::INTEREST_COUNT).wrapping_add(1);
     write_usize(this + media_fields::INTEREST_COUNT, n); // mais um interesse
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
@@ -2680,7 +2680,7 @@ pub(crate) unsafe fn build_interest_record(player: usize, club: usize, value: i3
     r[4..8].copy_from_slice(&(read_usize(club) as u32).to_le_bytes());
     r[8..0x10].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     r[0x11..0x15].copy_from_slice(&cap_interest_value(value).to_le_bytes());
-    r[0x15..].copy_from_slice(&match_pl_ftol(avaliacao * 100.0).to_le_bytes());
+    r[0x15..].copy_from_slice(&ftol(avaliacao * 100.0).to_le_bytes());
     r
 }
 
@@ -3001,7 +3001,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
     }
     let mut rating = manager as i32; // without a player: the argument that occupies the slot
     if player != 0 {
-        rating = match_pl_ftol(nota_da_historia(this, player, club, contract, kind, 3, 0.0) * *(0x968990 as *const f32) as f64);
+        rating = ftol(nota_da_historia(this, player, club, contract, kind, 3, 0.0) * *(0x968990 as *const f32) as f64);
     }
     let f = || read_usize(manager + staff::NON_PLAYER); // the manager record
     let ch = |o: usize| chance(f(), *((f() + o) as *const i8)) as i8 as i32; // the knowledge by attribute +o

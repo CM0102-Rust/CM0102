@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         }
     }
     let n = ((read_i16(obj + league::CLUB_COUNT) as i32) - 1).wrapping_mul(read_i16(obj + league::LEGS) as i32);
-    let threshold = match_pl_ftol(n as f64 * read_f64_at(0x968f78)) as i16; // the ftol stays in the word (movsx word afterwards); 0x968f78 = 0.33
+    let threshold = ftol(n as f64 * read_f64_at(0x968f78)) as i16; // the ftol stays in the word (movsx word afterwards); 0x968f78 = 0.33
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         if r != 0 {
             core::ptr::write_unaligned((r + manager_record::CUPS_WON) as *mut i16, read_i16(r + manager_record::CUPS_WON).wrapping_add(1));
             // fild weight; fld 4.0; _CIpow (base in st1); fmul 0.5; ftol
-            let v = match_pl_ftol(game_pow(read_i16(comp + competition::REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: the title weight; 0x968938 = 4, 0x968968 = 0.5
+            let v = ftol(game_pow(read_i16(comp + competition::REPUTATION) as f64, read_f64_at(0x968938)) * read_f64_at(0x968968)); // cqd13: the title weight; 0x968938 = 4, 0x968968 = 0.5
             write_i32(r + manager_record::YEAR_POINTS, read_i32(r + manager_record::YEAR_POINTS).wrapping_add(v));
             write_i32(r + manager_record::MONTH_POINTS, read_i32(r + manager_record::MONTH_POINTS).wrapping_add(v));
             if is_national_team(club) != 0 {
@@ -761,7 +761,7 @@ pub(crate) unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 
 /// [pt] Uma nota do lado do clube na partida (palavra em `a`): soma ftol(peso × k × [0x96ff88]) (produto em 32 bits) e fica
 /// no piso peso × k (16 bits) quando está abaixo dele, senão no máximo 10000 (comparações com sinal em 16 bits).
 pub(crate) unsafe fn raise_side_rating(a: usize, weight: i16, k: i32) {
-    let sum = match_pl_ftol((weight as i32).wrapping_mul(k) as f64 * read_f64_at(0x96ff88)); // 0x96ff88 = 0.1639344262
+    let sum = ftol((weight as i32).wrapping_mul(k) as f64 * read_f64_at(0x96ff88)); // 0x96ff88 = 0.1639344262
     let x = read_i16(a).wrapping_add(sum as i16);
     write_i16(a, x);
     let floor = weight.wrapping_mul(k as i16);
@@ -1239,7 +1239,7 @@ pub(crate) unsafe fn adjust_morale(p: usize, delta: i32) {
 /// [pt] A nota do não jogador em `a` sobe ftol(x × peso × 10/61) e fica no máximo entre x × peso (16 bits) e ela mesma,
 /// presa a 10000.
 pub(crate) unsafe fn raise_promotion_rating(a: usize, x: i32, weight: i32) {
-    write_i16(a, read_i16(a).wrapping_add(match_pl_ftol(x.wrapping_mul(weight) as f64 * read_f64(0x96ff88)) as i16));
+    write_i16(a, read_i16(a).wrapping_add(ftol(x.wrapping_mul(weight) as f64 * read_f64(0x96ff88)) as i16));
     let minimum = (x as i16).wrapping_mul(weight as i16);
     let v = read_i16(a);
     write_i16(a, if minimum > v { minimum } else if v > 0x2710 { 0x2710 } else { v });
@@ -1403,7 +1403,7 @@ pub(crate) unsafe fn add_rating_clamped(a: usize, v: i16) {
 /// [pt] As reputações (+0xb atual, +9 na nação, +0xd mundial) do registro de jogador `j` × `k`.
 pub(crate) unsafe fn scale_player_reputations(j: usize, k: f64) {
     for o in [0xb, 9, 0xd] {
-        write_i16(j + o, match_pl_ftol(read_i16(j + o) as i32 as f64 * k) as i16);
+        write_i16(j + o, ftol(read_i16(j + o) as i32 as f64 * k) as i16);
     }
 }
 
@@ -1506,7 +1506,7 @@ pub(crate) unsafe fn record_qualification(this: usize, club: usize, comp: usize,
     }
     // simplification: the original does pow(x, 2.0) (0x945ff0): x × x, exact for the importance (16 bits)
     let x = read_i16(comp + competition::REPUTATION) as f64;
-    let points = match_pl_ftol(x * x * (weight as u8 as i8 as i32) as f64);
+    let points = ftol(x * x * (weight as u8 as i8 as i32) as f64);
     staff_records_add_i32(r + manager_record::YEAR_POINTS, points);
     staff_records_add_i32(r + manager_record::MONTH_POINTS, points);
     let national_team: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(FN_DATABASE_IS_NATIONAL_TEAM);

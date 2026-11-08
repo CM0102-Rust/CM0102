@@ -129,7 +129,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     };
     let st = height as f64 + 1.0;
     if st > 0.0 {
-        attack = match_pl_ftol(attack as i16 as f64 / st);
+        attack = ftol(attack as i16 as f64 / st);
     }
     if byte(m, engine::LAST_POSSESSION_SIDE) == byte(j, match_player::SIDE) {
         if random(attack as i16 as i32 + 100) != 0 {
@@ -168,7 +168,7 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, estilo: i8,
     };
     if strong != 0 {
         crate::comparison::branch("play forte");
-        valor = match_pl_ftol(valor as f64 * 0.85) as i16;
+        valor = ftol(valor as f64 * 0.85) as i16;
     }
     let v = random(valor as i32);
     let rating = (v - strength as i32 / 3 - attack) as i16;
@@ -514,7 +514,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 }
                 for (o, dv) in [(0xa, da), (8, db), (0xc, dc)] {
                     let f = g(aux + staff::NON_PLAYER);
-                    let v = w(f + o).wrapping_add(match_pl_ftol(dv as f64 * 0.25) as i16);
+                    let v = w(f + o).wrapping_add(ftol(dv as f64 * 0.25) as i16);
                     core::ptr::write_unaligned((f + o) as *mut i16, v);
                     let f = g(aux + staff::NON_PLAYER);
                     core::ptr::write_unaligned((f + o) as *mut i16, w(f + o).clamp(1, 10000));

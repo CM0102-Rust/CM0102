@@ -17,9 +17,9 @@ MUTACOES = [
     ('m_livre', "            *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(4);", "            *w(p, match_player::MATCH_RATING) = (*w(p, match_player::MATCH_RATING)).wrapping_add(5);", "movimento domina a bola livre"),
     ('m_direcao', "let dx = byte(m, engine::BALL_X) as i32 + 4 + nx as i32;", "let dx = byte(m, engine::BALL_X) as i32 + 5 + nx as i32;"),
     ('m_perde', "            add(p, -0x96);", "            add(p, -0x95);", "movimento perde a bola"),
-    ('m_vence', "gain = match_pl_ftol(gain as f64 * read_f64_at(0x969520)) as i16;", "gain = match_pl_ftol(gain as f64 * read_f64_at(0x969520) * 1.01) as i16;", "movimento desafiante vence"),
+    ('m_vence', "gain = ftol(gain as f64 * read_f64_at(0x969520)) as i16;", "gain = ftol(gain as f64 * read_f64_at(0x969520) * 1.01) as i16;", "movimento desafiante vence"),
     ('m_penalti', "if random(byte(u(e, match_player::STAFF), 0x5a) as i32 + 6) == 0 {", "if random(byte(u(e, match_player::STAFF), 0x5a) as i32 + 7) == 0 {", "movimento penalty"),
     ('m_acao', "            narrate(call, 0x1f4c, u32::MAX);", "            narrate(call, 0x1f4d, u32::MAX);"),
-    ('m_2173', "if strong && random(match_pl_ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < random(0x1e) { 0x2173 } else { 0x1f4a }", "if strong && random(match_pl_ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < random(0x1f) { 0x2173 } else { 0x1f4a }"),
+    ('m_2173', "if strong && random(ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < random(0x1e) { 0x2173 } else { 0x1f4a }", "if strong && random(ftol(read_f32_at(p + match_player::DRIBBLING) as f64)) < random(0x1f) { 0x2173 } else { 0x1f4a }"),
     ('m_so_vira', "        *w(p, match_player::ACTION) = 0x6f;\n        return;", "        *w(p, match_player::ACTION) = 0x70;\n        return;", "movimento so vira"),
 ]

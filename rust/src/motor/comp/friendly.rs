@@ -1184,7 +1184,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entrada
                     1
                 };
                 if marked != 0 {
-                    let f = match_pl_ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8; // 0x9689b0 = 0.8
+                    let f = ftol(band as i8 as i32 as f64 * read_f64_at(0x9689b0)) as u8; // 0x9689b0 = 0.8
                     band = if (f as i8) < 1 { 1 } else { f };
                 }
                 j = j.wrapping_add(1);

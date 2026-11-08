@@ -1,0 +1,10 @@
+    pool nao paginado 2.15 -> 2.15 GB, paginado 3.75 -> 3.75 GB
+execucao 1: parou em 2002-000, 256754158 sorteios, impressao e07c1fc009947097, partidas 0/0000000000000000, banco 0000000000000000, 46 s
+    alocador: AVISO nenhuma regiao fixa livre; heap do Windows (simulacao nao reproduzivel)
+    pool nao paginado 2.15 -> 2.15 GB, paginado 3.75 -> 3.75 GB
+execucao 2: parou em 2002-000, 256141243 sorteios, impressao c9b131de56d2bd46, partidas 0/0000000000000000, banco 0000000000000000, 46 s
+    alocador: AVISO nenhuma regiao fixa livre; heap do Windows (simulacao nao reproduzivel)
+detector: parou em 2002-000, 255103118 sorteios, impressao f6251e595ed72b86, partidas 0/0000000000000000, banco 0000000000000000, 90 s
+detector de lixo: DIFERENTE (impressao f6251e595ed72b86, partidas 0/0000000000000000, banco 0000000000000000)
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: DIFERENTES

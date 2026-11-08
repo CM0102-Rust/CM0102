@@ -4,7 +4,7 @@ MUTACOES = [
     ('q_cerco', "unsafe fn surround_count(m: usize, s: usize, x: i8, y: i8) -> i8 {\n    let mut n = 0i8;", "unsafe fn surround_count(m: usize, s: usize, x: i8, y: i8) -> i8 {\n    let mut n = 1i8;"),
     ('q_v16', "                a = a.wrapping_sub(100 * v16 as i32);", "                a = a.wrapping_sub(90 * v16 as i32);"),
     ('q_attr', "                let mut e = (*((q + match_player::SHOTS_ON_TARGET) as *const u8) as i32 + *((q + match_player::SHOTS) as *const u8) as i32 + 0xa) * 10;", "                let mut e = (*((q + match_player::SHOTS_ON_TARGET) as *const u8) as i32 + *((q + match_player::SHOTS) as *const u8) as i32 + 0xb) * 10;"),
-    ('q_0x35', "                e = e.wrapping_sub(match_pl_ftol(read_f64_at(0x96d2a8) - *((q + match_player::MATCH_RATING) as *const i16) as f64 * read_f64_at(0x96d2c8)));", "                e = e.wrapping_sub(match_pl_ftol(read_f64_at(0x96d2a8) - *((q + 0x37) as *const i16) as f64 * read_f64_at(0x96d2c8)));"),
+    ('q_0x35', "                e = e.wrapping_sub(ftol(read_f64_at(0x96d2a8) - *((q + match_player::MATCH_RATING) as *const i16) as f64 * read_f64_at(0x96d2c8)));", "                e = e.wrapping_sub(ftol(read_f64_at(0x96d2a8) - *((q + 0x37) as *const i16) as f64 * read_f64_at(0x96d2c8)));"),
     ('q_7d', "                        rating = rating.wrapping_add(0x7d);", "                        rating = rating.wrapping_add(0x7c);"),
     ('q_empate', "        if best == 0 || rating as i16 > rating_best {", "        if best == 0 || rating as i16 >= rating_best {"),
     ('q_linhas', "    while r <= y.wrapping_add(1) {", "    while r <= y {"),

@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
     let mut best = -1000.0f64;
     let mut chosen = 0usize;
     while chosen == 0 {
-        let minimum = match_pl_ftol(games_of_club() as i32 as f64 * factor) as i16;
+        let minimum = ftol(games_of_club() as i32 as f64 * factor) as i16;
         for s in 0..50usize {
             let p = read_usize(club + club::SQUAD + 4 * s);
             if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
@@ -713,7 +713,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         if reg == 0 {
             continue;
         }
-        let jogou = match_pl_ftol(estatistica(reg, 1, 6.5)) as u8;
+        let jogou = ftol(estatistica(reg, 1, 6.5)) as u8;
         if (jogou as i32) < *((entry + club_record_entry::SEASON_GAMES) as *const i8) as i32 / 2 { // fewer than half the matches
             continue;
         }
@@ -911,7 +911,7 @@ pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offe
     if value < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // below the minimum for the reputation
     }
-    if exigir != 0 && value < match_pl_ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) { // 0x967880 = 0.1
+    if exigir != 0 && value < ftol(rep as f64 * rep as f64 * read_f64_at(0x967880)) { // 0x967880 = 0.1
         return 0;
     }
     (value != 0 && value > read_usize(rec + club_record::FEE_PAID) as i32) as u8

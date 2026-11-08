@@ -209,7 +209,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
         }
         let pd = *((j + match_player::PLAYER) as *const usize);
         let sum = 10 * (byte(pd, 0x43) as i32 + byte(pd, 0x33) as i32 + byte(pd, 0x27) as i32);
-        let mut v = match_pl_ftol(sum as f64 + read_f32_at(j + match_player::STAMINA) as f64);
+        let mut v = ftol(sum as f64 + read_f32_at(j + match_player::STAMINA) as f64);
         // simplification: the original calls 0x717410 on every test; it only reads the player
         let r = match_player_position(j);
         if r & 1 != 0 {

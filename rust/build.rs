@@ -9,6 +9,13 @@ fn main() {
     let def = raiz.join("ddraw.def");
     println!("cargo:rustc-cdylib-link-arg=/DEF:{}", def.display());
     println!("cargo:rerun-if-changed=ddraw.def");
+    // A fixed image base below every fixed region of the allocator (0x0b000000 DLL region, 0x0ff00000 private stack,
+    // 0x10000000 visible region, 0x18000000..0x58000000 game heap) and no ASLR: each new build is a "new" image to
+    // Windows, and after hundreds of builds since boot ASLR placed it inside the game heap region, whose reservation
+    // then failed (non-reproducible simulation, 08/11/2026). The machine code does not change, only where it is loaded.
+    // [pt] Base fixa abaixo das regiões fixas do alocador e sem ASLR (o ASLR passou a pôr a DLL dentro da região da heap).
+    println!("cargo:rustc-cdylib-link-arg=/BASE:0x05000000");
+    println!("cargo:rustc-cdylib-link-arg=/DYNAMICBASE:NO");
 
     let motor = raiz.join("src").join("motor.rs");
     println!("cargo:rerun-if-changed={}", motor.display());

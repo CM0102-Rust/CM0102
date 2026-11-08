@@ -280,9 +280,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let (a, x) = (*w(o) as f64, *w(o + 2) as f64);
             let middle = x * read_f64_at(0x968968); // 0x968968 = 0.5
             if !(a >= middle) {
-                *w(o) = match_pl_ftol(middle) as i16;
+                *w(o) = ftol(middle) as i16;
             } else if a > x + x {
-                *w(o) = match_pl_ftol(x + x) as i16;
+                *w(o) = ftol(x + x) as i16;
             }
         }
         let c7 = random(2) as u8;
@@ -364,7 +364,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 more(b(0xf5c8 + side * 0x36));
             }
             let p = jog(side, choose_by_role(m, side as u32) as i8);
-            let v = match_pl_ftol(read_f32_at(p + match_player::MOVEMENT) as f64 + read_f32_at(0x96afb0) as f64); // 0x96afb0 = 20
+            let v = ftol(read_f32_at(p + match_player::MOVEMENT) as f64 + read_f32_at(0x96afb0) as f64); // 0x96afb0 = 20
             if random(v) < random(2) {
                 add(p, -0xf);
                 more(b(0xf5ca + side * 0x36));
@@ -445,7 +445,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             } else {
                 (word(0x1da, other) as f64 * x * read_f64_at(0x96d318), split_b) // 0x96d318 = 4.8
             };
-            let r1 = random(match_pl_ftol(v));
+            let r1 = random(ftol(v));
             let l24 = random(word(0x1de, side)).wrapping_sub(r1) as i16;
             if l24 > 0 {
                 split_a(m, side as i8, 0x1c);
@@ -677,10 +677,10 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 let club = if s != 0 { u(pt(), 0x20) } else { u(pt(), 0x1c) };
                 let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64_at(0x968e30)) * read_f64_at(0x968ff8); // 0x968e30 = 40, 0x968ff8 = 50
                 let r = *((club + club::REPUTATION) as *const i16) as f64 * read_f64_at(0x969018) - read_f64_at(0x96d300); // 0x969018 = 1.6, 0x96d300 = 6000
-                let v = match_pl_ftol(((a - r) * read_f64_at(0x96d2f8) + read_f64_at(0x967890)) * *q as f64) as i16; // 0x96d2f8 = 2e-05, 0x967890 = 1
+                let v = ftol(((a - r) * read_f64_at(0x96d2f8) + read_f64_at(0x967890)) * *q as f64) as i16; // 0x96d2f8 = 2e-05, 0x967890 = 1
                 *q = v.clamp(0xdac, 0x2ee0);
             }
-            let n = (match_pl_ftol((*q as i32 + 0x1770) as f64 * read_f64_at(0x96a608) + read_f64_at(0x96d2f0)) as i8).clamp(1, 10); // 0x96a608 = 0.0004, 0x96d2f0 = 1.83
+            let n = (ftol((*q as i32 + 0x1770) as f64 * read_f64_at(0x96a608) + read_f64_at(0x96d2f0)) as i8).clamp(1, 10); // 0x96a608 = 0.0004, 0x96d2f0 = 1.83
             *((p + match_player::MATCH_GRADE) as *mut i8) = n;
             *((p + match_player::STAMINA_CEILING) as *mut u32) = *((p + match_player::STAMINA) as *const u32);
         }

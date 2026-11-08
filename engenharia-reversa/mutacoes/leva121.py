@@ -2,7 +2,7 @@
 MUTACOES = [
     ('c_pontas', "    if byte(a, match_player::POSITION) == -2 {\n        return Some(-1);", "    if byte(a, match_player::POSITION) == -3 {\n        return Some(-1);"),
     ('c_goleiro', "    if table(a) == 1 && byte(u(a, match_player::PLAYER), 0xf) < 20 {", "    if table(a) == 1 && byte(u(a, match_player::PLAYER), 0xf) < 19 {"),
-    ('c_peso', "            4 | 2 => match_pl_ftol(v as f64 * 1.35),", "            4 | 2 => match_pl_ftol(v as f64 * 1.3),"),
+    ('c_peso', "            4 | 2 => ftol(v as f64 * 1.35),", "            4 | 2 => ftol(v as f64 * 1.3),"),
     ('c_oito', "    let vb = pesar(match_condition(b), 1.25);", "    let vb = pesar(match_condition(b), 1.2);"),
     ('c_condicao', "    match_condition(a).wrapping_sub(vb)", "    match_condition(a).wrapping_sub(vb).wrapping_add(1)"),
     ('c_total', "    let total = || (*((u(c, match_manager::FIXTURE) + 0x4d) as *const u8) & 0xf) as i32 + 11;", "    let total = || (*((u(c, match_manager::FIXTURE) + 0x4d) as *const u8) & 0xf) as i32 + 10;"),

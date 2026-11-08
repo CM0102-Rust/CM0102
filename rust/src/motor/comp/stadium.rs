@@ -713,12 +713,12 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
             d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
-        pc = match_pl_ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0] * d);
+        pc = ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0] * d);
         let mut d = factor(this, game, c_est, c_away, f[1]);
         if d < read_f64_at(0x968f20) { // 0x968f20 = 0.15
             d = read_f64_at(0x968f20); // 0x968f20 = 0.15
         }
-        pf = match_pl_ftol(read_i32(away + club::MIN_ATTENDANCE).wrapping_add(read_i32(away + club::ATTENDANCE)) as f64 * f[1] * d * read_f64_at(0x968968)); // 0x968968 = 0.5
+        pf = ftol(read_i32(away + club::MIN_ATTENDANCE).wrapping_add(read_i32(away + club::ATTENDANCE)) as f64 * f[1] * d * read_f64_at(0x968968)); // 0x968968 = 0.5
         let comp = read_u32_as_usize(game + fixture::COMPETITION);
         if comp != 0 && home != 0 && read_u32_as_usize(home + club::DIVISION) == comp {
             let league = read_u32_as_usize(read_u32_as_usize(G_COMP_OBJECT_TABLE) + read_u32_as_usize(comp) * 4);
@@ -755,7 +755,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                             } else if cl < 4 {
                                 2
                             } else {
-                                match_pl_ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16 // 0x9689e0 = 0.25
+                                ftol(ax as i32 as f64 * read_f64_at(0x9689e0)) as i16 // 0x9689e0 = 0.25
                             };
                         }
                         let m = if bl < 4 && dl == 1 { 25 } else { 15 };
@@ -781,24 +781,24 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             }
         }
     } else {
-        pc = match_pl_ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0]);
-        pf = match_pl_ftol(read_i32(away + club::ATTENDANCE) as f64 * f[1]);
+        pc = ftol(read_i32(home + club::ATTENDANCE) as f64 * f[0]);
+        pf = ftol(read_i32(away + club::ATTENDANCE) as f64 * f[1]);
     }
     // the derbies
     let (home, away) = (read_u32_as_usize(game + fixture::HOME_CLUB), read_u32_as_usize(game + fixture::AWAY_CLUB));
     let rival = |a: usize, b: usize| read_u32_as_usize(a + 0xb3) == b || read_u32_as_usize(a + 0xb7) == b || read_u32_as_usize(a + 0xbb) == b;
     if rival(home, away) {
         crate::comparison::branch("cqo_2 classico");
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico; 0x968940 = 1.5
+        pc = ftol(pc as f64 * read_f64_at(0x968940)); // cqo2: o clássico; 0x968940 = 1.5
     } else if read_u32_as_usize(home + club::STADIUM) != 0 && read_u32_as_usize(away + club::STADIUM) != 0 && read_u32_as_usize(read_u32_as_usize(home + club::STADIUM) + 0x38) == read_u32_as_usize(read_u32_as_usize(away + club::STADIUM) + 0x38) {
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
+        pc = ftol(pc as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
     }
     if rival(away, home) {
-        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
+        pf = ftol(pf as f64 * read_f64_at(0x969588)); // 0x969588 = 1.35
     }
     if read_u8(game + fixture::NEUTRAL_VENUE) == 0 && read_u8(game + fixture::STAGE) != 0xff {
-        pc = match_pl_ftol(pc as f64 * read_f64_at(0x9689b8)); // 0x9689b8 = 1.05
-        pf = match_pl_ftol(pf as f64 * read_f64_at(0x969520)); // 0x969520 = 0.85
+        pc = ftol(pc as f64 * read_f64_at(0x9689b8)); // 0x9689b8 = 1.05
+        pf = ftol(pf as f64 * read_f64_at(0x969520)); // 0x969520 = 0.85
     }
     let comp = read_u32_as_usize(game + fixture::COMPETITION);
     if comp != 0 && home != 0 && read_u32_as_usize(home + club::DIVISION) == comp && read_u8(home + club::OWN_STADIUM) != 0 {
@@ -823,7 +823,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             if pc < n * 250 {
                 pc = n * 250;
             } else if pc > n * 1500 {
-                pc = n * 1500 - match_pl_ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30)); // 0x968f30 = -0.2
+                pc = n * 1500 - ftol((pc - n * 1500) as f64 * read_f64_at(0x968f30)); // 0x968f30 = -0.2
             }
         }
     }
@@ -844,7 +844,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                 let y = a * read_f64_at(0x968f20); // 0x968f20 = 0.15
                 let z = if x < y { x } else { y };
                 let w = a * read_f64_at(0x967888); // 0x967888 = 0.05
-                match_pl_ftol(if w > z { w } else { z })
+                ftol(if w > z { w } else { z })
             } else {
                 lot / 2
             };
@@ -886,7 +886,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
 pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
     let dx = (read_f64(a + city::LATITUDE) - read_f64(b + city::LATITUDE)).abs();
     let dy = (read_f64(a + city::LONGITUDE) - read_f64(b + city::LONGITUDE)).abs();
-    match_pl_ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40)) // 0x96fe40 = 44.44444444
+    ftol((dy * dy + dx * dx).sqrt() * read_f64_at(0x96fe40)) // 0x96fe40 = 44.44444444
 }
 
 /// Scores a venue for a neutral fixture: the English national stadium before 2004 scores 0; the score starts at 100000,
@@ -986,27 +986,27 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             }
         }
         if lugares > expected {
-            rating = match_pl_ftol(rating as f64 * read_f64_at(0x968978)); // 0x968978 = 1.2
+            rating = ftol(rating as f64 * read_f64_at(0x968978)); // 0x968978 = 1.2
         }
         let (l, e) = (lugares as f64, expected as f64);
         let t = e * read_f64_at(0x968940); // 0x968940 = 1.5
         if l > t {
-            rating = match_pl_ftol(rating as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890))); // 0x96fe30 = 8.333333333e-05, 0x967890 = 1
+            rating = ftol(rating as f64 / ((l - t) * read_f64_at(0x96fe30) + read_f64_at(0x967890))); // 0x96fe30 = 8.333333333e-05, 0x967890 = 1
         } else if l < e * read_f64_at(0x968e80) { // 0x968e80 = 0.3
-            rating = match_pl_ftol(rating as f64 * read_f64_at(0x967880)); // 0x967880 = 0.1
+            rating = ftol(rating as f64 * read_f64_at(0x967880)); // 0x967880 = 0.1
         } else if l < e * read_f64_at(0x968968) { // 0x968968 = 0.5
-            rating = match_pl_ftol(rating as f64 * read_f64_at(0x968e80)); // 0x968e80 = 0.3
+            rating = ftol(rating as f64 * read_f64_at(0x968e80)); // 0x968e80 = 0.3
         } else if l < e * read_f64_at(0x968e40) { // 0x968e40 = 0.7
-            rating = match_pl_ftol(rating as f64 * read_f64_at(0x968e40)); // 0x968e40 = 0.7
+            rating = ftol(rating as f64 * read_f64_at(0x968e40)); // 0x968e40 = 0.7
         } else if l < e * read_f64_at(0x9689d8) { // 0x9689d8 = 0.9
-            rating = match_pl_ftol(rating as f64 * read_f64_at(0x9689d8)); // 0x9689d8 = 0.9
+            rating = ftol(rating as f64 * read_f64_at(0x9689d8)); // 0x9689d8 = 0.9
         }
     } else if m & 4 != 0 {
         rating = friendly_random(lugares);
     }
     crate::comparison::branch("cpt_7 nota do estadio");
     let r = friendly_random(100); // cpt7: the random draw of the rating
-    match_pl_ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * rating as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
+    ftol((r as f64 * read_f64_at(0x968d60) + read_f64_at(0x9689b0)) * rating as f64) // 0x968d60 = 0.004, 0x9689b0 = 0.8
 }
 
 // simplification: rolls random numbers (and, with flag 4, draws the places): original only; the copy takes the branch.
